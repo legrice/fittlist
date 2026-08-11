@@ -142,6 +142,10 @@ export function renderStory(model: StoryModel) {
           rows: entries.map((entry) => ({ time: entry.times, name: entry.name, sub: "" })),
         }))
       : plan.days;
+  // Swiss keeps its editorial columns, but only reserves columns that have
+  // something in them. One day gets the page, two split it, and three or
+  // more settle into the original three-column rhythm.
+  const swissCols = Math.max(1, Math.min(3, editorialDays.length));
 
   return new ImageResponse(
     (
@@ -345,11 +349,11 @@ export function renderStory(model: StoryModel) {
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  width: 302,
+                  width: swissCols === 3 ? 302 : 908 / swissCols,
                   minHeight: px(250),
-                  padding: `0 ${di % 3 === 2 ? 0 : 18}px ${px(26)}px ${di % 3 === 0 ? 0 : 18}px`,
+                  padding: `0 ${di % swissCols === swissCols - 1 ? 0 : 18}px ${px(26)}px ${di % swissCols === 0 ? 0 : 18}px`,
                   marginBottom: px(34),
-                  borderLeftWidth: di % 3 === 0 ? 0 : 3,
+                  borderLeftWidth: di % swissCols === 0 ? 0 : 3,
                   borderLeftStyle: "solid",
                   borderLeftColor: t.accent,
                 }}

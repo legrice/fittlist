@@ -61,7 +61,7 @@ export async function GET(
   const prefs = user.storyPrefs ?? {};
   const { line1, line2, size } = headlineOf(prefs.headline ?? "", ["Train", "with me."]);
   const hSize = Math.round(size * (y.headlineSize / 100));
-  const showPhoto = prefs.showPhoto !== false && !!user.photo;
+  const showPhoto = params2.get("photo") !== "0" && prefs.showPhoto !== false && !!user.photo;
 
   // How much detail the week can carry: everything if it fits, the same rows
   // tighter if it doesn't, and a line a day when even that is too much.

@@ -30,19 +30,15 @@ export function ShareWeekSheet({
   // A new query param gives every open a clean cache key.
   const [bust, setBust] = useState(0);
 
-  // Customisation: the coach's headline + photo chip, persisted on their
-  // account so every week's image carries their look.
+  // Customisation: the coach's headline, persisted on their account so
+  // every week's image carries their voice.
   const [headline, setHeadline] = useState("");
-  const [showPhoto, setShowPhoto] = useState(true);
-  const [hasPhoto, setHasPhoto] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setBust(Date.now());
     getStoryPrefs().then((p) => {
       setHeadline(p.headline);
-      setShowPhoto(p.showPhoto);
-      setHasPhoto(p.hasPhoto);
     });
   }, [open]);
 
@@ -50,16 +46,9 @@ export function ShareWeekSheet({
     await setStoryPrefs({ headline });
     setBust(Date.now()); // re-render the preview with the new text
   };
-  const togglePhoto = async () => {
-    const v = !showPhoto;
-    setShowPhoto(v);
-    await setStoryPrefs({ showPhoto: v });
-    setBust(Date.now());
-  };
-
   if (!open) return null;
 
-  const storyUrl = `/api/story/${handle}?span=${span}&theme=${themeId}&v=${bust}`;
+  const storyUrl = `/api/story/${handle}?span=${span}&theme=${themeId}&photo=0&v=${bust}`;
   const storyFileName = `fittlist-${handle}-${span}-${themeId}.png`;
 
   // The system sheet, which is where Save Image lives too: one button,
@@ -144,14 +133,6 @@ export function ShareWeekSheet({
               if (e.key === "Enter") (e.target as HTMLInputElement).blur();
             }}
           />
-          {hasPhoto && (
-            <button className="storyphoto" onClick={togglePhoto} aria-pressed={showPhoto}>
-              <span>Show my photo</span>
-              <span className={`switch${showPhoto ? " on" : ""}`} aria-hidden="true">
-                <span className="switch-knob" />
-              </span>
-            </button>
-          )}
         </div>
         <StoryPreview
           src={storyUrl}

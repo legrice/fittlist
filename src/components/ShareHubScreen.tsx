@@ -64,7 +64,6 @@ export function ShareHubScreen({
   defaultFrom,
   today,
   savedHeadline,
-  hasPhoto,
   studios,
   templates,
   customTypes,
@@ -91,9 +90,6 @@ export function ShareHubScreen({
    *  one, so the Message chip never claims the default while the picture
    *  draws something else. */
   savedHeadline: string;
-  /** Whether there is a face to offer: the Photo chip only renders when
-   *  turning it on could show something. */
-  hasPhoto: boolean;
   /** The adder's ingredients, loaded only for a member: their hub carries
    *  the personal adder, because building the week is what the tab is for. */
   studios: StudioDto[];
@@ -124,11 +120,6 @@ export function ShareHubScreen({
   // spinner that never ends.
   const [hsize, setHsize] = useState(100);
   const [slider, setSlider] = useState(100);
-  // The face on the poster, offered only to somebody who has one. A chip
-  // that toggles in place rather than opening a sheet: two states need no
-  // room of their own. Off by default, by Matt's call: the headline owns
-  // the top now, and the face is the opt-in.
-  const [photo, setPhoto] = useState(false);
   // The dressing: the top bar (the default), frames and day dividers.
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>("top");
@@ -272,7 +263,7 @@ export function ShareHubScreen({
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
-    `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=${photo ? 1 : 0}` +
+    `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}`;
@@ -581,12 +572,6 @@ export function ShareHubScreen({
                     {DECOS.find((d) => d.id === decoId)?.label ?? "Top bar"}
                   </span>
                 </button>
-                {hasPhoto && (
-                  <button className="shctrl" onClick={() => setPhoto((v) => !v)}>
-                    <span className="shctrl-k">Photo</span>
-                    <span className="shctrl-v">{photo ? "On" : "Off"}</span>
-                  </button>
-                )}
               </div>
             )}
 

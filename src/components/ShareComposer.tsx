@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { shareRows, type ShareRow } from "@/app/actions/share";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
@@ -35,7 +34,6 @@ const HEADLINE = "Come train with me";
 const START_DAYS = 14;
 
 export function ShareComposer({
-  hasPhoto,
   today,
   firstIso,
   studios,
@@ -43,7 +41,6 @@ export function ShareComposer({
   customTypes,
   lastUsed,
 }: {
-  hasPhoto: boolean;
   today: string;
   /** The first day their week holds something, so the picture opens on a week
    *  rather than on an empty one they have to work out. */
@@ -64,7 +61,6 @@ export function ShareComposer({
   // they were not different enough to be worth a decision, so the picker was
   // a sheet and a grid asking about a difference nobody could see.
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
-  const [showPhoto, setShowPhoto] = useState(true);
 
   const [from, setFrom] = useState(firstIso > today ? firstIso : today);
   const [days, setDays] = useState(7);
@@ -79,10 +75,6 @@ export function ShareComposer({
   const [bust, setBust] = useState(0);
 
   const look = STORY_THEMES[themeId];
-
-  useEffect(() => {
-    getStoryPrefs().then((p) => setShowPhoto(p.showPhoto));
-  }, []);
 
   // The rows behind the count and the picker. Never filtered on the client:
   // the picture is drawn from the same loader on the server, and two filters
@@ -107,7 +99,7 @@ export function ShareComposer({
     from,
     days: String(days),
     headline: HEADLINE,
-    photo: showPhoto ? "1" : "0",
+    photo: "0",
   });
   const hideList = [...hidden].join(",");
   if (hideList) q.set("hide", hideList);
@@ -122,12 +114,6 @@ export function ShareComposer({
     setFrom(nextFrom);
     setDays(nextDays);
     setHidden(new Set());
-  };
-
-  const togglePhoto = async () => {
-    const v = !showPhoto;
-    setShowPhoto(v);
-    await setStoryPrefs({ showPhoto: v });
   };
 
   // The system sheet, which is where Save Image lives too: one button,
@@ -200,14 +186,6 @@ export function ShareComposer({
           </span>
         </button>
 
-        {hasPhoto && (
-          <button className="storyphoto" onClick={togglePhoto} aria-pressed={showPhoto}>
-            <span>Show my photo</span>
-            <span className={`switch${showPhoto ? " on" : ""}`} aria-hidden="true">
-              <span className="switch-knob" />
-            </span>
-          </button>
-        )}
       </div>
 
       {/* eslint-disable-next-line @next/next/no-img-element */}

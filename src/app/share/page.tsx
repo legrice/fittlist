@@ -78,7 +78,6 @@ export default async function SharePage() {
 
   return (
     <ShareComposer
-      hasPhoto={!!me.photo}
       today={today}
       firstIso={first && first > today ? first : today}
       studios={studios}
