@@ -19,35 +19,10 @@ html[data-native="ios"] body { padding-top: env(safe-area-inset-top); }
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
 }
 
-/* A web nav cannot use UIKit's private Liquid Glass control directly, but in
-   the native WKWebView this is the same material grammar: floating, strongly
-   blurred, translucent and bright at the edge. Safari keeps the established
-   docked white bar. */
-html[data-native="ios"] .navwrap {
-  left: 12px;
-  right: 12px;
-  bottom: max(8px, env(safe-area-inset-bottom));
-  width: auto;
-  border-radius: 28px;
-  filter: drop-shadow(0 10px 28px rgb(25 21 2 / 18%));
-}
-
-html[data-native="ios"] .navbar {
-  padding: 5px;
-  border: 1px solid rgb(255 255 255 / 62%);
-  border-radius: 28px;
-  background: rgb(255 255 255 / 68%);
-  -webkit-backdrop-filter: blur(32px) saturate(190%);
-  backdrop-filter: blur(32px) saturate(190%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 78%),
-    inset 0 -1px 0 rgb(255 255 255 / 26%);
-}
-
-html[data-native="ios"] .navtab {
-  padding-top: 7px;
-  padding-bottom: 8px;
-}
+/* UIKit owns navigation in the iOS shell. The website keeps the HTML bar. */
+html[data-native="ios"] .navwrap { display: none; }
+html[data-native="ios"] .cardwrap { padding-bottom: 28px; }
+html[data-native="ios"] .hasnav .fab { bottom: 20px; }
 
 /* Delight, the brand typeface, self-hosted as woff2.
    Three faces, because 600 is the ceiling now: the 700 and the 800 are not
