@@ -524,10 +524,10 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome ? "Nothing from your coaches yet" : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">{isHome ? "No classes yet" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? "Follow coaches to combine their upcoming classes in one schedule."
+                ? "Follow a coach to see their schedule here."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
             {isHome && (
