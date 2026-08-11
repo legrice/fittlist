@@ -95,7 +95,7 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
     return <button disabled={pending} aria-pressed={on} className={`coach-stamp${compact ? " compact" : ""} stamp-${(index % 4) + 1}${on ? " on" : ""}`} key={key} onClick={() => tap(key, label)}>{content}</button>;
   };
   return (
-    <section className="profile-props profile-stamps" aria-label={`Badges for ${firstName}`}>
+    <section id="badges" className="profile-props profile-stamps" aria-label={`Badges for ${firstName}`}>
       <div className="profile-props-copy">
         <strong>Badges</strong>
         <span>{total ? `${total} ${total === 1 ? "badge" : "badges"} from the community` : owner ? "Your first badge will appear here" : "Be the first to add a badge"}</span>

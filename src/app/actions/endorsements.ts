@@ -4,27 +4,29 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { addNotification } from "@/lib/notify";
 
-const TRAITS = new Set([
-  "great_coaching",
-  "welcoming",
-  "motivating",
-  "clear_cues",
-  "form_expert",
-  "makes_it_fun",
-  "community_builder",
-  "high_energy",
-  "calming_presence",
-  "creative_classes",
-  "tough_love",
-  "always_prepared",
-  "inclusive",
-  "great_music",
-  "confidence_builder",
-  "detail_oriented",
-  "adaptable",
-  "authentic",
-]);
+const TRAIT_LABELS: Record<string, string> = {
+  great_coaching: "Coach's choice",
+  welcoming: "Welcoming energy",
+  motivating: "Strong motivator",
+  clear_cues: "Clear communicator",
+  form_expert: "Form expert",
+  makes_it_fun: "Makes it fun",
+  community_builder: "Community builder",
+  high_energy: "High energy",
+  calming_presence: "Calming presence",
+  creative_classes: "Creative classes",
+  tough_love: "The right push",
+  always_prepared: "Always prepared",
+  inclusive: "Everyone belongs",
+  great_music: "Great music",
+  confidence_builder: "Builds confidence",
+  detail_oriented: "Notices the details",
+  adaptable: "Meets you there",
+  authentic: "Authentically them",
+};
+const TRAITS = new Set(Object.keys(TRAIT_LABELS));
 
 const STUDIO_TRAITS = new Set([
   "welcoming_space",
@@ -55,8 +57,25 @@ export async function toggleEndorsement(handle: string, trait: string) {
     eq(schema.profileEndorsements.trait, trait),
   );
   const [existing] = await db.select({ id: schema.profileEndorsements.id }).from(schema.profileEndorsements).where(where);
-  if (existing) await db.delete(schema.profileEndorsements).where(eq(schema.profileEndorsements.id, existing.id));
-  else await db.insert(schema.profileEndorsements).values({ targetUserId: target.id, endorserUserId: viewerId, trait });
+  if (existing) {
+    await db.delete(schema.profileEndorsements).where(eq(schema.profileEndorsements.id, existing.id));
+  } else {
+    await db.insert(schema.profileEndorsements).values({ targetUserId: target.id, endorserUserId: viewerId, trait });
+    // A badge is social proof somebody gave deliberately, so it belongs in
+    // the same unread activity stream as a follow. Notification delivery is
+    // best-effort: awarding the badge must still succeed if the feed hiccups.
+    try {
+      await addNotification(target.id, {
+        type: "badge_received",
+        title: "You received a badge",
+        body: TRAIT_LABELS[trait],
+        href: `/${handle}#badges`,
+        actorUserId: viewerId,
+      });
+    } catch (err) {
+      console.error("badge notification failed", err);
+    }
+  }
   revalidatePath(`/${handle}`);
   return { ok: true, selected: !existing };
 }

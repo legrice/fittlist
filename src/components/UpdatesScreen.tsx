@@ -53,6 +53,7 @@ const ICON: Record<string, string> = {
   follow_request: "person_add",
   class_overlap: "flag",
   studio_manager: "verified",
+  badge_received: "verified",
   shift_assigned: "calendar_month",
   shift_dropped: "event",
   // A change waiting on the studio, and the answer when it is no. A type with
