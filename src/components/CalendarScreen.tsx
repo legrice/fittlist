@@ -52,6 +52,7 @@ type View = "list" | "month";
 
 export function CalendarScreen({
   handle,
+  viewer,
   classes,
   todayIso,
   studios,
@@ -65,6 +66,9 @@ export function CalendarScreen({
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
   handle?: string | null;
+  /** Your own attribution, shown on the classes you coach just as it is on
+   *  Following. */
+  viewer: { id: string; name: string; photo: string | null; color: string };
   classes: ClassDto[];
   todayIso: string;
   studios: StudioDto[];
@@ -151,6 +155,7 @@ export function CalendarScreen({
             where,
             hm: t.hm,
             ap: t.ap,
+            coach: viewer,
             tag: c.shift ? "You · Shift" : "You",
             tagTone: "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
@@ -200,7 +205,7 @@ export function CalendarScreen({
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, kind, savedByIso, router]);
+  }, [classes, todayIso, studioById, handle, kind, savedByIso, router, viewer]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */

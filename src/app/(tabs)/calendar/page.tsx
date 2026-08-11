@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { myWeek } from "@/lib/week";
+import { avatarColor } from "@/lib/avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +114,12 @@ export default async function CalendarPage({
     <CalendarScreen
       savedDays={await myWeek(userId)}
       handle={me.handle}
+      viewer={{
+        id: me.id,
+        name: me.name,
+        photo: me.photoThumb ?? me.photo,
+        color: avatarColor(me),
+      }}
       classes={classes}
       todayIso={todayIso()}
       studios={studios}
