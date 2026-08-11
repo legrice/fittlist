@@ -280,6 +280,8 @@ export async function StudioView({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const base = `/s/${s.slug ?? s.id}`;
+  const addressParts = s.address.split(",").map((part) => part.trim()).filter(Boolean);
+  const studioCity = addressParts.length > 1 ? addressParts[addressParts.length - 2] : s.address;
 
   // What the editor needs, once: the dots menu and the hero's photo button
   // open the same editor over the same row.
@@ -330,8 +332,8 @@ export async function StudioView({
           ]}
           name={s.name}
           summary={s.about}
-          title=""
-          location={s.address}
+          title={s.types.slice(0, 2).join(" · ") || "Studio"}
+          location={studioCity}
           // The same full-bleed hero a coach's page wears, by Matt's call:
           // one design for every profile, photo or not. Without a photo the
           // hero fills with the studio's own colour (the same one its

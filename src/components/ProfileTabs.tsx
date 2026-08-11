@@ -220,9 +220,7 @@ export function ProfileTabs({
             <span className="pubhero-dim" aria-hidden="true" />
           </>
         ) : null}
-          {/* Navigation and identity belong to the photograph; utility actions
-              do not. This keeps the hero expressive without turning it into
-              a control panel. */}
+          {/* Navigation stays on the photograph; identity starts on paper. */}
         {backTo ? (
           <div className="profback">
             <BackLink
@@ -237,32 +235,28 @@ export function ProfileTabs({
           </div>
         ) : null}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
-            <div className="pubidentity pubidentity-overlay">
-              {badges && <div className="profbadges-top">{badges}</div>}
-              <div className="profname-row"><h1 className="profname">{name}</h1></div>
-              {(title.trim() || location.trim()) && (
-                <p className="profmeta">
-                  {title.trim() && <span className="proftitle">{title.trim()}</span>}
-                  {title.trim() && location.trim() && <span className="profmeta-sep" aria-hidden="true">&middot;</span>}
-                  {location.trim() && <span className="profwhere">{location.trim()}</span>}
-                </p>
-              )}
-            </div>
           </div>
         )}
-        {!heroPhoto && !heroColor && (
-          <div className="pubidentity">
-            {avatar}
+        <div className="pubidentity pubidentity-paper">
+            {!heroPhoto && !heroColor && avatar}
+            {!heroPhoto && !heroColor && (
+              <>
             {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
             {ownerTop && <div className="ownertop">{ownerTop}</div>}
+              </>
+            )}
+            {(title.trim() || location.trim()) && (
+              <div className="profile-eyebrow">
+                <span>{title.trim()}</span>
+                <span>{location.trim()}</span>
+              </div>
+            )}
             {badges && <div className="profbadges-top">{badges}</div>}
             <div className="profname-row"><h1 className="profname">{name}</h1></div>
-            {(title.trim() || location.trim()) && <p className="profmeta">{title.trim() && <span className="proftitle">{title.trim()}</span>}{title.trim() && location.trim() && <span className="profmeta-sep" aria-hidden="true">&middot;</span>}{location.trim() && <span className="profwhere">{location.trim()}</span>}</p>}
-          </div>
-        )}
+        </div>
         <div className="pubbelow">
-        {summary?.trim() ? <p className="profile-summary">{summary.trim()}</p> : null}
         {actions}
+        {summary?.trim() ? <p className="profile-summary">{summary.trim()}</p> : null}
         {endorsement}
         </div>
       </div>

@@ -3627,6 +3627,41 @@ button.ps-card { cursor: pointer; }
 }
 .profile-empty-small h2 { font-size: 18px; }
 .profile-empty-small p { margin-top: 4px; font-size: 14px; }
+
+/* The photo is atmosphere; the identity reads from the paper beneath it. */
+.pubidentity-paper {
+  padding-top: 20px;
+}
+.pubhead:not(.pubhead-hero) .pubidentity-paper { padding-top: 58px; }
+.pubhead:not(.pubhead-hero):not(:has(.profback)) .pubidentity-paper { padding-top: 20px; }
+.profile-eyebrow {
+  width: 100%; display: flex; align-items: baseline; justify-content: space-between; gap: 18px;
+  margin-bottom: 12px; color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+}
+.profile-eyebrow span:last-child { text-align: right; }
+.pubidentity-paper .profbadges-top { margin: 0 0 8px; }
+.pubidentity-paper .profname { font-size: 38px; line-height: 1; }
+.pubbelow { padding-top: 18px; }
+.profacts .actpill,
+.profacts .followpill {
+  min-height: 36px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+.pubhead.pubhead-hero .profacts .actpill-primary { border: 0; background: #fff; }
+.pubhead.pubhead-hero .profacts .followpill.on,
+.profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
+.profacts + .profile-summary {
+  margin-top: 22px;
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-line-clamp: 4;
+}
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's
