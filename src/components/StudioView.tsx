@@ -331,6 +331,7 @@ export async function StudioView({
             { key: "coaches", label: "Coaches" },
           ]}
           name={s.name}
+          summary={s.about}
           title=""
           location={s.address}
           // The same full-bleed hero a coach's page wears, by Matt's call:

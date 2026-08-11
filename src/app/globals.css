@@ -3531,6 +3531,80 @@ button.ps-card { cursor: pointer; }
 }
 .prop-pill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .prop-pill:disabled { opacity: .65; }
+
+/* Identity returns to the photograph, while the useful content begins below. */
+.pubhero-media {
+  height: calc(286px + var(--head-top, 0px));
+  margin-top: calc(-1 * var(--head-top, 0px));
+}
+.pubidentity-overlay {
+  position: absolute;
+  inset: auto 18px 20px;
+  width: auto;
+  padding: 0;
+  z-index: 1;
+}
+.pubhead.pubhead-hero .pubidentity-overlay .profname,
+.pubhead.pubhead-hero .pubidentity-overlay .profmeta,
+.pubhead.pubhead-hero .pubidentity-overlay .proftitle,
+.pubhead.pubhead-hero .pubidentity-overlay .profwhere,
+.pubhead.pubhead-hero .pubidentity-overlay .profmeta-sep { color: #fff; }
+.pubidentity-overlay .profbadges-top { margin-bottom: 8px; }
+.pubhero-media .profback { top: calc(var(--head-top, 0px) + 14px); left: 18px; z-index: 2; }
+.pubhero-media .ownertop { top: calc(var(--head-top, 0px) + 14px); right: 18px; z-index: 2; }
+.pubbelow { width: 100%; padding-top: 16px; }
+.profile-summary {
+  margin: 0; color: var(--ink); font-size: 15px; line-height: 1.45;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
+.profile-summary + .profacts { margin-top: 14px; }
+.profacts { gap: 8px; margin-top: 0; }
+.profacts .actpill,
+.profacts .followpill {
+  min-height: 34px;
+  padding: 8px 13px;
+  font-size: 13.5px;
+  background: #fff;
+  border-color: rgba(25, 21, 2, .14);
+  color: var(--ink);
+}
+.pubhead.pubhead-hero .profacts .actpill-primary { background: #fff; color: var(--ink); border-color: rgba(25, 21, 2, .14); }
+.pubhead.pubhead-hero .profacts .followpill.on,
+.profacts .followpill.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.profile-props { margin-top: 16px; padding-top: 14px; }
+
+/* A second row of capsules looked like more actions. Sections are editorial
+   navigation, so they use Yelp's quieter underline treatment. */
+.pubstick,
+.pubcard { border-radius: 0; }
+.pubcard { margin-top: 0; }
+.pubcard .pubtabs {
+  gap: 26px;
+  padding: 10px 0 0;
+  border-bottom: 1px solid var(--div);
+}
+.pubtab {
+  padding: 13px 2px 11px;
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+}
+.pubtab.sel { color: var(--ink); background: transparent; border-bottom-color: var(--ink); }
+.pubtab-pair,
+.pubtab-pair.sel { border-radius: 0; background: transparent; }
+.pubtab-pair.sel .pubtab.sel { background: transparent; }
+.pubtab-info { padding-top: 13px; padding-bottom: 11px; }
+.prof-overflow-trigger { cursor: pointer; }
+.prof-overflow-pop {
+  position: absolute; top: 46px; right: 0; z-index: 10;
+  width: 170px; padding: 6px; border-radius: 14px;
+  background: var(--card); color: var(--ink); box-shadow: 0 12px 35px rgba(17,17,17,.2);
+}
+.prof-overflow-pop button {
+  width: 100%; display: flex; align-items: center; gap: 9px; padding: 11px;
+  border: 0; background: transparent; color: inherit; font: 600 14px 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's

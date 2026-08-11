@@ -49,6 +49,7 @@ export function ProfileTabs({
   heroCta,
   actions,
   endorsement,
+  summary,
   badges,
   ownerTop,
   backTo,
@@ -88,6 +89,8 @@ export function ProfileTabs({
   actions: ReactNode;
   /** A positive bit of social proof between the action rail and sections. */
   endorsement?: ReactNode;
+  /** Short about copy shown once beneath the hero, before actions. */
+  summary?: string | null;
   /** Beside the name: only a studio uses it now, for the Verified badge that
    *  explains why the pencil is missing. */
   badges: ReactNode | null;
@@ -202,13 +205,9 @@ export function ProfileTabs({
             <span className="pubhero-dim" aria-hidden="true" />
           </>
         ) : null}
-          </div>
-        )}
-        <div className="pubidentity">
-        {!heroPhoto && !heroColor && avatar}
-        {/* The corner slots come after the picture on purpose: neither owns a
-            z-index (see the stacking note in the CSS), so DOM order is what
-            paints them on top, and a studio's banner is positioned now. */}
+          {/* Navigation and identity belong to the photograph; utility actions
+              do not. This keeps the hero expressive without turning it into
+              a control panel. */}
         {backTo ? (
           <div className="profback">
             <BackLink
@@ -223,24 +222,31 @@ export function ProfileTabs({
           </div>
         ) : null}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
-        {/* The badge sits above the name, by Matt's call: the claim leads
-            the identity it speaks for. */}
-        {badges && <div className="profbadges-top">{badges}</div>}
-        <div className="profname-row">
-          <h1 className="profname">{name}</h1>
-        </div>
-        {/* What they do and where, on one line and quieter than the name. */}
-        {(title.trim() || location.trim()) && (
-          <p className="profmeta">
-            {title.trim() && <span className="proftitle">{title.trim()}</span>}
-            {title.trim() && location.trim() && (
-              <span className="profmeta-sep" aria-hidden="true">
-                &middot;
-              </span>
-            )}
-            {location.trim() && <span className="profwhere">{location.trim()}</span>}
-          </p>
+            <div className="pubidentity pubidentity-overlay">
+              {badges && <div className="profbadges-top">{badges}</div>}
+              <div className="profname-row"><h1 className="profname">{name}</h1></div>
+              {(title.trim() || location.trim()) && (
+                <p className="profmeta">
+                  {title.trim() && <span className="proftitle">{title.trim()}</span>}
+                  {title.trim() && location.trim() && <span className="profmeta-sep" aria-hidden="true">&middot;</span>}
+                  {location.trim() && <span className="profwhere">{location.trim()}</span>}
+                </p>
+              )}
+            </div>
+          </div>
         )}
+        {!heroPhoto && !heroColor && (
+          <div className="pubidentity">
+            {avatar}
+            {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
+            {ownerTop && <div className="ownertop">{ownerTop}</div>}
+            {badges && <div className="profbadges-top">{badges}</div>}
+            <div className="profname-row"><h1 className="profname">{name}</h1></div>
+            {(title.trim() || location.trim()) && <p className="profmeta">{title.trim() && <span className="proftitle">{title.trim()}</span>}{title.trim() && location.trim() && <span className="profmeta-sep" aria-hidden="true">&middot;</span>}{location.trim() && <span className="profwhere">{location.trim()}</span>}</p>}
+          </div>
+        )}
+        <div className="pubbelow">
+        {summary?.trim() ? <p className="profile-summary">{summary.trim()}</p> : null}
         {actions}
         {endorsement}
         </div>
