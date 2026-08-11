@@ -101,3 +101,37 @@ export async function toggleStudioEndorsement(slug: string, trait: string) {
   revalidatePath(`/s/${slug}`);
   return { ok: true, selected: !existing };
 }
+
+/** A lightweight relationship with a place, distinct from endorsing one of
+ * its qualities. The same unique person/place/trait storage gives us a clean
+ * toggle without creating a second parallel interaction system. */
+export async function toggleStudioVisit(slug: string) {
+  const viewerId = await getSessionUserId();
+  if (!viewerId) return { ok: false, signedOut: true };
+  const db = await getDb();
+  const [target] = await db
+    .select({ id: schema.studios.id, slug: schema.studios.slug })
+    .from(schema.studios)
+    .where(UUID_RE.test(slug) ? eq(schema.studios.id, slug) : eq(schema.studios.slug, slug));
+  if (!target) return { ok: false };
+  const where = and(
+    eq(schema.studioEndorsements.targetStudioId, target.id),
+    eq(schema.studioEndorsements.endorserUserId, viewerId),
+    eq(schema.studioEndorsements.trait, "been_here"),
+  );
+  const [existing] = await db
+    .select({ id: schema.studioEndorsements.id })
+    .from(schema.studioEndorsements)
+    .where(where);
+  if (existing) {
+    await db.delete(schema.studioEndorsements).where(eq(schema.studioEndorsements.id, existing.id));
+  } else {
+    await db.insert(schema.studioEndorsements).values({
+      targetStudioId: target.id,
+      endorserUserId: viewerId,
+      trait: "been_here",
+    });
+  }
+  revalidatePath(`/s/${target.slug ?? slug}`);
+  return { ok: true, selected: !existing };
+}

@@ -25,6 +25,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
+import { StudioBeenHere } from "@/components/StudioBeenHere";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -99,7 +100,9 @@ export async function StudioView({
     .select({ trait: schema.studioEndorsements.trait, endorserUserId: schema.studioEndorsements.endorserUserId })
     .from(schema.studioEndorsements)
     .where(eq(schema.studioEndorsements.targetStudioId, s.id));
-  const studioEndorsementCounts = studioEndorsementRows.reduce<Record<string, number>>((all, row) => {
+  const studioVisitRows = studioEndorsementRows.filter((row) => row.trait === "been_here");
+  const studioBadgeRows = studioEndorsementRows.filter((row) => row.trait !== "been_here");
+  const studioEndorsementCounts = studioBadgeRows.reduce<Record<string, number>>((all, row) => {
     all[row.trait] = (all[row.trait] ?? 0) + 1;
     return all;
   }, {});
@@ -372,6 +375,11 @@ export async function StudioView({
                margin, which read as stray space between the address and the
                tabs on a studio with no contact ways. */
             <div className="profacts">
+              <StudioBeenHere
+                slug={s.slug ?? s.id}
+                initial={!!viewerId && studioVisitRows.some((row) => row.endorserUserId === viewerId)}
+                initialCount={studioVisitRows.length}
+              />
               {/* The same pill a person's page carries, opening the same
                   sheet. Nobody is messaged on fittlist here: a studio has no
                   account to write to, so the sheet is the ways in and no more. */}
@@ -406,7 +414,7 @@ export async function StudioView({
               studioSlug={s.slug ?? s.id}
               firstName={s.name}
               initial={studioEndorsementCounts}
-              mine={viewerId ? studioEndorsementRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
+              mine={viewerId ? studioBadgeRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
               owner={false}
             />
           }

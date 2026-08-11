@@ -3669,6 +3669,13 @@ button.ps-card { cursor: pointer; }
 .pubhead.pubhead-hero .profacts .actpill-primary { border: 0; background: #fff; }
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
+.profacts .studio-been-here.on { background: var(--ink); color: var(--paper); }
+.studio-been-count {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--wash); color: var(--ink); font-size: 11px; line-height: 1;
+}
+.studio-been-here.on .studio-been-count { background: rgba(255, 255, 255, .2); color: inherit; }
 .profacts + .profile-about-wrap {
   margin-top: 22px;
 }
