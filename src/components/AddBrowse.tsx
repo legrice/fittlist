@@ -35,6 +35,7 @@ export function AddBrowse({
   const [days, setDays] = useState<BrowseDay[] | null>(null);
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
+  const [removeConfirm, setRemoveConfirm] = useState<{ classId: string; iso: string; name: string } | null>(null);
   const [, start] = useTransition();
 
   useEffect(() => {
@@ -136,11 +137,11 @@ export function AddBrowse({
                   {!it.own && (
                     <button
                       className={`peekadd${on ? " on" : ""}`}
-                      onClick={() => save(it.classId, it.iso, it.name, !on)}
+                      onClick={() => on ? setRemoveConfirm({ classId: it.classId, iso: it.iso, name: it.name }) : save(it.classId, it.iso, it.name, true)}
                       aria-label={on ? `Added to your week: ${it.name}` : `Add ${it.name} to your week`}
                     >
-                      <Icon name={on ? "check_circle" : "add_circle"} size={22} />
-                      <span>{on ? "Added" : "Add"}</span>
+                      <Icon name={on ? "check" : "add_circle"} size={on ? 24 : 22} />
+                      {!on && <span>Add</span>}
                     </button>
                   )}
                 </div>
@@ -167,6 +168,21 @@ export function AddBrowse({
           </div>
         )}
       </div>
+      {removeConfirm && (
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setRemoveConfirm(null); }}>
+          <div className="sheet confirmsheet" role="dialog" aria-modal="true">
+            <h2>Remove this from your calendar?</h2>
+            <p className="lead">{removeConfirm.name} comes off your calendar. You can add it again any time.</p>
+            <div className="publishwrap nostick">
+              <button className="btn si" onClick={() => {
+                save(removeConfirm.classId, removeConfirm.iso, removeConfirm.name, false);
+                setRemoveConfirm(null);
+              }}>Remove it</button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setRemoveConfirm(null)}>Keep it</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

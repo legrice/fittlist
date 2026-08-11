@@ -295,16 +295,20 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Following is a readable combined schedule, not a builder. Twelve gives a
-  // useful near-term view while the complete discovery browser can go wider.
+  // Following is the complete rolling week: today plus the next six days.
+  // It used to stop after twelve rows, which meant a busy Saturday could hide
+  // Sunday entirely and made the page answer "the next twelve" rather than
+  // the question people came with: what are my coaches doing this week?
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
-    () =>
-      [...shown]
+    () => {
+      const nextWeek = plusDays(todayIso, 7);
+      return [...shown]
+        .filter((item) => item.iso >= todayIso && item.iso < nextWeek)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
-        .slice(0, 12)
-        .map(rowOf),
+        .map(rowOf);
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, coachById, favIds],
+    [shown, todayIso, coachById, favIds],
   );
   const homeDays = useMemo(() => {
     const days = new Map<string, (WeekRow & { item: FeedItem })[]>();

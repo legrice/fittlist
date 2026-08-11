@@ -169,12 +169,10 @@ export function CalendarScreen({
           !i.personal && i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
-        tag: i.personal ? "Added by you" : "Added",
-        tagTone: "personal" as const,
         onTap: i.personal ? undefined : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}&from=calendar`),
         corner: (
           <button
-            className="weekrow-x"
+            className="following-add on calendar-attending-check"
             type="button"
             aria-label={`Remove ${i.name} from your schedule`}
             onClick={() =>
@@ -187,7 +185,7 @@ export function CalendarScreen({
               })
             }
           >
-            <Icon name="close" size={18} />
+            <Icon name="check" size={24} />
           </button>
         ),
       };
@@ -276,7 +274,7 @@ export function CalendarScreen({
                 <select aria-label="Show schedule" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
                   <option value="all">All</option>
                   <option value="coaching">Coaching</option>
-                  <option value="added">Added</option>
+                  <option value="added">Attending</option>
                 </select>
                 <Icon name="expand_more" size={17} />
               </label>
@@ -500,7 +498,7 @@ export function CalendarScreen({
           }}
         >
           <div className="sheet confirmsheet">
-            <h2>Remove it from your schedule?</h2>
+            <h2>Remove this from your calendar?</h2>
             <p className="lead">
               {removeConfirm.name} comes off your schedule. You can add it again from the catalog.
             </p>
