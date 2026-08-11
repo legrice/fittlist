@@ -54,8 +54,14 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
   const [counts, setCounts] = useState(initial);
   const [pending, start] = useTransition();
   const [picker, setPicker] = useState(false);
-  const tap = (key: string) => start(async () => {
+  const [confirm, setConfirm] = useState<{ key: string; label: string } | null>(null);
+  const tap = (key: string, label: string, confirmed = false) => {
     const was = selected.has(key);
+    if (was && !confirmed) {
+      setConfirm({ key, label });
+      return;
+    }
+    start(async () => {
     const result = studioSlug
       ? await toggleStudioEndorsement(studioSlug, key)
       : await toggleEndorsement(handle, key);
@@ -70,7 +76,9 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
       return next;
     });
     setCounts((old) => ({ ...old, [key]: Math.max(0, (old[key] ?? 0) + (was ? -1 : 1)) }));
-  });
+    setConfirm(null);
+    });
+  };
   const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
   const earned = traits.filter(([key]) => (counts[key] ?? 0) > 0 || selected.has(key));
   const stamp = ([key, label, icon]: (typeof traits)[number], index: number, compact = false) => {
@@ -84,7 +92,7 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
       </>
     );
     if (owner) return <span className={`coach-stamp stamp-${(index % 4) + 1} on`} key={key}>{content}</span>;
-    return <button disabled={pending} aria-pressed={on} className={`coach-stamp${compact ? " compact" : ""} stamp-${(index % 4) + 1}${on ? " on" : ""}`} key={key} onClick={() => tap(key)}>{content}</button>;
+    return <button disabled={pending} aria-pressed={on} className={`coach-stamp${compact ? " compact" : ""} stamp-${(index % 4) + 1}${on ? " on" : ""}`} key={key} onClick={() => tap(key, label)}>{content}</button>;
   };
   return (
     <section className="profile-props profile-stamps" aria-label={`Badges for ${firstName}`}>
@@ -111,6 +119,25 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
               </div>
               <div className="stamp-picker-grid">
                 {traits.map((trait, index) => stamp(trait, index, true))}
+              </div>
+            </div>
+          </div>
+        )}
+        {confirm && (
+          <div
+            className="sheet-scrim"
+            onClick={(e) => { if (e.target === e.currentTarget && !pending) setConfirm(null); }}
+          >
+            <div className="sheet confirmsheet" role="dialog" aria-modal="true" aria-labelledby="remove-badge-title">
+              <h2 id="remove-badge-title">Remove {confirm.label}?</h2>
+              <p className="lead">Are you sure you want to remove this badge from {firstName}&rsquo;s profile?</p>
+              <div className="publishwrap nostick">
+                <button className="btn si" disabled={pending} onClick={() => tap(confirm.key, confirm.label, true)}>
+                  Remove badge
+                </button>
+                <button className="btn ghost" disabled={pending} style={{ marginTop: 8 }} onClick={() => setConfirm(null)}>
+                  Keep badge
+                </button>
               </div>
             </div>
           </div>
