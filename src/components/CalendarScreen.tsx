@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AddBrowse } from "@/components/AddBrowse";
@@ -22,6 +22,8 @@ import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay as WeekDayData } from "@/lib/week";
+import { setGoing } from "@/app/actions/going";
+import { removePersonalClass } from "@/app/actions/personal";
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -80,6 +82,15 @@ export function CalendarScreen({
   const [addOpen, setAddOpen] = useState(openAdder);
   const [browseOpen, setBrowseOpen] = useState(false);
   const [personalAdd, setPersonalAdd] = useState(false);
+  const [gone, setGone] = useState<Record<string, boolean>>({});
+  const [removeConfirm, setRemoveConfirm] = useState<{
+    key: string;
+    classId: string;
+    iso: string;
+    name: string;
+    personalId?: string;
+  } | null>(null);
+  const [, startRemove] = useTransition();
   // The overlay header's words: the day under it on the list, the month in
   // view on the grid. The grid's label is set from the first render (this
   // month is in view at rest), so the grid gates the bar on scroll depth
@@ -94,8 +105,14 @@ export function CalendarScreen({
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const savedByIso = useMemo(
-    () => new Map(savedDays.map((day) => [day.iso, day.items] as const)),
-    [savedDays],
+    () =>
+      new Map(
+        savedDays.map((day) => [
+          day.iso,
+          day.items.filter((item) => !gone[`added|${item.personal ? item.id : item.classId}|${item.iso}`]),
+        ] as const),
+      ),
+    [savedDays, gone],
   );
   const atOf = (r: { hm: string; ap: string }) => {
     const [h, m] = r.hm.split(":").map(Number);
@@ -137,8 +154,10 @@ export function CalendarScreen({
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
-      const addedRows = (savedByIso.get(iso) ?? []).map((i) => ({
-        key: `added|${i.personal ? i.id : i.classId}|${i.iso}`,
+      const addedRows = (savedByIso.get(iso) ?? []).map((i) => {
+        const key = `added|${i.personal ? i.id : i.classId}|${i.iso}`;
+        return {
+        key,
         classId: i.personal ? undefined : i.classId,
         iso: i.iso,
         name: i.name,
@@ -153,7 +172,26 @@ export function CalendarScreen({
         tag: i.personal ? "Added by you" : "Added",
         tagTone: "personal" as const,
         onTap: i.personal ? undefined : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}&from=calendar`),
-      }));
+        corner: (
+          <button
+            className="weekrow-x"
+            type="button"
+            aria-label={`Remove ${i.name} from your schedule`}
+            onClick={() =>
+              setRemoveConfirm({
+                key,
+                classId: i.classId,
+                iso: i.iso,
+                name: i.name,
+                personalId: i.personal ? i.id : undefined,
+              })
+            }
+          >
+            <Icon name="close" size={18} />
+          </button>
+        ),
+      };
+      });
       const rows = [
         ...(kind === "added" ? [] : coachingRows),
         ...(kind === "coaching" ? [] : addedRows),
@@ -453,6 +491,48 @@ export function CalendarScreen({
             router.refresh();
           }}
         />
+      )}
+      {removeConfirm && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setRemoveConfirm(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Remove it from your schedule?</h2>
+            <p className="lead">
+              {removeConfirm.name} comes off your schedule. You can add it again from the catalog.
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                onClick={() => {
+                  const item = removeConfirm;
+                  setRemoveConfirm(null);
+                  setGone((current) => ({ ...current, [item.key]: true }));
+                  startRemove(async () => {
+                    const result = item.personalId
+                      ? await removePersonalClass(item.personalId)
+                      : await setGoing(item.classId, item.iso, false);
+                    if (!result.ok) {
+                      setGone((current) => ({ ...current, [item.key]: false }));
+                      toast(result.error ?? "Couldn't remove that");
+                      return;
+                    }
+                    toast(`${item.name} was removed from your schedule`);
+                    router.refresh();
+                  });
+                }}
+              >
+                Remove it
+              </button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setRemoveConfirm(null)}>
+                Keep it
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
