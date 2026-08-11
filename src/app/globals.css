@@ -3692,6 +3692,25 @@ button.ps-card { cursor: pointer; }
 .stamp-2 { --stamp-bg: #f3a9c2; --stamp-ink: #57152c; }
 .stamp-3 { --stamp-bg: #b9dfff; --stamp-ink: #133650; }
 .stamp-4 { --stamp-bg: #cce876; --stamp-ink: #263600; }
+.add-stamp { --stamp-bg: #fff; --stamp-ink: var(--ink); }
+.add-stamp .coach-stamp-seal { border-style: dashed; outline: 0; }
+.stamp-picker {
+  max-height: min(82dvh, 720px);
+  overflow-y: auto;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.stamp-picker .adderhead {
+  position: sticky; top: 0; z-index: 2; padding-bottom: 14px;
+  background: var(--card);
+}
+.stamp-picker .adderhead h2 { margin: 0; }
+.stamp-picker .adderhead p { margin: 3px 0 0; color: var(--muted); font-size: 14px; }
+.stamp-picker-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center; gap: 22px 8px; padding-top: 6px;
+}
+.stamp-picker-grid .coach-stamp { width: 84px; }
+.stamp-picker-grid .coach-stamp-seal { width: 68px; height: 68px; }
 
 /* The unified profile is one document, not a sheet sliding over a pinned
    identity card. Only the section anchor rail sticks. */

@@ -13,6 +13,17 @@ const TRAITS = new Set([
   "form_expert",
   "makes_it_fun",
   "community_builder",
+  "high_energy",
+  "calming_presence",
+  "creative_classes",
+  "tough_love",
+  "always_prepared",
+  "inclusive",
+  "great_music",
+  "confidence_builder",
+  "detail_oriented",
+  "adaptable",
+  "authentic",
 ]);
 
 export async function toggleEndorsement(handle: string, trait: string) {
