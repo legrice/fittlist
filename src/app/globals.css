@@ -7518,10 +7518,8 @@ a.clspeek-by:active { opacity: .6; }
 .info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }
 .info-page-note a { color: inherit; font-weight: 600; }
 /* List and Month, as one control rather than two buttons: they are two ways of
-   looking at one thing, and a segment is what says so. Light all over, by
-   Matt's call: the edge is the input border rather than ink, and the current
-   view sits on the nav's own quiet gray wash with its glyph unchanged, the
-   same grammar the nav tabs use (the ground is the mark, never the ink). */
+   looking at one thing, and a segment is what says so. The selected view is
+   ink with a white glyph, unmistakably active against the white control. */
 .calseg {
   /* White with no stroke, by Matt's call: the fill is the edge, the same
      treatment the class boxes and the hub's pills wear. */
@@ -7537,7 +7535,7 @@ a.clspeek-by:active { opacity: .6; }
   background: none; cursor: pointer; color: var(--ink);
   display: inline-flex; align-items: center; justify-content: center;
 }
-.calseg button.on { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.calseg button.on { background: var(--ink); color: #fff; }
 /* Share, white beside the toggle: the title row's corner is the quiet
    door to the hub now, and Add took the floating button under the thumb
    (the same .wkfab Following's search wears). */

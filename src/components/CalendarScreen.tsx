@@ -203,7 +203,7 @@ export function CalendarScreen({
                     setView("list");
                   }}
                 >
-                  <Icon name="calendar_view_day" size={21} />
+                  <Icon name="calendar_view_day" size={25} />
                 </button>
                 <button
                   role="tab"
@@ -218,7 +218,7 @@ export function CalendarScreen({
                     setView("month");
                   }}
                 >
-                  <Icon name="calendar_view_month" size={21} />
+                  <Icon name="calendar_view_month" size={25} />
                 </button>
               </div>
               {/* No Share door here any more, by Matt's call: an arrow in
@@ -284,7 +284,7 @@ export function CalendarScreen({
                 setView("list");
               }}
             >
-              <Icon name="calendar_view_day" size={21} />
+              <Icon name="calendar_view_day" size={25} />
             </button>
             <button
               role="tab"
@@ -296,7 +296,7 @@ export function CalendarScreen({
                 setView("month");
               }}
             >
-              <Icon name="calendar_view_month" size={21} />
+              <Icon name="calendar_view_month" size={25} />
             </button>
           </div>
         </ScrollHead>
