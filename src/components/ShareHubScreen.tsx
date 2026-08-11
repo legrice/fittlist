@@ -772,7 +772,9 @@ export function ShareHubScreen({
             <h2>Layout</h2>
             <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
             <div className="settingslist layoutlist">
-              {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).map(
+              {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(
+                ([id]) => id !== "cowboy",
+              ).map(
                 ([id, style]) => {
                   const on = id === styleId;
                   return (

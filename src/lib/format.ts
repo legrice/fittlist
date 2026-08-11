@@ -264,8 +264,8 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     rowScale: 1.18,
   },
   party: {
-    label: "Party pop",
-    description: "Playful badges and rounded cards",
+    label: "Pop lineup",
+    description: "Playful color, badges and rounded cards",
     layout: "party",
     theme: "blush",
     typeface: "friendly",
