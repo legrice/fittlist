@@ -172,6 +172,8 @@ export function CalendarScreen({
           !i.personal && i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
+        tag: i.personal ? "Added by you" : undefined,
+        tagTone: i.personal ? "personal" as const : undefined,
         onTap: i.personal ? undefined : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}&from=calendar`),
         corner: (
           <button
