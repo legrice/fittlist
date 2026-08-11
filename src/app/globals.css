@@ -3666,11 +3666,13 @@ button.ps-card { cursor: pointer; }
 .pubhead.pubhead-hero .profacts .actpill-primary { border: 0; background: #fff; }
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
-.profacts + .profile-summary {
+.profacts + .profile-about-wrap {
   margin-top: 22px;
+}
+.profacts + .profile-about-wrap .profile-summary {
   font-size: 17px;
   line-height: 1.55;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
 }
 
 /* Props are collectible seals, not another row of filter chips. Each stamp

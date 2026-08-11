@@ -5,6 +5,7 @@ import { Icon } from "@/components/Icon";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useBandTop, useStuck } from "@/components/CalendarBits";
 import { ProfileShare } from "@/components/ProfileShare";
+import { ProfileAbout } from "@/components/ProfileAbout";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
@@ -91,7 +92,7 @@ export function ProfileTabs({
   actions: ReactNode;
   /** A positive bit of social proof between the action rail and sections. */
   endorsement?: ReactNode;
-  /** Short about copy shown once beneath the hero, before actions. */
+  /** About copy shown once beneath the action pills. */
   summary?: string | null;
   /** Closing growth loop, worded for a person or a studio by its caller. */
   sharePrompt: string;
@@ -262,7 +263,7 @@ export function ProfileTabs({
         </div>
         <div className="pubbelow">
         {actions}
-        {summary?.trim() ? <p className="profile-summary">{summary.trim()}</p> : null}
+        {summary?.trim() ? <ProfileAbout text={summary.trim()} className="profile-summary" /> : null}
         {endorsement}
         </div>
       </div>

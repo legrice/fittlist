@@ -25,7 +25,6 @@ import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
-import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -200,7 +199,7 @@ export async function PublicProfileView({
   }
 
   const hasInfo = Boolean(
-    user.disciplines.length || user.about?.trim() || user.highlights.length || user.certifications.length,
+    user.disciplines.length || user.highlights.length || user.certifications.length,
   );
   const about = hasInfo ? (
     <>
@@ -214,15 +213,6 @@ export async function PublicProfileView({
               </span>
             ))}
           </div>
-        </div>
-      )}
-      {user.about?.trim() && (
-        <div className="profsec aboutsec">
-          {/* Labelled like the sections after it. Without the label the bio
-              floated as bare text and Coaching focus read as the page's first
-              real section. */}
-          <h2 className="prof-sec-h">About</h2>
-          <ProfileAbout text={user.about} />
         </div>
       )}
       {user.highlights.length > 0 && (
