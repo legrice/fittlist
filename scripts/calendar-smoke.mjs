@@ -400,13 +400,18 @@ console.log("Profile opens your page, and the gear slides settings up over it");
 await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
-// The Share tab is a place now: it lands on the hub screen with the bar
-// still underneath. Search left the bar, by Matt's call: the magnifier in
-// the header's corner is the one door.
+// Discover and the header magnifier are two shortcuts to the same coach
+// search. Share remains its own place in the bar.
 await p.goto(BASE + "/calendar");
-if (await p.locator('.navtab[data-tab="search"]').count())
-  fail("Search left the bar: the header magnifier is the door");
+if (!(await p.locator('.navtab[data-tab="search"]', { hasText: "Discover" }).count()))
+  fail("Discover should open coach search from the tab bar");
 await p.locator('.brandbar-actions [aria-label="Search"]').waitFor();
+await p.locator('.navtab[data-tab="search"]').click();
+await p.waitForURL(/\/search/);
+await p.locator('input[placeholder="Search coaches"]').waitFor();
+if ((await p.locator('.navtab[data-tab="search"][aria-current="page"]').count()) !== 1)
+  fail("Discover should stay selected on coach search");
+await p.goto(BASE + "/calendar");
 await p.locator('.navtab[data-tab="share"]').click();
 await p.waitForURL(/\/coachshare/);
 if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");

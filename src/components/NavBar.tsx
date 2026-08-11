@@ -15,8 +15,8 @@ export type NavFace = { photo: string | null; color: string; initial: string };
 // The whole app in thumb reach: the screens you move between, and nothing
 // else. The Slack-style dock (the pill plus a search circle beside it) was
 // tried twice now and reverted twice, the second time by Matt after living
-// with it; search is Following's floating orange circle again, and this
-// stays the plain pill. Above 940px this hides and HeaderNav takes over,
+// with it. Discover is a normal tab pointing at the same search as the header
+// magnifier, and this stays one plain pill. Above 940px this hides and HeaderNav takes over,
 // off the same list.
 export function NavBar({
   active,

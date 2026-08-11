@@ -13,13 +13,14 @@ export type NavItem = {
 };
 
 /**
- * Four tabs at most, with Calendar reserved for somebody who teaches.
+ * Five durable places, with Discover pointing at the same coach search as
+ * the header magnifier.
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
  * bar, it is fewer things: build a calendar, share a calendar, follow a
- * calendar. Discovery is not a tab (it is the search button on Following),
- * settings are not a tab (they are the gear on Profile), and adding a class is
+ * calendar. Discover earns a tab as a frequent destination while keeping the
+ * header shortcut; settings are not a tab (they are the gear on Profile), and adding a class is
  * not a tab (it is the plus on Calendar). A tab is a place you live, not every
  * door in the building.
  *
@@ -39,15 +40,13 @@ export function navTabs(
 ): NavItem[] {
   return [
     { id: "following", href: "/feed", icon: "group", label: "Following" },
+    { id: "search", href: "/search", icon: "search", label: "Discover" },
     {
       id: "schedule" as const,
       href: scheduleHref ?? (coach ? "/calendar" : "/week"),
       icon: "calendar_month",
       label: "Schedule",
     },
-    // Search left the bar, by Matt's call: the magnifier lives in the
-    // header's corner now, and the same glyph in two places on one screen
-    // was two doors to one room. /search itself is unchanged.
     // Everyone's now, by Matt's call: it came off the member's bar while a
     // member had nothing to give, and the hub is where they build the week
     // they're going to before handing it on, so the tab is the way in. One
