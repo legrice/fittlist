@@ -24,6 +24,7 @@ import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
+import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -94,6 +95,14 @@ export async function StudioView({
     viewerId && viewerKind ? { id: viewerId, kind: viewerKind } : null,
   );
   const canEdit = access.canEdit;
+  const studioEndorsementRows = await db
+    .select({ trait: schema.studioEndorsements.trait, endorserUserId: schema.studioEndorsements.endorserUserId })
+    .from(schema.studioEndorsements)
+    .where(eq(schema.studioEndorsements.targetStudioId, s.id));
+  const studioEndorsementCounts = studioEndorsementRows.reduce<Record<string, number>>((all, row) => {
+    all[row.trait] = (all[row.trait] ?? 0) + 1;
+    return all;
+  }, {});
 
   // The gym's own week, if it runs one. Seven days from today, expanded the
   // same way every other surface expands a recurrence.
@@ -389,6 +398,16 @@ export async function StudioView({
                 studio={editProps}
               />
             </div>
+          }
+          endorsement={
+            <ProfileEndorsements
+              handle={s.slug ?? s.id}
+              studioSlug={s.slug ?? s.id}
+              firstName={s.name}
+              initial={studioEndorsementCounts}
+              mine={viewerId ? studioEndorsementRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
+              owner={false}
+            />
           }
         >
 

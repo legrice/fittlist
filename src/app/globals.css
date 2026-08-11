@@ -3662,10 +3662,10 @@ button.ps-card { cursor: pointer; }
 
 /* Props are collectible seals, not another row of filter chips. Each stamp
    keeps one stable personality and colour so it becomes recognisable. */
-.profile-stamps { overflow: hidden; }
+.profile-stamps { overflow: visible; }
 .profile-stamp-rail {
-  display: flex; gap: 14px; margin-top: 14px; padding: 3px 2px 5px;
-  overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 14px; margin: 9px -2px -5px; padding: 10px 4px 10px;
+  overflow-x: auto; overflow-y: visible; scrollbar-width: none;
 }
 .profile-stamp-rail::-webkit-scrollbar { display: none; }
 .coach-stamp {

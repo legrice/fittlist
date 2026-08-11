@@ -856,6 +856,23 @@ export const profileEndorsements = pgTable(
   ],
 );
 
+// Studios earn the same lightweight social proof as coaches, but keep their
+// own vocabulary and table so a place is never forced into being a user.
+export const studioEndorsements = pgTable(
+  "studio_endorsements",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    targetStudioId: uuid("target_studio_id").notNull().references(() => studios.id),
+    endorserUserId: uuid("endorser_user_id").notNull().references(() => users.id),
+    trait: text("trait").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("studio_endorsements_place_trait").on(t.targetStudioId, t.endorserUserId, t.trait),
+    index("studio_endorsements_target").on(t.targetStudioId),
+  ],
+);
+
 // One row per trainer who connected Google Calendar. We mirror their classes
 // into their calendar (one-way); syncedEventIds tracks the events we created so
 // a re-sync can clear and repopulate without touching their personal events.
