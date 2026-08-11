@@ -151,7 +151,8 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             dur: `${c.durationMin} min`,
-            tag: c.shift ? "Shift" : undefined,
+            tag: c.shift ? "You · Shift" : "You",
+            tagTone: "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });

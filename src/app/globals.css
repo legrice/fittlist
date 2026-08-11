@@ -96,7 +96,7 @@
   --rule: #191502;         /* charcoal hairline rules */
   --si: #C2410C;           /* the brand orange, everywhere it appears */
   --si-tint: #F7E3DA;      /* pale brand wash: tinted CTAs, selected tabs */
-  --si-ink: #C2410C;       /* brand text/icons sitting on the wash */
+  --si-ink: #8B2F0B;       /* accessible dark orange text sitting on the wash */
 
   /* What a row is to you, said as the colour of the bar down its left. One
      token per relationship and nothing else in the app introduces another:
