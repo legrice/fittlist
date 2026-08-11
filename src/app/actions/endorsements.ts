@@ -90,10 +90,9 @@ export async function toggleStudioEndorsement(slug: string, trait: string) {
     .from(schema.studios)
     .where(UUID_RE.test(slug) ? eq(schema.studios.id, slug) : eq(schema.studios.slug, slug));
   if (!target) return { ok: false };
-  // "I've been here" is a lasting affinity with a brick-and-mortar fitness
-  // business, not a location-history feature. Events, parks and virtual
-  // rooms would turn a profile into a noisy trail of coordinates.
-  if (target.placeKind !== "studio") return { ok: false };
+  // Place badges belong to lasting brick-and-mortar fitness and wellness
+  // businesses, not event venues, parks or virtual rooms.
+  if (target.placeKind !== "studio" && target.placeKind !== "wellness") return { ok: false };
   const where = and(
     eq(schema.studioEndorsements.targetStudioId, target.id),
     eq(schema.studioEndorsements.endorserUserId, viewerId),

@@ -373,7 +373,7 @@ export async function StudioView({
                margin, which read as stray space between the address and the
                tabs on a studio with no contact ways. */
             <div className="profacts">
-              {s.placeKind === "studio" && (
+              {(s.placeKind === "studio" || s.placeKind === "wellness") && (
                 <StudioBeenHere
                   slug={s.slug ?? s.id}
                   initial={!!viewerId && studioVisitRows.some((row) => row.endorserUserId === viewerId)}

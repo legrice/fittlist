@@ -47,12 +47,20 @@ export const STUDIO_TYPES = [
   "Recovery",
   "Sauna & cold plunge",
   "Physical therapy",
+  "Massage therapy",
+  "Acupuncture",
+  "Chiropractic",
+  "Nutrition",
+  "Reiki",
+  "Breathwork",
+  "Wellness services",
 ] as const;
 
-export const PLACE_KINDS = ["studio", "event", "outdoor", "virtual"] as const;
+export const PLACE_KINDS = ["studio", "wellness", "event", "outdoor", "virtual"] as const;
 export type PlaceKind = (typeof PLACE_KINDS)[number];
 export const PLACE_KIND_LABELS: Record<PlaceKind, string> = {
   studio: "Gym or studio",
+  wellness: "Health & wellness space",
   event: "Event or pop-up",
   outdoor: "Outdoor or public space",
   virtual: "Virtual",
