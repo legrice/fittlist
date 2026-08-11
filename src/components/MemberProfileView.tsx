@@ -99,6 +99,7 @@ export async function MemberProfileView({
         and(
           eq(schema.studioEndorsements.endorserUserId, user.id),
           eq(schema.studioEndorsements.trait, "been_here"),
+          eq(schema.studios.placeKind, "studio"),
         ),
       )
   )

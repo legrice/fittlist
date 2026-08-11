@@ -375,11 +375,13 @@ export async function StudioView({
                margin, which read as stray space between the address and the
                tabs on a studio with no contact ways. */
             <div className="profacts">
-              <StudioBeenHere
-                slug={s.slug ?? s.id}
-                initial={!!viewerId && studioVisitRows.some((row) => row.endorserUserId === viewerId)}
-                initialCount={studioVisitRows.length}
-              />
+              {s.placeKind === "studio" && (
+                <StudioBeenHere
+                  slug={s.slug ?? s.id}
+                  initial={!!viewerId && studioVisitRows.some((row) => row.endorserUserId === viewerId)}
+                  initialCount={studioVisitRows.length}
+                />
+              )}
               {/* The same pill a person's page carries, opening the same
                   sheet. Nobody is messaged on fittlist here: a studio has no
                   account to write to, so the sheet is the ways in and no more. */}
