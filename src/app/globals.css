@@ -68,6 +68,7 @@
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
+  --date-heading-weight: 600; /* one hierarchy across every schedule */
   --line: #e6ddc8;         /* warm cream input borders and light edges */
   /* The rule between rows, and its weight, as two tokens.
      They were one: every divider in the app was a 1px `--line`, the same
@@ -1011,7 +1012,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .daystrip-day.sel .daystrip-n { background: var(--si); color: #fff; box-shadow: none; }
 .daygrid-head {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 600; font-size: 17px; text-align: center; margin: 14px 0 10px;
+  font-weight: var(--date-heading-weight); font-size: 17px; text-align: center; margin: 14px 0 10px;
 }
 .daygrid { position: relative; margin: 0 0 30px; }
 .daygrid-hour { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 8px; }
@@ -1113,10 +1114,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
      across from it, not the case. `dayBandLabel` already produces "Today,
      Aug 5" in title case, so this is only the CSS getting out of its way. The
      tracking goes with the caps, because .13em is spacing for capitals and
-     reads as a gap between letters in a word anybody can lowercase. Size does
-     the separating now rather than weight: a point bigger than the rows and a
-     step lighter than a heading, which is a level above without being loud. */
-  font-size: 15px; font-weight: 500; letter-spacing: 0;
+     reads as a gap between letters in a word anybody can lowercase. It shares
+     the schedule-wide date-heading weight so the same date never changes
+     emphasis when it moves between Calendar, Following, and a profile. */
+  font-size: 15px; font-weight: var(--date-heading-weight); letter-spacing: 0;
   color: var(--ink);
   overflow: hidden; text-overflow: ellipsis;
 }
@@ -1622,7 +1623,8 @@ button.bl-band { cursor: pointer; }
 .ps-week { display: flex; flex-direction: column; gap: 28px; }
 .ps-daygroup { display: flex; flex-direction: column; gap: 10px; }
 .ps-daycol {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 15px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: var(--date-heading-weight); font-size: 15px;
   letter-spacing: -.01em; color: var(--ink); white-space: nowrap;
 }
 .ps-daycards { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -1705,7 +1707,7 @@ button.bl-band { cursor: pointer; }
 /* No divider under the day: the cards carry their own edges now, and a rule
    above a shadowed card read as clutter. The weight steps up instead. */
 .ps-agenda .ps-daycol {
-  font-weight: 500; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
+  font-weight: var(--date-heading-weight); font-size: 17px; color: var(--ink); letter-spacing: -.01em;
 }
 /* The card, on every list of classes there is. See ClassRow for why it is a
    card again rather than the flat row it replaces: the short version is that
@@ -6075,7 +6077,8 @@ button.ps-card { cursor: pointer; }
 .shpage-title { padding: 2px 0 10px; }
 .following-days { display: flex; flex-direction: column; gap: 24px; }
 .following-day-h {
-  margin: 0 0 9px; font-size: 18px; line-height: 1.15; font-weight: 600;
+  margin: 0 0 9px; font-size: 18px; line-height: 1.15;
+  font-weight: var(--date-heading-weight);
   letter-spacing: -.01em;
 }
 .following-day .home-next { margin-top: 0; }
@@ -7279,7 +7282,7 @@ a.clspeek-by:active { opacity: .6; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   /* Up from 16 to 22, then down two and two again to 18, by Matt's call:
      a step above the class names and no more. */
-  font-size: 18px; font-weight: 500; color: var(--ink);
+  font-size: 18px; font-weight: var(--date-heading-weight); color: var(--ink);
 }
 /* The today dot is gone, by Matt's call: every band is the date and nothing
    else, on every list. */
