@@ -57,7 +57,7 @@ export function AddBrowse({
     .map((day) => ({
       ...day,
       items: day.items.filter((it) =>
-        !needle || [it.name, it.where, it.coachName].some((value) => value?.toLowerCase().includes(needle)),
+        !needle || [it.name, it.where, it.attributionName].some((value) => value?.toLowerCase().includes(needle)),
       ),
     }))
     .filter((day) => day.items.length > 0);
@@ -112,11 +112,14 @@ export function AddBrowse({
                     <span className="peekrow-nm">{it.name}</span>
                     <span className="peekrow-sub">
                       {it.hm}
-                      <span className="peekrow-ap">{it.ap.toLowerCase()}</span> &middot;{" "}
-                      {it.durationMin} min
-                      {it.coachName ? ` · ${it.coachName.split(/\s+/)[0]}` : ""}
+                      <span className="peekrow-ap">{it.ap.toLowerCase()}</span>
                       {it.where ? ` · ${it.where}` : ""}
                     </span>
+                    {it.attributionName && (
+                      <span className="peekrow-by">
+                        {it.attribution === "added" ? "Added by" : "Coached by"} {it.attributionName}
+                      </span>
+                    )}
                   </Link>
                   {!it.own && (
                     <button

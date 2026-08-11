@@ -146,6 +146,8 @@ export type BrowseDay = {
     durationMin: number;
     where: string | null;
     coachName: string;
+    attribution: "coached" | "added";
+    attributionName: string;
     /** Yours to teach, so there is nothing to save. */
     own: boolean;
     saved: boolean;
@@ -191,6 +193,8 @@ export async function addBrowse(): Promise<BrowseDay[] | null> {
         durationMin: i.durationMin,
         where: i.where,
         coachName: coachName.get(i.coachId) ?? "",
+        attribution: "coached",
+        attributionName: coachName.get(i.coachId) ?? "",
         own: i.coachId === userId,
         saved: saved.has(`${i.classId}|${i.iso}`),
       },

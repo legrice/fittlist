@@ -6913,6 +6913,7 @@ button.ps-card { cursor: pointer; }
 .peekrow-nm { display: block; font-size: 16px; font-weight: 600; color: var(--ink); }
 .peekrow-sub { display: block; font-size: 13.5px; color: var(--ol); margin-top: 2px; }
 .peekrow-ap { font-size: 11px; margin-left: 1px; }
+.peekrow-by { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--ol); }
 /* The word rides the ribbon here for the reason it does on a calendar row:
    nobody has learned the mark yet, and this is the one action the whole pull
    model turns on. */
