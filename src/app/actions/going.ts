@@ -62,6 +62,8 @@ export async function setGoing(
   }
   revalidatePath("/feed");
   revalidatePath("/app");
+  revalidatePath("/calendar");
+  revalidatePath("/week");
   return { ok: true };
 }
 

@@ -77,10 +77,9 @@ export default async function WeekPage({
       }
     : { startTime: "18:00", durationMin: 60, studioId: null };
 
-  // /week is an old member-calendar address. Coaches keep their publishing
-  // calendar; members return to the schedules they follow.
+  // Coaches keep their publishing calendar. Members live here again: the
+  // classes they add are a real calendar people were actively missing.
   if (me && me.kind !== "fan") redirect(hl ? `/app?hl=${encodeURIComponent(hl)}` : "/app");
-  if (me?.kind === "fan") redirect("/feed");
 
   return (
     <WeekScreen

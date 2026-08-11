@@ -20,6 +20,7 @@ import { Toast, useToast } from "@/components/Toast";
 import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import type { WeekDay as WeekDayData } from "@/lib/week";
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -54,6 +55,7 @@ export function CalendarScreen({
   customTypes,
   lastUsed,
   subsCount,
+  savedDays = [],
   openAdder = false,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
@@ -66,12 +68,14 @@ export function CalendarScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
+  savedDays?: WeekDayData[];
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
+  const [kind, setKind] = useState<"all" | "coaching" | "added">("all");
   const [addOpen, setAddOpen] = useState(openAdder);
   // The overlay header's words: the day under it on the list, the month in
   // view on the grid. The grid's label is set from the first render (this
@@ -86,6 +90,14 @@ export function CalendarScreen({
   const [toastMsg, toastOn, toast] = useToast();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
+  const savedByIso = useMemo(
+    () => new Map(savedDays.map((day) => [day.iso, day.items] as const)),
+    [savedDays],
+  );
+  const atOf = (r: { hm: string; ap: string }) => {
+    const [h, m] = r.hm.split(":").map(Number);
+    return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
+  };
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -97,7 +109,7 @@ export function CalendarScreen({
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
-      const rows = classes
+      const coachingRows = classes
         .filter((c) => runsOn(c, iso, dow))
         // Been and gone is not on a schedule. Today keeps the ones still to
         // come and drops the six o'clock you already taught.
@@ -118,14 +130,35 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             dur: `${c.durationMin} min`,
+            tag: c.shift ? "Shift" : undefined,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
-      if (rows.length)
-        out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
+      const addedRows = (savedByIso.get(iso) ?? []).map((i) => ({
+        key: `added|${i.personal ? i.id : i.classId}|${i.iso}`,
+        classId: i.personal ? undefined : i.classId,
+        iso: i.iso,
+        name: i.name,
+        where: i.where,
+        hm: i.hm,
+        ap: i.ap,
+        dur: `${i.durationMin} min`,
+        coach:
+          !i.personal && i.coachName
+            ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
+            : null,
+        tag: i.personal ? "Added by you" : "Added",
+        tagTone: "personal" as const,
+        onTap: i.personal ? undefined : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}&from=calendar`),
+      }));
+      const rows = [
+        ...(kind === "added" ? [] : coachingRows),
+        ...(kind === "coaching" ? [] : addedRows),
+      ].sort((a, b) => atOf(a) - atOf(b));
+      if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle]);
+  }, [classes, todayIso, studioById, handle, kind, savedByIso, router]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -136,7 +169,7 @@ export function CalendarScreen({
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
-      const rows = classes
+      const coachingRows = classes
         .filter((c) => runsOn(c, iso, dow))
         .map((c) => ({
           kind: "coaching" as const,
@@ -144,10 +177,19 @@ export function CalendarScreen({
           at: timeToMinutes(c.startTime),
         }))
         .sort((a, b) => a.at - b.at);
+      const addedRows = (savedByIso.get(iso) ?? []).map((i) => ({
+        kind: (i.personal ? "private" : "added") as "private" | "added",
+        name: i.name,
+        at: atOf(i),
+      }));
+      const rows = [
+        ...(kind === "added" ? [] : coachingRows),
+        ...(kind === "coaching" ? [] : addedRows),
+      ].sort((a, b) => a.at - b.at);
       if (rows.length) m.set(iso, rows);
     }
     return m;
-  }, [classes, todayIso]);
+  }, [classes, todayIso, kind, savedByIso]);
 
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
@@ -162,7 +204,7 @@ export function CalendarScreen({
   // Whether this coach has published anything at all, not whether the next
   // eight weeks do: the empty state offers the thing to do only when there is
   // nothing on their coaching calendar.
-  const bare = classes.length === 0;
+  const bare = classes.length === 0 && savedDays.every((day) => day.items.length === 0);
 
   return (
     <>
@@ -189,6 +231,14 @@ export function CalendarScreen({
               screen reader. */}
           {!bare && (
             <div className="calbar-tools">
+              <label className="calfilter">
+                <select aria-label="Show schedule" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
+                  <option value="all">All</option>
+                  <option value="coaching">Coaching</option>
+                  <option value="added">Added</option>
+                </select>
+                <Icon name="expand_more" size={17} />
+              </label>
               <div className="calseg" role="tablist" aria-label="Schedule view">
                 <button
                   role="tab"
@@ -249,7 +299,13 @@ export function CalendarScreen({
         // A week that has run its course still offers the one act that
         // changes it: the same Add the title row carries, where somebody
         // reading "nothing coming up" is already looking.
-        <WeekEmpty first={false} title="" body="" cta="Add a class" onCta={() => setAddOpen(true)} />
+        <WeekEmpty
+          first={false}
+          title=""
+          body=""
+          cta={kind === "added" ? undefined : "Add a class"}
+          onCta={kind === "added" ? undefined : () => setAddOpen(true)}
+        />
       ) : (
         <div className="calendar-cardlist">
           <DayList days={days} />

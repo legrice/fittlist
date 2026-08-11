@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
@@ -8,6 +8,7 @@ import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine, type WeekRow } from "@/components/WeekView";
+import { setGoing } from "@/app/actions/going";
 
 export type FeedCoach = {
   id: string;
@@ -127,6 +128,7 @@ export function FollowingScreen({
   favIds,
   cats,
   todayIso,
+  meId,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -172,7 +174,11 @@ export function FollowingScreen({
   const [find, setFind] = useState(false);
   const [coachFilter, setCoachFilter] = useState<string>("all");
   const [toastMsg, toastOn, toast] = useToast();
-  const notify = (msg: string) => toast(msg);
+  const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
+  const notify = (msg: string, highlight?: string) => {
+    setToastAction(highlight ? { label: "Show it", href: `/calendar?hl=${encodeURIComponent(highlight)}` } : null);
+    toast(msg);
+  };
   const router = useRouter();
 
   const closeFind = () => {
@@ -268,6 +274,16 @@ export function FollowingScreen({
       dur: `${i.durationMin} min`,
       coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
       onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
+      corner:
+        meId && i.coachId !== meId ? (
+          <FollowingAdd
+            classId={i.classId}
+            iso={i.iso}
+            name={i.name}
+            initialOn={i.saved}
+            onNotice={notify}
+          />
+        ) : undefined,
     };
   };
 
@@ -692,7 +708,7 @@ export function FollowingScreen({
           allowWeekAdd={false}
         />
       )}
-      <Toast msg={toastMsg} on={toastOn} />
+      <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
   );
 }
@@ -710,8 +726,54 @@ const renderRow =
         </span>
       )}
       <ClassLine row={r} />
+      {r.corner}
     </div>
   );
+
+function FollowingAdd({
+  classId,
+  iso,
+  name,
+  initialOn,
+  onNotice,
+}: {
+  classId: string;
+  iso: string;
+  name: string;
+  initialOn: boolean;
+  onNotice: (message: string, highlight?: string) => void;
+}) {
+  const [on, setOn] = useState(initialOn);
+  const [busy, start] = useTransition();
+  const toggle = () => {
+    const next = !on;
+    setOn(next);
+    start(async () => {
+      const res = await setGoing(classId, iso, next);
+      if (!res.ok) {
+        setOn(!next);
+        onNotice(res.error ?? "Couldn't update your calendar");
+        return;
+      }
+      onNotice(
+        next ? `${name} was added to your calendar` : `${name} was removed from your calendar`,
+        next ? `${classId}.${iso}` : undefined,
+      );
+    });
+  };
+  return (
+    <button
+      className={`following-add${on ? " on" : ""}`}
+      type="button"
+      disabled={busy}
+      aria-label={on ? `Remove ${name} from your calendar` : `Add ${name} to your calendar`}
+      aria-pressed={on}
+      onClick={toggle}
+    >
+      <Icon name={on ? "check_circle" : "add_circle"} size={22} />
+    </button>
+  );
+}
 
 const plusDays = (iso: string, n: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);

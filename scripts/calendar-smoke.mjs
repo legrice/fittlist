@@ -92,9 +92,9 @@ await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 await p.goto(BASE + "/calendar");
 await p.locator(".clline").first().waitFor();
 
-// Add floats bottom right (Following's search spot and dress). Calendar is
-// coaching-only, so the title row has no relationship filter. No Share door
-// lives here either: the Share tab is the way to the hub.
+// Add floats bottom right (Following's search spot and dress). The compact
+// relationship dropdown shares the title row with the view control. No Share
+// door lives here: the Share tab is the way to the hub.
 {
   const fab = p.locator(".wkfab");
   if (!(await fab.count())) fail("Add should float bottom right once there is a week");
@@ -110,9 +110,12 @@ await p.locator(".clline").first().waitFor();
   const toggleMid = toggleBox.y + toggleBox.height / 2;
   if (Math.abs(titleMid - toggleMid) > 3)
     fail(`Calendar and its view toggle should align, got ${titleMid} and ${toggleMid}`);
-  if (await p.locator(".calbar-pills").count())
-    fail("a coaching-only calendar should not draw All, Coaching, or Added filters");
-  console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| coaching-only title row");
+  const filter = p.locator(".calfilter select");
+  if (!(await filter.count())) fail("the calendar needs its All, Coaching, Added dropdown");
+  const options = await filter.locator("option").allTextContents();
+  if (options.join("|") !== "All|Coaching|Added") fail("wrong calendar filters: " + options.join("|"));
+  if ((await filter.inputValue()) !== "all") fail("the calendar should default to All");
+  console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| combined calendar title row");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 

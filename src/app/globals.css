@@ -7748,6 +7748,16 @@ a.clspeek-by:active { opacity: .6; }
 /* Calendar is a working schedule, so each occurrence keeps a stronger white
    surface. Following stays editorial and flat below. */
 .calendar-cardlist .dayrows { gap: 10px; }
+.calfilter {
+  position: relative; display: inline-flex; align-items: center;
+  min-height: 40px; border-radius: 12px; background: var(--card); color: var(--ink);
+}
+.calfilter select {
+  appearance: none; min-height: 40px; padding: 0 31px 0 13px;
+  border: 0; border-radius: inherit; background: transparent; color: inherit;
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.calfilter .icon { position: absolute; right: 9px; pointer-events: none; }
 .calendar-cardlist .clline {
   grid-template-columns: 64px 1fr; column-gap: 10px;
   align-content: center;
@@ -7789,6 +7799,13 @@ a.clspeek-by:active { opacity: .6; }
 /* These reading lists wrap every class in `.clrow` for grouping, but carry no
    corner action. Give the name back the 38px the generic menu row reserves. */
 .disflat .clrow .clline-nm { padding-right: 0; }
+.disflat .clrow:has(.following-add) .clline-nm { padding-right: 34px; }
+.following-add {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 30px; height: 30px; padding: 0; border: 0; border-radius: 999px;
+  display: grid; place-items: center; background: none; color: var(--ink); cursor: pointer;
+}
+.following-add:disabled { opacity: .55; }
 .disflat .rowsave {
   top: 10px; right: 10px; bottom: auto;
   width: 36px; height: 36px; padding: 0;

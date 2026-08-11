@@ -39,14 +39,12 @@ export function navTabs(
 ): NavItem[] {
   return [
     { id: "following", href: "/feed", icon: "group", label: "Following" },
-    ...(coach
-      ? [{
-          id: "schedule" as const,
-          href: scheduleHref ?? "/calendar",
-          icon: "calendar_month",
-          label: "Schedule",
-        }]
-      : []),
+    {
+      id: "schedule" as const,
+      href: scheduleHref ?? (coach ? "/calendar" : "/week"),
+      icon: "calendar_month",
+      label: "Schedule",
+    },
     // Search left the bar, by Matt's call: the magnifier lives in the
     // header's corner now, and the same glyph in two places on one screen
     // was two doors to one room. /search itself is unchanged.
@@ -83,6 +81,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // Calendar is a coach tool. /week is retained only as an old address.
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app"))
     return "schedule";
+  if (pathname.startsWith("/week")) return "schedule";
   // /you is the old settings screen and is a redirect onto your profile now;
   // /settings is where those rows moved. Both belong to the Profile tab, and
   // the profile itself passes `active` explicitly, because a handle is not a

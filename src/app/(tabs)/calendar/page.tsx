@@ -6,6 +6,7 @@ import { todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { CalendarScreen } from "@/components/CalendarScreen";
+import { myWeek } from "@/lib/week";
 
 export const dynamic = "force-dynamic";
 
@@ -24,12 +25,12 @@ export const dynamic = "force-dynamic";
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ add?: string }>;
+  searchParams: Promise<{ add?: string; hl?: string }>;
 }) {
   // `?add=1` opens the adder on arrival. It is /app's old parameter, carried
   // through its redirect, and it is what "Add a class" links out in the world
   // still say.
-  const { add } = await searchParams;
+  const { add, hl } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -37,7 +38,7 @@ export default async function CalendarPage({
   if (!me) redirect("/");
   // Only somebody who teaches has a calendar. Members follow published
   // calendars rather than maintaining a second one inside FittList.
-  if (me.kind === "fan") redirect("/feed");
+  if (me.kind === "fan") redirect(hl ? `/week?hl=${encodeURIComponent(hl)}` : "/week");
 
   const [classRows, studioRows, templateRows, customTypeRows, subRows] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym
@@ -110,6 +111,7 @@ export default async function CalendarPage({
 
   return (
     <CalendarScreen
+      savedDays={await myWeek(userId)}
       handle={me.handle}
       classes={classes}
       todayIso={todayIso()}
