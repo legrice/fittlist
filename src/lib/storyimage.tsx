@@ -385,7 +385,7 @@ export function renderStory(model: StoryModel) {
                         style={{
                           display: "block",
                           width: "100%",
-                          fontSize: px(38),
+                          fontSize: px(46),
                           fontWeight: 700,
                           lineHeight: 0.96,
                           letterSpacing: -1,
@@ -394,14 +394,14 @@ export function renderStory(model: StoryModel) {
                         {row.name}
                       </span>
                       {row.sub && (
-                        <span style={{ display: "flex", fontSize: px(23), lineHeight: 1.1, marginTop: px(10) }}>
+                        <span style={{ display: "flex", fontSize: px(25), lineHeight: 1.1, marginTop: px(10) }}>
                           {row.sub}
                         </span>
                       )}
                       <span
                         style={{
                           display: "flex",
-                          fontSize: px(24),
+                          fontSize: px(27),
                           fontWeight: 600,
                           lineHeight: 1.1,
                           marginTop: px(7),
