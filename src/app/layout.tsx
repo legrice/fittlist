@@ -3,6 +3,7 @@ import { siteOrigin } from "@/lib/format";
 import { ServiceWorker } from "@/components/InstallApp";
 import { NavTrack } from "@/components/NavTrack";
 import { ScrollLock } from "@/components/ScrollLock";
+import { NativeAppBridge } from "@/components/NativeAppBridge";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
+        <NativeAppBridge />
         <ScrollLock />
         <NavTrack />
         <ServiceWorker />

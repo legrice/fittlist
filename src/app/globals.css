@@ -1,3 +1,24 @@
+/* The native shell owns the iPhone safe area; this selector is inert in Safari. */
+html[data-native="ios"] body { padding-top: env(safe-area-inset-top); }
+
+.native-offline {
+  position: fixed;
+  z-index: 10000;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+
 /* Delight, the brand typeface, self-hosted as woff2.
    Three faces, because 600 is the ceiling now: the 700 and the 800 are not
    declared and so cannot be reached, which is what makes the cap real rather

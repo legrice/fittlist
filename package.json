@@ -12,9 +12,18 @@
     "check:copy": "node scripts/check-copy.mjs",
     "check:story": "tsx scripts/storyplan-check.mjs",
     "check:icons": "node scripts/icon-check.mjs",
-    "check:weights": "node scripts/check-weights.mjs"
+    "check:weights": "node scripts/check-weights.mjs",
+    "ios:sync": "cap sync ios",
+    "ios:open": "cap open ios",
+    "ios:run": "cap run ios"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/share": "^8.0.1",
     "@electric-sql/pglite": "^0.2.17",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.2",
@@ -30,6 +39,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "@types/node": "^22.14.0",
     "@types/pg": "^8.11.11",
     "@types/qrcode": "^1.5.6",
