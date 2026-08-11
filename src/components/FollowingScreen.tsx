@@ -273,6 +273,8 @@ export function FollowingScreen({
       hm: i.hm,
       ap: i.ap,
       dur: `${i.durationMin} min`,
+      tag: meId && i.coachId === meId ? "You" : undefined,
+      tagTone: meId && i.coachId === meId ? "coaching" : undefined,
       coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
       onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
       corner:
@@ -496,6 +498,10 @@ export function FollowingScreen({
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
                 </button>
               ))}
+              <Link className="trayitem trayitem-more" href="/search?from=feed" aria-label="Discover more coaches">
+                <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
+                <span className="trayitem-nm">More</span>
+              </Link>
             </div>
           </div>
         </header>

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AddBrowse } from "@/components/AddBrowse";
 import {
@@ -348,6 +349,7 @@ export function CalendarScreen({
       ) : (
         <div className="calendar-cardlist">
           <DayList days={days} />
+          {kind === "added" && <Link className="calendar-attending-share" href="/share">Share your week</Link>}
         </div>
       )}
       </div>
