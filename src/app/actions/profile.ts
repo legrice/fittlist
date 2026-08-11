@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, gte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { storeImage } from "@/lib/storage";
@@ -11,6 +11,40 @@ import { getSessionUserId } from "@/lib/session";
 import { geocodeCity } from "@/lib/geocode";
 import { normalizeLocation } from "@/lib/location";
 import { knownLocations } from "@/app/actions/locations";
+import { addNotification } from "@/lib/notify";
+
+export async function nudgeProfileInfo(handle: string) {
+  const viewerId = await getSessionUserId();
+  if (!viewerId) return { ok: false, signedOut: true };
+  const db = await getDb();
+  const [target] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.handle, handle));
+  if (!target || target.id === viewerId) return { ok: false };
+
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+  const [sent] = await db
+    .select({ id: schema.notifications.id })
+    .from(schema.notifications)
+    .where(and(
+      eq(schema.notifications.userId, target.id),
+      eq(schema.notifications.actorUserId, viewerId),
+      eq(schema.notifications.type, "profile_info_nudge"),
+      gte(schema.notifications.createdAt, since),
+    ));
+  if (sent) return { ok: true, alreadySent: true };
+
+  await addNotification(target.id, {
+    type: "profile_info_nudge",
+    title: "Add a little more to your profile",
+    body: "Someone who follows your work would love to learn more about you.",
+    href: "/settings?edit=1",
+    actorUserId: viewerId,
+  });
+  return { ok: true, alreadySent: false };
+}
 
 // Instagram: accept a handle, an @handle, or a full URL - store the bare handle.
 function normalizeInstagram(raw: string): string | null {

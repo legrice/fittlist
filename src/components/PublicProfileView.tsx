@@ -26,6 +26,7 @@ import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { ProfileAbout } from "@/components/ProfileAbout";
+import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 import { Wordmark } from "@/components/Wordmark";
 
 // A continuous forward window, long enough that even a one-class-a-week
@@ -198,7 +199,10 @@ export async function PublicProfileView({
       days.push({ iso, week: Math.floor(days.length / 7), items });
   }
 
-  const about = (
+  const hasInfo = Boolean(
+    user.disciplines.length || user.about?.trim() || user.highlights.length || user.certifications.length,
+  );
+  const about = hasInfo ? (
     <>
       {user.disciplines.length > 0 && (
         <div className="profsec">
@@ -242,6 +246,12 @@ export async function PublicProfileView({
         </div>
       )}
     </>
+  ) : (
+    <ProfileInfoEmpty
+      handle={handle}
+      firstName={user.name.trim().split(/\s+/)[0] || user.name}
+      owner={isOwner}
+    />
   );
 
   // Studios got their own tab: "where do they teach" is a question people

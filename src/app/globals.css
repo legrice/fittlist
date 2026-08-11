@@ -3624,6 +3624,16 @@ button.ps-card { cursor: pointer; }
 }
 .profile-empty-small h2 { font-size: 18px; }
 .profile-empty-small p { margin-top: 4px; font-size: 14px; }
+.profile-info-empty { text-align: left; }
+.profile-info-empty h2 { max-width: 330px; line-height: 1.2; }
+.info-nudge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px; margin-top: 16px; padding: 0 16px;
+  border: 0; border-radius: 12px; background: var(--ink); color: var(--paper);
+  font: 600 14px 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  text-decoration: none; cursor: pointer;
+}
+.info-nudge:disabled { opacity: .58; cursor: default; }
 
 /* The photo is atmosphere; the identity reads from the paper beneath it. */
 .pubidentity-paper {
