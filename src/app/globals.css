@@ -6920,14 +6920,12 @@ a.clspeek-by:active { opacity: .6; }
    hub's cardwrap because the gradient lives on the layout's .screen. */
 .screen.hasnav:has(.shpage) { background: var(--ground); }
 .cardwrap.shpage { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-/* One row that scrolls off the edge, by Matt's call: four pills wrapped
-   to a second line at 390px, and a rail reads better than a stack. Safe
-   centred, also by his call, so the row sits in the middle of the window
-   when it fits and still scrolls when it doesn't. */
+/* One left-aligned row that scrolls off the edge: four pills wrapped to a
+   second line at 390px, and a rail reads better than a stack. */
 .shseg {
   display: flex; gap: 8px; margin-top: 16px;
   overflow-x: auto; scrollbar-width: none;
-  justify-content: safe center;
+  justify-content: flex-start;
   margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
   padding-left: 18px; padding-right: 18px;
 }
@@ -7408,7 +7406,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clline {
   grid-template-columns: 64px 1fr; column-gap: 10px;
   align-content: center;
-  min-height: 112px; padding: 14px;
+  min-height: 88px; padding: 11px 14px;
   border-bottom: 0; border-radius: 16px; background: var(--card);
   box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
 }
@@ -7505,15 +7503,13 @@ a.clspeek-by:active { opacity: .6; }
 
 /* The title and the two ways of looking, at the top of the calendar. */
 .calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
-.calbar-viewonly { justify-content: flex-end; }
 .calbar-tools { display: flex; align-items: center; gap: 10px; }
 .calbar-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 34px; font-weight: 600; letter-spacing: -.012em; color: var(--ink);
 }
-/* The word above the segment, by Matt's call: its own line under the
-   logo, a step smaller than the old title row's 34. */
-.caltitle { font-size: 30px; padding: 2px 0 10px; }
+/* Page-title size, sharing its row with the view toggle. */
+.caltitle { font-size: 30px; padding: 0; }
 .info-page-action { display: inline-flex; width: auto; margin-top: 12px; text-decoration: none; }
 .aboutpage .about-kicker { margin-bottom: 8px; color: var(--ol); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }

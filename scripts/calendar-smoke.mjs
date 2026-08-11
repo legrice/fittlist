@@ -101,9 +101,15 @@ await p.locator(".clline").first().waitFor();
   const fbox = await fab.boundingBox();
   if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
   if (await p.locator(".calbar-share").count()) fail("the Share arrow is gone from the title row");
-  // The title sits above the view controls.
+  // The title and view controls share one row.
   if (!(await p.locator(".caltitle", { hasText: "Calendar" }).count()))
-    fail("the word Calendar sits above the view controls");
+    fail("the word Calendar sits across from the view controls");
+  const titleBox = await p.locator(".caltitle").boundingBox();
+  const toggleBox = await p.locator(".calbar .calseg").boundingBox();
+  const titleMid = titleBox.y + titleBox.height / 2;
+  const toggleMid = toggleBox.y + toggleBox.height / 2;
+  if (Math.abs(titleMid - toggleMid) > 3)
+    fail(`Calendar and its view toggle should align, got ${titleMid} and ${toggleMid}`);
   if (await p.locator(".calbar-pills").count())
     fail("a coaching-only calendar should not draw All, Coaching, or Added filters");
   console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| coaching-only title row");
