@@ -3718,6 +3718,30 @@ button.ps-card { cursor: pointer; }
   position: relative;
   top: auto;
 }
+.profile-share-cta {
+  margin-top: 42px;
+  padding: 24px 20px 20px;
+  border-radius: 22px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.profile-share-cta-kicker {
+  margin: 0 0 9px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  opacity: .62;
+}
+.profile-share-cta h2 { margin: 0; max-width: 310px; font-size: 27px; line-height: 1.04; }
+.profile-share-cta > p:not(.profile-share-cta-kicker) {
+  margin: 10px 0 18px; max-width: 330px; font-size: 14px; line-height: 1.4; opacity: .7;
+}
+.profile-share-cta-btn {
+  width: 100%; min-height: 48px; padding: 0 18px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 0; border-radius: 14px; background: var(--paper); color: var(--ink);
+  font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif; cursor: pointer;
+}
+.profile-share-cta-btn:active { transform: scale(.985); }
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's

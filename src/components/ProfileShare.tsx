@@ -11,7 +11,7 @@ import { Toast, useToast } from "@/components/Toast";
 // Owners already have a Share pill under the name with the story image and the
 // QR code behind it. This is the one a visitor needs, and there was none: the
 // only way to send somebody a coach was to copy the address bar.
-export function ProfileShare({ path, name, pill = false }: { path: string; name: string; pill?: boolean }) {
+export function ProfileShare({ path, name, pill = false, cta = false }: { path: string; name: string; pill?: boolean; cta?: boolean }) {
   const [toastMsg, toastOn, toast] = useToast();
 
   const share = async () => {
@@ -30,9 +30,9 @@ export function ProfileShare({ path, name, pill = false }: { path: string; name:
 
   return (
     <>
-      <button className={pill ? "actpill profile-share-pill" : "evback profshare-btn"} aria-label={`Share ${name}`} onClick={share}>
+      <button className={cta ? "profile-share-cta-btn" : pill ? "actpill profile-share-pill" : "evback profshare-btn"} aria-label={`Share ${name}`} onClick={share}>
         <Icon name="ios_share" size={21} />
-        {pill ? <span>Share</span> : null}
+        {pill ? <span>Share</span> : cta ? <span>Share profile</span> : null}
       </button>
       <Toast msg={toastMsg} on={toastOn} />
     </>

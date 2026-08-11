@@ -4,6 +4,7 @@ import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useBandTop, useStuck } from "@/components/CalendarBits";
+import { ProfileShare } from "@/components/ProfileShare";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
@@ -49,6 +50,7 @@ export function ProfileTabs({
   actions,
   endorsement,
   summary,
+  sharePrompt,
   badges,
   ownerTop,
   backTo,
@@ -90,6 +92,8 @@ export function ProfileTabs({
   endorsement?: ReactNode;
   /** Short about copy shown once beneath the hero, before actions. */
   summary?: string | null;
+  /** Closing growth loop, worded for a person or a studio by its caller. */
+  sharePrompt: string;
   /** Beside the name: only a studio uses it now, for the Verified badge that
    *  explains why the pencil is missing. */
   badges: ReactNode | null;
@@ -279,6 +283,12 @@ export function ProfileTabs({
         )}
       </div>
       <div className="pubpanel">{children}</div>
+      <section className="profile-share-cta">
+        <p className="profile-share-cta-kicker">Pass it on</p>
+        <h2>{sharePrompt}</h2>
+        <p>Send them this profile so they have everything in one place.</p>
+        <ProfileShare path={base} name={name} cta />
+      </section>
       </div>
     </>
   );
