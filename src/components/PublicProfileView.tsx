@@ -25,6 +25,7 @@ import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
+import { ProfileAbout } from "@/components/ProfileAbout";
 import { Wordmark } from "@/components/Wordmark";
 
 // A continuous forward window, long enough that even a one-class-a-week
@@ -217,7 +218,7 @@ export async function PublicProfileView({
               floated as bare text and Coaching focus read as the page's first
               real section. */}
           <h2 className="prof-sec-h">About</h2>
-          <p className="profabout">{user.about}</p>
+          <ProfileAbout text={user.about} />
         </div>
       )}
       {user.highlights.length > 0 && (

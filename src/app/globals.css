@@ -1942,6 +1942,13 @@ button.ps-card { cursor: pointer; }
 }
 .profmeta-sep { color: var(--line); }
 .profabout { font-size: 15px; line-height: 1.55; color: var(--ink); margin-top: 18px; white-space: pre-wrap; }
+.profile-about-wrap:not(.open) .profile-about-copy {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
+.profile-about-more {
+  appearance: none; border: 0; background: none; color: var(--ink); cursor: pointer;
+  padding: 4px 0 0; font: inherit; font-size: 14px; font-weight: 600;
+}
 /* one horizontal, left/right-scrollable rail; bleeds to the content edges */
 .proflinks {
   display: flex; flex-wrap: nowrap; gap: 10px;

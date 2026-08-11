@@ -23,6 +23,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
 import { ProfileShare } from "@/components/ProfileShare";
+import { ProfileAbout } from "@/components/ProfileAbout";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -427,7 +428,7 @@ export async function StudioView({
         {s.about?.trim() && (
           <div className="studsec studsec-first">
             <h2 className="prof-sec-h">About</h2>
-            <p className="profabout">{s.about}</p>
+            <ProfileAbout text={s.about} />
           </div>
         )}
 

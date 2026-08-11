@@ -16,6 +16,7 @@ import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
+import { ProfileAbout } from "@/components/ProfileAbout";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -237,7 +238,7 @@ export async function MemberProfileView({
         <section id="profile-about" className="profile-anchor-section">
           <h2 className="profile-section-title">Info</h2>
           {user.about?.trim() ? (
-            <p className="mempro-about">{user.about}</p>
+            <ProfileAbout text={user.about} className="mempro-about" />
           ) : (
             <div className="empty-block">
               <h2>Nothing here yet</h2>
