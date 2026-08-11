@@ -20,6 +20,8 @@ export function ShareCardSheet({
   onClose,
   onToast,
   noThemes = false,
+  linkUrl,
+  linkTitle,
 }: {
   /** The image route, without its query: "/api/card/matt". */
   path: string;
@@ -32,6 +34,9 @@ export function ShareCardSheet({
   /** A class with a photo: the card is the photo with white words, so a
    *  colour picker only offers shades of unreadable, by Matt's call. */
   noThemes?: boolean;
+  /** Public classes can also be handed on as a link. Personal plans omit it. */
+  linkUrl?: string;
+  linkTitle?: string;
 }) {
   // Ink by default: the card leads with a photo, and photos sit best on dark.
   const [themeId, setThemeId] = useState<StoryThemeId>("iron");
@@ -74,6 +79,20 @@ export function ShareCardSheet({
       if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the image");
     } finally {
       setSharing(false);
+    }
+  };
+
+  const shareLink = async () => {
+    if (!linkUrl) return;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: linkTitle ?? title, url: linkUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(linkUrl);
+      onToast("Link copied, ready to paste");
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the link");
     }
   };
 
@@ -145,6 +164,12 @@ export function ShareCardSheet({
           <a className="btn ghost" style={{ marginTop: 8 }} href={cardUrl} download={cardFileName}>
             Save image
           </a>
+          {linkUrl && (
+            <button className="sharecard-link" type="button" onClick={shareLink}>
+              <Icon name="link" size={19} />
+              Share link
+            </button>
+          )}
         </div>
       </div>
     </div>

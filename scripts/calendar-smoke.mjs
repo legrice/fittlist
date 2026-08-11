@@ -252,6 +252,13 @@ await p.waitForTimeout(400);
   // keeps secondary class tools, including the owner's edit door.
   if (!(await p.locator(".clsfull-btn.share", { hasText: "Share" }).count()))
     fail("expected the outlined Share action in the footer");
+  await p.locator(".clsfull-btn.share", { hasText: "Share" }).click();
+  await p.locator(".sheet-full", { hasText: "Share this class" }).waitFor();
+  if (!(await p.getByRole("button", { name: "Share image" }).count()))
+    fail("class Share should lead with its image");
+  if (!(await p.getByRole("button", { name: "Share link" }).count()))
+    fail("the image sheet should retain the class link option");
+  await p.locator(".sheet-full .sheetclose").click();
   if (!(await p.locator(".clsfull-more").count())) fail("expected the class overflow");
   await p.locator(".clsfull-more").click();
   const tools = await p.locator(".clsfull-menu .ovmenu-item").allInnerTexts();

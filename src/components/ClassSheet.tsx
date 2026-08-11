@@ -991,6 +991,8 @@ export function ClassSheet({
           title="Share this class"
           lead="A square image of the class, made for a post or a story. The link on it opens this page."
           alt={`${c.name} as a card`}
+          linkUrl={c.shareUrl}
+          linkTitle={c.name}
           onClose={() => setCardOpen(false)}
           onToast={(m) => toast(m)}
         />

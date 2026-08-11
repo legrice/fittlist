@@ -11,6 +11,7 @@ import { reportClass } from "@/app/actions/reports";
 import { Adder } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { announceSaved } from "@/components/SaveEducation";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 
 /**
  * A class, tapped.
@@ -140,6 +141,7 @@ export function ClassPeek({
   // that; this way the sheet is instant and the detail is one tap behind it.
   const [full, setFull] = useState<ClassDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   // The viewer's mark, locally, so the button flips on the tap rather than
   // the round trip. Null until touched; the loaded detail is the truth
   // before that.
@@ -270,32 +272,12 @@ export function ClassPeek({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cls.id, cls.iso, cls.base]);
 
-  // Hand the picture on: the caller's sheet when it has one, the native
-  // share pointed at the class page when it doesn't, and the clipboard when
-  // the tray is missing or refuses. Every path ends in the tray or a toast;
-  // a share button that can silently do nothing reads as broken.
-  const share = async () => {
+  // Sharing a class leads with its designed image. A caller can still own the
+  // interaction, but the standard path opens the card preview and keeps the
+  // plain link as a quieter option inside it.
+  const share = () => {
     if (onShare) return onShare();
-    const url = full?.shareUrl;
-    if (!url) {
-      onToast(loading ? "Still loading, try again" : "Couldn't share that");
-      return;
-    }
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ url });
-        return;
-      }
-    } catch (e) {
-      // Dismissing the tray is a decision, not a failure.
-      if ((e as DOMException)?.name === "AbortError") return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      onToast("Link copied, ready to paste");
-    } catch {
-      onToast("Couldn't share that");
-    }
+    setCardOpen(true);
   };
 
   const editClass = () => {
@@ -566,6 +548,21 @@ export function ClassPeek({
           )}
         </div>
       </div>
+
+      {cardOpen && (
+        <ShareCardSheet
+          noThemes={!!full?.image}
+          path={`/api/card/class/${cls.id}`}
+          fileName={`fittlist-${cls.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
+          title="Share this class"
+          lead="A square picture of the class, made for sharing."
+          alt={`${cls.name} as a card`}
+          linkUrl={full?.shareUrl}
+          linkTitle={cls.name}
+          onClose={() => setCardOpen(false)}
+          onToast={onToast}
+        />
+      )}
 
       {/* The booking doors, as a sheet: Book brings up the options rather
           than jumping to somebody else's site unannounced, and each row says

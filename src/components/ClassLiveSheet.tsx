@@ -45,6 +45,8 @@ export function ClassLiveSheet({
         title="Share this class"
         lead="A square image of the class, made for a post or a story. The link on it opens the class."
         alt={`${name} as a card`}
+        linkUrl={`${window.location.origin}/${handle}/${classId}`}
+        linkTitle={name}
         onClose={() => {
           setCardOpen(false);
           onClose();

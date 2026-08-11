@@ -772,6 +772,14 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    kept the negative margin, which put anything after it (the "Don't have an
    account?" link) outside the padded area and half off the sheet. */
 .publishwrap.nostick { position: static; margin-bottom: 0; }
+.sharecard-link {
+  width: 100%; margin-top: 12px; padding: 8px 12px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 0; background: transparent; color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.sharecard-link:active { opacity: .58; }
 
 /* studio picker */
 .searchbox { position: relative; margin: 4px 0 8px; }
