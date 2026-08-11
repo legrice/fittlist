@@ -51,6 +51,7 @@ export function ProfileTabs({
   endorsement,
   summary,
   sharePrompt,
+  shareLabel = "Share their profile",
   badges,
   ownerTop,
   backTo,
@@ -94,6 +95,7 @@ export function ProfileTabs({
   summary?: string | null;
   /** Closing growth loop, worded for a person or a studio by its caller. */
   sharePrompt: string;
+  shareLabel?: string;
   /** Beside the name: only a studio uses it now, for the Verified badge that
    *  explains why the pencil is missing. */
   badges: ReactNode | null;
@@ -284,10 +286,8 @@ export function ProfileTabs({
       </div>
       <div className="pubpanel">{children}</div>
       <section className="profile-share-cta">
-        <p className="profile-share-cta-kicker">Pass it on</p>
         <h2>{sharePrompt}</h2>
-        <p>Send them this profile so they have everything in one place.</p>
-        <ProfileShare path={base} name={name} cta />
+        <ProfileShare path={base} name={name} cta ctaText={shareLabel} />
       </section>
       </div>
     </>

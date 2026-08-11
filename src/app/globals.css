@@ -3732,16 +3732,7 @@ button.ps-card { cursor: pointer; }
   background: var(--ink);
   color: var(--paper);
 }
-.profile-share-cta-kicker {
-  margin: 0 0 9px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
-  opacity: .62;
-}
-.profile-share-cta h2 { margin: 0; max-width: 310px; font-size: 27px; line-height: 1.04; }
-.profile-share-cta > p:not(.profile-share-cta-kicker) {
-  margin: 10px 0 18px; max-width: 330px; font-size: 14px; line-height: 1.4; opacity: .7;
-}
+.profile-share-cta h2 { margin: 0 0 18px; max-width: 340px; font-size: 27px; line-height: 1.04; }
 .profile-share-cta-btn {
   width: 100%; min-height: 48px; padding: 0 18px;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;

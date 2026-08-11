@@ -172,7 +172,7 @@ export async function MemberProfileView({
           }
           name={name}
           summary={user.about}
-          sharePrompt={`Know someone who should know about ${firstName}?`}
+          sharePrompt={`Know someone who should know ${firstName}?`}
           title={user.title ?? ""}
           location={user.location ?? ""}
           avatar={

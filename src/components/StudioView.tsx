@@ -343,6 +343,7 @@ export async function StudioView({
           name={s.name}
           summary={s.about}
           sharePrompt="Know someone who would love this studio?"
+          shareLabel="Share this studio"
           title={s.types.slice(0, 2).join(" · ") || "Studio"}
           location={studioCity}
           // The same full-bleed hero a coach's page wears, by Matt's call:
