@@ -7,7 +7,7 @@ import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
-import { mapsUrlFor } from "@/lib/studio";
+import { mapsUrlFor, placeKindLabel } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
 import { AppChrome } from "@/components/AppChrome";
 import { backToFor } from "@/lib/nav";
@@ -345,9 +345,9 @@ export async function StudioView({
           ]}
           name={s.name}
           summary={s.about}
-          sharePrompt="Know someone who would love this studio?"
-          shareLabel="Share this studio"
-          title={s.types.slice(0, 2).join(" · ") || "Studio"}
+          sharePrompt="Know someone who would love this place?"
+          shareLabel="Share this place"
+          title={s.types.slice(0, 2).join(" · ") || placeKindLabel(s.placeKind)}
           location={studioCity}
           // The same full-bleed hero a coach's page wears, by Matt's call:
           // one design for every profile, photo or not. Without a photo the

@@ -15,6 +15,7 @@ import {
   type PersonalMatch,
 } from "@/app/actions/personal";
 import { createStudio } from "@/app/actions/studios";
+import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
 import type { BookingLink } from "@/db/schema";
 import {
   CLASS_TYPES,
@@ -199,7 +200,7 @@ export function Adder({
             }
           : {
             title: "Add a class",
-            lead: "A class you go to. It lands on your week, and a dated class shows on your profile until it has run. The studio gets the details so the next person doesn't type them again.",
+            lead: "A class you go to. It lands on your week, and a dated class shows on your profile until it has run. The place gets the details so the next person doesn't type them again.",
           }
       : isEdit
       ? { title: "Edit class", lead: "Change anything. One save updates your page." }
@@ -260,6 +261,7 @@ export function Adder({
   const [search, setSearch] = useState("");
   const [nsName, setNsName] = useState("");
   const [nsAddr, setNsAddr] = useState("");
+  const [nsKind, setNsKind] = useState<PlaceKind>("studio");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
   // Studio-first: the class list is scoped to the chosen studio's catalog. A
@@ -420,7 +422,7 @@ export function Adder({
         ? "Pick a day"
         : "Pick at least one day"
     : needsStudio
-      ? "Pick a studio"
+      ? "Pick a place"
       : !durValid
         ? "End time must be after start"
         : isEdit || isPersonalEdit
@@ -627,7 +629,7 @@ export function Adder({
 
   const addStudio = () => {
     startTransition(async () => {
-      const res = await createStudio(nsName, nsAddr);
+      const res = await createStudio(nsName, nsAddr, nsKind);
       if (!res.ok || !res.studio) {
         onToast(res.error ?? "Something went wrong");
         return;
@@ -637,7 +639,7 @@ export function Adder({
       // A studio you just added has no classes to offer, so the class step
       // would be an empty room with one door; straight to the form.
       setStage("form");
-      onToast("Added to the studio directory");
+      onToast("Added to places");
     });
   };
 
@@ -949,7 +951,7 @@ export function Adder({
                 theirs; everybody else selects or creates the studio first. */}
             {!gym && !isEvent && (
             <div className="adder-card">
-            <label className="flabel">Studio</label>
+            <label className="flabel">Place</label>
             <button className="studio-sel" onClick={() => setStage("pick")}>
               {selectedStudio ? (
                 <span className="studio-sel-txt">
@@ -957,7 +959,7 @@ export function Adder({
                   <span className="ad">{selectedStudio.address}</span>
                 </span>
               ) : (
-                <span className="nm placeholder">Select or start typing a studio</span>
+                <span className="nm placeholder">Select or start typing a place</span>
               )}
               <span className="chev"><Icon name="chevron_right" size={20} /></span>
             </button>
@@ -981,7 +983,7 @@ export function Adder({
                 <p className="durnote" style={{ marginTop: 10 }}>
                   {selectedStudio
                     ? `The details are remembered for ${selectedStudio.name}, so the next person adding this class gets them filled in. Nothing shows on that page, and never who added it.`
-                    : "Pick a studio and the details are remembered for it, so the next person adding this class gets them filled in. Nothing shows on that page, and never who added it."}
+                    : "Pick a place and the details are remembered for it, so the next person adding this class gets them filled in. Nothing shows on that page, and never who added it."}
                 </p>
               </>
             )}
@@ -1050,7 +1052,7 @@ export function Adder({
             </div>
             {!gym && !isEvent && isPublic && !selectedStudio && (
               <p className="durnote" style={{ marginTop: 8 }}>
-                Pick a studio to see its classes.
+                Pick a place to see its classes.
               </p>
             )}
 
@@ -1111,7 +1113,7 @@ export function Adder({
               Photo{" "}
               <span>
                 {mineOnly
-                  ? "· optional, and it goes to the studio's list with the class"
+                  ? "· optional, and it stays with the class at this place"
                   : "· optional, and it carries the share card"}
               </span>
             </label>
@@ -1259,9 +1261,9 @@ export function Adder({
                   <Icon name="arrow_back" size={20} />
                 </button>
               )}
-              <h2>{stepped ? "Add a class" : "Choose a studio"}</h2>
+              <h2>{stepped ? "Add a class" : "Choose a place"}</h2>
             </div>
-            {stepped && <p className="stepline">Step 1 of 3 &middot; Choose the studio</p>}
+            {stepped && <p className="stepline">Step 1 of 3 &middot; Choose the place</p>}
             {/* The box leads and the list waits for typing: with five hundred
                 studios in the directory a dumped list is a wall, and the ask
                 here is three words long. Type it, tap it, move on. No
@@ -1271,8 +1273,8 @@ export function Adder({
               <input
                 type="text"
                 autoComplete="off"
-                placeholder="Start typing a studio…"
-                aria-label="Search studios"
+                placeholder="Search places…"
+                aria-label="Search places"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -1308,9 +1310,9 @@ export function Adder({
               </div>
             )}
             <button className="addnew" onClick={() => setStage("new")}>
-              + New studio
+              + New place
             </button>
-            <div className="dirnote">Studios are shared. Add one once and every trainer can use it.</div>
+            <div className="dirnote">Places are shared. Add one once and everyone can use it.</div>
           </div>
         )}
 
@@ -1335,11 +1337,11 @@ export function Adder({
             </p>
             <p className="lead">
               {catLoading || catalog.length > 0
-                ? "Start from a class already on this studio's list, or from scratch. Yours to adjust either way."
-                : "Nothing listed at this studio yet. Your class will be the first."}
+                ? "Start from a class already at this place, or from scratch. Yours to adjust either way."
+                : "Nothing listed at this place yet. Your class will be the first."}
             </p>
             {catLoading ? (
-              <p className="empty">Looking at this studio&rsquo;s list…</p>
+              <p className="empty">Looking at this place&rsquo;s list…</p>
             ) : (
               <div className="studio-list">
                 {catalog.map((c) => (
@@ -1380,27 +1382,42 @@ export function Adder({
               >
                 <Icon name="arrow_back" size={20} />
               </button>
-              <h2>New studio</h2>
+              <h2>New place</h2>
             </div>
-            <p className="lead">Name and address. That&rsquo;s the whole listing.</p>
+            <p className="lead">A gym, event, park, or online space where fitness happens.</p>
+            <label className="flabel">What kind of place?</label>
+            <div className="placekind-grid" role="radiogroup" aria-label="Place type">
+              {PLACE_KINDS.map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  role="radio"
+                  aria-checked={nsKind === kind}
+                  className={`placekind-option${nsKind === kind ? " on" : ""}`}
+                  onClick={() => setNsKind(kind)}
+                >
+                  {PLACE_KIND_LABELS[kind]}
+                </button>
+              ))}
+            </div>
             <label className="flabel" htmlFor="nsName">
-              Studio name
+              Place name
             </label>
             <input
               type="text"
               id="nsName"
-              placeholder="e.g. Palisade Barbell"
+              placeholder="e.g. Hamilton Park Run Club"
               autoComplete="off"
               value={nsName}
               onChange={(e) => setNsName(e.target.value)}
             />
             <label className="flabel" htmlFor="nsAddr">
-              Address
+              {nsKind === "virtual" ? "Link or online location" : "Location"}
             </label>
             <input
               type="text"
               id="nsAddr"
-              placeholder="e.g. 501 Palisade Ave, Jersey City"
+              placeholder={nsKind === "virtual" ? "e.g. Zoom" : "e.g. Hamilton Park, Jersey City"}
               autoComplete="off"
               value={nsAddr}
               onChange={(e) => setNsAddr(e.target.value)}
@@ -1411,7 +1428,7 @@ export function Adder({
                 disabled={pending || !nsName.trim() || !nsAddr.trim()}
                 onClick={addStudio}
               >
-                {pending ? "Adding…" : "Add studio"}
+                {pending ? "Adding…" : "Add place"}
               </button>
             </div>
           </div>

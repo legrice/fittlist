@@ -64,9 +64,9 @@ export function Contribute({ addHref }: { addHref: string }) {
               </Link>
               <Link className="setrow" href={addHref}>
                 <span className="setrow-txt">
-                  <span className="t">Add a studio</span>
+                  <span className="t">Add a place</span>
                   <span className="s">
-                    Name a new studio on a class and its page appears for everyone.
+                    Add a gym, event, park, or virtual space while adding a class.
                   </span>
                 </span>
                 <Icon name="chevron_right" size={20} />

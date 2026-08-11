@@ -783,6 +783,16 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 
 /* studio picker */
 .searchbox { position: relative; margin: 4px 0 8px; }
+.placekind-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 20px;
+}
+.placekind-option {
+  min-height: 48px; padding: 10px 12px; border: 0; border-radius: 14px;
+  background: var(--card); color: var(--ink); text-align: left;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--line);
+}
+.placekind-option.on { background: var(--ink); color: var(--paper); box-shadow: none; }
 .searchbox input {
   width: 100%; padding: 13px 14px 13px 40px; border: 1px solid var(--line);
   border-radius: 16px; font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);

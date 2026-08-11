@@ -241,6 +241,11 @@ export const studios = pgTable("studios", {
   slug: text("slug").unique(),
   name: text("name").notNull(),
   address: text("address").notNull(),
+  // "Studio" was the first kind of place in the directory, not the whole
+  // category. Existing rows default to it; events, parks and virtual rooms
+  // use the same page, schedule and class attachment without pretending to
+  // be brick and mortar.
+  placeKind: text("place_kind").notNull().default("studio"),
   // The address, geocoded once at save: a studio is a place, and a place
   // has coordinates. Best-effort; null when the lookup missed.
   lat: doublePrecision("lat"),

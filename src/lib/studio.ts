@@ -49,6 +49,19 @@ export const STUDIO_TYPES = [
   "Physical therapy",
 ] as const;
 
+export const PLACE_KINDS = ["studio", "event", "outdoor", "virtual"] as const;
+export type PlaceKind = (typeof PLACE_KINDS)[number];
+export const PLACE_KIND_LABELS: Record<PlaceKind, string> = {
+  studio: "Gym or studio",
+  event: "Event or pop-up",
+  outdoor: "Outdoor or public space",
+  virtual: "Virtual",
+};
+
+export function placeKindLabel(kind: string): string {
+  return PLACE_KIND_LABELS[kind as PlaceKind] ?? PLACE_KIND_LABELS.studio;
+}
+
 // A studio's page lives at /s/{slug}. Rows created before slugs existed fall
 // back to the id, so every studio is reachable either way.
 export function studioPath(s: { slug: string | null; id: string }) {

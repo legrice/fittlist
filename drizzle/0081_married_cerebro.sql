@@ -1,0 +1,1 @@
+ALTER TABLE "studios" ADD COLUMN "place_kind" text DEFAULT 'studio' NOT NULL;

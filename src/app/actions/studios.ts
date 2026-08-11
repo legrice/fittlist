@@ -8,7 +8,7 @@ import { storeImage } from "@/lib/storage";
 import { currentAdmin, adminEmails } from "@/lib/admin";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
-import { STUDIO_TYPES } from "@/lib/studio";
+import { PLACE_KINDS, STUDIO_TYPES, type PlaceKind } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
 
 export type StudioDto = { id: string; seq: number; name: string; address: string };
@@ -43,13 +43,15 @@ async function uniqueSlug(name: string, exceptId?: string) {
 export async function createStudio(
   nameRaw: string,
   addressRaw: string,
+  kindRaw: PlaceKind = "studio",
 ): Promise<{ ok: boolean; studio?: StudioDto; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const name = nameRaw.trim();
   const address = addressRaw.trim();
-  if (!name) return { ok: false, error: "Enter the studio name." };
-  if (!address) return { ok: false, error: "Enter the address." };
+  if (!name) return { ok: false, error: "Enter the place name." };
+  if (!address) return { ok: false, error: "Enter the location." };
+  const placeKind = PLACE_KINDS.includes(kindRaw) ? kindRaw : "studio";
   const db = await getDb();
   // A studio is a place, and a place has a point: one lookup at save,
   // best-effort, null on a miss.
@@ -59,6 +61,7 @@ export async function createStudio(
     .values({
       name,
       address,
+      placeKind,
       lat: geo?.lat ?? null,
       lng: geo?.lng ?? null,
       slug: await uniqueSlug(name),
