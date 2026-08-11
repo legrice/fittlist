@@ -3742,6 +3742,14 @@ button.ps-card { cursor: pointer; }
   font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif; cursor: pointer;
 }
 .profile-share-cta-btn:active { transform: scale(.985); }
+.profile-studio-rail { gap: 14px; padding-top: 2px; padding-bottom: 8px; }
+.profile-studio-rail .strail-item { width: 196px; }
+.profile-studio-rail .strail-ph { width: 196px; height: 142px; border-radius: 18px; }
+.profile-studio-rail .strail-nm { margin-top: 9px; font-size: 16.5px; }
+.profile-studio-rail .strail-types { font-size: 14px; }
+.profile-studio-rail .strail-mi {
+  margin-top: 3px; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's

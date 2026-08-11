@@ -248,27 +248,28 @@ export async function PublicProfileView({
   // off, because the tab that got you here already says it.
   const studios =
     coachStudios.length > 0 ? (
-      <div className="profstudios">
+      <div className="strail profile-studio-rail">
         {coachStudios.map((s) => (
-          // A place is somewhere with a face, same as a person. The card
-          // around each one made a list of two look like a form; the photo
-          // carries the row instead, and an initial stands in without one.
-          <Link key={s.id} className="coachstudio" href={studioPath(s)}>
-            {s.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="coachstudio-av" src={s.photo} alt="" />
-            ) : (
-              <span className="coachstudio-av coachstudio-av-empty" aria-hidden="true">
-                {(s.name.trim().charAt(0) || "?").toUpperCase()}
+          <Link key={s.id} className="strail-item" href={studioPath(s)}>
+            <span className="strail-ph">
+              {s.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={s.photo} alt="" />
+              ) : (
+                <span className="strail-ini" style={{ background: avatarColor({ id: s.id }) }} aria-hidden="true">
+                  {(s.name.trim().charAt(0) || "?").toUpperCase()}
+                </span>
+              )}
+            </span>
+            <span className="strail-nm">{s.name}</span>
+            {s.types.length > 0 && (
+              <span className="strail-types">{s.types.slice(0, 2).join(" · ")}</span>
+            )}
+            {s.address && (
+              <span className="strail-mi">
+                {s.address.split(",").slice(0, 2).join(",")}
               </span>
             )}
-            <span className="coachstudio-txt">
-              <span className="nm">{s.name}</span>
-              <span className="ad">{s.address}</span>
-            </span>
-            <span className="coachstudio-chev">
-              <Icon name="chevron_right" size={20} />
-            </span>
           </Link>
         ))}
       </div>
