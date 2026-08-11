@@ -44,7 +44,7 @@ export function navTabs(
           id: "schedule" as const,
           href: scheduleHref ?? "/calendar",
           icon: "calendar_month",
-          label: "Calendar",
+          label: "Schedule",
         }]
       : []),
     // Search left the bar, by Matt's call: the magnifier lives in the

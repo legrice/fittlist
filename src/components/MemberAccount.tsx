@@ -23,7 +23,7 @@ type MView = "profile" | "calendar" | "reach" | "account";
 
 const VIEW_TITLE: Record<MView, string> = {
   profile: "Your page",
-  calendar: "Calendar & sync",
+  calendar: "Schedule & sync",
   reach: "Privacy & reach",
   account: "Account",
 };
@@ -215,7 +215,7 @@ export function MemberAccount({
         <button className="setrow" onClick={() => setView("calendar")}>
           <span className="setrow-ic"><Icon name="event" size={24} /></span>
           <span className="setrow-txt">
-            <span className="t">Calendar &amp; sync</span>
+            <span className="t">Schedule &amp; sync</span>
             <span className="s">Your week in Apple, Google or Outlook</span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>

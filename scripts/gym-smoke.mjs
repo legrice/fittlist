@@ -489,7 +489,7 @@ console.log("the coach is told ok");
 {
   const feedFor = async (page) => {
     await page.goto(BASE + "/app?acct=1");
-    await openSetting(page, "Calendar & sync");
+    await openSetting(page, "Schedule & sync");
     const r = page.locator(".sheet .setrow", { hasText: "Your week in your calendar" });
     await r.waitFor();
     await r.click();
@@ -1026,7 +1026,7 @@ console.log("the coach is told ok");
 // coach who wants nothing public still gets their week.
 {
   await tom.goto(BASE + "/app?acct=1");
-  await openSetting(tom, "Calendar & sync");
+  await openSetting(tom, "Schedule & sync");
   const row = tom.locator(".sheet .setrow", { hasText: "Your week in your calendar" });
   await row.waitFor();
   if (!/shifts you.re on/i.test(await row.innerText()))

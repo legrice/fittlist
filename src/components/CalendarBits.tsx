@@ -398,7 +398,7 @@ export function CalHead({
         title
       )}
       <span className="calhead-spacer" />
-      <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
+      <button className="calmenu" aria-label="Schedule views" onClick={onMenu}>
         <Icon name={VIEW_ICON[view]} size={23} />
       </button>
       <button className="calfilter" aria-label="Filters" onClick={onFilter}>

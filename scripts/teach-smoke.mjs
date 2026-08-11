@@ -106,7 +106,7 @@ await row.click();
 // Wait for the tab, not for a stopwatch. The switch flips optimistically and
 // the bar redraws on router.refresh(), which is a round trip: a fixed sleep
 // passes on a warm server and fails on a cold one, and it did.
-await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ timeout: 15000 });
+await p.locator(".navtab", { hasText: "Schedule" }).waitFor({ timeout: 15000 });
 if (!(await row.locator(".switch.on").count())) fail("the switch should read on");
 // No reload. The bar is rendered by the layout above this screen, so a switch
 // that adds a tab and leaves the bar alone until the next navigation has
@@ -118,10 +118,10 @@ if (t.length !== 4 || !t[0].includes("Home") || !t[1].includes("Calendar") || !t
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png" });
 
 // ...and the calendar is real: it loads, and offers the first class.
-await p.locator(".navtab", { hasText: "Calendar" }).click();
+await p.locator(".navtab", { hasText: "Schedule" }).click();
 await p.waitForURL(/\/calendar/);
-await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
-console.log("the Calendar tab opens a real, empty week");
+await p.locator(".wkempty-t", { hasText: "Your schedule is empty" }).waitFor();
+console.log("the Schedule tab opens a real, empty week");
 
 // Turn it off again: the tab goes, and nothing else is harmed.
 await p.goto(BASE + "/settings");

@@ -378,7 +378,7 @@ export function ProfileSheet({
 
   const VIEW_TITLE: Record<Exclude<View, "home">, string> = {
     page: "Your page",
-    calendar: "Calendar & sync",
+    calendar: "Schedule & sync",
     reach: "Privacy & reach",
     account: "Account",
     security: "Login & security",
@@ -517,7 +517,7 @@ export function ProfileSheet({
         <h3 className="setgroup-h">Settings</h3>
         <div className="settingslist">
           {/* On for anybody looking at this screen, because a coach is exactly
-              somebody with it on. Turning it off drops the Calendar tab and
+              somebody with it on. Turning it off drops the Schedule tab and
               the listing without touching a class, so a week is never lost to
               a switch. */}
           <TeachToggle on canTurnOn />
@@ -532,7 +532,7 @@ export function ProfileSheet({
           <button className="setrow" onClick={() => openView("calendar")}>
             <span className="setrow-ic"><Icon name="event" size={24} /></span>
             <span className="setrow-txt">
-              <span className="t">Calendar &amp; sync</span>
+              <span className="t">Schedule &amp; sync</span>
               <span className="s">
                 {googleConfigured && connected ? "Google connected" : "Google"}, Apple and Outlook,
                 your week as text

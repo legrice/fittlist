@@ -51,7 +51,7 @@ export function SaveEducation({ shareHref }: { shareHref: string }) {
         </span>
         <h2>Added to your week</h2>
         <p className="lead">
-          It&rsquo;s now part of your week. Open Calendar to see it there, or share your
+          It&rsquo;s now part of your week. Open Schedule to see it there, or share your
           updated week with friends.
         </p>
         <div className="publishwrap nostick saveeducation-actions">
@@ -60,7 +60,7 @@ export function SaveEducation({ shareHref }: { shareHref: string }) {
             href={highlight ? `/calendar?hl=${encodeURIComponent(highlight)}` : "/calendar"}
             onClick={() => setOpen(false)}
           >
-            Go to Calendar
+            Go to Schedule
           </Link>
           <Link className="btn ghost" href={shareHref} onClick={() => setOpen(false)}>
             Share your week

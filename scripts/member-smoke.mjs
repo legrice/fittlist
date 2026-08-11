@@ -212,7 +212,7 @@ console.log("member profile ok (Schedule and About tabs, nothing about who they 
   await p.getByRole("button", { name: "Preview profile" }).waitFor();
   {
     const rows = await p.locator(".settingslist .setrow .t").allInnerTexts();
-    for (const must of ["Your page", "Calendar & sync", "Privacy & reach", "Account"])
+    for (const must of ["Your page", "Schedule & sync", "Privacy & reach", "Account"])
       if (!rows.map((t) => t.trim()).includes(must))
         fail("the settings should be the coach's four: " + rows.join("|"));
   }

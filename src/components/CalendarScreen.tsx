@@ -180,7 +180,7 @@ export function CalendarScreen({
         {/* Calendar and its two views share one title row. The screen is
             coaching-only, so there is no relationship filter to explain. */}
         <div className="calbar">
-          <h1 className="calbar-t caltitle tab-page-title">Your calendar</h1>
+          <h1 className="calbar-t caltitle tab-page-title">Your schedule</h1>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
@@ -233,7 +233,7 @@ export function CalendarScreen({
       {bare ? (
         <WeekEmpty
           first
-          title="Your calendar is empty"
+          title="Your schedule is empty"
           body="Put the classes you teach up here. That is the whole app: your week, at one link, kept current."
           cta="Add a class"
           onCta={() => setAddOpen(true)}

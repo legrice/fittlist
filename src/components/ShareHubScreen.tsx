@@ -918,7 +918,7 @@ export function ShareHubScreen({
             {/* Without this line people read a checkbox as a delete and stop
                 touching the control: hiding is the picture's business only. */}
             <p className="lead">
-              Untick one to leave it off the picture. Your calendar keeps it.
+              Untick one to leave it off the picture. Your schedule keeps it.
             </p>
             {/* Which hat, never both, by Matt's call: the picture is the
                 classes you coach or the ones you added, and the segment

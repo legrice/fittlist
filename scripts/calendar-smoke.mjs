@@ -42,7 +42,7 @@ await p.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 }
 // control is drawn: a plus beside the CTA is one button explaining the other,
 // and a poster of an empty week is the app talking to itself.
 await p.goto(BASE + "/calendar");
-await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
+await p.locator(".wkempty-t", { hasText: "Your schedule is empty" }).waitFor();
 if (await p.locator(".wkfab").count()) fail("no floating Add on an empty calendar");
 if (await p.locator(".calbar-share").count()) fail("no Share door on an empty calendar");
 console.log("an empty calendar is its own CTA, and carries no other control");
@@ -102,8 +102,8 @@ await p.locator(".clline").first().waitFor();
   if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
   if (await p.locator(".calbar-share").count()) fail("the Share arrow is gone from the title row");
   // The title and view controls share one row.
-  if (!(await p.locator(".caltitle", { hasText: "Your calendar" }).count()))
-    fail("Your calendar sits across from the view controls");
+  if (!(await p.locator(".caltitle", { hasText: "Your schedule" }).count()))
+    fail("Your schedule sits across from the view controls");
   const titleBox = await p.locator(".caltitle").boundingBox();
   const toggleBox = await p.locator(".calbar .calseg").boundingBox();
   const titleMid = titleBox.y + titleBox.height / 2;

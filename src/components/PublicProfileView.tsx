@@ -606,7 +606,7 @@ export async function PublicProfileView({
         </ProfileTabs>
         </FollowSync>
         {/* No Add class here. This page is where you look at your week, and
-            the Calendar tab is where you work on it: the plus lives on the
+            the Schedule tab is where you work on it: the plus lives on the
             calendar, under a thumb, next to the week it adds to. A second
             door on the profile meant two screens both claiming to be where
             classes come from, and this is the one that is really a page you
