@@ -52,27 +52,27 @@ export async function searchAll(
   const needle = query.trim().toLowerCase();
   const locNeedle = loc.trim().toLowerCase();
   if (needle.length < MIN && locNeedle.length < MIN) return empty;
-  return runSearch(userId, needle, locNeedle, false);
+  return runSearch(userId, needle, locNeedle, false, false);
 }
 
 /**
- * The idle screen's Nearby lists: the same three halves with no question
- * asked, behind the People / Studios / Classes segment. One body with
- * searchAll rather than a loader per kind, so browsing can never offer a
- * row the search would not (the block rules and `discoverable` are kept
- * once). Browsing does bring back the quality bar the search skips: a
- * coach on a list nobody asked for has to be worth opening.
+ * The dedicated Search screen is intentionally coaches-only. Keep these
+ * focused actions separate from searchAll, which still powers the broader
+ * Discover sheet, so typing a coach's name does not query studios, attendance
+ * marks, and two weeks of class occurrences the screen will never render.
  */
-export async function searchBrowse(): Promise<{
-  people: DirPerson[];
-  studios: DirStudio[];
-  classes: DirClass[];
-}> {
-  const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[] };
+export async function searchCoaches(query: string): Promise<DirPerson[]> {
   const userId = await getSessionUserId();
-  if (!userId) return empty;
-  if (!(await fansVisible())) return empty;
-  return runSearch(userId, "", "", true);
+  if (!userId) return [];
+  const needle = query.trim().toLowerCase();
+  if (needle.length < MIN) return [];
+  return (await runSearch(userId, needle, "", false, true)).people;
+}
+
+export async function browseCoaches(): Promise<DirPerson[]> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  return (await runSearch(userId, "", "", true, true)).people;
 }
 
 async function runSearch(
@@ -80,6 +80,7 @@ async function runSearch(
   needle: string,
   locNeedle: string,
   browse: boolean,
+  peopleOnly: boolean,
 ): Promise<{ people: DirPerson[]; studios: DirStudio[]; classes: DirClass[] }> {
   const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[] };
   const db = await getDb();
@@ -100,7 +101,9 @@ async function runSearch(
       .select({ trainerUserId: schema.followRequests.trainerUserId })
       .from(schema.followRequests)
       .where(eq(schema.followRequests.requesterUserId, userId)),
-    db.select().from(schema.studios).orderBy(schema.studios.name),
+    peopleOnly
+      ? Promise.resolve([])
+      : db.select().from(schema.studios).orderBy(schema.studios.name),
   ]);
 
   // A handle, a name, the city they train in, or what they teach. The handle
@@ -134,7 +137,11 @@ async function runSearch(
   // has to be findable whether or not its coach is called Vinyasa. The same
   // rows then answer both questions, so this is one call rather than two.
   const listable = allRows.filter((r) => !hidden.has(r.id));
-  const allClassRows = (await publicSchedules(listable)).filter((c) => c.isPublic);
+  // Coach Search only needs week counts for coaches it can return. The broad
+  // searchAll path still needs every public schedule because it also searches
+  // class inventory.
+  const scheduleOwners = peopleOnly ? matched : listable;
+  const allClassRows = (await publicSchedules(scheduleOwners)).filter((c) => c.isPublic);
   const start = new Date(`${todayIso()}T00:00:00Z`);
   const weekCount = new Map<string, number>();
   for (let i = 0; i < 7; i++) {
@@ -176,6 +183,8 @@ async function runSearch(
       color: avatarColor(r),
     }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
+
+  if (peopleOnly) return { people, studios: [], classes: [] };
 
   // ---- the classes.
   //

@@ -1365,71 +1365,23 @@ await fan
   .waitFor();
 console.log("discover ok (the row's pill agrees with the profile)");
 
-// Two halves of the directory, one row of controls. A studio is a place, so
-// it isn't followable and carries no city filter: it has an address and
-// nothing normalised to group by.
+// Search is the coach directory now. Studios and classes have their own
+// surfaces and should never leak back in through an old mixed-search result.
 {
   await fan.goto(BASE + "/discover");
   await fan.locator(".dissearchrow").waitFor();
-  // The box is a door now: drawn like a search field, opening the universal
-  // search. Two search behaviours behind one drawing of a box was confusing.
   await fan.locator(".dissearch-door").waitFor();
   if (await fan.locator(".dissearch-in").count())
     fail("Discover's box should be a door, not a filter");
-
-  // Studios left Discover with Classes: a directory you cannot follow anything
-  // from is not doing this screen's one job. The rows live on /search, and the
-  // component is shared, so the shape rules are checked where they render.
   if (await fan.locator(".distabs").count())
     fail("Discover is one list now: there should be no halves to pick");
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
-  await fan.locator(".dissearch-in").first().fill("Ironbound");
-  await fan.locator(".disrow-studio").first().waitFor();
-  if (await fan.locator(".discitysel").count())
-    fail("a studio has an address, not a city to filter by");
-  if (await fan.locator(".disrow-studio .disfollow").count())
-    fail("a studio is a place, not somebody you follow");
-  // A long gym name gets the width a Follow pill would have taken.
-  const wide = await fan
-    .locator(".disrow-studio .disrow-nmline")
-    .first()
-    .evaluate((e) => getComputedStyle(e).paddingRight);
-  if (wide !== "0px") fail("a studio row shouldn't hold space for a pill it hasn't got");
-  // A studio with no photo reads like a coach with no photo: the first letter
-  // on a colour off the same sixty, derived from the id so it never shifts.
-  {
-    const faces = await fan
-      .locator(".disrow-studio .disrow-av-empty")
-      .evaluateAll((els) =>
-        els.slice(0, 6).map((e) => [e.textContent.trim(), getComputedStyle(e).backgroundColor]),
-      );
-    if (!faces.length) fail("a studio with no photo should still have a face");
-    if (faces.some(([letter]) => !/^[A-Z0-9?]$/.test(letter)))
-      fail("expected one initial per studio: " + JSON.stringify(faces));
-    // The colour is derived from the id, never the grey placeholder a pin used
-    // to be. Distinctness needs two samples to mean anything, and a search
-    // narrow enough to name one studio only ever returns one.
-    if (faces.some(([, bg]) => /rgba?\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(bg)))
-      fail("a studio with no photo should carry its own colour: " + JSON.stringify(faces));
-    if (faces.length > 1 && new Set(faces.map(([, bg]) => bg)).size < 2)
-      fail("a directory of one colour is as unreadable as a directory of pins");
-  }
-  // Already on search, where the studio rows live: the address finds the town
-  // the same way the name finds the place.
-  await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
-  // A place is a rectangle, a person a circle: the same shape rule the
-  // profile heads follow, at row size.
-  {
-    const r = await fan
-      .locator(".disrow-studio .disrow-av")
-      .first()
-      .evaluate((e) => parseFloat(getComputedStyle(e).borderRadius));
-    if (r > 20) fail("a studio row's picture should be a rounded rectangle, radius " + r);
-  }
-  await fan.locator(".disrow-studio").first().click();
-  await fan.waitForURL(/\/s\//);
-  console.log("discover tabs ok (people and places, one row of controls)");
+  await fan.locator(".srchhead", { hasText: "Coaches" }).first().waitFor();
+  if (await fan.locator(".srchseg, .disrow-studio, .callist").count())
+    fail("Search should contain coaches only");
+  console.log("search door opens the coaches-only directory");
+}
 
 // Filtering is the chip rail alone now: All leads it, filled in by default
 // (the one selected chip is the hint the rest can be selected), and every
@@ -1524,80 +1476,75 @@ console.log("discover ok (the row's pill agrees with the profile)");
   }
   console.log("discover back ok (a list you came from is a list you can return to)");
 }
-}
 
-// ---- Universal search: one box, both halves under it, told apart by a
-// heading. The point is that you don't have to know which half a thing is in
-// before you look for it.
+// ---- Coach search: one box, one kind of result. Studios and classes have
+// their own surfaces now, so neither a query nor an old Recent entry may put
+// one back on this screen.
 {
-  // Discover's own box is the door to this screen. The header's magnifier
-  // left when the tab took that glyph back: the same mark is never drawn
-  // twice on one screen, and the corner is your face now.
-  await fan.goto(BASE + "/week");
-  if (await fan.locator(".searchbtn").count())
-    fail("the header magnifier should be gone: Discover's tab wears it");
   await fan.goto(BASE + "/discover");
-  // Recent is per device and this block is about the screen with nothing on
-  // it, so it starts from nothing: a studio row was tapped from search
-  // further up, which is exactly what Recent is for.
-  await fan.evaluate(() => localStorage.removeItem("fl-recent-searches"));
+  // Seed the shape an older build wrote. Search hides studio recents without
+  // destructively rewriting storage, so a rollback can still read them while
+  // this screen remains coaches-only.
+  await fan.evaluate(() =>
+    localStorage.setItem(
+      "fl-recent-searches",
+      JSON.stringify([
+        { t: "s", name: "Ironbound Strength", base: "s/ironbound-strength" },
+      ]),
+    ),
+  );
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
-  // Nothing typed yet: a prompt and the door to browsing, not the directory.
-  await fan.locator(".empty-block", { hasText: "Search fittlist" }).waitFor();
-  if (await fan.locator(".disrow").count()) fail("search should list nothing until it is asked");
+  await fan.locator(".srchhead", { hasText: /^Coaches/ }).waitFor();
+  if (await fan.locator(".recentrow").count())
+    fail("an old studio recent should be hidden from coach search");
+  if (await fan.locator(".srchseg, .disrow-studio, .callist, .clline").count())
+    fail("coach search should have no studio/class controls or rows");
+
+  const input = fan.locator(".dissearch-in").first();
+  if ((await input.getAttribute("placeholder")) !== "Search coaches")
+    fail("the search box should promise coaches only");
   // The box takes the caret on arrival, so the keyboard is already up.
   if (!(await fan.evaluate(() => document.activeElement?.classList.contains("dissearch-in"))))
     fail("the search box should be focused on arrival");
+
   // One letter is not a question: the floor keeps a stray keystroke from
-  // asking for the whole directory.
-  await fan.locator(".dissearch-in").first().fill("m");
+  // searching. The uncounted browse heading stays in place until the second.
+  await input.fill("m");
   await fan.waitForTimeout(600);
+  if (await fan.locator(".srchhead span").count())
+    fail("one character should not replace browse with search results");
+
+  // A studio-only name finds nothing here. This is the behavioral boundary,
+  // not merely a hidden Studios heading over results the client still fetched.
+  await input.fill("Ironbound Strength");
+  await fan.locator(".empty-block", { hasText: "No coaches match that" }).waitFor();
+  if (await fan.locator(".disrow-studio, .callist, .clline").count())
+    fail("a studio-only query leaked a studio or class into coach search");
+
+  // A coach by name, with the directory's own row: the week count and the
+  // corner chevron, without a redundant Coach badge in a coaches-only list.
+  await input.fill("matt");
+  await fan.locator(".disrow", { hasText: "Matt" }).first().waitFor();
   {
-    // Recent is a heading too, and tapping a studio row from here earlier put
-    // one there, so this asks whether a *search* ran rather than whether any
-    // heading exists.
     const heads = (await fan.locator(".srchhead").allInnerTexts()).map((t) =>
       t.split("\n")[0].trim(),
     );
-    if (heads.some((h) => /^(People|Studios|Classes)$/i.test(h)))
-      fail("one character should not search: " + heads.join("|"));
-  }
-
-  // A coach and a studio that share a word: both sections, both named.
-  await fan.locator(".dissearch-in").first().fill("ironbound");
-  await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
-  {
-    const heads = (await fan.locator(".srchhead").allInnerTexts()).map((t) => t.split("\n")[0]);
-    if (!heads.includes("STUDIOS"))
-      fail("a studio match should sit under a Studios heading: " + heads.join(","));
-    // The directory is seeded with a second Ironbound, so take the first.
-    await fan.locator(".disrow-studio", { hasText: "Ironbound Strength" }).first().waitFor();
-  }
-
-  // A person by name, with the directory's own row: the Coach badge, the
-  // week count and the corner chevron, not a second thinner copy of them.
-  await fan.locator(".dissearch-in").first().fill("matt");
-  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
-  {
+    if (heads.length !== 1 || heads[0] !== "Coaches")
+      fail("coach search should have one Coaches section: " + heads.join("|"));
     const row = fan.locator(".disrow", { hasText: "Matt" }).first();
-    await row.locator(".kindtag", { hasText: "Coach" }).waitFor();
+    if (await row.locator(".kindtag").count())
+      fail("a coaches-only list should not repeat Coach on every row");
     await row.locator(".disrow-txt .wk").waitFor();
     await row.locator(".disrow-chev").waitFor();
   }
 
-  // A town finds the people who train there, and the places in it, in one go:
-  // the whole reason this isn't two boxes.
-  await fan.locator(".dissearch-in").first().fill("jersey city");
-  // Wait for the half that wasn't on screen a moment ago. The people section
-  // was already up from the search before this one, so waiting on it returns
-  // at once and reads the old render.
-  await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
-  {
-    const heads = (await fan.locator(".srchhead").allInnerTexts()).map((t) => t.split("\n")[0]);
-    if (heads.join(",") !== "PEOPLE,STUDIOS")
-      fail("a town should turn up both halves, people first: " + heads.join(","));
-  }
+  // Coach metadata remains useful: a location can find coaches there, but it
+  // no longer brings the studios in that town along for the ride.
+  await input.fill("jersey city");
+  await fan.locator(".disrow", { hasText: "Matt" }).first().waitFor();
+  if (await fan.locator(".disrow-studio, .callist, .clline").count())
+    fail("a location search should still return coaches only");
 
   // One box only: the place field came off for now, so the town rides the
   // same box a name does.
@@ -1605,13 +1552,13 @@ console.log("discover ok (the row's pill agrees with the profile)");
     fail("the location field should be gone from search");
 
   // Nothing matches says so, once, and offers no rows.
-  await fan.locator(".dissearch-in").first().fill("zzqqxx");
-  await fan.locator(".empty-block", { hasText: "Nothing matches that" }).waitFor();
+  await input.fill("zzqqxx");
+  await fan.locator(".empty-block", { hasText: "No coaches match that" }).waitFor();
   if (await fan.locator(".srchhead").count()) fail("an empty result should carry no headings");
 
   // Tapping through and back: the arrow names the list you came from.
-  await fan.locator(".dissearch-in").first().fill("matt");
-  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
+  await input.fill("matt");
+  await fan.locator(".disrow", { hasText: "Matt" }).first().waitFor();
   await fan.locator(".disrow", { hasText: "Matt" }).first().locator(".disrow-main").click();
   await fan.locator(".pubhead").waitFor();
   if (!/from=search/.test(fan.url())) fail("a search result should say where it came from: " + fan.url());
@@ -1619,9 +1566,7 @@ console.log("discover ok (the row's pill agrees with the profile)");
   await fan.waitForURL(/\/search/);
 
   // Recent holds what was tapped, not what was typed: one visit to Matt's
-  // page means one row, wearing his name and linking straight there. None of
-  // the queries along the way ("ironbound", "jersey city", "zzqqxx") earned a
-  // place, because a string you typed is the work and the row is the answer.
+  // page means one coach row, wearing his name and linking straight there.
   {
     await fan.locator(".srchsec", { hasText: "Recent" }).waitFor();
     const rec = fan.locator("a.recentrow");
@@ -1633,11 +1578,12 @@ console.log("discover ok (the row's pill agrees with the profile)");
     await fan.waitForURL(/\/matt\?from=search/);
     await fan.locator(".profback .evback").click();
     await fan.waitForURL(/\/search/);
-    // Clear means it: the list empties and the prompt returns.
+    // Clear means it: Recent leaves and the coaches browse list remains.
     await fan.locator(".srchclear").click();
-    await fan.locator(".empty-block", { hasText: "Search fittlist" }).waitFor();
+    await fan.locator(".recentrow").waitFor({ state: "detached" });
+    await fan.locator(".srchhead", { hasText: /^Coaches/ }).waitFor();
   }
-  console.log("search ok (one box, tapped rows are the recents)");
+  console.log("coach search ok (one result kind, studio recents hidden, coach recents kept)");
 }
 
 // The studio directory is coach-editable, and a coach is kind, not handle:

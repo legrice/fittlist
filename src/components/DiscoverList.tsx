@@ -121,14 +121,11 @@ export function DiscoverList({
   return (
     <>
       {/* The box first, because searching is the thing people came to do. It
-          is a door now, not a filter: tapping it opens the universal search,
-          which covers both halves at once and the people you follow besides.
-          Two search behaviours behind one drawing of a box was the confusing
-          part; the magnifier left the header for this tab, so this is the one
-          place searching starts. */}
+          is a door now, not a second client-side filter: tapping it opens the
+          coach search with the same promise written on both surfaces. */}
       {!hideSearch && (
       <div className="dissearchrow">
-        <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
+        <Link className="dissearch dissearch-door" href="/search" aria-label="Search coaches">
           <Icon name="search" size={21} className="dissearch-ic" />
           {/* The door says what the field behind it says: it is drawn as that
               field, and a door whose words change on opening is two doors. */}

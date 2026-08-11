@@ -38,7 +38,7 @@ export function AppHeader({
       )}
       <div className="brandbar-actions">
         {/* One stable utility order everywhere in the signed-in app. Search
-            finds coaches and classes, the bell holds Notifications and
+            finds coaches, the bell holds Notifications and
             Messages together, and the gear opens settings in place. */}
         <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
         <HeaderIconLink

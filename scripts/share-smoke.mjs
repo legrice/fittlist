@@ -331,15 +331,13 @@ await settled(coach);
   await coach.locator(".clline").first().waitFor();
   if (!(await coach.locator(".clline-nm", { hasText: "Reformer Pilates" }).count()))
     fail("a class added from the editor should be on the calendar");
-  // And the studio it named is findable, which is the inventory filling
-  // itself in behind somebody making a picture.
-  await coach.goto(BASE + "/search");
-  await coach.locator(".dissearch-in").first().fill("Asana");
-  await coach.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
-  if (!(await coach.locator(".disrow-studio", { hasText: "Asana Soul Practice" }).count()))
-    fail("the studio named while adding should be findable");
+  // And the studio it named has a real public page, which is the inventory
+  // filling itself in behind somebody making a picture. Search is deliberately
+  // coaches-only now, so the studio inventory is verified at its own URL.
+  await coach.goto(BASE + "/s/asana-soul-practice");
+  await coach.locator(".profname", { hasText: "Asana Soul Practice" }).waitFor();
 }
-console.log("adding from the picker fills the calendar and the directory ok");
+console.log("adding from the picker fills the calendar and studio inventory ok");
 
 // ---- an empty range is an offer, not a blank picture. A week eight weeks out
 // holds nothing, and the picture says so with the way to fix it.

@@ -155,9 +155,9 @@ await m.waitForFunction(() => !document.querySelector(".rowsave.on"), null, {
 });
 console.log("the row ribbon fills in place and lights the You ring");
 
-// Under the schedule: the studios as rectangles, closest first, and the
-// coaches with Follow one tap deep, by Matt's call. Every head's arrow
-// lands on Search with that kind's segment already picked.
+// Old rail links may still carry a segment, but Search has one meaning now:
+// coaches. The legacy query must fall back cleanly rather than revive a
+// Classes or Studios segment.
 await m.locator(".nearlbl", { hasText: "Local studios" }).waitFor();
 await m.locator(".strail-item", { hasText: "Drew Gym" }).first().waitFor();
 await m.locator(".nearlbl", { hasText: "Find friends" }).waitFor();
@@ -166,11 +166,9 @@ await drewNear.locator(".ctrail-fl", { hasText: "Follow" }).waitFor();
 if ((await m.locator(".nearhead-go").count()) !== 3) fail("three rails, three arrows");
 await m.locator('.nearhead-go[href="/search?seg=classes"]').click();
 await m.waitForURL(/\/search\?seg=classes/);
-await m.locator(".srchseg button.sel", { hasText: "Classes" }).waitFor();
-// The list wears Home's own grammar: the banded days and the flat rows,
-// by Matt's call.
-await m.locator(".srchsec .dayband").first().waitFor();
-await m.locator(".srchsec .clline-nm").first().waitFor();
+await m.locator(".srchhead", { hasText: "Coaches" }).first().waitFor();
+if (await m.locator(".srchseg, .disrow-studio, .callist").count())
+  fail("Search should stay coaches-only even from an old segment link");
 await m.goBack();
 // The search page draws day bands too now, so wait for Home itself.
 await m.waitForURL(/\/feed/);

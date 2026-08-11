@@ -64,8 +64,8 @@ export type DirStudio = {
 
 /** A person: the whole row links to their page, chevron in the corner.
  *  `kindTag` is off where the list holds one kind: Discover lists coaches
- *  only, so a Coach badge on every row would be saying nothing; search
- *  mixes kinds, and there the badge is the distinction that matters. */
+ *  only, so a Coach badge on every row would be saying nothing. Search is
+ *  coaches-only too and follows the same rule. */
 export function PersonRow({
   person: c,
   from,
