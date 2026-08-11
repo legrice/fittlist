@@ -141,7 +141,7 @@ export function ClassLine({ row }: { row: WeekRow }) {
           at the same hour, by Matt's call: each is its own box now, and a
           box with a blank time column read as a box missing something
           rather than as a second thing at six. */}
-      {row.tag && (
+      {row.tag && !row.coach && (
         <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
           {row.tag}
         </span>
@@ -156,7 +156,12 @@ export function ClassLine({ row }: { row: WeekRow }) {
               initials(row.coach.name)
             )}
           </span>
-          {row.coach.name}
+          <span className="clline-by-name">{row.coach.name}</span>
+          {row.tag && (
+            <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
+              {row.tag}
+            </span>
+          )}
         </span>
       )}
       <span className="clline-t">

@@ -261,8 +261,8 @@ export function FollowingScreen({
     return out;
   }, [items, todayIso]);
 
-  // One row mapping. Duration sits beneath the time on the same grid row as
-  // the studio, so both secondary facts can be compared without another line.
+  // One row mapping. The compact feed keeps time, class, place and coach;
+  // duration belongs in the class detail rather than every scanning row.
   const rowOf = (i: FeedItem): WeekRow & { item: FeedItem } => {
     const c = coachById.get(i.coachId);
     return {
@@ -272,7 +272,6 @@ export function FollowingScreen({
       where: i.where,
       hm: i.hm,
       ap: i.ap,
-      dur: `${i.durationMin} min`,
       tag: meId && i.coachId === meId ? "You" : undefined,
       tagTone: meId && i.coachId === meId ? "coaching" : undefined,
       coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,

@@ -151,7 +151,6 @@ export function CalendarScreen({
             where,
             hm: t.hm,
             ap: t.ap,
-            dur: `${c.durationMin} min`,
             tag: c.shift ? "You · Shift" : "You",
             tagTone: "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
@@ -167,7 +166,6 @@ export function CalendarScreen({
         where: i.where,
         hm: i.hm,
         ap: i.ap,
-        dur: `${i.durationMin} min`,
         coach:
           !i.personal && i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
