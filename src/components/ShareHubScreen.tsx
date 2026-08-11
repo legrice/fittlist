@@ -544,8 +544,12 @@ export function ShareHubScreen({
                     + Add another class
                   </button>
                 )}
-                {/* Classes lead the rail, per the brief: what is on the picture
-                    is the first thing to change about it. */}
+                {/* A complete visual style is the fastest way to make the
+                    picture feel yours, so it leads the editing controls. */}
+                <button className="shctrl" onClick={() => setPick("layout")}>
+                  <span className="shctrl-k">Style</span>
+                  <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
+                </button>
                 <button className="shctrl" onClick={() => setPick("classes")}>
                   <span className="shctrl-k">Classes</span>
                   <span className="shctrl-v">
@@ -561,10 +565,6 @@ export function ShareHubScreen({
                   <span className="shctrl-v">
                     {noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   </span>
-                </button>
-                <button className="shctrl" onClick={() => setPick("layout")}>
-                  <span className="shctrl-k">Layout</span>
-                  <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("deco")}>
                   <span className="shctrl-k">Decoration</span>
@@ -754,7 +754,7 @@ export function ShareHubScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Layout</h2>
+            <h2>Style</h2>
             <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
             <div className="settingslist layoutlist">
               {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(
