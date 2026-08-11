@@ -4,11 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
+import { ClassLine, type WeekRow } from "@/components/WeekView";
 
 export type FeedCoach = {
   id: string;
@@ -127,12 +126,7 @@ export function FollowingScreen({
   coaches,
   favIds,
   cats,
-  follows,
   todayIso,
-  meId,
-  myRail,
-  meKind,
-  meFace,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -175,35 +169,11 @@ export function FollowingScreen({
   // Today isn't selected; it only ever names this one day.
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
-  const [peekPerson, setPeekPerson] = useState<RailPerson | null>(null);
   const [find, setFind] = useState(false);
-  const [findIntro, setFindIntro] = useState(false);
+  const [coachFilter, setCoachFilter] = useState<string>("all");
+  const [coachSheet, setCoachSheet] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
-  // A save lights your own circle rather than toasting, by Matt's call:
-  // the ring goes brand and a New badge rides your face, the same signal a
-  // followed person's fresh week sends. Tapping it lands on the Share
-  // screen, where the saved class now lives. localStorage carries it
-  // across navigations; the Share screen clears it on arrival.
-  const [youFresh, setYouFresh] = useState(false);
-  useEffect(() => {
-    try {
-      setYouFresh(!!localStorage.getItem("fl-you-new"));
-    } catch {
-      // Private mode: the ring just doesn't persist.
-    }
-  }, []);
-  const notify = (msg: string, hlKey?: string) => {
-    if (hlKey) {
-      try {
-        localStorage.setItem("fl-you-new", "1");
-      } catch {
-        // Private mode: the ring still lights for this visit.
-      }
-      setYouFresh(true);
-      return;
-    }
-    toast(msg);
-  };
+  const notify = (msg: string) => toast(msg);
   const router = useRouter();
 
   const closeFind = () => {
@@ -261,10 +231,16 @@ export function FollowingScreen({
   };
 
   const shown = useMemo(
-    () => items.filter(passes),
+    () => items.filter((item) => passes(item) && (!isHome || coachFilter === "all" || item.coachId === coachFilter)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo],
+    [items, f, geo, isHome, coachFilter],
   );
+
+  const coachOptions = useMemo(() => {
+    const ids = new Set(items.map((item) => item.coachId));
+    return coaches.filter((coach) => ids.has(coach.id));
+  }, [coaches, items]);
+  const selectedCoach = coachOptions.find((coach) => coach.id === coachFilter) ?? null;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -459,89 +435,18 @@ export function FollowingScreen({
           <p>Browse classes by day, time, distance, type, or place.</p>
         </header>
       )}
-      {/* No search bar up here any more, by Matt's call: the magnifier
-          lives in the header's corner, right of the bell, and the rail
-          leads the screen. */}
-      {/* This week: the people you follow with something coming up, soonest
-          first, no captions and no badges. A circle is a name and a ring,
-          the ring is the freshness signal, and tapping one opens their
-          week. You lead it, wearing your own face, and Add ends it. */}
       {isHome && (
-        <div className="tray">
-          <div className="tray-scroll">
-            {meKind === "coach" && <button
-              className="trayitem"
-              onClick={() => {
-                if (!meId) return;
-                setPeekPerson({
-                  id: meId,
-                  name: meFace.name,
-                  handle: null,
-                  photo: meFace.photo,
-                  color: meFace.color,
-                  fresh: youFresh,
-                  nextAt: todayIso,
-                });
-              }}
-            >
-              <span className="youwrap">
-                <span className={`trayav trayav-you${youFresh ? " trayav-ring" : ""}`}>
-                  {meFace.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={meFace.photo} alt="" />
-                  ) : (
-                    <span className="trayav-ini" style={{ background: meFace.color }}>
-                      {initials(meFace.name)}
-                    </span>
-                  )}
-                </span>
-              </span>
-              <span className="trayitem-nm">You</span>
-            </button>}
-            {myRail.map((p) => (
-              <button key={p.id} className="trayitem" onClick={() => setPeekPerson(p)}>
-                <span className={`trayav trayav-ring${p.fresh ? "" : " seen"}`}>
-                  {p.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.photo} alt="" />
-                  ) : (
-                    <span className="trayav-ini" style={{ background: p.color }}>
-                      {initials(p.name)}
-                    </span>
-                  )}
-                </span>
-                <span className="trayitem-nm">{p.name.split(/\s+/)[0]}</span>
-              </button>
-            ))}
-            <button
-              className="trayitem"
-              onClick={() => {
-                try {
-                  if (localStorage.getItem("fl-circle-intro-seen")) setFind(true);
-                  else setFindIntro(true);
-                } catch {
-                  setFindIntro(true);
-                }
-              }}
-            >
-              <span className="trayav trayav-add">
-                <Icon name="add" size={28} />
-              </span>
-              <span className="trayitem-nm">Add</span>
+        <header className="following-head">
+          <h1>Following</h1>
+          <p>Upcoming classes from the coaches you follow.</p>
+          <div className="following-controls">
+            <button className="following-filter" onClick={() => setCoachSheet(true)}>
+              {selectedCoach ? selectedCoach.name : "All coaches"}
+              <Icon name="expand_more" size={17} />
             </button>
-            {follows === 0 && (
-              <>
-                <span className="trayav trayav-ghost" aria-hidden="true" />
-                <span className="trayav trayav-ghost" aria-hidden="true" />
-              </>
-            )}
+            <Link className="following-manage" href="/following">Manage</Link>
           </div>
-          {follows === 0 && (
-            <p className="trayhint">
-              Follow the coaches you go to most. Their upcoming classes show up here.
-            </p>
-          )}
-        </div>
+        </header>
       )}
 
       {/* Home previews the next classes across days. The full page owns the
@@ -549,7 +454,7 @@ export function FollowingScreen({
           to narrow rather than making Home look quiet. */}
       {isHome && (
         <div className="week-schedule-head">
-          <span className="nearlbl">Upcoming from your coaches</span>
+          <span className="nearlbl">Upcoming</span>
           <Link className="nearhead-go home-seeall" href="/upcoming">
             Discover classes
           </Link>
@@ -675,44 +580,60 @@ export function FollowingScreen({
         </>
       )}
 
-      {/* No floating search circle either: the Search tab took the act.
-          People near you stays one tap away behind the rail's Add. */}
+      {/* Empty-state discovery stays in a sheet; normal discovery is the
+          header search and the Discover classes link. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
 
-      {isHome && findIntro && (
+      {isHome && coachSheet && (
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setFindIntro(false);
+            if (e.target === e.currentTarget) setCoachSheet(false);
           }}
         >
-          <div className="sheet confirmsheet circleeducation">
-            <span className="circleeducation-icon" aria-hidden="true">
-              <Icon name="group" size={24} />
-            </span>
-            <h2>Keep up with your coaches</h2>
-            <p className="lead">
-              Follow coaches to combine their upcoming classes on Following.
-            </p>
-            <div className="publishwrap nostick">
+          <div className="sheet following-filter-sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setCoachSheet(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Show classes from</h2>
+            <div className="fopts">
               <button
-                className="btn si"
+                className="fopt"
+                aria-pressed={coachFilter === "all"}
                 onClick={() => {
-                  try {
-                    localStorage.setItem("fl-circle-intro-seen", "1");
-                  } catch {
-                    // The explanation simply returns next time in private mode.
-                  }
-                  setFindIntro(false);
-                  setFind(true);
+                  setCoachFilter("all");
+                  setCoachSheet(false);
                 }}
               >
-                Find coaches
+                All coaches
+                {coachFilter === "all" && <Icon name="check" size={19} />}
               </button>
+              {coachOptions.map((coach) => (
+                <button
+                  key={coach.id}
+                  className="fopt following-coach-option"
+                  aria-pressed={coachFilter === coach.id}
+                  onClick={() => {
+                    setCoachFilter(coach.id);
+                    setCoachSheet(false);
+                  }}
+                >
+                  <span className="following-coach-face" style={{ background: coach.color }}>
+                    {coach.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={coach.photo} alt="" />
+                    ) : (
+                      (coach.name.trim().charAt(0) || "?").toUpperCase()
+                    )}
+                  </span>
+                  <span>{coach.name}</span>
+                  {coachFilter === coach.id && <Icon name="check" size={19} />}
+                </button>
+              ))}
             </div>
-            <button className="confirm-keep" onClick={() => setFindIntro(false)}>
-              Not now
-            </button>
+            <div className="publishwrap nostick">
+              <Link className="btn ghost" href="/following">Manage following</Link>
+            </div>
           </div>
         </div>
       )}
@@ -788,24 +709,6 @@ export function FollowingScreen({
             </div>
           </div>
         </div>
-      )}
-
-      {peekPerson && (
-        <CoachPeek
-          id={peekPerson.id}
-          name={peekPerson.name}
-          photo={peekPerson.photo}
-          color={peekPerson.color}
-          self={peekPerson.id === meId}
-          scheduleOnly
-          shareHref={meKind === "coach" ? "/coachshare" : "/membershare"}
-          onClose={() => {
-            setPeekPerson(null);
-            // The ring went out and follows may have flipped behind the
-            // sheet; closing is where the rail catches up.
-            router.refresh();
-          }}
-        />
       )}
 
       {peek && (
