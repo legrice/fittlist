@@ -400,31 +400,6 @@ export function ShareHubScreen({
     if (id && id !== seg) setSeg(id);
   };
 
-  // A horizontal flex row normally takes the height of its tallest slide.
-  // That left empty space under the shorter Week poster whenever another,
-  // off-screen format was taller. Fit the viewport to the active slide and
-  // keep following it as its image finishes loading or the phone rotates.
-  useEffect(() => {
-    if (building) return;
-    const el = slidesRef.current;
-    const i = { week: 0, profile: 1, qr: 2, text: 3 }[seg];
-    const kid = el?.children[i] as HTMLElement | undefined;
-    if (!el || !kid) return;
-    const fit = () => {
-      const css = getComputedStyle(el);
-      const inset = parseFloat(css.paddingTop) + parseFloat(css.paddingBottom);
-      el.style.height = `${kid.offsetHeight + inset}px`;
-    };
-    fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(kid);
-    window.addEventListener("resize", fit);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", fit);
-    };
-  }, [building, seg]);
-
   return (
     <>
       {/* `shpage` is the marker the gradient opt-out keys on. */}

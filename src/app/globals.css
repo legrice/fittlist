@@ -7469,17 +7469,21 @@ a.clspeek-by:active { opacity: .6; }
   overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none;
   /* The bottom padding is the shadow's room: the scroller clips anything
      past its box, and the previews' 30px blur was cut square at 4px. */
+  /* One fixed editor stage for every format. The old ResizeObserver resized
+     this rail to each active preview, which made the primary CTA jump after
+     every swipe. Shorter formats can have a little air; the action stays
+     where the thumb expects it. */
+  height: min(58vh, 520px); box-sizing: border-box;
   margin: 6px calc(50% - 50vw) 0; padding: 12px max(7vw, calc(50vw - 280px)) 36px;
-  transition: height .18s ease;
   -webkit-overflow-scrolling: touch;
 }
 .shslides::-webkit-scrollbar { display: none; }
 .shslide {
   flex: 0 0 min(86vw, 560px); scroll-snap-align: center;
-  display: flex; align-items: flex-start; justify-content: center;
+  height: 100%; display: flex; align-items: center; justify-content: center;
 }
 .shslide .qrcard { width: min(100%, 340px); }
-.shslide .shtext { width: min(100%, 340px); margin-top: 0; }
+.shslide .shtext { width: min(100%, 340px); max-height: 100%; margin-top: 0; overflow-y: auto; }
 /* The headline's loudness slider: the platform's own control in the brand
    colour, full width under its label. */
 .shslider { width: 100%; margin: 8px 0 4px; accent-color: var(--si); }
