@@ -246,6 +246,20 @@ await kaiRow.locator(".peekfollow", { hasText: "Follow" }).click();
 await kaiRow.locator(".peekfollow.on", { hasText: "Following" }).waitFor();
 console.log("People near you: segment, tags, Follow on every row");
 
+// Manage belongs to the coach rail, not every legacy follow relationship.
+// Drew is a coach and stays; Kai is a member and must not appear. The screen
+// only offers unfollow, never the Followers page's remove/block action.
+await m.goto(BASE + "/feed");
+await m.locator(".following-manage").click();
+await m.waitForURL(/\/following\?from=feed/);
+await m.getByRole("heading", { name: "Manage coaches" }).waitFor();
+await m.locator(".disrow", { hasText: "Drew" }).waitFor();
+if (await m.locator(".disrow", { hasText: "Kai" }).count()) fail("Manage included a member");
+if (await m.locator(".disblock").count()) fail("Manage exposed follower-removal controls");
+await m.locator(".folback .evback").click();
+await m.waitForURL(/\/feed/);
+console.log("Manage is the coach-only list behind Following");
+
 // The lit ring is a door: tapping You lands on the Share screen, the
 // first landing explains it once with Continue, and arriving is what
 // puts the ring out. The About block ends the scroll, and the page

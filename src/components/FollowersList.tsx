@@ -38,11 +38,16 @@ export type FollowerRow = {
 export function FollowersList({
   followers,
   pending = [],
+  mode = "followers",
 }: {
   followers: FollowerRow[];
   /** Asks waiting on an answer, when this account approves its followers. */
   pending?: PendingFollower[];
+  /** Following management reuses the row grammar, but only offers unfollow.
+   *  Blocking and follower-removal belong on the Followers screen. */
+  mode?: "followers" | "following";
 }) {
+  const managingFollowing = mode === "following";
   const router = useRouter();
   const [follows, setFollows] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(followers.map((f) => [f.id, f.following])),
@@ -58,16 +63,19 @@ export function FollowersList({
     if (!f.handle) return;
     const next = !follows[f.id];
     setFollows((m) => ({ ...m, [f.id]: next })); // optimistic: the tap must feel instant
+    if (managingFollowing && !next) setGone((g) => ({ ...g, [f.id]: true }));
     setBusy(f.id);
     startTransition(async () => {
       const res = next ? await followTrainer(f.handle!) : await unfollowTrainer(f.handle!);
       setBusy(null);
       if (!res.ok) {
         setFollows((m) => ({ ...m, [f.id]: !next }));
+        if (managingFollowing && !next) setGone((g) => ({ ...g, [f.id]: false }));
         toast(res.error ?? "Something went wrong.");
         return;
       }
       toast(next ? `Following ${f.name.trim().split(/\s+/)[0]}` : "Unfollowed");
+      if (managingFollowing) router.refresh();
     });
   };
 
@@ -163,15 +171,16 @@ export function FollowersList({
       </div>
     ) : null;
 
-  if (followers.length === 0) {
+  if (followers.length === 0 || (managingFollowing && shown.length === 0)) {
     return (
       <>
         {requests}
         <div className="empty-block">
-          <h2>No followers yet</h2>
+          <h2>{managingFollowing ? "No coaches followed yet" : "No followers yet"}</h2>
           <p>
-            Share your link and your QR code. Anyone who follows you, in the app or by email, shows
-            up here.
+            {managingFollowing
+              ? "Use Search to find coaches and follow their schedules."
+              : "Share your link and your QR code. Anyone who follows you, in the app or by email, shows up here."}
           </p>
         </div>
         <Toast msg={toastMsg} on={toastOn} />
@@ -209,7 +218,10 @@ export function FollowersList({
           return (
             <div key={f.id} className="disrow">
               {f.handle ? (
-                <Link className="disrow-main" href={`/${f.handle}?from=followers`}>
+                <Link
+                  className="disrow-main"
+                  href={`/${f.handle}?from=${managingFollowing ? "following" : "followers"}`}
+                >
                   {inner}
                   <LinkPending />
                 </Link>
@@ -228,7 +240,7 @@ export function FollowersList({
               )}
               {/* Quiet on purpose. Nothing is sent, and nothing on their side
                   says why: the page just stops being there. */}
-              {f.userId && (
+              {!managingFollowing && f.userId && (
                 <button
                   type="button"
                   className="disblock"
@@ -242,7 +254,7 @@ export function FollowersList({
           );
         })}
       </div>
-      {confirm && (
+      {!managingFollowing && confirm && (
         <div
           className="sheet-scrim"
           onClick={(e) => {

@@ -19,13 +19,18 @@ export const dynamic = "force-dynamic";
 // from the other end: there, the people who follow you, here, the people you
 // follow.
 //
-// It stays private, which is the whole point of the follow line: this is your
-// own list on your own screen, nobody else can see it, and nothing here is
-// published anywhere. The tab called Following is your merged week; this is
-// the people behind it.
-export default async function FollowingPage() {
+// It stays private: this is your own management list, nobody else can see it,
+// and nothing here is published. Following itself is the coaches' combined
+// schedule; this is the coach-only list behind that surface.
+export default async function FollowingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
+  const { from } = await searchParams;
+  const fromFeed = from === "feed";
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
@@ -41,14 +46,17 @@ export default async function FollowingPage() {
 
   const ids = [...new Set(rows.map((r) => r.trainerUserId))].filter((id) => id !== userId);
   const accounts = ids.length
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+    ? await db
+        .select()
+        .from(schema.users)
+        .where(and(inArray(schema.users.id, ids), eq(schema.users.kind, "coach")))
     : [];
   const byId = new Map(accounts.map((u) => [u.id, u]));
 
   const people: FollowerRow[] = rows.flatMap((r) => {
     const u = byId.get(r.trainerUserId);
-    // A gym account has no page to open and nobody follows one yet; if the
-    // row's subject has gone, there is nothing honest to draw.
+    // Manage is the control for the coach rail on Following. Legacy member
+    // follows and gym accounts do not belong on this screen.
     if (!u || !u.handle) return [];
     const name = u.name.trim() || u.email.split("@")[0];
     return [
@@ -58,7 +66,7 @@ export default async function FollowingPage() {
         sub:
           [u.title?.trim(), u.location?.trim()].filter(Boolean).join(" · ") ||
           `fittlist.co/${u.handle}`,
-        photo: u.photo,
+        photo: u.photoThumb ?? u.photo,
         color: avatarColor(u),
         handle: u.handle,
         // Already following, by construction: the control is the way out.
@@ -76,21 +84,25 @@ export default async function FollowingPage() {
       <div className="pad">
         <AppChrome userId={userId} bar />
         <div className="folback">
-          <BackLink className="evback" href="/settings" label="Back to settings">
+          <BackLink
+            className="evback"
+            href={fromFeed ? "/feed" : "/settings"}
+            label={fromFeed ? "Back to Following" : "Back to settings"}
+          >
             <Icon name="arrow_back" size={23} />
           </BackLink>
         </div>
         <div className="admintop">
           <div>
-            <h1>Following</h1>
+            <h1>Manage coaches</h1>
             <p className="adminsub">
               {n === 0
-                ? "Nobody yet"
-                : `${n} ${n === 1 ? "person whose" : "people whose"} week you get`}
+                ? "No coaches followed yet"
+                : `${n} ${n === 1 ? "coach" : "coaches"} you follow`}
             </p>
           </div>
         </div>
-        <FollowersList followers={people} pending={[]} />
+        <FollowersList followers={people} pending={[]} mode="following" />
       </div>
     </section>
   );

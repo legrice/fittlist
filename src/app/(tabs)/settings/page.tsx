@@ -44,8 +44,13 @@ export default async function SettingsPage({
       db
         .select({ id: schema.subscribers.id })
         .from(schema.subscribers)
+        .innerJoin(schema.users, eq(schema.users.id, schema.subscribers.trainerUserId))
         .where(
-          and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)),
+          and(
+            eq(schema.subscribers.email, me.email),
+            isNull(schema.subscribers.optedOutAt),
+            eq(schema.users.kind, "coach"),
+          ),
         ),
       db
         .select({ id: schema.subscribers.id })
@@ -115,7 +120,14 @@ export default async function SettingsPage({
     db
       .select({ id: schema.subscribers.id })
       .from(schema.subscribers)
-      .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+      .innerJoin(schema.users, eq(schema.users.id, schema.subscribers.trainerUserId))
+      .where(
+        and(
+          eq(schema.subscribers.email, me.email),
+          isNull(schema.subscribers.optedOutAt),
+          eq(schema.users.kind, "coach"),
+        ),
+      ),
     // The studios this person runs. Managing a place was reachable only from
     // the studio's own page, so somebody who runs a gym but doesn't teach at
     // it had no listing anywhere: Where I coach is driven by coach_studios,

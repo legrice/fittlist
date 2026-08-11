@@ -35,7 +35,14 @@ export async function settingsSheetData() {
       db
         .select({ id: schema.subscribers.id })
         .from(schema.subscribers)
-        .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+        .innerJoin(schema.users, eq(schema.users.id, schema.subscribers.trainerUserId))
+        .where(
+          and(
+            eq(schema.subscribers.email, me.email),
+            isNull(schema.subscribers.optedOutAt),
+            eq(schema.users.kind, "coach"),
+          ),
+        ),
       db
         .select({ id: schema.subscribers.id })
         .from(schema.subscribers)
@@ -93,7 +100,14 @@ export async function settingsSheetData() {
       db
         .select({ id: schema.subscribers.id })
         .from(schema.subscribers)
-        .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+        .innerJoin(schema.users, eq(schema.users.id, schema.subscribers.trainerUserId))
+        .where(
+          and(
+            eq(schema.subscribers.email, me.email),
+            isNull(schema.subscribers.optedOutAt),
+            eq(schema.users.kind, "coach"),
+          ),
+        ),
       myStaffStudios(),
     ]);
   const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
