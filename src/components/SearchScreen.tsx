@@ -229,6 +229,14 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
         </div>
       ) : (
         <div>
+          {studios.length > 0 && (
+            <div className="srchsec">
+              <h2 className="srchhead">Gyms &amp; studios <span>{studios.length}</span></h2>
+              <div className="dislist dislist-bare">
+                {studios.map((studio) => <StudioRow key={studio.id} studio={studio} from="search" />)}
+              </div>
+            </div>
+          )}
           {people.length > 0 && (
             <div className="srchsec" onClickCapture={remember(people)}>
               <h2 className="srchhead">Coaches <span>{people.length}</span></h2>
@@ -243,14 +251,6 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             <div className="srchsec">
               <h2 className="srchhead">Classes <span>{classes.length}</span></h2>
               <ClassResults classes={classes} todayIso={todayIso} from="search" />
-            </div>
-          )}
-          {studios.length > 0 && (
-            <div className="srchsec">
-              <h2 className="srchhead">Gyms &amp; studios <span>{studios.length}</span></h2>
-              <div className="dislist dislist-bare">
-                {studios.map((studio) => <StudioRow key={studio.id} studio={studio} from="search" />)}
-              </div>
             </div>
           )}
         </div>
