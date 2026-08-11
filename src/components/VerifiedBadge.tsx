@@ -39,11 +39,11 @@ export function VerifiedBadge({
       {/* Only Managed wears the check: the mark means a real team has the
           keys. Community and public listings are words alone. */}
       <button
-        className={`kindtag studiokept${verified ? "" : " studiokept-un"}`}
+        className={`actpill studiokept${verified ? "" : " studiokept-un"}`}
         onClick={() => setOpen(true)}
-        aria-label={verified ? "What Managed means" : claimable ? "What Community listing means" : "What Public space means"}
+        aria-label={verified ? "What Managed means" : claimable ? "What Unclaimed means" : "What Public space means"}
       >
-        {verified && <Icon name="verified" size={15} />} {verified ? "Managed" : claimable ? "Community listing" : "Public space"}
+        {verified && <Icon name="verified" size={18} />} {verified ? "Managed" : claimable ? "Unclaimed" : "Public space"}
       </button>
 
       {open &&
@@ -73,7 +73,7 @@ export function VerifiedBadge({
                 </>
               ) : claimable ? (
                 <>
-                  <h2 style={{ marginTop: 10 }}>Community listing</h2>
+                  <h2 style={{ marginTop: 10 }}>Unclaimed</h2>
                   <p className="lead">
                     This page is community-managed. Coaches and members can update it so
                     schedules and details stay accurate.

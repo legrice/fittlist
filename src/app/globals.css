@@ -5556,7 +5556,7 @@ button.ps-card { cursor: pointer; }
    span never needed. */
 .studiokept {
   display: inline-flex; align-items: center; gap: 4px;
-  border: none; cursor: pointer; font-size: 12px;
+  border: none; cursor: pointer;
 }
 .pubhead .studiokept,
 [data-mode="dark"] .pubhead .studiokept { color: #2c6b3f; }

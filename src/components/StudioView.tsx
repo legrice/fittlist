@@ -366,9 +366,7 @@ export async function StudioView({
           // slot has nothing to draw: a place has no face.
           avatar={null}
           backTo={backTo}
-          // Above the name on every skin, hero and banner alike; the white
-          // pill already reads over a photograph.
-          badges={<VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} claimable={s.placeKind !== "outdoor"} />}
+          badges={null}
           ownerTop={null}
           actions={
             /* Nothing to offer, no row: an empty pills row still spends its
@@ -408,6 +406,12 @@ export async function StudioView({
                 claimable={s.placeKind !== "outdoor"}
                 signedIn={signedIn}
                 studio={editProps}
+              />
+              <VerifiedBadge
+                studioId={s.id}
+                name={s.name}
+                verified={access.claimed}
+                claimable={s.placeKind !== "outdoor"}
               />
             </div>
           }
