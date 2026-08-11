@@ -171,7 +171,6 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [coachFilter, setCoachFilter] = useState<string>("all");
-  const [coachSheet, setCoachSheet] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   const notify = (msg: string) => toast(msg);
   const router = useRouter();
@@ -240,7 +239,6 @@ export function FollowingScreen({
     const ids = new Set(items.map((item) => item.coachId));
     return coaches.filter((coach) => ids.has(coach.id));
   }, [coaches, items]);
-  const selectedCoach = coachOptions.find((coach) => coach.id === coachFilter) ?? null;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -291,6 +289,11 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [shown, coachById, favIds],
   );
+  const homeDays = useMemo(() => {
+    const days = new Map<string, (WeekRow & { item: FeedItem })[]>();
+    for (const row of homeRows) days.set(row.item.iso, [...(days.get(row.item.iso) ?? []), row]);
+    return [...days.entries()].map(([iso, rows]) => ({ iso, rows }));
+  }, [homeRows]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -437,28 +440,44 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <h1>Following</h1>
-          <p>Upcoming classes from the coaches you follow.</p>
-          <div className="following-controls">
-            <button className="following-filter" onClick={() => setCoachSheet(true)}>
-              {selectedCoach ? selectedCoach.name : "All coaches"}
-              <Icon name="expand_more" size={17} />
-            </button>
+          <div className="following-title-row">
+            <h1>Following</h1>
             <Link className="following-manage" href="/following">Manage</Link>
           </div>
+          <div className="tray following-rail" role="group" aria-label="Filter by coach">
+            <div className="tray-scroll">
+              <button
+                className={`trayitem${coachFilter !== "all" ? " dim" : ""}`}
+                aria-pressed={coachFilter === "all"}
+                onClick={() => setCoachFilter("all")}
+              >
+                <span className={`trayav trayav-all${coachFilter === "all" ? " sel" : ""}`}>All</span>
+                <span className="trayitem-nm">All</span>
+              </button>
+              {coachOptions.map((coach) => (
+                <button
+                  key={coach.id}
+                  className={`trayitem${coachFilter !== "all" && coachFilter !== coach.id ? " dim" : ""}`}
+                  aria-pressed={coachFilter === coach.id}
+                  onClick={() => setCoachFilter(coach.id)}
+                >
+                  <span
+                    className={`trayav${coachFilter === coach.id ? " sel" : ""}`}
+                    style={{ background: coach.color }}
+                  >
+                    {coach.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={coach.photo} alt="" />
+                    ) : (
+                      <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
+                    )}
+                  </span>
+                  <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </header>
-      )}
-
-      {/* Home previews the next classes across days. The full page owns the
-          date rail and filters, where those controls have enough inventory
-          to narrow rather than making Home look quiet. */}
-      {isHome && (
-        <div className="week-schedule-head">
-          <span className="nearlbl">Upcoming</span>
-          <Link className="nearhead-go home-seeall" href="/upcoming">
-            Discover classes
-          </Link>
-        </div>
       )}
       {items.length === 0 ? (
         <>
@@ -546,8 +565,15 @@ export function FollowingScreen({
 
             <div className="cardwrap home-schedule">
               {isHome ? (
-                <div className="disflat home-next">
-                  {homeRows.map(renderRow(todayIso))}
+                <div className="following-days">
+                  {homeDays.map((group) => (
+                    <section key={group.iso} className="following-day">
+                      <h2 className="following-day-h">{daySectionLabel(group.iso, todayIso)}</h2>
+                      <div className="disflat home-next">
+                        {group.rows.map(renderRow())}
+                      </div>
+                    </section>
+                  ))}
                 </div>
               ) : (
                 <>
@@ -583,60 +609,6 @@ export function FollowingScreen({
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
-
-      {isHome && coachSheet && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setCoachSheet(false);
-          }}
-        >
-          <div className="sheet following-filter-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setCoachSheet(false)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>Show classes from</h2>
-            <div className="fopts">
-              <button
-                className="fopt"
-                aria-pressed={coachFilter === "all"}
-                onClick={() => {
-                  setCoachFilter("all");
-                  setCoachSheet(false);
-                }}
-              >
-                All coaches
-                {coachFilter === "all" && <Icon name="check" size={19} />}
-              </button>
-              {coachOptions.map((coach) => (
-                <button
-                  key={coach.id}
-                  className="fopt following-coach-option"
-                  aria-pressed={coachFilter === coach.id}
-                  onClick={() => {
-                    setCoachFilter(coach.id);
-                    setCoachSheet(false);
-                  }}
-                >
-                  <span className="following-coach-face" style={{ background: coach.color }}>
-                    {coach.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={coach.photo} alt="" />
-                    ) : (
-                      (coach.name.trim().charAt(0) || "?").toUpperCase()
-                    )}
-                  </span>
-                  <span>{coach.name}</span>
-                  {coachFilter === coach.id && <Icon name="check" size={19} />}
-                </button>
-              ))}
-            </div>
-            <div className="publishwrap nostick">
-              <Link className="btn ghost" href="/following">Manage following</Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
@@ -748,6 +720,17 @@ const plusDays = (iso: string, n: number) =>
 function tabLabel(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   return `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
+}
+
+function daySectionLabel(iso: string, today: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const date = d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+  return iso === today ? `Today, ${date.split(", ")[1]}` : date;
 }
 
 /** Miles between two pins, the haversine way, close enough for a rail. */

@@ -6046,36 +6046,22 @@ button.ps-card { cursor: pointer; }
    pads back in to line up with everything else on the screen. The top
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
-.week-schedule-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-top: 4px; padding: 15px 0 3px;
-}
-.week-schedule-head .nearlbl { margin: 0; }
 .following-head { padding: 18px 0 8px; }
+.following-title-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
 .following-head h1 {
   margin: 0; font-size: 30px; line-height: 1.05; letter-spacing: -.02em;
 }
-.following-head > p { margin: 7px 0 16px; color: var(--ol); font-size: 14px; }
-.following-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.following-filter {
-  display: inline-flex; align-items: center; gap: 7px; min-width: 0; height: 40px;
-  padding: 0 14px; border: 0; border-radius: 999px; background: var(--card);
-  color: var(--ink); font: 600 14px/1 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  cursor: pointer;
-}
-.following-filter .icon { flex: 0 0 auto; }
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
-.following-filter-sheet .fopts { margin-top: 10px; }
-.following-coach-option { justify-content: flex-start; gap: 11px; }
-.following-coach-option > span:nth-child(2) {
-  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.following-rail { margin: 14px -18px 0; }
+.following-rail .tray-scroll { padding-top: 6px; padding-bottom: 6px; }
+.following-days { display: flex; flex-direction: column; gap: 24px; }
+.following-day-h {
+  margin: 0 0 9px; font-size: 18px; line-height: 1.15; font-weight: 600;
+  letter-spacing: -.01em;
 }
-.following-coach-option > .icon { margin-left: auto; }
-.following-coach-face {
-  display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px;
-  overflow: hidden; border-radius: 999px; color: white; font-size: 12px; font-weight: 600;
-}
-.following-coach-face img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.following-day .home-next { margin-top: 0; }
 /* Save in the row's corner, not a dots menu, by Matt's call. */
 .rowsave {
   /* Across from the coach's line, not the name's, by Matt's call: the
@@ -6087,9 +6073,6 @@ button.ps-card { cursor: pointer; }
   font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
 }
 .rowsave.on { background: none; color: var(--ink); }
-/* Home's icon-only ribbon sits across from the class name. The name clears
-   its hit area; the coach line below gets the full card width again. */
-.disflat .clrow .clline-nm { padding-right: 38px; }
 .disflat .clrow .clline-by { max-width: none; }
 
 /* The four dropdown chips, each showing its current value: "Within 1 mile",
