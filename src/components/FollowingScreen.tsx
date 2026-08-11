@@ -245,6 +245,7 @@ export function FollowingScreen({
     const ids = new Set(items.map((item) => item.coachId));
     return coaches.filter((coach) => ids.has(coach.id));
   }, [coaches, items]);
+  const selectedCoach = coachFilter === "all" ? null : coachById.get(coachFilter) ?? null;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -494,6 +495,14 @@ export function FollowingScreen({
             </div>
           </div>
         </header>
+      )}
+      {isHome && selectedCoach && (
+        <div className="feedfilterbar following-coach-context">
+          <span className="feedfilter-txt">Classes with {selectedCoach.name.split(/\s+/)[0]}</span>
+          <Link href={`/${selectedCoach.handle}?from=feed`} className="feedfilter-link">
+            View profile <Icon name="chevron_right" size={17} />
+          </Link>
+        </div>
       )}
       {items.length === 0 ? (
         <>
