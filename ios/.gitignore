@@ -1,6 +1,7 @@
 App/build
 App/Pods
 App/output
+.DS_Store
 App/App/public
 DerivedData
 xcuserdata

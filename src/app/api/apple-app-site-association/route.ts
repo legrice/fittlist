@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Lets profile, place and class links open directly in the installed iOS app.
- * APPLE_TEAM_ID becomes available after Apple finishes the organization setup;
- * until then the endpoint stays valid but advertises no app association.
- */
+/** Apple fetches this through the extensionless .well-known rewrite. */
 export function GET() {
   const teamId = process.env.APPLE_TEAM_ID?.trim();
   return NextResponse.json(

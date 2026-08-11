@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/apple-app-site-association",
+        destination: "/api/apple-app-site-association",
+      },
+    ];
+  },
   serverExternalPackages: ["@electric-sql/pglite"],
   experimental: {
     // Profile originals are resized in the browser before this request. The
