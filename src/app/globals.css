@@ -7402,6 +7402,17 @@ a.clspeek-by:active { opacity: .6; }
 /* A tagged class that also names a coach puts the person one line below. */
 .clline-tag + .clline-by { grid-row: 4; }
 
+/* Calendar is a working schedule, so each occurrence keeps a stronger white
+   surface. Following stays editorial and flat below. */
+.calendar-cardlist .dayrows { gap: 10px; }
+.calendar-cardlist .clline {
+  grid-template-columns: 64px 1fr; column-gap: 10px;
+  align-content: center;
+  min-height: 112px; padding: 14px;
+  border-bottom: 0; border-radius: 16px; background: var(--card);
+  box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
+}
+
 /* The loudest thing on the screen, and the tracking is ordinary. The display
    type was set at -.025em, which is a headline's tracking applied to a list of
    real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */

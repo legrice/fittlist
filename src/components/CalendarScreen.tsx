@@ -251,7 +251,9 @@ export function CalendarScreen({
         // reading "nothing coming up" is already looking.
         <WeekEmpty first={false} title="" body="" cta="Add a class" onCta={() => setAddOpen(true)} />
       ) : (
-        <DayList days={days} />
+        <div className="calendar-cardlist">
+          <DayList days={days} />
+        </div>
       )}
       </div>
 
