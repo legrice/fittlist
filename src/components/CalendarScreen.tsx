@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { AddBrowse } from "@/components/AddBrowse";
 import {
   CalSticky,
   MonthHeadRow,
@@ -77,6 +78,8 @@ export function CalendarScreen({
   const [view, setView] = useState<View>("list");
   const [kind, setKind] = useState<"all" | "coaching" | "added">("all");
   const [addOpen, setAddOpen] = useState(openAdder);
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const [personalAdd, setPersonalAdd] = useState(false);
   // The overlay header's words: the day under it on the list, the month in
   // view on the grid. The grid's label is set from the first render (this
   // month is in view at rest), so the grid gates the bar on scroll depth
@@ -286,7 +289,7 @@ export function CalendarScreen({
           title="Your schedule is empty"
           body="Put the classes you teach up here. That is the whole app: your week, at one link, kept current."
           cta="Add a class"
-          onCta={() => setAddOpen(true)}
+          onCta={() => setBrowseOpen(true)}
         />
       ) : view === "month" ? (
         <MonthScroll
@@ -304,7 +307,7 @@ export function CalendarScreen({
           title=""
           body=""
           cta={kind === "added" ? undefined : "Add a class"}
-          onCta={kind === "added" ? undefined : () => setAddOpen(true)}
+          onCta={kind === "added" ? undefined : () => setBrowseOpen(true)}
         />
       ) : (
         <div className="calendar-cardlist">
@@ -362,9 +365,29 @@ export function CalendarScreen({
           as Following's search: adding is what somebody opens this screen
           to do, and the title row's corner belongs to Share now. */}
       {!bare && (
-        <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
+        <button className="wkfab" aria-label="Add a class" onClick={() => setBrowseOpen(true)}>
           <Icon name="add" size={28} />
         </button>
+      )}
+      {browseOpen && (
+        <AddBrowse
+          coachSeg
+          onClose={() => setBrowseOpen(false)}
+          onCoaching={() => {
+            setBrowseOpen(false);
+            setPersonalAdd(false);
+            setAddOpen(true);
+          }}
+          onAddNew={() => {
+            setBrowseOpen(false);
+            setPersonalAdd(true);
+            setAddOpen(true);
+          }}
+          onNotice={(message, highlight) => {
+            toast(message);
+            if (highlight) router.refresh();
+          }}
+        />
       )}
       {addOpen && (
         <Adder
@@ -374,15 +397,21 @@ export function CalendarScreen({
           lastUsed={lastUsed}
           subsCount={subsCount}
           firstPublish={bare}
-          onClose={() => setAddOpen(false)}
+          personal={personalAdd ? { canCoach: true } : undefined}
+          onClose={() => {
+            setAddOpen(false);
+            setPersonalAdd(false);
+          }}
           onToast={toast}
           onPublished={(msg) => {
             setAddOpen(false);
+            setPersonalAdd(false);
             toast(msg);
             router.refresh();
           }}
           onDeleted={(msg) => {
             setAddOpen(false);
+            setPersonalAdd(false);
             toast(msg);
             router.refresh();
           }}

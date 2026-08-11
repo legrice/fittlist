@@ -615,6 +615,10 @@ export function WeekScreen({
       {addMenu && (
         <AddBrowse
           onClose={() => setAddMenu(false)}
+          onNotice={(message) => {
+            toast(message);
+            router.refresh();
+          }}
           onAddNew={() => {
             setAddMenu(false);
             setPersonalEvent(false);

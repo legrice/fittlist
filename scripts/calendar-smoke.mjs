@@ -53,8 +53,9 @@ console.log("an empty calendar is its own CTA, and carries no other control");
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
   await p.locator(".wkempty-cta, .wkfab").first().click();
-  // Calendar is coaching-only, so both the empty CTA and the floating plus
-  // go straight to the publishing form.
+  // Search the shared catalog first; a coach who is publishing switches into
+  // the coaching path, then chooses the required studio.
+  await p.getByRole("button", { name: "I’m coaching" }).click();
   await p.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   // The list waits for typing: type it, tap it.
   await p.getByLabel("Search studios").fill(studio);

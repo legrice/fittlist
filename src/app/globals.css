@@ -7806,6 +7806,15 @@ a.clspeek-by:active { opacity: .6; }
   display: grid; place-items: center; background: none; color: var(--ink); cursor: pointer;
 }
 .following-add:disabled { opacity: .55; }
+.addbrowse-search {
+  display: flex; align-items: center; gap: 9px; margin: 4px 0 18px;
+  padding: 0 13px; min-height: 46px; border-radius: 14px; background: var(--card);
+  color: var(--ol);
+}
+.addbrowse-search input {
+  width: 100%; min-width: 0; padding: 0; border: 0; outline: 0;
+  background: transparent; color: var(--ink); font: inherit; font-size: 15px;
+}
 .disflat .rowsave {
   top: 10px; right: 10px; bottom: auto;
   width: 36px; height: 36px; padding: 0;

@@ -181,7 +181,7 @@ export function Adder({
     !isGym &&
     !isEdit &&
     !prefill?.name &&
-    (!isPersonal || (Boolean(personal?.oneOff) && !personal?.editId));
+    (!isPersonal || (!personal?.event && !personal?.editId));
   const [stage, setStage] = useState<Stage>(stepped ? "pick" : "form");
   // A prefill with no name is a starting point, not a copy: the rota opens the
   // form on the day that was tapped, and that is still a new class.
@@ -485,7 +485,7 @@ export function Adder({
   };
 
   const publish = () => {
-    if (!whenChosen || !durValid || (!mineOnly && isPublic && !studioId)) return;
+    if (!whenChosen || !durValid || (!isEvent && !isGym && !studioId)) return;
     startTransition(async () => {
       const input = {
         name,
@@ -945,13 +945,11 @@ export function Adder({
                 />
               </div>
             )}
-            {/* Studio: required for public, optional for private. A gym's
-                classes are at the gym, so it is never asked. */}
+            {/* Every class resolves to a place. A gym's classes already have
+                theirs; everybody else selects or creates the studio first. */}
             {!gym && !isEvent && (
             <div className="adder-card">
-            <label className="flabel">
-              Studio{(!isPublic || mineOnly) && <span> · optional</span>}
-            </label>
+            <label className="flabel">Studio</label>
             <button className="studio-sel" onClick={() => setStage("pick")}>
               {selectedStudio ? (
                 <span className="studio-sel-txt">
@@ -963,21 +961,6 @@ export function Adder({
               )}
               <span className="chev"><Icon name="chevron_right" size={20} /></span>
             </button>
-            {(!isPublic || mineOnly) && !selectedStudio && (
-              <>
-                <label className="flabel" htmlFor="fLoc" style={{ marginTop: 12 }}>
-                  Or type a location <span>· optional</span>
-                </label>
-                <input
-                  id="fLoc"
-                  className="editinput"
-                  placeholder={mineOnly ? "e.g. Online, the park" : "e.g. Client's home, Online"}
-                  value={location}
-                  maxLength={120}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </>
-            )}
             {mineOnly && (
               <>
                 <label className="flabel" htmlFor="fWith" style={{ marginTop: 12 }}>
@@ -1240,7 +1223,11 @@ export function Adder({
             </div>
 
             <div className="publishwrap">
-              <button className="btn si" disabled={!whenChosen || pending} onClick={publish}>
+              <button
+                className="btn si"
+                disabled={!whenChosen || pending || (!isEvent && !isGym && !studioId)}
+                onClick={publish}
+              >
                 {pending ? (isEdit || isPersonalEdit ? "Saving…" : "Publishing…") : publishLabel}
               </button>
             </div>

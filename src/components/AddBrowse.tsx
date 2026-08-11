@@ -17,6 +17,7 @@ export function AddBrowse({
   onCoaching,
   onAddNew,
   onEvent,
+  onNotice,
   onClose,
 }: {
   /** A coach picks a hat first: Discover, or I'm coaching. A member never
@@ -28,25 +29,43 @@ export function AddBrowse({
   onAddNew: () => void;
   /** Not a class at all: the personal event form. */
   onEvent?: () => void;
+  onNotice?: (message: string, highlight?: string) => void;
   onClose: () => void;
 }) {
   const [days, setDays] = useState<BrowseDay[] | null>(null);
   const [marks, setMarks] = useState<Record<string, boolean>>({});
+  const [query, setQuery] = useState("");
   const [, start] = useTransition();
 
   useEffect(() => {
     addBrowse().then((d) => setDays(d ?? []));
   }, []);
 
-  const save = (classId: string, iso: string, on: boolean) => {
+  const save = (classId: string, iso: string, name: string, on: boolean) => {
     const key = `${classId}|${iso}`;
     setMarks((m) => ({ ...m, [key]: on }));
     start(async () => {
       const res = await setGoing(classId, iso, on);
       if (!res.ok) setMarks((m) => ({ ...m, [key]: !on }));
-      else if (on) announceSaved(classId, iso);
+      else {
+        if (on) announceSaved(classId, iso);
+        onNotice?.(
+          on ? `${name} was added to your calendar` : `${name} was removed from your calendar`,
+          on ? `${classId}.${iso}` : undefined,
+        );
+      }
     });
   };
+
+  const needle = query.trim().toLowerCase();
+  const shownDays = (days ?? [])
+    .map((day) => ({
+      ...day,
+      items: day.items.filter((it) =>
+        !needle || [it.name, it.where, it.coachName].some((value) => value?.toLowerCase().includes(needle)),
+      ),
+    }))
+    .filter((day) => day.items.length > 0);
 
   return (
     <div
@@ -76,12 +95,27 @@ export function AddBrowse({
           </div>
         )}
 
+        <div className="addbrowse-search">
+          <Icon name="search" size={20} />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search classes, coaches, or studios"
+            aria-label="Search the class catalog"
+          />
+        </div>
+
         {!days && <p className="peekempty">Looking at the week&hellip;</p>}
         {days && days.length === 0 && (
           <p className="peekempty">Nothing listed near you this week yet.</p>
         )}
 
-        {days?.map((d) => (
+        {days && needle && shownDays.length === 0 && (
+          <p className="peekempty">No classes match &ldquo;{query.trim()}&rdquo;.</p>
+        )}
+
+        {shownDays.map((d) => (
           <div key={d.iso} className="peekday">
             <p className="peekday-h">{d.label}</p>
             {d.items.map((it) => {
@@ -102,7 +136,7 @@ export function AddBrowse({
                   {!it.own && (
                     <button
                       className={`peekadd${on ? " on" : ""}`}
-                      onClick={() => save(it.classId, it.iso, !on)}
+                      onClick={() => save(it.classId, it.iso, it.name, !on)}
                       aria-label={on ? `Added to your week: ${it.name}` : `Add ${it.name} to your week`}
                     >
                       <Icon name={on ? "check_circle" : "add_circle"} size={22} />
