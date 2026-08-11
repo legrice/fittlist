@@ -3662,6 +3662,46 @@ button.ps-card { cursor: pointer; }
   line-height: 1.55;
   -webkit-line-clamp: 4;
 }
+
+/* Props are collectible seals, not another row of filter chips. Each stamp
+   keeps one stable personality and colour so it becomes recognisable. */
+.profile-stamps { overflow: hidden; }
+.profile-stamp-rail {
+  display: flex; gap: 14px; margin-top: 14px; padding: 3px 2px 5px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.profile-stamp-rail::-webkit-scrollbar { display: none; }
+.coach-stamp {
+  position: relative; flex: 0 0 88px; width: 88px; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  border: 0; background: transparent; color: var(--ink); cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}
+.coach-stamp-seal {
+  position: relative; width: 76px; height: 76px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--stamp-bg); color: var(--stamp-ink);
+  border: 2px solid var(--stamp-ink);
+  outline: 1px dashed var(--stamp-ink); outline-offset: -7px;
+  transform: rotate(-2deg);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.coach-stamp:nth-child(even) .coach-stamp-seal { transform: rotate(2deg); }
+.coach-stamp.on .coach-stamp-seal {
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink);
+  transform: rotate(0) scale(1.03);
+}
+.coach-stamp-label { font-size: 12px; font-weight: 600; line-height: 1.1; text-align: center; }
+.coach-stamp-count {
+  position: absolute; top: -2px; right: 2px; min-width: 22px; height: 22px; padding: 0 5px;
+  display: grid; place-items: center; border-radius: 999px;
+  background: var(--ink); color: var(--paper); font-size: 11px; font-weight: 600;
+}
+.coach-stamp:disabled { opacity: .65; }
+.stamp-1 { --stamp-bg: #ffb35c; --stamp-ink: #4b2200; }
+.stamp-2 { --stamp-bg: #f3a9c2; --stamp-ink: #57152c; }
+.stamp-3 { --stamp-bg: #b9dfff; --stamp-ink: #133650; }
+.stamp-4 { --stamp-bg: #cce876; --stamp-ink: #263600; }
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's

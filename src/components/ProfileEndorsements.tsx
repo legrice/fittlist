@@ -2,12 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { toggleEndorsement } from "@/app/actions/endorsements";
+import { Icon } from "@/components/Icon";
 
 const TRAITS = [
-  ["great_coaching", "Great coaching"],
-  ["welcoming", "Welcoming"],
-  ["motivating", "Motivating"],
-  ["clear_cues", "Clear cues"],
+  ["motivating", "Strong motivator", "bolt"],
+  ["welcoming", "Welcoming energy", "favorite"],
+  ["clear_cues", "Clear communicator", "campaign"],
+  ["form_expert", "Form expert", "verified"],
+  ["makes_it_fun", "Makes it fun", "star_filled"],
+  ["community_builder", "Community builder", "groups"],
+  ["great_coaching", "Coach's choice", "auto_awesome"],
 ] as const;
 
 export function ProfileEndorsements({ handle, firstName, initial, mine, owner }: {
@@ -37,20 +41,26 @@ export function ProfileEndorsements({ handle, firstName, initial, mine, owner }:
   });
   const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
   return (
-    <section className="profile-props" aria-label={`Endorsements for ${firstName}`}>
+    <section className="profile-props profile-stamps" aria-label={`Coach stamps for ${firstName}`}>
       <div className="profile-props-copy">
-        <strong>{owner ? "What people appreciate" : `Give props to ${firstName}`}</strong>
-        <span>{total ? `${total} positive ${total === 1 ? "endorsement" : "endorsements"}` : "Celebrate what makes their coaching great"}</span>
+        <strong>{owner ? "Coach stamps" : `Stamp ${firstName}'s profile`}</strong>
+        <span>{total ? `${total} ${total === 1 ? "stamp" : "stamps"} from the people they coach` : "Add a seal of approval for what makes them great"}</span>
       </div>
-      <div className="profile-props-pills">
-        {TRAITS.map(([key, label]) => {
+      <div className="profile-stamp-rail">
+        {TRAITS.map(([key, label, icon], index) => {
           const count = counts[key] ?? 0;
           if (owner && !count) return null;
           return owner ? (
-            <span className="prop-pill on" key={key}>{label}{count ? ` · ${count}` : ""}</span>
+            <span className={`coach-stamp stamp-${(index % 4) + 1} on`} key={key}>
+              <span className="coach-stamp-seal"><Icon name={icon} size={27} /></span>
+              <span className="coach-stamp-label">{label}</span>
+              {count ? <span className="coach-stamp-count">{count}</span> : null}
+            </span>
           ) : (
-            <button disabled={pending} className={`prop-pill${selected.has(key) ? " on" : ""}`} key={key} onClick={() => tap(key)}>
-              {label}{count ? ` · ${count}` : ""}
+            <button disabled={pending} aria-pressed={selected.has(key)} className={`coach-stamp stamp-${(index % 4) + 1}${selected.has(key) ? " on" : ""}`} key={key} onClick={() => tap(key)}>
+              <span className="coach-stamp-seal"><Icon name={icon} size={27} /></span>
+              <span className="coach-stamp-label">{label}</span>
+              {count ? <span className="coach-stamp-count">{count}</span> : null}
             </button>
           );
         })}

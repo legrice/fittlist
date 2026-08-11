@@ -5,7 +5,15 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 
-const TRAITS = new Set(["great_coaching", "welcoming", "motivating", "clear_cues"]);
+const TRAITS = new Set([
+  "great_coaching",
+  "welcoming",
+  "motivating",
+  "clear_cues",
+  "form_expert",
+  "makes_it_fun",
+  "community_builder",
+]);
 
 export async function toggleEndorsement(handle: string, trait: string) {
   const viewerId = await getSessionUserId();
