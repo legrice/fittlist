@@ -55,9 +55,8 @@ export function iconUri(color: string) {
 
 export type StoryModel = {
   theme: StoryTheme;
-  /** How it is drawn, as opposed to what colour it is. Two axes, because
-   *  eight palettes times ten styles is eighty posters from two small rows of
-   *  controls, where one merged picker would be eighty swatches to scan. */
+  /** How it is drawn, as opposed to what colour it is. Layout and palette
+   *  stay separate so either choice remains small enough to understand. */
   style: StoryStyle;
   format: StoryFormat;
   /** Split in two for the line break; one colour. The second may be empty. */
@@ -105,6 +104,7 @@ export function renderStory(model: StoryModel) {
   const markUri = iconUri(t.lockupAccent ?? t.accent);
   const pad = storyPadding(format);
   const square = format === "square";
+  const layout = y.layout;
   // A square is a little over half the height, so the furniture comes down
   // with it or there is no room left for the week itself.
   const s = square ? 0.82 : 1;
@@ -125,6 +125,15 @@ export function renderStory(model: StoryModel) {
     subFs: Math.round(base.subFs * y.name),
     colW: y.stackTime ? base.colW + base.timeW + base.gap : base.colW,
   };
+  // Every experimental row still occupies the same 908px content measure.
+  // Insets and gaps come out of the detail column instead of pushing the
+  // right edge off-canvas.
+  const rowPadX =
+    layout === "party" ? 22 : layout === "split" || layout === "neon" || layout === "brutalist" ? 18 : 0;
+  const rowGap =
+    layout === "party" ? 24 : layout === "neon" ? 20 : layout === "brutalist" ? 22 : layout === "split" ? 18 : m.gap;
+  const timeW = layout === "brutalist" ? 150 : m.timeW;
+  const detailW = y.stackTime ? 908 - rowPadX * 2 : 908 - rowPadX * 2 - timeW - rowGap;
 
   return new ImageResponse(
     (
@@ -265,15 +274,24 @@ export function renderStory(model: StoryModel) {
             // back to Delight.
             fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
             fontStyle: guest?.italic ? "italic" : "normal",
+            textTransform: y.upper ? "uppercase" : "none",
+            color: layout === "neon" ? t.accent : t.fg,
             marginBottom: px(78),
             maxWidth: photo ? 646 : 908,
+            ...(layout === "split"
+              ? { borderBottomWidth: 5, borderBottomStyle: "solid", borderBottomColor: t.fg, paddingBottom: 18 }
+              : {}),
+            ...(layout === "brutalist"
+              ? { borderBottomWidth: 9, borderBottomStyle: "solid", borderBottomColor: t.fg, paddingBottom: 12 }
+              : {}),
           }}
         >
           <span>{line1}</span>
-          {/* One colour for both lines, by Matt's call: the accent second
-              line was a house style tic, and the headline reads as one
-              sentence now that the case is the writer's own. */}
-          {line2 && <span>{line2}</span>}
+          {line2 && (
+            <span style={{ color: layout === "party" || layout === "brutalist" ? t.accent : undefined }}>
+              {line2}
+            </span>
+          )}
         </div>
         )}
 
@@ -292,7 +310,31 @@ export function renderStory(model: StoryModel) {
         ) : plan.tier === 3 ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
             {plan.summary.map(({ day, entries }) => (
-              <div key={day} style={{ display: "flex", marginBottom: 26 }}>
+              <div
+                key={day}
+                style={{
+                  display: "flex",
+                  marginBottom: layout === "brutalist" ? 36 : 26,
+                  ...(layout === "split"
+                    ? { borderWidth: 2, borderStyle: "solid", borderColor: t.fg, borderRadius: 12, padding: 16 }
+                    : {}),
+                  ...(layout === "party"
+                    ? { borderWidth: 3, borderStyle: "solid", borderColor: t.fg, borderRadius: 24, padding: 16 }
+                    : {}),
+                  ...(layout === "neon"
+                    ? { borderWidth: 3, borderStyle: "solid", borderColor: t.accent, borderRadius: 12, padding: 16 }
+                    : {}),
+                  ...(layout === "brutalist"
+                    ? {
+                        borderWidth: 5,
+                        borderStyle: "solid",
+                        borderColor: t.fg,
+                        padding: 16,
+                        boxShadow: `9px 9px 0 ${t.accent}`,
+                      }
+                    : {}),
+                }}
+              >
                 <span
                   style={{
                     display: "flex",
@@ -303,7 +345,7 @@ export function renderStory(model: StoryModel) {
                     fontSize: 30,
                     letterSpacing: 3,
                     textTransform: "uppercase",
-                    color: t.faint,
+                    color: layout === "neon" ? t.accent : t.faint,
                   }}
                 >
                   {day}
@@ -319,11 +361,19 @@ export function renderStory(model: StoryModel) {
                 >
                   {entries.map((e) => (
                     <div key={e.name} style={{ display: "flex" }}>
-                      <span style={{ fontWeight: 700 }}>{e.name}</span>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          ...(y.upper ? { textTransform: "uppercase" as const } : {}),
+                          ...(layout === "neon" ? { color: t.accent } : {}),
+                        }}
+                      >
+                        {e.name}
+                      </span>
                       <span
                         style={{
                           fontWeight: 600,
-                          color: t.muted,
+                          color: layout === "neon" ? t.accent : t.muted,
                           marginLeft: Math.round(plan.summaryFs * 0.32),
                         }}
                       >
@@ -360,12 +410,49 @@ export function renderStory(model: StoryModel) {
                   style={{
                     display: "flex",
                     fontWeight: 600,
-                    fontSize: m.dayFs,
+                    fontSize: layout === "brutalist" ? m.dayFs + 4 : m.dayFs,
                     letterSpacing: `${y.dayTrack}em`,
                     textTransform: "uppercase",
-                    color: t.faint,
+                    color: layout === "neon" ? t.accent : t.faint,
                     alignSelf: y.align === "center" ? "center" : "flex-start",
                     margin: `${m.dayMt}px 0 ${m.dayMb}px`,
+                    ...(layout === "split"
+                      ? {
+                          padding: "8px 13px",
+                          borderWidth: 2,
+                          borderStyle: "solid",
+                          borderColor: t.fg,
+                          borderRadius: 8,
+                          color: t.fg,
+                        }
+                      : {}),
+                    ...(layout === "party"
+                      ? {
+                          padding: "8px 17px",
+                          borderWidth: 3,
+                          borderStyle: "solid",
+                          borderColor: t.accent,
+                          borderRadius: 999,
+                          color: t.fg,
+                        }
+                      : {}),
+                    ...(layout === "neon"
+                      ? {
+                          paddingLeft: 14,
+                          borderLeftWidth: 8,
+                          borderLeftStyle: "solid",
+                          borderLeftColor: t.accent,
+                        }
+                      : {}),
+                    ...(layout === "brutalist"
+                      ? {
+                          paddingBottom: 5,
+                          borderBottomWidth: 6,
+                          borderBottomStyle: "solid",
+                          borderBottomColor: t.fg,
+                          color: t.fg,
+                        }
+                      : {}),
                   }}
                 >
                   {day}
@@ -379,21 +466,60 @@ export function renderStory(model: StoryModel) {
                       // becomes a column; otherwise it holds its own gutter.
                       flexDirection: y.stackTime ? "column" : "row",
                       alignItems: y.align === "center" ? "center" : "flex-start",
-                      gap: y.stackTime ? 4 : m.gap,
-                      marginBottom: m.rowMb,
-                      ...(y.chip
+                      gap: y.stackTime ? 4 : rowGap,
+                      marginBottom: layout === "brutalist" ? m.rowMb + 10 : m.rowMb,
+                      ...(layout === "plain" && y.chip
                         ? {
                             background: t.faint + "22",
                             borderRadius: y.radius,
                             padding: `${Math.round(m.rowMb * 0.7)}px ${Math.round(m.gap * 0.7)}px`,
                           }
                         : null),
-                      ...(y.rule !== "none" && !y.chip
+                      ...(layout === "plain" && y.rule !== "none" && !y.chip
                         ? {
                             borderBottom: `${y.rule === "bold" ? 4 : 2}px solid ${t.faint}55`,
                             paddingBottom: Math.round(m.rowMb * 0.6),
                           }
                         : null),
+                      ...(layout === "split"
+                        ? {
+                            padding: `18px ${rowPadX}px`,
+                            borderWidth: 2,
+                            borderStyle: "solid",
+                            borderColor: t.fg,
+                            borderRadius: y.radius,
+                          }
+                        : {}),
+                      ...(layout === "party"
+                        ? {
+                            padding: `18px ${rowPadX}px`,
+                            borderWidth: 3,
+                            borderStyle: "solid",
+                            borderColor: t.fg,
+                            borderRadius: y.radius,
+                            background: `${i % 2 === 0 ? t.accent : t.fg}14`,
+                          }
+                        : {}),
+                      ...(layout === "neon"
+                        ? {
+                            padding: `16px ${rowPadX}px`,
+                            borderWidth: 3,
+                            borderStyle: "solid",
+                            borderColor: t.accent,
+                            borderRadius: y.radius,
+                            background: `${t.accent}0d`,
+                          }
+                        : {}),
+                      ...(layout === "brutalist"
+                        ? {
+                            padding: `17px ${rowPadX}px`,
+                            borderWidth: 5,
+                            borderStyle: "solid",
+                            borderColor: t.fg,
+                            borderRadius: 0,
+                            boxShadow: `10px 10px 0 ${t.accent}`,
+                          }
+                        : {}),
                     }}
                   >
                     {!y.stackTime && (
@@ -401,10 +527,19 @@ export function renderStory(model: StoryModel) {
                         style={{
                           fontWeight: 700,
                           fontSize: m.timeFs,
-                          color: t.time,
-                          width: m.timeW,
+                          color: layout === "neon" ? t.accent : t.time,
+                          width: timeW,
                           flexShrink: 0,
                           display: "flex",
+                          ...(layout === "split"
+                            ? {
+                                alignSelf: "stretch",
+                                alignItems: "center",
+                                borderRightWidth: 2,
+                                borderRightStyle: "solid",
+                                borderRightColor: t.fg,
+                              }
+                            : {}),
                         }}
                       >
                         {r.time}
@@ -419,7 +554,7 @@ export function renderStory(model: StoryModel) {
                       style={{
                         display: "flex",
                         flexDirection: "column",
-                        width: m.colW,
+                        width: detailW,
                         alignItems: y.align === "center" ? "center" : "flex-start",
                       }}
                     >
@@ -433,6 +568,7 @@ export function renderStory(model: StoryModel) {
                           lineHeight: 1.15,
                           textAlign: y.align,
                           ...(y.upper ? { textTransform: "uppercase" as const } : null),
+                          ...(layout === "neon" ? { color: t.accent } : null),
                         }}
                       >
                         {r.name}
@@ -446,7 +582,7 @@ export function renderStory(model: StoryModel) {
                         <span
                           style={{
                             fontSize: m.subFs,
-                            color: t.faint,
+                            color: layout === "neon" ? t.accent : t.faint,
                             lineHeight: 1.2,
                             textAlign: y.align,
                           }}
@@ -468,6 +604,12 @@ export function renderStory(model: StoryModel) {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            ...(layout === "neon"
+              ? { borderTopWidth: 3, borderTopStyle: "solid", borderTopColor: t.accent, paddingTop: 18 }
+              : {}),
+            ...(layout === "brutalist"
+              ? { borderTopWidth: 7, borderTopStyle: "solid", borderTopColor: t.fg, paddingTop: 18 }
+              : {}),
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

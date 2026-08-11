@@ -6901,7 +6901,7 @@ a.clspeek-by:active { opacity: .6; }
 /* ---------------------------------------------------------------------------
    The Share screen: the hub behind the bar's Share tab.
 
-   One surface, three subjects. The title says which one you are on, the
+   One surface, four subjects. The title says which one you are on, the
    segment pills switch it, the colour swatches redraw the picture live, and
    the big button saves the thing on screen. The picture is the label: a
    preview that changes when a swatch is tapped explains the swatches better
@@ -7039,6 +7039,34 @@ a.clspeek-by:active { opacity: .6; }
 .qrcard .qrurl { color: var(--ol); margin-bottom: 0; }
 /* The pickers behind Dates and Classes: a scrolling list of rows and a Done. */
 .shpick-list { max-height: 42vh; overflow-y: auto; overscroll-behavior: contain; }
+.layoutlist { margin-top: 8px; }
+.layoutpick { align-items: center; }
+.layoutmini {
+  flex: 0 0 auto; width: 52px; height: 64px; padding: 8px 6px;
+  display: flex; flex-direction: column; justify-content: center; gap: 5px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--card); color: var(--ink); overflow: hidden;
+}
+.layoutmini > span { display: block; height: 6px; background: currentColor; opacity: .8; }
+.layoutmini-plain > span:nth-child(2) { width: 78%; }
+.layoutmini-plain > span:nth-child(3) { width: 62%; }
+.layoutmini-split > span {
+  height: 9px; border: 1px solid currentColor; background: none;
+  background-image: linear-gradient(90deg, transparent 30%, currentColor 30%, currentColor 33%, transparent 33%);
+}
+.layoutmini-party { background: var(--si-tint); }
+.layoutmini-party > span {
+  height: 10px; border: 1.5px solid var(--ink); border-radius: 999px;
+  background: var(--card); opacity: 1;
+}
+.layoutmini-party > span:nth-child(2) { margin-left: 5px; background: color-mix(in srgb, var(--si) 18%, white); }
+.layoutmini-neon { background: #3b3b3b; color: #c9ff38; border-color: #c9ff38; }
+.layoutmini-neon > span { height: 9px; border: 1.5px solid currentColor; border-radius: 3px; background: transparent; opacity: 1; }
+.layoutmini-brutalist { overflow: visible; border: 2px solid var(--ink); border-radius: 0; }
+.layoutmini-brutalist > span {
+  height: 8px; border: 1.5px solid var(--ink); background: var(--card);
+  box-shadow: 2px 2px 0 var(--si); opacity: 1;
+}
 .shpick-titleline { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .shpick-titleline > .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .shclass-tag {
@@ -7409,9 +7437,9 @@ a.clspeek-by:active { opacity: .6; }
    real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */
 .clline-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  /* 17, down another notch by Matt's call (18 before, 23 before that):
-     on the flat rows the section headings own the loud sizes now. */
-  font-size: 17px; font-weight: 600; line-height: 1.15; letter-spacing: -.005em;
+  /* Two pixels up: the class is the row's answer, so it should clearly lead
+     the clock and studio without becoming a page heading. */
+  font-size: 19px; font-weight: 600; line-height: 1.15; letter-spacing: -.005em;
   color: var(--ink);
 }
 /* The studio, with a pin. The glyph is what stops it reading as a second line

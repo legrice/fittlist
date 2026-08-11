@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
+import {
+  STORY_STYLES,
+  STORY_THEMES,
+  type StoryStyleId,
+  type StoryThemeId,
+} from "@/lib/format";
 import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
 import { DECOS, type DecoId } from "@/lib/decorations";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
@@ -12,7 +17,7 @@ import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// The Share tab's screen, on Matt's concept: one surface, three subjects.
+// The Share tab's screen, on Matt's concept: one surface, four subjects.
 // Week, Profile and QR code are segments rather than tiles, the title says
 // which one you are on, the colours redraw the picture live, and the big
 // button saves the thing on screen. The Week segment carries the Dates and
@@ -21,12 +26,6 @@ import { Toast, useToast } from "@/components/Toast";
 // to it any more, by Matt's call; copy-week-as-text is gone the same way,
 // and the page link lives with the QR code.
 //
-// Deliberately absent: the style row (Poster, Ticket, Grid, Minimal) from
-// the concept. Ten layout styles shipped once and came out because the
-// differences were not worth a decision; colour is what makes two posters
-// read as two posters. The renderer still honours a StoryStyle, so a real
-// style axis can return, but a row of thumbnails over one layout would be
-// a picker of lies.
 type Seg = "week" | "profile" | "qr" | "text";
 
 /** One occurrence the picture could hold, from the same loader the image
@@ -105,6 +104,7 @@ export function ShareHubScreen({
   const router = useRouter();
   const [seg, setSeg] = useState<Seg>("week");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
+  const [styleId, setStyleId] = useState<StoryStyleId>("plain");
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
   const [hide, setHide] = useState<Set<string>>(new Set());
@@ -132,7 +132,9 @@ export function ShareHubScreen({
   // The dressing: the top bar (the default), frames and day dividers.
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>("top");
-  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "deco">(null);
+  const [pick, setPick] = useState<
+    null | "dates" | "classes" | "message" | "layout" | "deco"
+  >(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -270,14 +272,16 @@ export function ShareHubScreen({
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
-    `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=${photo ? 1 : 0}` +
+    `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=${photo ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}` +
-    `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`;
+    `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
   const fileName =
-    seg === "week" ? `fittlist-${handle}-week.png` : `fittlist-${handle}-card.png`;
+    seg === "week"
+      ? `fittlist-${handle}-week-${styleId}.png`
+      : `fittlist-${handle}-card.png`;
   const qrUrl = `/api/qr/${handle}`;
   const qrFileName = `fittlist-${handle}-qr.png`;
 
@@ -567,6 +571,10 @@ export function ShareHubScreen({
                     {noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   </span>
                 </button>
+                <button className="shctrl" onClick={() => setPick("layout")}>
+                  <span className="shctrl-k">Layout</span>
+                  <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
+                </button>
                 <button className="shctrl" onClick={() => setPick("deco")}>
                   <span className="shctrl-k">Decoration</span>
                   <span className="shctrl-v">
@@ -597,7 +605,7 @@ export function ShareHubScreen({
                     "Opening…"
                   ) : (
                     <>
-                      Share <Icon name="arrow_outward" size={18} />
+                      Share <Icon name="ios_share" size={18} />
                     </>
                   )}
                 </button>
@@ -745,6 +753,57 @@ export function ShareHubScreen({
                   </button>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "layout" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPick(null);
+          }}
+        >
+          <div className="sheet shpick">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Layout</h2>
+            <p className="lead">Choose a structure, then use the preview to see it with your week.</p>
+            <div className="settingslist layoutlist">
+              {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).map(
+                ([id, style]) => {
+                  const on = id === styleId;
+                  return (
+                    <button
+                      key={id}
+                      className="setrow layoutpick"
+                      data-layout={id}
+                      aria-pressed={on}
+                      onClick={() => {
+                        setStyleId(id);
+                        setPick(null);
+                      }}
+                    >
+                      <span className={`layoutmini layoutmini-${id}`} aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                      <span className="setrow-txt">
+                        <span className="t">{style.label}</span>
+                        <span className="s">{style.description}</span>
+                      </span>
+                      {on && (
+                        <span className="setrow-ic">
+                          <Icon name="check" size={20} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                },
+              )}
             </div>
           </div>
         </div>

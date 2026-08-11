@@ -156,7 +156,7 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   sunset: { label: "Sunset", bg: "linear-gradient(170deg, #3b1c53 0%, #8f3a5f 55%, #d96b4a 100%)", fg: "#fdf3e6", accent: "#ffc46b", muted: "#e5c3bc", faint: "#d3a9a6", time: "#ffe6cf", lockup: "cloud", lockupAccent: "#ffc46b" },
   blush: { label: "Blush", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },
   slate: { label: "Slate", bg: "#2b2e33", fg: "#eef0ee", accent: "#c9e265", muted: "#a3a8ad", faint: "#7f858c", time: "#d8dcd8", lockup: "cloud", lockupAccent: "#c9e265" },
-  // The eight added when the style axis came out. Four grounds that are new
+  // The eight added when the first style axis came out. Four grounds that are new
   // families rather than shades of the eight above (a yellow, a deep green, a
   // blue, a true black and white), and four that are the quiet end, because
   // the quiet ones are what most people settle on and there was only one.
@@ -169,29 +169,16 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   surf: { label: "Surf", bg: "#cfe9e4", fg: "#10322e", accent: "#0f6b5c", muted: "#5c7f7a", faint: "#7c9b96", time: "#1d423d", lockup: "ink", lockupAccent: "#0f6b5c" },
   ember: { label: "Ember", bg: "linear-gradient(165deg, #1a1005 0%, #6b2a0f 60%, #c2410c 100%)", fg: "#fdeee2", accent: "#ffb066", muted: "#d9b49c", faint: "#bd9a80", time: "#ffe0c6", lockup: "cloud", lockupAccent: "#ffb066" },
 };
-/**
- * How the picture is drawn, as opposed to what colour it is.
- *
- * There were ten of these, and there is one. The ten were an attempt at "more
- * fun ways to share": a poster arrangement, a stacked one, a ticket, a
- * marquee, and so on, each a different point in a small vocabulary of
- * alignment, case, rules, chips and where the time sits. They were spread as
- * hard apart as the vocabulary allowed and they still were not different
- * enough to be worth a decision, which is the honest verdict on them: the
- * picker cost a sheet, a grid and ten miniatures to offer a difference nobody
- * could see. What actually makes two posters look like two posters is colour,
- * so there are sixteen colourways now and no second question.
- *
- * The shape stays because the paint reads it: `renderStory` takes a
- * `StoryStyle` and honours every knob on it, and `check:story` divides its
- * budget by `rowScale`. Reducing this to one entry deletes nine styles without
- * touching the renderer, and is what a style axis coming back would be built
- * on. Nothing in the app offers a choice of one.
- */
-export type StoryStyleId = "plain";
+/** How the picture is arranged, separately from its colourway. These are
+ * deliberately different structures rather than minor typographic presets:
+ * the classic open list, a split timetable, playful cards, neon outlines and
+ * a heavy brutalist stack. */
+export type StoryStyleId = "plain" | "split" | "party" | "neon" | "brutalist";
 
 export type StoryStyle = {
   label: string;
+  description: string;
+  layout: StoryStyleId;
   /** Multiplies the headline. */
   headline: number;
   /** Multiplies the class name on each row. */
@@ -226,11 +213,85 @@ export type StoryStyle = {
 };
 
 export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
-  plain: { label: "Plain", headline: 1.0, name: 1.0, upper: false, align: "left", rule: "none", chip: false, radius: 0, stackTime: false, dayTrack: 0.12, rowScale: 1.0 },
+  plain: {
+    label: "Classic",
+    description: "The clean open schedule",
+    layout: "plain",
+    headline: 1,
+    name: 1,
+    upper: false,
+    align: "left",
+    rule: "none",
+    chip: false,
+    radius: 0,
+    stackTime: false,
+    dayTrack: 0.12,
+    rowScale: 1,
+  },
+  split: {
+    label: "Side by side",
+    description: "Time and class in split cells",
+    layout: "split",
+    headline: 1,
+    name: 1.04,
+    upper: false,
+    align: "left",
+    rule: "none",
+    chip: false,
+    radius: 16,
+    stackTime: false,
+    dayTrack: 0.04,
+    rowScale: 1.18,
+  },
+  party: {
+    label: "Party pop",
+    description: "Playful badges and rounded cards",
+    layout: "party",
+    headline: 1,
+    name: 1.04,
+    upper: true,
+    align: "left",
+    rule: "none",
+    chip: true,
+    radius: 28,
+    stackTime: false,
+    dayTrack: 0.02,
+    rowScale: 1.42,
+  },
+  neon: {
+    label: "Neon boxes",
+    description: "Electric outlines and compact rows",
+    layout: "neon",
+    headline: 1,
+    name: 1.03,
+    upper: false,
+    align: "left",
+    rule: "none",
+    chip: true,
+    radius: 12,
+    stackTime: false,
+    dayTrack: 0.02,
+    rowScale: 1.28,
+  },
+  brutalist: {
+    label: "Brutalist",
+    description: "Heavy rules and offset blocks",
+    layout: "brutalist",
+    headline: 1,
+    name: 1,
+    upper: true,
+    align: "left",
+    rule: "bold",
+    chip: false,
+    radius: 0,
+    stackTime: false,
+    dayTrack: 0,
+    rowScale: 1.38,
+  },
 };
 
 /**
- * The one style, and a colourway, from whatever the URL said.
+ * A layout and a colourway, from whatever the URL said.
  *
  * Self-healing on purpose: an unknown colour falls back to Cream rather than
  * erroring or drawing something with no ink on it. `?theme=` and `?palette=`
@@ -242,13 +303,20 @@ export function storyLook(
   styleId: string | null,
   paletteId: string | null,
 ): [StoryStyleId, StoryStyle, StoryTheme] {
-  void styleId;
+  const wantStyle = (styleId ?? "").toLowerCase();
+  const styleById = (Object.keys(STORY_STYLES) as StoryStyleId[]).find(
+    (k) => k.toLowerCase() === wantStyle,
+  );
+  const styleByLabel = (Object.keys(STORY_STYLES) as StoryStyleId[]).find(
+    (k) => STORY_STYLES[k].label.toLowerCase() === wantStyle,
+  );
+  const style = styleById ?? styleByLabel ?? "plain";
   const want = (paletteId ?? "").toLowerCase();
   const byId = (Object.keys(STORY_THEMES) as StoryThemeId[]).find((k) => k.toLowerCase() === want);
   const byLabel = (Object.keys(STORY_THEMES) as StoryThemeId[]).find(
     (k) => STORY_THEMES[k].label.toLowerCase() === want,
   );
-  return ["plain", STORY_STYLES.plain, STORY_THEMES[byId ?? byLabel ?? "paper"]];
+  return [style, STORY_STYLES[style], STORY_THEMES[byId ?? byLabel ?? "paper"]];
 }
 
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {

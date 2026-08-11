@@ -445,7 +445,7 @@ await p.locator(".shseg-pill", { hasText: "Text" }).click();
   await p.locator(".shcta .btn", { hasText: "Copy text" }).click();
   await p.locator(".toast.on", { hasText: "Copied" }).waitFor();
 }
-// The week segment carries the rail: Dates, Classes, Message, one
+// The week segment carries the rail: Dates, Classes, Headline, Layout and Decoration, one
 // scrolling row of chips under the colours, and the pickers really move
 // the picture: fewer days, and a hidden class comes off the count and the
 // compose URL alike.
@@ -453,7 +453,7 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
 {
   // innerText reports the CSS-uppercased label, so compare in lower case.
   const keys = (await p.locator(".shctrl .shctrl-k").allInnerTexts()).map((t) => t.trim().toLowerCase());
-  if (keys.join("|") !== "classes|dates|headline|decoration")
+  if (keys.join("|") !== "classes|dates|headline|layout|decoration")
     fail("the rail leads with Classes, per the brief: " + keys.join("|"));
   const a = await p.locator(".shctrl").first().boundingBox();
   const b2 = await p.locator(".shctrl").nth(1).boundingBox();
@@ -466,6 +466,25 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
   const srcMsg = await p.locator(".shprev-week").getAttribute("src");
   if (!/Fall%20schedule%20is%20live/.test(srcMsg ?? ""))
     fail("the message should reach the picture: " + srcMsg);
+  // Layout is a real structural choice again: five visibly distinct paints,
+  // all accepted by the image route, and the chosen id rides the preview URL.
+  await p.locator(".shctrl", { hasText: "Layout" }).click();
+  const layoutIds = await p.locator(".layoutpick").evaluateAll((els) =>
+    els.map((e) => e.getAttribute("data-layout")),
+  );
+  if (layoutIds.join("|") !== "plain|split|party|neon|brutalist")
+    fail("expected five share layouts, got " + layoutIds.join("|"));
+  for (const id of layoutIds) {
+    const r = await p.request.get(`${BASE}/api/story/compose?style=${id}&days=3`);
+    if (!r.ok()) fail(`${id} layout does not render: ${r.status()}`);
+    const buf = await r.body();
+    if (buf.readUInt32BE(16) !== 1080 || buf.readUInt32BE(20) !== 1920)
+      fail(`${id} layout drew the wrong size`);
+  }
+  await p.locator('.layoutpick[data-layout="party"]').click();
+  const srcLayout = await p.locator(".shprev-week").getAttribute("src");
+  if (!/style=party/.test(srcLayout ?? ""))
+    fail("the picked layout should reach the picture: " + srcLayout);
   await p.locator(".shctrl", { hasText: "Dates" }).click();
   await p.locator(".shday", { hasText: /^3$/ }).click();
   await p.locator(".shpick .btn", { hasText: "Done" }).click();

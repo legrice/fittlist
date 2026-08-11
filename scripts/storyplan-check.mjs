@@ -9,6 +9,7 @@
 //
 //   node scripts/storyplan-check.mjs
 import { listBudget, measurePlan, planStory } from "../src/lib/storyplan.ts";
+import { STORY_STYLES } from "../src/lib/format.ts";
 
 const fail = (m) => {
   console.error("STORYPLAN FAIL: " + m);
@@ -77,6 +78,20 @@ for (const headline of HEADLINES)
 
 if (!(tiers.has(1) && tiers.has(2) && tiers.has(3)))
   fail(`only reached tiers ${[...tiers].join(", ")}; the check isn't exercising all three`);
+
+// Every visual layout declares how much taller its rows draw. The routes
+// divide by that scale before planning; hold that contract here so a new
+// card treatment cannot quietly spend more vertical space than it reserved.
+for (const [id, style] of Object.entries(STORY_STYLES)) {
+  const budget = listBudget(282);
+  const plan = planStory(
+    week({ days: 5, perDay: 3, names: 5, places: 4, longNames: false }),
+    budget / style.rowScale,
+  );
+  const claimed = measurePlan(plan) * style.rowScale;
+  if (claimed > budget)
+    fail(`${id} claims ${Math.round(claimed)}px inside a ${Math.round(budget)}px layout budget`);
+}
 
 // A single class must never be summarised: the simplest week keeps the layout
 // the poster was designed around.
