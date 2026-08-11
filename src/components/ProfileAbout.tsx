@@ -25,7 +25,7 @@ export function ProfileAbout({ text, className = "profabout" }: { text: string; 
       <p ref={copy} className={`${className} profile-about-copy`}>{text}</p>
       {canExpand && (
         <button className="profile-about-more" type="button" onClick={() => setExpanded((open) => !open)}>
-          {expanded ? "Show less" : "Read more"}
+          {expanded ? "Show less" : "Show more"}
         </button>
       )}
     </div>

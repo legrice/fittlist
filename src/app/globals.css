@@ -1945,6 +1945,9 @@ button.ps-card { cursor: pointer; }
 .profile-about-wrap:not(.open) .profile-about-copy {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
 }
+.profile-about-wrap.open .profile-about-copy {
+  display: block; -webkit-line-clamp: unset; overflow: visible;
+}
 .profile-about-more {
   appearance: none; border: 0; background: none; color: var(--ink); cursor: pointer;
   padding: 4px 0 0; font: inherit; font-size: 14px; font-weight: 600;
