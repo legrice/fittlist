@@ -6058,10 +6058,19 @@ button.ps-card { cursor: pointer; }
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
 .following-rail { margin: 14px -18px 0; }
 .following-rail .tray-scroll { padding-top: 6px; padding-bottom: 6px; }
-.screen.hasnav:has(.following-head) .brandbar {
+.screen.hasnav .brandbar {
   background: var(--ink); color: #fff; --wm-ink: #fff; --wm-mark: #fff;
 }
-.screen.hasnav:has(.following-head) .brandbar .iconbtn { color: #fff; }
+.screen.hasnav .brandbar .iconbtn { color: #fff; }
+.screen.hasnav .brandbar .headnav-l { color: rgba(255, 255, 255, .7); }
+.screen.hasnav .brandbar .headnav-l:hover,
+.screen.hasnav .brandbar .headnav-l.on { color: #fff; border-bottom-color: #fff; }
+.tab-page-title {
+  margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 30px; line-height: 1.05; font-weight: 600;
+  letter-spacing: -.02em; color: var(--ink);
+}
+.shpage-title { padding: 2px 0 10px; }
 .following-days { display: flex; flex-direction: column; gap: 24px; }
 .following-day-h {
   margin: 0 0 9px; font-size: 18px; line-height: 1.15; font-weight: 600;

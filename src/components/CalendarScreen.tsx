@@ -266,7 +266,7 @@ export function CalendarScreen({
       <CalSticky>
         {/* The word is back above the segment, by Matt's call: Calendar
             under the logo, then the pills as the row of controls. */}
-        <h1 className="calbar-t caltitle">Calendar</h1>
+        <h1 className="calbar-t caltitle tab-page-title">Calendar</h1>
         <div className="calbar">
           {!bare && (
             <div className="catpills calpills calbar-pills" role="tablist" aria-label="Which of your things">

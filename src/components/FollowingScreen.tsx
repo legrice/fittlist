@@ -441,7 +441,7 @@ export function FollowingScreen({
       {isHome && (
         <header className="following-head">
           <div className="following-title-row">
-            <h1>Following</h1>
+            <h1 className="tab-page-title">Following</h1>
             <Link className="following-manage" href="/following">Manage</Link>
           </div>
           <div className="tray following-rail" role="group" aria-label="Filter by coach">
