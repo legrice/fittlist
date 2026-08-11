@@ -8,7 +8,7 @@ provide native links, sharing, photos, notifications and calendar access.
 
 - App name: `FittList`
 - Bundle ID: `co.fittlist.app`
-- Website: `https://fittlist.co`
+- Website: `https://www.fittlist.co`
 - App Store organization: pending Apple conversion
 
 ## Local setup

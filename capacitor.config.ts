@@ -8,7 +8,10 @@ const config: CapacitorConfig = {
     // The catalog and profiles are server-rendered from the live database. The
     // shell therefore loads the canonical app instead of shipping a second,
     // stale static copy of FittList.
-    url: process.env.CAPACITOR_SERVER_URL ?? "https://fittlist.co",
+    // Vercel redirects the apex domain to www. Starting at the canonical host
+    // prevents iOS from interpreting that redirect as a request for Safari.
+    url: process.env.CAPACITOR_SERVER_URL ?? "https://www.fittlist.co",
+    allowNavigation: ["fittlist.co", "www.fittlist.co", "*.vercel.app"],
     cleartext: false,
   },
   ios: {
