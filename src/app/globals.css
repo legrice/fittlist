@@ -3702,6 +3702,13 @@ button.ps-card { cursor: pointer; }
 .stamp-2 { --stamp-bg: #f3a9c2; --stamp-ink: #57152c; }
 .stamp-3 { --stamp-bg: #b9dfff; --stamp-ink: #133650; }
 .stamp-4 { --stamp-bg: #cce876; --stamp-ink: #263600; }
+
+/* The unified profile is one document, not a sheet sliding over a pinned
+   identity card. Only the section anchor rail sticks. */
+.pubhead {
+  position: relative;
+  top: auto;
+}
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's
