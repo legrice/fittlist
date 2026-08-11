@@ -428,6 +428,11 @@ await p.locator(".shseg").waitFor();
 // The QR segment: the named card, the code, and the link beside it.
 await p.locator(".shseg-pill", { hasText: "QR code" }).click();
 await p.locator(".qrcard .qrimg").waitFor();
+{
+  const qrBox = await p.locator(".qrcard .qrimg").boundingBox();
+  if (Math.abs(qrBox.width - qrBox.height) > 2)
+    fail(`the QR code must render square, got ${qrBox.width}x${qrBox.height}`);
+}
 if (!(await p.locator(".qrcard-nm").innerText()).trim()) fail("the QR card names its owner");
 if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
   fail("the copy link lives with the QR code");

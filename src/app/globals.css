@@ -3248,8 +3248,13 @@ button.ps-card { cursor: pointer; }
 .acctcard-wide .acctcard-ic { margin-bottom: 0; }
 .acctcard-wide .acctcard-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 /* QR sheet */
-.qrframe { width: 232px; max-width: 100%; margin: 20px auto 14px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
-.qrimg { display: block; width: 100%; height: auto; }
+.qrframe {
+  display: grid; place-items: center;
+  width: 232px; max-width: 100%; aspect-ratio: 1;
+  margin: 20px auto 14px; padding: 16px;
+  background: #fff; border: 1px solid var(--line); border-radius: 18px;
+}
+.qrimg { display: block; width: 100%; height: 100%; aspect-ratio: 1; object-fit: contain; }
 .qrurl { text-align: center; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px; color: var(--si); word-break: break-all; margin-bottom: 4px; }
 .acctwrap .rowcta { margin-top: 12px; }
 
