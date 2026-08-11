@@ -348,8 +348,8 @@ export function CalendarScreen({
         // reading "nothing coming up" is already looking.
         <WeekEmpty
           first={kind === "added"}
-          title={kind === "added" ? "You haven’t added anything to your calendar" : ""}
-          body={kind === "added" ? "Follow a coach to see what they’re teaching, or add a class to your schedule." : ""}
+          title={kind === "added" ? "Nothing added yet" : ""}
+          body={kind === "added" ? "Follow a coach or add a class." : ""}
           cta={kind === "added" ? undefined : "Add a class"}
           onCta={kind === "added" ? undefined : () => setAddChoice(true)}
           actions={kind === "added" ? (
