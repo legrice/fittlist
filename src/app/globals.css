@@ -7431,9 +7431,18 @@ a.clspeek-by:active { opacity: .6; }
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
 
-/* Class lists stay editorial and open: no card around each occurrence, only
-   the shared hairline that separates one row from the next. */
-.disflat { display: flex; flex-direction: column; margin-top: 2px; }
+/* Class lists use the same soft white cards as Calendar: one rounded surface
+   language across the app, with the page ground providing separation. */
+.disflat { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+.disflat .clrow {
+  overflow: hidden; border-radius: 16px; background: var(--card);
+  box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
+}
+.disflat .clline {
+  grid-template-columns: 64px 1fr; column-gap: 10px;
+  align-content: center;
+  min-height: 112px; padding: 14px; border-bottom: 0;
+}
 .disflat .rowsave {
   top: 10px; right: 10px; bottom: auto;
   width: 36px; height: 36px; padding: 0;
