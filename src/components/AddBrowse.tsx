@@ -13,17 +13,11 @@ import { announceSaved } from "@/components/SaveEducation";
 // (peekday, peekrow, peekadd), because the two lists are one idea: a week
 // you can save from.
 export function AddBrowse({
-  coachSeg,
-  onCoaching,
   onAddNew,
   onEvent,
   onNotice,
   onClose,
 }: {
-  /** A coach picks a hat first: Discover, or I'm coaching. A member never
-   *  sees the segments, because one answer is not a question. */
-  coachSeg?: boolean;
-  onCoaching?: () => void;
   /** The class isn't listed: the ordinary adder, with everything typed
    *  landing in the catalog for the next person. */
   onAddNew: () => void;
@@ -79,22 +73,12 @@ export function AddBrowse({
         <div className="peekhead">
           <div className="peekhead-txt">
             <h2 className="peekhead-nm">Add a class</h2>
+            <p className="addbrowse-intro">Discover classes from coaches near you.</p>
           </div>
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
         </div>
-
-        {coachSeg && (
-          <div className="modetoggle addseg">
-            <button className="sel" type="button">
-              Discover
-            </button>
-            <button type="button" onClick={onCoaching}>
-              I&rsquo;m coaching
-            </button>
-          </div>
-        )}
 
         <div className="addbrowse-search">
           <Icon name="search" size={20} />
@@ -157,7 +141,7 @@ export function AddBrowse({
             <p className="durnote">
               Can&rsquo;t find it? Add it and it shows up here for everyone else too.
             </p>
-            <button className="btn ghost" onClick={onAddNew}>
+            <button className="btn si" onClick={onAddNew}>
               + Add a class that isn&rsquo;t here
             </button>
             {onEvent && (

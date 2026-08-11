@@ -6838,10 +6838,25 @@ button.ps-card { cursor: pointer; }
 
 /* The Add screen's browse foot: the two ways out when the class you mean
    is not on the list. */
-.addbrowse-foot { padding: 14px 2px 8px; }
+.sheet.addbrowse { background: var(--ground); }
+.addbrowse-intro { margin: 4px 0 0; color: var(--ol); font-size: 14px; line-height: 1.35; }
+.addbrowse-foot {
+  padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
+  background: var(--ground);
+}
 .addbrowse-foot .btn { width: 100%; margin-top: 10px; }
 .addbrowse-ev { display: block; margin: 12px auto 0; font-size: 13.5px; }
-.addseg { margin: 0 0 14px; }
+.addrole-sheet { max-width: 420px; }
+.addrole-sheet h2 { margin: 4px 42px 4px 0; }
+.addrole-seg {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 20px; padding: 4px; border-radius: 999px; background: var(--cl);
+}
+.addrole-seg button {
+  min-height: 46px; border: 0; border-radius: 999px; background: var(--card); color: var(--ink);
+  font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif; cursor: pointer;
+}
+.addrole-seg button:first-child { background: var(--ink); color: var(--paper); }
 
 /* The by-row: the coach and, on Discover, the star that favorites them
    without leaving the class. A class is how you discover a coach. */

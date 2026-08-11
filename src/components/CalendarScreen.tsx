@@ -80,7 +80,8 @@ export function CalendarScreen({
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [kind, setKind] = useState<"all" | "coaching" | "added">("all");
-  const [addOpen, setAddOpen] = useState(openAdder);
+  const [addChoice, setAddChoice] = useState(openAdder);
+  const [addOpen, setAddOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
   const [personalAdd, setPersonalAdd] = useState(false);
   const [gone, setGone] = useState<Record<string, boolean>>({});
@@ -327,7 +328,7 @@ export function CalendarScreen({
           title="Your schedule is empty"
           body="Put the classes you teach up here. That is the whole app: your week, at one link, kept current."
           cta="Add a class"
-          onCta={() => setBrowseOpen(true)}
+          onCta={() => setAddChoice(true)}
         />
       ) : view === "month" ? (
         <MonthScroll
@@ -345,7 +346,7 @@ export function CalendarScreen({
           title=""
           body=""
           cta={kind === "added" ? undefined : "Add a class"}
-          onCta={kind === "added" ? undefined : () => setBrowseOpen(true)}
+          onCta={kind === "added" ? undefined : () => setAddChoice(true)}
         />
       ) : (
         <div className="calendar-cardlist">
@@ -404,19 +405,35 @@ export function CalendarScreen({
           as Following's search: adding is what somebody opens this screen
           to do, and the title row's corner belongs to Share now. */}
       {!bare && (
-        <button className="wkfab" aria-label="Add a class" onClick={() => setBrowseOpen(true)}>
+        <button className="wkfab" aria-label="Add a class" onClick={() => setAddChoice(true)}>
           <Icon name="add" size={28} />
         </button>
       )}
+      {addChoice && (
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
+          <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddChoice(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2 id="addrole-title">Add a class</h2>
+            <p className="lead">Are you coaching or attending?</p>
+            <div className="addrole-seg" role="group" aria-label="How are you joining this class?">
+              <button onClick={() => {
+                setAddChoice(false);
+                setPersonalAdd(false);
+                setAddOpen(true);
+              }}>Coaching</button>
+              <button onClick={() => {
+                setAddChoice(false);
+                setBrowseOpen(true);
+              }}>Attending</button>
+            </div>
+          </div>
+        </div>
+      )}
       {browseOpen && (
         <AddBrowse
-          coachSeg
           onClose={() => setBrowseOpen(false)}
-          onCoaching={() => {
-            setBrowseOpen(false);
-            setPersonalAdd(false);
-            setAddOpen(true);
-          }}
           onAddNew={() => {
             setBrowseOpen(false);
             setPersonalAdd(true);
