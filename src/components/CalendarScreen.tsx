@@ -16,15 +16,16 @@ import {
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { PlanSheet } from "@/components/PlanSheet";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
-import type { WeekDay as WeekDayData } from "@/lib/week";
+import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
-import { removePersonalClass } from "@/app/actions/personal";
+import { removePersonalClass, type PersonalDetail } from "@/app/actions/personal";
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -110,6 +111,8 @@ export function CalendarScreen({
   const scrolled = useScrolledPast(120);
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
+  const [plan, setPlan] = useState<string | null>(null);
+  const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
 
@@ -181,7 +184,9 @@ export function CalendarScreen({
             : null,
         tag: i.personal ? "Added by you" : undefined,
         tagTone: i.personal ? "personal" as const : undefined,
-        onTap: i.personal ? undefined : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}&from=calendar`),
+        onTap: i.personal
+          ? () => setPlan(i.id)
+          : () => setPeek(peekOfAdded(i)),
         corner: (
           <button
             className="following-add on calendar-attending-check"
@@ -512,6 +517,48 @@ export function CalendarScreen({
         />
       )}
 
+      {plan && (
+        <PlanSheet
+          id={plan}
+          onClose={() => setPlan(null)}
+          onToast={toast}
+          onRemoved={(message) => {
+            setPlan(null);
+            toast(message);
+            router.refresh();
+          }}
+          onEdit={(personal) => {
+            setPlan(null);
+            setPlanEdit({ id: personal.id, prefill: personalPrefill(personal) });
+          }}
+        />
+      )}
+
+      {planEdit && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={subsCount}
+          firstPublish={false}
+          personal={{ canCoach: !member, editId: planEdit.id }}
+          prefill={planEdit.prefill}
+          onClose={() => setPlanEdit(null)}
+          onToast={toast}
+          onPublished={(message) => {
+            setPlanEdit(null);
+            toast(message);
+            router.refresh();
+          }}
+          onDeleted={(message) => {
+            setPlanEdit(null);
+            toast(message);
+            router.refresh();
+          }}
+        />
+      )}
+
       {edit && (
         <Adder
           studios={studios}
@@ -613,6 +660,52 @@ function peekOf(
     // A shift's page lives under the studio, because that is who owns it.
     base: c.shift ? (c.shiftBase ? `s/${c.shiftBase}` : undefined) : (handle ?? undefined),
     mine: true,
+  };
+}
+
+/** A catalog class already on this calendar opens the same modern peek as it
+ *  does from Following. The row has enough to paint the first frame; the
+ *  sheet loads its image, About, booking links and RSVP state behind it. */
+function peekOfAdded(item: WeekItem): PeekClass {
+  const d = new Date(`${item.iso}T00:00:00Z`);
+  const dow = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  return {
+    id: item.classId,
+    iso: item.iso,
+    name: item.name,
+    when: `${dow}, ${md}`,
+    time: `${item.hm} ${item.ap.toLowerCase()}`,
+    studio: item.where,
+    coach: item.coachName
+      ? {
+          name: item.coachName,
+          handle: item.handle || null,
+          photo: item.coachPhoto,
+          color: item.coachColor,
+        }
+      : null,
+    base: item.handle,
+    mine: false,
+  };
+}
+
+function personalPrefill(item: PersonalDetail): AdderPrefill {
+  return {
+    name: item.name,
+    classType: item.classType,
+    description: item.description,
+    image: item.image,
+    startTime: item.startTime,
+    durationMin: item.durationMin,
+    studioId: item.studioId,
+    location: item.location,
+    withWho: item.withWho,
+    links: item.links,
+    days: [item.dayOfWeek],
+    dayOfWeek: item.dayOfWeek,
+    endsOn: item.endsOn,
+    specificDate: item.specificDate,
   };
 }
 
