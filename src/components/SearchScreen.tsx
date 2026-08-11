@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { browseCoaches, searchCoaches } from "@/app/actions/search";
-import { PersonRow, type DirPerson } from "@/components/DirectoryRows";
+import { browseCoaches, searchAll } from "@/app/actions/search";
+import { ClassResults } from "@/components/ClassResults";
+import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
+import type { DirClass } from "@/lib/discoverclasses";
 
 // Two characters keeps a stray keystroke from asking for the directory.
 // The server action holds the same floor.
@@ -57,9 +59,11 @@ function writeRecent(hit: RecentHit): RecentHit[] {
   return next;
 }
 
-export function SearchScreen() {
+export function SearchScreen({ todayIso }: { todayIso: string }) {
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
+  const [studios, setStudios] = useState<DirStudio[]>([]);
+  const [classes, setClasses] = useState<DirClass[]>([]);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [asked, setAsked] = useState("");
@@ -97,6 +101,8 @@ export function SearchScreen() {
     const needle = q.trim();
     if (needle.length < MIN) {
       setPeople([]);
+      setStudios([]);
+      setClasses([]);
       setBusy(false);
       setFailed(false);
       setAsked("");
@@ -108,13 +114,17 @@ export function SearchScreen() {
     setFailed(false);
     const timer = setTimeout(async () => {
       try {
-        const result = await searchCoaches(needle);
+        const result = await searchAll(needle);
         if (run.current !== mine) return;
-        setPeople(result);
+        setPeople(result.people);
+        setStudios(result.studios);
+        setClasses(result.classes);
         setAsked(needle);
       } catch {
         if (run.current !== mine) return;
         setPeople([]);
+        setStudios([]);
+        setClasses([]);
         setAsked(needle);
         setFailed(true);
       } finally {
@@ -125,7 +135,7 @@ export function SearchScreen() {
   }, [q]);
 
   const short = q.trim().length < MIN;
-  const nothing = !short && !busy && asked === q.trim() && people.length === 0;
+  const nothing = !short && !busy && asked === q.trim() && people.length + studios.length + classes.length === 0;
 
   const remember =
     (rows: DirPerson[]) => (event: MouseEvent<HTMLDivElement>) => {
@@ -146,8 +156,8 @@ export function SearchScreen() {
             className="dissearch-in"
             value={q}
             onChange={(event) => setQ(event.target.value)}
-            placeholder="Search coaches"
-            aria-label="Search coaches"
+            placeholder="Search coaches, classes, or studios"
+            aria-label="Search coaches, classes, or studios"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
@@ -205,7 +215,7 @@ export function SearchScreen() {
         </>
       ) : busy ? (
         <div className="empty-block" role="status" aria-live="polite">
-          <p>Searching coaches&hellip;</p>
+          <p>Searching&hellip;</p>
         </div>
       ) : failed ? (
         <div className="empty-block" role="status" aria-live="polite">
@@ -214,19 +224,35 @@ export function SearchScreen() {
         </div>
       ) : nothing ? (
         <div className="empty-block">
-          <h2>No coaches match that</h2>
-          <p>Try another name, location, specialty, or handle.</p>
+          <h2>No results for that</h2>
+          <p>Try another coach, class, studio, or specialty.</p>
         </div>
       ) : (
-        <div className="srchsec" onClickCapture={remember(people)}>
-          <h2 className="srchhead">
-            Coaches <span>{people.length}</span>
-          </h2>
-          <div className="dislist dislist-bare">
-            {people.map((person) => (
-              <PersonRow key={person.id} person={person} from="search" kindTag={false} />
-            ))}
-          </div>
+        <div>
+          {people.length > 0 && (
+            <div className="srchsec" onClickCapture={remember(people)}>
+              <h2 className="srchhead">Coaches <span>{people.length}</span></h2>
+              <div className="dislist dislist-bare">
+                {people.map((person) => (
+                  <PersonRow key={person.id} person={person} from="search" kindTag={false} />
+                ))}
+              </div>
+            </div>
+          )}
+          {classes.length > 0 && (
+            <div className="srchsec">
+              <h2 className="srchhead">Classes <span>{classes.length}</span></h2>
+              <ClassResults classes={classes} todayIso={todayIso} from="search" />
+            </div>
+          )}
+          {studios.length > 0 && (
+            <div className="srchsec">
+              <h2 className="srchhead">Gyms &amp; studios <span>{studios.length}</span></h2>
+              <div className="dislist dislist-bare">
+                {studios.map((studio) => <StudioRow key={studio.id} studio={studio} from="search" />)}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

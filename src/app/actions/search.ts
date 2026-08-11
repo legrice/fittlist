@@ -5,7 +5,6 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
 import { publicSchedules } from "@/lib/coachweek";
-import { fansVisible } from "@/lib/flags";
 import { runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
@@ -48,7 +47,6 @@ export async function searchAll(
   const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[] };
   const userId = await getSessionUserId();
   if (!userId) return empty;
-  if (!(await fansVisible())) return empty;
   const needle = query.trim().toLowerCase();
   const locNeedle = loc.trim().toLowerCase();
   if (needle.length < MIN && locNeedle.length < MIN) return empty;
@@ -87,7 +85,7 @@ async function runSearch(
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return empty;
 
-  const [allRows, hidden, followRows, askRows, studioRows] = await Promise.all([
+  const [allRows, hidden, followRows, askRows, studioRows, coachStudioRows] = await Promise.all([
     db
       .select()
       .from(schema.users)
@@ -104,6 +102,9 @@ async function runSearch(
     peopleOnly
       ? Promise.resolve([])
       : db.select().from(schema.studios).orderBy(schema.studios.name),
+    peopleOnly
+      ? Promise.resolve([])
+      : db.select({ userId: schema.coachStudios.userId, studioId: schema.coachStudios.studioId }).from(schema.coachStudios),
   ]);
 
   // A handle, a name, the city they train in, or what they teach. The handle
@@ -118,18 +119,17 @@ async function runSearch(
   // typing it most wants. `certifications` stays out on purpose: a credential
   // is not a category, and searching free chips for a category word only works
   // by coincidence.
-  const matched = allRows
+  const candidates = allRows
     .filter((r) => !hidden.has(r.id) && r.id !== userId && r.kind !== "fan" && r.kind !== "gym" && r.name.trim())
-    .filter(
-      (r) =>
-        needle.length < MIN ||
-        r.name.toLowerCase().includes(needle) ||
-        (r.handle ?? "").toLowerCase().includes(needle) ||
-        (r.title ?? "").toLowerCase().includes(needle) ||
-        (r.location ?? "").toLowerCase().includes(needle) ||
-        (r.disciplines ?? []).some((d) => d.toLowerCase().includes(needle)),
-    )
     .filter((r) => !locNeedle || (r.location ?? "").toLowerCase().includes(locNeedle));
+  const personMatches = (r: (typeof candidates)[number]) =>
+    needle.length < MIN ||
+    r.name.toLowerCase().includes(needle) ||
+    (r.handle ?? "").toLowerCase().includes(needle) ||
+    (r.title ?? "").toLowerCase().includes(needle) ||
+    (r.location ?? "").toLowerCase().includes(needle) ||
+    (r.disciplines ?? []).some((d) => d.toLowerCase().includes(needle));
+  const directMatched = candidates.filter(personMatches);
 
   // Every listable person's schedule, once. It was the matched people only,
   // which was right when this searched names and is wrong now that it
@@ -140,8 +140,26 @@ async function runSearch(
   // Coach Search only needs week counts for coaches it can return. The broad
   // searchAll path still needs every public schedule because it also searches
   // class inventory.
-  const scheduleOwners = peopleOnly ? matched : listable;
+  const scheduleOwners = peopleOnly ? directMatched : listable;
   const allClassRows = (await publicSchedules(scheduleOwners)).filter((c) => c.isPublic);
+  const studioMatches = (st: (typeof studioRows)[number]) =>
+    needle.length < MIN ||
+    st.name.toLowerCase().includes(needle) ||
+    st.address.toLowerCase().includes(needle) ||
+    st.types.some((t) => t.toLowerCase().includes(needle));
+  const matchedStudioIds = new Set(studioRows.filter(studioMatches).map((st) => st.id));
+  // A place name is also a useful way to find the people who work there.
+  // Read both explicit profile associations and published schedules: either
+  // one is enough to truthfully say a coach is connected to that studio.
+  const studioCoachIds = new Set([
+    ...coachStudioRows.filter((row) => matchedStudioIds.has(row.studioId)).map((row) => row.userId),
+    ...allClassRows
+      .filter((row) => !!row.studioId && matchedStudioIds.has(row.studioId))
+      .map((row) => row.ownerUserId),
+  ]);
+  const matched = peopleOnly
+    ? directMatched
+    : candidates.filter((row) => personMatches(row) || studioCoachIds.has(row.id));
   const start = new Date(`${todayIso()}T00:00:00Z`);
   const weekCount = new Map<string, number>();
   for (let i = 0; i < 7; i++) {
@@ -232,7 +250,22 @@ async function runSearch(
     // matching it fourteen times is the same answer fourteen times.
     const hit = new Map<string, boolean>();
     if (!browse) {
-      for (const c of [...allClassRows, ...gymRows]) hit.set(c.id, classMatches(c, needle));
+      const owners = new Map([...listable, ...gyms].map((owner) => [owner.id, owner]));
+      for (const c of [...allClassRows, ...gymRows]) {
+        const ownerId = ("ownerUserId" in c ? c.ownerUserId : c.userId) as string;
+        const owner = owners.get(ownerId);
+        const ownerHit = !!owner && (
+          owner.name.toLowerCase().includes(needle) ||
+          (owner.handle ?? "").toLowerCase().includes(needle) ||
+          (owner.title ?? "").toLowerCase().includes(needle)
+        );
+        hit.set(
+          c.id,
+          classMatches(c, needle) ||
+            (!!c.studioId && matchedStudioIds.has(c.studioId)) ||
+            ownerHit,
+        );
+      }
     }
     classes = buildDiscoverClasses({
       viewerId: userId,
@@ -250,13 +283,7 @@ async function runSearch(
   }
 
   const studios: DirStudio[] = studioRows
-    .filter(
-      (st) =>
-        needle.length < MIN ||
-        st.name.toLowerCase().includes(needle) ||
-        st.address.toLowerCase().includes(needle) ||
-        st.types.some((t) => t.toLowerCase().includes(needle)),
-    )
+    .filter(studioMatches)
     // A studio has no city column, so its address is what a place means.
     .filter((st) => !locNeedle || st.address.toLowerCase().includes(locNeedle))
     .map((st) => ({

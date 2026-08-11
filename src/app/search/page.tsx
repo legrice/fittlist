@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { AppChrome } from "@/components/AppChrome";
 import { SearchScreen } from "@/components/SearchScreen";
 import { lookMode } from "@/lib/darkmode";
+import { todayIso } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export default async function SearchPage() {
     <section className="screen hasnav" data-mode={lookMode(me?.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
-        <SearchScreen />
+        <SearchScreen todayIso={todayIso()} />
       </div>
     </section>
   );
