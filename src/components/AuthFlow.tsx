@@ -88,7 +88,7 @@ export function AuthFlow({
   const [handle, setHandle] = useState("");
   const [error, setError] = useState(
     search.get("invite")
-      ? "Fittlist is invite-only during beta. Request an invite below, then sign in with that email."
+      ? "That invitation needs a fresh link. You can also sign up directly below."
       : search.get("expired")
         ? "That link expired. Try again."
         : "",
@@ -272,7 +272,7 @@ export function AuthFlow({
                 <h1>
                   Welcome to the
                   <br />
-                  fittlist beta.
+                  fittlist.
                 </h1>
                 <p>
                   {invitedByLink
@@ -327,7 +327,7 @@ export function AuthFlow({
                   </span>
                 )}
                 <span className="invby-txt">
-                  <b>{inviter.name}</b> invited you to the beta
+                  <b>{inviter.name}</b> invited you to fittlist
                 </span>
               </div>
             )}

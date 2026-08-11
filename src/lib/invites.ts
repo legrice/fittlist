@@ -16,10 +16,10 @@ export const INVITE_MSG =
 export const INVITES_PER_USER = Number(process.env.BETA_INVITES_PER_USER || 0);
 export const invitesCapped = () => INVITES_PER_USER > 0;
 
-// Invite gating is on unless explicitly disabled (INVITE_ONLY=false opens
-// self-serve signups when the beta ends).
+// Signup is public now. Invite links remain useful for attribution and a warm
+// introduction, but they are no longer a gate somebody has to pass.
 export function inviteOnly(): boolean {
-  return process.env.INVITE_ONLY !== "false";
+  return false;
 }
 
 const norm = (e: string) => e.trim().toLowerCase();

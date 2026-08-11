@@ -85,9 +85,8 @@ export function InviteSheet({
             </button>
             <h2>Your invite link</h2>
             <p className="lead">
-              Fittlist is invite-only while it&rsquo;s in beta. Anyone who opens this link can
-              create an account: coaches get a page for their week, and anyone can follow along.
-              Send it to as many people as you like.
+              Anyone who opens this link can join fittlist. Coaches get a page for their week,
+              and anyone can follow along. Send it to as many people as you like.
             </p>
 
             {/* The link as a QR code: at the gym, scanning beats typing. */}
@@ -196,7 +195,7 @@ export function InviteFriends() {
           <Icon name="groups" size={24} />
         </span>
         <span className="setrow-txt">
-          <span className="t">Invite people to the beta</span>
+          <span className="t">Invite people to fittlist</span>
           <span className="s">{sub}</span>
         </span>
         <span className="setrow-chev">

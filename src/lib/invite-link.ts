@@ -45,7 +45,7 @@ export async function sendInviteLink({
     subject,
     text: `${body.join("\n\n")}\n\n${url}`,
     html: emailHtml({
-      heading: invite ? "You're invited to the fittlist beta" : "Sign in to fittlist",
+      heading: invite ? "You're invited to fittlist" : "Sign in to fittlist",
       body,
       cta: { label: invite ? "Set up your page" : "Sign in", url },
       footer: `This was sent to ${email} by fittlist. If you weren't expecting it, ignore it. Nothing has been created for that address.`,

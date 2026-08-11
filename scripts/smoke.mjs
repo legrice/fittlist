@@ -782,8 +782,8 @@ console.log("class sheet ok (opens over the list, the page is still shareable)")
   // the heading uses a curly apostrophe, the toast a straight one
   await subPage.getByRole("heading", { name: /on Matt.s list/ }).waitFor();
   await expect(
-    subPage.locator(".sheet .lead").textContent().then((t) => t.includes("still in beta")),
-    "the account offer keeps the beta framing",
+    subPage.locator(".sheet .lead").textContent().then((t) => t.includes("Create an account")),
+    "the account offer explains the signup payoff",
   );
   await subPage.getByRole("button", { name: "Maybe later, just email me" }).click();
   await subPage.waitForFunction(() => !document.querySelector(".sheet"));
@@ -1032,17 +1032,10 @@ await openProfile(page);
   const hrefs = await bar.locator("a").evaluateAll((els) => els.map((e) => e.getAttribute("href")));
   if (!hrefs.every((h) => h.includes("via=matt")))
     fail(`a header link drops the coach's credit: ${JSON.stringify(hrefs)}`);
-  // One door up here, and it opens on arrival rather than dropping them on the
-  // pitch. Two side by side made the visitor pick before reading anything, and
-  // sat right above Contact and Follow.
-  if (await bar.getByText("Sign up").count())
-    fail("the visitor bar carries one door; sign up lives inside the sheet");
-  await bar.getByText("Sign in").click();
-  await lp.waitForURL(/join=login/);
-  await lp.getByRole("heading", { name: "Sign in" }).waitFor();
-  // The other door is under the button, so someone who has never been here
-  // isn't stuck with only the close button.
-  await lp.locator(".authswitch").getByText("Sign up").click();
+  // One clear acquisition door up here. It opens the signup sheet directly;
+  // returning members still have Sign in inside it.
+  await bar.getByText("Sign up").click();
+  await lp.waitForURL(/join=signup/);
   await lp.getByRole("heading", { name: "Sign up with email" }).waitFor();
   // And back the other way.
   await lp.locator(".authswitch").getByText("Sign in").click();

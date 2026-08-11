@@ -33,11 +33,11 @@ export function PublicTopBar({ handle, next }: { handle?: string; next?: string 
           way through nowhere in sight. */}
       <Link
         className="pubtop-login"
-        href={`/?${[via, "join=login", next ? `next=${encodeURIComponent(next)}` : ""]
+        href={`/?${[via, "join=signup", next ? `next=${encodeURIComponent(next)}` : ""]
           .filter(Boolean)
           .join("&")}`}
       >
-        Sign in
+        Sign up
       </Link>
     </div>
   );

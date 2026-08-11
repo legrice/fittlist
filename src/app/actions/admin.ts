@@ -648,9 +648,9 @@ export async function adminInvite(
 
   const url = await sendInviteLink({
     email: email,
-    subject: "You're invited to the fittlist beta",
+    subject: "You're invited to fittlist",
     intro:
-      "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
+      "You lucky duck. You've been invited to fittlist. Tap to set up your page:",
     invite: true,
   });
   revalidatePath("/admin");
@@ -689,9 +689,9 @@ export async function adminActOnRequest(
     .onConflictDoUpdate({ target: schema.invites.email, set: { label } });
   const url = await sendInviteLink({
     email: req.email,
-    subject: "You're invited to the fittlist beta",
+    subject: "You're invited to fittlist",
     intro:
-      "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
+      "You lucky duck. You've been invited to fittlist. Tap to set up your page:",
     invite: true,
   });
   revalidatePath("/admin");

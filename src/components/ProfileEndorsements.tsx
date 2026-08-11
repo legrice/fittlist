@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toggleEndorsement, toggleStudioEndorsement } from "@/app/actions/endorsements";
 import { Icon } from "@/components/Icon";
 import { BodyPortal } from "@/components/BodyPortal";
+import { SignupPrompt } from "@/components/SignupPrompt";
 
 const TRAITS = [
   ["motivating", "Strong motivator", "bolt"],
@@ -55,6 +56,7 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
   const [pending, start] = useTransition();
   const [picker, setPicker] = useState(false);
   const [confirm, setConfirm] = useState<{ key: string; label: string } | null>(null);
+  const [signup, setSignup] = useState(false);
   const tap = (key: string, label: string, confirmed = false) => {
     const was = selected.has(key);
     if (was && !confirmed) {
@@ -66,7 +68,7 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
       ? await toggleStudioEndorsement(studioSlug, key)
       : await toggleEndorsement(handle, key);
     if (result.signedOut) {
-      window.location.href = `/?next=${studioSlug ? `/s/${studioSlug}` : `/${handle}`}`;
+      setSignup(true);
       return;
     }
     if (!result.ok) return;
@@ -143,6 +145,14 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
           </div>
         )}
       </BodyPortal>
+      <SignupPrompt
+        open={signup}
+        onClose={() => setSignup(false)}
+        next={studioSlug ? `/s/${studioSlug}` : `/${handle}`}
+        via={studioSlug ? undefined : handle}
+        title="Add your voice"
+        body="Sign up to add badges, follow coaches, and help people find fitness communities they’ll love."
+      />
     </section>
   );
 }

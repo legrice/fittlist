@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { toggleStudioVisit } from "@/app/actions/endorsements";
 import { Icon } from "@/components/Icon";
+import { SignupPrompt } from "@/components/SignupPrompt";
 
 export function StudioBeenHere({ slug, initial, initialCount }: {
   slug: string;
@@ -12,11 +13,12 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
   const [selected, setSelected] = useState(initial);
   const [count, setCount] = useState(initialCount);
   const [pending, start] = useTransition();
+  const [signup, setSignup] = useState(false);
 
   const toggle = () => start(async () => {
     const result = await toggleStudioVisit(slug);
     if (result.signedOut) {
-      window.location.href = `/?next=${encodeURIComponent(`/s/${slug}`)}`;
+      setSignup(true);
       return;
     }
     if (!result.ok || result.selected === undefined) return;
@@ -25,6 +27,7 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
   });
 
   return (
+    <>
     <button
       type="button"
       className={`actpill studio-been-here${selected ? " on" : ""}`}
@@ -36,5 +39,13 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
       {selected ? "Been here" : "I’ve been here"}
       {count > 0 && <span className="studio-been-count">{count}</span>}
     </button>
+    <SignupPrompt
+      open={signup}
+      onClose={() => setSignup(false)}
+      next={`/s/${slug}`}
+      title="Save the places you love"
+      body="Sign up to add this gym or studio to your profile and share your favorite places with people you know."
+    />
+    </>
   );
 }

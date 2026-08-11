@@ -2791,6 +2791,10 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin-bottom: 18px;
 }
+.profwrap > .pubtop {
+  margin-top: calc(-18px - env(safe-area-inset-top));
+  padding-top: calc(10px + env(safe-area-inset-top));
+}
 .pubtop-home { display: inline-flex; text-decoration: none; }
 .pubtop-wm { font-size: 19px; }
 /* The one way in, as a filled pill: it's the only control up here now, so it
@@ -2801,6 +2805,7 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px;
   transition: transform .08s;
 }
+.pub-hero .pubtop-login { background: #fff; color: var(--ink); }
 .pubtop-login:active { transform: scale(.97); }
 
 /* The identity block: face, name, where, what, then what you can do about it.

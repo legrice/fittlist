@@ -999,7 +999,7 @@ export function ProfileSheet({
               >
                 <span className="setrow-ic"><Icon name="groups" size={24} /></span>
                 <span className="setrow-txt">
-                  <span className="t">Beta invite link</span>
+                  <span className="t">Invite link</span>
                   <span className="s">Anyone who opens it can join</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
