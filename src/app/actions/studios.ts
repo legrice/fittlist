@@ -118,9 +118,9 @@ export async function updateStudio(
   if (
     input.photo &&
     !/^https:\/\//.test(input.photo) &&
-    (!input.photo.startsWith("data:image/") || input.photo.length > 900_000)
+    (!input.photo.startsWith("data:image/") || input.photo.length > 2_500_000)
   )
-    return { ok: false, error: "That image didn't work. Try a smaller one." };
+    return { ok: false, error: "That photo couldn't be prepared. Try another photo." };
 
   const [existing] = await db.select().from(schema.studios).where(eq(schema.studios.id, id));
   if (!existing) return { ok: false, error: "Studio not found." };

@@ -44,7 +44,8 @@ export function StudioOwnerBar({
   const [pWebsite, setPWebsite] = useState(props.website);
   const [pInstagram, setPInstagram] = useState(props.instagram);
 
-  const pickPhoto = (file: File) => readPhoto(file, setPPhoto);
+  const pickPhoto = (file: File) =>
+    readPhoto(file, setPPhoto, () => toast("That photo format isn't supported. Try another photo."));
 
   // Fresh fields every time the sheet opens: the page may have changed
   // under us since the last look.
