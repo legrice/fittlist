@@ -8,10 +8,11 @@ import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBa
 import { Toast, useToast } from "@/components/Toast";
 
 /** Studio utilities shown directly in the horizontal profile action rail. */
-export function StudioMenu({ canEdit, claimed, signedIn, studio }: {
+export function StudioMenu({ canEdit, claimed, claimable, signedIn, studio }: {
   slug: string;
   canEdit: boolean;
   claimed: boolean;
+  claimable: boolean;
   signedIn: boolean;
   studio: StudioEditProps;
 }) {
@@ -22,7 +23,7 @@ export function StudioMenu({ canEdit, claimed, signedIn, studio }: {
   return (
     <>
       {canEdit && <button className="actpill" onClick={() => setMindfulOpen(true)}><Icon name="edit" size={18} /> Edit</button>}
-      {!claimed && <button className="actpill" onClick={() => setFeedback("claim")}><Icon name="verified" size={18} /> Claim</button>}
+      {!claimed && claimable && <button className="actpill" onClick={() => setFeedback("claim")}><Icon name="verified" size={18} /> Claim this place</button>}
       <button className="actpill" onClick={() => setFeedback("suggest")}><Icon name="chat_bubble" size={18} /> Suggest edit</button>
       {signedIn && <button className="actpill" onClick={() => setFeedback("report")}><Icon name="flag" size={18} /> Report</button>}
       <button className="actpill" onClick={() => setFeedback("optout")}><Icon name="public_off" size={18} /> Take down</button>

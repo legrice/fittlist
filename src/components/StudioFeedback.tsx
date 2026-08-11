@@ -238,11 +238,10 @@ export function StudioFeedback({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Own this page</h2>
+            <h2>Claim this place</h2>
             <p className="lead">
-              If you run this studio, this page can be yours: your own schedule, your own
-              details, and the Verified badge so everyone knows who speaks for it. Tell us
-              who you are and we&rsquo;ll set you up.
+              If you run or organize this place, claim it to manage its schedule and details
+              with your team. Tell us who you are and we&rsquo;ll help set it up.
             </p>
             <label className="flabel" htmlFor="clName">Your name</label>
             <input
@@ -296,7 +295,7 @@ export function StudioFeedback({
                 disabled={pending || !sgEmail.trim() || !sgRelation}
                 onClick={sendClaim}
               >
-                {pending ? "Sending…" : "Ask to own this page"}
+                {pending ? "Sending…" : "Send claim request"}
               </button>
             </div>
           </div>

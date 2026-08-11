@@ -338,7 +338,7 @@ export async function StudioView({
               // tab: the note was a paragraph over the list, read once and
               // scrolled past forever after. Its sheet carries the same Own
               // this page ask the badge's does.
-              info: community ? <CommunityNote studioId={s.id} name={s.name} /> : undefined,
+              info: community ? <CommunityNote studioId={s.id} name={s.name} claimable={s.placeKind !== "outdoor"} /> : undefined,
             },
             { key: "about", label: "Info" },
             { key: "coaches", label: "Coaches" },
@@ -368,7 +368,7 @@ export async function StudioView({
           backTo={backTo}
           // Above the name on every skin, hero and banner alike; the white
           // pill already reads over a photograph.
-          badges={<VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />}
+          badges={<VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} claimable={s.placeKind !== "outdoor"} />}
           ownerTop={null}
           actions={
             /* Nothing to offer, no row: an empty pills row still spends its
@@ -403,6 +403,7 @@ export async function StudioView({
                 slug={s.slug ?? ""}
                 canEdit={canEdit}
                 claimed={access.claimed}
+                claimable={s.placeKind !== "outdoor"}
                 signedIn={signedIn}
                 studio={editProps}
               />

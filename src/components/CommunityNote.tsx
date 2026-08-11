@@ -10,10 +10,10 @@ import { Toast, useToast } from "@/components/Toast";
 //
 // The note used to sit as a paragraph over the week itself, read once and
 // scrolled past forever after. It is a tap away now: the dot says there is
-// something to know, the sheet says it, and the same Get in touch leads into
-// the Own this page ask the badge's sheet uses, because the person most
+// something to know, the sheet says it, and the same claim action leads into
+// the place claim ask the badge's sheet uses, because the person most
 // likely to open this is somebody who runs the place.
-export function CommunityNote({ studioId, name }: { studioId: string; name: string }) {
+export function CommunityNote({ studioId, name, claimable = true }: { studioId: string; name: string; claimable?: boolean }) {
   const [open, setOpen] = useState(false);
   const [claim, setClaim] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -50,13 +50,12 @@ export function CommunityNote({ studioId, name }: { studioId: string; name: stri
               </button>
               <h2 style={{ marginTop: 10 }}>This schedule</h2>
               <p className="lead">
-                Built by coaches and members who train here. Claim this page to take over
-                your studio&rsquo;s schedule and details.
+                Built by coaches and members who train here.
               </p>
-              <p className="lead">
-                <strong>Run {name}? We&rsquo;d love to verify your page.</strong>
-              </p>
-              <div className="publishwrap">
+              {claimable ? <p className="lead">
+                <strong>Run or organize {name}? Claim this place to manage its schedule and details.</strong>
+              </p> : <p className="lead">This public space stays shared, so nobody owns its page.</p>}
+              {claimable && <div className="publishwrap">
                 <button
                   className="btn si"
                   onClick={() => {
@@ -64,9 +63,9 @@ export function CommunityNote({ studioId, name }: { studioId: string; name: stri
                     setClaim(true);
                   }}
                 >
-                  Get in touch
+                  Claim this place
                 </button>
-              </div>
+              </div>}
             </div>
           </div>,
           document.body,
