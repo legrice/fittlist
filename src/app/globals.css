@@ -7766,7 +7766,7 @@ a.clspeek-by:active { opacity: .6; }
 .calfilter {
   position: relative; display: inline-flex; align-items: center;
   flex: 1; width: auto; min-width: 0;
-  min-height: 40px; border-radius: 12px; background: var(--card); color: var(--ink);
+  min-height: 40px; border-radius: 999px; background: var(--card); color: var(--ink);
 }
 .calfilter select {
   appearance: none; width: 100%; min-width: 0; min-height: 40px; padding: 0 31px 0 13px;
