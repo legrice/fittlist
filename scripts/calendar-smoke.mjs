@@ -53,12 +53,8 @@ console.log("an empty calendar is its own CTA, and carries no other control");
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
   await p.locator(".wkempty-cta, .wkfab").first().click();
-  // The fab asks which act first now (the empty CTA still goes straight
-  // to the form); "Add a class I'm coaching" is the door.
-  await p
-    .locator(".setrow", { hasText: /coaching/ })
-    .click({ timeout: 3000 })
-    .catch(() => {});
+  // Calendar is coaching-only, so both the empty CTA and the floating plus
+  // go straight to the publishing form.
   await p.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   // The list waits for typing: type it, tap it.
   await p.getByLabel("Search studios").fill(studio);
@@ -96,22 +92,21 @@ await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 await p.goto(BASE + "/calendar");
 await p.locator(".clline").first().waitFor();
 
-// Add floats bottom right (Following's search spot and dress). The title
-// row carries the All/Saved/Coaching segment where the word Calendar
-// stood, and no Share door anywhere: the Share tab is the way to the hub.
+// Add floats bottom right (Following's search spot and dress). Calendar is
+// coaching-only, so the title row has no relationship filter. No Share door
+// lives here either: the Share tab is the way to the hub.
 {
   const fab = p.locator(".wkfab");
   if (!(await fab.count())) fail("Add should float bottom right once there is a week");
   const fbox = await fab.boundingBox();
   if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
   if (await p.locator(".calbar-share").count()) fail("the Share arrow is gone from the title row");
-  // The word is back above the segment, by Matt's call.
+  // The title sits above the view controls.
   if (!(await p.locator(".caltitle", { hasText: "Calendar" }).count()))
-    fail("the word Calendar rides above the segment");
-  const pills = (await p.locator(".calbar-pills .catpill").allInnerTexts()).map((t) => t.trim());
-  if (pills.join("|") !== "All|Coaching|Saved")
-    fail("the segment reads All | Coaching | Saved, got " + pills.join("|"));
-  console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| the segment holds the title row");
+    fail("the word Calendar sits above the view controls");
+  if (await p.locator(".calbar-pills").count())
+    fail("a coaching-only calendar should not draw All, Coaching, or Added filters");
+  console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| coaching-only title row");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
@@ -138,7 +133,7 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
 // somebody to page through a thing they can scroll.
 {
   if (await p.locator(".wkarrow").count()) fail("the week stepper should be gone");
-  await p.locator(".calbar-pills").waitFor();
+  await p.locator(".calbar").waitFor();
   // Two glyphs rather than two words, so the label is the accessible name and
   // the check reads that: a shape says which view it is better than a word
   // does, and a screen reader gets nothing from a shape.

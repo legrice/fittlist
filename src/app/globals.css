@@ -7402,21 +7402,6 @@ a.clspeek-by:active { opacity: .6; }
 /* A tagged class that also names a coach puts the person one line below. */
 .clline-tag + .clline-by { grid-row: 4; }
 
-/* Calendar uses the same soft cards as Home while preserving its continuous
-   date-grouped scroll. The date bands remain structural; only class rows lift. */
-.calendar-cardlist .dayrows { gap: 10px; }
-.calendar-cardlist .clline {
-  grid-template-columns: 64px 1fr; column-gap: 10px;
-  align-content: center;
-  min-height: 112px; padding: 14px;
-  border-bottom: 0; border-radius: 16px; background: var(--card);
-  box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
-}
-.calendar-cardlist .calendar-save {
-  top: 10px; right: 10px; bottom: auto;
-  width: 36px; height: 36px; padding: 0;
-  align-items: center; justify-content: center;
-}
 /* The loudest thing on the screen, and the tracking is ordinary. The display
    type was set at -.025em, which is a headline's tracking applied to a list of
    real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */
@@ -7435,20 +7420,9 @@ a.clspeek-by:active { opacity: .6; }
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
 
-/* Home keeps the calendar row's information grammar, but gives each result
-   the same soft container language as the rest of the landing: pill filters,
-   round people, studio tiles and the About card. Calendar itself stays a
-   flat editorial list; these overrides belong only to Home's `.disflat`. */
-.disflat { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
-.disflat .clrow {
-  overflow: hidden; border-radius: 16px; background: var(--card);
-  box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
-}
-.disflat .clline {
-  grid-template-columns: 64px 1fr; column-gap: 10px;
-  align-content: center;
-  min-height: 112px; padding: 14px; border-bottom: 0;
-}
+/* Class lists stay editorial and open: no card around each occurrence, only
+   the shared hairline that separates one row from the next. */
+.disflat { display: flex; flex-direction: column; margin-top: 2px; }
 .disflat .rowsave {
   top: 10px; right: 10px; bottom: auto;
   width: 36px; height: 36px; padding: 0;
@@ -7511,6 +7485,7 @@ a.clspeek-by:active { opacity: .6; }
 
 /* The title and the two ways of looking, at the top of the calendar. */
 .calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
+.calbar-viewonly { justify-content: flex-end; }
 .calbar-tools { display: flex; align-items: center; gap: 10px; }
 .calbar-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;

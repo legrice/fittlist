@@ -2,8 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { WeekDay as WeekDayData } from "@/lib/week";
-import { AddBrowse } from "@/components/AddBrowse";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import {
   CalSticky,
@@ -16,10 +14,8 @@ import {
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { setGoing } from "@/app/actions/going";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
-import { PlanSheet } from "@/components/PlanSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
@@ -58,7 +54,6 @@ export function CalendarScreen({
   customTypes,
   lastUsed,
   subsCount,
-  savedDays = [],
   openAdder = false,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
@@ -71,23 +66,13 @@ export function CalendarScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
-  /** The other half of the coach's calendar, per the brief: the classes
-   *  they saved and their own entries, from the same loader a member's
-   *  week reads. The pills above the list are what tell the halves apart. */
-  savedDays?: WeekDayData[];
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
-  // All / Saved / Coaching, per the brief. A filter is a way of looking,
-  // so it resets on arrival.
-  const [pill, setPill] = useState<"all" | "saved" | "coaching">("all");
   const [addOpen, setAddOpen] = useState(openAdder);
-  // The plus opens the segmented Add screen, per the brief: Discover (the
-  // browse list with inline Save) leading, I'm coaching one tap away.
-  const [browseOpen, setBrowseOpen] = useState(false);
   // The overlay header's words: the day under it on the list, the month in
   // view on the grid. The grid's label is set from the first render (this
   // month is in view at rest), so the grid gates the bar on scroll depth
@@ -98,39 +83,9 @@ export function CalendarScreen({
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
-  // A personal entry on the coach's calendar opens its own sheet, the same
-  // PlanSheet the member week uses: this capability shipped member-side
-  // only once before and the row sat dead here, which is the exact
-  // one-shape bug the doctrine warns about.
-  const [plan, setPlan] = useState<string | null>(null);
-  const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
-  // The plus asks which act first, by Matt's call: two CTAs, Discover
-  // classes (the browse sheet whole) or the publishing form, instead of a
-  // browse screen with the form one segment away.
-  const [addMenu, setAddMenu] = useState(false);
-  const [removeSaved, setRemoveSaved] = useState<null | {
-    classId: string;
-    iso: string;
-    name: string;
-  }>(null);
-  const [removingSaved, setRemovingSaved] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
-
-  /** Minutes from a row's clock, so the two halves sort as one day. */
-  const atOf = (r: { hm: string; ap: string }) => {
-    const [h, m] = r.hm.split(":").map(Number);
-    return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
-  };
-
-  // The saved half, keyed by date. myWeek hands occurrences already
-  // expanded and forward-only, so this is a lookup rather than a loader.
-  const savedByIso = useMemo(() => {
-    const m = new Map<string, WeekDayData["items"]>();
-    for (const d of savedDays) m.set(d.iso, d.items);
-    return m;
-  }, [savedDays]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -163,55 +118,14 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             dur: `${c.durationMin} min`,
-            // Coaching is a warm relationship badge whether the class is
-            // yours or an assigned shift; the detail sheet explains which.
-            tag: "Coaching",
-            tagTone: "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
-      const savedRows =
-        pill === "coaching"
-          ? []
-          : (savedByIso.get(iso) ?? []).map((i) => ({
-              key: `sv|${i.personal ? i.id : i.classId}|${i.iso}`,
-              classId: i.personal ? undefined : i.classId,
-              iso: i.iso,
-              name: i.name,
-              where: i.where,
-              hm: i.hm,
-              ap: i.ap,
-              dur: `${i.durationMin} min`,
-              coach:
-                !i.personal && i.coachName
-                  ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
-                  : null,
-              tag: i.personal ? "Added by you" : undefined,
-              tagTone: i.personal ? ("personal" as const) : undefined,
-              corner: !i.personal ? (
-                <button
-                  className="rowsave bare on calendar-save"
-                  aria-label={`Remove ${i.name} from your calendar`}
-                  onClick={() =>
-                    setRemoveSaved({ classId: i.classId, iso: i.iso, name: i.name })
-                  }
-                >
-                  <Icon name="check_circle" size={20} />
-                </button>
-              ) : undefined,
-              // A personal entry opens its own sheet (edit, share, remove);
-              // a mark opens the class page it points at.
-              onTap: i.personal
-                ? () => setPlan(i.id)
-                : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}`),
-            }));
-      const coachingRows = pill === "saved" ? [] : rows;
-      const merged = [...coachingRows, ...savedRows].sort((a, b) => atOf(a) - atOf(b));
-      if (merged.length)
-        out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows: merged });
+      if (rows.length)
+        out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, pill, savedByIso, handle, router]);
+  }, [classes, todayIso, studioById, handle]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -245,11 +159,10 @@ export function CalendarScreen({
     });
   }, []);
 
-  // Whether this account has anything at all, not whether the next eight weeks
-  // do: the empty state offers the thing to do only when there is nothing.
-  // Both halves count: a coach with no classes of their own yet but a saved
-  // week got the empty screen for a build, which hid the rows they had.
-  const bare = classes.length === 0 && !savedDays.some((d) => d.items.length > 0);
+  // Whether this coach has published anything at all, not whether the next
+  // eight weeks do: the empty state offers the thing to do only when there is
+  // nothing on their coaching calendar.
+  const bare = classes.length === 0;
 
   return (
     <>
@@ -264,25 +177,10 @@ export function CalendarScreen({
           because two screens working it out separately is how they end up
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
-        {/* The word is back above the segment, by Matt's call: Calendar
-            under the logo, then the pills as the row of controls. */}
+        {/* Calendar under the logo, then the two view controls. The screen is
+            coaching-only, so there is no relationship filter to explain. */}
         <h1 className="calbar-t caltitle tab-page-title">Calendar</h1>
-        <div className="calbar">
-          {!bare && (
-            <div className="catpills calpills calbar-pills" role="tablist" aria-label="Which of your things">
-              {(["all", "coaching", "saved"] as const).map((k) => (
-                <button
-                  key={k}
-                  role="tab"
-                  aria-selected={pill === k}
-                  className={`catpill${pill === k ? " on" : ""}`}
-                  onClick={() => setPill(k)}
-                >
-                  {k === "all" ? "All" : k === "saved" ? "Added" : "Coaching"}
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="calbar calbar-viewonly">
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
@@ -353,9 +251,7 @@ export function CalendarScreen({
         // reading "nothing coming up" is already looking.
         <WeekEmpty first={false} title="" body="" cta="Add a class" onCta={() => setAddOpen(true)} />
       ) : (
-        <div className="calendar-cardlist">
-          <DayList days={days} />
-        </div>
+        <DayList days={days} />
       )}
       </div>
 
@@ -408,108 +304,9 @@ export function CalendarScreen({
           as Following's search: adding is what somebody opens this screen
           to do, and the title row's corner belongs to Share now. */}
       {!bare && (
-        <button className="wkfab" aria-label="Add a class" onClick={() => setAddMenu(true)}>
+        <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
           <Icon name="add" size={28} />
         </button>
-      )}
-
-      {addMenu && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setAddMenu(false);
-          }}
-        >
-          <div className="sheet confirmsheet">
-            <h2>Add to your calendar</h2>
-            <div className="settingslist">
-              <button
-                className="setrow"
-                onClick={() => {
-                  setAddMenu(false);
-                  setBrowseOpen(true);
-                }}
-              >
-                <span className="setrow-txt">
-                  <span className="t">Discover classes</span>
-                  <span className="s">Browse what is on near you and save the ones you are going to.</span>
-                </span>
-                <span className="setrow-ic">
-                  <Icon name="explore" size={20} />
-                </span>
-              </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setAddMenu(false);
-                  setAddOpen(true);
-                }}
-              >
-                <span className="setrow-txt">
-                  <span className="t">Add a class I&rsquo;m coaching</span>
-                  <span className="s">Goes on your public schedule and the place&rsquo;s page.</span>
-                </span>
-                <span className="setrow-ic">
-                  <Icon name="add" size={20} />
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {removeSaved && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !removingSaved) setRemoveSaved(null);
-          }}
-        >
-          <div className="sheet confirmsheet">
-            <h2>Remove {removeSaved.name} from your week?</h2>
-            <p className="lead">This class will be removed from your week.</p>
-            <div className="publishwrap nostick">
-              <button
-                className="btn si"
-                disabled={removingSaved}
-                onClick={async () => {
-                  setRemovingSaved(true);
-                  const res = await setGoing(removeSaved.classId, removeSaved.iso, false);
-                  setRemovingSaved(false);
-                  if (!res.ok) {
-                    toast("Couldn’t remove that class");
-                    return;
-                  }
-                  setRemoveSaved(null);
-                  toast("Removed from your week");
-                  router.refresh();
-                }}
-              >
-                {removingSaved ? "Removing…" : "Remove it"}
-              </button>
-            </div>
-            <button
-              className="confirm-keep"
-              disabled={removingSaved}
-              onClick={() => setRemoveSaved(null)}
-            >
-              Keep it
-            </button>
-          </div>
-        </div>
-      )}
-
-      {browseOpen && (
-        <AddBrowse
-          onAddNew={() => {
-            setBrowseOpen(false);
-            setAddOpen(true);
-          }}
-          onClose={() => {
-            setBrowseOpen(false);
-            router.refresh();
-          }}
-        />
       )}
       {addOpen && (
         <Adder
@@ -565,64 +362,6 @@ export function CalendarScreen({
           }}
           onDeleted={(msg) => {
             setEdit(null);
-            toast(msg);
-            router.refresh();
-          }}
-        />
-      )}
-      {plan && (
-        <PlanSheet
-          id={plan}
-          onClose={() => setPlan(null)}
-          onToast={toast}
-          onRemoved={(msg) => {
-            setPlan(null);
-            toast(msg);
-            router.refresh();
-          }}
-          onEdit={(p) => {
-            setPlan(null);
-            setPlanEdit({
-              id: p.id,
-              prefill: {
-                name: p.name,
-                classType: p.classType,
-                description: p.description,
-                image: p.image,
-                startTime: p.startTime,
-                durationMin: p.durationMin,
-                studioId: p.studioId,
-                location: p.location,
-                withWho: p.withWho,
-                links: p.links,
-                days: [p.dayOfWeek],
-                dayOfWeek: p.dayOfWeek,
-                endsOn: p.endsOn,
-                specificDate: p.specificDate,
-              },
-            });
-          }}
-        />
-      )}
-      {planEdit && (
-        <Adder
-          studios={studios}
-          templates={templates}
-          customTypes={customTypes}
-          lastUsed={lastUsed}
-          subsCount={0}
-          firstPublish={false}
-          personal={{ canCoach: false, editId: planEdit.id }}
-          prefill={planEdit.prefill}
-          onClose={() => setPlanEdit(null)}
-          onToast={toast}
-          onPublished={() => {
-            setPlanEdit(null);
-            toast("Saved");
-            router.refresh();
-          }}
-          onDeleted={(msg) => {
-            setPlanEdit(null);
             toast(msg);
             router.refresh();
           }}
