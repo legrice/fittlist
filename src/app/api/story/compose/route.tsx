@@ -37,9 +37,8 @@ export async function GET(req: Request) {
   // A member's week draws here too now: the Share tab is theirs as well,
   // and `shareWeek` answers by kind, so the same route serves both.
   const fan = me.kind === "fan";
-  // Style first, then one of the three colourways that style is offered in.
-  // Colour belongs to the style rather than sitting beside it, so a diner
-  // sign is never asked to wear Midnight.
+  // A style supplies a coordinated palette, typeface and decoration. Explicit
+  // query parameters are editor overrides and win over those defaults.
   const [, y, t] = storyLook(qs.get("style"), qs.get("palette") ?? qs.get("theme"));
   const format: StoryFormat = qs.get("fmt") === "square" ? "square" : "story";
   const { from, days } = shareRange(qs.get("from"), qs.get("days"));
@@ -72,7 +71,11 @@ export async function GET(req: Request) {
   // relative to that. The old photo-off auto-bump left with it (one knob,
   // not two fighting). The budget below reads the final size, or the
   // extra height would come out of the rows without the sums knowing.
-  const hs = Math.max(60, Math.min(180, parseInt(qs.get("hs") ?? "100", 10) || 100)) / 100;
+  const hs =
+    Math.max(
+      60,
+      Math.min(180, parseInt(qs.get("hs") ?? String(y.headlineSize), 10) || y.headlineSize),
+    ) / 100;
   const hSize = Math.round(size * hs * 1.4);
   // What the top of the canvas costs. Without a headline the rows take the
   // room, except the face still needs clearing when it is on: the paint
@@ -121,7 +124,7 @@ export async function GET(req: Request) {
     url: handle ? `fittlist.co/${handle}` : "fittlist.co",
     // The headline's Font, picked by personality on the hub; the body
     // stays Delight.
-    typeface: typeFaceOf(qs.get("type")),
-    deco: decoOf(qs.get("deco")),
+    typeface: typeFaceOf(qs.get("type") ?? y.typeface),
+    deco: decoOf(qs.get("deco") ?? y.decoration),
   });
 }

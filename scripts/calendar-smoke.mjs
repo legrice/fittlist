@@ -472,8 +472,8 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
   const layoutIds = await p.locator(".layoutpick").evaluateAll((els) =>
     els.map((e) => e.getAttribute("data-layout")),
   );
-  if (layoutIds.join("|") !== "plain|split|party|neon|brutalist|swiss")
-    fail("expected six share layouts, got " + layoutIds.join("|"));
+  if (layoutIds.join("|") !== "plain|split|party|neon|brutalist|swiss|cowboy")
+    fail("expected seven share layouts, got " + layoutIds.join("|"));
   for (const id of layoutIds) {
     const r = await p.request.get(`${BASE}/api/story/compose?style=${id}&days=3`);
     if (!r.ok()) fail(`${id} layout does not render: ${r.status()}`);
@@ -483,8 +483,8 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
   }
   await p.locator('.layoutpick[data-layout="party"]').click();
   const srcLayout = await p.locator(".shprev-week").getAttribute("src");
-  if (!/style=party/.test(srcLayout ?? ""))
-    fail("the picked layout should reach the picture: " + srcLayout);
+  if (!/style=party/.test(srcLayout ?? "") || !/theme=blush/.test(srcLayout ?? "") || !/type=friendly/.test(srcLayout ?? "") || !/hs=90/.test(srcLayout ?? "") || !/deco=double/.test(srcLayout ?? ""))
+    fail("the picked style should apply its coordinated defaults: " + srcLayout);
   await p.locator(".shctrl", { hasText: "Dates" }).click();
   await p.locator(".shday", { hasText: /^3$/ }).click();
   await p.locator(".shpick .btn", { hasText: "Done" }).click();

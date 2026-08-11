@@ -169,16 +169,28 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   surf: { label: "Surf", bg: "#cfe9e4", fg: "#10322e", accent: "#0f6b5c", muted: "#5c7f7a", faint: "#7c9b96", time: "#1d423d", lockup: "ink", lockupAccent: "#0f6b5c" },
   ember: { label: "Ember", bg: "linear-gradient(165deg, #1a1005 0%, #6b2a0f 60%, #c2410c 100%)", fg: "#fdeee2", accent: "#ffb066", muted: "#d9b49c", faint: "#bd9a80", time: "#ffe0c6", lockup: "cloud", lockupAccent: "#ffb066" },
 };
-/** How the picture is arranged, separately from its colourway. These are
- * deliberately different structures rather than minor typographic presets:
- * the classic open list, a split timetable, playful cards, neon outlines and
- * a heavy brutalist stack. */
-export type StoryStyleId = "plain" | "split" | "party" | "neon" | "brutalist" | "swiss";
+/** Complete starting art directions for the picture. Each style coordinates
+ * structure, palette, headline face and decoration; the editor's individual
+ * controls remain available as overrides after a style is chosen. */
+export type StoryStyleId =
+  | "plain"
+  | "split"
+  | "party"
+  | "neon"
+  | "brutalist"
+  | "swiss"
+  | "cowboy";
 
 export type StoryStyle = {
   label: string;
   description: string;
   layout: StoryStyleId;
+  /** Coordinated defaults applied when this style is selected. The separate
+   * controls remain available as intentional overrides afterwards. */
+  theme: StoryThemeId;
+  typeface: import("@/lib/typefaces").TypeFaceId;
+  decoration: import("@/lib/decorations").DecoId;
+  headlineSize: number;
   /** Multiplies the headline. */
   headline: number;
   /** Multiplies the class name on each row. */
@@ -217,6 +229,10 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     label: "Classic",
     description: "The clean open schedule",
     layout: "plain",
+    theme: "paper",
+    typeface: "standard",
+    decoration: "top",
+    headlineSize: 100,
     headline: 1,
     name: 1,
     upper: false,
@@ -232,6 +248,10 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     label: "Side by side",
     description: "Time and class in split cells",
     layout: "split",
+    theme: "sand",
+    typeface: "standard",
+    decoration: "dividers",
+    headlineSize: 95,
     headline: 1,
     name: 1.04,
     upper: false,
@@ -247,6 +267,10 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     label: "Party pop",
     description: "Playful badges and rounded cards",
     layout: "party",
+    theme: "blush",
+    typeface: "friendly",
+    decoration: "double",
+    headlineSize: 90,
     headline: 1,
     name: 1.04,
     upper: true,
@@ -262,6 +286,10 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     label: "Neon boxes",
     description: "Electric outlines and compact rows",
     layout: "neon",
+    theme: "slate",
+    typeface: "eighties",
+    decoration: "frame",
+    headlineSize: 100,
     headline: 1,
     name: 1.03,
     upper: false,
@@ -277,6 +305,10 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     label: "Brutalist",
     description: "Heavy rules and offset blocks",
     layout: "brutalist",
+    theme: "mono",
+    typeface: "standard",
+    decoration: "frame",
+    headlineSize: 115,
     headline: 1,
     name: 1,
     upper: true,
@@ -292,6 +324,10 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     label: "Swiss clock",
     description: "Editorial week grid with strong rules",
     layout: "swiss",
+    theme: "pop",
+    typeface: "standard",
+    decoration: "none",
+    headlineSize: 110,
     headline: 1,
     name: 1,
     upper: false,
@@ -302,6 +338,25 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     stackTime: false,
     dayTrack: 0,
     rowScale: 1.34,
+  },
+  cowboy: {
+    label: "Space cowboy",
+    description: "Loud staggered lineup poster",
+    layout: "cowboy",
+    theme: "pop",
+    typeface: "eighties",
+    decoration: "none",
+    headlineSize: 125,
+    headline: 1,
+    name: 1,
+    upper: true,
+    align: "left",
+    rule: "bold",
+    chip: false,
+    radius: 0,
+    stackTime: false,
+    dayTrack: 0,
+    rowScale: 1.5,
   },
 };
 
@@ -331,7 +386,7 @@ export function storyLook(
   const byLabel = (Object.keys(STORY_THEMES) as StoryThemeId[]).find(
     (k) => STORY_THEMES[k].label.toLowerCase() === want,
   );
-  return [style, STORY_STYLES[style], STORY_THEMES[byId ?? byLabel ?? "paper"]];
+  return [style, STORY_STYLES[style], STORY_THEMES[byId ?? byLabel ?? STORY_STYLES[style].theme]];
 }
 
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {

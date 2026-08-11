@@ -4,6 +4,7 @@ import { publicSchedule } from "@/lib/coachweek";
 import { DAYS, fmtTime, runsOn, storyLook, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory } from "@/lib/storyplan";
+import { typeFaceOf } from "@/lib/typefaces";
 
 // The coach's public poster: their week, drawn 1080x1920 for Stories. The paint
 // lives in `storyimage.tsx`, shared with the member's and the composer's, so a
@@ -18,9 +19,8 @@ export async function GET(
   const { handle } = await params;
   const params2 = new URL(req.url).searchParams;
   const span = params2.get("span") === "day" ? "day" : "week";
-  // Style first, then one of the three colourways that style is offered in.
-  // Colour belongs to the style rather than sitting beside it, so a diner
-  // sign is never asked to wear Midnight.
+  // Style is a complete starting art direction; explicit palette params are
+  // still accepted as overrides for shared links from the editor.
   const [, y, t] = storyLook(params2.get("style"), params2.get("palette") ?? params2.get("theme"));
 
   const db = await getDb();
@@ -59,7 +59,8 @@ export async function GET(
   // and an optional photo chip. The stock "Train / with me." keeps its
   // canonical split.
   const prefs = user.storyPrefs ?? {};
-  const { line1, line2, size: hSize } = headlineOf(prefs.headline ?? "", ["Train", "with me."]);
+  const { line1, line2, size } = headlineOf(prefs.headline ?? "", ["Train", "with me."]);
+  const hSize = Math.round(size * (y.headlineSize / 100));
   const showPhoto = prefs.showPhoto !== false && !!user.photo;
 
   // How much detail the week can carry: everything if it fits, the same rows
@@ -88,5 +89,7 @@ export async function GET(
     empty: byDay.length === 0,
     emptyLine: "Nothing on the calendar yet.",
     url: `fittlist.co/${user.handle ?? handle}`,
+    typeface: typeFaceOf(y.typeface),
+    deco: y.decoration,
   });
 }

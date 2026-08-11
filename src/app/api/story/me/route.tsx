@@ -4,6 +4,7 @@ import { storyLook, todayIso as todayIsoNow } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory } from "@/lib/storyplan";
+import { typeFaceOf } from "@/lib/typefaces";
 import { shareRange, shareWeek } from "@/lib/shareweek";
 
 // The member's share image: the classes they marked going, plus the entries
@@ -20,9 +21,8 @@ export async function GET(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) return new Response("Not found", { status: 404 });
   const qs = new URL(req.url).searchParams;
-  // Style first, then one of the three colourways that style is offered in.
-  // Colour belongs to the style rather than sitting beside it, so a diner
-  // sign is never asked to wear Midnight.
+  // Style is a complete starting art direction; explicit palette params are
+  // still accepted as overrides for shared links from the editor.
   const [, y, t] = storyLook(qs.get("style"), qs.get("palette") ?? qs.get("theme"));
 
   const db = await getDb();
@@ -34,7 +34,8 @@ export async function GET(req: Request) {
 
 
   const prefs = me.storyPrefs ?? {};
-  const { line1, line2, size: hSize } = headlineOf(prefs.headline ?? "", ["Come", "with me."]);
+  const { line1, line2, size } = headlineOf(prefs.headline ?? "", ["Come", "with me."]);
+  const hSize = Math.round(size * (y.headlineSize / 100));
   const showPhoto = prefs.showPhoto !== false && !!me.photo;
   const myHandle = (me.handle ?? "").trim();
 
@@ -58,5 +59,7 @@ export async function GET(req: Request) {
     empty: byDay.length === 0,
     emptyLine: "Nothing marked yet this week.",
     url: myHandle ? `fittlist.co/${myHandle}` : "fittlist.co",
+    typeface: typeFaceOf(y.typeface),
+    deco: y.decoration,
   });
 }

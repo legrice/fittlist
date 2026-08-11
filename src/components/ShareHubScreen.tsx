@@ -770,7 +770,7 @@ export function ShareHubScreen({
               <Icon name="close" size={18} />
             </button>
             <h2>Layout</h2>
-            <p className="lead">Choose a structure, then use the preview to see it with your week.</p>
+            <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
             <div className="settingslist layoutlist">
               {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).map(
                 ([id, style]) => {
@@ -783,6 +783,11 @@ export function ShareHubScreen({
                       aria-pressed={on}
                       onClick={() => {
                         setStyleId(id);
+                        setThemeId(style.theme);
+                        setTypeId(style.typeface);
+                        setDecoId(style.decoration);
+                        setHsize(style.headlineSize);
+                        setSlider(style.headlineSize);
                         setPick(null);
                       }}
                     >
