@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
+import { unreadUpdateCount } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
@@ -9,7 +10,7 @@ import type { NavTab } from "@/lib/nav";
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
 // everything else in the app gets it from here, so no signed-in screen is left
-// without a way home, search, messages, settings, or the tabs.
+// without a way home, search, updates, settings, or the tabs.
 //
 // `bar` renders the bottom tabs as well. It's a second element rather than a
 // wrapper because these screens all lay themselves out differently, and the
@@ -49,7 +50,10 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
-  const fans = await fansVisible();
+  const [fans, unread] = await Promise.all([
+    fansVisible(),
+    unreadUpdateCount(userId, me.email),
+  ]);
   // One calendar, at one address. This forked by kind for months, back when a
   // coach's was /app and a member had their own at /week; a member has no
   // calendar at all now, and the tab is not drawn for them. Left as it was, it
@@ -67,6 +71,7 @@ export async function AppChrome({
 
   const header = (
     <AppHeader
+      unread={unread}
       // The logo goes Home, by Matt's call: /feed is the front door for
       // everyone with the member side, whatever landingHref answers for
       // sign-in.

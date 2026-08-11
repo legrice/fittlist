@@ -4,9 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getSessionUserId } from "@/lib/session";
 import { markNotificationsRead, unreadNotifications } from "@/lib/notify";
 
-// Landing on Updates is the "I've seen these" signal. An action rather than a
-// side effect of the page render, so the header badge on every cached page
-// can be revalidated along with it.
+// Viewing Updates' Notifications segment is the "I've seen these" signal.
+// Message threads keep their own unread counts until the conversation opens.
 export async function markUpdatesSeen(): Promise<void> {
   const userId = await getSessionUserId();
   if (!userId) return;

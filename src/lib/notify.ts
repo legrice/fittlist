@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, notInArray, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb, schema } from "@/db";
 
@@ -35,7 +35,52 @@ export async function unreadNotifications(userId: string): Promise<number> {
   return rows.length;
 }
 
-export async function listNotifications(userId: string, limit = 50) {
+/** One badge for the combined Updates surface.
+ *
+ * Message events are stored both as notification rows and as unread counts on
+ * their threads. Count the thread, not its duplicate notification, so one new
+ * message never appears as two updates. Feedback replies stay notifications:
+ * the member reads those in the dedicated feedback room rather than Messages.
+ */
+export async function unreadUpdateCount(userId: string, email: string): Promise<number> {
+  const db = await getDb();
+  const normalizedEmail = email.trim().toLowerCase();
+  const [notifications, threads] = await Promise.all([
+    db
+      .select({ type: schema.notifications.type })
+      .from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, userId), isNull(schema.notifications.readAt))),
+    db
+      .select({
+        coachUserId: schema.inquiryThreads.coachUserId,
+        coachUnread: schema.inquiryThreads.coachUnread,
+        requesterUnread: schema.inquiryThreads.requesterUnread,
+      })
+      .from(schema.inquiryThreads)
+      .where(
+        or(
+          eq(schema.inquiryThreads.coachUserId, userId),
+          and(
+            eq(schema.inquiryThreads.requesterEmail, normalizedEmail),
+            eq(schema.inquiryThreads.kind, "inquiry"),
+          ),
+        ),
+      ),
+  ]);
+
+  const notificationCount = notifications.filter(
+    (notification) => notification.type !== "message" && notification.type !== "feedback",
+  ).length;
+  const messageCount = threads.reduce(
+    (total, thread) =>
+      total +
+      (thread.coachUserId === userId ? thread.coachUnread : thread.requesterUnread),
+    0,
+  );
+  return notificationCount + messageCount;
+}
+
+export async function listNotifications(userId: string, limit = 50, excludeTypes: string[] = []) {
   const db = await getDb();
   // Left join: an email subscriber has no account, and the row still shows.
   const actor = alias(schema.users, "actor");
@@ -56,7 +101,14 @@ export async function listNotifications(userId: string, limit = 50) {
     })
     .from(schema.notifications)
     .leftJoin(actor, eq(actor.id, schema.notifications.actorUserId))
-    .where(eq(schema.notifications.userId, userId))
+    .where(
+      excludeTypes.length
+        ? and(
+            eq(schema.notifications.userId, userId),
+            notInArray(schema.notifications.type, excludeTypes),
+          )
+        : eq(schema.notifications.userId, userId),
+    )
     .orderBy(desc(schema.notifications.createdAt))
     .limit(limit);
 }

@@ -100,8 +100,16 @@ await ad.getByRole("button", { name: "Send" }).click();
 await ad.locator(".chatmsg.mine .chatbubble").first().waitFor();
 console.log("admin replied ok");
 
-// the member sees the reply in the existing conversation
+// the member sees the reply in the existing conversation, and the shared
+// Updates badge brings the reply to their attention.
 await p.goto(BASE + "/you");
+if (!(
+  await p
+    .locator('.brandbar-actions [aria-label^="Notifications"] .inboxdot')
+    .isVisible()
+    .catch(() => false)
+))
+  fail("no Updates badge after the feedback reply");
 await p.goto(BASE + "/feedback");
 const theirs = await p.locator(".chatmsg.theirs .chatbubble").allInnerTexts();
 if (!theirs.join(" ").includes("Fixing today")) fail("the reply never reached the member");

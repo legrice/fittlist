@@ -745,7 +745,7 @@ export async function adminBroadcast(
       body,
     })),
   );
-  // The notification history may already be open in another route segment.
+  // The combined Updates badge is in every signed-in header.
   revalidatePath("/", "layout");
   return { ok: true, sent: targets.length };
 }

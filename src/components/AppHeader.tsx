@@ -6,12 +6,15 @@ import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
 // The same header on every signed-in screen: wordmark left, then Search,
-// Messages and Settings right. Profile already has a permanent tab, so these
+// Notifications and Settings right. Profile already has a permanent tab, so these
 // are the three useful actions somebody may need from anywhere in the app.
 export function AppHeader({
+  unread = 0,
   home = "/week",
   nav,
 }: {
+  /** Notifications and unread message threads share one Updates badge. */
+  unread?: number;
   /** Where the wordmark goes. The Following tab for anyone with the member
       side, the schedule for a coach who doesn't have it yet. */
   home?: string;
@@ -35,14 +38,15 @@ export function AppHeader({
       )}
       <div className="brandbar-actions">
         {/* One stable utility order everywhere in the signed-in app. Search
-            finds coaches and classes, Messages holds conversations, and the
-            gear opens the viewer's own settings without leaving the page. */}
+            finds coaches and classes, the bell holds Notifications and
+            Messages together, and the gear opens settings in place. */}
         <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
         <HeaderIconLink
-          label="Messages"
-          icon="chat_bubble"
-          href="/inbox"
-          match="/inbox"
+          label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+          icon="notifications"
+          href="/updates"
+          match={["/updates", "/inbox"]}
+          badge={unread > 0 ? <span className="inboxdot">{unread > 9 ? "9+" : unread}</span> : undefined}
         />
         <SettingsGear header />
       </div>

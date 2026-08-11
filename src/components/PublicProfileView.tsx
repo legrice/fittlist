@@ -435,7 +435,7 @@ export async function PublicProfileView({
     >
       <div className="profwrap">
         {/* Signed in, this is still the app, so it keeps the app's header: the
-            way home, search, messages and settings. A stranger gets the wordmark and one
+            way home, search, updates and settings. A stranger gets the wordmark and one
             way in instead, because none of those mean anything to them yet. */}
         {/* Your own page is the You tab, so it lights up here; the pathname is
             a handle, which the bar can't read on its own. */}

@@ -2072,11 +2072,12 @@ button.ps-card { cursor: pointer; }
 
 /* Inbox button in the schedule header */
 .brandbar-actions { display: flex; align-items: center; gap: 6px; }
-/* Bare glyphs: Search, Messages and Settings read as one quiet utility row
+/* Bare glyphs: Search, Notifications and Settings read as one quiet utility row
    rather than three white circles fighting the wordmark. */
 .brandbar-actions .iconbtn {
   width: 38px; height: 38px; border-radius: 999px;
   background: none; border: 0; color: var(--ink);
+  /* The combined unread badge overhangs the bell. */
   overflow: visible;
 }
 .brandbar-actions .iconbtn:active { background: var(--cl); }

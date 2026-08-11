@@ -846,14 +846,16 @@ const subN = await page.locator(".acctstats .acctstat").nth(1).locator(".n").tex
 if (subN.trim() !== "1") fail("follower count should be 1, got " + subN);
 console.log("stats ok");
 
-// ---- that follow dropped a notification. Notifications keep their direct
-// URL and history without occupying permanent header space.
+// ---- that follow dropped an update. The one bell holds both notification
+// activity and message threads, with a combined unread badge.
 await page.goto(BASE + "/app");
 await page.locator(".caladd").waitFor();
-if (await page.locator('.brandbar-actions [aria-label^="Notifications"]').count())
-  fail("Notifications should not occupy permanent header space");
-await page.goto(BASE + "/updates");
-await page.getByRole("heading", { name: "Notifications" }).waitFor();
+await expect(
+  page.locator('.brandbar-actions [aria-label^="Notifications"] .inboxdot').isVisible(),
+  "Updates bell shows the follow badge",
+);
+await page.locator('.brandbar-actions [aria-label^="Notifications"]').click();
+await page.getByRole("heading", { name: "Updates" }).waitFor();
 // more than one person followed by now, so take the first rather than
 // tripping strict mode
 await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).first().isVisible(), "follow notification listed");
@@ -869,12 +871,14 @@ await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).first().
   if (blank) fail(`${blank} notification icons are the blank-circle fallback`);
   console.log("notification icon ok (a real glyph, not the fallback circle)");
 }
-await page.goto(BASE + "/inbox");
-await page.getByRole("heading", { name: "Messages" }).waitFor();
+await page.locator(".updateseg button", { hasText: "Messages" }).click();
 await page.getByText("No messages yet", { exact: false }).waitFor();
-await page.goto(BASE + "/updates");
+await page.locator(".updateseg button", { hasText: "Notifications" }).click();
 await page.locator(".notifrow").first().waitFor();
-console.log("direct notification history and Messages screen ok");
+await page.goto(BASE + "/inbox");
+await page.waitForURL(/\/updates\?tab=messages/);
+await page.locator(".updateseg button.sel", { hasText: "Messages" }).waitFor();
+console.log("combined Notifications and Messages screen ok");
 
 // ================= Phase 2: the weekly list =================
 const CRON_KEY = process.env.CRON_SECRET ?? "smoke-cron";

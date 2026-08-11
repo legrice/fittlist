@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Icon } from "@/components/Icon";
+import { MarkSeen } from "@/components/MarkSeen";
 
-// Two screens: Notifications remains a direct-linkable history for system
-// activity, while the header's chat bubble opens Messages at /inbox. They
-// shared one screen behind a segmented toggle for a while, and the toggle
-// went with the second door: a screen named by its icon should hold exactly
-// what the icon promises.
+// One Updates surface behind the header bell: Notifications for follows and
+// schedule activity, Messages for conversations. The segmented control keeps
+// those two kinds of attention distinct without spending two header icons.
 
 type Notif = {
   id: string;
@@ -71,128 +71,146 @@ function fmt(d: Date | string) {
     : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function UpdatesScreen({
-  notifications,
-  header,
-}: {
-  notifications: Notif[];
-  /** The app header, built on the server and handed down. */
-  header?: React.ReactNode;
-}) {
+function NotificationList({ notifications }: { notifications: Notif[] }) {
+  if (notifications.length === 0) {
+    return (
+      <p className="adminempty" style={{ marginTop: 24 }}>
+        Nothing yet. When someone follows your schedule, you&rsquo;ll see it here.
+      </p>
+    );
+  }
   return (
-    <div className="pad">
-      {header}
-      <div className="admintop pagetop">
-        <div>
-          <h1>Notifications</h1>
-          <p className="adminsub">Follows, requests, and what changed</p>
-        </div>
-        <Link className="iconbtn acctclose" aria-label="Close" href="/week">
-          <Icon name="close" size={20} />
-        </Link>
-      </div>
-
-      {notifications.length === 0 ? (
-          <p className="adminempty" style={{ marginTop: 24 }}>
-            Nothing yet. When someone follows your schedule, you&rsquo;ll see it here.
-          </p>
-        ) : (
-          <div className="notiflist">
-            {notifications.map((n) => {
-              const inner = (
-                <>
-                  {n.actor ? (
-                    n.actor.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="notifrow-av" src={n.actor.photo} alt="" />
-                    ) : (
-                      <span
-                        className="notifrow-av notifrow-av-empty"
-                        style={{ background: n.actor.color }}
-                        aria-hidden="true"
-                      >
-                        {(n.actor.name.trim().charAt(0) || "?").toUpperCase()}
-                      </span>
-                    )
-                  ) : (
-                    <span className="notifrow-ic" aria-hidden="true">
-                      <Icon name={ICON[n.type] ?? "notifications"} size={22} />
-                    </span>
-                  )}
-                  <span className="notifrow-main">
-                    <span className="notifrow-top">
-                      <span className="nm">{n.title}</span>
-                      <span className="tm">{fmt(n.createdAt)}</span>
-                    </span>
-                    {n.body && <span className="notifrow-body">{n.body}</span>}
-                  </span>
-                  {!n.readAt && <span className="notifrow-dot" aria-hidden="true" />}
-                </>
-              );
-              const cls = `notifrow${n.readAt ? "" : " unread"}`;
-              return n.href ? (
-                <Link key={n.id} href={n.href} className={cls}>
-                  {inner}
-                </Link>
+    <div className="notiflist">
+      {notifications.map((n) => {
+        const inner = (
+          <>
+            {n.actor ? (
+              n.actor.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="notifrow-av" src={n.actor.photo} alt="" />
               ) : (
-                <div key={n.id} className={cls}>
-                  {inner}
-                </div>
-              );
-            })}
+                <span
+                  className="notifrow-av notifrow-av-empty"
+                  style={{ background: n.actor.color }}
+                  aria-hidden="true"
+                >
+                  {(n.actor.name.trim().charAt(0) || "?").toUpperCase()}
+                </span>
+              )
+            ) : (
+              <span className="notifrow-ic" aria-hidden="true">
+                <Icon name={ICON[n.type] ?? "notifications"} size={22} />
+              </span>
+            )}
+            <span className="notifrow-main">
+              <span className="notifrow-top">
+                <span className="nm">{n.title}</span>
+                <span className="tm">{fmt(n.createdAt)}</span>
+              </span>
+              {n.body && <span className="notifrow-body">{n.body}</span>}
+            </span>
+            {!n.readAt && <span className="notifrow-dot" aria-hidden="true" />}
+          </>
+        );
+        const cls = `notifrow${n.readAt ? "" : " unread"}`;
+        return n.href ? (
+          <Link key={n.id} href={n.href} className={cls}>
+            {inner}
+          </Link>
+        ) : (
+          <div key={n.id} className={cls}>
+            {inner}
           </div>
-        )}
+        );
+      })}
     </div>
   );
 }
 
-/** The Messages screen behind the header's chat bubble, at /inbox: the
- *  threads alone, nothing else wearing the name. */
-export function MessagesScreen({
+function ThreadList({ threads }: { threads: Thread[] }) {
+  if (threads.length === 0) {
+    return (
+      <p className="adminempty" style={{ marginTop: 24 }}>
+        No messages yet. When someone requests a private session, it lands here.
+      </p>
+    );
+  }
+  return (
+    <div className="inbox-list">
+      {threads.map((t) => (
+        <Link key={t.id} href={`/inbox/${t.id}`} className={`inboxrow${t.unread > 0 ? " unread" : ""}`}>
+          <span className="inboxrow-av" aria-hidden="true">
+            {(t.who.trim().charAt(0) || "?").toUpperCase()}
+          </span>
+          <span className="inboxrow-main">
+            <span className="inboxrow-top">
+              <span className="nm">
+                {t.who}
+                {t.feedback && <span className="inboxrow-tag">feedback</span>}
+              </span>
+              <span className="tm">{fmt(t.at)}</span>
+            </span>
+            <span className="inboxrow-preview">{t.preview}</span>
+          </span>
+          {t.unread > 0 && <span className="inboxrow-badge">{t.unread}</span>}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+export function UpdatesScreen({
+  notifications,
   threads,
+  initialTab,
+  markSeen,
   header,
 }: {
+  notifications: Notif[];
   threads: Thread[];
+  initialTab: "notifications" | "messages";
+  markSeen: () => Promise<void>;
+  /** The app header, built on the server and handed down. */
   header?: React.ReactNode;
 }) {
+  const [tab, setTab] = useState<"notifications" | "messages">(initialTab);
+
+  const pick = (next: "notifications" | "messages") => {
+    setTab(next);
+    window.history.replaceState(
+      null,
+      "",
+      next === "messages" ? "/updates?tab=messages" : "/updates",
+    );
+  };
+
   return (
     <div className="pad">
       {header}
+      {tab === "notifications" && <MarkSeen action={markSeen} />}
       <div className="admintop pagetop">
         <div>
-          <h1>Messages</h1>
-          <p className="adminsub">Private sessions and questions</p>
+          <h1>Updates</h1>
+          <p className="adminsub">Follows, requests, and messages</p>
         </div>
         <Link className="iconbtn acctclose" aria-label="Close" href="/week">
           <Icon name="close" size={20} />
         </Link>
       </div>
 
-      {threads.length === 0 ? (
-        <p className="adminempty" style={{ marginTop: 24 }}>
-          No messages yet. When someone requests a private session, it lands here.
-        </p>
+      <div className="seg updateseg">
+        <button className={tab === "notifications" ? "sel" : ""} onClick={() => pick("notifications")}>
+          Notifications
+        </button>
+        <button className={tab === "messages" ? "sel" : ""} onClick={() => pick("messages")}>
+          Messages
+        </button>
+      </div>
+
+      {tab === "notifications" ? (
+        <NotificationList notifications={notifications} />
       ) : (
-        <div className="inbox-list">
-          {threads.map((t) => (
-            <Link key={t.id} href={`/inbox/${t.id}`} className={`inboxrow${t.unread > 0 ? " unread" : ""}`}>
-              <span className="inboxrow-av" aria-hidden="true">
-                {(t.who.trim().charAt(0) || "?").toUpperCase()}
-              </span>
-              <span className="inboxrow-main">
-                <span className="inboxrow-top">
-                  <span className="nm">
-                    {t.who}
-                    {t.feedback && <span className="inboxrow-tag">feedback</span>}
-                  </span>
-                  <span className="tm">{fmt(t.at)}</span>
-                </span>
-                <span className="inboxrow-preview">{t.preview}</span>
-              </span>
-              {t.unread > 0 && <span className="inboxrow-badge">{t.unread}</span>}
-            </Link>
-          ))}
-        </div>
+        <ThreadList threads={threads} />
       )}
     </div>
   );

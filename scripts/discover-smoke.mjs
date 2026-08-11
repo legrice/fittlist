@@ -83,11 +83,9 @@ if (await m.locator(".dissearch-door").count()) fail("Home's search bar came off
   const actions = await m.locator(".brandbar-actions > [aria-label]").evaluateAll((els) =>
     els.map((el) => el.getAttribute("aria-label")),
   );
-  if (actions.join("|") !== "Search|Messages|Settings")
-    fail("header should be Search, Messages, Settings: " + actions.join("|"));
+  if (actions.join("|") !== "Search|Notifications|Settings")
+    fail("header should be Search, Notifications, Settings: " + actions.join("|"));
 }
-if (await m.locator('.brandbar-actions [aria-label^="Notifications"]').count())
-  fail("Notifications should not occupy permanent header space");
 await m.locator(".railbl", { hasText: "This week" }).waitFor();
 await m.locator(".trayhint").waitFor();
 if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two ghosts");

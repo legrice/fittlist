@@ -23,16 +23,18 @@ export function HeaderIconLink({
   className?: string;
   /** The unread count bubble, when the door carries one. */
   badge?: ReactNode;
-  /** The pathname that counts as "here". "?acct" means the settings overlay,
-   *  which lives in the query string rather than the path. */
-  match: string;
+  /** The pathname or pathnames that count as "here". "?acct" means a
+   *  query-backed overlay rather than a route. */
+  match: string | string[];
 }) {
   const pathname = usePathname();
   const params = useSearchParams();
-  const on =
-    match === "?acct"
+  const matches = Array.isArray(match) ? match : [match];
+  const on = matches.some((candidate) =>
+    candidate === "?acct"
       ? params.has("acct")
-      : pathname === match || pathname.startsWith(`${match}/`);
+      : pathname === candidate || pathname.startsWith(`${candidate}/`),
+  );
   return (
     <Link
       className={`iconbtn inboxbtn ${className}${on ? " onroute" : ""}`}
