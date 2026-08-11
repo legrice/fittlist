@@ -182,6 +182,12 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   search: Search,
 };
 
+// These two Material paths come from the compact 24px set rather than the
+// 960-unit Symbols set used by the rest of MAT. Drawing them in the 960-unit
+// viewBox put the artwork outside the visible canvas, which left the sparkle
+// badges looking like they had no icon at all.
+const MAT_24 = new Set(["auto_awesome", "auto_awesome_outline"]);
+
 /** The house size and weight. The size kept the Phosphor era's bump (the type
  *  went up, so the glyphs had to); the weight is Lucide's own drawing, one
  *  step heavier than the 1.75 it shipped at here originally. */
@@ -205,7 +211,12 @@ export function Icon({
   if (d) {
     return (
       <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true">
-        <svg width={size} height={size} viewBox="0 -960 960 960" aria-hidden="true">
+        <svg
+          width={size}
+          height={size}
+          viewBox={MAT_24.has(name) ? "0 0 24 24" : "0 -960 960 960"}
+          aria-hidden="true"
+        >
           <path fill="currentColor" d={d} />
         </svg>
       </span>
