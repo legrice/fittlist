@@ -499,7 +499,8 @@ export async function PublicProfileView({
           ]}
           name={user.name}
           summary={user.about}
-          sharePrompt={`Know someone who should know ${user.name.trim().split(/\s+/)[0] || user.name}?`}
+          sharePrompt={isOwner ? "Let people know where to find you." : `Know someone who should know ${user.name.trim().split(/\s+/)[0] || user.name}?`}
+          shareLabel={isOwner ? "Share your profile" : "Share their profile"}
           title={user.title ?? ""}
           location={user.location ?? ""}
           trackSchedule={!isOwner}

@@ -172,7 +172,8 @@ export async function MemberProfileView({
           }
           name={name}
           summary={user.about}
-          sharePrompt={`Know someone who should know ${firstName}?`}
+          sharePrompt={isOwner ? "Let people know where to find you." : `Know someone who should know ${firstName}?`}
+          shareLabel={isOwner ? "Share your profile" : "Share their profile"}
           title={user.title ?? ""}
           location={user.location ?? ""}
           avatar={
