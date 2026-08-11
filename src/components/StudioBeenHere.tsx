@@ -36,7 +36,7 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
       onClick={toggle}
     >
       <Icon name={selected ? "check" : "place"} size={18} />
-      {selected ? "Been here" : "I’ve been here"}
+      Been here?
       {count > 0 && <span className="studio-been-count">{count}</span>}
     </button>
     <SignupPrompt
