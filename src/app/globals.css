@@ -7449,6 +7449,9 @@ a.clspeek-by:active { opacity: .6; }
   align-content: center;
   min-height: 112px; padding: 14px; border-bottom: 0;
 }
+/* These reading lists wrap every class in `.clrow` for grouping, but carry no
+   corner action. Give the name back the 38px the generic menu row reserves. */
+.disflat .clrow .clline-nm { padding-right: 0; }
 .disflat .rowsave {
   top: 10px; right: 10px; bottom: auto;
   width: 36px; height: 36px; padding: 0;
