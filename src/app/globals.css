@@ -7438,9 +7438,6 @@ a.clspeek-by:active { opacity: .6; }
   justify-content: center;
 }
 .home-next { margin-top: 6px; }
-.home-next .clline-t { grid-row: 2; }
-.home-next .clline-dur { grid-row: 3; }
-.home-next .clline-by { grid-row: 3; }
 .home-classdate {
   position: absolute; top: 13px; left: 14px; z-index: 2;
   padding: 3px 8px; border-radius: 999px;
