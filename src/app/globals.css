@@ -589,7 +589,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 
 /* sheets */
 .sheet-scrim {
-  position: fixed; inset: 0; background: rgba(23, 26, 31, .48); z-index: 46;
+  position: fixed; inset: 0; background: rgba(23, 26, 31, .55); z-index: 46;
   display: flex; align-items: flex-end;
 }
 .sheet {
