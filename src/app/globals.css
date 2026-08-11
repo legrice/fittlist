@@ -7060,6 +7060,19 @@ button.ps-card { cursor: pointer; }
   width: 42px; height: 42px; background: var(--card);
   box-shadow: 0 4px 14px rgba(25, 21, 2, .18);
 }
+.clspeek-x.clsfull-more {
+  position: sticky; top: 2px; z-index: 7;
+  display: flex; margin-bottom: -42px;
+  width: 42px; height: 42px; background: var(--card);
+  box-shadow: 0 4px 14px rgba(25, 21, 2, .18);
+}
+.clsfull-menu {
+  position: sticky; top: 50px; z-index: 8;
+  width: min(280px, calc(100% - 44px)); margin: 0 0 -1px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--soft-shadow); overflow: hidden;
+  animation: fadeIn .12s ease;
+}
 .clsfull-kick {
   /* No top margin of its own: the photo's air (or the grab handle's) is
      already above it, and the pair stacked to a gulf. */

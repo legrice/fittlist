@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { adminClassEditor } from "@/app/actions/admin";
 import { deleteClass } from "@/app/actions/classes";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
 import { giveUpShift, sendShiftTo } from "@/app/actions/gym";
+import { reportClass } from "@/app/actions/reports";
+import { Adder } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { announceSaved } from "@/components/SaveEducation";
 
@@ -148,6 +151,12 @@ export function ClassPeek({
   const [manage, setManage] = useState<ClassDetail["shift"] | null>(null);
   const [sending, setSending] = useState(false);
   const [shiftErr, setShiftErr] = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reported, setReported] = useState(false);
+  const [adminAdder, setAdminAdder] = useState<Awaited<
+    ReturnType<typeof adminClassEditor>
+  > | null>(null);
 
   // The base is an address ("s/{slug}" for a gym's class); classDetail wants
   // the bare key it looks the owner up by. Conflating those two is how a
@@ -288,6 +297,38 @@ export function ClassPeek({
       onToast("Couldn't share that");
     }
   };
+
+  const editClass = () => {
+    setMoreOpen(false);
+    if (cls.mine && onEdit) {
+      onEdit();
+      return;
+    }
+    if (!full?.adminEdit || pending) return;
+    start(async () => {
+      const editor = await adminClassEditor(cls.id);
+      if (!editor) {
+        onToast("That class can't be edited here");
+        return;
+      }
+      if (!editor.prefill.specificDate) editor.prefill.occurrenceDate = cls.iso;
+      setAdminAdder(editor);
+    });
+  };
+
+  const sendReport = (reason: string) => {
+    if (pending) return;
+    start(async () => {
+      const res = await reportClass(cls.id, reason);
+      setReportOpen(false);
+      if (!res.ok) {
+        onToast(res.error ?? "Couldn't send that");
+        return;
+      }
+      setReported(true);
+      onToast("Thanks. We'll take a look.");
+    });
+  };
   // The row's carried depth paints first and the fetch confirms it: the
   // sheet must not grow a paragraph after it is already up.
   const description = full?.description ?? cls.preview?.description ?? null;
@@ -317,11 +358,68 @@ export function ClassPeek({
       }}
     >
       <div className="sheet clspeek clsfull" ref={sheetRef}>
-        {/* The close stays pinned in the top-right corner while the sheet
-            scrolls. Share is a first-class footer action beside Book. */}
+        {/* Secondary tools stay on the left; Close stays on the right. Both
+            remain visible while a long class scrolls. */}
+        <button
+          className="clspeek-x clsfull-more"
+          aria-label="More class actions"
+          aria-expanded={moreOpen}
+          onClick={() => setMoreOpen((open) => !open)}
+        >
+          <Icon name="more_horiz" size={20} />
+        </button>
         <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
           <Icon name="close" size={20} />
         </button>
+        {moreOpen && full && (
+          <div className="clsfull-menu" role="menu">
+            <a
+              className="ovmenu-item"
+              role="menuitem"
+              href={full.googleUrl}
+              target="_blank"
+              rel="noopener nofollow"
+              onClick={() => setMoreOpen(false)}
+            >
+              <Icon name="calendar_month" size={19} /> Add to Google Calendar
+            </a>
+            <a
+              className="ovmenu-item"
+              role="menuitem"
+              href={full.icsHref}
+              onClick={() => setMoreOpen(false)}
+            >
+              <Icon name="calendar_today" size={19} /> Add to Apple or Outlook
+            </a>
+            <button
+              className="ovmenu-item"
+              role="menuitem"
+              onClick={() => {
+                setMoreOpen(false);
+                void share();
+              }}
+            >
+              <Icon name="ios_share" size={19} /> Share class
+            </button>
+            {(cls.mine && onEdit || full.adminEdit) && (
+              <button className="ovmenu-item" role="menuitem" onClick={editClass}>
+                <Icon name="edit" size={19} /> Edit class
+              </button>
+            )}
+            {!cls.mine && !reported && (
+              <button
+                className="ovmenu-item ovmenu-quiet"
+                role="menuitem"
+                onClick={() => {
+                  setMoreOpen(false);
+                  setReportOpen(true);
+                }}
+              >
+                <Icon name="flag" size={19} /> Report this class
+              </button>
+            )}
+          </div>
+        )}
         {full?.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="clsfull-photo" src={full.image} alt="" />
@@ -599,6 +697,61 @@ export function ClassPeek({
             </button>
           </div>
         </div>
+      )}
+      {reportOpen && (
+        <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet confirmsheet">
+            <h2>What&rsquo;s wrong with it?</h2>
+            <p className="lead">This goes to Fittlist, not to the coach.</p>
+            <div className="reportreasons">
+              {["Not a real class", "No longer running", "Wrong time or place", "Something else"].map(
+                (reason) => (
+                  <button
+                    key={reason}
+                    className="btn ghost reportreason"
+                    disabled={pending}
+                    onClick={() => sendReport(reason)}
+                  >
+                    {reason}
+                  </button>
+                ),
+              )}
+            </div>
+            <button className="confirm-keep" disabled={pending} onClick={() => setReportOpen(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {adminAdder && full && (
+        <Adder
+          studios={adminAdder.studios}
+          templates={[]}
+          customTypes={adminAdder.customTypes}
+          lastUsed={{
+            startTime: adminAdder.prefill.startTime,
+            durationMin: adminAdder.prefill.durationMin,
+            studioId: adminAdder.prefill.studioId,
+          }}
+          subsCount={0}
+          firstPublish={false}
+          prefill={adminAdder.prefill}
+          onClose={() => setAdminAdder(null)}
+          onToast={onToast}
+          onPublished={() => {
+            setAdminAdder(null);
+            onToast("Saved");
+            onChanged();
+            router.refresh();
+          }}
+          onDeleted={(message) => {
+            setAdminAdder(null);
+            onToast(message);
+            onChanged();
+            onClose();
+            router.refresh();
+          }}
+        />
       )}
     </div>
   );

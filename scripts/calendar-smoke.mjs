@@ -248,11 +248,16 @@ await p.waitForTimeout(400);
   if (!(await p.locator(".clspeek-btn", { hasText: "Cancel this date" }).count()))
     fail("expected Cancel this date");
   if (!(await p.locator(".clspeek-del").count())) fail("expected the quiet delete");
-  // Share is back in the footer as the outlined action; the top-left
-  // overflow has gone away.
+  // Share stays in the footer as the outlined action. The top-left overflow
+  // keeps secondary class tools, including the owner's edit door.
   if (!(await p.locator(".clsfull-btn.share", { hasText: "Share" }).count()))
     fail("expected the outlined Share action in the footer");
-  if (await p.locator(".clsfull-more").count()) fail("the overflow menu should be gone");
+  if (!(await p.locator(".clsfull-more").count())) fail("expected the class overflow");
+  await p.locator(".clsfull-more").click();
+  const tools = await p.locator(".clsfull-menu .ovmenu-item").allInnerTexts();
+  for (const wanted of ["Add to Google Calendar", "Add to Apple or Outlook", "Share class", "Edit class"])
+    if (!tools.some((tool) => tool.includes(wanted))) fail(`class overflow is missing ${wanted}: ${tools.join(" | ")}`);
+  await p.locator(".clsfull-more").click();
   if (await p.locator(".clsfull-btn.book").count()) fail("no Book on your own class");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-sheet.png" });
