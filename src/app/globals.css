@@ -6786,7 +6786,7 @@ button.ps-card { cursor: pointer; }
 .bookbtn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   width: 100%; padding: 16px; border-radius: 999px;
-  background: var(--si); color: #fff; text-decoration: none;
+  background: var(--ink); color: var(--paper); text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16.5px; font-weight: 600;
 }
