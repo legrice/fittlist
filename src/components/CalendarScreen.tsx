@@ -347,11 +347,17 @@ export function CalendarScreen({
         // changes it: the same Add the title row carries, where somebody
         // reading "nothing coming up" is already looking.
         <WeekEmpty
-          first={false}
-          title=""
-          body=""
+          first={kind === "added"}
+          title={kind === "added" ? "You haven’t added anything to your calendar" : ""}
+          body={kind === "added" ? "Follow a coach to see what they’re teaching, or add a class to your schedule." : ""}
           cta={kind === "added" ? undefined : "Add a class"}
           onCta={kind === "added" ? undefined : () => setAddChoice(true)}
+          actions={kind === "added" ? (
+            <div className="calendar-empty-actions">
+              <Link className="btn ghost" href="/search">Find a coach</Link>
+              <button className="btn si" type="button" onClick={() => setBrowseOpen(true)}>Add a class</button>
+            </div>
+          ) : undefined}
         />
       ) : (
         <div className="calendar-cardlist">
@@ -365,7 +371,7 @@ export function CalendarScreen({
           naming the day (or month) under it with the toggle and Add along
           for the ride, so the two things the title row offered are never a
           long scroll away. */}
-      {!bare && (
+      {!bare && !(kind === "added" && days.length === 0) && (
         <ScrollHead
           on={view === "month" ? scrolled : !!topDay}
           label={
@@ -409,7 +415,7 @@ export function CalendarScreen({
       {/* Add floats bottom right, under the thumb, the same spot and dress
           as Following's search: adding is what somebody opens this screen
           to do, and the title row's corner belongs to Share now. */}
-      {!bare && (
+      {!bare && !(kind === "added" && days.length === 0) && (
         <button className="wkfab" aria-label="Add a class" onClick={() => setAddChoice(true)}>
           <Icon name="add" size={28} />
         </button>

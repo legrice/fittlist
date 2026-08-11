@@ -7014,6 +7014,17 @@ button.ps-card { cursor: pointer; }
    an empty screen wears the one loud colour. */
 .wkempty-cta { margin-top: 22px; width: 100%; }
 .btn.si.wkempty-cta { background: var(--si); color: #fff; }
+.calendar-empty-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px;
+}
+.calendar-empty-actions .btn {
+  min-width: 0; min-height: 50px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.calendar-empty-actions .btn.ghost {
+  background: var(--card); color: var(--ink); border: 1px solid var(--div);
+}
+.calendar-empty-actions .btn.si { background: var(--ink); color: var(--paper); }
 /* The one filled control on the calendar: adding a class. It floats bottom
    right, where a thumb already is, and it is the only thing on this screen
    wearing the brand colour. */

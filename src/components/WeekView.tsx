@@ -217,12 +217,14 @@ export function WeekEmpty({
   body,
   cta,
   onCta,
+  actions,
 }: {
   first: boolean;
   title: string;
   body: string;
   cta?: string;
   onCta?: () => void;
+  actions?: ReactNode;
 }) {
   return (
     <div className="wkempty">
@@ -246,6 +248,7 @@ export function WeekEmpty({
           {cta}
         </button>
       )}
+      {actions}
     </div>
   );
 }
