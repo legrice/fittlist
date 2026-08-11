@@ -7806,7 +7806,11 @@ a.clspeek-by:active { opacity: .6; }
   width: 32px; height: 32px; padding: 0; border: 0; border-radius: 999px;
   display: grid; place-items: center; background: none; color: var(--ink); cursor: pointer;
 }
-.following-add.on { background: var(--go); color: #fff; }
+.following-add.on { background: none; color: #fff; }
+.following-add.on svg {
+  width: 24px; height: 24px; padding: 3px; border-radius: 999px;
+  background: var(--go); box-sizing: border-box;
+}
 .following-add:disabled { opacity: .55; }
 .addbrowse-search {
   display: flex; align-items: center; gap: 9px; margin: 4px 0 18px;
