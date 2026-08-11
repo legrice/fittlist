@@ -19,6 +19,15 @@ const config: CapacitorConfig = {
     preferredContentMode: "mobile",
     scrollEnabled: true,
   },
+  plugins: {
+    StatusBar: {
+      // Reserve the system status area instead of laying the web view beneath
+      // the clock, Dynamic Island and signal indicators.
+      overlaysWebView: false,
+      style: "LIGHT",
+      backgroundColor: "#191502",
+    },
+  },
 };
 
 export default config;

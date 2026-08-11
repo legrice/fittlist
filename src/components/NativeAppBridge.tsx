@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { Network } from "@capacitor/network";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 /** The seam between the server-rendered product and its iOS container. */
 export function NativeAppBridge() {
@@ -13,6 +14,8 @@ export function NativeAppBridge() {
     if (!Capacitor.isNativePlatform()) return;
 
     document.documentElement.dataset.native = Capacitor.getPlatform();
+    void StatusBar.setOverlaysWebView({ overlay: false });
+    void StatusBar.setStyle({ style: Style.Light });
     let live = true;
     const removers: Array<() => Promise<void>> = [];
 
