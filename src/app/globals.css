@@ -6700,9 +6700,9 @@ button.ps-card { cursor: pointer; }
 
 /* ---------------------------------------------------------------------------
    The classic viewer, back in the sheet: the photograph to the top edge,
-   the kicker, the by-line, glyph facts, About, and a pinned footer of
-   Share (ink) and Book (brand) that is Share alone when there is no
-   booking door. It slides up like every sheet and closes on an X.
+   the kicker, the by-line, glyph facts, About, and a pinned footer whose
+   primary Book action is ink. It slides up like every sheet and closes on
+   an X.
    --------------------------------------------------------------------------- */
 .clsfull { position: relative; }
 .clsfull-photo {
@@ -6780,7 +6780,7 @@ button.ps-card { cursor: pointer; }
   font-size: 16.5px; font-weight: 600;
 }
 .clsfull-btn.dark { background: var(--ink); color: var(--paper); }
-.clsfull-btn.book { background: var(--si); color: #fff; }
+.clsfull-btn.book { background: var(--ink); color: #fff; }
 /* A shift's one act, in the footer slot a member's Book takes: the date is
    yours to manage, not to book. */
 .clsfull-btn.manage { background: var(--si); color: #fff; }
