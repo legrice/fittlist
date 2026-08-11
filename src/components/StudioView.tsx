@@ -246,8 +246,6 @@ export async function StudioView({
   // pitch), About is the categories and the words, Coaches is who teaches
   // here. One layout to learn, however small the studio.
   const tab: StudioTab = wanted === "auto" ? "schedule" : wanted;
-  const show = (section: StudioTab) => tab === section;
-
   const backTo = backToFor(from, signedIn);
 
   const hasContact = !!(s.contactEmail || s.phone || s.website || s.instagram);
@@ -393,8 +391,8 @@ export async function StudioView({
           }
         >
 
-        {tab === "schedule" &&
-          (hasSchedule ? (
+        <section id="profile-schedule" className="profile-anchor-section">
+          {hasSchedule ? (
             <StudioSchedule
               slug={s.slug ?? s.id}
               days={days}
@@ -408,12 +406,15 @@ export async function StudioView({
                 the studio takes the page and runs its own.
               </p>
             </div>
-          ))}
+          )}
+        </section>
 
+        <section id="profile-about" className="profile-anchor-section">
+        <h2 className="profile-section-title">Info</h2>
         {/* What kind of place this is, first thing under the tabs: it is the
             answer to "is this for me", and it used to sit above the photo
             where it read as a caption on the name. */}
-        {show("about") && s.types.length > 0 && (
+        {s.types.length > 0 && (
           <div className="studiotypes studiotypes-top">
             {s.types.map((t) => (
               <span key={t} className="studiotype">
@@ -423,14 +424,13 @@ export async function StudioView({
           </div>
         )}
 
-        {show("about") && s.about?.trim() && (
+        {s.about?.trim() && (
           <div className="studsec studsec-first">
             <h2 className="prof-sec-h">About</h2>
             <p className="profabout">{s.about}</p>
           </div>
         )}
 
-        {show("about") && (
         <div className="profstudios studsec">
           <h2 className="prof-sec-h">Where it is</h2>
           <a
@@ -448,10 +448,11 @@ export async function StudioView({
             </span>
           </a>
         </div>
-        )}
+        </section>
 
-        {show("coaches") &&
-          (coaches.length === 0 ? (
+        <section id="profile-coaches" className="profile-anchor-section">
+        <h2 className="profile-section-title">Coaches</h2>
+          {coaches.length === 0 ? (
             <>
               <div className="empty-block">
                 <h2>Nobody listed yet</h2>
@@ -492,7 +493,8 @@ export async function StudioView({
                 class. */}
             {signedIn && <InviteCoach studioName={s.name} />}
           </div>
-          ))}
+          )}
+        </section>
 
         </ProfileTabs>
 

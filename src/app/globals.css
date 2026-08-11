@@ -3605,6 +3605,28 @@ button.ps-card { cursor: pointer; }
   width: 100%; display: flex; align-items: center; gap: 9px; padding: 11px;
   border: 0; background: transparent; color: inherit; font: 600 14px 'Delight', 'Helvetica Neue', Arial, sans-serif;
 }
+.profile-anchor-section {
+  scroll-margin-top: calc(var(--dayband-top, 72px) + 12px);
+}
+.profile-anchor-section + .profile-anchor-section {
+  margin-top: 34px;
+  padding-top: 28px;
+  border-top: 8px solid var(--shell);
+}
+.profile-section-title {
+  margin: 0 0 16px;
+  font-size: 24px;
+  line-height: 1.08;
+}
+.profile-anchor-section > .profsec:first-of-type,
+.profile-anchor-section > .studsec:first-of-type { margin-top: 0; }
+.profile-empty-small {
+  min-height: 0;
+  padding: 20px 16px;
+  text-align: left;
+}
+.profile-empty-small h2 { font-size: 18px; }
+.profile-empty-small p { margin-top: 4px; font-size: 14px; }
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's

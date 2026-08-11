@@ -660,7 +660,7 @@ if (await page.locator(".profshare").count()) fail("the profile share button sho
 if (await page.locator(".profacts .followpill").count())
   fail("the owner has nobody to follow on their own page");
 await expect(page.locator(".pubtab", { hasText: "Info" }).isVisible(), "Info tab present");
-await expect(page.locator(".pubtab.sel", { hasText: "Info" }).isVisible(), "Info tab active on /about");
+await expect(page.locator(".pubtab.sel", { hasText: "Schedule" }).isVisible(), "unified profile starts at Schedule");
 // Schedule leads: it's the thing the page exists to surface.
 {
   const order = await page.locator(".pubtab").allInnerTexts();
@@ -695,10 +695,9 @@ await page.locator(".sheet .sheetclose, .sheet .adderclose").first().click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.screenshot({ path: SCRATCH + "/shot-profile.png", fullPage: true });
 
-// ---- Schedule is its own URL, so a tab is a real navigation you can share
+// ---- Schedule is the first anchor on the unified profile
 await page.locator(".pubtab", { hasText: "Schedule" }).click();
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
-await page.waitForURL((u) => u.pathname === "/matt");
 await expect(page.getByText("Barbell Strength").first().isVisible(), "schedule shows class");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
@@ -2648,22 +2647,19 @@ await page.locator(".pubtab.sel").waitFor();
   if (t.radius > 0) fail("the tabs should not be pill shapes, radius " + t.radius);
   if (parseFloat(t.under) < 2) fail("the selected tab should carry an underline, got " + t.under);
 }
-// ---- each tab is a link with its own URL, so a coach can send someone to one
+// ---- tabs are anchor navigation over one continuous profile
 {
   const hrefs = await page
     .locator(".pubtabs a")
-    .evaluateAll((els) => els.map((e) => new URL(e.href).pathname));
-  // Contact is a pill and a sheet now, not a tab: how to reach somebody is a
-  // thing you do rather than a section you read.
-  const want = ["/matt", "/matt/about", "/matt/studios"];
+    .evaluateAll((els) => els.map((e) => new URL(e.href).hash));
+  const want = ["#profile-schedule", "#profile-about", "#profile-studios"];
   if (hrefs.join("|") !== want.join("|"))
     fail("tabs should link to " + want.join(", ") + ", got " + hrefs.join(", "));
-  // Landing on a section URL renders that section and only that section.
+  // Legacy section URLs still resolve, but carry the complete profile.
   await page.goto(BASE + "/matt/about");
-  await page.locator(".pubtab.sel", { hasText: "Info" }).waitFor();
+  await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
   await page.locator(".profabout").waitFor();
-  if (await page.locator(".ps-event").count())
-    fail("the about URL should not carry the schedule");
+  if (!(await page.locator(".ps-event").count())) fail("the unified profile should keep its schedule");
   // The old /contact link still resolves: people have already sent it. It
   // lands on the schedule, with the Contact pill right there.
   await page.goto(BASE + "/matt/contact");
@@ -2671,14 +2667,13 @@ await page.locator(".pubtab.sel").waitFor();
   // And back to the schedule, which is the bare handle.
   await page.goto(BASE + "/matt/about");
   await page.locator(".pubtab", { hasText: "Schedule" }).click();
-  await page.waitForURL((u) => u.pathname === "/matt");
   await page.locator(".ps-event").first().waitFor();
   // The old /schedule link still resolves: people have already sent it.
   await page.goto(BASE + "/matt/schedule");
   await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
   await page.locator(".ps-event").first().waitFor();
 }
-console.log("profile tabs are links ok (three URLs, one section each)");
+console.log("profile anchor tabs ok (one page, three sections)");
 
 // Settings are the You tab now; the profile carries no door to somewhere
 // else, and the corner carries no gear.

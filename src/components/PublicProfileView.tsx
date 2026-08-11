@@ -9,14 +9,12 @@ import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
-import { followingList } from "@/lib/circles";
 
 import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { ClassRowMenu } from "@/components/ClassRowMenu";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
-import { FollowList } from "@/components/FollowList";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ScheduleMore } from "@/components/ScheduleMore";
@@ -182,8 +180,6 @@ export async function PublicProfileView({
   // Who they follow, only when that tab is the one being read: the other
   // tabs have no use for it, and a query nobody reads gets slower without
   // anybody noticing.
-  const follows = tab === "following" ? await followingList(user.email, viewerId) : [];
-
   const today = todayIso();
   const start = new Date(`${today}T00:00:00Z`);
   const days: { iso: string; week: number; items: typeof classRows }[] = [];
@@ -321,7 +317,7 @@ export async function PublicProfileView({
         // their own profile that "Anotherone hasn't posted classes yet",
         // which is the app talking about them to them.
         isOwner ? (
-          <div className="empty-block">
+          <div className="empty-block profile-empty-small">
             <h2>Nothing on your schedule</h2>
             <p>Add the classes you coach and this page fills in.</p>
             <Link className="btn si folfind" href="/calendar">
@@ -329,7 +325,7 @@ export async function PublicProfileView({
             </Link>
           </div>
         ) : (
-          <div className="empty-block">
+          <div className="empty-block profile-empty-small">
             <h2>Nothing on the calendar</h2>
             <p>
               {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email
@@ -412,21 +408,29 @@ export async function PublicProfileView({
                 </div>
               </section>
             );
-            // One week at a time: the first non-empty week renders now, and
-            // the rest wait behind View more, revealed a week per tap. Empty
-            // weeks never make a chunk, so the button always shows something.
-            const weekIdxs = [...new Set(days.map((d) => d.week))].sort((a, b) => a - b);
-            const [firstWeek, ...laterWeeks] = weekIdxs;
+            let remaining = 8;
+            const preview: typeof days = [];
+            const later: typeof days = [];
+            for (const day of days) {
+              const first = day.items.slice(0, remaining);
+              const rest = day.items.slice(remaining);
+              if (first.length) preview.push({ ...day, items: first });
+              if (rest.length) later.push({ ...day, items: rest });
+              remaining = Math.max(0, remaining - first.length);
+              if (!remaining && !rest.length && day.items.length) {
+                // Later days remain intact once the eight-entry preview fills.
+                const at = days.indexOf(day);
+                later.push(...days.slice(at + 1));
+                break;
+              }
+            }
             return (
               <>
-                {days.filter((d) => d.week === firstWeek).map(renderDay)}
-                {laterWeeks.length > 0 && (
+                {preview.map(renderDay)}
+                {later.length > 0 && (
                   <ScheduleMore
-                    chunks={laterWeeks.map((w) => (
-                      <div key={w} style={{ display: "contents" }}>
-                        {days.filter((d) => d.week === w).map(renderDay)}
-                      </div>
-                    ))}
+                    label="See more schedule"
+                    chunks={[<div key="more-schedule" style={{ display: "contents" }}>{later.map(renderDay)}</div>]}
                   />
                 )}
               </>
@@ -597,29 +601,17 @@ export async function PublicProfileView({
               to show means no tab) and Contact is a sheet now, so both fall
               back to the schedule rather than rendering an empty page under a
               tab that isn't there. */}
-          {tab === "about" ? (
-            about
-          ) : tab === "following" ? (
-            /* Who they follow, the same list a member's page leads with:
-               a coach follows coaches too, and the tab means the same
-               thing on both kinds of page. */
-            <FollowList
-              rows={follows}
-              isOwner={isOwner}
-              firstName={user.name.trim().split(/\s+/)[0] || user.name}
-              signedIn={!!viewerId}
-            />
-          ) : tab === "studios" && studios ? (
-            studios
-          ) : (
-            /* One week on this tab: what they teach. It carried a
-               Teaching/Going segment, which was the other hat: the classes
-               this coach was going to. Going marks are gone from the app, so
-               the second half is empty by construction and a segment whose
-               other side can only ever be empty is a control that means
-               nothing. */
-            schedule
-          )}
+          <section id="profile-schedule" className="profile-anchor-section">{schedule}</section>
+          <section id="profile-about" className="profile-anchor-section">
+            <h2 className="profile-section-title">Info</h2>
+            {about}
+          </section>
+          {studios ? (
+            <section id="profile-studios" className="profile-anchor-section">
+              <h2 className="profile-section-title">Studios</h2>
+              {studios}
+            </section>
+          ) : null}
         </ProfileTabs>
         </FollowSync>
         {/* No Add class here. This page is where you look at your week, and

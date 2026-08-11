@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { Fragment, useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useBandTop, useStuck } from "@/components/CalendarBits";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
@@ -104,6 +103,7 @@ export function ProfileTabs({
   stickAction?: ReactNode;
   children: ReactNode;
 }) {
+  const [activeSection, setActiveSection] = useState(tabs[0]?.key ?? tab);
   const tracked = useRef(false);
   const stickRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
@@ -148,6 +148,22 @@ export function ProfileTabs({
     else fetch(url, { method: "POST", keepalive: true }).catch(() => {});
   }, [tab, trackSchedule, trackHandle]);
 
+  useEffect(() => {
+    const sections = tabs
+      .map((t) => document.getElementById(`profile-${t.key}`))
+      .filter((el): el is HTMLElement => !!el);
+    if (!sections.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActiveSection(visible[0].target.id.replace("profile-", ""));
+      },
+      { rootMargin: "-25% 0px -60% 0px", threshold: 0 },
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [tabs]);
+
   // The first tab is the bare URL: it's what the link is for, and an About page
   // somebody hasn't filled in is an awkward first thing to land on. The old
   // suffix still resolves, because people have already sent that link.
@@ -156,24 +172,23 @@ export function ProfileTabs({
   // dot stays a sibling of the link inside it: a button in a link is not a
   // thing.
   const tabLink = (t: TabDef, i: number) => {
+    void i;
     const link = (
-      <Link
-        href={i === 0 ? base : `${base}/${t.key}`}
-        aria-current={tab === t.key ? "page" : undefined}
-        className={`pubtab${tab === t.key ? " sel" : ""}`}
-        // Switching sections shouldn't throw you back to the top of a page you
-        // are already partway down; the header above is identical either way.
-        scroll={false}
+      <a
+        href={`#profile-${t.key}`}
+        aria-current={activeSection === t.key ? "location" : undefined}
+        className={`pubtab${activeSection === t.key ? " sel" : ""}`}
+        onClick={() => setActiveSection(t.key)}
       >
         {t.label}
-      </Link>
+      </a>
     );
     // The info dot only rides its tab while that tab is the one you are
     // on, by Matt's call: pinned to an unselected pill it read as a stray
     // control that fell out of the row.
-    if (!t.info || tab !== t.key) return <Fragment key={t.key}>{link}</Fragment>;
+    if (!t.info || activeSection !== t.key) return <Fragment key={t.key}>{link}</Fragment>;
     return (
-      <span key={t.key} className={`pubtab-pair${tab === t.key ? " sel" : ""}`}>
+      <span key={t.key} className={`pubtab-pair${activeSection === t.key ? " sel" : ""}`}>
         {link}
         {t.info}
       </span>

@@ -188,9 +188,8 @@ if (!(await p.getByText("Lifts heavy, runs slow").count())) fail("tagline missin
   if (tabs.join("|") !== "Schedule|Info")
     fail("a member's page should wear Schedule and Info: " + tabs.join("|"));
 }
-await p.getByText(/Nothing coming up|Your week/).first().waitFor();
+await p.getByText(/No upcoming schedule|Your week/).first().waitFor();
 await p.locator(".pubtab", { hasText: "Info" }).click();
-await p.waitForURL("**/member/about");
 if (!(await p.getByText("Six mornings a week").count())) fail("bio missing from About");
 // Who they follow is nobody else's business. Two profiles side by side, one
 // with six coaches and one with none, is a scoreboard nobody asked for.

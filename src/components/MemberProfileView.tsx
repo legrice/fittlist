@@ -6,12 +6,10 @@ import { backToFor } from "@/lib/nav";
 import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { followingList } from "@/lib/circles";
 import { canSeeWeek, memberWeek, type SharedWeekItem } from "@/lib/week";
 import { fansVisible } from "@/lib/flags";
 import { AppChrome } from "@/components/AppChrome";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
-import { FollowList } from "@/components/FollowList";
 import { Icon } from "@/components/Icon";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
@@ -91,7 +89,6 @@ export async function MemberProfileView({
 
   // The coaches they follow: the page's first tab now, in place of the
   // shared week.
-  const follows = await followingList(user.email, viewerId);
   const firstName = name.split(/\s+/)[0];
 
   // The week they built on the Share tab, by Matt's call: the classes they
@@ -223,36 +220,31 @@ export async function MemberProfileView({
         {/* About: who they are, and honestly nothing more. Most members
             haven't written it yet, and the empty state says so without
             making the page feel unfinished. */}
-        {tab === "about" &&
-          (user.about?.trim() ? (
+        <section id="profile-schedule" className="profile-anchor-section">
+        {week.length > 0 ? (
+          <div className="memwk">
+            {week.map((day) => (
+              <div key={day.iso} className="memwk-day">
+                <div className="memwk-band">{day.label}</div>
+                {day.items.map((it) => <MemberWeekRow key={`${it.classId}.${it.iso}`} it={it} />)}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p></div>
+        )}
+        </section>
+        <section id="profile-about" className="profile-anchor-section">
+          <h2 className="profile-section-title">Info</h2>
+          {user.about?.trim() ? (
             <p className="mempro-about">{user.about}</p>
           ) : (
             <div className="empty-block">
               <h2>Nothing here yet</h2>
               <p>{firstName} hasn&rsquo;t written about themselves.</p>
             </div>
-          ))}
-
-        {/* The week they're going to, then the coaches they follow. The
-            week leads when it exists: it is the thing the page's owner
-            built to be seen, and it empties itself as the days run. */}
-        {tab === "schedule" && week.length > 0 && (
-          <div className="memwk">
-            {week.map((day) => (
-              <div key={day.iso} className="memwk-day">
-                <div className="memwk-band">{day.label}</div>
-                {day.items.map((it) => (
-                  <MemberWeekRow key={`${it.classId}.${it.iso}`} it={it} />
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-        {/* The coaches they follow. One component with the coach page's own
-            Following tab, so the row and the empty state cannot drift. */}
-        {tab === "schedule" && (
-          <FollowList rows={follows} isOwner={isOwner} firstName={firstName} signedIn={!!viewerId} />
-        )}
+          )}
+        </section>
         </ProfileTabs>
       </div>
     </div>
