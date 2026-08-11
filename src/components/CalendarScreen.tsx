@@ -180,7 +180,7 @@ export function CalendarScreen({
         {/* Calendar and its two views share one title row. The screen is
             coaching-only, so there is no relationship filter to explain. */}
         <div className="calbar">
-          <h1 className="calbar-t caltitle tab-page-title">Calendar</h1>
+          <h1 className="calbar-t caltitle tab-page-title">Your calendar</h1>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
