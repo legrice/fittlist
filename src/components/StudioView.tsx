@@ -22,6 +22,7 @@ import { StudioPhotoCta } from "@/components/StudioPhotoCta";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
+import { ProfileShare } from "@/components/ProfileShare";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -326,7 +327,7 @@ export async function StudioView({
               // this page ask the badge's does.
               info: community ? <CommunityNote studioId={s.id} name={s.name} /> : undefined,
             },
-            { key: "about", label: "About" },
+            { key: "about", label: "Info" },
             { key: "coaches", label: "Coaches" },
           ]}
           name={s.name}
@@ -367,7 +368,6 @@ export async function StudioView({
             /* Nothing to offer, no row: an empty pills row still spends its
                margin, which read as stray space between the address and the
                tabs on a studio with no contact ways. */
-            !hasContact ? null : (
             <div className="profacts">
               {/* The same pill a person's page carries, opening the same
                   sheet. Nobody is messaged on fittlist here: a studio has no
@@ -387,10 +387,8 @@ export async function StudioView({
                   }}
                 />
               )}
-              {/* No share circle up here any more: the dots carry Share
-                  this studio, and one door beats two. */}
+              <ProfileShare path={base} name={s.name} pill />
             </div>
-            )
           }
         >
 

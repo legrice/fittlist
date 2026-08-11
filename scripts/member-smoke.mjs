@@ -185,11 +185,11 @@ await p.getByRole("heading", { name: "Mem Ber" }).waitFor();
 if (!(await p.getByText("Lifts heavy, runs slow").count())) fail("tagline missing");
 {
   const tabs = (await p.locator(".pubtab").allInnerTexts()).map((t) => t.trim());
-  if (tabs.join("|") !== "Schedule|About")
-    fail("a member's page should wear Schedule and About: " + tabs.join("|"));
+  if (tabs.join("|") !== "Schedule|Info")
+    fail("a member's page should wear Schedule and Info: " + tabs.join("|"));
 }
 await p.getByText(/Nothing coming up|Your week/).first().waitFor();
-await p.locator(".pubtab", { hasText: "About" }).click();
+await p.locator(".pubtab", { hasText: "Info" }).click();
 await p.waitForURL("**/member/about");
 if (!(await p.getByText("Six mornings a week").count())) fail("bio missing from About");
 // Who they follow is nobody else's business. Two profiles side by side, one
@@ -199,7 +199,7 @@ if (await p.locator(".disrow", { hasText: "Carina" }).count())
 if (await p.getByText(/Trains with/i).count())
   fail("a member's profile still has the trains-with section");
 await p.screenshot({ path: OUT + "/shot-member-profile.png", fullPage: true });
-console.log("member profile ok (Schedule and About tabs, nothing about who they follow)");
+console.log("member profile ok (Schedule and Info tabs, nothing about who they follow)");
 
 
 // A member claims a handle and has a page at it, so handing it on is theirs

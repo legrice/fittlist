@@ -17,6 +17,7 @@ import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
+import { ProfileShare } from "@/components/ProfileShare";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -156,11 +157,8 @@ export async function MemberProfileView({
           base={`/${user.handle ?? ""}`}
           tab={tab}
           tabs={[
-            // About leads, by Matt's call, same as a coach's page. The tab
-            // after it names what's behind it: a built week says Schedule,
-            // and until there is one the coaches they follow are the page.
-            { key: "about", label: "About" },
-            { key: "schedule", label: week.length ? "Schedule" : "Following" },
+            { key: "schedule", label: "Schedule" },
+            { key: "about", label: "Info" },
           ]}
           /* The coach page's full-bleed hero, by Matt's call: the photo when
              there is one, the person's own colour when there isn't, so a
@@ -215,6 +213,7 @@ export async function MemberProfileView({
                     initialRequested={follow.requested}
                   />
                 )}
+                <ProfileShare path={`/${user.handle!}`} name={name} pill />
               </div>
             )
           }

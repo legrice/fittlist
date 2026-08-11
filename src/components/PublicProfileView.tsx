@@ -25,6 +25,8 @@ import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
+import { ProfileShare } from "@/components/ProfileShare";
+import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { Wordmark } from "@/components/Wordmark";
 
 // A continuous forward window, long enough that even a one-class-a-week
@@ -157,6 +159,14 @@ export async function PublicProfileView({
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
   // Studios/spaces this coach is associated with, derived from where they coach.
   const coachStudios = [...studioRows].sort((a, b) => a.name.localeCompare(b.name));
+  const endorsementRows = await db
+    .select({ trait: schema.profileEndorsements.trait, endorserUserId: schema.profileEndorsements.endorserUserId })
+    .from(schema.profileEndorsements)
+    .where(eq(schema.profileEndorsements.targetUserId, user.id));
+  const endorsementCounts = endorsementRows.reduce<Record<string, number>>((all, row) => {
+    all[row.trait] = (all[row.trait] ?? 0) + 1;
+    return all;
+  }, {});
 
   // Continuous forward calendar: each date from today with classes. Days
   // group into chunks of seven POPULATED days, not seven calendar days, so a
@@ -467,14 +477,9 @@ export async function PublicProfileView({
           base={`/${handle}`}
           tab={tab}
           tabs={[
-            // About leads, by Matt's call: the bare handle lands on who this
-            // is, and the schedule is one pill over. The first tab's href is
-            // the base, so /{handle} is About now and /{handle}/schedule the
-            // calendar, both of which already resolved.
-            { key: "about", label: "About" },
             { key: "schedule", label: "Schedule" },
+            { key: "about", label: "Info" },
             ...(studios ? [{ key: "studios", label: "Studios" }] : []),
-            { key: "following", label: "Following" },
           ]}
           name={user.name}
           title={user.title ?? ""}
@@ -554,8 +559,18 @@ export async function PublicProfileView({
                   account={account}
                   canSignUp={fansEnabled()}
                 />
+                <ProfileShare path={`/${handle}`} name={user.name} pill />
               </div>
             )
+          }
+          endorsement={
+            <ProfileEndorsements
+              handle={handle}
+              firstName={user.name.trim().split(/\s+/)[0] || user.name}
+              initial={endorsementCounts}
+              mine={viewerId ? endorsementRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
+              owner={isOwner}
+            />
           }
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to

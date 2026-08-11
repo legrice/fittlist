@@ -839,6 +839,23 @@ export const pageVisits = pgTable(
   (t) => [uniqueIndex("page_visits_trainer_date").on(t.trainerUserId, t.date)],
 );
 
+// Positive, lightweight endorsements. Fixed traits keep this useful social
+// proof rather than turning profiles into review pages or public criticism.
+export const profileEndorsements = pgTable(
+  "profile_endorsements",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    targetUserId: uuid("target_user_id").notNull().references(() => users.id),
+    endorserUserId: uuid("endorser_user_id").notNull().references(() => users.id),
+    trait: text("trait").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("profile_endorsements_person_trait").on(t.targetUserId, t.endorserUserId, t.trait),
+    index("profile_endorsements_target").on(t.targetUserId),
+  ],
+);
+
 // One row per trainer who connected Google Calendar. We mirror their classes
 // into their calendar (one-way); syncedEventIds tracks the events we created so
 // a re-sync can clear and repopulate without touching their personal events.

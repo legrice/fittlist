@@ -48,6 +48,7 @@ export function ProfileTabs({
   heroColor,
   heroCta,
   actions,
+  endorsement,
   badges,
   ownerTop,
   backTo,
@@ -85,6 +86,8 @@ export function ProfileTabs({
   /** The row of pills under the name. A visitor gets Contact and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
+  /** A positive bit of social proof between the action rail and sections. */
+  endorsement?: ReactNode;
   /** Beside the name: only a studio uses it now, for the Verified badge that
    *  explains why the pencil is missing. */
   badges: ReactNode | null;
@@ -180,6 +183,8 @@ export function ProfileTabs({
           then the two things you can do about it. A profile is the one screen
           about a person rather than a list, so it gets the symmetry. */}
       <div className={`pubhead${heroPhoto || heroColor ? " pubhead-hero" : ""}`} ref={headRef}>
+        {(heroPhoto || heroColor) && (
+          <div className="pubhero-media">
         {heroPhoto ? (
           <>
             {/* The photo, from the very top of the screen: it reaches up by
@@ -197,8 +202,10 @@ export function ProfileTabs({
             <span className="pubhero-dim" aria-hidden="true" />
           </>
         ) : null}
+          </div>
+        )}
+        <div className="pubidentity">
         {!heroPhoto && !heroColor && avatar}
-        {heroCta}
         {/* The corner slots come after the picture on purpose: neither owns a
             z-index (see the stacking note in the CSS), so DOM order is what
             paints them on top, and a studio's banner is positioned now. */}
@@ -235,6 +242,8 @@ export function ProfileTabs({
           </p>
         )}
         {actions}
+        {endorsement}
+        </div>
       </div>
       {/* The card. The head above sits on the shell gray; the tabs row is
           the first thing on the paper, and the panel rides it to the bottom

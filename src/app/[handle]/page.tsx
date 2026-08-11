@@ -73,9 +73,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   // A member has the same kind of link and no schedule behind it, so their
   // profile is its own, much smaller page.
   if (user.kind === "fan") {
-    // About leads, by Matt's call: the bare handle lands on who this is,
-    // and the schedule is one pill over at /{handle}/schedule.
-    return <MemberProfileView user={user} isOwner={isOwner} viewerId={viewerId} tab="about" from={from} />;
+    return <MemberProfileView user={user} isOwner={isOwner} viewerId={viewerId} tab="schedule" from={from} />;
   }
-  return <PublicProfileView user={user} isOwner={isOwner} tab="about" from={from} />;
+  return <PublicProfileView user={user} isOwner={isOwner} tab="schedule" from={from} />;
 }

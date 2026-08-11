@@ -3448,6 +3448,89 @@ button.ps-card { cursor: pointer; }
 }
 .pubhead-hero .actpill-primary { background: #fff; color: var(--ink); border-color: #fff; }
 .pubhead-hero .followpill.on { background: var(--go); color: #fff; border-color: var(--go); }
+
+/* Profiles use the same clear hierarchy as a useful place page: photograph,
+   identity, actions, then sections. Nothing actionable floats on the image. */
+.pubhead.pubhead-hero {
+  padding: 0 0 14px;
+  background: var(--shell);
+}
+.pubhero-media {
+  position: relative;
+  align-self: stretch;
+  height: 258px;
+  margin: 0 calc(50% - 50vw);
+  overflow: hidden;
+  background: var(--cl);
+}
+.pubhero-media .pubhero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pubhero-media .pubhero-dim {
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  height: 38%;
+  background: linear-gradient(to bottom, transparent, rgba(25, 21, 2, .18));
+}
+.pubidentity {
+  position: relative;
+  width: 100%;
+  padding-top: 58px;
+}
+.pubhead:not(.pubhead-hero) .pubidentity { padding-top: 78px; }
+.pubhead:not(.pubhead-hero):not(:has(.profback)) .pubidentity { padding-top: 26px; }
+.pubhead .profback,
+.pubhead .ownertop {
+  top: 14px;
+}
+.pubhead.pubhead-hero .profname,
+.pubhead.pubhead-hero .profmeta,
+.pubhead.pubhead-hero .proftitle,
+.pubhead.pubhead-hero .profwhere,
+.pubhead.pubhead-hero .profmeta-sep { color: var(--ink); }
+.pubhead.pubhead-hero .actpill,
+.pubhead.pubhead-hero .followpill {
+  border-color: var(--line);
+  color: var(--ink);
+  background: var(--card);
+}
+.pubhead.pubhead-hero .actpill-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.pubhead.pubhead-hero .followpill.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.profacts {
+  width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.profacts::-webkit-scrollbar { display: none; }
+.profile-share-pill .icon { color: currentColor; }
+.profile-props {
+  width: 100%;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--div);
+}
+.profile-props-copy { display: flex; flex-direction: column; gap: 3px; }
+.profile-props-copy strong { font-size: 17px; line-height: 1.2; }
+.profile-props-copy span { color: var(--muted); font-size: 13.5px; }
+.profile-props-pills {
+  display: flex; gap: 8px; margin-top: 12px; overflow-x: auto;
+  scrollbar-width: none;
+}
+.profile-props-pills::-webkit-scrollbar { display: none; }
+.prop-pill {
+  flex: 0 0 auto; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  border-radius: 999px; padding: 9px 13px; font: 600 13px 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  cursor: pointer;
+}
+.prop-pill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.prop-pill:disabled { opacity: .65; }
 /* No gear on the picture any more: it moved to the header's corner, whose
    icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's
