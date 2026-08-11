@@ -637,6 +637,20 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* The informational sheets (the badges' explainers, the community note) are
    read, not filled in, so their words run four up from the form leads. */
 .sheet.infosheet p.lead { font-size: 17px; }
+.signup-prompt { padding-top: 22px; }
+.signup-prompt .sheetclose { top: 20px; }
+.sheet.signup-prompt h2 {
+  margin: 2px 0 10px;
+  padding-right: 64px;
+  font-size: 26px;
+  line-height: 1.08;
+}
+.sheet.signup-prompt p.lead {
+  max-width: 520px;
+  margin-bottom: 18px;
+  font-size: 16px;
+  line-height: 1.45;
+}
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }
 
 /* THE ADDER */
