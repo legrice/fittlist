@@ -236,7 +236,7 @@ export async function updateProfile(input: {
     if (photo && !photo.startsWith("data:image/") && !/^https:\/\//.test(photo)) {
       return { ok: false, error: "Photo is too large. Try a smaller image." };
     }
-    if (photo?.startsWith("data:image/") && photo.length > 900_000) {
+    if (photo?.startsWith("data:image/") && photo.length > 2_500_000) {
       return { ok: false, error: "Photo is too large. Try a smaller image." };
     }
     set.photo = (await storeImage(photo || null, "u")) || null;

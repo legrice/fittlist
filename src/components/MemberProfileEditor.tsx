@@ -7,7 +7,7 @@ import { claimProfile } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 import { LocationInput } from "@/components/LocationInput";
-import { shrinkDataUrl } from "@/lib/photo";
+import { readPhotoPair } from "@/lib/photo";
 import { slug } from "@/lib/format";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -54,33 +54,14 @@ export function MemberProfileEditor({
     if (openOnMount) window.history.replaceState(null, "", "/settings");
   }, [openOnMount]);
 
-  // Not `readPhoto`: this one centre-crops to a square, because a member's
-  // picture is only ever shown in a circle and letting a tall photo through
-  // means a head cropped by CSS instead of by us. The shared helper fits to
-  // the long edge, which is right for everything that fills a width.
+  // Member pages now wear the same full-width hero as coach pages. Keep the
+  // full composition for that hero and make a separate high-density thumb
+  // for circles instead of permanently reducing the source to 480px square.
   const pickPhoto = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new window.Image();
-      img.onload = () => {
-        const size = 480;
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        const scale = Math.max(size / img.width, size / img.height);
-        const w = img.width * scale;
-        const h = img.height * scale;
-        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-        const full = canvas.toDataURL("image/jpeg", 0.82);
-        setPPhoto(full);
-        // The list-size copy shrinks from the same crop.
-        shrinkDataUrl(full, setPThumb);
-      };
-      img.src = String(reader.result);
-    };
-    reader.readAsDataURL(file);
+    readPhotoPair(file, (full, thumb) => {
+      setPPhoto(full);
+      setPThumb(thumb);
+    });
   };
 
   const preview = slug(pHandle.trim() || pName) || "yourname";

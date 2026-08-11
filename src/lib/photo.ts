@@ -8,17 +8,20 @@
 //
 // Photos live in text columns as data URLs, so the size here is the size on
 // the row. 640 was chosen when a photo was a circle; the full-bleed hero is
-// ~1170 device pixels wide on a 3x phone, and 640 stretched across that is
-// why every profile read soft. 1280 lands around 150 to 300KB a photo, which
-// is the accepted cost until photos move out of the rows into real files;
-// pictures uploaded before this stay at 640 until they are re-picked.
-const MAX_EDGE = 1280;
-const QUALITY = 0.8;
+// ~1170 device pixels wide on a 3x phone. A portrait capped at 1280 on its
+// long edge can be only 720px wide, so even a high-resolution original still
+// looked soft after our resize. 2304 keeps the short edge of common portrait
+// ratios large enough for the hero while Blob keeps that file out of list
+// queries. Pictures uploaded before this stay at their old size until picked
+// again.
+const MAX_EDGE = 2304;
+const QUALITY = 0.86;
 /* The list size. A by-line circle is 26px and the tray's faces are 80: a
-   320 thumb covers every small rendering at 3x, and it is what keeps a
+   480 thumb covers the largest profile circles on a high-density screen and
+   keeps a
    row from dragging the hero's full file along. */
-const THUMB_EDGE = 320;
-const THUMB_QUALITY = 0.75;
+const THUMB_EDGE = 480;
+const THUMB_QUALITY = 0.82;
 
 function scaleTo(img: HTMLImageElement, maxEdge: number, quality: number): string {
   let { width, height } = img;

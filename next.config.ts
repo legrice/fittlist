@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
   experimental: {
+    // Profile originals are resized in the browser before this request. The
+    // sharper hero source can legitimately pass Next's 1MB default once it is
+    // base64 encoded; the action validates the image again before storage.
+    serverActions: { bodySizeLimit: "3mb" },
     // Let the client router reuse a dynamic page it rendered in the last 30
     // seconds instead of round-tripping to the server again. Every screen is
     // force-dynamic, so without this each tab tap re-rendered a page you were
