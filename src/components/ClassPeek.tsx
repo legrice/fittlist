@@ -324,15 +324,15 @@ export function ClassPeek({
             away on a scroll, and the one way off a sheet has to stay under
             the thumb the whole way down. The photograph follows, running to
             the sheet's own top edge, and slides under the circle. */}
-        {/* The corners: close left, overflow right, one sticky row, by Matt's
+        {/* The corners: overflow left, close right, one sticky row, by Matt's
             call. Share lives behind the dots now rather than in the
             footer, which belongs to the acts (Save, Book). */}
         <div className="clsfull-toprow">
-          <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={20} />
-          </button>
           <button className="clspeek-x clsfull-more" aria-label="More" onClick={() => setMore(true)}>
             <Icon name="more_horiz" size={20} />
+          </button>
+          <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={20} />
           </button>
         </div>
         {full?.image && (
