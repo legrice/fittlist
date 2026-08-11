@@ -244,13 +244,11 @@ await p.waitForTimeout(400);
   if (!(await p.locator(".clspeek-btn", { hasText: "Cancel this date" }).count()))
     fail("expected Cancel this date");
   if (!(await p.locator(".clspeek-del").count())) fail("expected the quiet delete");
-  // Share lives behind the top-left dots now, by Matt's call: the footer
-  // is the acts alone, and your own class has none to offer.
-  if (await p.locator(".clsfull-btn.dark").count()) fail("Share left the footer for the dots");
-  if (!(await p.locator(".clsfull-more").count())) fail("expected the overflow dots top left");
-  await p.locator(".clsfull-more").click();
-  await p.locator(".setrow", { hasText: "Share" }).waitFor();
-  await p.locator(".sheet", { hasText: "Share" }).locator(".clspeek-x").last().click();
+  // Share is back in the footer as the outlined action; the top-left
+  // overflow has gone away.
+  if (!(await p.locator(".clsfull-btn.share", { hasText: "Share" }).count()))
+    fail("expected the outlined Share action in the footer");
+  if (await p.locator(".clsfull-more").count()) fail("the overflow menu should be gone");
   if (await p.locator(".clsfull-btn.book").count()) fail("no Book on your own class");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-sheet.png" });

@@ -6713,20 +6713,11 @@ button.ps-card { cursor: pointer; }
 }
 /* Sticky, not absolute: the sheet is its own scroller, and an absolute X
    rode the photograph away, leaving a long class with no visible way off.
-   It sits first in the flow, pulls its own height back so the photo starts
-   where it always did, and pins at the top of the scrollport the whole way
-   down. The white circle and shadow are always on, because pinned it floats
-   over whatever scrolled under it, photo and prose alike. Doubled selector
-   on purpose: .clspeek-x is later in this file, and its inline-flex made
-   margin-left: auto mean nothing. */
-/* One sticky row for both corners: overflow dots left, close right,
-   by Matt's call. It pulls its own height back so the photo starts where
-   it always did, and both circles float over whatever scrolls under. */
-.clsfull-toprow {
+   It pulls its own height back so the photo starts where it always did and
+   floats over whatever scrolls beneath it. */
+.clspeek-x.clsfull-x {
   position: sticky; top: 2px; z-index: 6;
-  display: flex; justify-content: space-between; margin-bottom: -42px;
-}
-.clsfull-toprow .clspeek-x {
+  display: flex; margin-left: auto; margin-bottom: -42px;
   width: 42px; height: 42px; background: var(--card);
   box-shadow: 0 4px 14px rgba(25, 21, 2, .18);
 }
@@ -6775,7 +6766,10 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16.5px; font-weight: 600;
 }
-.clsfull-btn.dark { background: var(--ink); color: var(--paper); }
+.clsfull-btn.share {
+  background: var(--card); color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
 .clsfull-btn.book { background: var(--ink); color: #fff; }
 /* A shift's one act, in the footer slot a member's Book takes: the date is
    yours to manage, not to book. */
