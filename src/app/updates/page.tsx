@@ -12,9 +12,9 @@ import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
-// The screen behind the header bell: notifications alone, by Matt's call.
-// Messages have their own door (the chat bubble) and their own screen at
-// /inbox; the old ?tab=messages links land there.
+// Notification history remains at its established URL even though it no
+// longer occupies permanent header space. Messages have their own door and
+// screen at /inbox; old ?tab=messages links still land there.
 export default async function UpdatesPage({
   searchParams,
 }: {

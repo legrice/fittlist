@@ -9,9 +9,9 @@ import {
 } from "@/app/actions/notifprefs";
 import { Icon } from "@/components/Icon";
 
-// Settings > Notifications. Three switches, all about email: in-app
-// notifications aren't optional because the bell is where the app itself
-// talks, and a bell you can silence is a bell nobody trusts.
+// Settings > Notifications. Three switches, all about email. The in-app
+// notification history remains system-owned; these control which updates
+// also leave the app and reach the account's inbox.
 const ROWS: { key: keyof NotifPrefs; title: string; sub: string }[] = [
   {
     key: "messages",
@@ -78,8 +78,7 @@ export function NotificationPrefs() {
               </button>
               <h2>Notifications</h2>
               <p className="lead">
-                These are your emails. Everything still shows up in the app either way, under the
-                bell.
+                These settings control which updates also reach your email inbox.
               </p>
               <div className="settingslist">
                 {ROWS.map((r) => (

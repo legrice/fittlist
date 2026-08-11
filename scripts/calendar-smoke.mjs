@@ -290,7 +290,7 @@ await p.waitForFunction(
   if (left.includes(name)) fail(name + " should be off every week");
 }
 
-// A coach's Profile tab opens their page too, with the same gear on it, and
+// A coach's Profile tab opens their page too, with the same shared header, and
 // the page keeps the tab bar so the tab is not a one-way door.
 await p.locator(".navtab[data-tab='you']").click();
 await p.waitForURL(/\/raebell/);
@@ -298,12 +298,13 @@ await p.locator(".profname", { hasText: "Rae Bell" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
 {
   // No arrow: the tab is how you got here, so there is nothing behind it.
-  // The corner holds the settings circle instead, by Matt's call: the spot
-  // the back button takes on somebody else's page.
+  // Settings stays in the app header; the profile corner remains empty.
   if (await p.locator('.profback [aria-label*="Back"]').count())
     fail("your own profile carries no back arrow");
-  if (!(await p.locator('.profback [aria-label="Settings"]').count()))
-    fail("the corner carries the settings circle");
+  if (await p.locator('.profback [aria-label="Settings"]').count())
+    fail("the profile should not duplicate Settings");
+  if (!(await p.locator('.brandbar-actions [aria-label="Settings"]').count()))
+    fail("the shared header carries Settings");
   // No Add class either. The plus lives on the calendar, next to the week it
   // adds to; a second door here meant two screens both claiming to be where
   // classes come from.
@@ -379,11 +380,9 @@ await p.goto(BASE + "/raebell");
     fail(`the bands should pin under the tab row: ${varTop} vs ${stickH}`);
   console.log("profile head pins at " + top + ", tab row pins at " + stickH + ", tabs are wash pills");
 }
-// The corner circle slides settings up over the profile, the same move
-// Edit profile makes, and closing lands you back where you were: no
-// navigation at all. It sits where the back button goes on somebody
-// else's page; the header carries no gear.
-await p.locator('.profback [aria-label="Settings"]').click();
+// The header gear slides settings up over the profile, the same move Edit
+// profile makes, and closing lands you back where you were: no navigation.
+await p.locator('.brandbar-actions [aria-label="Settings"]').click();
 await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 if (!/\/raebell$/.test(new URL(p.url()).pathname)) fail("the gear should not navigate, at " + p.url());

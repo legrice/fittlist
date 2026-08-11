@@ -53,16 +53,17 @@ await p.getByRole("button", { name: "Add a class" }).waitFor();
 if (await p.locator(".shseg").count()) fail("a member's hub has one subject and no segment row");
 console.log("a member’s /membershare opens on the start block");
 
-// The Profile tab opens your page, not a list of switches. Settings are
-// the white circle in the corner the back button takes on somebody else's
-// page, by Matt's call; the header carries no gear any more.
+// The Profile tab opens your page, not a list of switches. Settings stays in
+// the same shared header position here as it does everywhere else.
 await p.locator(".navtab[data-tab='you']").click();
 await p.waitForURL(/\/kiabright/);
 await p.locator(".profname", { hasText: "Kia Bright" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
-if (await p.locator('.brandbar-actions [aria-label="Settings"]').count())
-  fail("the header carries no gear any more");
-await p.locator('.profback [aria-label="Settings"]').click();
+if (!(await p.locator('.brandbar-actions [aria-label="Settings"]').count()))
+  fail("the shared header should carry Settings");
+if (await p.locator('.profback [aria-label="Settings"]').count())
+  fail("the profile should not duplicate the header's Settings door");
+await p.locator('.brandbar-actions [aria-label="Settings"]').click();
 await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".setrow", { hasText: "I coach classes" }).waitFor();
 console.log("Profile opens your page, and the gear slides settings up over it");

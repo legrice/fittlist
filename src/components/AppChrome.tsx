@@ -1,10 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { adminEmails } from "@/lib/admin";
-import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
-import { unreadNotifications } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
@@ -12,7 +9,7 @@ import type { NavTab } from "@/lib/nav";
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
 // everything else in the app gets it from here, so no signed-in screen is left
-// without a way home, the bell, your week, or the tabs.
+// without a way home, search, messages, settings, or the tabs.
 //
 // `bar` renders the bottom tabs as well. It's a second element rather than a
 // wrapper because these screens all lay themselves out differently, and the
@@ -45,7 +42,6 @@ export async function AppChrome({
       photo: schema.users.photo,
       photoThumb: schema.users.photoThumb,
       avatarColor: schema.users.avatarColor,
-      adminActivityAt: schema.users.adminActivityAt,
       id: schema.users.id,
     })
     .from(schema.users)
@@ -53,12 +49,7 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
-  // The admin's own pulse rides the header beside the bell, for the one or
-  // two accounts that have /admin at all: the same activity list the admin
-  // screen shows, one tap from anywhere.
-  const isAdmin = adminEmails().includes(me.email.toLowerCase());
   const fans = await fansVisible();
-  const unread = await unreadNotifications(userId);
   // One calendar, at one address. This forked by kind for months, back when a
   // coach's was /app and a member had their own at /week; a member has no
   // calendar at all now, and the tab is not drawn for them. Left as it was, it
@@ -76,19 +67,10 @@ export async function AppChrome({
 
   const header = (
     <AppHeader
-      unread={unread}
       // The logo goes Home, by Matt's call: /feed is the front door for
       // everyone with the member side, whatever landingHref answers for
       // sign-in.
       home={fans ? "/feed" : "/app"}
-      // The magnifier rides right of the bell wherever the member side
-      // exists, by Matt's call. The gear survives only where there is no
-      // member side at all: the coaches-only mode has no tab bar, so it is
-      // the one door to the account.
-      search={fans}
-      settings={fans ? undefined : "/settings"}
-      adminActivity={isAdmin}
-      adminActivityNew={isAdmin && (await adminActivityFreshSince(me.adminActivityAt))}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />
   );

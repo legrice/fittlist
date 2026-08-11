@@ -9,7 +9,7 @@ import { MemberAccount } from "@/components/MemberAccount";
 import { ProfileSheet } from "@/components/ProfileSheet";
 
 /**
- * The gear on your own profile, and the settings sheet behind it.
+ * The gear in the signed-in app header, and the settings sheet behind it.
  *
  * It was a link to /settings, which swapped the whole page; it slides the
  * account up over your profile now, the same move Edit profile and Share
@@ -18,18 +18,13 @@ import { ProfileSheet } from "@/components/ProfileSheet";
  * this is the door most taps go through.
  *
  * The data loads on open through the same server function the page uses, so
- * the two skins cannot drift. Portaled to the body, because the gear sits in
- * the pinned head and sticky is a stacking context on mobile: rendered in
- * place, the overlay would paint under the card that slides over the chrome.
+ * the two skins cannot drift. Portaled to the body, because the header is a
+ * sticky stacking context on mobile: rendered in place, the overlay would
+ * paint under the card that slides over the chrome.
  */
-export function SettingsGear({ header = false, corner = false }: {
-  /** Drawn as one of the header's icon buttons (the coaches-only shell). */
+export function SettingsGear({ header = false }: {
+  /** Drawn as one of the shared header's icon buttons. */
   header?: boolean;
-  /** Drawn as the white circle in the profile head's corner, the spot the
-   *  back button takes on somebody else's page, by Matt's call: the tab
-   *  bar is where the acting happens now, so the header thinned and your
-   *  own page carries the one door to settings. */
-  corner?: boolean;
 }) {
   const [data, setData] = useState<SettingsSheetData | null>(null);
   const [open, setOpen] = useState(false);
@@ -53,8 +48,9 @@ export function SettingsGear({ header = false, corner = false }: {
   return (
     <>
       <button
-        className={corner ? "evback" : header ? "iconbtn inboxbtn" : "profgear"}
+        className={header ? `iconbtn inboxbtn${open ? " onroute" : ""}` : "profgear"}
         aria-label="Settings"
+        aria-expanded={open}
         onClick={openSheet}
       >
         <Icon name="settings" size={23} />

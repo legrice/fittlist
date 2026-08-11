@@ -24,7 +24,6 @@ import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
-import { SettingsGear } from "@/components/SettingsGear";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -436,7 +435,7 @@ export async function PublicProfileView({
     >
       <div className="profwrap">
         {/* Signed in, this is still the app, so it keeps the app's header: the
-            way home, the bell, your week. A stranger gets the wordmark and one
+            way home, search, messages and settings. A stranger gets the wordmark and one
             way in instead, because none of those mean anything to them yet. */}
         {/* Your own page is the You tab, so it lights up here; the pathname is
             a handle, which the bar can't read on its own. */}
@@ -483,11 +482,9 @@ export async function PublicProfileView({
           trackSchedule={!isOwner}
           trackHandle={handle}
           backTo={backTo}
-          // Your own page carries the door to settings in the corner the
-          // back button takes on somebody else's, by Matt's call: the
-          // header thinned to the wordmark and the bell, so the page is
-          // where the one remaining door lives.
-          corner={isOwner ? <SettingsGear corner /> : undefined}
+          // Settings lives in the shared app header. Somebody else's page
+          // still keeps its back control here; your own page needs no second
+          // settings door in that same corner.
           // The full-bleed hero for everybody, by Matt's call: the photo
           // when there is one, the person's own colour when there isn't,
           // the same rule the member page follows, so no photo is never a
@@ -560,10 +557,9 @@ export async function PublicProfileView({
               </div>
             )
           }
-          // The gear moved up into the app header (AppChrome's `gear`), by
-          // Matt's call: floating on the photo it read as loose furniture,
-          // and the header's corner is both where every app keeps settings
-          // and easier to reach. The slot stays for a studio's dots.
+          // The gear lives in the shared app header. Floating it on the photo
+          // read as loose furniture; the stable header position is easier to
+          // find and reach. The slot stays for a studio's dots.
           ownerTop={null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone

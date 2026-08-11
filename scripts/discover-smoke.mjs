@@ -76,13 +76,18 @@ const m = await mk(`dm${stamp}@example.com`, `Demi ${stamp.slice(-3)}`, true);
 const tabs = (await m.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 if (!tabs[0].includes("Home")) fail("Home leads the bar: " + tabs.join("|"));
 
-// The landing: the magnifier in the header's corner right of the bell (the
-// search bar came off the top, by Matt's call), the teaching rail
+// The landing: one stable utility order in the header, then the teaching rail
 // (following nobody), and the three rails.
 if (await m.locator(".dissearch-door").count()) fail("Home's search bar came off");
-await m.locator('.brandbar-actions [aria-label="Search"]').waitFor();
-// Messages and notifications are two doors, the way YouTube splits them.
-await m.locator('.brandbar-actions [aria-label="Messages"]').waitFor();
+{
+  const actions = await m.locator(".brandbar-actions > [aria-label]").evaluateAll((els) =>
+    els.map((el) => el.getAttribute("aria-label")),
+  );
+  if (actions.join("|") !== "Search|Messages|Settings")
+    fail("header should be Search, Messages, Settings: " + actions.join("|"));
+}
+if (await m.locator('.brandbar-actions [aria-label^="Notifications"]').count())
+  fail("Notifications should not occupy permanent header space");
 await m.locator(".railbl", { hasText: "This week" }).waitFor();
 await m.locator(".trayhint").waitFor();
 if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two ghosts");

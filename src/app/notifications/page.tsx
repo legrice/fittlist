@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Notifications merged into the Updates screen (with Messages) behind the bell.
+// Preserve the old address for links that already point at notification history.
 export default function NotificationsPage() {
   redirect("/updates");
 }

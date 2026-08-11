@@ -2072,28 +2072,18 @@ button.ps-card { cursor: pointer; }
 
 /* Inbox button in the schedule header */
 .brandbar-actions { display: flex; align-items: center; gap: 6px; }
-/* Bare glyphs again, by Matt's call: the corner holds four controls now
-   (pulse, chat, bell, magnifier) and four white circles read as a row of
-   buttons fighting the wordmark. The circle had its turn while the bell
-   stood alone. */
+/* Bare glyphs: Search, Messages and Settings read as one quiet utility row
+   rather than three white circles fighting the wordmark. */
 .brandbar-actions .iconbtn {
   width: 38px; height: 38px; border-radius: 999px;
   background: none; border: 0; color: var(--ink);
-  /* the unread badge overhangs — don't let .iconbtn's clip cut it */
   overflow: visible;
 }
 .brandbar-actions .iconbtn:active { background: var(--cl); }
 /* Standing on an icon's own screen fills its glyph in, the way the tab bar
-   marks its active tab. First path only: the shield's tick and the bell's
-   clapper are open strokes, and filling those paints shapes nobody drew. */
+   marks its active tab. First path only keeps multi-part glyphs intact. */
 .brandbar-actions .iconbtn.onroute svg path:first-of-type { fill: currentColor; }
 .inboxbtn { position: relative; }
-/* New activity, said as a dot rather than a count: the pulse's number
-   would only ever grow, and a scoreboard in the header is not the point. */
-.actnewdot {
-  position: absolute; top: -2px; right: -2px; width: 9px; height: 9px;
-  border-radius: 999px; background: var(--si); border: 1.5px solid var(--paper);
-}
 .inboxdot {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
   border-radius: 999px; background: var(--si); color: #fff; font-size: 11px; font-weight: 600;

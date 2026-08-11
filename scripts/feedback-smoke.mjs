@@ -100,10 +100,8 @@ await ad.getByRole("button", { name: "Send" }).click();
 await ad.locator(".chatmsg.mine .chatbubble").first().waitFor();
 console.log("admin replied ok");
 
-// the member sees the reply, in the app, and the bell says so
+// the member sees the reply in the existing conversation
 await p.goto(BASE + "/you");
-if (!(await p.locator(".inboxdot").first().isVisible().catch(() => false)))
-  fail("no unread badge after the reply");
 await p.goto(BASE + "/feedback");
 const theirs = await p.locator(".chatmsg.theirs .chatbubble").allInnerTexts();
 if (!theirs.join(" ").includes("Fixing today")) fail("the reply never reached the member");

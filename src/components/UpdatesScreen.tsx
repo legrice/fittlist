@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 
-// Two screens now, by Matt's call, the way the header splits them: the bell
-// opens Notifications (this file's UpdatesScreen, notifications alone), the
-// chat bubble opens Messages (MessagesScreen at /inbox, threads alone). They
+// Two screens: Notifications remains a direct-linkable history for system
+// activity, while the header's chat bubble opens Messages at /inbox. They
 // shared one screen behind a segmented toggle for a while, and the toggle
 // went with the second door: a screen named by its icon should hold exactly
 // what the icon promises.

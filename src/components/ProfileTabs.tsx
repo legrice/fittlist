@@ -51,7 +51,6 @@ export function ProfileTabs({
   badges,
   ownerTop,
   backTo,
-  corner,
   stickAction,
   children,
 }: {
@@ -89,15 +88,11 @@ export function ProfileTabs({
   /** Beside the name: only a studio uses it now, for the Verified badge that
    *  explains why the pencil is missing. */
   badges: ReactNode | null;
-  /** Top right of the header: a studio's dots. A coach's settings moved to
-   *  the app header's gear, so a person's corner is empty. */
+  /** Top right of the header: a studio's dots. A person's settings live in
+   *  the shared app header, so their profile corner stays empty. */
   ownerTop?: ReactNode;
   /** Where a back control should go, when they got here from a list. */
   backTo?: { href: string; label: string } | null;
-  /** The owner's corner: what sits where the back button goes on somebody
-   *  else's page. Your own page has no back (the tab bar is the way off),
-   *  so the slot holds the settings circle instead, by Matt's call. */
-  corner?: React.ReactNode;
   /** A compact copy of the Follow control, across from the small name in the
    *  stuck bar, so scrolling never carries someone away from the yes. */
   stickAction?: ReactNode;
@@ -219,10 +214,6 @@ export function ProfileTabs({
               <Icon name="arrow_back" size={23} />
             </BackLink>
           </div>
-        ) : corner ? (
-          // The owner's page has no back (the tab bar is the way off), so
-          // the same corner holds the settings circle, by Matt's call.
-          <div className="profback">{corner}</div>
         ) : null}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
         {/* The badge sits above the name, by Matt's call: the claim leads

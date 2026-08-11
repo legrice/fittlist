@@ -16,7 +16,6 @@ import { Icon } from "@/components/Icon";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
-import { SettingsGear } from "@/components/SettingsGear";
 import { PublicTopBar } from "@/components/PublicTopBar";
 
 // A member's public profile. Deliberately not the coach page: there's no
@@ -189,11 +188,10 @@ export async function MemberProfileView({
             />
           }
           backTo={backTo}
-          corner={isOwner ? <SettingsGear corner /> : undefined}
           // Nothing above the name; see PublicProfileView.
           badges={null}
-          // The gear lives in the app header now (AppChrome's `gear`), same
-          // as a coach's page: floating here it read as loose furniture.
+          // Settings lives in the shared app header; floating it here as well
+          // made the owner's page carry two doors to the same place.
           ownerTop={null}
           actions={
             isOwner && user.handle ? (

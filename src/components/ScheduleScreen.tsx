@@ -83,8 +83,6 @@ export function ScheduleScreen({
   customTypes,
   lastUsed,
   subsCount,
-  inboxUnread,
-  notifUnread,
   plans,
   circles,
   autoOpenAdder,
@@ -105,8 +103,6 @@ export function ScheduleScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
-  inboxUnread: number;
-  notifUnread: number;
   /** The classes they're going to and their own entries, from the same loader
    *  the member calendar uses: You is one calendar of everything now, and the
    *  rows wear Coaching, Going, Shift or Yours to say which hat. */
@@ -249,9 +245,6 @@ export function ScheduleScreen({
   }, []);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
-
-  // One bell for everything: unread notifications + unread messages.
-  const updatesUnread = notifUnread + inboxUnread;
 
   const edit = (c: ClassDto, onIso?: string) => {
     // A weekly class is stored as one row per day; editing it should load every
@@ -514,15 +507,7 @@ export function ScheduleScreen({
       <HighlightOnLand />
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
-          unread={updatesUnread}
-          // The gear only where there is no member side at all: the
-          // coaches-only mode has no face in the corner, so it is the one door.
-          settings={showFanView ? undefined : "/settings"}
           home={showFanView ? landing : "/app"}
-          // The magnifier, opening the directory as a sheet. Nobody to find in
-          // the coaches-only shell, so it is off there and the gear above is
-          // that shell's one corner control.
-          find={showFanView}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
           nav={showFanView ? { active: "schedule", scheduleHref: "/app" } : undefined}

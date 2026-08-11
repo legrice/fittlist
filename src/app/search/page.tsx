@@ -10,8 +10,8 @@ import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
-// The screen behind the header's magnifier, laid out like the one behind the
-// bell: its own route, the app header and the tab bar, no tab lit. Search is
+// The screen behind the header's magnifier: its own route, the app header and
+// the tab bar, no tab lit. Search is
 // something you do from wherever you are rather than one of the four places
 // you browse from, and arriving here must not take the way back with it.
 export default async function SearchPage({

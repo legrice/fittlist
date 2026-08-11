@@ -86,8 +86,8 @@ export async function sendInquiry(
 
   await db.insert(schema.inquiryMessages).values({ threadId: thread.id, fromCoach: false, body: message });
 
-  // The bell has to know: the Messages tab lives behind it, and a badge that
-  // only counts per-thread unreads never lit it. Best effort, like follows.
+  // Keep this in notification history as well as the Messages thread. That
+  // history still powers direct links and delivery outside the app.
   const senderId = viewerId;
   try {
     await addNotification(coach.id, {
@@ -183,8 +183,8 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   // Whoever wrote in might have an account under that address; if they do,
-  // the reply belongs in their app too: a bell, a badge, a thread they can
-  // answer without leaving. The email still goes out (unless they turned
+  // the reply belongs in their app too: a thread they can answer without
+  // leaving, plus notification history. The email still goes out (unless they turned
   // message emails off in settings); for a visitor with no account it's the
   // only door there is.
   const [them] = await db

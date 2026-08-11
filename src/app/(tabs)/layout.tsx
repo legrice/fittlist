@@ -5,9 +5,6 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
-import { adminEmails } from "@/lib/admin";
-import { adminActivityFreshSince } from "@/lib/adminactivity";
-import { unreadNotifications } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
@@ -38,10 +35,9 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // A member has a handle too, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
   // In parallel: these are independent, and this layout runs on every tab
-  // switch, so awaiting them one by one stacked four round trips onto every
+  // switch, so awaiting them one by one would stack extra round trips onto every
   // tap of the bar.
-  const [unread, promptDue, invitesLeft] = await Promise.all([
-    unreadNotifications(userId),
+  const [promptDue, invitesLeft] = await Promise.all([
     feedbackPromptDue(userId),
     invitesBannerCount(),
   ]);
@@ -65,21 +61,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
     <section className="screen hasnav" data-mode={lookMode(me.look)}>
       <div className="pad">
         <AppHeader
-          unread={unread}
-          adminActivity={adminEmails().includes(me.email.toLowerCase())}
-          adminActivityNew={
-            adminEmails().includes(me.email.toLowerCase()) &&
-            (await adminActivityFreshSince(me.adminActivityAt))
-          }
           // The wordmark goes Home, by Matt's call: /feed is the front
           // door for everyone now, whatever landingHref answers for
           // sign-in.
           home="/feed"
-          // The magnifier is back in the corner, right of the bell, by
-          // Matt's call: Discover's search bar came off and the corner is
-          // where the act moved. No gear: settings are the circle on your
-          // own profile.
-          search
           nav={{ coach: isCoach, scheduleHref, profileHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}

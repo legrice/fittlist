@@ -700,7 +700,7 @@ export async function adminActOnRequest(
 
 // A note from fittlist itself, into the Updates feed. One person by handle or
 // email, all coaches, all members, or everyone. In-app only: an announcement
-// is app news, and app news belongs where the bell already points. No actor,
+// is app news and stays in notification history. No actor,
 // so it renders with the megaphone rather than a face; the megaphone IS the
 // fittlist account.
 export async function adminBroadcast(
@@ -745,7 +745,7 @@ export async function adminBroadcast(
       body,
     })),
   );
-  // The bell badge is in every header, so everything cached goes.
+  // The notification history may already be open in another route segment.
   revalidatePath("/", "layout");
   return { ok: true, sent: targets.length };
 }
