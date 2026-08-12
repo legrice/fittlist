@@ -494,12 +494,6 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <div className="home-modes" role="tablist" aria-label="Home">
-            {([['classes', 'Classes'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
-          </div>
-          {homeMode !== "classes" && <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>}
-          {homeMode !== "classes" && <div className="catpills fchips home-directory-filters" aria-label={`${homeMode} filters`}><button className={`catpill fchip-lead${homeLocation !== "all" || homeType !== "all" ? " on" : ""}`} aria-label="Filters" onClick={() => setDirectorySheet("all")}><Icon name="tune" size={17} />{(homeLocation !== "all" || homeType !== "all") && <span>{Number(homeLocation !== "all") + Number(homeType !== "all")}</span>}</button><button className={`catpill${homeLocation !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("location")}>{homeLocation === "all" ? "All locations" : homeLocation} <Icon name="expand_more" size={16} /></button><button className={`catpill${homeType !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("type")}>{homeType === "all" ? "All types" : homeType} <Icon name="expand_more" size={16} /></button></div>}
-          {homeMode === "classes" && <>
           <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
             <div className="tray-scroll">
               {meId && (
@@ -557,8 +551,11 @@ export function FollowingScreen({
               </Link>
             </div>
           </div>
-          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder="Search classes" aria-label="Search classes" /></label>
-          </>}
+          <div className="home-modes" role="tablist" aria-label="Home">
+            {([['classes', 'Classes'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
+          </div>
+          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>
+          {homeMode !== "classes" && <div className="catpills fchips home-directory-filters" aria-label={`${homeMode} filters`}><button className={`catpill fchip-lead${homeLocation !== "all" || homeType !== "all" ? " on" : ""}`} aria-label="Filters" onClick={() => setDirectorySheet("all")}><Icon name="tune" size={17} />{(homeLocation !== "all" || homeType !== "all") && <span>{Number(homeLocation !== "all") + Number(homeType !== "all")}</span>}</button><button className={`catpill${homeLocation !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("location")}>{homeLocation === "all" ? "All locations" : homeLocation} <Icon name="expand_more" size={16} /></button><button className={`catpill${homeType !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("type")}>{homeType === "all" ? "All types" : homeType} <Icon name="expand_more" size={16} /></button></div>}
         </header>
       )}
       {isHome && homeMode === "coaches" && (

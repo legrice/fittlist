@@ -6481,7 +6481,7 @@ button.ps-card { cursor: pointer; }
 .following-head {
   padding: 14px 0 8px;
 }
-.home-modes { display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; }
+.home-modes { display:flex; gap:7px; margin-top: 10px; overflow-x:auto; scrollbar-width:none; }
 .home-modes::-webkit-scrollbar { display:none; }
 .home-modes button { flex:0 0 auto; min-height:38px; padding:0 16px; border-radius:999px; background:var(--card); font-size:14px; font-weight:600; }
 .home-modes button.on { background:var(--ink); color:var(--paper); }
