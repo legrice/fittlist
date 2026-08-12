@@ -502,7 +502,7 @@ export function FollowingScreen({
                       <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                     )}
                   </span>
-                  <span className="trayitem-nm">Your schedule</span>
+                  <span className="trayitem-nm">You</span>
                 </button>
               )}
               {coachOptions.map((coach) => (
