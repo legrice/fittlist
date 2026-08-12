@@ -138,7 +138,7 @@ export function CoachPeek({
       }}
     >
       <div
-        className="sheet sheet-full peeksheet"
+        className="sheet sheet-full peeksheet personweek-sheet"
         onTouchStart={(event) => {
           const point = event.touches[0];
           touch.current = {
@@ -155,6 +155,7 @@ export function CoachPeek({
         <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
           <Icon name="close" size={18} />
         </button>
+        <div className="personweek-surface">
         {/* Identity stays compact: face beside name and city, with actions
             below. The close button keeps its own fixed corner. */}
         <div className="peekhead peekhead-stack">
@@ -271,6 +272,7 @@ export function CoachPeek({
         {!self && !scheduleOnly && peek && visibleDays.length > 0 && (
           <p className="peekfoot">Add anything here to put it on your own week.</p>
         )}
+        </div>
       </div>
     </div>
   );

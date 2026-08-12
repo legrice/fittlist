@@ -7119,6 +7119,70 @@ button.ps-card { cursor: pointer; }
   background: var(--go); box-sizing: border-box;
 }
 
+/* A person's week is one white sheet pulled over a shallow gray ledge. The
+   avatar bridges the boundary; everything else belongs to the uninterrupted
+   white surface below it. Scoped here so AddBrowse and the other full sheets
+   keep their own architecture. */
+.sheet.peeksheet.personweek-sheet {
+  padding:28px 0 0;
+  background:var(--control);
+}
+.sheet.peeksheet.personweek-sheet > .peekclose {
+  position:absolute; top:42px; right:22px; z-index:8;
+  margin:0; background:var(--control); box-shadow:none;
+}
+.personweek-surface {
+  position:relative; min-height:calc(100dvh - 28px);
+  padding:42px 24px calc(28px + env(safe-area-inset-bottom));
+  border-radius:28px 28px 0 0;
+  background:var(--card);
+}
+.personweek-sheet .peekhead { margin:0; }
+.personweek-sheet .peekidentity {
+  position:relative; min-height:38px; padding-right:54px;
+}
+.personweek-sheet .peekav {
+  position:absolute; top:-69px; left:0;
+  width:64px; height:64px;
+  border:3px solid var(--card);
+  box-shadow:none;
+}
+.personweek-sheet .peekidentity-txt { padding-left:76px; }
+.personweek-sheet .peekhead-nm {
+  font-size:21px; line-height:1.1; letter-spacing:-.01em;
+}
+.personweek-sheet .peekhead-city {
+  margin-top:3px; font-size:14px; line-height:1.25;
+}
+.personweek-sheet .peekacts { margin:14px 0 0; }
+.personweek-sheet .peekview {
+  background:var(--control); border-color:transparent; color:var(--ink);
+}
+.personweek-sheet .peekday { margin-top:24px; }
+.personweek-sheet .peekday + .peekday { margin-top:26px; }
+.personweek-sheet .peekday-h {
+  margin:0; padding:0 0 9px;
+  font-size:16.5px; line-height:1.2; font-weight:600;
+  border-bottom:1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.personweek-sheet .peekday > * + * {
+  border-top:1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.personweek-sheet .peekday > .peekday-h + * { border-top:0; }
+.personweek-sheet .peekrow {
+  min-height:0; padding:18px 0; gap:12px;
+  border:0;
+}
+.personweek-sheet .peekrow + .peekrow { border-top:0; }
+.personweek-sheet .peekrow-nm {
+  font-size:20px; line-height:1.16; font-weight:600; letter-spacing:-.008em;
+}
+.personweek-sheet .peekrow-sub {
+  margin-top:3px; font-size:16.5px; line-height:1.25; font-weight:400;
+}
+.personweek-sheet .peekrow-ap { font-size:12px; }
+.personweek-sheet .peekfoot { margin-top:18px; }
+
 /* ---------------------------------------------------------------------------
    The week: one at a time, an arrow either side.
 
