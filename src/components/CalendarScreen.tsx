@@ -63,6 +63,7 @@ export function CalendarScreen({
   subsCount,
   savedDays = [],
   openAdder = false,
+  openAddMode,
   member = false,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
@@ -85,14 +86,16 @@ export function CalendarScreen({
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
+  /** A global Add choice can skip the generic first question. */
+  openAddMode?: "place" | "event";
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [kind, setKind] = useState<"all" | "coaching" | "added">(member ? "added" : "all");
   const [addChoice, setAddChoice] = useState(openAdder && !member);
-  const [addOpen, setAddOpen] = useState(false);
-  const [browseOpen, setBrowseOpen] = useState(openAdder && member);
-  const [personalAdd, setPersonalAdd] = useState(false);
+  const [addOpen, setAddOpen] = useState(openAddMode === "event");
+  const [browseOpen, setBrowseOpen] = useState((openAdder && member) || openAddMode === "place");
+  const [personalAdd, setPersonalAdd] = useState(openAddMode === "event");
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [removeConfirm, setRemoveConfirm] = useState<{
     key: string;

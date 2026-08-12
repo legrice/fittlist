@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "following" | "discover" | "search" | "share" | "schedule" | "you" | "none";
+export type NavTab = "following" | "discover" | "search" | "add" | "share" | "schedule" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -39,8 +39,7 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    { id: "following", href: "/feed", icon: "group", label: "Following" },
-    { id: "search", href: "/search", icon: "search", label: "Discover" },
+    { id: "following", href: "/feed", icon: "home", label: "Home" },
     {
       id: "schedule" as const,
       href: scheduleHref ?? "/calendar",
@@ -51,6 +50,12 @@ export function navTabs(
     // member had nothing to give, and the hub is where they build the week
     // they're going to before handing it on, so the tab is the way in. One
     // screen, an address per kind, and the routes bounce a wrong arrival.
+    {
+      id: "add",
+      href: "#add",
+      icon: "add",
+      label: "Add",
+    },
     {
       id: "share",
       href: coach ? "/coachshare" : "/membershare",

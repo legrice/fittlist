@@ -77,6 +77,7 @@ export async function AppChrome({
       // sign-in.
       home={fans ? "/feed" : "/app"}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
+      settings={active === "you"}
     />
   );
   if (!bar) return header;

@@ -8,8 +8,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let bridge = CAPBridgeViewController()
     private let headerView = UIView()
     private let tabBar = UITabBar()
-    private let tabIDs = ["following", "search", "schedule", "share", "you"]
-    private let fallbackRoutes = ["/feed", "/search", "/calendar", "/coachshare", "/you"]
+    private let tabIDs = ["following", "schedule", "add", "share", "you"]
+    private let fallbackRoutes = ["/feed", "/calendar", "#add", "/coachshare", "/you"]
+    private var settingsButton: UIButton?
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
@@ -37,9 +38,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
         tabBar.items = [
-            item("Following", "person.2", 0),
-            item("Discover", "magnifyingglass", 1),
-            item("Schedule", "calendar", 2),
+            item("Home", "house", 0),
+            item("Schedule", "calendar", 1),
+            item("Add", "plus.circle.fill", 2),
             item("Share", "arrow.up.right", 3),
             item("Profile", "person.crop.circle", 4),
         ]
@@ -86,10 +87,13 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         home.addTarget(self, action: #selector(openHome), for: .touchUpInside)
         headerView.addSubview(home)
 
+        let settings = headerButton(symbol: "gearshape", action: #selector(openSettings), label: "Settings")
+        settings.isHidden = true
+        settingsButton = settings
         let actions = UIStackView(arrangedSubviews: [
             headerButton(symbol: "magnifyingglass", action: #selector(openSearch), label: "Search"),
             headerButton(symbol: "bell", action: #selector(openUpdates), label: "Notifications"),
-            headerButton(symbol: "gearshape", action: #selector(openSettings), label: "Settings"),
+            settings,
         ])
         actions.translatesAutoresizingMaskIntoConstraints = false
         actions.axis = .horizontal
@@ -205,6 +209,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         guard tabIDs.indices.contains(item.tag) else { return }
+        if tabIDs[item.tag] == "add" {
+            bridge.webView?.evaluateJavaScript("document.querySelector('.navwrap [data-tab=\"add\"]')?.click()")
+            return
+        }
         navigate(tabID: tabIDs[item.tag], fallback: fallbackRoutes[item.tag])
     }
 
@@ -233,11 +241,17 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         guard message.name == "fittlistRoute", let path = message.body as? String else { return }
         let tag: Int?
         if path == "/feed" || path == "/upcoming" { tag = 0 }
-        else if path == "/discover" || path == "/search" { tag = 1 }
-        else if path == "/calendar" { tag = 2 }
+        else if path == "/calendar" { tag = 1 }
         else if path.hasPrefix("/share") || path == "/coachshare" || path == "/membershare" { tag = 3 }
         else if path == "/you" || path == "/settings" { tag = 4 }
         else { tag = nil }
+        // A person's own profile has a handle URL, so the pathname alone
+        // cannot identify it. The hidden web bar still marks Profile current;
+        // read that source of truth instead of guessing from the slug.
+        bridge.webView?.evaluateJavaScript("!!document.querySelector('.navwrap [data-tab=\"you\"][aria-current=\"page\"]')") { [weak self] value, _ in
+            let profileCurrent = (value as? Bool) == true
+            self?.settingsButton?.isHidden = !(tag == 4 || profileCurrent)
+        }
         if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
             tabBar.selectedItem = next
         }

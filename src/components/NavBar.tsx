@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
+import { GlobalAdd } from "@/components/GlobalAdd";
 
 export type { NavTab };
 
@@ -46,6 +47,7 @@ export function NavBar({
     <div className="navwrap">
       <nav className="navbar" aria-label="Main">
         {navTabs(coach, scheduleHref, profileHref).map((t) => {
+          if (t.id === "add") return <GlobalAdd key={t.id} />;
           const on = here === t.id;
           const cls = `navtab${on ? " on" : ""}`;
           const isMe = t.id === "you" && !!face;

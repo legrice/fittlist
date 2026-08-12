@@ -126,6 +126,7 @@ export default async function CalendarPage({
       lastUsed={lastUsed}
       subsCount={subRows.length}
       openAdder={add === "1"}
+      openAddMode={add === "event" ? "event" : add === "place" ? "place" : undefined}
       member={member}
     />
   );

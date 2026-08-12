@@ -129,6 +129,7 @@ export function FollowingScreen({
   cats,
   todayIso,
   meId,
+  nearStudios,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -173,6 +174,8 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [coachFilter, setCoachFilter] = useState<string>("all");
+  const [homeMode, setHomeMode] = useState<"following" | "coaches" | "studios">("following");
+  const [homeQuery, setHomeQuery] = useState("");
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -463,9 +466,14 @@ export function FollowingScreen({
       {isHome && (
         <header className="following-head">
           <div className="following-title-row">
-            <h1 className="tab-page-title">Following</h1>
-            <Link className="following-manage" href="/following?from=feed">Manage</Link>
+            <h1 className="tab-page-title">Home</h1>
+            {homeMode === "following" && <Link className="following-manage" href="/following?from=feed">Manage</Link>}
           </div>
+          <div className="home-modes" role="tablist" aria-label="Home">
+            {([['following', 'Following'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); }}>{label}</button>)}
+          </div>
+          {homeMode !== "following" && <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Filter ${homeMode}`} aria-label={`Filter ${homeMode}`} /></label>}
+          {homeMode === "following" && <>
           <div className="tray following-rail" role="group" aria-label="Filter by coach">
             <div className="tray-scroll">
               <button
@@ -503,9 +511,20 @@ export function FollowingScreen({
               </Link>
             </div>
           </div>
+          </>}
         </header>
       )}
-      {isHome && selectedCoach && (
+      {isHome && homeMode === "coaches" && (
+        <div className="home-directory-grid">
+          {coaches.filter((c) => !homeQuery.trim() || c.name.toLowerCase().includes(homeQuery.trim().toLowerCase())).map((coach) => <Link href={`/${coach.handle}?from=feed`} className="home-person-tile" key={coach.id}><span className="home-person-face" style={{ background: coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : (coach.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{coach.name}</strong><span>{favIds.includes(coach.id) ? "Following" : coach.next ?? "View profile"}</span></Link>)}
+        </div>
+      )}
+      {isHome && homeMode === "studios" && (
+        <div className="home-studio-grid">
+          {nearStudios.filter((studio) => { const q = homeQuery.trim().toLowerCase(); return !q || studio.name.toLowerCase().includes(q) || studio.types.some((t) => t.toLowerCase().includes(q)); }).map((studio) => <Link href={`/s/${studio.slug}?from=feed`} className="home-studio-tile" key={studio.id}>{studio.photo ? <img src={studio.photo} alt="" /> : <span style={{ background: studio.color }}>{(studio.name.trim().charAt(0) || "?").toUpperCase()}</span>}<strong>{studio.name}</strong><small>{studio.types.slice(0, 2).join(" · ") || "Fitness space"}</small></Link>)}
+        </div>
+      )}
+      {isHome && homeMode === "following" && selectedCoach && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">Classes with {selectedCoach.name.split(/\s+/)[0]}</span>
           <Link href={`/${selectedCoach.handle}?from=feed`} className="feedfilter-link">
@@ -513,7 +532,7 @@ export function FollowingScreen({
           </Link>
         </div>
       )}
-      {items.length === 0 ? (
+      {(!isHome || homeMode === "following") && (items.length === 0 ? (
         <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -638,7 +657,7 @@ export function FollowingScreen({
             </div>
           </div>
         </>
-      )}
+      ))}
 
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
