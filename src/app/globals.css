@@ -6514,6 +6514,12 @@ button.ps-card { cursor: pointer; }
   flex:0 0 52px; width:52px; height:52px; aspect-ratio:1;
   margin:auto; border-radius:50%; background:var(--ink);
 }
+.globaladd-sheet {
+  /* The global composer is launched by the footer itself, so it stops above
+     that footer instead of letting its choices continue underneath it. */
+  margin-bottom: calc(76px + env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 76px - env(safe-area-inset-bottom));
+}
 .globaladd-sheet .lead { margin-bottom:14px; }
 .globaladd-list { display:grid; gap:9px; }
 .globaladd-list > a { display:grid; grid-template-columns:30px minmax(0,1fr) 20px; align-items:center; gap:11px; padding:15px; border-radius:16px; background:var(--ground); text-decoration:none; }
