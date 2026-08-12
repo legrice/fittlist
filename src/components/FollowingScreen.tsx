@@ -136,7 +136,6 @@ export function FollowingScreen({
   todayIso,
   meId,
   meFace,
-  nearStudios,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -181,11 +180,7 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [coachPeek, setCoachPeek] = useState<FeedCoach | null>(null);
-  const [homeMode, setHomeMode] = useState<"classes" | "coaches" | "studios">("classes");
   const [homeQuery, setHomeQuery] = useState("");
-  const [homeLocation, setHomeLocation] = useState("all");
-  const [homeType, setHomeType] = useState("all");
-  const [directorySheet, setDirectorySheet] = useState<null | "all" | "location" | "type">(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -200,15 +195,6 @@ export function FollowingScreen({
   };
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
-  const directoryLocations = useMemo(() => {
-    const values = homeMode === "coaches" ? coaches.map((c) => c.location) : nearStudios.map((s) => s.location);
-    return [...new Set(values.map((v) => v?.trim()).filter((v): v is string => !!v))].sort();
-  }, [coaches, nearStudios, homeMode]);
-  const directoryTypes = useMemo(() => {
-    const values = homeMode === "coaches" ? coaches.map((c) => c.title?.trim() || "Fitness coach") : nearStudios.flatMap((s) => s.types);
-    return [...new Set(values.filter(Boolean))].sort();
-  }, [coaches, nearStudios, homeMode]);
-
   // The viewer's pin: taken silently when the browser already granted it
   // somewhere else (the studio tiles say how far, the rail sorts by real
   // miles), and asked for the first time a distance is picked and never
@@ -348,6 +334,15 @@ export function FollowingScreen({
     for (const row of homeRows) days.set(row.item.iso, [...(days.get(row.item.iso) ?? []), row]);
     return [...days.entries()].map(([iso, rows]) => ({ iso, rows }));
   }, [homeRows]);
+  const homePreviewDays = useMemo(() => {
+    let left = 8;
+    return homeDays.flatMap((group) => {
+      if (left <= 0) return [];
+      const rows = group.rows.slice(0, left);
+      left -= rows.length;
+      return rows.length ? [{ ...group, rows }] : [];
+    });
+  }, [homeDays]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -494,6 +489,8 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
+          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder="Search classes, people, or places" aria-label="Search classes, people, or places" /></label>
+          <div className="home-social-title"><strong>People you follow</strong><Link href="/following">Manage</Link></div>
           <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
             <div className="tray-scroll">
               {meId && (
@@ -551,24 +548,12 @@ export function FollowingScreen({
               </Link>
             </div>
           </div>
-          <div className="home-modes" role="tablist" aria-label="Home">
-            {([['classes', 'Classes'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
-          </div>
-          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>
-          {homeMode !== "classes" && <div className="catpills fchips home-directory-filters" aria-label={`${homeMode} filters`}><button className={`catpill fchip-lead${homeLocation !== "all" || homeType !== "all" ? " on" : ""}`} aria-label="Filters" onClick={() => setDirectorySheet("all")}><Icon name="tune" size={17} />{(homeLocation !== "all" || homeType !== "all") && <span>{Number(homeLocation !== "all") + Number(homeType !== "all")}</span>}</button><button className={`catpill${homeLocation !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("location")}>{homeLocation === "all" ? "All locations" : homeLocation} <Icon name="expand_more" size={16} /></button><button className={`catpill${homeType !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("type")}>{homeType === "all" ? "All types" : homeType} <Icon name="expand_more" size={16} /></button></div>}
         </header>
       )}
-      {isHome && homeMode === "coaches" && (
-        <div className="home-directory-grid">
-          {coaches.filter((c) => { const q = homeQuery.trim().toLowerCase(); const type = c.title?.trim() || "Fitness coach"; return (!q || c.name.toLowerCase().includes(q) || type.toLowerCase().includes(q)) && (homeLocation === "all" || c.location?.trim() === homeLocation) && (homeType === "all" || type === homeType); }).map((coach) => <Link href={`/${coach.handle}?from=feed`} className="home-person-tile" key={coach.id}>{favIds.includes(coach.id) && <span className="home-person-following" aria-label="Following"><Icon name="how_to_reg" size={20} /></span>}<span className="home-person-face" style={{ background: coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : (coach.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{coach.name}</strong><span>{coach.title?.trim() || "Fitness coach"}</span></Link>)}
-        </div>
+      {isHome && items.length > 0 && (
+        <div className="home-ideas-head"><h2>Ideas for your week</h2><Link href="/upcoming">See all</Link></div>
       )}
-      {isHome && homeMode === "studios" && (
-        <div className="home-studio-grid">
-          {nearStudios.filter((studio) => { const q = homeQuery.trim().toLowerCase(); return (!q || studio.name.toLowerCase().includes(q) || studio.types.some((t) => t.toLowerCase().includes(q))) && (homeLocation === "all" || studio.location === homeLocation) && (homeType === "all" || studio.types.includes(homeType)); }).map((studio) => <Link href={`/s/${studio.slug}?from=feed`} className="home-studio-tile" key={studio.id}>{studio.photo ? <img src={studio.photo} alt="" /> : <span style={{ background: studio.color }}>{(studio.name.trim().charAt(0) || "?").toUpperCase()}</span>}<strong>{studio.name}</strong><small>{studio.types.slice(0, 2).join(" · ") || "Fitness space"}</small></Link>)}
-        </div>
-      )}
-      {isHome && homeMode === "classes" && items.length > 0 && (
+      {isHome && items.length > 0 && (
         <div className="catpills fchips home-class-filters" aria-label="Class filters">
           <button
             className={`catpill fchip-lead${activeCount ? " on" : ""}`}
@@ -590,7 +575,7 @@ export function FollowingScreen({
           ))}
         </div>
       )}
-      {(!isHome || homeMode === "classes") && (items.length === 0 ? (
+      {(items.length === 0 ? (
         <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -677,7 +662,7 @@ export function FollowingScreen({
             <div className="cardwrap home-schedule">
               {isHome ? (
                 <div className="following-days">
-                  {homeDays.map((group) => (
+                  {homePreviewDays.map((group) => (
                     <section key={group.iso} className="following-day">
                       <h2 className="following-day-h">{daySectionLabel(group.iso, todayIso)}</h2>
                       <div className="disflat home-next">
@@ -790,19 +775,6 @@ export function FollowingScreen({
                 </button>
               )}
             </div>
-          </div>
-        </div>
-      )}
-      {directorySheet && (
-        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setDirectorySheet(null); }}>
-          <div className="sheet fsheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setDirectorySheet(null)}><Icon name="close" size={18} /></button>
-            <h2>{directorySheet === "all" ? "Filters" : directorySheet === "location" ? "Location" : "Type"}</h2>
-            <div className="fopts">
-              {(directorySheet === "all" || directorySheet === "location") && <><p className="fsec-h">Location</p>{["all", ...directoryLocations].map((value) => <button key={value} className="fopt" aria-pressed={homeLocation === value} onClick={() => { setHomeLocation(value); if (directorySheet !== "all") setDirectorySheet(null); }}>{value === "all" ? "All locations" : value}{homeLocation === value && <Icon name="check" size={19} />}</button>)}</>}
-              {(directorySheet === "all" || directorySheet === "type") && <><p className="fsec-h">Type</p>{["all", ...directoryTypes].map((value) => <button key={value} className="fopt" aria-pressed={homeType === value} onClick={() => { setHomeType(value); if (directorySheet !== "all") setDirectorySheet(null); }}>{value === "all" ? "All types" : value}{homeType === value && <Icon name="check" size={19} />}</button>)}</>}
-            </div>
-            {directorySheet === "all" && <div className="publishwrap fsheet-foot"><button className="btn si" onClick={() => setDirectorySheet(null)}>Done</button>{(homeLocation !== "all" || homeType !== "all") && <button className="btn ghost" onClick={() => { setHomeLocation("all"); setHomeType("all"); setDirectorySheet(null); }}>Clear filters</button>}</div>}
           </div>
         </div>
       )}
