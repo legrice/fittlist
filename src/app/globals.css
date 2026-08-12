@@ -6518,12 +6518,12 @@ button.ps-card { cursor: pointer; }
 .navtab-add {
   position:relative; align-self:center;
   flex:1; width:auto; height:52px; min-width:0; min-height:52px;
-  padding:0; background:none; color:var(--paper);
+  padding:0; background:none; color:var(--ink);
 }
 .navadd-glyph {
   display:flex; align-items:center; justify-content:center;
   flex:0 0 52px; width:52px; height:52px; aspect-ratio:1;
-  margin:auto; border-radius:50%; background:var(--ink);
+  margin:auto; border-radius:18px; background:var(--control);
 }
 .globaladd-sheet {
   /* The composer replaces the footer while it is open: its solid surface
