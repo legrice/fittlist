@@ -465,10 +465,6 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <div className="following-title-row">
-            <h1 className="tab-page-title">Home</h1>
-            {homeMode === "following" && <Link className="following-manage" href="/following?from=feed">Manage</Link>}
-          </div>
           <div className="home-modes" role="tablist" aria-label="Home">
             {([['following', 'Following'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); }}>{label}</button>)}
           </div>
