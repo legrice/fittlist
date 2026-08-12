@@ -6554,7 +6554,6 @@ button.ps-card { cursor: pointer; }
   font-size: 30px; line-height: 1.05; font-weight: 600;
   letter-spacing: -.02em; color: var(--ink);
 }
-.shpage-title { padding: 2px 0 10px; }
 .following-days { display: flex; flex-direction: column; gap: 24px; }
 .following-day-h {
   position: sticky; top: 0; z-index: 6;
@@ -8139,7 +8138,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 
 /* The title and the two ways of looking, at the top of the calendar. */
-.calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
+.calbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding-bottom: 12px; }
 .calbar-tools { display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px; }
 .calbar-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;

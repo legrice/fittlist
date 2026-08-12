@@ -282,10 +282,9 @@ export function CalendarScreen({
           because two screens working it out separately is how they end up
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
-        {/* Calendar and its two views share one title row. The screen is
-            coaching-only, so there is no relationship filter to explain. */}
+        {/* The tab bar already names this destination. Keep only the controls
+            that change what is shown, rather than repeating "Schedule". */}
         <div className="calbar">
-          <h1 className="calbar-t caltitle tab-page-title">Schedule</h1>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels

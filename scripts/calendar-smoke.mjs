@@ -102,15 +102,10 @@ await p.locator(".clline").first().waitFor();
   const fbox = await fab.boundingBox();
   if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
   if (await p.locator(".calbar-share").count()) fail("the Share arrow is gone from the title row");
-  // The title and view controls share one row.
-  if (!(await p.locator(".caltitle", { hasText: "Schedule" }).count()))
-    fail("Schedule sits across from the filter and view controls");
-  const titleBox = await p.locator(".caltitle").boundingBox();
+  // The tab bar identifies the destination, so this row is controls only.
+  if (await p.locator(".caltitle").count())
+    fail("Schedule should not repeat the tab label as a page title");
   const toggleBox = await p.locator(".calbar .calseg").boundingBox();
-  const titleMid = titleBox.y + titleBox.height / 2;
-  const toggleMid = toggleBox.y + toggleBox.height / 2;
-  if (Math.abs(titleMid - toggleMid) > 3)
-    fail(`Calendar and its view toggle should align, got ${titleMid} and ${toggleMid}`);
   const filter = p.locator(".calfilter select");
   if (!(await filter.count())) fail("the calendar needs its All, Coaching, Added dropdown");
   const options = await filter.locator("option").allTextContents();

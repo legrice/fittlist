@@ -404,7 +404,6 @@ export function ShareHubScreen({
     <>
       {/* `shpage` is the marker the gradient opt-out keys on. */}
       <div className="cardwrap shpage">
-        <h1 className="tab-page-title shpage-title">Share</h1>
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
             below the fold. Two lines and the button; the experiment talk
