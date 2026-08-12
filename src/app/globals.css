@@ -6560,15 +6560,15 @@ button.ps-card { cursor: pointer; }
 .classshare-avatar { display:flex; align-items:center; justify-content:center; width:44px; height:44px; overflow:hidden; border-radius:50%; color:#fff; }
 .classshare-avatar img { width:100%; height:100%; object-fit:cover; }
 .screen.hasnav .brandbar {
-  background:transparent; color:var(--ink); --wm-ink:var(--ink); --wm-mark:var(--ink);
+  background:var(--ink); color:var(--paper); --wm-ink:var(--paper); --wm-mark:var(--paper);
 }
-.screen.hasnav .brandbar .iconbtn { color:var(--ink); }
-.screen.hasnav .brandbar .headnav-l { color:var(--muted); }
+.screen.hasnav .brandbar .iconbtn { color:var(--paper); }
+.screen.hasnav .brandbar .headnav-l { color:color-mix(in srgb, var(--paper) 68%, transparent); }
 .screen.hasnav .brandbar .headnav-l:hover,
-.screen.hasnav .brandbar .headnav-l.on { color:var(--ink); border-bottom-color:var(--ink); }
+.screen.hasnav .brandbar .headnav-l.on { color:var(--paper); border-bottom-color:var(--paper); }
 /* Photo-led profiles keep their overlay contrast; only standard app chrome
    returns to ink on the page ground. */
-.screen.hasnav .pub-hero .brandbar { color:#fff; --wm-ink:#fff; --wm-mark:#fff; }
+.screen.hasnav .pub-hero .brandbar { background:transparent; color:#fff; --wm-ink:#fff; --wm-mark:#fff; }
 .screen.hasnav .pub-hero .brandbar .iconbtn { color:#fff; }
 .tab-page-title {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
