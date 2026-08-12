@@ -21,8 +21,10 @@ html[data-native="ios"] body { padding-top: env(safe-area-inset-top); }
 
 /* UIKit owns navigation in the iOS shell. The website keeps the HTML bar. */
 html[data-native="ios"] .navwrap { display: none; }
-html[data-native="ios"] .cardwrap { padding-bottom: 28px; }
-html[data-native="ios"] .hasnav .fab { bottom: 20px; }
+/* UIKit's material bar overlays the web view, just like the website's fixed
+   bar. Keep the last content and floating action reachable above it. */
+html[data-native="ios"] .cardwrap { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+html[data-native="ios"] .hasnav .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
 /* Delight, the brand typeface, self-hosted as woff2.
    Three faces, because 600 is the ceiling now: the 700 and the 800 are not

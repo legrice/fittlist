@@ -46,7 +46,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             bridge.view.topAnchor.constraint(equalTo: view.topAnchor),
             bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bridge.view.bottomAnchor.constraint(equalTo: tabBar.topAnchor),
+            // The page continues behind the translucent bar. Stopping the web
+            // view at the bar's top left UIKit's ink background showing through
+            // as a solid footer and gave the material nothing to blur.
+            bridge.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
