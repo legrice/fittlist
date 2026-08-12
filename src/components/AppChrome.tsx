@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
-import { unreadUpdateCount } from "@/lib/notify";
+import { unreadActivityCount, unreadMessageCount } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
@@ -50,9 +50,10 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
-  const [fans, unread] = await Promise.all([
+  const [fans, unreadNotifications, unreadMessages] = await Promise.all([
     fansVisible(),
-    unreadUpdateCount(userId, me.email),
+    unreadActivityCount(userId),
+    unreadMessageCount(userId, me.email),
   ]);
   // One calendar, at one address. This forked by kind for months, back when a
   // coach's was /app and a member had their own at /week; a member has no
@@ -71,7 +72,8 @@ export async function AppChrome({
 
   const header = (
     <AppHeader
-      unread={unread}
+      unreadNotifications={unreadNotifications}
+      unreadMessages={unreadMessages}
       // The logo goes Home, by Matt's call: /feed is the front door for
       // everyone with the member side, whatever landingHref answers for
       // sign-in.

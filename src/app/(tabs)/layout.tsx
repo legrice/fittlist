@@ -5,7 +5,7 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
-import { unreadUpdateCount } from "@/lib/notify";
+import { unreadActivityCount, unreadMessageCount } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
@@ -38,8 +38,9 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // In parallel: these are independent, and this layout runs on every tab
   // switch, so awaiting them one by one would stack extra round trips onto every
   // tap of the bar.
-  const [unread, promptDue, invitesLeft] = await Promise.all([
-    unreadUpdateCount(userId, me.email),
+  const [unreadNotifications, unreadMessages, promptDue, invitesLeft] = await Promise.all([
+    unreadActivityCount(userId),
+    unreadMessageCount(userId, me.email),
     feedbackPromptDue(userId),
     invitesBannerCount(),
   ]);
@@ -63,7 +64,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
     <section className="screen hasnav" data-mode={lookMode(me.look)}>
       <div className="pad">
         <AppHeader
-          unread={unread}
+          unreadNotifications={unreadNotifications}
+          unreadMessages={unreadMessages}
           // The wordmark goes Home, by Matt's call: /feed is the front
           // door for everyone now, whatever landingHref answers for
           // sign-in.

@@ -6514,6 +6514,19 @@ button.ps-card { cursor: pointer; }
 .following-rail .trayav { width: 94px; height: 94px; }
 .following-rail .trayitem-nm { max-width: 96px; font-weight: 400; }
 .following-rail .trayitem-more { opacity: 1; }
+.classshare-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:18px; }
+.classshare-actions button { display:flex; min-width:0; flex-direction:column; align-items:center; gap:7px; border:0; background:transparent; color:var(--ink); font-size:12px; font-weight:600; }
+.classshare-actions button > span { display:flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:var(--ground); }
+.classshare-people { margin-top:16px; padding:14px; border-radius:18px; background:var(--ground); }
+.classshare-people > label { display:flex; align-items:center; gap:8px; min-height:44px; padding:0 12px; border-radius:999px; background:var(--card); color:var(--muted); }
+.classshare-people input { width:100%; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; }
+.classshare-people-list { display:grid; gap:4px; margin-top:10px; }
+.classshare-people-list > button { display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:10px; width:100%; padding:8px 4px; border:0; background:transparent; color:var(--ink); text-align:left; }
+.classshare-people-list > button > span:nth-child(2) { min-width:0; }
+.classshare-people-list strong,.classshare-people-list small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.classshare-people-list small { color:var(--muted); font-size:12px; font-weight:400; }
+.classshare-avatar { display:flex; align-items:center; justify-content:center; width:44px; height:44px; overflow:hidden; border-radius:50%; color:#fff; }
+.classshare-avatar img { width:100%; height:100%; object-fit:cover; }
 .screen.hasnav .brandbar {
   background:transparent; color:var(--ink); --wm-ink:var(--ink); --wm-mark:var(--ink);
 }

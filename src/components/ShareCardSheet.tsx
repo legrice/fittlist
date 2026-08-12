@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
+import { findShareRecipients, sendClassShare, type ShareRecipient } from "@/app/actions/share-message";
 
 // The card sheet: a square Instagram image, pick a style, save or share.
 //
@@ -43,6 +44,11 @@ export function ShareCardSheet({
   const [styleOpen, setStyleOpen] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [peopleOpen, setPeopleOpen] = useState(false);
+  const [peopleQuery, setPeopleQuery] = useState("");
+  const [people, setPeople] = useState<ShareRecipient[]>([]);
+  const [sendingTo, setSendingTo] = useState<string | null>(null);
+  const [peoplePending, startPeople] = useTransition();
   // A fresh cache-buster per open; see ShareWeekSheet.
   const [bust] = useState(() => Date.now());
 
@@ -53,6 +59,14 @@ export function ShareCardSheet({
         typeof navigator.canShare === "function",
     );
   }, []);
+
+  useEffect(() => {
+    if (!peopleOpen || !linkUrl) return;
+    const timer = window.setTimeout(() => {
+      startPeople(async () => setPeople(await findShareRecipients(peopleQuery)));
+    }, peopleQuery ? 180 : 0);
+    return () => window.clearTimeout(timer);
+  }, [peopleOpen, peopleQuery, linkUrl]);
 
   const cardUrl = `${path}?theme=${themeId}&v=${bust}-${themeId}`;
   const cardFileName = fileName;
@@ -94,6 +108,23 @@ export function ShareCardSheet({
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the link");
     }
+  };
+
+  const emailLink = () => {
+    if (!linkUrl) return;
+    window.location.href = `mailto:?subject=${encodeURIComponent(linkTitle ?? title)}&body=${encodeURIComponent(linkUrl)}`;
+  };
+
+  const sendToPerson = (person: ShareRecipient) => {
+    if (!linkUrl || sendingTo) return;
+    setSendingTo(person.id);
+    startPeople(async () => {
+      const result = await sendClassShare(person.id, linkTitle ?? title, linkUrl);
+      setSendingTo(null);
+      if (!result.ok) return onToast(result.error ?? "Couldn’t send that class");
+      onToast(`Sent to ${person.name}`);
+      setPeopleOpen(false);
+    });
   };
 
   return (
@@ -155,6 +186,43 @@ export function ShareCardSheet({
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="cardimg" src={cardUrl} alt={alt} />
+        {linkUrl && (
+          <div className="classshare-actions">
+            <button type="button" onClick={() => setPeopleOpen((open) => !open)}>
+              <span><Icon name="forum" size={23} /></span>
+              Message
+            </button>
+            <button type="button" onClick={shareCard} disabled={sharing}>
+              <span><Icon name="share" size={23} /></span>
+              Instagram
+            </button>
+            <button type="button" onClick={emailLink}>
+              <span><Icon name="mail" size={23} /></span>
+              Email
+            </button>
+            <button type="button" onClick={shareLink}>
+              <span><Icon name="content_copy" size={23} /></span>
+              Copy link
+            </button>
+          </div>
+        )}
+        {peopleOpen && linkUrl && (
+          <div className="classshare-people">
+            <label><Icon name="search" size={19} /><input value={peopleQuery} onChange={(event) => setPeopleQuery(event.target.value)} autoFocus type="search" placeholder="Find someone on FittList" /></label>
+            <div className="classshare-people-list" aria-busy={peoplePending}>
+              {people.map((person) => (
+                <button key={person.id} type="button" disabled={!!sendingTo} onClick={() => sendToPerson(person)}>
+                  <span className="classshare-avatar" style={{ background: person.color ?? "#777" }}>
+                    {person.photo ? <img src={person.photo} alt="" /> : (person.name.trim().charAt(0) || "?").toUpperCase()}
+                  </span>
+                  <span><strong>{person.name}</strong><small>@{person.handle}</small></span>
+                  {sendingTo === person.id ? "Sending…" : "Send"}
+                </button>
+              ))}
+              {!peoplePending && people.length === 0 && <p>No people found.</p>}
+            </div>
+          </div>
+        )}
         {/* Share leads, save is the quiet one. See ShareComposer: the filled
             button used to say Save and open the share sheet. */}
         <div className="publishwrap">
@@ -164,12 +232,6 @@ export function ShareCardSheet({
           <a className="btn ghost" style={{ marginTop: 8 }} href={cardUrl} download={cardFileName}>
             Save image
           </a>
-          {linkUrl && (
-            <button className="sharecard-link" type="button" onClick={shareLink}>
-              <Icon name="link" size={19} />
-              Share link
-            </button>
-          )}
         </div>
       </div>
     </div>

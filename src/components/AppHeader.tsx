@@ -9,13 +9,14 @@ import type { NavTab } from "@/lib/nav";
 // Notifications and Settings right. Profile already has a permanent tab, so these
 // are the three useful actions somebody may need from anywhere in the app.
 export function AppHeader({
-  unread = 0,
+  unreadNotifications = 0,
+  unreadMessages = 0,
   home = "/week",
   nav,
   settings = false,
 }: {
-  /** Notifications and unread message threads share one Updates badge. */
-  unread?: number;
+  unreadNotifications?: number;
+  unreadMessages?: number;
   /** Where the wordmark goes. The Following tab for anyone with the member
       side, the schedule for a coach who doesn't have it yet. */
   home?: string;
@@ -40,16 +41,22 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* One stable utility order everywhere in the signed-in app. Search
-            finds coaches, the bell holds Notifications and
-            Messages together, and the gear opens settings in place. */}
+        {/* Search, conversations, then activity: two kinds of attention with
+            two distinct jobs, rather than one bell that makes people hunt. */}
         <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
         <HeaderIconLink
-          label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+          label={`Messages${unreadMessages ? `, ${unreadMessages} unread` : ""}`}
+          icon="forum"
+          href="/updates?tab=messages"
+          match="/inbox"
+          badge={unreadMessages > 0 ? <span className="inboxdot">{unreadMessages > 9 ? "9+" : unreadMessages}</span> : undefined}
+        />
+        <HeaderIconLink
+          label={`Notifications${unreadNotifications ? `, ${unreadNotifications} unread` : ""}`}
           icon="notifications"
           href="/updates"
-          match={["/updates", "/inbox"]}
-          badge={unread > 0 ? <span className="inboxdot">{unread > 9 ? "9+" : unread}</span> : undefined}
+          match="/updates"
+          badge={unreadNotifications > 0 ? <span className="inboxdot">{unreadNotifications > 9 ? "9+" : unreadNotifications}</span> : undefined}
         />
         {settings && <SettingsGear header />}
       </div>

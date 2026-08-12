@@ -35,6 +35,40 @@ export async function unreadNotifications(userId: string): Promise<number> {
   return rows.length;
 }
 
+export async function unreadActivityCount(userId: string): Promise<number> {
+  const db = await getDb();
+  const rows = await db
+    .select({ type: schema.notifications.type })
+    .from(schema.notifications)
+    .where(and(eq(schema.notifications.userId, userId), isNull(schema.notifications.readAt)));
+  return rows.filter((row) => row.type !== "message" && row.type !== "feedback").length;
+}
+
+export async function unreadMessageCount(userId: string, email: string): Promise<number> {
+  const db = await getDb();
+  const normalizedEmail = email.trim().toLowerCase();
+  const threads = await db
+    .select({
+      coachUserId: schema.inquiryThreads.coachUserId,
+      coachUnread: schema.inquiryThreads.coachUnread,
+      requesterUnread: schema.inquiryThreads.requesterUnread,
+    })
+    .from(schema.inquiryThreads)
+    .where(
+      or(
+        eq(schema.inquiryThreads.coachUserId, userId),
+        and(
+          eq(schema.inquiryThreads.requesterEmail, normalizedEmail),
+          eq(schema.inquiryThreads.kind, "inquiry"),
+        ),
+      ),
+    );
+  return threads.reduce(
+    (total, thread) => total + (thread.coachUserId === userId ? thread.coachUnread : thread.requesterUnread),
+    0,
+  );
+}
+
 /** One badge for the combined Updates surface.
  *
  * Message events are stored both as notification rows and as unread counts on
