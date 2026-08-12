@@ -6482,7 +6482,7 @@ button.ps-card { cursor: pointer; }
   margin: 0 -18px;
   padding: 4px 18px 18px;
   background: var(--ground);
-  border-bottom: 1px solid var(--div);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 .home-ideas-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
@@ -6503,7 +6503,9 @@ button.ps-card { cursor: pointer; }
 .home-week-surface .disflat .clrow {
   overflow:visible; border-radius:0; background:transparent; box-shadow:none;
 }
-.home-week-surface .disflat .clrow:not(:last-child) { border-bottom:1px solid var(--div); }
+.home-week-surface .disflat .clrow:not(:last-child) {
+  border-bottom:1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
 .home-week-surface .disflat .clline {
   min-height:0; padding:18px; border:0; background:transparent;
 }
