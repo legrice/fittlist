@@ -6523,7 +6523,7 @@ button.ps-card { cursor: pointer; }
 .navadd-glyph {
   display:flex; align-items:center; justify-content:center;
   flex:0 0 52px; width:52px; height:52px; aspect-ratio:1;
-  margin:auto; border-radius:18px; background:var(--control);
+  margin:auto; border-radius:18px; background:var(--ink); color:var(--paper);
 }
 .globaladd-sheet {
   /* The composer replaces the footer while it is open: its solid surface
