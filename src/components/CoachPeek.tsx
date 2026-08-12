@@ -155,21 +155,25 @@ export function CoachPeek({
         <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
           <Icon name="close" size={18} />
         </button>
-        {/* The head stacks, by Matt's call: close alone in the corner, then
-            the face, the name on its own line under it, and two actions
-            below. Your own sheet swaps Follow for Share your week. */}
+        {/* Identity stays compact: face beside name and city, with actions
+            below. The close button keeps its own fixed corner. */}
         <div className="peekhead peekhead-stack">
-          <span className="peekav">
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photo} alt="" />
-            ) : (
-              <span className="peekav-ini" style={{ background: color }}>
-                {initialOf(name)}
-              </span>
-            )}
-          </span>
-          <h2 className="peekhead-nm">{name}</h2>
+          <div className="peekidentity">
+            <span className="peekav">
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo} alt="" />
+              ) : (
+                <span className="peekav-ini" style={{ background: color }}>
+                  {initialOf(name)}
+                </span>
+              )}
+            </span>
+            <span className="peekidentity-txt">
+              <h2 className="peekhead-nm">{name}</h2>
+              {peek?.location && <span className="peekhead-city">{peek.location}</span>}
+            </span>
+          </div>
           {peek?.handle && (
             <div className="peekacts">
               <Link className="peekfollow peekview" href={`/${peek.handle}`}>

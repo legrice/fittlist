@@ -32,6 +32,7 @@ export type PeekDay = { iso: string; label: string; items: PeekItem[] };
 
 export type Peek = {
   name: string;
+  location: string | null;
   handle: string | null;
   photo: string | null;
   color: string;
@@ -261,6 +262,7 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
   // this sheet answers "what has Erin got on", not "who is working".
   return {
     name: person.name.trim() || person.email.split("@")[0],
+    location: person.location?.trim() || null,
     handle: person.handle,
     photo: person.photo,
     color: avatarColor(person),
