@@ -16,6 +16,8 @@ export type FeedCoach = {
   handle: string;
   photo: string | null;
   color: string;
+  /** Public coaching specialty shown on coach discovery cards. */
+  title: string | null;
   /** When their next class is ("Today 6:00p"): the Add screen's browse list
    *  and People near you still say it. The rail deliberately does not. */
   next: string | null;
@@ -512,7 +514,7 @@ export function FollowingScreen({
       )}
       {isHome && homeMode === "coaches" && (
         <div className="home-directory-grid">
-          {coaches.filter((c) => !homeQuery.trim() || c.name.toLowerCase().includes(homeQuery.trim().toLowerCase())).map((coach) => <Link href={`/${coach.handle}?from=feed`} className="home-person-tile" key={coach.id}><span className="home-person-face" style={{ background: coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : (coach.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{coach.name}</strong><span>{favIds.includes(coach.id) ? "Following" : coach.next ?? "View profile"}</span></Link>)}
+          {coaches.filter((c) => { const q = homeQuery.trim().toLowerCase(); return !q || c.name.toLowerCase().includes(q) || c.title?.toLowerCase().includes(q); }).map((coach) => <Link href={`/${coach.handle}?from=feed`} className="home-person-tile" key={coach.id}>{favIds.includes(coach.id) && <span className="home-person-following" aria-label="Following"><Icon name="account_circle" size={18} /><Icon name="check" size={11} /></span>}<span className="home-person-face" style={{ background: coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : (coach.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{coach.name}</strong><span>{coach.title?.trim() || "Fitness coach"}</span></Link>)}
         </div>
       )}
       {isHome && homeMode === "studios" && (

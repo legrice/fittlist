@@ -208,6 +208,7 @@ export async function buildDiscoverFeed(
       handle: c.handle!,
       photo: c.photoThumb ?? c.photo,
       color: avatarColor(c),
+      title: c.title,
       next: nextLabel(c.id),
     }))
     .sort((a, b) => {
