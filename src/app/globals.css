@@ -6476,16 +6476,11 @@ button.ps-card { cursor: pointer; }
   padding: 4px 18px 18px;
   background: var(--card);
 }
-.home-ideas-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
-.home-ideas-head { margin-top:20px; }
-.home-ideas-head h2 { margin:0; font-size:23px; line-height:1.1; }
-.home-ideas-head-all h2 { font-size:18px; }
 .home-week-surface {
   margin: 0 -18px; padding: 22px 0 calc(18px + env(safe-area-inset-bottom));
   background: var(--card);
 }
-.home-week-surface .home-ideas-head { margin-top:0; padding:0 18px; }
+.home-week-surface .home-week-context { margin:0 18px 14px; }
 .home-week-surface .home-schedule { margin:10px 0 0; padding:0; border-radius:0; }
 .home-week-surface .following-days { gap:0; }
 .home-week-surface .following-day-h {
