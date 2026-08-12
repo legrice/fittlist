@@ -7,7 +7,8 @@ import WebKit
 final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler {
     private let bridge = CAPBridgeViewController()
     private let tabBar = UITabBar()
-    private let routes = ["/feed", "/discover", "/calendar", "/share", "/you"]
+    private let tabIDs = ["following", "search", "schedule", "share", "you"]
+    private let fallbackRoutes = ["/feed", "/search", "/calendar", "/coachshare", "/you"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
@@ -110,16 +111,17 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
-        guard routes.indices.contains(item.tag) else { return }
-        let route = routes[item.tag]
+        guard tabIDs.indices.contains(item.tag) else { return }
+        let tabID = tabIDs[item.tag]
+        let fallback = fallbackRoutes[item.tag]
         // Click the existing Next.js tab when it is present. Although hidden by
-        // the native marker, it keeps client-side navigation and cached page
-        // state intact. The location fallback also works on signed-out pages.
+        // the native marker, it keeps role-aware destinations (especially the
+        // coach/member Share split), client navigation and cached state intact.
+        // The fallback covers signed-out and transitional pages without tabs.
         bridge.webView?.evaluateJavaScript("""
           (() => {
-            const route = '\(route)';
-            const link = document.querySelector(`.tabbar a[href="${route}"]`);
-            if (link) link.click(); else window.location.assign(route);
+            const link = document.querySelector('.navwrap a[data-tab="\(tabID)"]');
+            if (link) link.click(); else window.location.assign('\(fallback)');
           })();
         """)
     }
@@ -137,7 +139,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         if path == "/feed" || path == "/upcoming" { tag = 0 }
         else if path == "/discover" || path == "/search" { tag = 1 }
         else if path == "/calendar" { tag = 2 }
-        else if path.hasPrefix("/share") { tag = 3 }
+        else if path.hasPrefix("/share") || path == "/coachshare" || path == "/membershare" { tag = 3 }
         else if path == "/you" || path == "/settings" { tag = 4 }
         else { tag = nil }
         if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
