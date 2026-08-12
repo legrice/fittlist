@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -179,7 +178,7 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [coachPeek, setCoachPeek] = useState<FeedCoach | null>(null);
+  const [weekOwner, setWeekOwner] = useState<"all" | "mine" | string>("all");
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -242,9 +241,16 @@ export function FollowingScreen({
   };
 
   const shown = useMemo(
-    () => items.filter(passes),
+    () =>
+      items.filter(
+        (item) =>
+          passes(item) &&
+          (!isHome ||
+            weekOwner === "all" ||
+            (weekOwner === "mine" ? item.coachId === meId || item.saved : item.coachId === weekOwner)),
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo],
+    [items, f, geo, isHome, weekOwner, meId],
   );
 
   const coachOptions = useMemo(() => {
@@ -253,16 +259,8 @@ export function FollowingScreen({
       (coach) => ids.has(coach.id) && coach.id !== meId && favIds.includes(coach.id),
     );
   }, [coaches, items, favIds, meId]);
-  const peekPeople = useMemo<FeedCoach[]>(() => {
-    const mine = meId ? [{ id: meId, name: meFace.name, handle: "", photo: meFace.photo, color: meFace.color, title: null, location: null, next: null }] : [];
-    return [...mine, ...coachOptions];
-  }, [meId, meFace, coachOptions]);
-  const moveCoachPeek = (step: -1 | 1) => {
-    if (!coachPeek || peekPeople.length < 2) return;
-    const at = peekPeople.findIndex((person) => person.id === coachPeek.id);
-    const next = (Math.max(0, at) + step + peekPeople.length) % peekPeople.length;
-    setCoachPeek(peekPeople[next]);
-  };
+  const selectedCoach =
+    weekOwner === "all" || weekOwner === "mine" ? null : coachById.get(weekOwner) ?? null;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -478,26 +476,24 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
+          <div className="tray following-rail" role="group" aria-label="Weekly schedules">
             <div className="tray-scroll">
+              <button
+                className={`trayitem${weekOwner !== "all" ? " dim" : ""}`}
+                aria-pressed={weekOwner === "all"}
+                onClick={() => setWeekOwner("all")}
+              >
+                <span className={`trayav trayav-all${weekOwner === "all" ? " sel" : ""}`}>All</span>
+                <span className="trayitem-nm">All</span>
+              </button>
               {meId && (
                 <button
-                  className="trayitem"
-                  onClick={() =>
-                    setCoachPeek({
-                      id: meId,
-                      name: meFace.name,
-                      handle: "",
-                      photo: meFace.photo,
-                      color: meFace.color,
-                      title: null,
-                      location: null,
-                      next: null,
-                    })
-                  }
+                  className={`trayitem${weekOwner !== "all" && weekOwner !== "mine" ? " dim" : ""}`}
+                  aria-pressed={weekOwner === "mine"}
+                  onClick={() => setWeekOwner("mine")}
                   aria-label="View your week"
                 >
-                  <span className="trayav" style={{ background: meFace.color }}>
+                  <span className={`trayav${weekOwner === "mine" ? " sel" : ""}`} style={{ background: meFace.color }}>
                     {meFace.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={meFace.photo} alt="" />
@@ -505,18 +501,19 @@ export function FollowingScreen({
                       <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                     )}
                   </span>
-                  <span className="trayitem-nm">Your week</span>
+                  <span className="trayitem-nm">My week</span>
                 </button>
               )}
               {coachOptions.map((coach) => (
                 <button
                   key={coach.id}
-                  className="trayitem"
-                  onClick={() => setCoachPeek(coach)}
+                  className={`trayitem${weekOwner !== "all" && weekOwner !== coach.id ? " dim" : ""}`}
+                  aria-pressed={weekOwner === coach.id}
+                  onClick={() => setWeekOwner(coach.id)}
                   aria-label={`View ${coach.name}'s week`}
                 >
                   <span
-                    className="trayav"
+                    className={`trayav${weekOwner === coach.id ? " sel" : ""}`}
                     style={{ background: coach.color }}
                   >
                     {coach.photo ? (
@@ -538,8 +535,23 @@ export function FollowingScreen({
         </header>
       )}
       <div className={isHome ? "home-week-surface" : undefined}>
-        {isHome && homeDays.length > 0 && (
-          <div className="home-ideas-head"><h2>All classes this week</h2><Link href="/upcoming">See all</Link></div>
+        {isHome && (
+          <div className="home-ideas-head">
+            <h2>
+              {weekOwner === "all"
+                ? "All classes this week"
+                : weekOwner === "mine"
+                  ? "My classes this week"
+                  : `${selectedCoach?.name.split(/\s+/)[0] ?? "Their"}'s classes this week`}
+            </h2>
+            {weekOwner === "all" ? (
+              <Link href="/upcoming">See all</Link>
+            ) : weekOwner === "mine" ? (
+              <Link href="/share">Share your week</Link>
+            ) : selectedCoach ? (
+              <Link href={`/${selectedCoach.handle}?from=feed`}>View profile</Link>
+            ) : null}
+          </div>
         )}
         {((isHome ? homeRows.length === 0 : items.length === 0) ? (
         <>
@@ -552,13 +564,25 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome ? "No classes yet" : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">
+              {isHome
+                ? weekOwner === "mine"
+                  ? "Nothing in your week yet"
+                  : weekOwner === "all"
+                    ? "No classes yet"
+                    : "No classes this week"
+                : "Nothing near you yet"}
+            </h2>
             <p className="wkempty-b">
               {isHome
-                ? "Follow a coach to see their schedule here."
+                ? weekOwner === "mine"
+                  ? "Add a class to start building your week."
+                  : weekOwner === "all"
+                    ? "Follow a coach to see their schedule here."
+                    : "Their next class will show up here."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
-            {isHome && (
+            {isHome && weekOwner === "all" && (
               <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
                 Find coaches
               </button>
@@ -753,19 +777,6 @@ export function FollowingScreen({
           onToast={notify}
           onChanged={() => {}}
           allowWeekAdd={false}
-        />
-      )}
-      {coachPeek && (
-        <CoachPeek
-          id={coachPeek.id}
-          name={coachPeek.name}
-          photo={coachPeek.photo}
-          color={coachPeek.color}
-          self={coachPeek.id === meId}
-          shareHref={coachPeek.id === meId ? "/share" : undefined}
-          onPrevious={peekPeople.length > 1 ? () => moveCoachPeek(-1) : undefined}
-          onNext={peekPeople.length > 1 ? () => moveCoachPeek(1) : undefined}
-          onClose={() => setCoachPeek(null)}
         />
       )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />

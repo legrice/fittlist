@@ -4827,7 +4827,7 @@ button.ps-card { cursor: pointer; }
    inside the card that room is the card's own, or the two stack into a
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
-.screen.hasnav .brandbar { padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom:8px; }
+.screen.hasnav .brandbar { padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom:12px; }
 /* No per-card fade any more: the screen's gradient runs behind clear
    cards, so there is nothing to splice. */
 /* The bar, back to the plain pill: the Slack-style dock (pill plus a search
