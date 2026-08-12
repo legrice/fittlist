@@ -6479,10 +6479,8 @@ button.ps-card { cursor: pointer; }
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
 .following-head { padding: 4px 0 4px; }
-.home-social-title,.home-ideas-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.home-social-title { margin-top:0; }
-.home-social-title strong { font-size:18px; }
-.home-social-title a,.home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
+.home-ideas-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
 .home-ideas-head { margin-top:20px; }
 .home-ideas-head h2 { margin:0; font-size:23px; line-height:1.1; }
 .navtab-add {

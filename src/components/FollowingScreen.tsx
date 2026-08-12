@@ -475,7 +475,6 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <div className="home-social-title"><strong>People you follow</strong><Link href="/following">Manage</Link></div>
           <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
             <div className="tray-scroll">
               {meId && (
