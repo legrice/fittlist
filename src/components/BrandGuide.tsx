@@ -14,8 +14,8 @@ type Swatch = { name: string; token: string; hex: string; note: string; onDark?:
 const CORE: Swatch[] = [
   { name: "Orange", token: "--si", hex: "#C2410C", note: "The accent, and every primary action", onDark: true },
   { name: "Ink", token: "--ink", hex: "#191502", note: "Text, and dark surfaces", onDark: true },
-  { name: "Paper", token: "--paper", hex: "#fdfcf7", note: "The ground everything scrolls on" },
-  { name: "Card", token: "--card", hex: "#ffffff", note: "What floats on the paper" },
+  { name: "Paper", token: "--paper", hex: "#ffffff", note: "The white ground everything scrolls on" },
+  { name: "Card", token: "--card", hex: "#ffffff", note: "Inset surfaces on the same white canvas" },
 ];
 
 const SUPPORTING: Swatch[] = [
@@ -82,7 +82,7 @@ export function BrandGuide({ mark }: { mark: string }) {
         <div className="brandmarks">
           <div className="brandmark on-si" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#ffffff"') }} />
           <div className="brandmark on-paper" dangerouslySetInnerHTML={{ __html: mark }} />
-          <div className="brandmark on-ink" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#fdfcf7"') }} />
+          <div className="brandmark on-ink" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#ffffff"') }} />
         </div>
         <p className="brandp brandp-tight">
           White on orange is the app icon. Orange on paper is the header lockup. Paper on ink is

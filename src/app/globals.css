@@ -79,29 +79,21 @@ html[data-native="ios"] .screen.hasnav > .pad {
      grey, which is the other way to lose the brand. */
   --cl: #f7f4ea;           /* warm cream — headers, tags, accents */
   --cl-d: #efe9db;         /* one step down: chips that need to read off the page */
-  --paper: #fdfcf7;        /* the content card: a breath off white */
-  /* The screen behind the card. The app reads as two layers: the header
-     (and whatever else is chrome) sits on this quiet warm gray, and the
-     content rides the paper with rounded top corners over it. It merged
-     onto the paper for a build and came back apart, by Matt's call: one
-     surface needed a drawn edge to say where content starts, and the two
-     tones say it without one. */
-  --shell: #f0eee8;
+  --paper: #ffffff;
+  /* One white surface across the app. Structure now comes from typography
+     and neutral inset rules rather than alternating cream and gray panels. */
+  --shell: #ffffff;
   /* The outline the view toggle wears. It went nearly ink for a build and
      stepped back to this wash, by Matt's call: worth the try, but the
      black frames shouted on every row. The class boxes wore it too until
      the gradient concept landed them borderless on the gray. */
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  /* The tabs shell's Health-style ground: a light pleasant warmth at the
-     very top flowing down into the warm gray. It went flat for a moment,
-     by Matt's call, and came straight back by the same voice: the fade
-     is something to look at, and a flat page had nothing. The ground
-     stays warm (#f1efe9, from the cool #eef0f1) so the fade settles into
-     its own family rather than bridging a clash. */
+  /* Decorative share treatments keep their own palettes; ordinary app
+     surfaces use white. */
   --grad-top: #f8dcc6;
   --grad-mid: #f3e6db;
-  --ground: #f1efe9;
-  --card: #ffffff;         /* white cards float on the cream */
+  --ground: #ffffff;
+  --card: #ffffff;
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
   --date-heading-weight: 600; /* one hierarchy across every schedule */
