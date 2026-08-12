@@ -185,6 +185,7 @@ export function FollowingScreen({
   const [homeQuery, setHomeQuery] = useState("");
   const [homeLocation, setHomeLocation] = useState("all");
   const [homeType, setHomeType] = useState("all");
+  const [directorySheet, setDirectorySheet] = useState<null | "all" | "location" | "type">(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -497,7 +498,7 @@ export function FollowingScreen({
             {([['classes', 'Classes'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
           </div>
           {homeMode !== "classes" && <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>}
-          {homeMode !== "classes" && <div className="home-directory-filters"><label><span>Location</span><select value={homeLocation} onChange={(e) => setHomeLocation(e.target.value)}><option value="all">All locations</option>{directoryLocations.map((location) => <option key={location} value={location}>{location}</option>)}</select></label><label><span>Type</span><select value={homeType} onChange={(e) => setHomeType(e.target.value)}><option value="all">All types</option>{directoryTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div>}
+          {homeMode !== "classes" && <div className="catpills fchips home-directory-filters" aria-label={`${homeMode} filters`}><button className={`catpill fchip-lead${homeLocation !== "all" || homeType !== "all" ? " on" : ""}`} aria-label="Filters" onClick={() => setDirectorySheet("all")}><Icon name="tune" size={17} />{(homeLocation !== "all" || homeType !== "all") && <span>{Number(homeLocation !== "all") + Number(homeType !== "all")}</span>}</button><button className={`catpill${homeLocation !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("location")}>{homeLocation === "all" ? "All locations" : homeLocation} <Icon name="expand_more" size={16} /></button><button className={`catpill${homeType !== "all" ? " on" : ""}`} onClick={() => setDirectorySheet("type")}>{homeType === "all" ? "All types" : homeType} <Icon name="expand_more" size={16} /></button></div>}
           {homeMode === "classes" && <>
           <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
             <div className="tray-scroll">
@@ -792,6 +793,19 @@ export function FollowingScreen({
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {directorySheet && (
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setDirectorySheet(null); }}>
+          <div className="sheet fsheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setDirectorySheet(null)}><Icon name="close" size={18} /></button>
+            <h2>{directorySheet === "all" ? "Filters" : directorySheet === "location" ? "Location" : "Type"}</h2>
+            <div className="fopts">
+              {(directorySheet === "all" || directorySheet === "location") && <><p className="fsec-h">Location</p>{["all", ...directoryLocations].map((value) => <button key={value} className="fopt" aria-pressed={homeLocation === value} onClick={() => { setHomeLocation(value); if (directorySheet !== "all") setDirectorySheet(null); }}>{value === "all" ? "All locations" : value}{homeLocation === value && <Icon name="check" size={19} />}</button>)}</>}
+              {(directorySheet === "all" || directorySheet === "type") && <><p className="fsec-h">Type</p>{["all", ...directoryTypes].map((value) => <button key={value} className="fopt" aria-pressed={homeType === value} onClick={() => { setHomeType(value); if (directorySheet !== "all") setDirectorySheet(null); }}>{value === "all" ? "All types" : value}{homeType === value && <Icon name="check" size={19} />}</button>)}</>}
+            </div>
+            {directorySheet === "all" && <div className="publishwrap fsheet-foot"><button className="btn si" onClick={() => setDirectorySheet(null)}>Done</button>{(homeLocation !== "all" || homeType !== "all") && <button className="btn ghost" onClick={() => { setHomeLocation("all"); setHomeType("all"); setDirectorySheet(null); }}>Clear filters</button>}</div>}
           </div>
         </div>
       )}
