@@ -18,6 +18,8 @@ export type FeedCoach = {
   color: string;
   /** Public coaching specialty shown on coach discovery cards. */
   title: string | null;
+  /** Public city or area used by the Home directory's location filter. */
+  location: string | null;
   /** When their next class is ("Today 6:00p"): the Add screen's browse list
    *  and People near you still say it. The rail deliberately does not. */
   next: string | null;
@@ -49,6 +51,7 @@ export type NearStudio = {
   photo: string | null;
   color: string;
   types: string[];
+  location: string | null;
   lat: number | null;
   lng: number | null;
   /** A city-center estimate until the viewer grants an exact browser pin. */
@@ -178,6 +181,8 @@ export function FollowingScreen({
   const [coachFilter, setCoachFilter] = useState<string>("all");
   const [homeMode, setHomeMode] = useState<"following" | "coaches" | "studios">("following");
   const [homeQuery, setHomeQuery] = useState("");
+  const [homeLocation, setHomeLocation] = useState("all");
+  const [homeType, setHomeType] = useState("all");
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -192,6 +197,14 @@ export function FollowingScreen({
   };
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
+  const directoryLocations = useMemo(() => {
+    const values = homeMode === "coaches" ? coaches.map((c) => c.location) : nearStudios.map((s) => s.location);
+    return [...new Set(values.map((v) => v?.trim()).filter((v): v is string => !!v))].sort();
+  }, [coaches, nearStudios, homeMode]);
+  const directoryTypes = useMemo(() => {
+    const values = homeMode === "coaches" ? coaches.map((c) => c.title?.trim() || "Fitness coach") : nearStudios.flatMap((s) => s.types);
+    return [...new Set(values.filter(Boolean))].sort();
+  }, [coaches, nearStudios, homeMode]);
 
   // The viewer's pin: taken silently when the browser already granted it
   // somewhere else (the studio tiles say how far, the rail sorts by real
@@ -468,9 +481,9 @@ export function FollowingScreen({
       {isHome && (
         <header className="following-head">
           <div className="home-modes" role="tablist" aria-label="Home">
-            {([['following', 'Following'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); }}>{label}</button>)}
+            {([['following', 'Following'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
           </div>
-          {homeMode !== "following" && <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Filter ${homeMode}`} aria-label={`Filter ${homeMode}`} /></label>}
+          {homeMode !== "following" && <><label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Filter ${homeMode}`} aria-label={`Filter ${homeMode}`} /></label><div className="home-directory-filters"><label><span>Location</span><select value={homeLocation} onChange={(e) => setHomeLocation(e.target.value)}><option value="all">All locations</option>{directoryLocations.map((location) => <option key={location} value={location}>{location}</option>)}</select></label><label><span>Type</span><select value={homeType} onChange={(e) => setHomeType(e.target.value)}><option value="all">All types</option>{directoryTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div></>}
           {homeMode === "following" && <>
           <div className="tray following-rail" role="group" aria-label="Filter by coach">
             <div className="tray-scroll">
@@ -514,12 +527,12 @@ export function FollowingScreen({
       )}
       {isHome && homeMode === "coaches" && (
         <div className="home-directory-grid">
-          {coaches.filter((c) => { const q = homeQuery.trim().toLowerCase(); return !q || c.name.toLowerCase().includes(q) || c.title?.toLowerCase().includes(q); }).map((coach) => <Link href={`/${coach.handle}?from=feed`} className="home-person-tile" key={coach.id}>{favIds.includes(coach.id) && <span className="home-person-following" aria-label="Following"><Icon name="account_circle" size={18} /><Icon name="check" size={11} /></span>}<span className="home-person-face" style={{ background: coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : (coach.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{coach.name}</strong><span>{coach.title?.trim() || "Fitness coach"}</span></Link>)}
+          {coaches.filter((c) => { const q = homeQuery.trim().toLowerCase(); const type = c.title?.trim() || "Fitness coach"; return (!q || c.name.toLowerCase().includes(q) || type.toLowerCase().includes(q)) && (homeLocation === "all" || c.location?.trim() === homeLocation) && (homeType === "all" || type === homeType); }).map((coach) => <Link href={`/${coach.handle}?from=feed`} className="home-person-tile" key={coach.id}>{favIds.includes(coach.id) && <span className="home-person-following" aria-label="Following"><Icon name="account_circle" size={18} /><Icon name="check" size={11} /></span>}<span className="home-person-face" style={{ background: coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : (coach.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{coach.name}</strong><span>{coach.title?.trim() || "Fitness coach"}</span></Link>)}
         </div>
       )}
       {isHome && homeMode === "studios" && (
         <div className="home-studio-grid">
-          {nearStudios.filter((studio) => { const q = homeQuery.trim().toLowerCase(); return !q || studio.name.toLowerCase().includes(q) || studio.types.some((t) => t.toLowerCase().includes(q)); }).map((studio) => <Link href={`/s/${studio.slug}?from=feed`} className="home-studio-tile" key={studio.id}>{studio.photo ? <img src={studio.photo} alt="" /> : <span style={{ background: studio.color }}>{(studio.name.trim().charAt(0) || "?").toUpperCase()}</span>}<strong>{studio.name}</strong><small>{studio.types.slice(0, 2).join(" · ") || "Fitness space"}</small></Link>)}
+          {nearStudios.filter((studio) => { const q = homeQuery.trim().toLowerCase(); return (!q || studio.name.toLowerCase().includes(q) || studio.types.some((t) => t.toLowerCase().includes(q))) && (homeLocation === "all" || studio.location === homeLocation) && (homeType === "all" || studio.types.includes(homeType)); }).map((studio) => <Link href={`/s/${studio.slug}?from=feed`} className="home-studio-tile" key={studio.id}>{studio.photo ? <img src={studio.photo} alt="" /> : <span style={{ background: studio.color }}>{(studio.name.trim().charAt(0) || "?").toUpperCase()}</span>}<strong>{studio.name}</strong><small>{studio.types.slice(0, 2).join(" · ") || "Fitness space"}</small></Link>)}
         </div>
       )}
       {isHome && homeMode === "following" && selectedCoach && (

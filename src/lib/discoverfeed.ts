@@ -209,6 +209,7 @@ export async function buildDiscoverFeed(
       photo: c.photoThumb ?? c.photo,
       color: avatarColor(c),
       title: c.title,
+      location: c.location,
       next: nextLabel(c.id),
     }))
     .sort((a, b) => {
@@ -335,6 +336,7 @@ export async function buildDiscoverFeed(
       photo: s.photo,
       color: avatarColor({ id: s.id }),
       types: s.types,
+      location: s.address.split(",").slice(-3, -1).join(",").trim() || s.address.split(",")[0]?.trim() || null,
       lat: s.lat ?? null,
       lng: s.lng ?? null,
       approxMiles:
