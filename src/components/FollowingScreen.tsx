@@ -495,7 +495,7 @@ export function FollowingScreen({
           <div className="home-modes" role="tablist" aria-label="Home">
             {([['classes', 'Classes'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
           </div>
-          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>
+          {homeMode !== "classes" && <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>}
           {homeMode !== "classes" && <div className="home-directory-filters"><label><span>Location</span><select value={homeLocation} onChange={(e) => setHomeLocation(e.target.value)}><option value="all">All locations</option>{directoryLocations.map((location) => <option key={location} value={location}>{location}</option>)}</select></label><label><span>Type</span><select value={homeType} onChange={(e) => setHomeType(e.target.value)}><option value="all">All types</option>{directoryTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div>}
           {homeMode === "classes" && <>
           <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
@@ -527,6 +527,7 @@ export function FollowingScreen({
               </Link>
             </div>
           </div>
+          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder="Search classes" aria-label="Search classes" /></label>
           </>}
         </header>
       )}
