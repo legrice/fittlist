@@ -293,14 +293,26 @@ export function CalendarScreen({
               screen reader. */}
           {!bare && (
             <div className="calbar-tools">
-              {!member && <label className="calfilter">
-                <select aria-label="Show schedule" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
-                  <option value="all">All</option>
-                  <option value="coaching">Coaching</option>
-                  <option value="added">Attending</option>
-                </select>
-                <Icon name="expand_more" size={17} />
-              </label>}
+              {!member && (
+                <div className="calkindseg" role="tablist" aria-label="Show schedule">
+                  {([
+                    ["all", "All"],
+                    ["coaching", "Coaching"],
+                    ["added", "Attending"],
+                  ] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="tab"
+                      aria-selected={kind === value}
+                      className={kind === value ? "on" : ""}
+                      onClick={() => setKind(value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="calseg" role="tablist" aria-label="Schedule view">
                 <button
                   role="tab"

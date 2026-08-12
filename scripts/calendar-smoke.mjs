@@ -106,11 +106,11 @@ await p.locator(".clline").first().waitFor();
   if (await p.locator(".caltitle").count())
     fail("Schedule should not repeat the tab label as a page title");
   const toggleBox = await p.locator(".calbar .calseg").boundingBox();
-  const filter = p.locator(".calfilter select");
-  if (!(await filter.count())) fail("the calendar needs its All, Coaching, Added dropdown");
-  const options = await filter.locator("option").allTextContents();
-  if (options.join("|") !== "All|Coaching|Added") fail("wrong calendar filters: " + options.join("|"));
-  if ((await filter.inputValue()) !== "all") fail("the calendar should default to All");
+  const filters = p.locator(".calkindseg [role=tab]");
+  if ((await filters.allTextContents()).join("|") !== "All|Coaching|Attending")
+    fail("the calendar needs visible All, Coaching, Attending tabs");
+  if ((await filters.filter({ hasText: "All" }).getAttribute("aria-selected")) !== "true")
+    fail("the calendar should default to All");
   console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| combined calendar title row");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
