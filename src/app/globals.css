@@ -7486,7 +7486,23 @@ a.clspeek-by:active { opacity: .6; }
      wrapping name pushed the code around. */
   max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.qrcard .qrframe { border: none; }
+.qrcard .qrframe {
+  /* Do not let the fixed-height share stage resolve the generic QR image's
+     `height: 100%` against the card. Mobile Safari could briefly give that
+     percentage a non-square containing block, leaving only the top half of
+     the code visible. This frame and its image own an explicit square. */
+  flex: 0 0 auto;
+  width: min(232px, 100%);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border: none;
+  overflow: visible;
+}
+.qrcard .qrimg {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
 .qrcard .qrurl { color: var(--ol); margin-bottom: 0; }
 /* The pickers behind Dates and Classes: a scrolling list of rows and a Done. */
 .shpick-list { max-height: 42vh; overflow-y: auto; overscroll-behavior: contain; }
