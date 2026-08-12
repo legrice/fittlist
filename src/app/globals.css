@@ -7170,17 +7170,36 @@ button.ps-card { cursor: pointer; }
 }
 .personweek-sheet .peekday > .peekday-h + * { border-top:0; }
 .personweek-sheet .peekrow {
-  min-height:0; padding:18px 0; gap:12px;
+  position:relative; min-height:0; padding:18px 0;
   border:0;
 }
 .personweek-sheet .peekrow + .peekrow { border-top:0; }
+.personweek-sheet .peekrow-go {
+  display:grid; grid-template-columns:72px minmax(0,1fr); column-gap:8px;
+  align-items:baseline; width:100%;
+}
+.personweek-sheet .peekrow:has(.peekadd) .peekrow-go { padding-right:40px; }
+.personweek-sheet .peekrow-time {
+  grid-column:1; grid-row:1;
+  display:flex; align-items:baseline; gap:2px;
+  color:var(--ink); font-size:15.5px; line-height:1.16; font-weight:600;
+  white-space:nowrap;
+}
 .personweek-sheet .peekrow-nm {
+  grid-column:2; grid-row:1; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   font-size:20px; line-height:1.16; font-weight:600; letter-spacing:-.008em;
 }
 .personweek-sheet .peekrow-sub {
-  margin-top:3px; font-size:16.5px; line-height:1.25; font-weight:400;
+  grid-column:2; grid-row:2; min-width:0;
+  margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:16.5px; line-height:1.25; font-weight:400;
 }
 .personweek-sheet .peekrow-ap { font-size:12px; }
+.personweek-sheet .peekrow-tags { grid-column:2; grid-row:3; }
+.personweek-sheet .peekadd {
+  position:absolute; top:13px; right:0;
+}
 .personweek-sheet .peekfoot { margin-top:18px; }
 
 /* ---------------------------------------------------------------------------

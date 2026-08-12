@@ -231,12 +231,12 @@ export function CoachPeek({
                       data-d={it.iso}
                       data-base={it.base}
                     >
-                      <span className="peekrow-nm">{it.name}</span>
-                      <span className="peekrow-sub">
+                      <span className="peekrow-time">
                         {it.hm}
                         <span className="peekrow-ap">{it.ap.toLowerCase()}</span>
-                        {it.where ? ` · ${it.where}` : ""}
                       </span>
+                      <span className="peekrow-nm">{it.name}</span>
+                      {it.where && <span className="peekrow-sub">{it.where}</span>}
                       {!self && on && (
                         <span className="peekrow-tags">
                           <span className="peektag peektag-you">In your week too</span>
