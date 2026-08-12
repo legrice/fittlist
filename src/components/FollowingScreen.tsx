@@ -180,7 +180,6 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [coachPeek, setCoachPeek] = useState<FeedCoach | null>(null);
-  const [homeQuery, setHomeQuery] = useState("");
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -243,22 +242,9 @@ export function FollowingScreen({
   };
 
   const shown = useMemo(
-    () => {
-      const q = homeQuery.trim().toLowerCase();
-      return items.filter((item) => {
-        const coach = coachById.get(item.coachId);
-        return (
-          passes(item) &&
-          (!isHome ||
-            !q ||
-            item.name.toLowerCase().includes(q) ||
-            (item.where ?? "").toLowerCase().includes(q) ||
-            (coach?.name ?? "").toLowerCase().includes(q))
-        );
-      });
-    },
+    () => items.filter(passes),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo, isHome, homeQuery, coachById],
+    [items, f, geo],
   );
 
   const coachOptions = useMemo(() => {
@@ -489,7 +475,6 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder="Search classes, people, or places" aria-label="Search classes, people, or places" /></label>
           <div className="home-social-title"><strong>People you follow</strong><Link href="/following">Manage</Link></div>
           <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
             <div className="tray-scroll">
