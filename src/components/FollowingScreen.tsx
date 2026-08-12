@@ -544,10 +544,11 @@ export function FollowingScreen({
           </div>
         </header>
       )}
-      {isHome && items.length > 0 && (
-        <div className="home-ideas-head"><h2>All classes this week</h2><Link href="/upcoming">See all</Link></div>
-      )}
-      {(items.length === 0 ? (
+      <div className={isHome ? "home-week-surface" : undefined}>
+        {isHome && items.length > 0 && (
+          <div className="home-ideas-head"><h2>All classes this week</h2><Link href="/upcoming">See all</Link></div>
+        )}
+        {(items.length === 0 ? (
         <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -672,7 +673,8 @@ export function FollowingScreen({
             </div>
           </div>
         </>
-      ))}
+        ))}
+      </div>
 
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
