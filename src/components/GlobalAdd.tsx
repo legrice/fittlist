@@ -10,7 +10,6 @@ export function GlobalAdd() {
     <>
       <button className="navtab navtab-add" data-tab="add" aria-label="Add" onClick={() => setOpen(true)}>
         <span className="navadd-glyph"><Icon name="add" size={29} /></span>
-        <span>Add</span>
       </button>
       {open && <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
         <div className="sheet globaladd-sheet" role="dialog" aria-modal="true" aria-labelledby="globaladd-title">

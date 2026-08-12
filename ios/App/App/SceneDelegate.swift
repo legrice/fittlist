@@ -40,7 +40,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.items = [
             item("Home", "house", 0),
             item("Schedule", "calendar", 1),
-            item("Add", "plus.circle.fill", 2),
+            item(nil, "plus.circle.fill", 2),
             item("Share", "arrow.up.right", 3),
             item("Profile", "person.crop.circle", 4),
         ]
@@ -150,7 +150,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     @objc private func openUpdates() { navigate(fallback: "/updates") }
     @objc private func openSettings() { navigate(fallback: "/settings") }
 
-    private func item(_ title: String, _ symbol: String, _ tag: Int) -> UITabBarItem {
+    private func item(_ title: String?, _ symbol: String, _ tag: Int) -> UITabBarItem {
         UITabBarItem(title: title, image: UIImage(systemName: symbol), tag: tag)
     }
 
