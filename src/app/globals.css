@@ -6480,6 +6480,7 @@ button.ps-card { cursor: pointer; }
 .home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
 .home-ideas-head { margin-top:20px; }
 .home-ideas-head h2 { margin:0; font-size:23px; line-height:1.1; }
+.home-ideas-head-all h2 { font-size:18px; }
 .home-week-surface {
   margin: 0 -18px; padding: 22px 0 calc(18px + env(safe-area-inset-bottom));
   background: var(--card);
