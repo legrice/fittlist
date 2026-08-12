@@ -12,11 +12,11 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let fallbackRoutes = ["/feed", "/calendar", "#add", "/coachshare", "/you"]
     private var settingsButton: UIButton?
 
-    override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+    override var preferredStatusBarStyle: UIStatusBarStyle { .darkContent }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1)
+        view.backgroundColor = UIColor(red: 246 / 255, green: 244 / 255, blue: 239 / 255, alpha: 1)
 
         addChild(bridge)
         bridge.view.translatesAutoresizingMaskIntoConstraints = false
@@ -51,7 +51,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 62),
+            headerView.heightAnchor.constraint(equalToConstant: 52),
             bridge.view.topAnchor.constraint(equalTo: headerView.bottomAnchor),
             bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -69,21 +69,21 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
     private func configureHeader() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1)
+        headerView.backgroundColor = UIColor(red: 246 / 255, green: 244 / 255, blue: 239 / 255, alpha: 1)
         view.addSubview(headerView)
 
         let home = UIButton(type: .system)
         home.translatesAutoresizingMaskIntoConstraints = false
         home.setTitle("FittList", for: .normal)
         home.setImage(brandMark(), for: .normal)
-        home.tintColor = .white
+        home.tintColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1)
         home.configuration = {
             var configuration = UIButton.Configuration.plain()
             configuration.imagePadding = 7
             return configuration
         }()
-        home.setTitleColor(.white, for: .normal)
-        home.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
+        home.setTitleColor(UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1), for: .normal)
+        home.titleLabel?.font = .systemFont(ofSize: 22, weight: .bold)
         home.addTarget(self, action: #selector(openHome), for: .touchUpInside)
         headerView.addSubview(home)
 
@@ -111,7 +111,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private func headerButton(symbol: String, action: Selector, label: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: symbol), for: .normal)
-        button.tintColor = .white
+        button.tintColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1)
         button.accessibilityLabel = label
         button.widthAnchor.constraint(equalToConstant: 44).isActive = true
         button.heightAnchor.constraint(equalToConstant: 44).isActive = true
@@ -123,7 +123,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         let size = CGSize(width: 20, height: 20.3)
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { context in
-            UIColor.white.setFill()
+            UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1).setFill()
             let scale = size.width / 134
             let blocks = [
                 CGRect(x: 0, y: 0, width: 40, height: 40),

@@ -4836,7 +4836,7 @@ button.ps-card { cursor: pointer; }
    inside the card that room is the card's own, or the two stack into a
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
-.screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
+.screen.hasnav .brandbar { padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom:8px; }
 /* No per-card fade any more: the screen's gradient runs behind clear
    cards, so there is nothing to splice. */
 /* The bar, back to the plain pill: the Slack-style dock (pill plus a search
@@ -6535,12 +6535,16 @@ button.ps-card { cursor: pointer; }
 .following-coach-context .feedfilter-txt { font-size: 17px; }
 .following-coach-context .feedfilter-link { font-size: 14px; }
 .screen.hasnav .brandbar {
-  background: var(--ink); color: #fff; --wm-ink: #fff; --wm-mark: #fff;
+  background:transparent; color:var(--ink); --wm-ink:var(--ink); --wm-mark:var(--ink);
 }
-.screen.hasnav .brandbar .iconbtn { color: #fff; }
-.screen.hasnav .brandbar .headnav-l { color: rgba(255, 255, 255, .7); }
+.screen.hasnav .brandbar .iconbtn { color:var(--ink); }
+.screen.hasnav .brandbar .headnav-l { color:var(--muted); }
 .screen.hasnav .brandbar .headnav-l:hover,
-.screen.hasnav .brandbar .headnav-l.on { color: #fff; border-bottom-color: #fff; }
+.screen.hasnav .brandbar .headnav-l.on { color:var(--ink); border-bottom-color:var(--ink); }
+/* Photo-led profiles keep their overlay contrast; only standard app chrome
+   returns to ink on the page ground. */
+.screen.hasnav .pub-hero .brandbar { color:#fff; --wm-ink:#fff; --wm-mark:#fff; }
+.screen.hasnav .pub-hero .brandbar .iconbtn { color:#fff; }
 .tab-page-title {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 30px; line-height: 1.05; font-weight: 600;
