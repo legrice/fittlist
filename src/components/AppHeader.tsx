@@ -46,7 +46,7 @@ export function AppHeader({
         <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
         <HeaderIconLink
           label={`Messages${unreadMessages ? `, ${unreadMessages} unread` : ""}`}
-          icon="forum"
+          icon="chat_bubble"
           href="/updates?tab=messages"
           match="/inbox"
           badge={unreadMessages > 0 ? <span className="inboxdot">{unreadMessages > 9 ? "9+" : unreadMessages}</span> : undefined}
