@@ -41,6 +41,11 @@ export function CircleTray({ circles }: { circles: Circle[] }) {
     // stays lit over classes they have already read.
     void markPeeked(c.id);
   };
+  const movePeek = (step: -1 | 1) => {
+    if (!open || circles.length < 2) return;
+    const at = circles.findIndex((circle) => circle.id === open.id);
+    openPeek(circles[(Math.max(0, at) + step + circles.length) % circles.length]);
+  };
 
   return (
     <>
@@ -88,6 +93,8 @@ export function CircleTray({ circles }: { circles: Circle[] }) {
           name={open.name}
           photo={open.photo}
           color={open.color}
+          onPrevious={circles.length > 1 ? () => movePeek(-1) : undefined}
+          onNext={circles.length > 1 ? () => movePeek(1) : undefined}
           onClose={() => setOpen(null)}
         />
       )}

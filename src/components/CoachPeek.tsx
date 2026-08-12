@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { personPeek, type Peek } from "@/app/actions/peek";
 import { setGoing } from "@/app/actions/going";
@@ -33,6 +33,8 @@ export function CoachPeek({
   self = false,
   scheduleOnly = false,
   shareHref,
+  onPrevious,
+  onNext,
   onClose,
 }: {
   id: string;
@@ -47,6 +49,9 @@ export function CoachPeek({
    * privately added for themselves. */
   scheduleOnly?: boolean;
   shareHref?: string;
+  /** Horizontal paging through the rail that opened this sheet. */
+  onPrevious?: () => void;
+  onNext?: () => void;
   onClose: () => void;
 }) {
   const [peek, setPeek] = useState<Peek | null>(null);
@@ -57,9 +62,16 @@ export function CoachPeek({
   const [follow, setFollow] = useState<null | "following" | "requested" | "off">(null);
   const [followBusy, setFollowBusy] = useState(false);
   const [, startTransition] = useTransition();
+  const touch = useRef<{ x: number; y: number; row: boolean } | null>(null);
 
   useEffect(() => {
+    let live = true;
+    setPeek(null);
+    setMissing(false);
+    setFollow(null);
+    setMarks({});
     personPeek(id).then((res) => {
+      if (!live) return;
       if (!res) {
         setMissing(true);
         return;
@@ -67,7 +79,20 @@ export function CoachPeek({
       setPeek(res);
       setFollow(res.following ? "following" : "off");
     });
+    return () => { live = false; };
   }, [id]);
+
+  const finishSwipe = (event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touch.current;
+    touch.current = null;
+    if (!start || start.row) return;
+    const point = event.changedTouches[0];
+    const dx = point.clientX - start.x;
+    const dy = point.clientY - start.y;
+    if (Math.abs(dx) < 54 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    if (dx < 0) onNext?.();
+    else onPrevious?.();
+  };
 
   const save = (classId: string, iso: string, on: boolean) => {
     const key = `${classId}|${iso}`;
@@ -112,7 +137,18 @@ export function CoachPeek({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="sheet sheet-full peeksheet">
+      <div
+        className="sheet sheet-full peeksheet"
+        onTouchStart={(event) => {
+          const point = event.touches[0];
+          touch.current = {
+            x: point.clientX,
+            y: point.clientY,
+            row: event.target instanceof Element && !!event.target.closest(".peekrow"),
+          };
+        }}
+        onTouchEnd={finishSwipe}
+      >
         {/* A direct child of the scrolling sheet so sticky can hold it for
             the full week. Inside the short header it was constrained to the
             header and disappeared as soon as the dates began. */}

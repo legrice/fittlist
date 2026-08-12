@@ -253,6 +253,16 @@ export function FollowingScreen({
       (coach) => ids.has(coach.id) && coach.id !== meId && favIds.includes(coach.id),
     );
   }, [coaches, items, favIds, meId]);
+  const peekPeople = useMemo<FeedCoach[]>(() => {
+    const mine = meId ? [{ id: meId, name: meFace.name, handle: "", photo: meFace.photo, color: meFace.color, title: null, location: null, next: null }] : [];
+    return [...mine, ...coachOptions];
+  }, [meId, meFace, coachOptions]);
+  const moveCoachPeek = (step: -1 | 1) => {
+    if (!coachPeek || peekPeople.length < 2) return;
+    const at = peekPeople.findIndex((person) => person.id === coachPeek.id);
+    const next = (Math.max(0, at) + step + peekPeople.length) % peekPeople.length;
+    setCoachPeek(peekPeople[next]);
+  };
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -758,6 +768,8 @@ export function FollowingScreen({
           color={coachPeek.color}
           self={coachPeek.id === meId}
           shareHref={coachPeek.id === meId ? "/share" : undefined}
+          onPrevious={peekPeople.length > 1 ? () => moveCoachPeek(-1) : undefined}
+          onNext={peekPeople.length > 1 ? () => moveCoachPeek(1) : undefined}
           onClose={() => setCoachPeek(null)}
         />
       )}
