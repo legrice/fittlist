@@ -25,6 +25,13 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.isTranslucent = true
         tabBar.tintColor = UIColor(red: 199 / 255, green: 71 / 255, blue: 10 / 255, alpha: 1)
         tabBar.unselectedItemTintColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 0.72)
+        let appearance = UITabBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterial)
+        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.48)
+        appearance.shadowColor = .clear
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
         tabBar.items = [
             item("Following", "person.2", 0),
             item("Discover", "magnifyingglass", 1),
@@ -56,6 +63,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         bridge.loadViewIfNeeded()
         guard let controller = bridge.webView?.configuration.userContentController else { return }
         controller.add(self, name: "fittlistRoute")
+        controller.add(self, name: "fittlistExternal")
+        bridge.webView?.allowsBackForwardNavigationGestures = true
 
         // Mark the document before it paints so the HTML fallback bar never
         // flashes underneath the real native tab bar.
@@ -75,7 +84,19 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
               addEventListener('popstate', send);
               addEventListener('hashchange', send);
               document.addEventListener('click', event => {
-                if (event.target.closest?.('a[href]')) setTimeout(send, 0);
+                const link = event.target.closest?.('a[href]');
+                if (!link) return;
+                const url = new URL(link.href, location.href);
+                const external = url.protocol !== 'http:' && url.protocol !== 'https:'
+                  || (url.hostname !== location.hostname
+                    && url.hostname !== 'fittlist.co'
+                    && url.hostname !== 'www.fittlist.co');
+                if (external) {
+                  event.preventDefault();
+                  window.webkit.messageHandlers.fittlistExternal.postMessage(url.href);
+                  return;
+                }
+                setTimeout(send, 0);
               }, true);
               send();
             })();
@@ -88,10 +109,26 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         guard routes.indices.contains(item.tag) else { return }
         let route = routes[item.tag]
-        bridge.webView?.evaluateJavaScript("window.location.assign('\(route)')")
+        // Click the existing Next.js tab when it is present. Although hidden by
+        // the native marker, it keeps client-side navigation and cached page
+        // state intact. The location fallback also works on signed-out pages.
+        bridge.webView?.evaluateJavaScript("""
+          (() => {
+            const route = '\(route)';
+            const link = document.querySelector(`.tabbar a[href="${route}"]`);
+            if (link) link.click(); else window.location.assign(route);
+          })();
+        """)
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "fittlistExternal", let rawURL = message.body as? String,
+           let url = URL(string: rawURL),
+           let scheme = url.scheme?.lowercased(),
+           ["http", "https", "mailto", "tel", "sms", "maps"].contains(scheme) {
+            UIApplication.shared.open(url)
+            return
+        }
         guard message.name == "fittlistRoute", let path = message.body as? String else { return }
         let tag: Int?
         if path == "/feed" || path == "/upcoming" { tag = 0 }
