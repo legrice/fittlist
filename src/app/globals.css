@@ -6510,7 +6510,10 @@ button.ps-card { cursor: pointer; }
 .shpage-title { padding: 2px 0 10px; }
 .following-days { display: flex; flex-direction: column; gap: 24px; }
 .following-day-h {
-  margin: 0 0 9px; font-size: 18px; line-height: 1.15;
+  position: sticky; top: 0; z-index: 6;
+  margin: 0 -18px 9px; padding: 8px 18px;
+  background: var(--ground);
+  font-size: 18px; line-height: 1.15;
   font-weight: var(--date-heading-weight);
   letter-spacing: -.01em;
 }
