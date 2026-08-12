@@ -545,7 +545,7 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && items.length > 0 && (
-        <div className="home-ideas-head"><h2>Upcoming classes near you</h2><Link href="/upcoming">See all</Link></div>
+        <div className="home-ideas-head"><h2>All classes this week</h2><Link href="/upcoming">See all</Link></div>
       )}
       {(items.length === 0 ? (
         <>
