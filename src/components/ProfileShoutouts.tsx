@@ -42,21 +42,23 @@ export function ProfileShoutouts({ handle, studioSlug, name, signedIn, owner, in
     <section id="profile-shoutouts" className="profile-anchor-section profile-shoutouts">
       <div className="shoutouts-head">
         <div><h2 className="profile-section-title">Shoutouts</h2><p>Kind words from the community.</p></div>
-        {!owner && <button className="btn shoutout-give" onClick={openComposer}>Give a shoutout</button>}
       </div>
       {shown.length ? (
-        <div className="shoutout-list">
-          {shown.map((row) => (
-            <article className="shoutout-card" key={row.id}>
-              <p>“{row.body}”</p><span>From {row.authorName}</span>
-              {owner && <div className="shoutout-actions">
-                <button disabled={pending} onClick={() => moderate(row.id, row.featured ? "hide" : "feature")}>{row.featured ? "Remove from profile" : "Feature on profile"}</button>
-                <button disabled={pending} onClick={() => moderate(row.id, "delete")}>Delete</button>
-              </div>}
-            </article>
-          ))}
-        </div>
-      ) : <div className="empty-block compact"><h3>No shoutouts yet</h3><p>{owner ? "New shoutouts will arrive here for you to feature." : `Be the first to give ${first} a shoutout.`}</p></div>}
+        <>
+          <div className="shoutout-list">
+            {shown.map((row) => (
+              <article className="shoutout-card" key={row.id}>
+                <p>“{row.body}”</p><span>From {row.authorName}</span>
+                {owner && <div className="shoutout-actions">
+                  <button disabled={pending} onClick={() => moderate(row.id, row.featured ? "hide" : "feature")}>{row.featured ? "Remove from profile" : "Feature on profile"}</button>
+                  <button disabled={pending} onClick={() => moderate(row.id, "delete")}>Delete</button>
+                </div>}
+              </article>
+            ))}
+          </div>
+          {!owner && <button className="btn shoutout-give shoutout-give-after" onClick={openComposer}>Give a shoutout</button>}
+        </>
+      ) : <div className="empty-block compact shoutout-empty"><h3>No shoutouts yet</h3><p>{owner ? "New shoutouts will arrive here for you to feature." : `Be the first to give ${first} a shoutout.`}</p>{!owner && <button className="btn shoutout-give" onClick={openComposer}>Give a shoutout</button>}</div>}
       {message && <p className="shoutout-message" role="status">{message}</p>}
       <BodyPortal>{composer && <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setComposer(false); }}><div className="sheet shoutout-sheet" role="dialog" aria-modal="true" aria-labelledby="shoutout-title"><button className="iconbtn sheetclose" aria-label="Close" onClick={() => setComposer(false)}><Icon name="close" size={18} /></button><h2 id="shoutout-title">Give {first} a shoutout</h2><p className="lead">What should people know about them?</p><textarea value={body} maxLength={280} autoFocus placeholder={`What makes ${first} great?`} onChange={(e) => setBody(e.target.value)} /><div className="shoutout-counter">{body.length}/280</div><button className="btn si" disabled={pending || body.trim().length < 8} onClick={send}>{pending ? "Sending…" : "Send privately"}</button></div></div>}</BodyPortal>
       <SignupPrompt open={signup} onClose={() => setSignup(false)} next={studioSlug ? `/s/${studioSlug}#profile-shoutouts` : `/${handle}#profile-shoutouts`} via={handle} title="Join the conversation" body="Sign up to give shoutouts and celebrate the people and places that make fitness better." />
