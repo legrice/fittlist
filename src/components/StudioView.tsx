@@ -26,6 +26,7 @@ import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { StudioBeenHere } from "@/components/StudioBeenHere";
+import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -106,6 +107,11 @@ export async function StudioView({
     all[row.trait] = (all[row.trait] ?? 0) + 1;
     return all;
   }, {});
+  const shoutoutRows = await db
+    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+    .from(schema.shoutouts)
+    .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
+    .where(eq(schema.shoutouts.targetStudioId, s.id));
 
   // The gym's own week, if it runs one. Seven days from today, expanded the
   // same way every other surface expands a recurrence.
@@ -342,6 +348,7 @@ export async function StudioView({
             },
             { key: "about", label: "Info" },
             { key: "coaches", label: "Coaches" },
+            { key: "shoutouts", label: "Shoutouts" },
           ]}
           name={s.name}
           summary={s.about}
@@ -531,6 +538,14 @@ export async function StudioView({
           </div>
           )}
         </section>
+
+        <ProfileShoutouts
+          studioSlug={s.slug ?? s.id}
+          name={s.name}
+          signedIn={signedIn}
+          owner={access.isManager}
+          initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+        />
 
         </ProfileTabs>
 

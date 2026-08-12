@@ -878,6 +878,28 @@ export const studioEndorsements = pgTable(
   ],
 );
 
+// A short, personal recommendation. Unlike badges these are freeform, and
+// unlike reviews they are never scored or published by default: the person
+// or place receiving one decides whether it belongs on their public profile.
+export const shoutouts = pgTable(
+  "shoutouts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    authorUserId: uuid("author_user_id").notNull().references(() => users.id),
+    targetUserId: uuid("target_user_id").references(() => users.id),
+    targetStudioId: uuid("target_studio_id").references(() => studios.id),
+    body: text("body").notNull(),
+    featuredAt: timestamp("featured_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("shoutouts_author_user").on(t.authorUserId, t.targetUserId),
+    uniqueIndex("shoutouts_author_studio").on(t.authorUserId, t.targetStudioId),
+    index("shoutouts_target_user").on(t.targetUserId, t.createdAt),
+    index("shoutouts_target_studio").on(t.targetStudioId, t.createdAt),
+  ],
+);
+
 // One row per trainer who connected Google Calendar. We mirror their classes
 // into their calendar (one-way); syncedEventIds tracks the events we created so
 // a re-sync can clear and repopulate without touching their personal events.

@@ -9,7 +9,7 @@ import { ProfileAbout } from "@/components/ProfileAbout";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
-export type ProfileTab = "about" | "studios" | "schedule" | "following";
+export type ProfileTab = "about" | "studios" | "schedule" | "following" | "shoutouts";
 
 /** One tab: the key is the URL suffix, and the first in the list owns the
  *  bare base rather than a suffix of its own. */

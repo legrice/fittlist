@@ -575,6 +575,20 @@
       "when": 1786479016798,
       "tag": "0081_married_cerebro",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1786532233500,
+      "tag": "0082_kind_moon_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1786532251912,
+      "tag": "0083_gigantic_william_stryker",
+      "breakpoints": true
     }
   ]
 }

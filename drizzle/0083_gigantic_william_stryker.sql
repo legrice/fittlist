@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "shoutouts_author_user" ON "shoutouts" USING btree ("author_user_id","target_user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "shoutouts_author_studio" ON "shoutouts" USING btree ("author_user_id","target_studio_id");

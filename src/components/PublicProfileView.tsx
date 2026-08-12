@@ -24,6 +24,7 @@ import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
+import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
@@ -180,6 +181,11 @@ export async function PublicProfileView({
     all[row.trait] = (all[row.trait] ?? 0) + 1;
     return all;
   }, {});
+  const shoutoutRows = await db
+    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+    .from(schema.shoutouts)
+    .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
+    .where(eq(schema.shoutouts.targetUserId, user.id));
 
   // Continuous forward calendar: each date from today with classes. Days
   // group into chunks of seven POPULATED days, not seven calendar days, so a
@@ -473,6 +479,7 @@ export async function PublicProfileView({
             { key: "schedule", label: "Schedule" },
             { key: "about", label: "Info" },
             ...(studios ? [{ key: "studios", label: "Studios" }] : []),
+            { key: "shoutouts", label: "Shoutouts" },
           ]}
           name={user.name}
           summary={user.about}
@@ -613,6 +620,13 @@ export async function PublicProfileView({
               )}
             </section>
           ) : null}
+          <ProfileShoutouts
+            handle={handle}
+            name={user.name}
+            signedIn={!!viewerId}
+            owner={isOwner}
+            initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+          />
         </ProfileTabs>
         </FollowSync>
         {/* No Add class here. This page is where you look at your week, and

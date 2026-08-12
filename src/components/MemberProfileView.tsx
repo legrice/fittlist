@@ -17,6 +17,7 @@ import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
+import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -118,6 +119,11 @@ export async function MemberProfileView({
   // on, and an arrow pointing at Following on a screen you reached from a tab
   // is a control offering to undo a tap you did not make.
   const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
+  const shoutoutRows = await db
+    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+    .from(schema.shoutouts)
+    .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
+    .where(eq(schema.shoutouts.targetUserId, user.id));
 
   // The same ways in a coach's page offers, minus the one that needs a
   // published week. A member with nothing filled in gets no pill at all.
@@ -173,6 +179,7 @@ export async function MemberProfileView({
             { key: "schedule", label: "Schedule" },
             { key: "about", label: "Info" },
             ...(visitedStudios.length ? [{ key: "studios", label: "Studios" }] : []),
+            { key: "shoutouts", label: "Shoutouts" },
           ]}
           /* The coach page's full-bleed hero, by Matt's call: the photo when
              there is one, the person's own colour when there isn't, so a
@@ -267,6 +274,13 @@ export async function MemberProfileView({
             </div>
           </section>
         )}
+        <ProfileShoutouts
+          handle={user.handle ?? undefined}
+          name={name}
+          signedIn={!!viewerId}
+          owner={isOwner}
+          initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+        />
         </ProfileTabs>
       </div>
     </div>
