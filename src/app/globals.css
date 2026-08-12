@@ -6548,7 +6548,7 @@ button.ps-card { cursor: pointer; }
 .following-rail { margin: 4px -18px 0; }
 .following-rail .tray-scroll { gap: 10px; padding-top: 6px; padding-bottom: 6px; }
 .following-rail .trayitem { width: 100px; }
-.following-rail .trayav { width: 94px; height: 94px; border-radius:24px; }
+.following-rail .trayav { width: 94px; height: 94px; border-radius:32px; }
 .following-rail .trayitem-nm { max-width: 96px; font-weight: 500; }
 .following-rail .trayitem-more { opacity: 1; }
 .classshare-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:18px; }
