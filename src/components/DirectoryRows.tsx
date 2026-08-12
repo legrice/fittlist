@@ -63,9 +63,8 @@ export type DirStudio = {
 };
 
 /** A person: the whole row links to their page, chevron in the corner.
- *  `kindTag` is off where the list holds one kind: Discover lists coaches
- *  only, so a Coach badge on every row would be saying nothing. Search is
- *  coaches-only too and follows the same rule. */
+ *  `kindTag` is off where the list holds one kind. Search leaves it on because
+ *  coaches and members now share the people results. */
 export function PersonRow({
   person: c,
   from,
@@ -105,7 +104,9 @@ export function PersonRow({
         <span className="disrow-txt">
           <span className="disrow-nmline">
             <span className="nm">{c.name}</span>
-            {kindTag && c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
+            {kindTag && (
+              <span className="kindtag kindtag-sm">{c.kind === "coach" ? "Coach" : "Member"}</span>
+            )}
           </span>
           {/* The tagline, and the relationship after it only where there is
               no pill to say the same thing. */}

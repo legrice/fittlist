@@ -73,12 +73,22 @@ export async function browseCoaches(): Promise<DirPerson[]> {
   return (await runSearch(userId, "", "", true, true)).people;
 }
 
+/** The Search landing state is a people directory, not a coach directory.
+ * Members can publish and share a real fitness week too, so hiding them here
+ * makes a useful public schedule impossible to find again. */
+export async function browsePeople(): Promise<DirPerson[]> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  return (await runSearch(userId, "", "", true, true, true)).people;
+}
+
 async function runSearch(
   userId: string,
   needle: string,
   locNeedle: string,
   browse: boolean,
   peopleOnly: boolean,
+  includeMembers = false,
 ): Promise<{ people: DirPerson[]; studios: DirStudio[]; classes: DirClass[] }> {
   const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[] };
   const db = await getDb();
@@ -120,7 +130,14 @@ async function runSearch(
   // is not a category, and searching free chips for a category word only works
   // by coincidence.
   const candidates = allRows
-    .filter((r) => !hidden.has(r.id) && r.id !== userId && r.kind !== "fan" && r.kind !== "gym" && r.name.trim())
+    .filter(
+      (r) =>
+        !hidden.has(r.id) &&
+        r.id !== userId &&
+        r.kind !== "gym" &&
+        (includeMembers || !peopleOnly || r.kind !== "fan") &&
+        r.name.trim(),
+    )
     .filter((r) => !locNeedle || (r.location ?? "").toLowerCase().includes(locNeedle));
   const personMatches = (r: (typeof candidates)[number]) =>
     needle.length < MIN ||
@@ -183,13 +200,15 @@ async function runSearch(
     // profile). A named search skips it, because you asked for this person.
     .filter(
       (r) =>
-        !browse || !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
+        !browse ||
+        (includeMembers && r.kind === "fan") ||
+        !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
     )
     .map((r) => ({
       id: r.id,
       handle: r.handle!,
       name: r.name,
-      kind: "coach" as const,
+      kind: r.kind === "fan" ? ("member" as const) : ("coach" as const),
       photo: r.photoThumb ?? r.photo,
       title: r.title ?? "",
       location: r.location?.trim() ?? "",

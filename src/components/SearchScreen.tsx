@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { browseCoaches, searchAll } from "@/app/actions/search";
+import { browsePeople, searchAll } from "@/app/actions/search";
 import { ClassResults } from "@/components/ClassResults";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
@@ -84,7 +84,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       // Nothing stored is a valid starting state.
     }
     let live = true;
-    browseCoaches()
+    browsePeople()
       .then((rows) => {
         if (live) setBrowse(rows);
       })
@@ -156,8 +156,8 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             className="dissearch-in"
             value={q}
             onChange={(event) => setQ(event.target.value)}
-            placeholder="Search coaches, classes, or studios"
-            aria-label="Search coaches, classes, or studios"
+            placeholder="Search people, classes, or studios"
+            aria-label="Search people, classes, or studios"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
@@ -199,17 +199,17 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             </div>
           )}
           <div className="srchsec" onClickCapture={remember(browse ?? [])}>
-            <h2 className="srchhead">Coaches</h2>
+            <h2 className="srchhead">People</h2>
             {!browse ? (
               <p className="peekempty">Looking around&hellip;</p>
             ) : browse.length ? (
               <div className="dislist dislist-bare">
                 {browse.map((person) => (
-                  <PersonRow key={person.id} person={person} from="search" kindTag={false} />
+                  <PersonRow key={person.id} person={person} from="search" />
                 ))}
               </div>
             ) : (
-              <p className="peekempty">No coaches to show yet.</p>
+              <p className="peekempty">No people to show yet.</p>
             )}
           </div>
         </>
@@ -239,10 +239,10 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
           )}
           {people.length > 0 && (
             <div className="srchsec" onClickCapture={remember(people)}>
-              <h2 className="srchhead">Coaches <span>{people.length}</span></h2>
+              <h2 className="srchhead">People <span>{people.length}</span></h2>
               <div className="dislist dislist-bare">
                 {people.map((person) => (
-                  <PersonRow key={person.id} person={person} from="search" kindTag={false} />
+                  <PersonRow key={person.id} person={person} from="search" />
                 ))}
               </div>
             </div>
