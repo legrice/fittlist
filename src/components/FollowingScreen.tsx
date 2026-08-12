@@ -501,7 +501,7 @@ export function FollowingScreen({
                       <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                     )}
                   </span>
-                  <span className="trayitem-nm">My week</span>
+                  <span className="trayitem-nm">Your week</span>
                 </button>
               )}
               {coachOptions.map((coach) => (
@@ -541,7 +541,7 @@ export function FollowingScreen({
               {weekOwner === "all"
                 ? "All classes this week"
                 : weekOwner === "mine"
-                  ? "My classes this week"
+                  ? "Your classes this week"
                   : `${selectedCoach?.name.split(/\s+/)[0] ?? "Their"}'s classes this week`}
             </h2>
             {weekOwner === "all" ? (

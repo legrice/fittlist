@@ -87,7 +87,7 @@ export function StudioShiftsView({
   };
 
   const tabs: { key: Tab; label: string; n?: number }[] = [
-    { key: "mine", label: "My shifts", n: view.mine.length },
+    { key: "mine", label: "Your shifts", n: view.mine.length },
     { key: "open", label: "Open", n: view.open.length },
     ...(view.isManager
       ? ([{ key: "requests", label: "Requests", n: view.requests.length }] as const)

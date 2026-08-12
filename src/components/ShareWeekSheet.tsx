@@ -71,7 +71,7 @@ export function ShareWeekSheet({
         </div>
         <div className="share-toggles">
           <div className="seg">
-            <button className={span === "week" ? "sel" : ""} onClick={() => setSpan("week")}>My week</button>
+            <button className={span === "week" ? "sel" : ""} onClick={() => setSpan("week")}>Your week</button>
             <button className={span === "day" ? "sel" : ""} onClick={() => setSpan("day")}>Today</button>
           </div>
         </div>
