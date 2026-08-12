@@ -135,6 +135,7 @@ export function FollowingScreen({
   cats,
   todayIso,
   meId,
+  meFace,
   nearStudios,
   mode = "home",
 }: {
@@ -276,7 +277,7 @@ export function FollowingScreen({
   const coachOptions = useMemo(() => {
     const ids = new Set(items.map((item) => item.coachId));
     return coaches.filter(
-      (coach) => ids.has(coach.id) && (favIds.includes(coach.id) || coach.id === meId),
+      (coach) => ids.has(coach.id) && coach.id !== meId && favIds.includes(coach.id),
     );
   }, [coaches, items, favIds, meId]);
 
@@ -500,6 +501,34 @@ export function FollowingScreen({
           {homeMode === "classes" && <>
           <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
             <div className="tray-scroll">
+              {meId && (
+                <button
+                  className="trayitem"
+                  onClick={() =>
+                    setCoachPeek({
+                      id: meId,
+                      name: meFace.name,
+                      handle: "",
+                      photo: meFace.photo,
+                      color: meFace.color,
+                      title: null,
+                      location: null,
+                      next: null,
+                    })
+                  }
+                  aria-label="View your schedule"
+                >
+                  <span className="trayav" style={{ background: meFace.color }}>
+                    {meFace.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={meFace.photo} alt="" />
+                    ) : (
+                      <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
+                    )}
+                  </span>
+                  <span className="trayitem-nm">You</span>
+                </button>
+              )}
               {coachOptions.map((coach) => (
                 <button
                   key={coach.id}
@@ -782,6 +811,8 @@ export function FollowingScreen({
           name={coachPeek.name}
           photo={coachPeek.photo}
           color={coachPeek.color}
+          self={coachPeek.id === meId}
+          shareHref={coachPeek.id === meId ? "/share" : undefined}
           onClose={() => setCoachPeek(null)}
         />
       )}
