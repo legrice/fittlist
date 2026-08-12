@@ -179,7 +179,7 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [coachFilter, setCoachFilter] = useState<string>("all");
-  const [homeMode, setHomeMode] = useState<"following" | "coaches" | "studios">("following");
+  const [homeMode, setHomeMode] = useState<"classes" | "coaches" | "studios">("classes");
   const [homeQuery, setHomeQuery] = useState("");
   const [homeLocation, setHomeLocation] = useState("all");
   const [homeType, setHomeType] = useState("all");
@@ -254,15 +254,31 @@ export function FollowingScreen({
   };
 
   const shown = useMemo(
-    () => items.filter((item) => passes(item) && (!isHome || coachFilter === "all" || item.coachId === coachFilter)),
+    () => {
+      const q = homeQuery.trim().toLowerCase();
+      return items.filter((item) => {
+        const coach = coachById.get(item.coachId);
+        return (
+          passes(item) &&
+          (!isHome || coachFilter === "all" || item.coachId === coachFilter) &&
+          (!isHome ||
+            !q ||
+            item.name.toLowerCase().includes(q) ||
+            (item.where ?? "").toLowerCase().includes(q) ||
+            (coach?.name ?? "").toLowerCase().includes(q))
+        );
+      });
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo, isHome, coachFilter],
+    [items, f, geo, isHome, coachFilter, homeQuery, coachById],
   );
 
   const coachOptions = useMemo(() => {
     const ids = new Set(items.map((item) => item.coachId));
-    return coaches.filter((coach) => ids.has(coach.id));
-  }, [coaches, items]);
+    return coaches.filter(
+      (coach) => ids.has(coach.id) && (favIds.includes(coach.id) || coach.id === meId),
+    );
+  }, [coaches, items, favIds, meId]);
   const selectedCoach = coachFilter === "all" ? null : coachById.get(coachFilter) ?? null;
 
   // The rail of days: as far ahead as the feed itself looks, every day
@@ -314,15 +330,12 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Following is the complete rolling week: today plus the next six days.
-  // It used to stop after twelve rows, which meant a busy Saturday could hide
-  // Sunday entirely and made the page answer "the next twelve" rather than
-  // the question people came with: what are my coaches doing this week?
+  // Classes is the nearby catalog in chronological order. The server already
+  // bounds its horizon; do not cut that inventory back to one week here.
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
     () => {
-      const nextWeek = plusDays(todayIso, 7);
       return [...shown]
-        .filter((item) => item.iso >= todayIso && item.iso < nextWeek)
+        .filter((item) => item.iso >= todayIso)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
         .map(rowOf);
     },
@@ -481,10 +494,11 @@ export function FollowingScreen({
       {isHome && (
         <header className="following-head">
           <div className="home-modes" role="tablist" aria-label="Home">
-            {([['following', 'Following'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
+            {([['classes', 'Classes'], ['coaches', 'Coaches'], ['studios', 'Studios']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={homeMode === key} className={homeMode === key ? "on" : ""} onClick={() => { setHomeMode(key); setHomeQuery(""); setHomeLocation("all"); setHomeType("all"); }}>{label}</button>)}
           </div>
-          {homeMode !== "following" && <><label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Filter ${homeMode}`} aria-label={`Filter ${homeMode}`} /></label><div className="home-directory-filters"><label><span>Location</span><select value={homeLocation} onChange={(e) => setHomeLocation(e.target.value)}><option value="all">All locations</option>{directoryLocations.map((location) => <option key={location} value={location}>{location}</option>)}</select></label><label><span>Type</span><select value={homeType} onChange={(e) => setHomeType(e.target.value)}><option value="all">All types</option>{directoryTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div></>}
-          {homeMode === "following" && <>
+          <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>
+          {homeMode !== "classes" && <div className="home-directory-filters"><label><span>Location</span><select value={homeLocation} onChange={(e) => setHomeLocation(e.target.value)}><option value="all">All locations</option>{directoryLocations.map((location) => <option key={location} value={location}>{location}</option>)}</select></label><label><span>Type</span><select value={homeType} onChange={(e) => setHomeType(e.target.value)}><option value="all">All types</option>{directoryTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div>}
+          {homeMode === "classes" && <>
           <div className="tray following-rail" role="group" aria-label="Filter by coach">
             <div className="tray-scroll">
               <button
@@ -535,7 +549,7 @@ export function FollowingScreen({
           {nearStudios.filter((studio) => { const q = homeQuery.trim().toLowerCase(); return (!q || studio.name.toLowerCase().includes(q) || studio.types.some((t) => t.toLowerCase().includes(q))) && (homeLocation === "all" || studio.location === homeLocation) && (homeType === "all" || studio.types.includes(homeType)); }).map((studio) => <Link href={`/s/${studio.slug}?from=feed`} className="home-studio-tile" key={studio.id}>{studio.photo ? <img src={studio.photo} alt="" /> : <span style={{ background: studio.color }}>{(studio.name.trim().charAt(0) || "?").toUpperCase()}</span>}<strong>{studio.name}</strong><small>{studio.types.slice(0, 2).join(" · ") || "Fitness space"}</small></Link>)}
         </div>
       )}
-      {isHome && homeMode === "following" && selectedCoach && (
+      {isHome && homeMode === "classes" && selectedCoach && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">Classes with {selectedCoach.name.split(/\s+/)[0]}</span>
           <Link href={`/${selectedCoach.handle}?from=feed`} className="feedfilter-link">
@@ -543,7 +557,29 @@ export function FollowingScreen({
           </Link>
         </div>
       )}
-      {(!isHome || homeMode === "following") && (items.length === 0 ? (
+      {isHome && homeMode === "classes" && items.length > 0 && (
+        <div className="catpills fchips home-class-filters" aria-label="Class filters">
+          <button
+            className={`catpill fchip-lead${activeCount ? " on" : ""}`}
+            aria-label={`Filters${activeCount ? `, ${activeCount} set` : ""}`}
+            onClick={() => setSheet("all")}
+          >
+            <Icon name="tune" size={17} />
+            {activeCount > 0 && <span>{activeCount}</span>}
+          </button>
+          {(["time", "dist", "cat"] as const).map((key) => (
+            <button
+              key={key}
+              className={`catpill${f[key] !== "any" ? " on" : ""}`}
+              aria-pressed={f[key] !== "any"}
+              onClick={() => setSheet(key)}
+            >
+              {chipLabel(key)} <Icon name="expand_more" size={16} />
+            </button>
+          ))}
+        </div>
+      )}
+      {(!isHome || homeMode === "classes") && (items.length === 0 ? (
         <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
