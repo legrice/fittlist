@@ -6479,10 +6479,14 @@ button.ps-card { cursor: pointer; }
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
 .following-head {
+  position: relative;
   margin: 0 -18px;
   padding: 4px 18px 18px;
   background: var(--ground);
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.following-head::after {
+  content:""; position:absolute; right:18px; bottom:0; left:18px; height:1px;
+  background:color-mix(in srgb, var(--ink) 10%, transparent);
 }
 .home-ideas-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
@@ -6504,7 +6508,11 @@ button.ps-card { cursor: pointer; }
   overflow:visible; border-radius:0; background:transparent; box-shadow:none;
 }
 .home-week-surface .disflat .clrow:not(:last-child) {
-  border-bottom:1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  position:relative;
+}
+.home-week-surface .disflat .clrow:not(:last-child)::after {
+  content:""; position:absolute; right:18px; bottom:0; left:18px; height:1px;
+  background:color-mix(in srgb, var(--ink) 10%, transparent);
 }
 .home-week-surface .disflat .clline {
   min-height:0; padding:18px; border:0; background:transparent;
@@ -6538,7 +6546,7 @@ button.ps-card { cursor: pointer; }
 .following-rail { margin: 4px -18px 0; }
 .following-rail .tray-scroll { gap: 10px; padding-top: 6px; padding-bottom: 6px; }
 .following-rail .trayitem { width: 100px; }
-.following-rail .trayav { width: 94px; height: 94px; }
+.following-rail .trayav { width: 94px; height: 94px; border-radius:24px; }
 .following-rail .trayitem-nm { max-width: 96px; font-weight: 500; }
 .following-rail .trayitem-more { opacity: 1; }
 .classshare-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:18px; }
