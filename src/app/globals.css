@@ -6478,20 +6478,24 @@ button.ps-card { cursor: pointer; }
    pads back in to line up with everything else on the screen. The top
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
-.following-head { padding: 4px 0 4px; }
+.following-head {
+  margin: 0 -18px;
+  padding: 4px 18px 4px;
+  background: var(--card);
+}
 .home-ideas-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
 .home-ideas-head { margin-top:20px; }
 .home-ideas-head h2 { margin:0; font-size:23px; line-height:1.1; }
 .home-week-surface {
   margin: 16px -18px 0; padding: 22px 18px calc(18px + env(safe-area-inset-bottom));
-  background: var(--card);
+  background: var(--ground);
 }
 .home-week-surface .home-ideas-head { margin-top:0; }
 .home-week-surface .following-days { gap:24px; }
 .home-week-surface .following-day-h {
   margin:0 0 8px; padding:8px 0;
-  background:var(--card);
+  background:var(--ground);
 }
 .home-week-surface .disflat { gap:0; }
 .home-week-surface .disflat .clrow {
