@@ -6533,12 +6533,6 @@ button.ps-card { cursor: pointer; }
 .following-rail { margin: 14px -18px 0; }
 .following-rail .tray-scroll { padding-top: 6px; padding-bottom: 6px; }
 .following-rail .trayitem-more { opacity: 1; }
-.following-coach-context {
-  min-height: 54px; margin: 4px 0 16px; padding: 12px 16px;
-  border-radius: 14px; background: var(--card);
-}
-.following-coach-context .feedfilter-txt { font-size: 17px; }
-.following-coach-context .feedfilter-link { font-size: 14px; }
 .screen.hasnav .brandbar {
   background:transparent; color:var(--ink); --wm-ink:var(--ink); --wm-mark:var(--ink);
 }

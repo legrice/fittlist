@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -178,7 +179,7 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [coachFilter, setCoachFilter] = useState<string>("all");
+  const [coachPeek, setCoachPeek] = useState<FeedCoach | null>(null);
   const [homeMode, setHomeMode] = useState<"classes" | "coaches" | "studios">("classes");
   const [homeQuery, setHomeQuery] = useState("");
   const [homeLocation, setHomeLocation] = useState("all");
@@ -260,7 +261,6 @@ export function FollowingScreen({
         const coach = coachById.get(item.coachId);
         return (
           passes(item) &&
-          (!isHome || coachFilter === "all" || item.coachId === coachFilter) &&
           (!isHome ||
             !q ||
             item.name.toLowerCase().includes(q) ||
@@ -270,7 +270,7 @@ export function FollowingScreen({
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo, isHome, coachFilter, homeQuery, coachById],
+    [items, f, geo, isHome, homeQuery, coachById],
   );
 
   const coachOptions = useMemo(() => {
@@ -279,7 +279,6 @@ export function FollowingScreen({
       (coach) => ids.has(coach.id) && (favIds.includes(coach.id) || coach.id === meId),
     );
   }, [coaches, items, favIds, meId]);
-  const selectedCoach = coachFilter === "all" ? null : coachById.get(coachFilter) ?? null;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -499,25 +498,17 @@ export function FollowingScreen({
           <label className="home-mode-search"><Icon name="search" size={20} /><input value={homeQuery} onChange={(e) => setHomeQuery(e.target.value)} type="search" placeholder={`Search ${homeMode}`} aria-label={`Search ${homeMode}`} /></label>
           {homeMode !== "classes" && <div className="home-directory-filters"><label><span>Location</span><select value={homeLocation} onChange={(e) => setHomeLocation(e.target.value)}><option value="all">All locations</option>{directoryLocations.map((location) => <option key={location} value={location}>{location}</option>)}</select></label><label><span>Type</span><select value={homeType} onChange={(e) => setHomeType(e.target.value)}><option value="all">All types</option>{directoryTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div>}
           {homeMode === "classes" && <>
-          <div className="tray following-rail" role="group" aria-label="Filter by coach">
+          <div className="tray following-rail" role="group" aria-label="Schedules from coaches you follow">
             <div className="tray-scroll">
-              <button
-                className={`trayitem${coachFilter !== "all" ? " dim" : ""}`}
-                aria-pressed={coachFilter === "all"}
-                onClick={() => setCoachFilter("all")}
-              >
-                <span className={`trayav trayav-all${coachFilter === "all" ? " sel" : ""}`}>All</span>
-                <span className="trayitem-nm">All</span>
-              </button>
               {coachOptions.map((coach) => (
                 <button
                   key={coach.id}
-                  className={`trayitem${coachFilter !== "all" && coachFilter !== coach.id ? " dim" : ""}`}
-                  aria-pressed={coachFilter === coach.id}
-                  onClick={() => setCoachFilter(coach.id)}
+                  className="trayitem"
+                  onClick={() => setCoachPeek(coach)}
+                  aria-label={`View ${coach.name}'s schedule`}
                 >
                   <span
-                    className={`trayav${coachFilter === coach.id ? " sel" : ""}`}
+                    className="trayav"
                     style={{ background: coach.color }}
                   >
                     {coach.photo ? (
@@ -547,14 +538,6 @@ export function FollowingScreen({
       {isHome && homeMode === "studios" && (
         <div className="home-studio-grid">
           {nearStudios.filter((studio) => { const q = homeQuery.trim().toLowerCase(); return (!q || studio.name.toLowerCase().includes(q) || studio.types.some((t) => t.toLowerCase().includes(q))) && (homeLocation === "all" || studio.location === homeLocation) && (homeType === "all" || studio.types.includes(homeType)); }).map((studio) => <Link href={`/s/${studio.slug}?from=feed`} className="home-studio-tile" key={studio.id}>{studio.photo ? <img src={studio.photo} alt="" /> : <span style={{ background: studio.color }}>{(studio.name.trim().charAt(0) || "?").toUpperCase()}</span>}<strong>{studio.name}</strong><small>{studio.types.slice(0, 2).join(" · ") || "Fitness space"}</small></Link>)}
-        </div>
-      )}
-      {isHome && homeMode === "classes" && selectedCoach && (
-        <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">Classes with {selectedCoach.name.split(/\s+/)[0]}</span>
-          <Link href={`/${selectedCoach.handle}?from=feed`} className="feedfilter-link">
-            View profile <Icon name="chevron_right" size={17} />
-          </Link>
         </div>
       )}
       {isHome && homeMode === "classes" && items.length > 0 && (
@@ -790,6 +773,15 @@ export function FollowingScreen({
           onToast={notify}
           onChanged={() => {}}
           allowWeekAdd={false}
+        />
+      )}
+      {coachPeek && (
+        <CoachPeek
+          id={coachPeek.id}
+          name={coachPeek.name}
+          photo={coachPeek.photo}
+          color={coachPeek.color}
+          onClose={() => setCoachPeek(null)}
         />
       )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
