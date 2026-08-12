@@ -174,12 +174,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outlin
 a { color: inherit; }
 
 .screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
-/* Flat warm gray, by Matt's call, third swing of this pendulum and the
-   reason is new: the screens carry real imagery now (heroes, studio
-   tiles, faces), and the fade was colour competing with colour. The
-   ground steps back and the content is the warmth. */
+/* The signed-in app is one clean white canvas. Warm gray remains available
+   for controls and inset surfaces, but it no longer divides whole pages. */
 .screen.hasnav {
-  background: var(--ground);
+  background: var(--card);
   --band: transparent;
 }
 .screen.hasnav .brandbar { background: transparent; position: static; }
@@ -6482,7 +6480,7 @@ button.ps-card { cursor: pointer; }
   position: relative;
   margin: 0 -18px;
   padding: 4px 18px 18px;
-  background: var(--ground);
+  background: var(--card);
 }
 .following-head::after {
   content:""; position:absolute; right:18px; bottom:0; left:18px; height:1px;
@@ -6494,14 +6492,18 @@ button.ps-card { cursor: pointer; }
 .home-ideas-head h2 { margin:0; font-size:23px; line-height:1.1; }
 .home-week-surface {
   margin: 0 -18px; padding: 22px 0 calc(18px + env(safe-area-inset-bottom));
-  background: var(--ground);
+  background: var(--card);
 }
 .home-week-surface .home-ideas-head { margin-top:0; padding:0 18px; }
 .home-week-surface .home-schedule { margin:10px 0 0; padding:0; border-radius:0; }
 .home-week-surface .following-days { gap:0; }
 .home-week-surface .following-day-h {
   margin:0; padding:22px 18px 8px;
-  background:var(--ground);
+  background:var(--card);
+}
+.home-week-surface .following-day-h::after {
+  content:""; position:absolute; right:18px; bottom:0; left:18px; height:1px;
+  background:color-mix(in srgb, var(--ink) 10%, transparent);
 }
 .home-week-surface .disflat { gap:0; }
 .home-week-surface .disflat .clrow {
