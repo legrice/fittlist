@@ -6512,7 +6512,7 @@ button.ps-card { cursor: pointer; }
 .following-rail .tray-scroll { gap: 10px; padding-top: 6px; padding-bottom: 6px; }
 .following-rail .trayitem { width: 100px; }
 .following-rail .trayav { width: 94px; height: 94px; }
-.following-rail .trayitem-nm { max-width: 96px; }
+.following-rail .trayitem-nm { max-width: 96px; font-weight: 400; }
 .following-rail .trayitem-more { opacity: 1; }
 .screen.hasnav .brandbar {
   background:transparent; color:var(--ink); --wm-ink:var(--ink); --wm-mark:var(--ink);
