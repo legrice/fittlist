@@ -551,29 +551,7 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && items.length > 0 && (
-        <div className="home-ideas-head"><h2>Ideas for your week</h2><Link href="/upcoming">See all</Link></div>
-      )}
-      {isHome && items.length > 0 && (
-        <div className="catpills fchips home-class-filters" aria-label="Class filters">
-          <button
-            className={`catpill fchip-lead${activeCount ? " on" : ""}`}
-            aria-label={`Filters${activeCount ? `, ${activeCount} set` : ""}`}
-            onClick={() => setSheet("all")}
-          >
-            <Icon name="tune" size={17} />
-            {activeCount > 0 && <span>{activeCount}</span>}
-          </button>
-          {(["time", "dist", "cat"] as const).map((key) => (
-            <button
-              key={key}
-              className={`catpill${f[key] !== "any" ? " on" : ""}`}
-              aria-pressed={f[key] !== "any"}
-              onClick={() => setSheet(key)}
-            >
-              {chipLabel(key)} <Icon name="expand_more" size={16} />
-            </button>
-          ))}
-        </div>
+        <div className="home-ideas-head"><h2>Upcoming classes near you</h2><Link href="/upcoming">See all</Link></div>
       )}
       {(items.length === 0 ? (
         <>

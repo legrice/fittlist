@@ -6487,7 +6487,6 @@ button.ps-card { cursor: pointer; }
 .home-social-title a,.home-ideas-head a { flex:0 0 auto; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
 .home-ideas-head { margin-top:20px; }
 .home-ideas-head h2 { margin:0; font-size:23px; line-height:1.1; }
-.home-class-filters { margin-top: 12px; }
 .navtab-add {
   position:relative; align-self:center;
   flex:1; width:auto; height:52px; min-width:0; min-height:52px;
