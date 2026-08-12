@@ -7032,7 +7032,7 @@ button.ps-card { cursor: pointer; }
    skim and act on several times before closing, and the overlay's shape says
    one thing, whole screen. `.sheet.sheet-full` normally removes top padding;
    the doubled selector wins that specificity and restores a real top inset. */
-.sheet.peeksheet { padding-top: 24px; }
+.sheet.peeksheet { padding-top: 24px; background: var(--ground); }
 .sheet.peeksheet > .peekclose {
   position: sticky; top: 14px; z-index: 7;
   display: flex; margin: 0 0 -38px auto;

@@ -193,8 +193,7 @@ export function CoachPeek({
                       <span className="peekrow-nm">{it.name}</span>
                       <span className="peekrow-sub">
                         {it.hm}
-                        <span className="peekrow-ap">{it.ap.toLowerCase()}</span> &middot;{" "}
-                        {it.durationMin} min
+                        <span className="peekrow-ap">{it.ap.toLowerCase()}</span>
                         {it.where ? ` · ${it.where}` : ""}
                       </span>
                       {!self && on && (
