@@ -434,14 +434,6 @@ export function CalendarScreen({
         </ScrollHead>
       )}
 
-      {/* Add floats bottom right, under the thumb, the same spot and dress
-          as Following's search: adding is what somebody opens this screen
-          to do, and the title row's corner belongs to Share now. */}
-      {!bare && !(kind === "added" && days.length === 0) && (
-        <button className="wkfab" aria-label="Add a class" onClick={openAdd}>
-          <Icon name="add" size={28} />
-        </button>
-      )}
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
