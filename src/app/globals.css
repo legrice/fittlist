@@ -25,6 +25,15 @@ html[data-native="ios"] .navwrap { display: none; }
    bar. Keep the last content and floating action reachable above it. */
 html[data-native="ios"] .cardwrap { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 html[data-native="ios"] .hasnav .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
+/* The website lets its brand row sit behind the page as content scrolls. In
+   the native shell that reads as an empty status area, so pin the row directly
+   below the Dynamic Island and let the ink surfaces meet as one header. */
+html[data-native="ios"] .screen.hasnav .brandbar {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 40;
+  padding-top: 16px;
+}
 
 /* Delight, the brand typeface, self-hosted as woff2.
    Three faces, because 600 is the ceiling now: the 700 and the 800 are not
