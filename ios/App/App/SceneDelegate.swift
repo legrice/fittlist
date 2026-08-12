@@ -160,7 +160,13 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         // Mark the document before it paints so the HTML fallback bar never
         // flashes underneath the real native tab bar.
         controller.addUserScript(WKUserScript(
-            source: "document.documentElement.dataset.native='ios';",
+            source: """
+            document.documentElement.dataset.native = 'ios';
+            const nativeStyle = document.createElement('style');
+            nativeStyle.id = 'fittlist-native-shell-style';
+            nativeStyle.textContent = '.brandbar,.navwrap{display:none!important}';
+            (document.head || document.documentElement).appendChild(nativeStyle);
+            """,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
         ))
