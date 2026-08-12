@@ -8019,15 +8019,15 @@ a.clspeek-by:active { opacity: .6; }
    white canvas, separated by quiet inset rules instead of cards. */
 .calendar-cardlist .dayrows { gap: 0; }
 .calkindseg {
-  display: flex; flex: 1; min-width: 0; padding: 3px;
-  border-radius: 999px; background: var(--control);
+  display: flex; flex: 1; min-width: 0; gap: 7px;
+  padding: 0; background: transparent;
 }
 .calkindseg button {
-  flex: 1; min-width: 0; min-height: 34px; padding: 0 8px;
-  border: 0; border-radius: 999px; background: transparent; color: var(--ink);
+  flex: 0 1 auto; min-width: 0; min-height: 36px; padding: 0 14px;
+  border: 0; border-radius: 999px; background: var(--control); color: var(--ink);
   font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
 }
-.calkindseg button.on { background: var(--ink); color: var(--paper); }
+.calkindseg button.on { background: var(--si); color: #fff; }
 .calendar-cardlist .clline {
   grid-template-columns: 72px 1fr; column-gap: 8px;
   min-height: 0; padding: 17px 0;
@@ -8150,11 +8150,9 @@ a.clspeek-by:active { opacity: .6; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .scrollhead-tools { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-/* On the bar's near-white glass the white fills vanish, so the overlay's
-   copies wear the wash edge for contrast. */
-.scrollhead .calseg, .scrollhead .calbar-share {
-  border: var(--divw) solid var(--edge);
-}
+/* The overlay repeats the same gray view control without adding another
+   outline to its glass bar. */
+.scrollhead .calseg { border:0; }
 
 /* The title and the two ways of looking, at the top of the calendar. */
 .calbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding-bottom: 12px; }
@@ -8173,10 +8171,8 @@ a.clspeek-by:active { opacity: .6; }
    looking at one thing, and a segment is what says so. The selected view is
    ink with a white glyph, unmistakably active against the white control. */
 .calseg {
-  /* White with no stroke, by Matt's call: the fill is the edge, the same
-     treatment the class boxes and the hub's pills wear. */
   display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
-  background: var(--card);
+  background: var(--control);
 }
 /* Square-ish, because what is inside is a glyph rather than a word: a pill
    sized for "Month" and holding an icon is mostly empty pill. */
