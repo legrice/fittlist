@@ -313,12 +313,14 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Classes is the nearby catalog in chronological order. The server already
-  // bounds its horizon; do not cut that inventory back to one week here.
+  // Home is the next seven calendar days, inclusive of today. It used to be
+  // an eight-row teaser, which made "All classes this week" untrue on a busy
+  // week and hid whichever classes happened to sort ninth.
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
     () => {
+      const weekEnd = plusDays(todayIso, 6);
       return [...shown]
-        .filter((item) => item.iso >= todayIso)
+        .filter((item) => item.iso >= todayIso && item.iso <= weekEnd)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
         .map(rowOf);
     },
@@ -330,15 +332,6 @@ export function FollowingScreen({
     for (const row of homeRows) days.set(row.item.iso, [...(days.get(row.item.iso) ?? []), row]);
     return [...days.entries()].map(([iso, rows]) => ({ iso, rows }));
   }, [homeRows]);
-  const homePreviewDays = useMemo(() => {
-    let left = 8;
-    return homeDays.flatMap((group) => {
-      if (left <= 0) return [];
-      const rows = group.rows.slice(0, left);
-      left -= rows.length;
-      return rows.length ? [{ ...group, rows }] : [];
-    });
-  }, [homeDays]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -545,10 +538,10 @@ export function FollowingScreen({
         </header>
       )}
       <div className={isHome ? "home-week-surface" : undefined}>
-        {isHome && items.length > 0 && (
+        {isHome && homeDays.length > 0 && (
           <div className="home-ideas-head"><h2>All classes this week</h2><Link href="/upcoming">See all</Link></div>
         )}
-        {(items.length === 0 ? (
+        {((isHome ? homeRows.length === 0 : items.length === 0) ? (
         <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -635,7 +628,7 @@ export function FollowingScreen({
             <div className="cardwrap home-schedule">
               {isHome ? (
                 <div className="following-days">
-                  {homePreviewDays.map((group) => (
+                  {homeDays.map((group) => (
                     <section key={group.iso} className="following-day">
                       <h2 className="following-day-h">{daySectionLabel(group.iso, todayIso)}</h2>
                       <div className="disflat home-next">
