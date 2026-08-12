@@ -6515,10 +6515,10 @@ button.ps-card { cursor: pointer; }
   margin:auto; border-radius:50%; background:var(--ink);
 }
 .globaladd-sheet {
-  /* The global composer is launched by the footer itself, so it stops above
-     that footer instead of letting its choices continue underneath it. */
-  margin-bottom: calc(76px + env(safe-area-inset-bottom));
-  max-height: calc(100dvh - 76px - env(safe-area-inset-bottom));
+  /* The composer replaces the footer while it is open: its solid surface
+     reaches the bottom edge, and this extra inset leaves the choices where
+     the footer used to be without showing the footer through it. */
+  --pad-b: calc(82px + env(safe-area-inset-bottom));
 }
 .globaladd-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:18px; }
 .globaladd-list > a { display:flex; min-width:0; min-height:86px; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:12px 8px; border-radius:16px; background:var(--ground); text-align:center; text-decoration:none; }
