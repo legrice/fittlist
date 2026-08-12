@@ -25,14 +25,21 @@ html[data-native="ios"] .navwrap { display: none; }
    bar. Keep the last content and floating action reachable above it. */
 html[data-native="ios"] .cardwrap { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 html[data-native="ios"] .hasnav .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
-/* The website lets its brand row sit behind the page as content scrolls. In
-   the native shell that reads as an empty status area, so pin the row directly
-   below the Dynamic Island and let the ink surfaces meet as one header. */
+/* The website lets its brand row sit behind the page as content scrolls. That
+   stacking model can still paint over a sticky child inside WKWebView, so the
+   native shell gives the row one unambiguous viewport position: directly below
+   the Dynamic Island, above every page. The column reserves the same height. */
 html[data-native="ios"] .screen.hasnav .brandbar {
-  position: sticky;
+  position: fixed;
   top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
   z-index: 40;
+  margin: 0;
   padding-top: 16px;
+}
+html[data-native="ios"] .screen.hasnav > .pad {
+  padding-top: 74px;
 }
 
 /* Delight, the brand typeface, self-hosted as woff2.
