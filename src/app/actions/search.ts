@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, gte, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, lte } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
@@ -191,6 +191,49 @@ async function runSearch(
 
   const following = new Set(followRows.map((r) => r.trainerUserId));
   const requested = new Set(askRows.map((r) => r.trainerUserId));
+  const attendingCount = new Map<string, number>();
+  if (matched.length) {
+    const weekEnd = (() => {
+      const d = new Date(`${todayIso()}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + 6);
+      return d.toISOString().slice(0, 10);
+    })();
+    // An open profile's public plans are useful discovery metadata. For an
+    // approve-first account, only an approved follower gets the count, just
+    // as only that follower can open the week itself.
+    const visibleIds = matched
+      .filter((r) => !r.approveFollowers || following.has(r.id))
+      .map((r) => r.id);
+    if (visibleIds.length) {
+      const [marks, personal] = await Promise.all([
+        db
+          .select({ userId: schema.attendances.userId })
+          .from(schema.attendances)
+          .where(
+            and(
+              inArray(schema.attendances.userId, visibleIds),
+              eq(schema.attendances.isPublic, true),
+              gte(schema.attendances.occurrenceDate, todayIso()),
+              lte(schema.attendances.occurrenceDate, weekEnd),
+            ),
+          ),
+        db
+          .select({ userId: schema.personalClasses.userId })
+          .from(schema.personalClasses)
+          .where(
+            and(
+              inArray(schema.personalClasses.userId, visibleIds),
+              isNotNull(schema.personalClasses.specificDate),
+              gte(schema.personalClasses.specificDate, todayIso()),
+              lte(schema.personalClasses.specificDate, weekEnd),
+            ),
+          ),
+      ]);
+      for (const row of [...marks, ...personal]) {
+        attendingCount.set(row.userId, (attendingCount.get(row.userId) ?? 0) + 1);
+      }
+    }
+  }
   // The closest match first: a name that starts with what you typed is almost
   // always the one you meant, and everything else keeps its name order.
   const rank = (name: string) => (name.toLowerCase().startsWith(needle) ? 0 : 1);
@@ -213,6 +256,7 @@ async function runSearch(
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,
+      attendingThisWeek: attendingCount.get(r.id) ?? 0,
       following: following.has(r.id),
       requested: requested.has(r.id),
       availability: r.availability,

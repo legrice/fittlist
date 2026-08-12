@@ -34,6 +34,10 @@ export type DirPerson = {
   title: string;
   location: string;
   classesThisWeek: number;
+  /** Public plans on their schedule over the same seven-day window. Search
+   *  uses this beside coaching count so a member's week is a reason to open
+   *  their profile, not an invisible capability. */
+  attendingThisWeek?: number;
   following: boolean;
   /** A pending ask at a coach who approves their followers. */
   requested: boolean;
@@ -114,13 +118,22 @@ export function PersonRow({
             {c.title || `fittlist.co/${c.handle}`}
             {follow ? "" : c.following ? " · Following" : c.requested ? " · Requested" : ""}
           </span>
-          {weekLine && c.kind === "coach" && (
+          {weekLine && c.attendingThisWeek !== undefined ? (
+            <span className="wk">
+              {[
+                c.classesThisWeek ? `Coaching ${c.classesThisWeek}` : "",
+                c.attendingThisWeek ? `Attending ${c.attendingThisWeek}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ") || "No plans this week"}
+            </span>
+          ) : weekLine && c.kind === "coach" ? (
             <span className="wk">
               {c.classesThisWeek
                 ? `${c.classesThisWeek} ${c.classesThisWeek === 1 ? "class" : "classes"} this week`
                 : "No classes posted yet"}
             </span>
-          )}
+          ) : null}
         </span>
         {/* The chevron steps aside for the pill: two things in one corner is
             the row shouting, and the whole row is still the link. */}
