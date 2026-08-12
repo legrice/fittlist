@@ -94,6 +94,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --grad-mid: #f3e6db;
   --ground: #ffffff;
   --card: #ffffff;
+  --control: #f3f4f4;      /* neutral lift for buttons on the white canvas */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
   --date-heading-weight: 600; /* one hierarchy across every schedule */
@@ -570,7 +571,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
-.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+.btn.ghost { background: var(--control); color: var(--ink); border: 1px solid transparent; }
 .btn.si { background: var(--ink); color: var(--paper); }
 .btn[disabled] { opacity: .45; pointer-events: none; }
 
@@ -3011,7 +3012,7 @@ button.ps-card { cursor: pointer; }
   padding: 13px 22px; border-radius: 999px; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   transition: transform .08s;
-  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  border: 1px solid transparent; background: var(--control); color: var(--ink);
 }
 .actpill-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .actpill:active, .followpill:active { transform: scale(.97); }
@@ -3673,11 +3674,11 @@ button.ps-card { cursor: pointer; }
   min-height: 34px;
   padding: 8px 13px;
   font-size: 13.5px;
-  background: #fff;
-  border-color: rgba(25, 21, 2, .14);
+  background: var(--control);
+  border-color: transparent;
   color: var(--ink);
 }
-.pubhead.pubhead-hero .profacts .actpill-primary { background: #fff; color: var(--ink); border-color: rgba(25, 21, 2, .14); }
+.pubhead.pubhead-hero .profacts .actpill-primary { background: var(--control); color: var(--ink); border-color: transparent; }
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .profile-props { margin-top: 16px; padding-top: 14px; }
@@ -3759,10 +3760,10 @@ button.ps-card { cursor: pointer; }
   padding: 9px 14px;
   border: 0;
   border-radius: 12px;
-  background: #fff;
+  background: var(--control);
   box-shadow: none;
 }
-.pubhead.pubhead-hero .profacts .actpill-primary { border: 0; background: #fff; }
+.pubhead.pubhead-hero .profacts .actpill-primary { border: 0; background: var(--control); }
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
 .profacts .studio-been-here.on { background: var(--ink); color: var(--paper); }
@@ -4397,6 +4398,7 @@ button.ps-card { cursor: pointer; }
   --si-tint: #3f2413;
   --si-ink: #f0a071;
   --card: #211c13;
+  --control: #2b2821;
   --ink: #f3efe3;
   --ol: #a89f8a;
   --line: #35301f;
@@ -4860,7 +4862,7 @@ button.ps-card { cursor: pointer; }
      read: the card's own white rather than the paper's cream, so the pill
      sits brighter than the list scrolling under it. */
   background: var(--card);
-  background: color-mix(in srgb, var(--card) 86%, transparent);
+  background: color-mix(in srgb, var(--card) 76%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   box-shadow:
@@ -6603,7 +6605,7 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; gap: 3px;
   /* Full white again, by Matt's call: the half-strength fill tried for a
      build read as disabled rather than quiet. */
-  background: var(--card);
+  background: var(--control);
 }
 .fchips .catpill.on { background: var(--ink); }
 .fchips .catpill .icon { margin-right: -3px; }
@@ -6636,7 +6638,7 @@ button.ps-card { cursor: pointer; }
 /* Follow, in a peek's head and on a People near you row: the outline pill
    that fills in ink when it is a yes. One relationship word, no stars. */
 .peekfollow {
-  flex-shrink: 0; border: 1px solid var(--ink); background: var(--card);
+  flex-shrink: 0; border: 1px solid transparent; background: var(--control);
   border-radius: 999px; padding: 8px 15px; cursor: pointer;
   font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink);
 }
@@ -6743,13 +6745,13 @@ button.ps-card { cursor: pointer; }
 .catpills::-webkit-scrollbar { display: none; }
 .catpill {
   flex-shrink: 0; height: 36px; padding: 0 15px; border-radius: 999px;
-  border: none; background: var(--card); color: var(--ink); cursor: pointer;
+  border: none; background: var(--control); color: var(--ink); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13.5px;
 }
 .catpill.on { background: var(--ink); color: var(--paper); }
 .calpills { padding: 2px 18px 10px; }
 /* Unselected is white with no outline, by Matt's call. */
-.calpills .catpill { background: var(--card); border: none; }
+.calpills .catpill { background: var(--control); border: none; }
 /* The hairline between the two filter axes on Discover's rail: what the
    class is, then when in the day it runs. */
 .catpill-div { flex-shrink: 0; width: 1px; height: 22px; margin: 7px 3px; background: var(--div); }
@@ -7207,7 +7209,7 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; justify-content: center;
 }
 .calendar-empty-actions .btn.ghost {
-  background: var(--card); color: var(--ink); border: 1px solid var(--div);
+  background: var(--control); color: var(--ink); border: 1px solid transparent;
 }
 .calendar-empty-actions .btn.si { background: var(--ink); color: var(--paper); }
 /* The one filled control on the calendar: adding a class. It floats bottom
@@ -8018,7 +8020,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .dayrows { gap: 0; }
 .calkindseg {
   display: flex; flex: 1; min-width: 0; padding: 3px;
-  border-radius: 999px; background: var(--card);
+  border-radius: 999px; background: var(--control);
 }
 .calkindseg button {
   flex: 1; min-width: 0; min-height: 34px; padding: 0 8px;
