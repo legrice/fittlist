@@ -492,7 +492,7 @@ export function FollowingScreen({
                       next: null,
                     })
                   }
-                  aria-label="View your schedule"
+                  aria-label="View your week"
                 >
                   <span className="trayav" style={{ background: meFace.color }}>
                     {meFace.photo ? (
@@ -502,7 +502,7 @@ export function FollowingScreen({
                       <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                     )}
                   </span>
-                  <span className="trayitem-nm">You</span>
+                  <span className="trayitem-nm">Your week</span>
                 </button>
               )}
               {coachOptions.map((coach) => (
@@ -510,7 +510,7 @@ export function FollowingScreen({
                   key={coach.id}
                   className="trayitem"
                   onClick={() => setCoachPeek(coach)}
-                  aria-label={`View ${coach.name}'s schedule`}
+                  aria-label={`View ${coach.name}'s week`}
                 >
                   <span
                     className="trayav"
