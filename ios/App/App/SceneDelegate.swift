@@ -6,6 +6,7 @@ import WebKit
 /// keeps one web product while the highest-value app surfaces become native.
 final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler {
     private let bridge = CAPBridgeViewController()
+    private let headerView = UIView()
     private let tabBar = UITabBar()
     private let tabIDs = ["following", "search", "schedule", "share", "you"]
     private let fallbackRoutes = ["/feed", "/search", "/calendar", "/coachshare", "/you"]
@@ -20,6 +21,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         bridge.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bridge.view)
         bridge.didMove(toParent: self)
+
+        configureHeader()
 
         tabBar.translatesAutoresizingMaskIntoConstraints = false
         tabBar.delegate = self
@@ -44,7 +47,11 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         view.addSubview(tabBar)
 
         NSLayoutConstraint.activate([
-            bridge.view.topAnchor.constraint(equalTo: view.topAnchor),
+            headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 62),
+            bridge.view.topAnchor.constraint(equalTo: headerView.bottomAnchor),
             bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             // The page continues behind the translucent bar. Stopping the web
@@ -58,6 +65,86 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
         installWebHooks()
     }
+
+    private func configureHeader() {
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.backgroundColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1)
+        view.addSubview(headerView)
+
+        let home = UIButton(type: .system)
+        home.translatesAutoresizingMaskIntoConstraints = false
+        home.setTitle("FittList", for: .normal)
+        home.setImage(brandMark(), for: .normal)
+        home.tintColor = .white
+        home.configuration = {
+            var configuration = UIButton.Configuration.plain()
+            configuration.imagePadding = 7
+            return configuration
+        }()
+        home.setTitleColor(.white, for: .normal)
+        home.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
+        home.addTarget(self, action: #selector(openHome), for: .touchUpInside)
+        headerView.addSubview(home)
+
+        let actions = UIStackView(arrangedSubviews: [
+            headerButton(symbol: "magnifyingglass", action: #selector(openSearch), label: "Search"),
+            headerButton(symbol: "bell", action: #selector(openUpdates), label: "Notifications"),
+            headerButton(symbol: "gearshape", action: #selector(openSettings), label: "Settings"),
+        ])
+        actions.translatesAutoresizingMaskIntoConstraints = false
+        actions.axis = .horizontal
+        actions.spacing = 2
+        headerView.addSubview(actions)
+
+        NSLayoutConstraint.activate([
+            home.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 18),
+            home.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+            actions.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -10),
+            actions.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+        ])
+    }
+
+    private func headerButton(symbol: String, action: Selector, label: String) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: symbol), for: .normal)
+        button.tintColor = .white
+        button.accessibilityLabel = label
+        button.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        button.addTarget(self, action: action, for: .touchUpInside)
+        return button
+    }
+
+    private func brandMark() -> UIImage {
+        let size = CGSize(width: 20, height: 20.3)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            UIColor.white.setFill()
+            let scale = size.width / 134
+            let blocks = [
+                CGRect(x: 0, y: 0, width: 40, height: 40),
+                CGRect(x: 48, y: 0, width: 86, height: 40),
+                CGRect(x: 0, y: 48, width: 40, height: 40),
+                CGRect(x: 48, y: 48, width: 46, height: 40),
+                CGRect(x: 0, y: 96, width: 40, height: 40),
+            ]
+            blocks.forEach { block in
+                let rect = CGRect(
+                    x: block.minX * scale,
+                    y: block.minY * scale,
+                    width: block.width * scale,
+                    height: block.height * scale
+                )
+                UIBezierPath(roundedRect: rect, cornerRadius: 4 * scale).fill()
+            }
+            context.cgContext.flush()
+        }.withRenderingMode(.alwaysTemplate)
+    }
+
+    @objc private func openHome() { navigate(tabID: "following", fallback: "/feed") }
+    @objc private func openSearch() { navigate(tabID: "search", fallback: "/search") }
+    @objc private func openUpdates() { navigate(fallback: "/updates") }
+    @objc private func openSettings() { navigate(fallback: "/settings") }
 
     private func item(_ title: String, _ symbol: String, _ tag: Int) -> UITabBarItem {
         UITabBarItem(title: title, image: UIImage(systemName: symbol), tag: tag)
@@ -112,15 +199,18 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         guard tabIDs.indices.contains(item.tag) else { return }
-        let tabID = tabIDs[item.tag]
-        let fallback = fallbackRoutes[item.tag]
+        navigate(tabID: tabIDs[item.tag], fallback: fallbackRoutes[item.tag])
+    }
+
+    private func navigate(tabID: String? = nil, fallback: String) {
         // Click the existing Next.js tab when it is present. Although hidden by
         // the native marker, it keeps role-aware destinations (especially the
         // coach/member Share split), client navigation and cached state intact.
         // The fallback covers signed-out and transitional pages without tabs.
         bridge.webView?.evaluateJavaScript("""
           (() => {
-            const link = document.querySelector('.navwrap a[data-tab="\(tabID)"]');
+            const tabID = \(tabID.map { "'\($0)'" } ?? "null");
+            const link = tabID && document.querySelector(`.navwrap a[data-tab="${tabID}"]`);
             if (link) link.click(); else window.location.assign('\(fallback)');
           })();
         """)
