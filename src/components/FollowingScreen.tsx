@@ -535,18 +535,14 @@ export function FollowingScreen({
         </header>
       )}
       <div className={isHome ? "home-week-surface" : undefined}>
-        {isHome && (
+        {isHome && weekOwner !== "all" && (
           <div className="home-ideas-head">
             <h2>
-              {weekOwner === "all"
-                ? "All classes this week"
-                : weekOwner === "mine"
+              {weekOwner === "mine"
                   ? "Your classes this week"
                   : `${selectedCoach?.name.split(/\s+/)[0] ?? "Their"}'s classes this week`}
             </h2>
-            {weekOwner === "all" ? (
-              <Link href="/upcoming">See all</Link>
-            ) : weekOwner === "mine" ? (
+            {weekOwner === "mine" ? (
               <Link href="/share">Share your week</Link>
             ) : selectedCoach ? (
               <Link href={`/${selectedCoach.handle}?from=feed`}>View profile</Link>
