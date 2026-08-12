@@ -67,7 +67,7 @@ export function ClassCardActions({
           aria-pressed={on}
           onClick={toggle}
         >
-          <Icon name={on ? "check_circle" : "add_circle"} size={22} />
+          <Icon name={on ? "check_circle" : "add"} size={22} />
           <span className="evcard-add-t">{on ? "Added" : "Add"}</span>
         </button>
       )}

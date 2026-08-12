@@ -830,7 +830,7 @@ function FollowingAdd({
       aria-pressed={on}
       onClick={toggle}
     >
-      <Icon name={on ? "check" : "add_circle"} size={24} />
+      <Icon name={on ? "check" : "add"} size={22} />
     </button>
   );
 }

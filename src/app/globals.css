@@ -2678,7 +2678,7 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
   padding: 15px 22px; border-radius: 999px; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
-  background: var(--card); color: var(--ink); border: 1px solid var(--ink);
+  background: var(--control); color: var(--ink); border: 1px solid transparent;
   transition: transform .08s;
 }
 .classsheet-add:active { transform: scale(.97); }
@@ -5828,7 +5828,7 @@ button.ps-card { cursor: pointer; }
   position: absolute; right: 12px; bottom: 12px; z-index: 2;
   height: 42px; border-radius: 999px; padding: 0 8px;
   display: flex; align-items: center; justify-content: center; gap: 4px;
-  background: none; color: var(--ink); border: none;
+  background: var(--control); color: var(--ink); border: none;
   transition: transform .08s;
 }
 /* Quiet: the class name stays the loudest thing on the row, and a column of
@@ -7107,7 +7107,7 @@ button.ps-card { cursor: pointer; }
 .peekadd {
   flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
   height: 34px; padding: 0 12px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--card);
+  border: 1px solid transparent; background: var(--control);
   font-size: 13.5px; font-weight: 600; color: var(--ink); cursor: pointer;
 }
 .peekadd.on {
@@ -8079,7 +8079,7 @@ a.clspeek-by:active { opacity: .6; }
 .following-add {
   position: absolute; top: 12px; right: 12px; z-index: 2;
   width: 32px; height: 32px; padding: 0; border: 0; border-radius: 999px;
-  display: grid; place-items: center; background: none; color: var(--ink); cursor: pointer;
+  display: grid; place-items: center; background: var(--control); color: var(--ink); cursor: pointer;
 }
 .following-add.on { background: none; color: #fff; }
 .following-add.on svg {

@@ -127,7 +127,7 @@ export function AddBrowse({
                       onClick={() => on ? setRemoveConfirm({ classId: it.classId, iso: it.iso, name: it.name }) : save(it.classId, it.iso, it.name, true)}
                       aria-label={on ? `Added to your week: ${it.name}` : `Add ${it.name} to your week`}
                     >
-                      <Icon name={on ? "check" : "add_circle"} size={on ? 24 : 22} />
+                      <Icon name={on ? "check" : "add"} size={on ? 24 : 22} />
                       {!on && <span>Add</span>}
                     </button>
                   )}
