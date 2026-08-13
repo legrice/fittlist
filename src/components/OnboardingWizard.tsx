@@ -223,7 +223,7 @@ export function OnboardingWizard({
 
         {step === 1 && (
           <>
-            <h1>How do you use fitness?</h1>
+            <h1>How do you fitness?</h1>
             <p>You can change this later in your profile.</p>
             <button
               type="button"
