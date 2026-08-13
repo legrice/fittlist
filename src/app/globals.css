@@ -338,7 +338,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   letter-spacing:-.045em; text-align:center;
 }
 .ob p.oblanding-sub {
-  margin:0; color:var(--muted); font-size:21px; line-height:1.42; text-align:center;
+  margin:0; color:var(--muted); font-size:18px; line-height:1.42; text-align:center;
 }
 .oblanding-illustration { flex:1 1 150px; min-height:110px; }
 .oblanding-actions { display:flex; flex-direction:column; gap:12px; }
@@ -348,7 +348,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .ob .oblanding-actions .obsignup { background:var(--si); color:#fff; }
 .ob .oblanding-actions .oblogin {
-  background:transparent; color:var(--ink); border:1px solid var(--line);
+  background:#fff; color:var(--ink); border:1px solid var(--line);
 }
 .ob p.oblanding-legal {
   margin:20px auto 0; max-width:360px; color:var(--muted); font-size:12.5px; line-height:1.45;
