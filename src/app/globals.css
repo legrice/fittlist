@@ -5064,7 +5064,7 @@ button.ps-card { cursor: pointer; }
 .distabs { padding-top: 0; margin-bottom: 2px; }
 .distabs .pubtab { font-size: 16px; }
 .discover-tabs {
-  display: flex; gap: 8px; padding: 10px 20px 0;
+  display: flex; gap: 8px; padding: 10px 0 0;
 }
 .discover-tabs button {
   min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px;
@@ -5072,24 +5072,22 @@ button.ps-card { cursor: pointer; }
   box-shadow: 0 1px 5px rgba(17,17,17,.05);
 }
 .discover-tabs button.on { background: var(--si); color: #fff; box-shadow: none; }
-.discover-searchrow { padding-top: 12px; }
+.dissearchrow.discover-searchrow { margin: 8px 0 10px; padding-top: 0; }
 .discover-filterrow {
   display:flex; align-items:center; gap:8px; overflow-x:auto; overflow-y:hidden;
-  margin:0 calc(50% - 50vw) 14px; padding:0 20px 2px; scrollbar-width:none;
+  margin:0 0 14px; padding:0 0 2px; scrollbar-width:none;
 }
 .discover-filterrow::-webkit-scrollbar { display:none; }
-.discover-select {
-  position:relative; flex:0 0 auto; display:inline-flex; align-items:center;
-  height:40px; border-radius:999px; background:var(--card); color:var(--ink);
-  box-shadow:0 1px 5px rgba(17,17,17,.05);
+.discover-filterpill {
+  flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  height:38px; max-width:190px; padding:0 14px; border:1px solid var(--line); border-radius:999px;
+  background:var(--card); color:var(--ink); font:inherit; font-size:14px; font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.discover-select select {
-  appearance:none; -webkit-appearance:none; height:100%; max-width:180px;
-  padding:0 36px 0 15px; border:0; border-radius:inherit; background:none;
-  color:inherit; font-family:inherit; font-size:14px; font-weight:600;
-}
-.discover-select svg { position:absolute; right:12px; pointer-events:none; }
-.discover-select.on { background:var(--si); color:#fff; }
+.discover-filterpill svg { flex:0 0 auto; }
+.discover-filterpill.on { background:var(--si); border-color:var(--si); color:#fff; }
+.discover-filter-sheet { padding-top:18px; }
+.discover-filter-options { margin:12px -4px 0; }
 .dischips {
   display: flex; gap: 8px; align-items: center;
   /* Sideways only: `overflow-x: auto` alone makes the row an implicit

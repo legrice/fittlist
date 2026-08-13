@@ -41,6 +41,7 @@ function rankByUse(values: (string | null | undefined)[]): string[] {
 
 /** Which of the directory's three halves is in front of you. */
 export type DiscoverHalf = "classes" | "coaches" | "studios";
+type DiscoverFilter = "when" | "type" | "location";
 
 // The directory, which has three halves: the classes, the coaches and the
 // places. The box is a door to the universal search; the tabs pick a half;
@@ -98,6 +99,7 @@ export function DiscoverList({
   const [selectedType, setSelectedType] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [classRange, setClassRange] = useState<"all" | "today" | "tomorrow" | "weekend" | "7">("all");
+  const [filterMenu, setFilterMenu] = useState<DiscoverFilter | null>(null);
   // The half goes in the URL as you switch, because leaving it in state alone
   // meant a profile's back arrow returned you to Classes however you got
   // there: the arrow pops history, and the entry it popped to had forgotten
@@ -217,6 +219,29 @@ export function DiscoverList({
     return [];
   }, [studios, people, tab]);
 
+  const rangeOptions: { value: typeof classRange; label: string }[] = [
+    { value: "all", label: "Any day" },
+    { value: "today", label: "Today" },
+    { value: "tomorrow", label: "Tomorrow" },
+    { value: "weekend", label: "This weekend" },
+    { value: "7", label: "Next 7 days" },
+  ];
+  const rangeLabel = rangeOptions.find((option) => option.value === classRange)?.label ?? "Any day";
+  const filterOptions = filterMenu === "when"
+    ? rangeOptions
+    : filterMenu === "type"
+      ? [{ value: "", label: "Any type" }, ...(tab === "classes" ? classTypeOptions : disciplines).map((value) => ({ value, label: value }))]
+      : [{ value: "", label: "Any location" }, ...cities.map((value) => ({ value, label: value }))];
+  const filterValue = filterMenu === "when" ? classRange : filterMenu === "type" ? selectedType : selectedCity;
+  const filterTitle = filterMenu === "when" ? "When" : filterMenu === "type" ? "Type" : "Location";
+
+  const chooseFilter = (value: string) => {
+    if (filterMenu === "when") setClassRange(value as typeof classRange);
+    if (filterMenu === "type") setSelectedType(value);
+    if (filterMenu === "location") setSelectedCity(value);
+    setFilterMenu(null);
+  };
+
   return (
     <>
       <div className="discover-tabs" role="tablist" aria-label="Discover sections">
@@ -267,39 +292,58 @@ export function DiscoverList({
 
       <div className="discover-filterrow" aria-label={`${tab} filters`}>
         {tab === "classes" && (
-          <label className={`discover-select${classRange !== "all" ? " on" : ""}`}>
-            <span className="sr-only">When</span>
-            <select value={classRange} onChange={(event) => setClassRange(event.target.value as typeof classRange)}>
-              <option value="all">Any day</option>
-              <option value="today">Today</option>
-              <option value="tomorrow">Tomorrow</option>
-              <option value="weekend">This weekend</option>
-              <option value="7">Next 7 days</option>
-            </select>
+          <button
+            type="button"
+            className={`discover-filterpill${classRange !== "all" ? " on" : ""}`}
+            onClick={() => setFilterMenu("when")}
+          >
+            {rangeLabel}
             <Icon name="expand_more" size={17} />
-          </label>
+          </button>
         )}
-        <label className={`discover-select${selectedType ? " on" : ""}`}>
-          <span className="sr-only">Type</span>
-          <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}>
-            <option value="">Any type</option>
-            {(tab === "classes" ? classTypeOptions : disciplines).map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
+        <button
+          type="button"
+          className={`discover-filterpill${selectedType ? " on" : ""}`}
+          onClick={() => setFilterMenu("type")}
+        >
+          {selectedType || "Any type"}
           <Icon name="expand_more" size={17} />
-        </label>
+        </button>
         {tab !== "classes" && cities.length > 0 && (
-          <label className={`discover-select${selectedCity ? " on" : ""}`}>
-            <span className="sr-only">Location</span>
-            <select value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)}>
-              <option value="">Any location</option>
-              {cities.map((city) => <option key={city} value={city}>{city}</option>)}
-            </select>
+          <button
+            type="button"
+            className={`discover-filterpill${selectedCity ? " on" : ""}`}
+            onClick={() => setFilterMenu("location")}
+          >
+            {selectedCity || "Any location"}
             <Icon name="expand_more" size={17} />
-          </label>
+          </button>
         )}
       </div>
+
+      {filterMenu && (
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setFilterMenu(null); }}>
+          <div className="sheet discover-filter-sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setFilterMenu(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>{filterTitle}</h2>
+            <div className="discover-filter-options">
+              {filterOptions.map((option) => (
+                <button
+                  type="button"
+                  className="clsopt"
+                  key={option.value}
+                  onClick={() => chooseFilter(option.value)}
+                >
+                  <span>{option.label}</span>
+                  {option.value === filterValue && <Icon className="clsopt-on" name="check" size={21} />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {tab === "classes" ? (
         <>
