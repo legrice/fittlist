@@ -8005,7 +8005,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clline {
   grid-template-columns: 64px 1fr; column-gap: 10px;
   align-content: center;
-  min-height: 88px; padding: 14px;
+  padding: 14px;
   border-bottom: 0; border-radius: 16px; background: var(--card);
   box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
 }
@@ -8046,7 +8046,7 @@ a.clspeek-by:active { opacity: .6; }
 .disflat .clline {
   grid-template-columns: 64px 1fr; column-gap: 10px;
   align-content: center;
-  min-height: 112px; padding: 14px; border-bottom: 0;
+  padding: 14px; border-bottom: 0;
 }
 /* These reading lists wrap every class in `.clrow` for grouping, but carry no
    corner action. Give the name back the 38px the generic menu row reserves. */
