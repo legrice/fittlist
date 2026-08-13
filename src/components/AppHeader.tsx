@@ -31,7 +31,7 @@ export function AppHeader({
   settings?: boolean;
   /** Site operations are visible only to configured admins. */
   admin?: boolean;
-  /** Number of unresolved reports and other queues requiring admin action. */
+  /** Number of unresolved reported listings. */
   adminAttention?: number;
 }) {
   return (
@@ -51,7 +51,7 @@ export function AppHeader({
         {/* Admin first when present, then creation, conversations and activity. */}
         {admin && (
           <HeaderIconLink
-            label={`Admin${adminAttention ? `, ${adminAttention} items need attention` : ""}`}
+            label={`Admin${adminAttention ? `, ${adminAttention} unresolved ${adminAttention === 1 ? "report" : "reports"}` : ""}`}
             icon="admin_panel_settings"
             href="/admin"
             match="/admin"
