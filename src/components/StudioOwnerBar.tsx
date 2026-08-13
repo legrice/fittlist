@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateStudio } from "@/app/actions/studios";
+import { adminDeleteStudio } from "@/app/actions/admin";
 import { Icon } from "@/components/Icon";
 import { readPhoto } from "@/lib/photo";
 import { TypePicker } from "@/components/TypePicker";
@@ -21,6 +22,8 @@ export type StudioEditProps = {
   phone: string;
   website: string;
   instagram: string;
+  /** Site-admin-only destructive control; ordinary editors never receive it. */
+  admin?: boolean;
 };
 
 // Any coach can correct a studio in the shared directory. The sheet is the
@@ -34,6 +37,8 @@ export function StudioOwnerBar({
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
   const [saving, startSaving] = useTransition();
+  const [deleting, startDeleting] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [pName, setPName] = useState(props.name);
@@ -93,6 +98,20 @@ export function StudioOwnerBar({
       if (res.slug) router.replace(`/s/${res.slug}`);
       router.refresh();
       toast("Studio updated");
+    });
+
+  const remove = () =>
+    startDeleting(async () => {
+      const res = await adminDeleteStudio(props.id);
+      if (!res.ok) {
+        setConfirmingDelete(false);
+        toast(res.error ?? "Couldn't delete this place");
+        return;
+      }
+      setConfirmingDelete(false);
+      onClose();
+      router.replace("/discover?half=studios");
+      router.refresh();
     });
 
   return (
@@ -256,6 +275,31 @@ export function StudioOwnerBar({
                 {saving ? "Saving…" : "Save place"}
               </button>
             </div>
+            {props.admin && (
+              <div className="dangerzone studio-delete-zone">
+                <button className="tertiary" type="button" onClick={() => setConfirmingDelete(true)}>
+                  Delete this place
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {confirmingDelete && (
+        <div className="sheet-scrim studio-delete-confirm" onClick={(event) => { if (event.target === event.currentTarget) setConfirmingDelete(false); }}>
+          <div className="sheet confirmsheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setConfirmingDelete(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Delete {props.name}?</h2>
+            <p className="lead">This permanently removes the place from fittlist. It can only be deleted when no classes or coaches still depend on it.</p>
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={deleting} onClick={remove}>
+                {deleting ? "Deleting…" : "Yes, delete this place"}
+              </button>
+            </div>
+            <button className="tertiary tellsheet-done" onClick={() => setConfirmingDelete(false)}>Keep this place</button>
           </div>
         </div>
       )}

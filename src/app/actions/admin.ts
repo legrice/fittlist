@@ -591,6 +591,9 @@ export async function adminDeleteStudio(
   if (gone?.accountUserId)
     await db.delete(schema.users).where(eq(schema.users.id, gone.accountUserId));
   revalidatePath("/admin");
+  revalidatePath("/discover");
+  revalidatePath("/feed");
+  if (gone) revalidatePath(`/s/${gone.slug ?? gone.id}`);
   return { ok: true };
 }
 

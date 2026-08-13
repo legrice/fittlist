@@ -15,6 +15,7 @@ export function AppHeader({
   home = "/week",
   nav,
   settings = false,
+  admin = false,
 }: {
   notificationUnread?: number;
   messageUnread?: number;
@@ -27,6 +28,8 @@ export function AppHeader({
   nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string; profileHref?: string };
   /** Settings is contextual to your own profile rather than global chrome. */
   settings?: boolean;
+  /** Site operations are visible only to configured admins. */
+  admin?: boolean;
 }) {
   return (
     <div className="brandbar">
@@ -42,7 +45,15 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* Creation, conversations, then activity: each action has one door. */}
+        {/* Admin first when present, then creation, conversations and activity. */}
+        {admin && (
+          <HeaderIconLink
+            label="Admin"
+            icon="admin_panel_settings"
+            href="/admin"
+            match="/admin"
+          />
+        )}
         <GlobalAdd />
         <HeaderIconLink
           label={`Messages${messageUnread ? `, ${messageUnread} unread` : ""}`}

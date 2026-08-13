@@ -911,6 +911,8 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .dangerzone { margin-top: var(--pad-b); padding-top: 18px; border-top: 1px solid var(--line); text-align: center; }
 .deletelink { color: var(--si); font-weight: 600; font-size: 14px; padding: 6px 0; }
 .dangerzone .keep { display: block; margin: 12px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
+.studio-delete-zone { margin-top:18px; }
+.studio-delete-confirm { z-index:48; }
 
 /* Add a class: a white pill that floats over the week, saying what it does
    rather than leaving a bare + to be guessed at. The shadow does the lifting,

@@ -12,6 +12,7 @@ import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { NavBar } from "@/components/NavBar";
 import { lookMode } from "@/lib/darkmode";
+import { adminEmails } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           // sign-in.
           home="/feed"
           nav={{ coach: isCoach, scheduleHref, profileHref }}
+          admin={adminEmails().includes(me.email.toLowerCase())}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}

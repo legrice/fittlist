@@ -3,6 +3,7 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
 import { unreadHeaderCounts } from "@/lib/notify";
+import { adminEmails } from "@/lib/admin";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
@@ -79,6 +80,7 @@ export async function AppChrome({
       home={fans ? "/feed" : "/app"}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
       settings={active === "you"}
+      admin={adminEmails().includes(me.email.toLowerCase())}
     />
   );
   if (!bar) return header;

@@ -321,6 +321,7 @@ export async function StudioView({
     phone: s.phone ?? "",
     website: s.website ?? "",
     instagram: s.instagram ?? "",
+    admin: access.isAdmin,
   };
 
   return (

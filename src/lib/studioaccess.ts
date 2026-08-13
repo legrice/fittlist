@@ -24,6 +24,8 @@ export type StudioAccess = {
   canEdit: boolean;
   /** This viewer runs the place, as opposed to merely being allowed to fix it. */
   isManager: boolean;
+  /** The site admin may also remove the place from inside its editor. */
+  isAdmin: boolean;
 };
 
 export async function studioManagerIds(studioId: string): Promise<string[]> {
@@ -46,11 +48,11 @@ export async function studioAccess(
 ): Promise<StudioAccess> {
   const managerIds = await studioManagerIds(studioId);
   const claimed = managerIds.length > 0;
-  if (!viewer) return { claimed, managerIds, canEdit: false, isManager: false };
+  if (!viewer) return { claimed, managerIds, canEdit: false, isManager: false, isAdmin: false };
   const isManager = managerIds.includes(viewer.id);
   // The site admin keeps the keys to every page: a gym that locks itself out,
   // or claims a studio it has no business claiming, has to be fixable.
   const admin = await currentAdmin();
   const canEdit = isManager || !!admin || (!claimed && viewer.kind !== "fan");
-  return { claimed, managerIds, canEdit, isManager };
+  return { claimed, managerIds, canEdit, isManager, isAdmin: !!admin };
 }
