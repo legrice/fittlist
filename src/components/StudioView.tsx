@@ -347,11 +347,6 @@ export async function StudioView({
             {
               key: "schedule",
               label: "Schedule",
-              // The commons' week explains itself from an info dot beside the
-              // tab: the note was a paragraph over the list, read once and
-              // scrolled past forever after. Its sheet carries the same Own
-              // this page ask the badge's does.
-              info: community ? <CommunityNote studioId={s.id} name={s.name} claimable={s.placeKind !== "outdoor"} /> : undefined,
             },
             { key: "about", label: "Info" },
             { key: "coaches", label: "Coaches" },
@@ -442,6 +437,13 @@ export async function StudioView({
         >
 
         <section id="profile-schedule" className="profile-anchor-section">
+          {community && (
+            <CommunityNote
+              studioId={s.id}
+              name={s.name}
+              claimable={s.placeKind !== "outdoor"}
+            />
+          )}
           {hasSchedule ? (
             <StudioSchedule
               slug={s.slug ?? s.id}

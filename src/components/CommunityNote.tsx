@@ -6,11 +6,11 @@ import { Icon } from "@/components/Icon";
 import { StudioFeedback } from "@/components/StudioFeedback";
 import { Toast, useToast } from "@/components/Toast";
 
-// The community schedule's info dot, beside the Schedule tab.
+// The community schedule's disclaimer, directly above the week.
 //
 // The note used to sit as a paragraph over the week itself, read once and
-// scrolled past forever after. It is a tap away now: the dot says there is
-// something to know, the sheet says it, and the same claim action leads into
+// scrolled past forever after. The short line says what matters without a
+// detour; More opens the context, and the same claim action leads into
 // the place claim ask the badge's sheet uses, because the person most
 // likely to open this is somebody who runs the place.
 export function CommunityNote({ studioId, name, claimable = true }: { studioId: string; name: string; claimable?: boolean }) {
@@ -23,13 +23,10 @@ export function CommunityNote({ studioId, name, claimable = true }: { studioId: 
 
   return (
     <>
-      <button
-        className="pubtab-info"
-        aria-label="About this schedule"
-        onClick={() => setOpen(true)}
-      >
-        <Icon name="info" size={20} />
-      </button>
+      <div className="community-schedule-note">
+        <p>Built by coaches and members who train here.</p>
+        <button type="button" onClick={() => setOpen(true)}>More</button>
+      </div>
 
       {open &&
         mounted &&

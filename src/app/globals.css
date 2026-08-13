@@ -3131,6 +3131,18 @@ button.ps-card { cursor: pointer; }
   color: var(--ol); cursor: pointer;
 }
 .pubtab-info:active { opacity: .6; }
+.community-schedule-note {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  margin: 4px 0 16px; padding: 0 0 12px; border-bottom: 1px solid var(--div);
+}
+.community-schedule-note p {
+  margin: 0; color: var(--muted); font-size: 14px; line-height: 1.35;
+}
+.community-schedule-note button {
+  flex: 0 0 auto; padding: 4px 0; color: var(--ink); font: 600 13px 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.community-schedule-note button:active { opacity: .6; }
 /* The badge above the name: the claim leads the identity it speaks for. */
 .profbadges-top { display: flex; margin-bottom: 10px; }
 .profbadges-onbanner .kindtag { background: rgba(255, 255, 255, .92); }
