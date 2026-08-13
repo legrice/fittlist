@@ -549,7 +549,7 @@ export function FollowingScreen({
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
                 </button>
               ))}
-              <Link className="trayitem trayitem-more" href="/search?from=feed" aria-label="Discover more coaches">
+              <Link className="trayitem trayitem-more" href="/discover?half=coaches" aria-label="Discover more coaches">
                 <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
                 <span className="trayitem-nm">More</span>
               </Link>
