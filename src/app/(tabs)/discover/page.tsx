@@ -34,6 +34,7 @@ export default async function DiscoverPage({
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
+  const today = todayIso();
   // Blocked in either direction: not on the list. Discover is where someone
   // who was removed would go looking, so it has to be the same nothing the
   // profile is, and it drops the ones you removed too so you aren't handed
@@ -65,7 +66,7 @@ export default async function DiscoverPage({
         occurrenceDate: schema.attendances.occurrenceDate,
       })
       .from(schema.attendances)
-      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()))),
+      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, today))),
     db.select().from(schema.studios).orderBy(schema.studios.name),
   ]);
   const allRows = everyone.filter((r) => !!r.handle && r.discoverable);
@@ -90,7 +91,7 @@ export default async function DiscoverPage({
 
   // "Classes this week" — the signal that a page is actually live, and the
   // thing a fan is deciding on.
-  const start = new Date(`${todayIso()}T00:00:00Z`);
+  const start = new Date(`${today}T00:00:00Z`);
   const weekCount = new Map<string, number>();
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);
@@ -150,16 +151,32 @@ export default async function DiscoverPage({
   // The other half of the directory. Every studio, in name order: a row here
   // is a place, and a place doesn't get ranked by whether it signed up. The
   // tag says which of them you can see a week for, which is the useful part.
-  const studios: DirStudio[] = studioRows.map((st) => ({
-    id: st.id,
-    slug: st.slug ?? st.id,
-    name: st.name,
-    address: st.address,
-    photo: st.photo,
-    types: st.types,
-    hasSchedule: !!st.accountUserId,
-    color: avatarColor({ id: st.id }),
-  }));
+  // The directory should feel browsed, not alphabetized. Keep the assortment
+  // stable for a day so it does not jump while someone moves between tabs,
+  // and let real photography lead while the image library is still growing.
+  const studioShuffleRank = (id: string) => {
+    let hash = 2166136261;
+    for (const char of `${today}|${id}`) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    }
+    return hash >>> 0;
+  };
+  const studios: DirStudio[] = studioRows
+    .map((st) => ({
+      id: st.id,
+      slug: st.slug ?? st.id,
+      name: st.name,
+      address: st.address,
+      photo: st.photo,
+      types: st.types,
+      hasSchedule: !!st.accountUserId,
+      color: avatarColor({ id: st.id }),
+    }))
+    .sort(
+      (a, b) =>
+        Number(!!b.photo) - Number(!!a.photo) ||
+        studioShuffleRank(a.id) - studioShuffleRank(b.id),
+    );
 
   return (
     <>
@@ -177,7 +194,7 @@ export default async function DiscoverPage({
           studios: studioRows,
           marks,
         })}
-        todayIso={todayIso()}
+        todayIso={today}
         cities={cities}
         myCity={me.location?.trim() || null}
         startHalf={startHalf}
