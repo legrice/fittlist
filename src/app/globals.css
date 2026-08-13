@@ -2187,6 +2187,35 @@ button.ps-card { cursor: pointer; }
    through the safe area while the darker scrim puts the page behind it. */
 .globaladd-sheet { --pad-b: calc(82px + env(safe-area-inset-bottom)); }
 .globaladd-scrim { background:rgba(10,10,8,.72); }
+.globaladd-scrim.chooser {
+  display: block; background: rgba(10, 10, 8, .76);
+  backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px);
+}
+.globaladd-speed {
+  position: fixed; z-index: 2; width: min(250px, calc(100vw - 36px));
+  min-height: 38px;
+}
+.globaladd-speed-close {
+  position: absolute; top: 0; right: 0; width: 38px; height: 38px;
+  display: grid; place-items: center; border-radius: 999px;
+  background: var(--ink); color: var(--paper); box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+}
+.globaladd-speed-options {
+  position: absolute; top: 46px; right: 0; display: flex; flex-direction: column; gap: 10px;
+}
+.globaladd-speed-options button {
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  min-width: 190px; color: #fff; font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  white-space: nowrap;
+}
+.globaladd-speed-options button i {
+  width: 44px; height: 44px; display: grid; place-items: center; flex: 0 0 auto;
+  border-radius: var(--button-radius); background: var(--paper); color: var(--ink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18); font-style: normal;
+}
+.globaladd-speed-options button:active i,
+.globaladd-speed-close:active { transform: scale(.94); }
+.globaladd-speed-options button:disabled { opacity: .55; }
 .globaladd-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:18px; }
 .globaladd-list > button { display:flex; min-width:0; min-height:86px; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:12px 8px; border-radius:16px; background:var(--ground); text-align:center; }
 .globaladd-list > button:disabled { opacity:.55; }

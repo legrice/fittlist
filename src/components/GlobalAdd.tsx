@@ -47,6 +47,8 @@ export function GlobalAdd() {
   const [placeMatches, setPlaceMatches] = useState<StudioMatch[]>([]);
   const [matching, setMatching] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [triggerBox, setTriggerBox] = useState<DOMRect | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const router = useRouter();
 
@@ -98,6 +100,10 @@ export function GlobalAdd() {
     setOpen(false);
     setMode(null);
     resetPlace();
+  };
+  const openChooser = () => {
+    setTriggerBox(triggerRef.current?.getBoundingClientRect() ?? null);
+    setOpen(true);
   };
   const choose = (next: "class" | "place") => {
     if (next === "place") {
@@ -358,40 +364,51 @@ export function GlobalAdd() {
     open && typeof document !== "undefined"
       ? createPortal(
           <div
-            className="sheet-scrim globaladd-scrim"
+            className={`sheet-scrim globaladd-scrim${mode ? " flow" : " chooser"}`}
             onClick={(event) => {
               if (event.target === event.currentTarget) close();
             }}
           >
-            <div
-              className={`sheet globaladd-sheet${mode === "place" && placeStep === "details" ? " sheet-full" : ""}`}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="globaladd-title"
-            >
-              {placeStep !== "details" && (
-                <button className="iconbtn sheetclose" aria-label="Close" onClick={close}>
-                  <Icon name="close" size={18} />
+            {mode ? (
+              <div
+                className={`sheet globaladd-sheet${mode === "place" && placeStep === "details" ? " sheet-full" : ""}`}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="globaladd-title"
+              >
+                {placeStep !== "details" && (
+                  <button className="iconbtn sheetclose" aria-label="Close" onClick={close}>
+                    <Icon name="close" size={18} />
+                  </button>
+                )}
+                {mode === "place" && (placeStep === "identity" ? placeIdentity : placeDetails)}
+              </div>
+            ) : (
+              <div
+                className="globaladd-speed"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Add to FittList"
+                style={triggerBox ? {
+                  top: `${triggerBox.top}px`,
+                  right: `${window.innerWidth - triggerBox.right}px`,
+                } : undefined}
+              >
+                <button className="globaladd-speed-close" aria-label="Close add menu" onClick={close}>
+                  <Icon name="close" size={24} />
                 </button>
-              )}
-              {mode === "place" ? (
-                placeStep === "identity" ? placeIdentity : placeDetails
-              ) : (
-                <>
-                  <h2 id="globaladd-title">Add a class or place</h2>
-                  <div className="globaladd-list">
-                    <button disabled={pending} onClick={() => choose("class")}>
-                      <Icon name="activity" size={23} />
-                      <b>Class</b>
-                    </button>
-                    <button onClick={() => choose("place")}>
-                      <Icon name="place" size={23} />
-                      <b>Place</b>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+                <div className="globaladd-speed-options">
+                  <button disabled={pending} onClick={() => choose("class")}>
+                    <span>Add a class</span>
+                    <i><Icon name="activity" size={22} /></i>
+                  </button>
+                  <button onClick={() => choose("place")}>
+                    <span>Add a studio</span>
+                    <i><Icon name="place" size={22} /></i>
+                  </button>
+                </div>
+              </div>
+            )}
             {data && mode === "class" && (
               <Adder
                 studios={data.studios}
@@ -422,7 +439,7 @@ export function GlobalAdd() {
 
   return (
     <>
-      <button className="iconbtn" aria-label="Add" onClick={() => setOpen(true)}>
+      <button ref={triggerRef} className="iconbtn" aria-label="Add" onClick={openChooser}>
         <Icon name="add" size={24} />
       </button>
       {composer}
