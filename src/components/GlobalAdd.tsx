@@ -47,8 +47,6 @@ export function GlobalAdd() {
   const [placeMatches, setPlaceMatches] = useState<StudioMatch[]>([]);
   const [matching, setMatching] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const [triggerBox, setTriggerBox] = useState<DOMRect | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const router = useRouter();
 
@@ -102,7 +100,6 @@ export function GlobalAdd() {
     resetPlace();
   };
   const openChooser = () => {
-    setTriggerBox(triggerRef.current?.getBoundingClientRect() ?? null);
     setOpen(true);
   };
   const choose = (next: "class" | "place") => {
@@ -170,7 +167,6 @@ export function GlobalAdd() {
         <label>
           Name
           <input
-            autoFocus
             autoComplete="off"
             value={placeName}
             onChange={(event) => setPlaceName(event.target.value)}
@@ -244,7 +240,6 @@ export function GlobalAdd() {
           <label>
             {locationLabel}
             <input
-              autoFocus
               value={placeAddress}
               onChange={(event) => setPlaceAddress(event.target.value)}
               placeholder={
@@ -385,26 +380,25 @@ export function GlobalAdd() {
               </div>
             ) : (
               <div
-                className="globaladd-speed"
+                className="sheet globaladd-chooser"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Add to FittList"
-                style={triggerBox ? {
-                  top: `${triggerBox.top}px`,
-                  right: `${window.innerWidth - triggerBox.right}px`,
-                } : undefined}
+                aria-labelledby="globaladd-chooser-title"
               >
-                <button className="globaladd-speed-close" aria-label="Close add menu" onClick={close}>
-                  <Icon name="close" size={24} />
+                <button className="iconbtn sheetclose" aria-label="Close add menu" onClick={close}>
+                  <Icon name="close" size={18} />
                 </button>
-                <div className="globaladd-speed-options">
+                <h2 id="globaladd-chooser-title">Add to FittList</h2>
+                <div className="globaladd-chooser-options">
                   <button disabled={pending} onClick={() => choose("class")}>
-                    <span>Add a class</span>
                     <i><Icon name="activity" size={22} /></i>
+                    <span>Add a class</span>
+                    <Icon name="chevron_right" size={20} />
                   </button>
                   <button onClick={() => choose("place")}>
-                    <span>Add a studio</span>
                     <i><Icon name="place" size={22} /></i>
+                    <span>Add a studio</span>
+                    <Icon name="chevron_right" size={20} />
                   </button>
                 </div>
               </div>
@@ -439,7 +433,7 @@ export function GlobalAdd() {
 
   return (
     <>
-      <button ref={triggerRef} className="iconbtn" aria-label="Add" onClick={openChooser}>
+      <button className="iconbtn" aria-label="Add" onClick={openChooser}>
         <Icon name="add" size={24} />
       </button>
       {composer}
