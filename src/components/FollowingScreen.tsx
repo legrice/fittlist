@@ -113,6 +113,7 @@ type Filters = {
   place: "any" | string[];
 };
 const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
+const SELF_FILTER = "__your_week__";
 
 /**
  * Following: the coaches you keep up with and their combined schedule.
@@ -129,6 +130,8 @@ export function FollowingScreen({
   cats,
   todayIso,
   meId,
+  meKind,
+  meFace,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -172,7 +175,9 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [coachFilter, setCoachFilter] = useState<string>("all");
+  // Nothing selected is the combined week. A face is an explicit filter,
+  // including your own face at the front of the rail.
+  const [coachFilter, setCoachFilter] = useState<string | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -236,16 +241,26 @@ export function FollowingScreen({
   };
 
   const shown = useMemo(
-    () => items.filter((item) => passes(item) && (!isHome || coachFilter === "all" || item.coachId === coachFilter)),
+    () =>
+      items.filter(
+        (item) =>
+          passes(item) &&
+          (!isHome ||
+            coachFilter === null ||
+            (coachFilter === SELF_FILTER
+              ? item.saved || (!!meId && item.coachId === meId)
+              : item.coachId === coachFilter)),
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [items, f, geo, isHome, coachFilter],
   );
 
   const coachOptions = useMemo(() => {
     const ids = new Set(items.map((item) => item.coachId));
-    return coaches.filter((coach) => ids.has(coach.id));
-  }, [coaches, items]);
-  const selectedCoach = coachFilter === "all" ? null : coachById.get(coachFilter) ?? null;
+    return coaches.filter((coach) => ids.has(coach.id) && coach.id !== meId);
+  }, [coaches, items, meId]);
+  const selectedCoach = coachFilter && coachFilter !== SELF_FILTER ? coachById.get(coachFilter) ?? null : null;
+  const selectedSelf = coachFilter === SELF_FILTER;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -296,7 +311,9 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Following is the complete rolling week: today plus the next six days.
+  // Following is the complete rolling week: today through the same weekday
+  // next week. The inclusive end is what makes Wednesday-to-Wednesday read as
+  // a full visible week rather than mysteriously stopping on Tuesday.
   // It used to stop after twelve rows, which meant a busy Saturday could hide
   // Sunday entirely and made the page answer "the next twelve" rather than
   // the question people came with: what are my coaches doing this week?
@@ -304,7 +321,7 @@ export function FollowingScreen({
     () => {
       const nextWeek = plusDays(todayIso, 7);
       return [...shown]
-        .filter((item) => item.iso >= todayIso && item.iso < nextWeek)
+        .filter((item) => item.iso >= todayIso && item.iso <= nextWeek)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
         .map(rowOf);
     },
@@ -471,22 +488,32 @@ export function FollowingScreen({
             <h1 className="tab-page-title">Following</h1>
             <Link className="following-manage" href="/following?from=feed">Manage</Link>
           </div>
-          <div className="tray following-rail" role="group" aria-label="Filter by coach">
+          <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
             <div className="tray-scroll">
               <button
-                className={`trayitem${coachFilter !== "all" ? " dim" : ""}`}
-                aria-pressed={coachFilter === "all"}
-                onClick={() => setCoachFilter("all")}
+                className={`trayitem${coachFilter && !selectedSelf ? " dim" : ""}`}
+                aria-pressed={selectedSelf}
+                onClick={() => setCoachFilter(selectedSelf ? null : SELF_FILTER)}
               >
-                <span className={`trayav trayav-all${coachFilter === "all" ? " sel" : ""}`}>All</span>
-                <span className="trayitem-nm">All</span>
+                <span
+                  className={`trayav trayav-you${selectedSelf ? " sel" : ""}`}
+                  style={{ background: meFace.color }}
+                >
+                  {meFace.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={meFace.photo} alt="" />
+                  ) : (
+                    <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
+                  )}
+                </span>
+                <span className="trayitem-nm">Your week</span>
               </button>
               {coachOptions.map((coach) => (
                 <button
                   key={coach.id}
-                  className={`trayitem${coachFilter !== "all" && coachFilter !== coach.id ? " dim" : ""}`}
+                  className={`trayitem${coachFilter && coachFilter !== coach.id ? " dim" : ""}`}
                   aria-pressed={coachFilter === coach.id}
-                  onClick={() => setCoachFilter(coach.id)}
+                  onClick={() => setCoachFilter(coachFilter === coach.id ? null : coach.id)}
                 >
                   <span
                     className={`trayav${coachFilter === coach.id ? " sel" : ""}`}
@@ -510,11 +537,16 @@ export function FollowingScreen({
           </div>
         </header>
       )}
-      {isHome && selectedCoach && (
+      {isHome && (selectedCoach || selectedSelf) && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">Classes with {selectedCoach.name.split(/\s+/)[0]}</span>
-          <Link href={`/${selectedCoach.handle}?from=feed`} className="feedfilter-link">
-            View profile <Icon name="chevron_right" size={17} />
+          <span className="feedfilter-txt">
+            {selectedSelf ? "Your classes this week" : `Classes with ${selectedCoach!.name.split(/\s+/)[0]}`}
+          </span>
+          <Link
+            href={selectedSelf ? (meKind === "coach" ? "/coachshare" : "/membershare") : `/${selectedCoach!.handle}?from=feed`}
+            className="feedfilter-link"
+          >
+            {selectedSelf ? "Share your week" : "View profile"} <Icon name="chevron_right" size={17} />
           </Link>
         </div>
       )}

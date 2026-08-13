@@ -21,7 +21,7 @@ export default async function DiscoverPage() {
   const feed = await buildDiscoverFeed(userId, me);
   const followed = new Set(feed.favIds);
   const followingItems = feed.items.filter(
-    (item) => followed.has(item.coachId) || (me.kind !== "fan" && item.coachId === userId),
+    (item) => item.saved || followed.has(item.coachId) || (me.kind !== "fan" && item.coachId === userId),
   );
   return (
     <FollowingScreen
