@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { browseCoaches, searchAll } from "@/app/actions/search";
+import { searchAll } from "@/app/actions/search";
 import { ClassResults } from "@/components/ClassResults";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
@@ -16,11 +16,9 @@ const RECENT_MAX = 8;
 const RECENT_PREVIEW = 3;
 
 type RecentHit = {
-  t: "p";
+  t: "p" | "s" | "c";
   name: string;
-  /** Person recents have always stored the handle in `base`. Keeping that
-   *  shape means an older cached bundle can still read them after a rollback. */
-  base: string;
+  href: string;
 };
 
 function readRecents(): RecentHit[] {
@@ -34,11 +32,20 @@ function readRecents(): RecentHit[] {
     for (const item of value) {
       if (!item || typeof item !== "object") continue;
       const stored = item as Record<string, unknown>;
-      const base = stored.base ?? stored.handle;
-      if (stored.t !== "p" || typeof stored.name !== "string" || typeof base !== "string") {
+      const legacyBase = stored.base ?? stored.handle;
+      const href = typeof stored.href === "string"
+        ? stored.href
+        : stored.t === "p" && typeof legacyBase === "string"
+          ? `/${legacyBase}?from=search`
+          : null;
+      if (
+        !["p", "s", "c"].includes(String(stored.t)) ||
+        typeof stored.name !== "string" ||
+        !href
+      ) {
         continue;
       }
-      recents.push({ t: "p", name: stored.name, base });
+      recents.push({ t: stored.t as RecentHit["t"], name: stored.name, href });
       if (recents.length === RECENT_MAX) break;
     }
     return recents;
@@ -48,7 +55,7 @@ function readRecents(): RecentHit[] {
 }
 
 function writeRecent(hit: RecentHit): RecentHit[] {
-  const next = [hit, ...readRecents().filter((item) => item.base !== hit.base)].slice(
+  const next = [hit, ...readRecents().filter((item) => item.href !== hit.href)].slice(
     0,
     RECENT_MAX,
   );
@@ -70,7 +77,6 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const [asked, setAsked] = useState("");
   const [recent, setRecent] = useState<RecentHit[]>([]);
   const [recentExpanded, setRecentExpanded] = useState(false);
-  const [browse, setBrowse] = useState<DirPerson[] | null>(null);
   const box = useRef<HTMLInputElement>(null);
   // Only the newest request may paint, or a slow short query can replace the
   // answer to the longer name somebody has already finished typing.
@@ -85,16 +91,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
     } catch {
       // Nothing stored is a valid starting state.
     }
-    let live = true;
-    browseCoaches()
-      .then((rows) => {
-        if (live) setBrowse(rows);
-      })
-      .catch(() => {
-        if (live) setBrowse([]);
-      });
     return () => {
-      live = false;
       clearTimeout(timer);
     };
   }, []);
@@ -139,14 +136,29 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const short = q.trim().length < MIN;
   const nothing = !short && !busy && asked === q.trim() && people.length + studios.length + classes.length === 0;
 
-  const remember =
+  const rememberPerson =
     (rows: DirPerson[]) => (event: MouseEvent<HTMLDivElement>) => {
       const anchor = (event.target as HTMLElement).closest("a");
       if (!anchor) return;
       const handle = (anchor.getAttribute("href") ?? "").match(/^\/([^/?]+)(?:\?|$)/)?.[1];
       const person = rows.find((row) => row.handle === handle);
-      if (person) setRecent(writeRecent({ t: "p", name: person.name, base: person.handle }));
+      if (person) setRecent(writeRecent({ t: "p", name: person.name, href: `/${person.handle}?from=search` }));
     };
+
+  const rememberStudio =
+    (rows: DirStudio[]) => (event: MouseEvent<HTMLDivElement>) => {
+      const anchor = (event.target as HTMLElement).closest("a");
+      const href = anchor?.getAttribute("href") ?? "";
+      const studio = rows.find((row) => href.startsWith(`/s/${row.slug}`));
+      if (studio) setRecent(writeRecent({ t: "s", name: studio.name, href: `/s/${studio.slug}?from=search` }));
+    };
+
+  const rememberClass = (event: MouseEvent<HTMLDivElement>) => {
+    const anchor = (event.target as HTMLElement).closest("a");
+    const href = anchor?.getAttribute("href") ?? "";
+    const cls = classes.find((row) => href.includes(`/${row.classId}?`));
+    if (cls) setRecent(writeRecent({ t: "c", name: cls.name, href }));
+  };
 
   return (
     <>
@@ -193,8 +205,8 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
                 </button>
               </h2>
               {recent.slice(0, recentExpanded ? RECENT_MAX : RECENT_PREVIEW).map((item) => (
-                <Link key={item.base} className="recentrow" href={`/${item.base}?from=search`}>
-                  <Icon name="account_circle" size={19} />
+                <Link key={item.href} className="recentrow" href={item.href}>
+                  <Icon name={item.t === "p" ? "account_circle" : item.t === "s" ? "place" : "activity"} size={19} />
                   {item.name}
                 </Link>
               ))}
@@ -210,20 +222,6 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
               )}
             </div>
           )}
-          <div className="srchsec" onClickCapture={remember(browse ?? [])}>
-            <h2 className="srchhead">Coaches</h2>
-            {!browse ? (
-              <p className="peekempty">Looking around&hellip;</p>
-            ) : browse.length ? (
-              <div className="dislist dislist-bare">
-                {browse.map((person) => (
-                  <PersonRow key={person.id} person={person} from="search" kindTag={false} />
-                ))}
-              </div>
-            ) : (
-              <p className="peekempty">No coaches to show yet.</p>
-            )}
-          </div>
         </>
       ) : busy ? (
         <div className="empty-block" role="status" aria-live="polite">
@@ -242,7 +240,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       ) : (
         <div>
           {studios.length > 0 && (
-            <div className="srchsec">
+            <div className="srchsec" onClickCapture={rememberStudio(studios)}>
               <h2 className="srchhead">Gyms &amp; studios <span>{studios.length}</span></h2>
               <div className="dislist dislist-bare">
                 {studios.map((studio) => <StudioRow key={studio.id} studio={studio} from="search" />)}
@@ -250,7 +248,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             </div>
           )}
           {people.length > 0 && (
-            <div className="srchsec" onClickCapture={remember(people)}>
+            <div className="srchsec" onClickCapture={rememberPerson(people)}>
               <h2 className="srchhead">Coaches <span>{people.length}</span></h2>
               <div className="dislist dislist-bare">
                 {people.map((person) => (
@@ -260,7 +258,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             </div>
           )}
           {classes.length > 0 && (
-            <div className="srchsec">
+            <div className="srchsec" onClickCapture={rememberClass}>
               <h2 className="srchhead">Classes <span>{classes.length}</span></h2>
               <ClassResults classes={classes} todayIso={todayIso} from="search" />
             </div>

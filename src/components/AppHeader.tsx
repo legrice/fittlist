@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { HeaderIconLink } from "@/components/HeaderIconLink";
-import { GlobalAdd } from "@/components/GlobalAdd";
 import { HeaderNav } from "@/components/HeaderNav";
 import { SettingsGear } from "@/components/SettingsGear";
 import { Wordmark } from "@/components/Wordmark";
@@ -48,7 +47,7 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* Admin first when present, then creation, conversations and activity. */}
+        {/* Admin first when present, then search, conversations and activity. */}
         {admin && (
           <HeaderIconLink
             label={`Admin${adminAttention ? `, ${adminAttention} unresolved ${adminAttention === 1 ? "report" : "reports"}` : ""}`}
@@ -58,7 +57,7 @@ export function AppHeader({
             badge={adminAttention > 0 ? <span className="inboxdot">{adminAttention > 9 ? "9+" : adminAttention}</span> : undefined}
           />
         )}
-        <GlobalAdd />
+        <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
         <HeaderIconLink
           label={`Messages${messageUnread ? `, ${messageUnread} unread` : ""}`}
           icon="chat_bubble"
