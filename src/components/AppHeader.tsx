@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeaderIconLink } from "@/components/HeaderIconLink";
+import { GlobalAdd } from "@/components/GlobalAdd";
 import { HeaderNav } from "@/components/HeaderNav";
 import { SettingsGear } from "@/components/SettingsGear";
 import { Wordmark } from "@/components/Wordmark";
@@ -37,10 +38,10 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* One stable utility order everywhere in the signed-in app. Search
-            finds coaches, the bell holds Notifications and
+        {/* One stable utility order everywhere in the signed-in app. Add
+            opens creation in place, the bell holds Notifications and
             Messages together, and the gear opens settings in place. */}
-        <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
+        <GlobalAdd />
         <HeaderIconLink
           label={`Notifications${unread ? `, ${unread} unread` : ""}`}
           icon="notifications"
