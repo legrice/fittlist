@@ -86,7 +86,7 @@ export default async function EventPage({ params, searchParams }: Props) {
     from === "home"
       ? "Back home"
       : from === "following"
-        ? "Back to Following"
+        ? "Back to This Week"
         : `Back to ${user.name}’s schedule`;
 
   return (

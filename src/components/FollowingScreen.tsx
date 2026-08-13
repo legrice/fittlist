@@ -496,7 +496,7 @@ export function FollowingScreen({
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
-            <Icon name="arrow_back" size={20} /> Following
+            <Icon name="arrow_back" size={20} /> This Week
           </Link>
           <h1>Upcoming near you</h1>
           <p>Browse classes by day, time, distance, type, or place.</p>
@@ -505,7 +505,7 @@ export function FollowingScreen({
       {isHome && (
         <header className="following-head">
           <div className="following-title-row">
-            <h1 className="tab-page-title">Following</h1>
+            <h1 className="tab-page-title">This Week</h1>
             <Link className="following-manage" href="/following?from=feed">Manage</Link>
           </div>
           <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
@@ -613,16 +613,21 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome ? "No classes yet" : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">{isHome ? "Your week is empty" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? "Follow a coach to see their schedule here."
+                ? "Follow a coach or add a class to make this place less lonely."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
             {isHome && (
-              <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
-                Find coaches
-              </button>
+              <div className="wkempty-actions">
+                <button className="btn ghost" onClick={() => setFind(true)}>
+                  Find a coach
+                </button>
+                <Link className="btn si" href="/calendar?add=1">
+                  Add a class
+                </Link>
+              </div>
             )}
           </div>
         </>

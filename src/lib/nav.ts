@@ -38,7 +38,7 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    { id: "following", href: "/feed", icon: "group", label: "Following" },
+    { id: "following", href: "/feed", icon: "group", label: "This Week" },
     { id: "search", href: "/discover", icon: "search", label: "Discover" },
     {
       id: "schedule" as const,
@@ -121,5 +121,5 @@ export function backToFor(from: string | undefined, signedIn: boolean): { href: 
   // signed-in viewer can actually open, and /week sends a coach to /app.
   // Following for a signed-in viewer: it is the one screen everybody has, and
   // a member has no calendar to be sent back to.
-  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
+  return signedIn ? { href: "/feed", label: "Back to This Week" } : { href: "/", label: "Back" };
 }

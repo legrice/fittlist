@@ -7332,6 +7332,14 @@ button.ps-card { cursor: pointer; }
    an empty screen wears the one loud colour. */
 .wkempty-cta { margin-top: 22px; width: 100%; }
 .btn.si.wkempty-cta { background: var(--si); color: #fff; }
+.wkempty-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-top: 22px;
+}
+.wkempty-actions .btn { width: 100%; margin: 0; }
 .calendar-empty-actions {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px;
 }

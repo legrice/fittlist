@@ -291,7 +291,7 @@ export function OnboardingWizard({
         {step === 3 && (
           <>
             <h1>Follow a few coaches.</h1>
-            <p>Their weeks land on your Following tab. Skip if you&rsquo;d rather not.</p>
+            <p>Their weeks land in This Week. Skip if you&rsquo;d rather not.</p>
             {suggested !== null && suggested.length === 0 && (
               <p className="microcopy">Nobody to suggest yet. You&rsquo;ll find people in Discover.</p>
             )}

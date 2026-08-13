@@ -87,7 +87,7 @@ export default async function FollowingPage({
           <BackLink
             className="evback"
             href={fromFeed ? "/feed" : "/settings"}
-            label={fromFeed ? "Back to Following" : "Back to settings"}
+            label={fromFeed ? "Back to This Week" : "Back to settings"}
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
