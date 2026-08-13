@@ -25,9 +25,9 @@ export type DiscoverFeed = {
   cats: string[];
   follows: number;
   today: string;
-  /** The This week rail: everyone you follow, coaches and members mixed,
-   *  each carrying the freshness ring's state. People with something coming
-   *  up lead; empty weeks remain visible at the end. */
+  /** The This week rail: every coach you follow, each carrying the freshness
+   *  ring's state. Coaches with something coming up lead; empty weeks remain
+   *  visible at the end. */
   myRail: RailPerson[];
   /** The rails under the schedule: every studio, the viewer's city first,
    *  and every listable coach with the viewer's follow state riding along. */
@@ -225,16 +225,18 @@ export async function buildDiscoverFeed(
   for (const i of items) if (i.classType) catCount.set(i.classType, (catCount.get(i.classType) ?? 0) + 1);
   const cats = [...catCount.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
 
-  // The This Week rail is the follow relationship itself, not a list of
-  // schedules that happen to be populated today. People teaching soonest
-  // lead; an empty week moves to the tail rather than making the person
-  // disappear.
+  // The This Week rail is the followed-coach relationship itself, not a list
+  // of schedules that happen to be populated today. Coaches teaching soonest
+  // lead; an empty week moves to the tail rather than making the coach
+  // disappear. Members stay out: a large personal follow graph overwhelms
+  // the useful shortcut to coaching calendars.
   const peekedByTrainer = new Map(followRows.map((r) => [r.trainerUserId, r.peekedAt]));
   const followedUsers = followed.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, followed))
     : [];
-  const followedPeople = followedUsers.filter((u) => u.kind !== "gym" && !!u.handle);
-  const followedCoaches = followedPeople.filter((u) => u.kind !== "fan");
+  const followedCoaches = followedUsers.filter(
+    (u) => u.kind !== "fan" && u.kind !== "gym" && !!u.handle,
+  );
   const [theirClasses, theirSchedules] = await Promise.all([
     followed.length
       ? db
@@ -269,7 +271,7 @@ export async function buildDiscoverFeed(
       consider(c.ownerUserId, `${iso}T${String(timeToMinutes(c.startTime)).padStart(4, "0")}`);
     }
   }
-  const myRail: RailPerson[] = followedPeople
+  const myRail: RailPerson[] = followedCoaches
     .map((u) => {
       const peeked = peekedByTrainer.get(u.id)?.getTime() ?? 0;
       return {
