@@ -95,6 +95,9 @@ export function DiscoverList({
   // this, or the button contradicts the screen it opens.
   const [tab, setTab] = useState<DiscoverHalf>(startHalf);
   const [query, setQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [classRange, setClassRange] = useState<"all" | "today" | "tomorrow" | "weekend" | "7">("all");
   // The half goes in the URL as you switch, because leaving it in state alone
   // meant a profile's back arrow returned you to Classes however you got
   // there: the arrow pops history, and the entry it popped to had forgotten
@@ -105,7 +108,9 @@ export function DiscoverList({
   const pick = (next: DiscoverHalf) => {
     setTab(next);
     setQuery("");
-    setTypes(new Set());
+    setSelectedType("");
+    setSelectedCity("");
+    setClassRange("all");
     if (typeof window !== "undefined") {
       const url = next === "classes" ? "/discover" : `/discover?half=${next}`;
       window.history.replaceState(null, "", url);
@@ -121,20 +126,6 @@ export function DiscoverList({
   // a filter you didn't set is a list you can't explain, and the count on the
   // Filters chip would be reporting a choice nobody made.
   void myCity;
-  // The city filter left with the Filters sheet for now; `cities` stays a
-  // prop so it can come back the day there are enough filters to need a
-  // sheet again.
-  void cities;
-  const [types, setTypes] = useState<Set<string>>(new Set());
-
-
-  const toggleType = (t: string) =>
-    setTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(t)) next.delete(t);
-      else next.add(t);
-      return next;
-    });
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return people
@@ -147,8 +138,27 @@ export function DiscoverList({
           c.location.toLowerCase().includes(q) ||
           c.disciplines.some((d) => d.toLowerCase().includes(q)),
       )
-      .filter((c) => types.size === 0 || c.disciplines.some((d) => types.has(d)));
-  }, [people, query, types]);
+      .filter((c) => !selectedType || c.disciplines.includes(selectedType))
+      .filter((c) => !selectedCity || c.location.toLowerCase().includes(selectedCity.toLowerCase()));
+  }, [people, query, selectedCity, selectedType]);
+
+  const rangeBounds = useMemo(() => {
+    const day = (offset: number) => {
+      const date = new Date(`${todayIso}T00:00:00Z`);
+      date.setUTCDate(date.getUTCDate() + offset);
+      return date.toISOString().slice(0, 10);
+    };
+    if (classRange === "today") return [todayIso, todayIso] as const;
+    if (classRange === "tomorrow") return [day(1), day(1)] as const;
+    if (classRange === "7") return [todayIso, day(6)] as const;
+    if (classRange === "weekend") {
+      const dow = new Date(`${todayIso}T00:00:00Z`).getUTCDay();
+      if (dow === 6) return [todayIso, day(1)] as const;
+      if (dow === 0) return [todayIso, todayIso] as const;
+      return [day(6 - dow), day(7 - dow)] as const;
+    }
+    return null;
+  }, [classRange, todayIso]);
 
   const shownClasses = useMemo(
     () =>
@@ -160,9 +170,10 @@ export function DiscoverList({
           (c.classType ?? "").toLowerCase().includes(q) ||
           (c.coachName ?? "").toLowerCase().includes(q) ||
           (c.studioName ?? c.where ?? "").toLowerCase().includes(q);
-        return matchesQuery && (types.size === 0 || (c.classType ? types.has(c.classType) : false));
+        const matchesRange = !rangeBounds || (c.iso >= rangeBounds[0] && c.iso <= rangeBounds[1]);
+        return matchesQuery && matchesRange && (!selectedType || c.classType === selectedType);
       }),
-    [classes, query, types],
+    [classes, query, rangeBounds, selectedType],
   );
 
   // A filter is only offered where it can narrow something: the types the
@@ -192,15 +203,11 @@ export function DiscoverList({
       ) return false;
       // One vocabulary across the directory, so the same pick narrows both
       // halves: the yoga teachers, and the places that offer yoga.
-      if (types.size > 0 && !st.types.some((t) => types.has(t))) return false;
+      if (selectedType && !st.types.includes(selectedType)) return false;
+      if (selectedCity && !st.address.toLowerCase().includes(selectedCity.toLowerCase())) return false;
       return true;
     });
-  }, [studios, query, types]);
-
-  // All is the absence of picks, and it leads the rail already filled in:
-  // the one selected chip is what says the others can be selected.
-  const allOn = types.size === 0;
-  const clearAll = () => setTypes(new Set());
+  }, [studios, query, selectedCity, selectedType]);
   // What the lens in front of you can actually be narrowed by, and nothing
   // else: the studios' own type vocabulary, on the Studios half only.
   const disciplines = useMemo(() => {
@@ -209,17 +216,6 @@ export function DiscoverList({
       return rankByUse(people.filter((c) => c.kind === "coach").flatMap((c) => c.disciplines));
     return [];
   }, [studios, people, tab]);
-
-  // The words this half can narrow by, plus any pick carried in from another
-  // half. A selection that survives the switch has to stay visible or it is a
-  // list quietly filtered by something with no chip to un-pick: the rail says
-  // what is on, and All is the way back off all of it.
-  const railWords = useMemo(() => {
-    const here = tab === "classes" ? classTypeOptions : disciplines;
-    const carried = [...types].filter((t) => !here.includes(t)).sort();
-    return [...here, ...carried];
-  }, [tab, classTypeOptions, disciplines, types]);
-
 
   return (
     <>
@@ -269,38 +265,41 @@ export function DiscoverList({
         </label>
       </div>
 
-      {/* One rail, all three halves. All leads it, filled in by default: the
-          one selected chip is the hint that the rest can be selected. The
-          chips after it are multiselect and busiest first, and All is the way
-          back, which is why there is no Clear all anywhere. Classes had two
-          bottom sheets here instead; a sheet is a tap that hides the whole
-          filter, and the answer to a long type list is a rail that scrolls. */}
-      {railWords.length > 0 && (
-        <div className="dischips" aria-label="Filters">
-          <button
-            type="button"
-            className={`chip${allOn ? " sel" : ""}`}
-            aria-pressed={allOn}
-            onClick={clearAll}
-          >
-            All
-          </button>
-          {railWords.map((d) => {
-            const on = types.has(d);
-            return (
-              <button
-                key={d}
-                type="button"
-                className={`chip${on ? " sel" : ""}`}
-                aria-pressed={on}
-                onClick={() => toggleType(d)}
-              >
-                {d}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="discover-filterrow" aria-label={`${tab} filters`}>
+        {tab === "classes" && (
+          <label className={`discover-select${classRange !== "all" ? " on" : ""}`}>
+            <span className="sr-only">When</span>
+            <select value={classRange} onChange={(event) => setClassRange(event.target.value as typeof classRange)}>
+              <option value="all">Any day</option>
+              <option value="today">Today</option>
+              <option value="tomorrow">Tomorrow</option>
+              <option value="weekend">This weekend</option>
+              <option value="7">Next 7 days</option>
+            </select>
+            <Icon name="expand_more" size={17} />
+          </label>
+        )}
+        <label className={`discover-select${selectedType ? " on" : ""}`}>
+          <span className="sr-only">Type</span>
+          <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}>
+            <option value="">Any type</option>
+            {(tab === "classes" ? classTypeOptions : disciplines).map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+          <Icon name="expand_more" size={17} />
+        </label>
+        {tab !== "classes" && cities.length > 0 && (
+          <label className={`discover-select${selectedCity ? " on" : ""}`}>
+            <span className="sr-only">Location</span>
+            <select value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)}>
+              <option value="">Any location</option>
+              {cities.map((city) => <option key={city} value={city}>{city}</option>)}
+            </select>
+            <Icon name="expand_more" size={17} />
+          </label>
+        )}
+      </div>
 
       {tab === "classes" ? (
         <>

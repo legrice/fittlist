@@ -138,9 +138,14 @@ export default async function DiscoverPage({
     // face at the top is the reason to keep opening it.
     .sort((a, b) => (joinedAt.get(b.id) ?? 0) - (joinedAt.get(a.id) ?? 0));
 
-  const cities = [...new Set(people.map((c) => c.location).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b),
-  );
+  const studioCities = studioRows.map((studio) => {
+    if (studio.placeKind === "virtual") return "";
+    const parts = studio.address.split(",").map((part) => part.trim()).filter(Boolean);
+    return parts.length > 1 ? parts[parts.length - 2] : "";
+  });
+  const cities = [
+    ...new Set([...people.map((person) => person.location), ...studioCities].filter(Boolean)),
+  ].sort((a, b) => a.localeCompare(b));
 
   // The other half of the directory. Every studio, in name order: a row here
   // is a place, and a place doesn't get ranked by whether it signed up. The
