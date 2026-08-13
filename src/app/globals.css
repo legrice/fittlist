@@ -514,6 +514,13 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   font-size: 13.5px; color: var(--ol);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.wizinvite-empty {
+  margin-top: 20px; padding: 24px 20px; border-radius: 18px;
+  background: var(--card); text-align: center;
+}
+.wizinvite-empty h2 { font-size: 20px; margin-bottom: 7px; }
+.wizinvite-empty p { color: var(--ol); font-size: 14px; line-height: 1.45; margin-bottom: 18px; }
+.wizinvite-empty .btn { width: 100%; }
 .wizphoto-img {
   width: 132px; height: 132px; border-radius: 999px; object-fit: cover;
   box-shadow: var(--soft-shadow); background: #fff;

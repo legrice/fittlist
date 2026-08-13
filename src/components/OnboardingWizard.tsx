@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LocationPicker } from "@/components/LocationPicker";
+import { InviteSheet } from "@/components/InviteFriends";
 import { updateProfile } from "@/app/actions/profile";
 import { cityFromCoordinates, completeOnboarding, suggestedCoaches } from "@/app/actions/onboarding";
 import { setTeaching } from "@/app/actions/auth";
@@ -94,6 +95,7 @@ export function OnboardingWizard({
   const [error, setError] = useState("");
   const [locating, setLocating] = useState(false);
   const [skipWarning, setSkipWarning] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pickPhoto = (file: File) =>
@@ -402,7 +404,13 @@ export function OnboardingWizard({
             <h1>Follow a few coaches near you.</h1>
             <p>Coaches in {pLocation.split(",")[0]} with classes coming up.</p>
             {suggested !== null && suggested.length === 0 && (
-              <p className="microcopy">Nobody to suggest yet. You&rsquo;ll find people in Discover.</p>
+              <div className="wizinvite-empty">
+                <h2>No coaches nearby yet</h2>
+                <p>Know someone who teaches in {pLocation.split(",")[0]}? Invite them to put their week on FittList.</p>
+                <button className="btn si" type="button" onClick={() => setInviteOpen(true)}>
+                  Invite a coach
+                </button>
+              </div>
             )}
             {suggested === null && (
               <div className="obfollist" aria-busy="true">
@@ -465,6 +473,7 @@ export function OnboardingWizard({
             </section>
           </div>
         )}
+        {inviteOpen && <InviteSheet onClose={() => setInviteOpen(false)} />}
       </div>
     </section>
   );
