@@ -8,12 +8,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()),
-  title: "fittlist: one link in your bio, every gym you coach at",
-  description:
-    "Claim your page, publish the classes you coach across every studio, share one permanent link.",
+  title: "FittList: Your week in fitness",
+  description: "Build your fitness calendar. Share it. See what everyone else is up to.",
   openGraph: {
-    title: "fittlist",
-    description: "Follow coaches. Build your schedule. Stay connected to your local fitness community.",
+    title: "Your week in fitness.",
+    description: "Build your fitness calendar. Share it. See what everyone else is up to.",
     siteName: "fittlist",
     type: "website",
     // The site's own card. Profile pages override this with theirs, so it only
@@ -22,8 +21,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "fittlist",
-    description: "Follow coaches. Build your schedule. Stay connected to your local fitness community.",
+    title: "Your week in fitness.",
+    description: "Build your fitness calendar. Share it. See what everyone else is up to.",
     images: ["/api/og"],
   },
   // Installed on a home screen, iOS reads these rather than the manifest.
