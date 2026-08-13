@@ -478,8 +478,10 @@ export async function PublicProfileView({
           heroColor={avatarColor(user)}
           heroCta={
             isOwner && !user.photo ? (
-              <Link className="herocta" href={`/${handle}?edit=1`} aria-label="Add a photo">
-                <Icon name="image" size={24} />
+              <Link className="herocta hero-photo-prompt" href={`/${handle}?edit=1`}>
+                <strong>Put a face to the name</strong>
+                <span>Profiles feel more personal when people know who they&rsquo;re following.</span>
+                <b>Add a photo</b>
               </Link>
             ) : undefined
           }

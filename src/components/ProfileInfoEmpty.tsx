@@ -25,13 +25,19 @@ export function ProfileInfoEmpty({ handle, firstName, owner }: {
   return (
     <>
       <div className="empty-block profile-info-empty">
-        <h2>{firstName} hasn&rsquo;t added anything to their info yet</h2>
         {owner ? (
-          <Link className="info-nudge" href="/settings?edit=1">Add info</Link>
+          <>
+            <h2>You haven&rsquo;t added to your profile yet</h2>
+            <p>Let people know who you are, what you do, and what they can expect.</p>
+            <Link className="info-nudge" href="/settings?edit=1">Edit profile</Link>
+          </>
         ) : (
-          <button className="info-nudge" disabled={pending} onClick={nudge}>
-            {pending ? "Sending…" : `Nudge ${firstName}`}
-          </button>
+          <>
+            <h2>{firstName} hasn&rsquo;t added anything to their info yet</h2>
+            <button className="info-nudge" disabled={pending} onClick={nudge}>
+              {pending ? "Sending…" : `Nudge ${firstName}`}
+            </button>
+          </>
         )}
       </div>
       <Toast msg={toastMsg} on={toastOn} />

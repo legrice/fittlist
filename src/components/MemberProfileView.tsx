@@ -18,6 +18,7 @@ import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
+import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -188,8 +189,10 @@ export async function MemberProfileView({
           heroColor={avatarColor(user)}
           heroCta={
             isOwner && !user.photo ? (
-              <Link className="herocta" href="/settings?edit=1" aria-label="Add a photo">
-                <Icon name="image" size={24} />
+              <Link className="herocta hero-photo-prompt" href="/settings?edit=1">
+                <strong>Put a face to the name</strong>
+                <span>Profiles feel more personal when people know who they&rsquo;re following.</span>
+                <b>Add a photo</b>
               </Link>
             ) : undefined
           }
@@ -260,10 +263,11 @@ export async function MemberProfileView({
         </section>
         <section id="profile-about" className="profile-anchor-section">
           <h2 className="profile-section-title">Info</h2>
-          <div className="empty-block profile-info-empty">
-            <h2>Nothing here yet</h2>
-            <p>{firstName} hasn&rsquo;t added anything to their info yet.</p>
-          </div>
+          <ProfileInfoEmpty
+            handle={user.handle ?? ""}
+            firstName={firstName}
+            owner={isOwner}
+          />
         </section>
         {visitedStudios.length > 0 && (
           <section id="profile-studios" className="profile-anchor-section">

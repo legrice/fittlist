@@ -114,6 +114,7 @@ type Filters = {
 };
 const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
 const SELF_FILTER = "__your_week__";
+const WEEK_INTRO_KEY = "fl-your-week-intro-seen";
 
 /**
  * Following: the coaches you keep up with and their combined schedule.
@@ -175,6 +176,7 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
+  const [weekIntro, setWeekIntro] = useState(false);
   // Nothing selected is the combined week. A face is an explicit filter,
   // including your own face at the front of the rail.
   const [coachFilter, setCoachFilter] = useState<string | null>(null);
@@ -185,6 +187,24 @@ export function FollowingScreen({
     toast(msg);
   };
   const router = useRouter();
+
+  const chooseSelf = () => {
+    if (selectedSelf) {
+      setCoachFilter(null);
+      return;
+    }
+    setCoachFilter(SELF_FILTER);
+    try {
+      if (!localStorage.getItem(WEEK_INTRO_KEY)) {
+        localStorage.setItem(WEEK_INTRO_KEY, "1");
+        setWeekIntro(true);
+      }
+    } catch {
+      // Storage can be unavailable in private browsing. The current session
+      // still gets the explanation without blocking the week itself.
+      setWeekIntro(true);
+    }
+  };
 
   const closeFind = () => {
     setFind(false);
@@ -493,7 +513,7 @@ export function FollowingScreen({
               <button
                 className={`trayitem${coachFilter && !selectedSelf ? " dim" : ""}`}
                 aria-pressed={selectedSelf}
-                onClick={() => setCoachFilter(selectedSelf ? null : SELF_FILTER)}
+                onClick={chooseSelf}
               >
                 <span
                   className={`trayav trayav-you${selectedSelf ? " sel" : ""}`}
@@ -548,6 +568,38 @@ export function FollowingScreen({
           >
             {selectedSelf ? "Share your week" : "View profile"} <Icon name="chevron_right" size={17} />
           </Link>
+        </div>
+      )}
+      {weekIntro && (
+        <div
+          className="sheet-scrim"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setWeekIntro(false);
+          }}
+        >
+          <section className="sheet confirmsheet weekeducation" role="dialog" aria-modal="true" aria-labelledby="week-intro-title">
+            <button className="peekclose sheetclose" type="button" onClick={() => setWeekIntro(false)} aria-label="Close">
+              <Icon name="close" size={22} />
+            </button>
+            <span className="circleeducation-icon" aria-hidden="true">
+              <Icon name="calendar_month" size={24} />
+            </span>
+            <h2 id="week-intro-title">Build your week</h2>
+            <p className="lead">
+              Your week is the fitness you plan to do. Add your own classes and workouts, or follow coaches and add something from their schedules.
+            </p>
+            <div className="publishwrap nostick saveeducation-actions">
+              <Link className="btn si" href="/calendar?add=1" onClick={() => setWeekIntro(false)}>
+                Build your schedule
+              </Link>
+              <Link className="btn ghost" href="/discover?half=coaches" onClick={() => setWeekIntro(false)}>
+                Find coaches
+              </Link>
+            </div>
+            <button className="confirm-keep" type="button" onClick={() => setWeekIntro(false)}>
+              Keep browsing
+            </button>
+          </section>
         </div>
       )}
       {items.length === 0 ? (

@@ -17,6 +17,7 @@ import { rememberAfterAuth, takeAfterAuth } from "@/lib/afterauth";
 import { slug } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
+import Link from "next/link";
 
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
@@ -258,99 +259,22 @@ export function AuthFlow({
 
         {stage === "landing" && (
           <>
-            <div className="obhero obhero-app">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="obhero-img"
-                src="/landing-hero.webp"
-                alt="The fittlist app: the week from every coach you follow, in one list"
-              />
+            <div className="oblanding-mark" aria-hidden="true">
+              <Wordmark variant="ink" className="oblanding-logo" />
             </div>
-            {invited ? (
-              <>
-                <div className="invitetag">You&rsquo;re in</div>
-                <h1>
-                  Welcome to the
-                  <br />
-                  fittlist.
-                </h1>
-                <p>
-                  {invitedByLink
-                    ? "Your invite is live. Sign up and you're in"
-                    : "Your invite is live. Sign up with the email address it was sent to"}
-                  {fans ? ", whether you coach or you're here to train" : " and your page is yours"}.
-                  It&rsquo;s early days, things will move around, and what you tell us changes what
-                  gets built. That&rsquo;s the whole point of being here now.
-                </p>
-              </>
-            ) : fans ? (
-              // The thing that makes this different from a studio's app: you
-              // follow the person, and their whole week comes with them.
-              <>
-                {/* Three words that work for both sides: a member finds a coach
-                    who suits them, a coach finds the people who suit them. */}
-                <h1 className="ob-hero">Find your fit</h1>
-                <p>
-                  Follow coaches. Build your schedule. Stay connected to your local fitness
-                  community.
-                </p>
-              </>
-            ) : (
-              <>
-                <h1>
-                  The link in bio,
-                  <br />
-                  built for coaches.
-                </h1>
-                <p>
-                  Your classes across every studio, plus every way to book and reach you. One link
-                  in your bio.
-                </p>
-              </>
-            )}
-
-            {/* Who sent them. It sits under the pitch rather than over it: the
-                product still has to say what it is, and then this says why
-                they can trust it. */}
-            {inviter && !invited && (
-              <div className="invby">
-                {inviter.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="invby-av" src={inviter.photo} alt="" />
-                ) : (
-                  <span
-                    className="invby-av invby-av-empty"
-                    style={{ background: inviter.color }}
-                    aria-hidden="true"
-                  >
-                    {(inviter.name.trim().charAt(0) || "?").toUpperCase()}
-                  </span>
-                )}
-                <span className="invby-txt">
-                  <b>{inviter.name}</b> invited you to fittlist
-                </span>
-              </div>
-            )}
-
-            <button className="btn" onClick={() => { setError(""); setSheet("signup"); }}>
-              {invited || inviter ? "Claim your invite" : "Sign up with email"}
-            </button>
-            {/* Signing up and logging in are the two things most people are
-                here to do, so they sit together. Everything else is a fallback
-                and lives below them. */}
-            <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
-              Already have an account? <b>Sign in</b>
-            </button>
-            {/* Asking for an invite is a real action with a form behind it, so
-                it gets a button rather than a second line of link text.
-                Someone holding an invite has nothing to queue for. */}
-            {(providers.google || providers.apple || (inviteOnly && !invited && !inviter)) && (
+            <h1 className="ob-hero">Your week<br />in fitness.</h1>
+            <p className="oblanding-sub">Build your fitness calendar.<br />Share it. See what everyone else is up to.</p>
+            <div className="oblanding-illustration" aria-hidden="true" />
+            <div className="oblanding-actions">
+              <button className="btn obsignup" onClick={() => { setError(""); setSheet("signup"); }}>
+                Sign up free
+              </button>
+              <button className="btn oblogin" onClick={() => { setError(""); setSheet("login"); }}>
+                Log in
+              </button>
+            </div>
+            {(providers.google || providers.apple) && (
               <div className="obalts" style={{ marginTop: 16 }}>
-                {inviteOnly && !invited && !inviter && (
-                  <button className="obalt obrequest" onClick={openRequest}>
-                    <Icon name="mail" size={20} /> Request an invite
-                  </button>
-                )}
                 {providers.google && (
                   <a className="obalt google" href={`/api/google/login${viaQ}`}>
                     <GoogleG /> Continue with Google
@@ -364,6 +288,9 @@ export function AuthFlow({
               </div>
             )}
             {error && <div className="errorcopy">{error}</div>}
+            <p className="oblanding-legal">
+              By signing up, you agree to FittList&rsquo;s <span>Terms of Use</span> and <Link href="/privacy">Privacy Policy</Link>.
+            </p>
           </>
         )}
 

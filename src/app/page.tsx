@@ -4,7 +4,6 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { googleConfigured } from "@/lib/gcal";
 import { appleConfigured } from "@/lib/apple";
-import { inviteOnly } from "@/lib/invites";
 import { fansEnabled, landingHref } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
@@ -59,7 +58,7 @@ export default async function Home({
           claimAs={user.kind === "fan" ? "fan" : "coach"}
           via={viaHandle}
           providers={providers}
-          inviteOnly={inviteOnly()}
+          inviteOnly={false}
           invited={wasInvited || viaAdmin}
           invitedByLink={viaAdmin && !wasInvited}
           inviter={inviter}
@@ -73,7 +72,7 @@ export default async function Home({
       startStage="email"
       via={viaHandle}
       providers={providers}
-      inviteOnly={inviteOnly()}
+      inviteOnly={false}
       invited={wasInvited || viaAdmin}
       invitedByLink={viaAdmin && !wasInvited}
       inviter={inviter}

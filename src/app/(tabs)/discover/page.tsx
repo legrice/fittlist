@@ -27,7 +27,7 @@ export default async function DiscoverPage({
   // contradicting the word that got somebody there.
   const { half } = await searchParams;
   const startHalf: DiscoverHalf =
-    half === "coaches" || half === "studios" ? half : "classes";
+    half === "classes" || half === "studios" ? half : "coaches";
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");

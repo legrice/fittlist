@@ -68,7 +68,7 @@ export function DiscoverList({
   myCity = null,
   backHref,
   hideBack = false,
-  startHalf = "classes",
+  startHalf = "coaches",
 }: {
   people: DirPerson[];
   studios?: DirStudio[];
@@ -115,7 +115,7 @@ export function DiscoverList({
     setSelectedCity("");
     setClassRange("all");
     if (typeof window !== "undefined") {
-      const url = next === "classes" ? "/discover" : `/discover?half=${next}`;
+      const url = next === "coaches" ? "/discover" : `/discover?half=${next}`;
       window.history.replaceState(null, "", url);
     }
   };
@@ -248,19 +248,19 @@ export function DiscoverList({
       <div className="discover-tabs" role="tablist" aria-label="Discover sections">
         <button
           role="tab"
-          className={tab === "classes" ? "on" : ""}
-          aria-selected={tab === "classes"}
-          onClick={() => pick("classes")}
-        >
-          Classes
-        </button>
-        <button
-          role="tab"
           className={tab === "coaches" ? "on" : ""}
           aria-selected={tab === "coaches"}
           onClick={() => pick("coaches")}
         >
           Coaches
+        </button>
+        <button
+          role="tab"
+          className={tab === "classes" ? "on" : ""}
+          aria-selected={tab === "classes"}
+          onClick={() => pick("classes")}
+        >
+          Classes
         </button>
         <button
           role="tab"
@@ -404,6 +404,7 @@ export function DiscoverList({
                   )}
                 </span>
                 <strong>{c.name}</strong>
+                {c.location && <small className="discover-person-location">{c.location}</small>}
               </Link>
               <RowFollow
                 handle={c.handle}
