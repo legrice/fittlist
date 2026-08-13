@@ -7,7 +7,7 @@ import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { ClassLine, type WeekRow } from "@/components/WeekView";
+import { ClassLine, DayList, type WeekRow } from "@/components/WeekView";
 import { setGoing } from "@/app/actions/going";
 
 export type FeedCoach = {
@@ -314,8 +314,13 @@ export function FollowingScreen({
   const homeDays = useMemo(() => {
     const days = new Map<string, (WeekRow & { item: FeedItem })[]>();
     for (const row of homeRows) days.set(row.item.iso, [...(days.get(row.item.iso) ?? []), row]);
-    return [...days.entries()].map(([iso, rows]) => ({ iso, rows }));
-  }, [homeRows]);
+    return [...days.entries()].map(([iso, rows]) => ({
+      iso,
+      label: daySectionLabel(iso, todayIso),
+      today: iso === todayIso,
+      rows,
+    }));
+  }, [homeRows, todayIso]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -599,15 +604,8 @@ export function FollowingScreen({
 
             <div className="cardwrap home-schedule">
               {isHome ? (
-                <div className="following-days">
-                  {homeDays.map((group) => (
-                    <section key={group.iso} className="following-day">
-                      <h2 className="following-day-h">{daySectionLabel(group.iso, todayIso)}</h2>
-                      <div className="disflat home-next">
-                        {group.rows.map(renderRow())}
-                      </div>
-                    </section>
-                  ))}
+                <div className="calendar-cardlist following-calendar-list">
+                  <DayList days={homeDays} />
                 </div>
               ) : (
                 <>
