@@ -15,7 +15,7 @@ type ComposerData = { studios: StudioDto[]; templates: TemplateDto[]; customType
 
 export function GlobalAdd() {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<null | "class" | "place" | "event">(null);
+  const [mode, setMode] = useState<null | "class" | "place">(null);
   const [data, setData] = useState<ComposerData | null>(null);
   const [pending, startTransition] = useTransition();
   const [placeName, setPlaceName] = useState("");
@@ -24,7 +24,7 @@ export function GlobalAdd() {
   const [toastMsg, toastOn, toast] = useToast();
   const router = useRouter();
   const close = () => { setOpen(false); setMode(null); };
-  const choose = (next: "class" | "place" | "event") => {
+  const choose = (next: "class" | "place") => {
     if (next === "place") { setMode(next); return; }
     startTransition(async () => {
       const loaded = data ?? await globalComposerData();
@@ -45,9 +45,9 @@ export function GlobalAdd() {
     <div className="sheet-scrim globaladd-scrim" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
       <div className="sheet globaladd-sheet" role="dialog" aria-modal="true" aria-labelledby="globaladd-title">
         <button className="iconbtn sheetclose" aria-label="Close" onClick={close}><Icon name="close" size={18} /></button>
-        {mode === "place" ? <><h2 id="globaladd-title">Add a place</h2><div className="globaladd-place"><label>Type<select value={placeKind} onChange={(e) => setPlaceKind(e.target.value as PlaceKind)}>{PLACE_KINDS.map((kind) => <option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>)}</select></label><label>Name<input value={placeName} onChange={(e) => setPlaceName(e.target.value)} placeholder="Place name" /></label><label>Location<input value={placeAddress} onChange={(e) => setPlaceAddress(e.target.value)} placeholder="Address or location" /></label><button className="btn si" disabled={pending || !placeName.trim() || !placeAddress.trim()} onClick={addPlace}>{pending ? "Adding…" : "Add place"}</button></div></> : <><h2 id="globaladd-title">Add a class, place, or event</h2><div className="globaladd-list"><button disabled={pending} onClick={() => choose("class")}><Icon name="activity" size={23} /><b>Class</b></button><button onClick={() => choose("place")}><Icon name="place" size={23} /><b>Place</b></button><button disabled={pending} onClick={() => choose("event")}><Icon name="event" size={23} /><b>Event</b></button></div></>}
+        {mode === "place" ? <><h2 id="globaladd-title">Add a studio</h2><div className="globaladd-place"><label>Type<select value={placeKind} onChange={(e) => setPlaceKind(e.target.value as PlaceKind)}>{PLACE_KINDS.map((kind) => <option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>)}</select></label><label>Name<input value={placeName} onChange={(e) => setPlaceName(e.target.value)} placeholder="Studio name" /></label><label>Location<input value={placeAddress} onChange={(e) => setPlaceAddress(e.target.value)} placeholder="Address or location" /></label><button className="btn si" disabled={pending || !placeName.trim() || !placeAddress.trim()} onClick={addPlace}>{pending ? "Adding…" : "Add studio"}</button></div></> : <><h2 id="globaladd-title">Add a class or studio</h2><div className="globaladd-list"><button disabled={pending} onClick={() => choose("class")}><Icon name="activity" size={23} /><b>Class</b></button><button onClick={() => choose("place")}><Icon name="place" size={23} /><b>Studio</b></button></div></>}
       </div>
-      {data && (mode === "class" || mode === "event") && <Adder studios={data.studios} templates={data.templates} customTypes={data.customTypes} lastUsed={data.lastUsed} subsCount={0} firstPublish={false} personal={{ canCoach: data.canCoach, event: mode === "event" }} onClose={() => setMode(null)} onToast={toast} onPublished={(msg) => { close(); toast(msg); router.refresh(); }} onDeleted={(msg) => { close(); toast(msg); router.refresh(); }} />}
+      {data && mode === "class" && <Adder studios={data.studios} templates={data.templates} customTypes={data.customTypes} lastUsed={data.lastUsed} subsCount={0} firstPublish={false} personal={{ canCoach: data.canCoach, event: false }} onClose={() => setMode(null)} onToast={toast} onPublished={(msg) => { close(); toast(msg); router.refresh(); }} onDeleted={(msg) => { close(); toast(msg); router.refresh(); }} />}
     </div>,
     document.body,
   ) : null;
