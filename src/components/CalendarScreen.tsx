@@ -20,7 +20,7 @@ import { PlanSheet } from "@/components/PlanSheet";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
+import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
@@ -379,10 +379,10 @@ export function CalendarScreen({
           ) : undefined}
         />
       ) : (
-        <div className="calendar-cardlist">
-          <DayList days={days} />
-          {kind === "added" && <Link className="calendar-attending-share" href={member ? "/membershare" : "/coachshare"}>Share your week</Link>}
-        </div>
+        <CalendarList
+          days={days}
+          footer={kind === "added" ? <Link className="calendar-attending-share" href={member ? "/membershare" : "/coachshare"}>Share your week</Link> : undefined}
+        />
       )}
       </div>
 

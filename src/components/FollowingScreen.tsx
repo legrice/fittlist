@@ -7,7 +7,7 @@ import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { ClassLine, DayList, type WeekRow } from "@/components/WeekView";
+import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { setGoing } from "@/app/actions/going";
 
 export type FeedCoach = {
@@ -604,9 +604,7 @@ export function FollowingScreen({
 
             <div className="cardwrap home-schedule">
               {isHome ? (
-                <div className="calendar-cardlist following-calendar-list">
-                  <DayList days={homeDays} />
-                </div>
+                <CalendarList days={homeDays} className="following-calendar-list" />
               ) : (
                 <>
               {/* Why Today isn't the selected tab, said once: the landing

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { ClassRowMenu, type ClassRowMenuProps } from "@/components/ClassRowMenu";
 
 /**
@@ -65,6 +65,9 @@ export type WeekRow = {
   menu?: Omit<ClassRowMenuProps, "name">;
   /** A sibling action in the row's corner, kept outside the row button. */
   corner?: ReactNode;
+  /** A behavior wrapper such as swipe-to-remove. The row still comes from
+   *  CalendarList; the caller may only add interaction around it. */
+  wrap?: (row: ReactNode) => ReactNode;
 };
 
 export type WeekDayRows = {
@@ -109,8 +112,8 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
         <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
           <DayBand label={d.label} today={d.today} />
           <div className="dayrows">
-            {d.rows.map((r) =>
-              r.menu || r.corner ? (
+            {d.rows.map((r) => {
+              const row = r.menu || r.corner ? (
                 <div key={r.key} className="clrow">
                   <ClassLine row={r} />
                   {r.menu && <ClassRowMenu {...r.menu} name={r.name} />}
@@ -118,11 +121,31 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
                 </div>
               ) : (
                 <ClassLine key={r.key} row={r} />
-              ),
-            )}
+              );
+              return r.wrap ? <Fragment key={r.key}>{r.wrap(row)}</Fragment> : row;
+            })}
           </div>
         </section>
       ))}
+    </div>
+  );
+}
+
+/** The only public shell for a calendar list. It owns the density and card
+ * treatment so every schedule changes together when these rules change. */
+export function CalendarList({
+  days,
+  className = "",
+  footer,
+}: {
+  days: WeekDayRows[];
+  className?: string;
+  footer?: ReactNode;
+}) {
+  return (
+    <div className={`calendar-cardlist${className ? ` ${className}` : ""}`}>
+      <DayList days={days} />
+      {footer}
     </div>
   );
 }

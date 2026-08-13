@@ -1,6 +1,6 @@
 import { clockParts, fmtDayHeaderRel, todayIso } from "@/lib/format";
 import { ClassOpener } from "@/components/ClassOpener";
-import { ClassRowMenu } from "@/components/ClassRowMenu";
+import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 
 export type StudioDay = {
   iso: string;
@@ -33,15 +33,6 @@ export type StudioDay = {
     where?: string | null;
   }[];
 };
-
-/** Two letters, because one does not tell four coaches apart. A local copy of
- *  WeekView's: that module is "use client", and importing a function value
- *  from one into a server component hands back a reference, not a function. */
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const two = (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
-  return (two || name.trim().charAt(0) || "?").toUpperCase();
-}
 
 // The gym's own week, on its own page, drawn in the calendar's own grammar:
 // the day bands, the .clline rows, the coach as a by-line chip where the
@@ -77,90 +68,50 @@ export function StudioSchedule({
     );
   }
   const today = todayIso();
+  const listDays: WeekDayRows[] = days.map((day) => ({
+    iso: day.iso,
+    label: fmtDayHeaderRel(day.iso, today),
+    today: day.iso === today,
+    rows: day.items.map((item) => {
+      const start = clockParts(item.startTime);
+      const base = item.base ?? `s/${slug}`;
+      return {
+        key: `${day.iso}-${item.id}`,
+        name: item.name,
+        where: item.where ?? null,
+        hm: start.hm,
+        ap: start.ap,
+        dur: `${item.durationMin} min`,
+        coach: item.coachName
+          ? {
+              id: item.base ?? item.coachName,
+              name: item.coachName,
+              color: item.coachColor ?? accent,
+              photo: item.coachPhoto ?? null,
+            }
+          : null,
+        href: item.plain ? null : `/${base}/${item.id}?d=${day.iso}`,
+        classId: item.id,
+        iso: day.iso,
+        base: item.base ?? undefined,
+        menu: item.plain
+          ? undefined
+          : {
+              classId: item.id,
+              base,
+              iso: day.iso,
+              coach: item.coachName && item.base
+                ? { name: item.coachName, href: `/${item.base}` }
+                : null,
+            },
+      };
+    }),
+  }));
   return (
     // The slug is the key classDetail resolves a gym's class by; the /s/
     // prefix belongs to the URL, not to the lookup.
     <ClassOpener handle={slug}>
-      <div className="daylist">
-        {days.map((d) => (
-          <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
-            <div className="dayband">
-              <span className="dayband-d">{fmtDayHeaderRel(d.iso, today)}</span>
-            </div>
-            <div className="dayrows">
-              {d.items.map((c) => {
-                const start = clockParts(c.startTime);
-                // Every row says its own time, even beside another at the
-                // same hour: each is its own box, the list grammar's rule.
-                const rowCls = "clline";
-                const inner = (
-                  <>
-                    {c.coachName && (
-                      <span className="clline-by">
-                        <span
-                          className="clline-av"
-                          style={{ background: c.coachColor ?? accent }}
-                        >
-                          {c.coachPhoto ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={c.coachPhoto} alt="" />
-                          ) : (
-                            initialsOf(c.coachName)
-                          )}
-                        </span>
-                        {c.coachName}
-                      </span>
-                    )}
-                    <span className="clline-t">
-                      {start.hm}
-                      <span className="clline-ap">{start.ap.toUpperCase()}</span>
-                    </span>
-                    <span className="clline-nm">{c.name}</span>
-                    <span className="clline-dur">{c.durationMin} min</span>
-                    {c.where && <span className="clline-w">{c.where}</span>}
-                  </>
-                );
-                if (c.plain) {
-                  return (
-                    <div key={`${d.iso}-${c.id}`} className={rowCls}>
-                      {inner}
-                    </div>
-                  );
-                }
-                const base = c.base ?? `s/${slug}`;
-                const href = `/${base}/${c.id}?d=${d.iso}`;
-                return (
-                  // The dots are a sibling of the link, inside the same
-                  // corner, on every row with a real page behind it. The
-                  // report row is how a class nobody teaches any more comes
-                  // off this page.
-                  <div key={`${d.iso}-${c.id}`} className="clrow">
-                    <a
-                      className={rowCls}
-                      href={href}
-                      data-cid={c.id}
-                      data-d={d.iso}
-                      data-base={c.base ?? undefined}
-                    >
-                      {inner}
-                    </a>
-                    {/* No studio row: where it is is the page you are
-                        standing on. The coach row only where the commons
-                        knows one with a page. */}
-                    <ClassRowMenu
-                      classId={c.id}
-                      base={base}
-                      iso={d.iso}
-                      name={c.name}
-                      coach={c.coachName && c.base ? { name: c.coachName, href: `/${c.base}` } : null}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
+      <CalendarList days={listDays} />
     </ClassOpener>
   );
 }

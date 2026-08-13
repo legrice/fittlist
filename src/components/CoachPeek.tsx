@@ -7,6 +7,7 @@ import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
 import { SwipeGoing } from "@/components/SwipeGoing";
+import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
 import { announceSaved } from "@/components/SaveEducation";
 
@@ -104,6 +105,44 @@ export function CoachPeek({
         }))
         .filter((day) => day.items.length > 0)
     : [];
+  const listDays: WeekDayRows[] = visibleDays.map((day) => ({
+    iso: day.iso,
+    label: day.label,
+    rows: day.items.map((item) => {
+      const key = `${item.classId}|${item.iso}`;
+      const on = marks[key] ?? item.saved;
+      const corner = !self && !scheduleOnly ? (
+        <button
+          className={`following-add${on ? " on" : ""}`}
+          onClick={() => save(item.classId, item.iso, !on)}
+          aria-label={on ? `Added to your week: ${item.name}` : `Add ${item.name} to your week`}
+        >
+          <Icon name={on ? "check" : "add_circle"} size={24} />
+        </button>
+      ) : undefined;
+      return {
+        key,
+        name: item.name,
+        where: item.where,
+        hm: item.hm,
+        ap: item.ap,
+        dur: `${item.durationMin} min`,
+        href: `/${item.base}/${item.classId}?d=${item.iso}`,
+        classId: item.classId,
+        iso: item.iso,
+        base: item.base,
+        tag: !self && on ? "In your week too" : undefined,
+        corner,
+        wrap: !self && !scheduleOnly
+          ? (row) => (
+              <SwipeGoing going={on} onToggle={() => save(item.classId, item.iso, !on)}>
+                {row}
+              </SwipeGoing>
+            )
+          : undefined,
+      };
+    }),
+  }));
 
   return (
     <div
@@ -171,63 +210,11 @@ export function CoachPeek({
           </p>
         )}
 
-        {visibleDays.map((d) => (
-          <div key={d.iso} className="peekday">
-            <p className="peekday-h">{d.label}</p>
-            {d.items.map((it) => {
-              const key = `${it.classId}|${it.iso}`;
-              const on = marks[key] ?? it.saved;
-              // A class opens as a sheet from a list and as a page from a
-              // link, and a peek is a list. Left as a bare href the row
-              // navigated, which threw the peek away.
-              const row = (
-                <ClassOpener handle="">
-                  <div className="peekrow">
-                    <Link
-                      className="peekrow-go"
-                      href={`/${it.base}/${it.classId}?d=${it.iso}`}
-                      data-cid={it.classId}
-                      data-d={it.iso}
-                      data-base={it.base}
-                    >
-                      <span className="peekrow-nm">{it.name}</span>
-                      <span className="peekrow-sub">
-                        {it.hm}
-                        <span className="peekrow-ap">{it.ap.toLowerCase()}</span> &middot;{" "}
-                        {it.durationMin} min
-                        {it.where ? ` · ${it.where}` : ""}
-                      </span>
-                      {!self && on && (
-                        <span className="peekrow-tags">
-                          <span className="peektag peektag-you">In your week too</span>
-                        </span>
-                      )}
-                    </Link>
-                    {!self && !scheduleOnly && (
-                      <button
-                        className={`peekadd${on ? " on" : ""}`}
-                        onClick={() => save(it.classId, it.iso, !on)}
-                        aria-label={on ? `Added to your week: ${it.name}` : `Add ${it.name} to your week`}
-                      >
-                        <Icon name={on ? "check_circle" : "add_circle"} size={22} />
-                        <span>{on ? "Added" : "Add"}</span>
-                      </button>
-                    )}
-                  </div>
-                </ClassOpener>
-              );
-              if (self || scheduleOnly) return <div key={key}>{row}</div>;
-              return (
-                // Saving belongs to somebody else's week. Your own peek is
-                // already the destination, so it carries neither swipe nor
-                // a second Save action.
-                <SwipeGoing key={key} going={on} onToggle={() => save(it.classId, it.iso, !on)}>
-                  {row}
-                </SwipeGoing>
-              );
-            })}
-          </div>
-        ))}
+        {listDays.length > 0 && (
+          <ClassOpener handle="">
+            <CalendarList days={listDays} />
+          </ClassOpener>
+        )}
 
         {!self && !scheduleOnly && peek && visibleDays.length > 0 && (
           <p className="peekfoot">Add anything here to put it on your own week.</p>

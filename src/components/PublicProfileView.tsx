@@ -11,7 +11,7 @@ import { classAddress, publicSchedule } from "@/lib/coachweek";
 
 import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
-import { ClassRowMenu } from "@/components/ClassRowMenu";
+import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
@@ -343,15 +343,13 @@ export async function PublicProfileView({
             The ribbon went with them. It put a class in your plans, and plans
             are gone: a member reads the week of the people they follow, and
             there is nothing to add it to. */}
-        <div className="daylist">
+        <>
           {(() => {
-            const renderDay = (d: (typeof days)[number]) => (
-              <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
-                <div className="dayband">
-                  <span className="dayband-d">{fmtDayHeaderRel(d.iso, today)}</span>
-                </div>
-                <div className="dayrows">
-                  {d.items.map((c) => {
+            const listDays = (source: typeof days): WeekDayRows[] => source.map((d) => ({
+              iso: d.iso,
+              label: fmtDayHeaderRel(d.iso, today),
+              today: d.iso === today,
+              rows: d.items.map((c) => {
                     const s = c.studioId ? studioById.get(c.studioId) : undefined;
                     const where = s ? s.name : c.location;
                     const start = clockParts(c.startTime);
@@ -361,47 +359,25 @@ export async function PublicProfileView({
                     const at = classAddress(c, handle, s?.slug);
                     const base = at?.base ?? handle;
                     const href = `/${base}/${c.id}?d=${d.iso}`;
-                    const row = (
-                      <a
-                        key={`${d.iso}-${c.id}`}
-                        className="clline"
-                        href={href}
-                        data-cid={c.id}
-                        data-d={d.iso}
-                        data-base={at?.key}
-                      >
-                        <span className="clline-t">
-                          {start.hm}
-                          <span className="clline-ap">{start.ap.toUpperCase()}</span>
-                        </span>
-                        <span className="clline-nm">{c.name}</span>
-                        {where && (
-                          <span className="clline-w">{where}</span>
-                        )}
-                      </a>
-                    );
-                    // The dots ride a visitor's rows only: the owner's tap
-                    // already opens the editor, and reporting your own class
-                    // is a button that can only answer with an error.
-                    if (isOwner) return row;
-                    return (
-                      <div key={`${d.iso}-${c.id}`} className="clrow">
-                        {row}
-                        {/* No coach row: whose class it is is the page you
-                            are standing on. */}
-                        <ClassRowMenu
-                          classId={c.id}
-                          base={base}
-                          iso={d.iso}
-                          name={c.name}
-                          studio={s ? { name: s.name, href: `/s/${s.slug}` } : null}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            );
+                    return {
+                      key: `${d.iso}-${c.id}`,
+                      name: c.name,
+                      where: where ?? null,
+                      hm: start.hm,
+                      ap: start.ap,
+                      href,
+                      classId: c.id,
+                      iso: d.iso,
+                      base: at?.key,
+                      menu: isOwner ? undefined : {
+                        classId: c.id,
+                        base,
+                        iso: d.iso,
+                        studio: s ? { name: s.name, href: `/s/${s.slug}` } : null,
+                      },
+                    };
+                  }),
+            }));
             let remaining = 8;
             const preview: typeof days = [];
             const later: typeof days = [];
@@ -420,17 +396,17 @@ export async function PublicProfileView({
             }
             return (
               <>
-                {preview.map(renderDay)}
+                <CalendarList days={listDays(preview)} />
                 {later.length > 0 && (
                   <ScheduleMore
                     label="See more schedule"
-                    chunks={[<div key="more-schedule" style={{ display: "contents" }}>{later.map(renderDay)}</div>]}
+                    chunks={[<CalendarList key="more-schedule" days={listDays(later)} />]}
                   />
                 )}
               </>
             );
           })()}
-        </div>
+        </>
         </MaybeOpener>
       )}
     </>

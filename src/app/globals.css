@@ -7984,7 +7984,8 @@ a.clspeek-by:active { opacity: .6; }
   border-bottom: 0; border-radius: 16px; background: var(--card);
   box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
 }
-.calendar-cardlist .clrow:has(.calendar-attending-check) .clline-nm { padding-right: 34px; }
+.calendar-cardlist .clrow:has(.calendar-attending-check) .clline-nm,
+.calendar-cardlist .clrow:has(.following-add) .clline-nm { padding-right: 34px; }
 .calendar-attending-share {
   display: flex; width: 100%; min-height: 50px; margin: 18px 0 4px;
   align-items: center; justify-content: center; border-radius: 999px;
