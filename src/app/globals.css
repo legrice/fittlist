@@ -5201,6 +5201,8 @@ select.editinput.placekind-select {
 }
 .discover-tabs button.on { background: var(--si); color: #fff; box-shadow: none; }
 .dissearchrow.discover-searchrow { margin: 14px 0 10px; padding-top: 0; }
+.discover-searchrow .dissearch { box-shadow: none; }
+.discover-searchrow .dissearch:focus-within { box-shadow: 0 0 0 3px var(--si); }
 .discover-filterrow {
   display:flex; align-items:center; gap:8px; overflow-x:auto; overflow-y:hidden;
   margin:0 0 14px; padding:0 0 2px; scrollbar-width:none;
