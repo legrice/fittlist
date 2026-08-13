@@ -5051,6 +5051,15 @@ button.ps-card { cursor: pointer; }
    them, scrolling off the edge. */
 .distabs { padding-top: 0; margin-bottom: 2px; }
 .distabs .pubtab { font-size: 16px; }
+.discover-tabs {
+  display: flex; gap: 8px; padding: 10px 20px 0;
+}
+.discover-tabs button {
+  min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 6%, var(--card)); color: var(--ink); font: inherit; font-size: 15px; font-weight: 600;
+}
+.discover-tabs button.on { background: var(--ink); color: var(--paper); }
+.discover-searchrow { padding-top: 12px; }
 .dischips {
   display: flex; gap: 8px; align-items: center;
   /* Sideways only: `overflow-x: auto` alone makes the row an implicit
