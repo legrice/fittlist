@@ -344,7 +344,7 @@ export function CalendarScreen({
         <WeekEmpty
           first
           title={member ? "Nothing added yet" : "Your schedule is empty"}
-          body={member ? "Follow a coach or add a class." : "Put the classes you teach up here. That is the whole app: your week, at one link, kept current."}
+          body={member ? "Follow a coach or add a class." : "Put the classes you teach up here."}
           cta={member ? undefined : "Add a class"}
           onCta={member ? undefined : openAdd}
           actions={member ? (
