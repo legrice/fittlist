@@ -28,7 +28,13 @@ type ComposerData = {
 const placeKey = (value: string) =>
   value.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "");
 
-export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
+export function GlobalAdd({
+  floating = false,
+  classOnly = false,
+}: {
+  floating?: boolean;
+  classOnly?: boolean;
+} = {}) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<null | "class" | "place">(null);
   const [classRole, setClassRole] = useState<null | "coaching" | "attending">(null);
@@ -102,6 +108,20 @@ export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
     resetPlace();
   };
   const openChooser = () => {
+    if (classOnly) {
+      startTransition(async () => {
+        const loaded = data ?? (await globalComposerData());
+        if (!loaded) {
+          toast("Sign in to add to FittList");
+          return;
+        }
+        setData(loaded);
+        setClassRole(loaded.canCoach ? null : "attending");
+        setMode("class");
+        setOpen(true);
+      });
+      return;
+    }
     setOpen(true);
   };
   const choose = (next: "class" | "place") => {
@@ -449,7 +469,12 @@ export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
 
   return (
     <>
-      <button className={floating ? "wkfab" : "iconbtn"} aria-label="Add" onClick={openChooser}>
+      <button
+        className={floating ? "wkfab" : "iconbtn"}
+        aria-label={classOnly ? "Add a class" : "Add"}
+        disabled={pending}
+        onClick={openChooser}
+      >
         <Icon name="add" size={24} />
       </button>
       {composer}
