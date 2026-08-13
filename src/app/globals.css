@@ -1984,7 +1984,13 @@ button.ps-card { cursor: pointer; }
 /* The profile shell pads its column 18px (+ safe area) at the top, and the
    brandbar's stock -14px margin swallowed only 14 of it: the logo sat 4px
    lower on a profile or studio page than anywhere else in the app. */
-.profwrap .brandbar { margin-top: calc(-18px - env(safe-area-inset-top)); }
+.profwrap .brandbar {
+  margin-top: calc(-18px - env(safe-area-inset-top));
+  /* Profile pages are one continuous document. Their app header leaves with
+     the hero instead of occupying permanent space above the profile. */
+  position: relative;
+  top: auto;
+}
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
   margin-top: 20px;
@@ -3954,7 +3960,7 @@ button.ps-card { cursor: pointer; }
    measured top is exactly this bar's bottom edge. The Sign in pill stays the
    ink fill: it is the one CTA up there and reads fine on a photograph. */
 .pub-hero .pubtop {
-  position: sticky; top: 0; z-index: 2;
+  position: relative; top: auto; z-index: 2;
   margin-bottom: 0; padding-bottom: 12px;
 }
 .pub-hero .pubtop::before {
