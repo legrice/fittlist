@@ -3361,6 +3361,13 @@ button.ps-card { cursor: pointer; }
   width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 16px; background: #fff;
   font-family: inherit; font-size: 16px; color: var(--ink);
 }
+/* Native iOS selects need an explicit content box: block padding inherited
+   from text inputs can leave the chosen label clipped while the chevron still
+   renders. Unknown legacy values are normalized by StudioOwnerBar. */
+select.editinput.placekind-select {
+  min-height: 52px; padding: 0 44px 0 16px; line-height: 1.25;
+  background-color: var(--card); color: var(--ink);
+}
 .editinput:focus, .abouttext:focus { outline: none; border-color: var(--pg-day); }
 .editprefix { position: relative; }
 .editprefix .editinput { padding-left: 30px; }

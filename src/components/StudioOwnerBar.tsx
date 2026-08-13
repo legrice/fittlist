@@ -10,6 +10,9 @@ import { TypePicker } from "@/components/TypePicker";
 import { Toast, useToast } from "@/components/Toast";
 import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
 
+const validPlaceKind = (kind: string): PlaceKind =>
+  PLACE_KINDS.includes(kind as PlaceKind) ? (kind as PlaceKind) : "studio";
+
 export type StudioEditProps = {
   id: string;
   name: string;
@@ -43,7 +46,7 @@ export function StudioOwnerBar({
 
   const [pName, setPName] = useState(props.name);
   const [pAddress, setPAddress] = useState(props.address);
-  const [pPlaceKind, setPPlaceKind] = useState(props.placeKind);
+  const [pPlaceKind, setPPlaceKind] = useState(() => validPlaceKind(props.placeKind));
   const [pTypes, setPTypes] = useState<string[]>(props.types);
   const [pAbout, setPAbout] = useState(props.about);
   const [pPhoto, setPPhoto] = useState<string | null>(props.photo);
@@ -61,7 +64,7 @@ export function StudioOwnerBar({
     if (!open) return;
     setPName(props.name);
     setPAddress(props.address);
-    setPPlaceKind(props.placeKind);
+    setPPlaceKind(validPlaceKind(props.placeKind));
     setPTypes(props.types);
     setPAbout(props.about);
     setPPhoto(props.photo);
@@ -148,7 +151,7 @@ export function StudioOwnerBar({
             <label className="flabel" htmlFor="stPlaceKind">Place type</label>
             <select
               id="stPlaceKind"
-              className="editinput"
+              className="editinput placekind-select"
               value={pPlaceKind}
               onChange={(e) => setPPlaceKind(e.target.value as PlaceKind)}
             >
