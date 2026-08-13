@@ -7889,13 +7889,17 @@ a.clspeek-by:active { opacity: .6; }
 .clline-nm { grid-row: 1; }
 .clline-w { grid-row: 2; }
 .clline-by, .clline-tag { grid-column: 2; grid-row: 3; justify-self: start; }
-/* One line each, by Matt's call: "Ironbound Performance Athletics"
-   wrapping under a long class name made every busy row two heights.
-   The ellipsis is the honest cut, and the class page has the rest. */
+/* Both text columns own their available width. Places stay on one line, while
+   the class name gets two: it is the row's primary answer and should not be
+   cut before secondary information. */
 .clline-nm, .clline-w {
-  grid-column: 2; min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  grid-column: 2; min-width: 0; overflow: hidden;
 }
+.clline-nm {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  white-space: normal; overflow-wrap: anywhere;
+}
+.clline-w { white-space: nowrap; text-overflow: ellipsis; }
 .clline:active { opacity: .6; }
 /* Under the row's own lines: who else is going, and anything like it. */
 .clline-extra { grid-column: 2; grid-row: 4; margin-top: 6px; min-width: 0; }
