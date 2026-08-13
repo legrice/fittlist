@@ -7,11 +7,13 @@ import { Icon } from "@/components/Icon";
 import { readPhoto } from "@/lib/photo";
 import { TypePicker } from "@/components/TypePicker";
 import { Toast, useToast } from "@/components/Toast";
+import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
 
 export type StudioEditProps = {
   id: string;
   name: string;
   address: string;
+  placeKind: PlaceKind;
   types: string[];
   about: string;
   photo: string | null;
@@ -36,6 +38,7 @@ export function StudioOwnerBar({
 
   const [pName, setPName] = useState(props.name);
   const [pAddress, setPAddress] = useState(props.address);
+  const [pPlaceKind, setPPlaceKind] = useState(props.placeKind);
   const [pTypes, setPTypes] = useState<string[]>(props.types);
   const [pAbout, setPAbout] = useState(props.about);
   const [pPhoto, setPPhoto] = useState<string | null>(props.photo);
@@ -53,6 +56,7 @@ export function StudioOwnerBar({
     if (!open) return;
     setPName(props.name);
     setPAddress(props.address);
+    setPPlaceKind(props.placeKind);
     setPTypes(props.types);
     setPAbout(props.about);
     setPPhoto(props.photo);
@@ -71,6 +75,7 @@ export function StudioOwnerBar({
       const res = await updateStudio(props.id, {
         name: pName,
         address: pAddress,
+        placeKind: pPlaceKind,
         types: pTypes,
         about: pAbout,
         photo: pPhoto ?? "",
@@ -101,7 +106,7 @@ export function StudioOwnerBar({
         >
           <div className="sheet sheet-full">
             <div className="adderhead">
-              <h2>Edit studio</h2>
+              <h2>Edit place</h2>
               <button
                 className="iconbtn sheetclose adderclose"
                 aria-label="Close"
@@ -121,15 +126,29 @@ export function StudioOwnerBar({
               onChange={(e) => setPName(e.target.value)}
             />
 
-            <label className="flabel" htmlFor="stAddress">
-              Address
-            </label>
-            <input
-              id="stAddress"
+            <label className="flabel" htmlFor="stPlaceKind">Place type</label>
+            <select
+              id="stPlaceKind"
               className="editinput"
-              value={pAddress}
-              onChange={(e) => setPAddress(e.target.value)}
-            />
+              value={pPlaceKind}
+              onChange={(e) => setPPlaceKind(e.target.value as PlaceKind)}
+            >
+              {PLACE_KINDS.map((kind) => (
+                <option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>
+              ))}
+            </select>
+
+            {pPlaceKind !== "virtual" && <>
+              <label className="flabel" htmlFor="stAddress">
+                {pPlaceKind === "studio" || pPlaceKind === "wellness" ? "Address" : "Location"}
+              </label>
+              <input
+                id="stAddress"
+                className="editinput"
+                value={pAddress}
+                onChange={(e) => setPAddress(e.target.value)}
+              />
+            </>}
 
             <label className="flabel">
               Type <span>· pick every one that fits</span>
@@ -176,7 +195,13 @@ export function StudioOwnerBar({
               id="stAbout"
               className="abouttext"
               rows={4}
-              placeholder="What the space is like, what to expect, parking…"
+              placeholder={
+                pPlaceKind === "virtual"
+                  ? "What people can join and what to expect…"
+                  : pPlaceKind === "outdoor"
+                    ? "Where to meet and what to expect…"
+                    : "What the space is like and what to expect…"
+              }
               value={pAbout}
               onChange={(e) => setPAbout(e.target.value)}
             />
@@ -192,18 +217,20 @@ export function StudioOwnerBar({
               value={pEmail}
               onChange={(e) => setPEmail(e.target.value)}
             />
-            <label className="flabel" htmlFor="stPhone">
-              Phone
-            </label>
-            <input
-              id="stPhone"
-              className="editinput"
-              type="tel"
-              value={pPhone}
-              onChange={(e) => setPPhone(e.target.value)}
-            />
+            {(pPlaceKind === "studio" || pPlaceKind === "wellness") && <>
+              <label className="flabel" htmlFor="stPhone">
+                Phone
+              </label>
+              <input
+                id="stPhone"
+                className="editinput"
+                type="tel"
+                value={pPhone}
+                onChange={(e) => setPPhone(e.target.value)}
+              />
+            </>}
             <label className="flabel" htmlFor="stWebsite">
-              Website
+              {pPlaceKind === "virtual" ? "Join link or website" : "Website"}
             </label>
             <input
               id="stWebsite"
@@ -226,7 +253,7 @@ export function StudioOwnerBar({
 
             <div className="publishwrap">
               <button className="btn si" disabled={saving} onClick={save}>
-                {saving ? "Saving…" : "Save studio"}
+                {saving ? "Saving…" : "Save place"}
               </button>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { coachAnalytics } from "@/lib/visits";
 import { staffView } from "@/app/actions/gym";
 import { StudioShiftsView } from "@/components/StudioShiftsView";
+import type { PlaceKind } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export default async function ShiftsPage({ params }: { params: Promise<{ slug: s
               id: studio.id,
               name: studio.name,
               address: studio.address,
+              placeKind: studio.placeKind as PlaceKind,
               types: studio.types,
               about: studio.about ?? "",
               photo: studio.photo,

@@ -2183,8 +2183,12 @@ button.ps-card { cursor: pointer; }
 .globaladd-list b { display:block; font-size:17px; }
 .globaladd-place { display:grid; gap:12px; margin-top:18px; }
 .globaladd-place label { display:grid; gap:6px; font-size:13px; font-weight:600; }
+.globaladd-place label > span { color:var(--muted); font-weight:400; }
 .globaladd-place input,.globaladd-place select { width:100%; min-height:48px; padding:0 13px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink); font:inherit; }
 .globaladd-place select { min-height:52px; padding-block:12px; }
+.globaladd-details { padding-bottom:calc(18px + env(safe-area-inset-bottom)); }
+.globaladd-details .abouttext { min-height:104px; background:var(--card); }
+.globaladd-photo { margin-top:-4px; }
 .globaladd-matches { display:grid; gap:0; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:var(--ground); }
 .globaladd-matches > span { padding:10px 12px 7px; color:var(--muted); font-size:12px; font-weight:600; }
 .globaladd-matches > button { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 12px; border-top:1px solid var(--line); text-align:left; }

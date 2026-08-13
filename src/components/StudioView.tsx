@@ -300,7 +300,12 @@ export async function StudioView({
 
   const base = `/s/${s.slug ?? s.id}`;
   const addressParts = s.address.split(",").map((part) => part.trim()).filter(Boolean);
-  const studioCity = addressParts.length > 1 ? addressParts[addressParts.length - 2] : s.address;
+  const studioCity =
+    s.placeKind === "virtual"
+      ? "Online"
+      : addressParts.length > 1
+        ? addressParts[addressParts.length - 2]
+        : s.address;
 
   // What the editor needs, once: the dots menu and the hero's photo button
   // open the same editor over the same row.
@@ -308,6 +313,7 @@ export async function StudioView({
     id: s.id,
     name: s.name,
     address: s.address,
+    placeKind: s.placeKind as import("@/lib/studio").PlaceKind,
     types: s.types,
     about: s.about ?? "",
     photo: s.photo,
@@ -474,7 +480,7 @@ export async function StudioView({
           </div>
         )}
 
-        <div className="profstudios studsec">
+        {s.placeKind !== "virtual" && s.address && <div className="profstudios studsec">
           <h2 className="prof-sec-h">Where it is</h2>
           <a
             className="profstudio"
@@ -490,7 +496,7 @@ export async function StudioView({
               <span className="ad">Get directions</span>
             </span>
           </a>
-        </div>
+        </div>}
         </section>
 
         <section id="profile-coaches" className="profile-anchor-section">

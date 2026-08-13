@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, ilike, inArray, ne } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { geocodeAddress } from "@/lib/geocode";
@@ -32,6 +32,19 @@ const studioKey = (value: string) =>
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "");
 
+const duplicatePlace = (
+  row: typeof schema.studios.$inferSelect,
+  name: string,
+  address: string,
+  placeKind: PlaceKind,
+) => {
+  if (row.placeKind !== placeKind || studioKey(row.name) !== studioKey(name)) return false;
+  // A virtual destination has no street identity, so its name is its stable
+  // directory identity. Physical places and pop-ups may legitimately share a
+  // name across locations; only the same name at the same location is a copy.
+  return placeKind === "virtual" || studioKey(row.address) === studioKey(address);
+};
+
 const studioMatch = (row: typeof schema.studios.$inferSelect): StudioMatch => ({
   id: row.id,
   seq: row.seq,
@@ -41,19 +54,36 @@ const studioMatch = (row: typeof schema.studios.$inferSelect): StudioMatch => ({
 });
 
 /** Lightweight typeahead for every place-creation door. */
-export async function findStudioMatches(queryRaw: string): Promise<StudioMatch[]> {
+export async function findStudioMatches(
+  queryRaw: string,
+  kindRaw: PlaceKind = "studio",
+): Promise<StudioMatch[]> {
   const userId = await getSessionUserId();
   const query = queryRaw.trim();
   if (!userId || query.length < 2) return [];
+  const placeKind = PLACE_KINDS.includes(kindRaw) ? kindRaw : "studio";
   const db = await getDb();
   const rows = await db
     .select()
     .from(schema.studios)
-    .where(ilike(schema.studios.name, `%${query}%`))
-    .orderBy(asc(schema.studios.name))
-    .limit(5);
-  return rows.map(studioMatch);
+    .where(eq(schema.studios.placeKind, placeKind))
+    .orderBy(asc(schema.studios.name));
+  const needle = studioKey(query);
+  return rows
+    .filter((row) => studioKey(row.name).includes(needle))
+    .slice(0, 5)
+    .map(studioMatch);
 }
+
+export type StudioCreateDetails = {
+  types?: string[];
+  about?: string;
+  photo?: string | null;
+  contactEmail?: string;
+  phone?: string;
+  website?: string;
+  instagram?: string;
+};
 
 const slugify = (s: string) =>
   s
@@ -86,19 +116,26 @@ export async function createStudio(
   nameRaw: string,
   addressRaw: string,
   kindRaw: PlaceKind = "studio",
+  details: StudioCreateDetails = {},
 ): Promise<{ ok: boolean; studio?: StudioDto; duplicate?: StudioMatch; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const name = nameRaw.trim();
   const address = addressRaw.trim();
   if (!name) return { ok: false, error: "Enter the place name." };
-  if (!address) return { ok: false, error: "Enter the location." };
   const placeKind = PLACE_KINDS.includes(kindRaw) ? kindRaw : "studio";
+  if (placeKind !== "virtual" && !address) return { ok: false, error: "Enter the location." };
+  if (
+    details.photo &&
+    !/^https:\/\//.test(details.photo) &&
+    (!details.photo.startsWith("data:image/") || details.photo.length > 2_500_000)
+  )
+    return { ok: false, error: "That photo couldn't be prepared. Try another photo." };
   const db = await getDb();
   // Autocomplete is guidance; this is the actual guard. Keeping it here means
   // the global composer, class adder and profile settings cannot bypass it.
   const existing = await db.select().from(schema.studios).orderBy(asc(schema.studios.name));
-  const duplicate = existing.find((row) => studioKey(row.name) === studioKey(name));
+  const duplicate = existing.find((row) => duplicatePlace(row, name, address, placeKind));
   if (duplicate) {
     return {
       ok: false,
@@ -108,7 +145,13 @@ export async function createStudio(
   }
   // A studio is a place, and a place has a point: one lookup at save,
   // best-effort, null on a miss.
-  const geo = await geocodeAddress(address);
+  const geo = placeKind === "virtual" ? null : await geocodeAddress(address);
+  const types = (details.types ?? []).filter((type) =>
+    (STUDIO_TYPES as readonly string[]).includes(type),
+  );
+  const photo = details.photo
+    ? await storeImage(details.photo, "studio")
+    : null;
   const [studio] = await db
     .insert(schema.studios)
     .values({
@@ -119,6 +162,13 @@ export async function createStudio(
       lng: geo?.lng ?? null,
       slug: await uniqueSlug(name),
       createdByUserId: userId,
+      types,
+      about: details.about?.trim() || null,
+      photo,
+      contactEmail: details.contactEmail?.trim() || null,
+      phone: details.phone?.trim() || null,
+      website: details.website?.trim() || null,
+      instagram: details.instagram?.trim().replace(/^@/, "") || null,
     })
     .returning();
   return {
@@ -136,6 +186,7 @@ export async function createStudio(
 export type StudioEdit = {
   name: string;
   address: string;
+  placeKind: PlaceKind;
   types: string[];
   about: string;
   photo?: string | null; // data URL, "" to clear, undefined to leave as-is
@@ -175,8 +226,9 @@ export async function updateStudio(
 
   const name = input.name.trim();
   const address = input.address.trim();
+  const placeKind = PLACE_KINDS.includes(input.placeKind) ? input.placeKind : "studio";
   if (!name) return { ok: false, error: "Enter the studio name." };
-  if (!address) return { ok: false, error: "Enter the address." };
+  if (placeKind !== "virtual" && !address) return { ok: false, error: "Enter the location." };
   if (
     input.photo &&
     !/^https:\/\//.test(input.photo) &&
@@ -186,19 +238,29 @@ export async function updateStudio(
 
   const [existing] = await db.select().from(schema.studios).where(eq(schema.studios.id, id));
   if (!existing) return { ok: false, error: "Studio not found." };
+  const possibleDuplicates = await db.select().from(schema.studios).where(
+    and(eq(schema.studios.placeKind, placeKind), ne(schema.studios.id, id)),
+  );
+  const duplicate = possibleDuplicates.find((row) => duplicatePlace(row, name, address, placeKind));
+  if (duplicate) return { ok: false, error: `${duplicate.name} is already on FittList.` };
 
   // Only recompute the slug when the name actually moved, so a link to a studio
   // survives unrelated edits. Same rule for the point: the address moving is
   // what makes the old coordinates wrong.
   const slug =
     existing.slug && existing.name.trim() === name ? existing.slug : await uniqueSlug(name, id);
-  const geo = existing.address.trim() === address ? null : await geocodeAddress(address);
+  const geo =
+    placeKind === "virtual" || existing.address.trim() === address
+      ? null
+      : await geocodeAddress(address);
 
   const types = input.types.filter((t) => (STUDIO_TYPES as readonly string[]).includes(t));
   const set: Partial<typeof schema.studios.$inferInsert> = {
     ...(geo ? { lat: geo.lat, lng: geo.lng } : {}),
     name,
     address,
+    placeKind,
+    ...(placeKind === "virtual" ? { lat: null, lng: null } : {}),
     slug,
     types,
     about: input.about.trim() || null,

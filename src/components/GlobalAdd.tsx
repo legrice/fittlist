@@ -1,33 +1,58 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { globalComposerData } from "@/app/actions/composer";
-import { createStudio, findStudioMatches, type StudioMatch } from "@/app/actions/studios";
+import {
+  createStudio,
+  findStudioMatches,
+  type StudioMatch,
+} from "@/app/actions/studios";
 import { Adder } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { TypeMultiSelect } from "@/components/TypePicker";
+import { readPhoto } from "@/lib/photo";
 import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 
-type ComposerData = { studios: StudioDto[]; templates: TemplateDto[]; customTypes: string[]; lastUsed: LastUsed; canCoach: boolean };
+type ComposerData = {
+  studios: StudioDto[];
+  templates: TemplateDto[];
+  customTypes: string[];
+  lastUsed: LastUsed;
+  canCoach: boolean;
+};
+
+const placeKey = (value: string) =>
+  value.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "");
 
 export function GlobalAdd() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<null | "class" | "place">(null);
+  const [placeStep, setPlaceStep] = useState<"identity" | "details">("identity");
   const [data, setData] = useState<ComposerData | null>(null);
   const [pending, startTransition] = useTransition();
   const [placeName, setPlaceName] = useState("");
   const [placeAddress, setPlaceAddress] = useState("");
   const [placeKind, setPlaceKind] = useState<PlaceKind>("studio");
+  const [placeTypes, setPlaceTypes] = useState<string[]>([]);
+  const [placeAbout, setPlaceAbout] = useState("");
+  const [placePhoto, setPlacePhoto] = useState<string | null>(null);
+  const [placeEmail, setPlaceEmail] = useState("");
+  const [placePhone, setPlacePhone] = useState("");
+  const [placeWebsite, setPlaceWebsite] = useState("");
+  const [placeInstagram, setPlaceInstagram] = useState("");
   const [placeMatches, setPlaceMatches] = useState<StudioMatch[]>([]);
   const [matching, setMatching] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const router = useRouter();
+
   useEffect(() => {
     const query = placeName.trim();
-    if (mode !== "place" || query.length < 2) {
+    if (mode !== "place" || placeStep !== "identity" || query.length < 2) {
       setPlaceMatches([]);
       setMatching(false);
       return;
@@ -36,53 +61,372 @@ export function GlobalAdd() {
     setMatching(true);
     const timer = window.setTimeout(async () => {
       try {
-        const matches = await findStudioMatches(query);
+        const matches = await findStudioMatches(query, placeKind);
         if (current) setPlaceMatches(matches);
       } finally {
         if (current) setMatching(false);
       }
     }, 220);
-    return () => { current = false; window.clearTimeout(timer); };
-  }, [mode, placeName]);
-  const exactMatch = placeMatches.find((studio) =>
-    studio.name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "") ===
-    placeName.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, ""),
+    return () => {
+      current = false;
+      window.clearTimeout(timer);
+    };
+  }, [mode, placeKind, placeName, placeStep]);
+
+  const exactMatch = placeMatches.find(
+    (studio) => placeKey(studio.name) === placeKey(placeName),
   );
-  const close = () => { setOpen(false); setMode(null); };
+  const needsAddress = placeKind !== "virtual";
+  const locationLabel =
+    placeKind === "studio" || placeKind === "wellness" ? "Address" : "Location";
+
+  const resetPlace = () => {
+    setPlaceStep("identity");
+    setPlaceName("");
+    setPlaceAddress("");
+    setPlaceKind("studio");
+    setPlaceTypes([]);
+    setPlaceAbout("");
+    setPlacePhoto(null);
+    setPlaceEmail("");
+    setPlacePhone("");
+    setPlaceWebsite("");
+    setPlaceInstagram("");
+    setPlaceMatches([]);
+  };
+  const close = () => {
+    setOpen(false);
+    setMode(null);
+    resetPlace();
+  };
   const choose = (next: "class" | "place") => {
-    if (next === "place") { setMode(next); return; }
+    if (next === "place") {
+      setMode(next);
+      return;
+    }
     startTransition(async () => {
-      const loaded = data ?? await globalComposerData();
-      if (!loaded) { toast("Sign in to add to FittList"); return; }
+      const loaded = data ?? (await globalComposerData());
+      if (!loaded) {
+        toast("Sign in to add to FittList");
+        return;
+      }
       setData(loaded);
       setMode(next);
     });
   };
-  const addPlace = () => startTransition(async () => {
-    const result = await createStudio(placeName, placeAddress, placeKind);
-    if (!result.ok) {
-      if (result.duplicate) setPlaceMatches((current) =>
-        current.some((studio) => studio.id === result.duplicate!.id)
-          ? current
-          : [result.duplicate!, ...current],
-      );
-      toast(result.error ?? "Something went wrong");
-      return;
-    }
-    close();
-    setPlaceName(""); setPlaceAddress(""); setPlaceKind("studio");
-    toast("Place added");
-    router.refresh();
-  });
-  const composer = open && typeof document !== "undefined" ? createPortal(
-    <div className="sheet-scrim globaladd-scrim" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
-      <div className="sheet globaladd-sheet" role="dialog" aria-modal="true" aria-labelledby="globaladd-title">
-        <button className="iconbtn sheetclose" aria-label="Close" onClick={close}><Icon name="close" size={18} /></button>
-        {mode === "place" ? <><h2 id="globaladd-title">Add a studio</h2><div className="globaladd-place"><label>Name<input autoFocus autoComplete="off" value={placeName} onChange={(e) => setPlaceName(e.target.value)} placeholder="Start typing the studio name" /></label>{(matching || placeMatches.length > 0) && <div className="globaladd-matches" aria-live="polite"><span>{matching ? "Checking FittList…" : "Already on FittList"}</span>{placeMatches.map((studio) => <button key={studio.id} type="button" onClick={() => { if (studio.slug) { close(); router.push(`/s/${studio.slug}`); } }} disabled={!studio.slug}><span><b>{studio.name}</b><small>{studio.address}</small></span>{studio.slug && <em>View studio</em>}</button>)}{exactMatch && <p>This studio already exists. Open it instead of adding another copy.</p>}</div>}<label>Type<select value={placeKind} onChange={(e) => setPlaceKind(e.target.value as PlaceKind)}>{PLACE_KINDS.map((kind) => <option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>)}</select></label><label>Location<input value={placeAddress} onChange={(e) => setPlaceAddress(e.target.value)} placeholder="Address or location" /></label><button className="btn si" disabled={pending || Boolean(exactMatch) || !placeName.trim() || !placeAddress.trim()} onClick={addPlace}>{pending ? "Adding…" : exactMatch ? "Already on FittList" : "Add studio"}</button></div></> : <><h2 id="globaladd-title">Add a class or studio</h2><div className="globaladd-list"><button disabled={pending} onClick={() => choose("class")}><Icon name="activity" size={23} /><b>Class</b></button><button onClick={() => choose("place")}><Icon name="place" size={23} /><b>Studio</b></button></div></>}
+  const addPlace = () =>
+    startTransition(async () => {
+      const result = await createStudio(placeName, placeAddress, placeKind, {
+        types: placeTypes,
+        about: placeAbout,
+        photo: placePhoto,
+        contactEmail: placeEmail,
+        phone: placePhone,
+        website: placeWebsite,
+        instagram: placeInstagram,
+      });
+      if (!result.ok) {
+        if (result.duplicate) {
+          setPlaceMatches((current) =>
+            current.some((studio) => studio.id === result.duplicate!.id)
+              ? current
+              : [result.duplicate!, ...current],
+          );
+          setPlaceStep("identity");
+        }
+        toast(result.error ?? "Something went wrong");
+        return;
+      }
+      close();
+      toast("Place added");
+      router.refresh();
+    });
+
+  const placeIdentity = (
+    <>
+      <h2 id="globaladd-title">Add a place</h2>
+      <p className="lead">First, make sure it is not already on FittList.</p>
+      <div className="globaladd-place">
+        <label>
+          Place type
+          <select
+            value={placeKind}
+            onChange={(event) => {
+              setPlaceKind(event.target.value as PlaceKind);
+              setPlaceMatches([]);
+            }}
+          >
+            {PLACE_KINDS.map((kind) => (
+              <option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Name
+          <input
+            autoFocus
+            autoComplete="off"
+            value={placeName}
+            onChange={(event) => setPlaceName(event.target.value)}
+            placeholder="Start typing the place name"
+          />
+        </label>
+        {(matching || placeMatches.length > 0) && (
+          <div className="globaladd-matches" aria-live="polite">
+            <span>{matching ? "Checking FittList…" : `Existing ${PLACE_KIND_LABELS[placeKind].toLowerCase()}s`}</span>
+            {placeMatches.map((studio) => (
+              <button
+                key={studio.id}
+                type="button"
+                onClick={() => {
+                  if (studio.slug) {
+                    close();
+                    router.push(`/s/${studio.slug}`);
+                  }
+                }}
+                disabled={!studio.slug}
+              >
+                <span>
+                  <b>{studio.name}</b>
+                  {studio.address && <small>{studio.address}</small>}
+                </span>
+                {studio.slug && <em>View place</em>}
+              </button>
+            ))}
+            {exactMatch && (
+              <p>
+                {placeKind === "virtual"
+                  ? "This virtual place already exists. Open it instead of adding another copy."
+                  : "If this is the same place, open it. If it is another location, continue."}
+              </p>
+            )}
+          </div>
+        )}
+        <button
+          className="btn si"
+          disabled={pending || !placeName.trim() || (placeKind === "virtual" && Boolean(exactMatch))}
+          onClick={() => setPlaceStep("details")}
+        >
+          {placeKind === "virtual" && exactMatch
+            ? "Already on FittList"
+            : exactMatch
+              ? "Add a different location"
+              : "Continue"}
+        </button>
       </div>
-      {data && mode === "class" && <Adder studios={data.studios} templates={data.templates} customTypes={data.customTypes} lastUsed={data.lastUsed} subsCount={0} firstPublish={false} personal={{ canCoach: data.canCoach, event: false }} onClose={() => setMode(null)} onToast={toast} onPublished={(msg) => { close(); toast(msg); router.refresh(); }} onDeleted={(msg) => { close(); toast(msg); router.refresh(); }} />}
-    </div>,
-    document.body,
-  ) : null;
-  return <><button className="iconbtn" aria-label="Add" onClick={() => setOpen(true)}><Icon name="add" size={24} /></button>{composer}<Toast msg={toastMsg} on={toastOn} /></>;
+    </>
+  );
+
+  const placeDetails = (
+    <>
+      <div className="adderhead">
+        <button
+          className="iconbtn sheetclose adderback"
+          aria-label="Back"
+          onClick={() => setPlaceStep("identity")}
+        >
+          <Icon name="arrow_back" size={20} />
+        </button>
+        <h2 id="globaladd-title">Tell us about {placeName}</h2>
+        <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={close}>
+          <Icon name="close" size={18} />
+        </button>
+      </div>
+      <p className="lead">A few details make the page useful from day one.</p>
+      <div className="globaladd-place globaladd-details">
+        {needsAddress && (
+          <label>
+            {locationLabel}
+            <input
+              autoFocus
+              value={placeAddress}
+              onChange={(event) => setPlaceAddress(event.target.value)}
+              placeholder={
+                placeKind === "outdoor"
+                  ? "Park, meeting point, or neighborhood"
+                  : placeKind === "event"
+                    ? "Venue or event location"
+                    : "Street address"
+              }
+            />
+          </label>
+        )}
+        <label>
+          What happens here? <span>Pick everything that fits</span>
+          <TypeMultiSelect
+            value={placeTypes}
+            onChange={setPlaceTypes}
+            placeholder="Choose categories"
+            title={`What happens at ${placeName}?`}
+          />
+        </label>
+        <label>
+          About
+          <textarea
+            className="abouttext"
+            rows={3}
+            value={placeAbout}
+            onChange={(event) => setPlaceAbout(event.target.value)}
+            placeholder={
+              placeKind === "virtual"
+                ? "What people can join and what to expect"
+                : "What the place is like and what to expect"
+            }
+          />
+        </label>
+        <label>Photo</label>
+        <div className="editphoto globaladd-photo">
+          {placePhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="editphoto-img" src={placePhoto} alt="" />
+          ) : (
+            <div className="editphoto-img editphoto-empty" aria-hidden="true">
+              <Icon name="place" size={28} />
+            </div>
+          )}
+          <div className="editphoto-actions">
+            <button className="btn ghost" onClick={() => fileRef.current?.click()}>
+              {placePhoto ? "Change photo" : "Add photo"}
+            </button>
+            {placePhoto && (
+              <button className="btn ghost" onClick={() => setPlacePhoto(null)}>Remove</button>
+            )}
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) readPhoto(file, setPlacePhoto, () => toast("That photo format isn't supported."));
+              event.target.value = "";
+            }}
+          />
+        </div>
+        <label>
+          {placeKind === "virtual" ? "Join link or website" : "Website"}
+          <input
+            type="url"
+            inputMode="url"
+            value={placeWebsite}
+            onChange={(event) => setPlaceWebsite(event.target.value)}
+            placeholder="https://"
+          />
+        </label>
+        <label>
+          Instagram
+          <input
+            value={placeInstagram}
+            onChange={(event) => setPlaceInstagram(event.target.value)}
+            placeholder="username"
+          />
+        </label>
+        <label>
+          Contact email
+          <input
+            type="email"
+            inputMode="email"
+            value={placeEmail}
+            onChange={(event) => setPlaceEmail(event.target.value)}
+            placeholder="hello@example.com"
+          />
+        </label>
+        {(placeKind === "studio" || placeKind === "wellness") && (
+          <label>
+            Phone
+            <input
+              type="tel"
+              inputMode="tel"
+              value={placePhone}
+              onChange={(event) => setPlacePhone(event.target.value)}
+            />
+          </label>
+        )}
+        <button
+          className="btn si"
+          disabled={pending || (needsAddress && !placeAddress.trim())}
+          onClick={addPlace}
+        >
+          {pending ? "Adding…" : "Add place"}
+        </button>
+      </div>
+    </>
+  );
+
+  const composer =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            className="sheet-scrim globaladd-scrim"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) close();
+            }}
+          >
+            <div
+              className={`sheet globaladd-sheet${mode === "place" && placeStep === "details" ? " sheet-full" : ""}`}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="globaladd-title"
+            >
+              {placeStep !== "details" && (
+                <button className="iconbtn sheetclose" aria-label="Close" onClick={close}>
+                  <Icon name="close" size={18} />
+                </button>
+              )}
+              {mode === "place" ? (
+                placeStep === "identity" ? placeIdentity : placeDetails
+              ) : (
+                <>
+                  <h2 id="globaladd-title">Add a class or place</h2>
+                  <div className="globaladd-list">
+                    <button disabled={pending} onClick={() => choose("class")}>
+                      <Icon name="activity" size={23} />
+                      <b>Class</b>
+                    </button>
+                    <button onClick={() => choose("place")}>
+                      <Icon name="place" size={23} />
+                      <b>Place</b>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            {data && mode === "class" && (
+              <Adder
+                studios={data.studios}
+                templates={data.templates}
+                customTypes={data.customTypes}
+                lastUsed={data.lastUsed}
+                subsCount={0}
+                firstPublish={false}
+                personal={{ canCoach: data.canCoach, event: false }}
+                onClose={() => setMode(null)}
+                onToast={toast}
+                onPublished={(message) => {
+                  close();
+                  toast(message);
+                  router.refresh();
+                }}
+                onDeleted={(message) => {
+                  close();
+                  toast(message);
+                  router.refresh();
+                }}
+              />
+            )}
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <>
+      <button className="iconbtn" aria-label="Add" onClick={() => setOpen(true)}>
+        <Icon name="add" size={24} />
+      </button>
+      {composer}
+      <Toast msg={toastMsg} on={toastOn} />
+    </>
+  );
 }
