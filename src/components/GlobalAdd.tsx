@@ -28,7 +28,7 @@ type ComposerData = {
 const placeKey = (value: string) =>
   value.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "");
 
-export function GlobalAdd() {
+export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<null | "class" | "place">(null);
   const [placeStep, setPlaceStep] = useState<"identity" | "details">("identity");
@@ -433,7 +433,7 @@ export function GlobalAdd() {
 
   return (
     <>
-      <button className="iconbtn" aria-label="Add" onClick={openChooser}>
+      <button className={floating ? "wkfab" : "iconbtn"} aria-label="Add" onClick={openChooser}>
         <Icon name="add" size={24} />
       </button>
       {composer}
