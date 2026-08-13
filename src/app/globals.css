@@ -5605,6 +5605,11 @@ button.ps-card { cursor: pointer; }
   text-decoration: none;
 }
 .recentrow .icon { color: var(--ol); flex-shrink: 0; }
+.recent-more {
+  display: block; margin: 10px 0 0; padding: 4px 2px; border: 0; background: none;
+  color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline;
+  text-underline-offset: 3px; cursor: pointer;
+}
 .srchhead .srchclear {
   margin-left: auto; border: none; background: none; cursor: pointer;
   font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ol);

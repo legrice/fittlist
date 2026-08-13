@@ -13,6 +13,7 @@ import type { DirClass } from "@/lib/discoverclasses";
 const MIN = 2;
 const RECENT_KEY = "fl-recent-searches";
 const RECENT_MAX = 8;
+const RECENT_PREVIEW = 3;
 
 type RecentHit = {
   t: "p";
@@ -68,6 +69,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const [failed, setFailed] = useState(false);
   const [asked, setAsked] = useState("");
   const [recent, setRecent] = useState<RecentHit[]>([]);
+  const [recentExpanded, setRecentExpanded] = useState(false);
   const [browse, setBrowse] = useState<DirPerson[] | null>(null);
   const box = useRef<HTMLInputElement>(null);
   // Only the newest request may paint, or a slow short query can replace the
@@ -190,12 +192,22 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
                   Clear
                 </button>
               </h2>
-              {recent.map((item) => (
+              {recent.slice(0, recentExpanded ? RECENT_MAX : RECENT_PREVIEW).map((item) => (
                 <Link key={item.base} className="recentrow" href={`/${item.base}?from=search`}>
                   <Icon name="account_circle" size={19} />
                   {item.name}
                 </Link>
               ))}
+              {recent.length > RECENT_PREVIEW && (
+                <button
+                  type="button"
+                  className="recent-more"
+                  onClick={() => setRecentExpanded((open) => !open)}
+                  aria-expanded={recentExpanded}
+                >
+                  {recentExpanded ? "See less" : "See more"}
+                </button>
+              )}
             </div>
           )}
           <div className="srchsec" onClickCapture={remember(browse ?? [])}>
