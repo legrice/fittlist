@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
 import { getDb, schema } from "@/db";
+import { avatarColor } from "@/lib/avatar";
 import { lookMode } from "@/lib/darkmode";
 import { getSessionUserId } from "@/lib/session";
 
@@ -13,7 +14,7 @@ export default async function InboxPage() {
   if (!userId) redirect("/");
   const db = await getDb();
   const [me] = await db
-    .select({ look: schema.users.look, email: schema.users.email })
+    .select({ id: schema.users.id, look: schema.users.look, email: schema.users.email })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   if (!me) redirect("/");
@@ -80,12 +81,33 @@ export default async function InboxPage() {
       };
     }),
   ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const messageRows = await db.select({
+    id: schema.users.id,
+    name: schema.users.name,
+    handle: schema.users.handle,
+    photo: schema.users.photo,
+    photoThumb: schema.users.photoThumb,
+    avatarColor: schema.users.avatarColor,
+    kind: schema.users.kind,
+    messagesOpen: schema.users.messagesOpen,
+  }).from(schema.users);
+  const messagePeople = messageRows
+    .filter((person) => person.id !== me.id && person.kind !== "gym" && person.handle && person.messagesOpen)
+    .map((person) => ({
+      id: person.id,
+      name: person.name.trim() || person.handle!,
+      handle: person.handle!,
+      photo: person.photoThumb ?? person.photo,
+      color: avatarColor(person),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <section className="screen admin hasnav" data-mode={lookMode(me.look)}>
       <UpdatesScreen
         mode="messages"
         threads={threads}
+        messagePeople={messagePeople}
         header={<AppChrome userId={userId} bar />}
       />
     </section>

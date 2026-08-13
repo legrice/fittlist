@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { MarkSeen } from "@/components/MarkSeen";
+import { NewMessage, type MessagePerson } from "@/components/NewMessage";
 
 // Notifications and Messages share the same quiet list grammar, but each owns
 // its route and header action. There is no mode switch hidden inside either.
@@ -126,12 +127,13 @@ function NotificationList({ notifications }: { notifications: Notif[] }) {
   );
 }
 
-function ThreadList({ threads }: { threads: Thread[] }) {
+function ThreadList({ threads, people }: { threads: Thread[]; people: MessagePerson[] }) {
   if (threads.length === 0) {
     return (
-      <p className="adminempty" style={{ marginTop: 24 }}>
-        No messages yet. When someone requests a private session, it lands here.
-      </p>
+      <div className="adminempty inbox-empty" style={{ marginTop: 24 }}>
+        <p>No messages yet.</p>
+        <NewMessage people={people} empty />
+      </div>
     );
   }
   return (
@@ -164,6 +166,7 @@ export function UpdatesScreen({
   mode,
   markSeen,
   header,
+  messagePeople = [],
 }: {
   notifications?: Notif[];
   threads?: Thread[];
@@ -171,6 +174,7 @@ export function UpdatesScreen({
   markSeen?: () => Promise<void>;
   /** The app header, built on the server and handed down. */
   header?: React.ReactNode;
+  messagePeople?: MessagePerson[];
 }) {
   return (
     <div className="pad">
@@ -183,15 +187,18 @@ export function UpdatesScreen({
             {mode === "notifications" ? "Follows, badges, and activity" : "Your conversations"}
           </p>
         </div>
-        <Link className="iconbtn acctclose" aria-label="Close" href="/feed">
-          <Icon name="close" size={20} />
-        </Link>
+        <div className="updates-actions">
+          {mode === "messages" && <NewMessage people={messagePeople} />}
+          <Link className="iconbtn acctclose" aria-label="Close" href="/feed">
+            <Icon name="close" size={20} />
+          </Link>
+        </div>
       </div>
 
       {mode === "notifications" ? (
         <NotificationList notifications={notifications ?? []} />
       ) : (
-        <ThreadList threads={threads ?? []} />
+        <ThreadList threads={threads ?? []} people={messagePeople} />
       )}
     </div>
   );
