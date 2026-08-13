@@ -156,6 +156,9 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --sa: #d6d1b3;
   --yellow: #f5f200;
   --radius: 16px;
+  /* One silhouette for actions throughout the product. Pills remain reserved
+     for filters, tabs, status and compact follow/action rails. */
+  --button-radius: 16px;
   /* soft drop shadows - floating containers, warm-charcoal tint */
   --soft-shadow: 0 1px 2px rgba(25, 21, 2, .06), 0 5px 16px rgba(25, 21, 2, .08);
   --soft-shadow-lg: 0 2px 6px rgba(25, 21, 2, .07), 0 12px 28px rgba(25, 21, 2, .11);
@@ -571,12 +574,11 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .iconbtn:hover { border-color: var(--ink); color: var(--ink); }
 
 .btn {
-  /* Big spacious pills, the class sheet's own register, by Matt's call:
-     the 16px-radius block read as a form control next to them. */
+  /* Primary and secondary actions share one deeply rounded rectangle. */
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   background: var(--ink); color: #fff; font-weight: 600; font-size: 16.5px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  padding: 16px 22px; border-radius: 999px; width: 100%; transition: transform .08s;
+  padding: 16px 22px; border-radius: var(--button-radius); width: 100%; transition: transform .08s;
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
@@ -2385,7 +2387,7 @@ button.ps-card { cursor: pointer; }
 }
 .reportcount.hot { background: var(--si); color: #fff; }
 .admincard-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.admincard-actions .btn { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 999px; }
+.admincard-actions .btn { width: auto; padding: 9px 14px; font-size: 13px; border-radius: var(--button-radius); }
 .reportlist { display: flex; flex-direction: column; gap: 12px; }
 /* The megaphone's audience, as a dropdown. It borrows the Discover pill,
    which is flex:1 there; here it stands alone and needs its own height. */
@@ -2721,7 +2723,7 @@ button.ps-card { cursor: pointer; }
    solid ink once it belongs to you. */
 .classsheet-add {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
-  padding: 15px 22px; border-radius: 999px; cursor: pointer;
+  padding: 15px 22px; border-radius: var(--button-radius); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   background: var(--card); color: var(--ink); border: 1px solid var(--ink);
   transition: transform .08s;
@@ -2985,7 +2987,7 @@ button.ps-card { cursor: pointer; }
 .sharepill:active { transform: scale(.97); }
 /* The next week of a schedule, on request. */
 .viewmore {
-  display: block; margin: 18px auto 6px; padding: 12px 26px; border-radius: 999px;
+  display: block; margin: 18px auto 6px; padding: 12px 26px; border-radius: var(--button-radius);
   border: none; background: #e9e7e1; color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px;
   cursor: pointer;
@@ -3204,7 +3206,7 @@ button.ps-card { cursor: pointer; }
 .shoutouts-head { margin-bottom:16px; }
 .shoutouts-head .profile-section-title { margin:0 0 3px; }
 .shoutouts-head p { margin:0; color:var(--muted); font-size:15px; }
-.shoutout-give { flex:0 0 auto; min-height:42px; padding:0 17px; border:0; border-radius:14px; background:var(--ink); color:var(--paper); }
+.shoutout-give { flex:0 0 auto; min-height:42px; padding:0 17px; border:0; border-radius:var(--button-radius); background:var(--ink); color:var(--paper); }
 .shoutout-empty { display:flex; flex-direction:column; align-items:center; }
 .shoutout-empty .shoutout-give { margin-top:18px; }
 .shoutout-give-after { width:100%; margin-top:14px; }
@@ -3437,7 +3439,7 @@ button.ps-card { cursor: pointer; }
 .secrow-txt .s { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .secbtn {
   flex-shrink: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
-  color: #191502; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px;
+  color: #191502; background: #fff; border: 1px solid var(--line); border-radius: var(--button-radius); padding: 8px 18px;
 }
 .secbtn:active { background: #f6f1e5; }
 .secbtn[disabled] { opacity: .5; pointer-events: none; }
@@ -3793,7 +3795,7 @@ button.ps-card { cursor: pointer; }
 .info-nudge {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 40px; margin-top: 16px; padding: 0 16px;
-  border: 0; border-radius: 12px; background: var(--ink); color: var(--paper);
+  border: 0; border-radius: var(--button-radius); background: var(--ink); color: var(--paper);
   font: 600 14px 'Delight', 'Helvetica Neue', Arial, sans-serif;
   text-decoration: none; cursor: pointer;
 }
@@ -3919,7 +3921,7 @@ button.ps-card { cursor: pointer; }
 .profile-share-cta-btn {
   width: 100%; min-height: 48px; padding: 0 18px;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  border: 0; border-radius: 14px; background: var(--paper); color: var(--ink);
+  border: 0; border-radius: var(--button-radius); background: var(--paper); color: var(--ink);
   font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif; cursor: pointer;
 }
 .profile-share-cta-btn:active { transform: scale(.985); }
@@ -4080,7 +4082,7 @@ button.ps-card { cursor: pointer; }
 .evactions .btn.evactbtn {
   width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   padding: 12px 14px; font-size: 14px; white-space: nowrap;
-  background: var(--cl); color: var(--ink); border: none; border-radius: 999px;
+  background: var(--cl); color: var(--ink); border: none; border-radius: var(--button-radius);
 }
 /* Share hugs its label; Add to calendar takes the rest. Same specificity as
    the rule above, declared after it, so the auto width wins. */
@@ -4105,7 +4107,7 @@ button.ps-card { cursor: pointer; }
 }
 .evcta-inner { max-width: 660px; margin: 0 auto; }
 .evctanote { margin: 0 0 9px; font-size: 12px; color: var(--ol); text-align: center; }
-.evctabtn { border-radius: 999px; padding: 15px 18px; font-size: 15px; }
+.evctabtn { border-radius: var(--button-radius); padding: 15px 18px; font-size: 15px; }
 /* Marked: the same solid ink as Following. */
 .evctabtn.on { background: var(--ink); color: var(--paper); }
 @media (min-width: 940px) {
@@ -6218,7 +6220,7 @@ button.ps-card { cursor: pointer; }
 .acctinvite-btn {
   flex: 0 0 auto; border: 0; background: var(--si); color: #fff;
   font-family: inherit; font-size: 14px; font-weight: 600;
-  padding: 11px 20px; border-radius: 999px; cursor: pointer;
+  padding: 11px 20px; border-radius: var(--button-radius); cursor: pointer;
 }
 /* Admin, Brand and Ethos are internal and were three rows under their own
    heading on every staff account. A footer is where a thing you use twice a
@@ -7015,7 +7017,7 @@ button.ps-card { cursor: pointer; }
 }
 .abouthome-go {
   display: inline-flex; align-items: center; justify-content: space-between; gap: 18px;
-  min-height: 44px; padding: 0 16px; border-radius: 999px;
+  min-height: 44px; padding: 0 16px; border-radius: var(--button-radius);
   background: var(--paper); color: var(--ink);
   font-size: 14px; font-weight: 600; text-decoration: none;
 }
@@ -7095,7 +7097,7 @@ button.ps-card { cursor: pointer; }
   margin-top: 20px;
 }
 .addrole-actions button {
-  min-height: 48px; border: 0; border-radius: 14px; background: var(--cl); color: var(--ink);
+  min-height: 48px; border: 0; border-radius: var(--button-radius); background: var(--cl); color: var(--ink);
   font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif; cursor: pointer;
 }
 .addrole-actions button:first-child { background: var(--ink); color: var(--paper); }
@@ -7255,7 +7257,7 @@ button.ps-card { cursor: pointer; }
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px;
 }
 .calendar-empty-actions .btn {
-  min-width: 0; min-height: 50px; border-radius: 999px;
+  min-width: 0; min-height: 50px; border-radius: var(--button-radius);
   display: inline-flex; align-items: center; justify-content: center;
 }
 .calendar-empty-actions .btn.ghost {
@@ -7369,7 +7371,7 @@ button.ps-card { cursor: pointer; }
 }
 .clsfull-btn {
   flex: 1; display: inline-flex; align-items: center; justify-content: center;
-  padding: 16px; border-radius: 999px; border: none; cursor: pointer; text-decoration: none;
+  padding: 16px; border-radius: var(--button-radius); border: none; cursor: pointer; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16.5px; font-weight: 600;
 }
@@ -7386,7 +7388,7 @@ button.ps-card { cursor: pointer; }
 .bookbtns { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
 .bookbtn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  width: 100%; padding: 16px; border-radius: 999px;
+  width: 100%; padding: 16px; border-radius: var(--button-radius);
   background: var(--ink); color: var(--paper); text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16.5px; font-weight: 600;
@@ -7466,7 +7468,7 @@ a.clspeek-by:active { opacity: .6; }
 
 .clspeek-cta { display: flex; gap: 12px; margin-top: 26px; }
 .clspeek-btn {
-  flex: 1; min-height: 62px; padding: 10px 16px; border-radius: 999px;
+  flex: 1; min-height: 62px; padding: 10px 16px; border-radius: var(--button-radius);
   display: inline-flex; align-items: center; justify-content: center; text-align: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 17px; font-weight: 600; cursor: pointer; text-decoration: none;
