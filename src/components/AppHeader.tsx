@@ -16,6 +16,7 @@ export function AppHeader({
   nav,
   settings = false,
   admin = false,
+  adminAttention = 0,
 }: {
   notificationUnread?: number;
   messageUnread?: number;
@@ -30,6 +31,8 @@ export function AppHeader({
   settings?: boolean;
   /** Site operations are visible only to configured admins. */
   admin?: boolean;
+  /** Number of unresolved reports and other queues requiring admin action. */
+  adminAttention?: number;
 }) {
   return (
     <div className="brandbar">
@@ -48,10 +51,11 @@ export function AppHeader({
         {/* Admin first when present, then creation, conversations and activity. */}
         {admin && (
           <HeaderIconLink
-            label="Admin"
+            label={`Admin${adminAttention ? `, ${adminAttention} items need attention` : ""}`}
             icon="admin_panel_settings"
             href="/admin"
             match="/admin"
+            badge={adminAttention > 0 ? <span className="inboxdot">{adminAttention > 9 ? "9+" : adminAttention}</span> : undefined}
           />
         )}
         <GlobalAdd />

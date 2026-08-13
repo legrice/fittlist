@@ -12,7 +12,7 @@ import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { NavBar } from "@/components/NavBar";
 import { lookMode } from "@/lib/darkmode";
-import { adminEmails } from "@/lib/admin";
+import { adminAttentionCount, adminEmails } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +39,12 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // In parallel: these are independent, and this layout runs on every tab
   // switch, so awaiting them one by one would stack extra round trips onto every
   // tap of the bar.
-  const [unread, promptDue, invitesLeft] = await Promise.all([
+  const isAdmin = adminEmails().includes(me.email.toLowerCase());
+  const [unread, promptDue, invitesLeft, adminAttention] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
     feedbackPromptDue(userId),
     invitesBannerCount(),
+    isAdmin ? adminAttentionCount() : Promise.resolve(0),
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
@@ -71,7 +73,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           // sign-in.
           home="/feed"
           nav={{ coach: isCoach, scheduleHref, profileHref }}
-          admin={adminEmails().includes(me.email.toLowerCase())}
+          admin={isAdmin}
+          adminAttention={adminAttention}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}

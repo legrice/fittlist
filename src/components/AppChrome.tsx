@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
 import { unreadHeaderCounts } from "@/lib/notify";
-import { adminEmails } from "@/lib/admin";
+import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
@@ -51,9 +51,11 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
-  const [fans, unread] = await Promise.all([
+  const isAdmin = adminEmails().includes(me.email.toLowerCase());
+  const [fans, unread, adminAttention] = await Promise.all([
     fansVisible(),
     unreadHeaderCounts(userId, me.email),
+    isAdmin ? adminAttentionCount() : Promise.resolve(0),
   ]);
   // One calendar, at one address. This forked by kind for months, back when a
   // coach's was /app and a member had their own at /week; a member has no
@@ -80,7 +82,8 @@ export async function AppChrome({
       home={fans ? "/feed" : "/app"}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
       settings={active === "you"}
-      admin={adminEmails().includes(me.email.toLowerCase())}
+      admin={isAdmin}
+      adminAttention={adminAttention}
     />
   );
   if (!bar) return header;
