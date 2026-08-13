@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useBandTop } from "@/components/CalendarBits";
 import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
-import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
+import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import type { DirClass } from "@/lib/discoverclasses";
 
 /**
@@ -363,9 +363,20 @@ export function DiscoverList({
             <p>Studios arrive as coaches add the places they teach.</p>
           </div>
         ) : (
-          <div className="dislist dislist-bare">
+          <div className="discover-studio-grid">
             {shownStudios.map((st) => (
-              <StudioRow key={st.id} studio={st} from="discover" />
+              <Link href={`/s/${st.slug}?from=discover`} className="discover-studio-tile" key={st.id}>
+                {st.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={st.photo} alt="" />
+                ) : (
+                  <span className="discover-studio-placeholder" style={{ background: st.color }}>
+                    {(st.name.trim().charAt(0) || "?").toUpperCase()}
+                  </span>
+                )}
+                <strong>{st.name}</strong>
+                <small>{st.types.slice(0, 2).join(" · ") || "Fitness space"}</small>
+              </Link>
             ))}
           </div>
         )
@@ -379,12 +390,25 @@ export function DiscoverList({
           <p>The list fills up as coaches put their week on fittlist.</p>
         </div>
       ) : (
-        <div className="dislist dislist-bare">
+        <div className="discover-person-grid">
           {shown.map((c) => (
-            // Coaches only on this half, so a Coach badge on every row is a
-            // word that never distinguishes anything. Search mixes kinds and
-            // keeps it.
-            <PersonRow key={c.id} person={c} from="discover" kindTag={false} follow />
+            <Link href={`/${c.handle}?from=discover`} className="discover-person-tile" key={c.id}>
+              {c.following && (
+                <span className="discover-person-following" aria-label="Following">
+                  <Icon name="how_to_reg" size={20} />
+                </span>
+              )}
+              <span className="discover-person-face" style={{ background: c.color }}>
+                {c.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.photo} alt="" />
+                ) : (
+                  (c.name.trim().charAt(0) || "?").toUpperCase()
+                )}
+              </span>
+              <strong>{c.name}</strong>
+              <span>{c.title?.trim() || "Fitness coach"}</span>
+            </Link>
           ))}
         </div>
       )}
