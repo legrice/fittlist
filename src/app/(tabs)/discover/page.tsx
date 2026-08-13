@@ -139,13 +139,28 @@ export default async function DiscoverPage({
     // face at the top is the reason to keep opening it.
     .sort((a, b) => (joinedAt.get(b.id) ?? 0) - (joinedAt.get(a.id) ?? 0));
 
+  // Filters speak in cities, never street addresses. Profile locations are
+  // normally "City, ST", so their first part gives us a clean vocabulary;
+  // those names also let us recover a city from older studio addresses that
+  // were saved without a comma between the street and town. If an address is
+  // conventionally comma-separated, the city is the part before state/ZIP.
+  const looksLikeStreet = (value: string) =>
+    /^\d/.test(value) || /\b(st|street|ave|avenue|rd|road|blvd|boulevard|dr|drive|ln|lane|way|pl|place)\b/i.test(value);
+  const profileCities = people
+    .map((person) => person.location.split(",")[0]?.trim() ?? "")
+    .filter((city) => city && !looksLikeStreet(city));
+  const knownCities = [...new Set(profileCities)].sort((a, b) => b.length - a.length);
   const studioCities = studioRows.map((studio) => {
     if (studio.placeKind === "virtual") return "";
+    const known = knownCities.find((city) => studio.address.toLowerCase().includes(city.toLowerCase()));
+    if (known) return known;
     const parts = studio.address.split(",").map((part) => part.trim()).filter(Boolean);
-    return parts.length > 1 ? parts[parts.length - 2] : "";
+    if (parts.length >= 3) return parts[parts.length - 2];
+    if (parts.length === 2 && !looksLikeStreet(parts[0])) return parts[0];
+    return "";
   });
   const cities = [
-    ...new Set([...people.map((person) => person.location), ...studioCities].filter(Boolean)),
+    ...new Set([...profileCities, ...studioCities].filter(Boolean)),
   ].sort((a, b) => a.localeCompare(b));
 
   // The other half of the directory. Every studio, in name order: a row here
