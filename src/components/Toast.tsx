@@ -32,7 +32,7 @@ export function Toast({
       role="status"
       aria-live="polite"
     >
-      {msg}
+      <span className="toast-msg">{msg}</span>
       {action && (
         <a className="toast-act" href={action.href}>
           {action.label}

@@ -1426,15 +1426,17 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .toast {
   position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%) translateY(8px);
+  display: flex; align-items: center; max-width: calc(100vw - 32px);
   background: var(--ink); color: #fff; font-size: 13px; font-weight: 600;
   padding: 11px 16px; border-radius: 16px; opacity: 0; pointer-events: none;
-  transition: opacity .2s, transform .2s; z-index: 60; white-space: nowrap;
+  transition: opacity .2s, transform .2s; z-index: 60;
 }
+.toast-msg { min-width: 0; line-height: 1.3; overflow-wrap: anywhere; }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 /* A toast carrying a link has to be tappable; the bare kind stays inert
    so it never blocks the list under it. */
 .toast.has-act.on { pointer-events: auto; }
-.toast-act { color: #fff; text-decoration: underline; margin-left: 12px; font-weight: 600; }
+.toast-act { flex: 0 0 auto; color: #fff; text-decoration: underline; margin-left: 12px; font-weight: 600; white-space: nowrap; }
 [data-mode="dark"] .toast-act { color: #191502; }
 .empty { color: var(--ol); font-size: 13px; padding: 14px 0; }
 
