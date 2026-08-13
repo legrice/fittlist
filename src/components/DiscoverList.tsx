@@ -6,6 +6,7 @@ import { useBandTop } from "@/components/CalendarBits";
 import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
+import { RowFollow } from "@/components/RowFollow";
 import type { DirClass } from "@/lib/discoverclasses";
 
 /**
@@ -392,23 +393,26 @@ export function DiscoverList({
       ) : (
         <div className="discover-person-grid">
           {shown.map((c) => (
-            <Link href={`/${c.handle}?from=discover`} className="discover-person-tile" key={c.id}>
-              {c.following && (
-                <span className="discover-person-following" aria-label="Following">
-                  <Icon name="how_to_reg" size={20} />
+            <div className="discover-person-tile" key={c.id}>
+              <Link href={`/${c.handle}?from=discover`} className="discover-person-main">
+                <span className="discover-person-face" style={{ background: c.color }}>
+                  {c.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.photo} alt="" />
+                  ) : (
+                    (c.name.trim().charAt(0) || "?").toUpperCase()
+                  )}
                 </span>
-              )}
-              <span className="discover-person-face" style={{ background: c.color }}>
-                {c.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.photo} alt="" />
-                ) : (
-                  (c.name.trim().charAt(0) || "?").toUpperCase()
-                )}
-              </span>
-              <strong>{c.name}</strong>
-              <span>{c.title?.trim() || "Fitness coach"}</span>
-            </Link>
+                <strong>{c.name}</strong>
+              </Link>
+              <RowFollow
+                handle={c.handle}
+                name={c.name}
+                isCoach
+                following={c.following}
+                requested={c.requested}
+              />
+            </div>
           ))}
         </div>
       )}
