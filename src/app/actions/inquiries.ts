@@ -211,7 +211,7 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
     }
     revalidatePath(`/inbox/${threadId}`);
     revalidatePath("/feedback");
-    revalidatePath("/updates");
+    revalidatePath("/inbox");
     return { ok: true };
   }
 
@@ -243,7 +243,7 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
 
   revalidatePath(`/inbox/${threadId}`);
   revalidatePath("/inbox");
-  revalidatePath("/updates");
+  revalidatePath("/inbox");
   return { ok: true };
 }
 
@@ -300,7 +300,7 @@ export async function replyAsRequester(threadId: string, bodyRaw: string): Promi
     );
   }
   revalidatePath(`/inbox/${threadId}`);
-  revalidatePath("/updates");
+  revalidatePath("/inbox");
   return { ok: true };
 }
 

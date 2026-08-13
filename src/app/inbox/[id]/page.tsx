@@ -71,7 +71,7 @@ export default async function InboxThreadPage({
         <Link
           className="iconbtn chatback"
           aria-label={from === "requests" ? "Back to requests" : "Back to messages"}
-          href={from === "requests" ? "/requests" : "/updates?tab=messages"}
+          href={from === "requests" ? "/requests" : "/inbox"}
         >
           <Icon name="arrow_back" size={20} />
         </Link>

@@ -41,7 +41,7 @@ export async function emailCoachInquiry(opts: {
     subject: `${who} wants to train with you`,
     text:
       `${who} sent you a private-session request on fittlist:\n\n"${opts.body}"\n\n` +
-      `Reply from your inbox: ${siteOrigin()}/updates?tab=messages`,
+      `Reply from your inbox: ${siteOrigin()}/inbox`,
   });
 }
 
@@ -53,7 +53,7 @@ export async function emailFeedback(opts: { to: string; from: string; body: stri
     subject: `Feedback from ${opts.from}`,
     text:
       `${opts.from} sent feedback on fittlist:\n\n"${opts.body}"\n\n` +
-      `Reply from your inbox: ${siteOrigin()}/updates?tab=messages`,
+      `Reply from your inbox: ${siteOrigin()}/inbox`,
   });
 }
 

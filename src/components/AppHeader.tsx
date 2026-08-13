@@ -10,13 +10,14 @@ import type { NavTab } from "@/lib/nav";
 // Notifications and Settings right. Profile already has a permanent tab, so these
 // are the three useful actions somebody may need from anywhere in the app.
 export function AppHeader({
-  unread = 0,
+  notificationUnread = 0,
+  messageUnread = 0,
   home = "/week",
   nav,
   settings = false,
 }: {
-  /** Notifications and unread message threads share one Updates badge. */
-  unread?: number;
+  notificationUnread?: number;
+  messageUnread?: number;
   /** Where the wordmark goes. The Following tab for anyone with the member
       side, the schedule for a coach who doesn't have it yet. */
   home?: string;
@@ -41,16 +42,21 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* One stable utility order everywhere in the signed-in app. Add
-            opens creation in place, the bell holds Notifications and
-            Messages together, and the gear opens settings in place. */}
+        {/* Creation, conversations, then activity: each action has one door. */}
         <GlobalAdd />
         <HeaderIconLink
-          label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+          label={`Messages${messageUnread ? `, ${messageUnread} unread` : ""}`}
+          icon="chat_bubble"
+          href="/inbox"
+          match="/inbox"
+          badge={messageUnread > 0 ? <span className="inboxdot">{messageUnread > 9 ? "9+" : messageUnread}</span> : undefined}
+        />
+        <HeaderIconLink
+          label={`Notifications${notificationUnread ? `, ${notificationUnread} unread` : ""}`}
           icon="notifications"
-          href="/updates"
-          match={["/updates", "/inbox"]}
-          badge={unread > 0 ? <span className="inboxdot">{unread > 9 ? "9+" : unread}</span> : undefined}
+          href="/notifications"
+          match="/notifications"
+          badge={notificationUnread > 0 ? <span className="inboxdot">{notificationUnread > 9 ? "9+" : notificationUnread}</span> : undefined}
         />
         {settings && <SettingsGear header />}
       </div>

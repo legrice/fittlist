@@ -88,7 +88,7 @@ console.log("member sent feedback ok");
 await p.screenshot({ path: OUT + "/fb-2-sent.png" });
 
 // the admin sees it, tagged, and replies
-await ad.goto(BASE + "/updates?tab=messages");
+await ad.goto(BASE + "/inbox");
 const thread = p2Row(ad);
 await thread.waitFor();
 if (!(await ad.locator(".inboxrow-tag").first().isVisible())) fail("no feedback tag in the inbox");
@@ -101,7 +101,7 @@ await ad.locator(".chatmsg.mine .chatbubble").first().waitFor();
 console.log("admin replied ok");
 
 // the member sees the reply in the existing conversation, and the shared
-// Updates badge brings the reply to their attention.
+// Notifications badge brings the reply to their attention.
 await p.goto(BASE + "/you");
 if (!(
   await p
@@ -109,7 +109,7 @@ if (!(
     .isVisible()
     .catch(() => false)
 ))
-  fail("no Updates badge after the feedback reply");
+  fail("no Notifications badge after the feedback reply");
 await p.goto(BASE + "/feedback");
 const theirs = await p.locator(".chatmsg.theirs .chatbubble").allInnerTexts();
 if (!theirs.join(" ").includes("Fixing today")) fail("the reply never reached the member");
@@ -123,7 +123,7 @@ await p.waitForTimeout(700);
 await p.reload();
 const all = await p.locator(".chatbubble").allInnerTexts();
 if (all.length !== 3) fail(`expected 3 messages in one thread, got ${all.length}`);
-await ad.goto(BASE + "/updates?tab=messages");
+await ad.goto(BASE + "/inbox");
 const rows = await ad.locator(".inboxrow").count();
 if (rows !== 1) fail(`expected one thread, got ${rows}`);
 console.log("one thread per person ok");

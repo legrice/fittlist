@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { MarkSeen } from "@/components/MarkSeen";
 
-// One Updates surface behind the header bell: Notifications for follows and
-// schedule activity, Messages for conversations. The segmented control keeps
-// those two kinds of attention distinct without spending two header icons.
+// Notifications and Messages share the same quiet list grammar, but each owns
+// its route and header action. There is no mode switch hidden inside either.
 
 type Notif = {
   id: string;
@@ -163,55 +161,37 @@ function ThreadList({ threads }: { threads: Thread[] }) {
 export function UpdatesScreen({
   notifications,
   threads,
-  initialTab,
+  mode,
   markSeen,
   header,
 }: {
-  notifications: Notif[];
-  threads: Thread[];
-  initialTab: "notifications" | "messages";
-  markSeen: () => Promise<void>;
+  notifications?: Notif[];
+  threads?: Thread[];
+  mode: "notifications" | "messages";
+  markSeen?: () => Promise<void>;
   /** The app header, built on the server and handed down. */
   header?: React.ReactNode;
 }) {
-  const [tab, setTab] = useState<"notifications" | "messages">(initialTab);
-
-  const pick = (next: "notifications" | "messages") => {
-    setTab(next);
-    window.history.replaceState(
-      null,
-      "",
-      next === "messages" ? "/updates?tab=messages" : "/updates",
-    );
-  };
-
   return (
     <div className="pad">
       {header}
-      {tab === "notifications" && <MarkSeen action={markSeen} />}
+      {mode === "notifications" && markSeen && <MarkSeen action={markSeen} />}
       <div className="admintop pagetop">
         <div>
-          <h1>Updates</h1>
-          <p className="adminsub">Follows, requests, and messages</p>
+          <h1>{mode === "notifications" ? "Notifications" : "Messages"}</h1>
+          <p className="adminsub">
+            {mode === "notifications" ? "Follows, badges, and activity" : "Your conversations"}
+          </p>
         </div>
-        <Link className="iconbtn acctclose" aria-label="Close" href="/week">
+        <Link className="iconbtn acctclose" aria-label="Close" href="/feed">
           <Icon name="close" size={20} />
         </Link>
       </div>
 
-      <div className="seg updateseg">
-        <button className={tab === "notifications" ? "sel" : ""} onClick={() => pick("notifications")}>
-          Notifications
-        </button>
-        <button className={tab === "messages" ? "sel" : ""} onClick={() => pick("messages")}>
-          Messages
-        </button>
-      </div>
-
-      {tab === "notifications" ? (
-        <NotificationList notifications={notifications} />
+      {mode === "notifications" ? (
+        <NotificationList notifications={notifications ?? []} />
       ) : (
-        <ThreadList threads={threads} />
+        <ThreadList threads={threads ?? []} />
       )}
     </div>
   );

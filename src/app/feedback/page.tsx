@@ -28,7 +28,7 @@ export default async function FeedbackPage() {
 
   const host = await feedbackHost();
   // The person feedback goes to has no one to send it to.
-  if (!host || host.email.toLowerCase() === me.email.toLowerCase()) redirect("/updates?tab=messages");
+  if (!host || host.email.toLowerCase() === me.email.toLowerCase()) redirect("/inbox");
 
   const thread = await myFeedback();
   const back = "/settings";

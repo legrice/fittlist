@@ -35,14 +35,13 @@ export async function unreadNotifications(userId: string): Promise<number> {
   return rows.length;
 }
 
-/** One badge for the combined Updates surface.
- *
- * Message events are stored both as notification rows and as unread counts on
- * their threads. Count the thread, not its duplicate notification, so one new
- * message never appears as two updates. Feedback replies stay notifications:
- * the member reads those in the dedicated feedback room rather than Messages.
- */
-export async function unreadUpdateCount(userId: string, email: string): Promise<number> {
+/** Independent header counts for the two attention doors. Message
+ * notification rows duplicate thread unread state, so Notifications excludes
+ * them and Messages counts the thread itself. */
+export async function unreadHeaderCounts(
+  userId: string,
+  email: string,
+): Promise<{ notifications: number; messages: number }> {
   const db = await getDb();
   const normalizedEmail = email.trim().toLowerCase();
   const [notifications, threads] = await Promise.all([
@@ -68,16 +67,28 @@ export async function unreadUpdateCount(userId: string, email: string): Promise<
       ),
   ]);
 
-  const notificationCount = notifications.filter(
-    (notification) => notification.type !== "message" && notification.type !== "feedback",
-  ).length;
-  const messageCount = threads.reduce(
-    (total, thread) =>
-      total +
-      (thread.coachUserId === userId ? thread.coachUnread : thread.requesterUnread),
-    0,
-  );
-  return notificationCount + messageCount;
+  return {
+    notifications: notifications.filter(
+      (notification) => notification.type !== "message" && notification.type !== "feedback",
+    ).length,
+    messages: threads.reduce(
+      (total, thread) =>
+        total + (thread.coachUserId === userId ? thread.coachUnread : thread.requesterUnread),
+      0,
+    ),
+  };
+}
+
+/** One badge for the combined Updates surface.
+ *
+ * Message events are stored both as notification rows and as unread counts on
+ * their threads. Count the thread, not its duplicate notification, so one new
+ * message never appears as two updates. Feedback replies stay notifications:
+ * the member reads those in the dedicated feedback room rather than Messages.
+ */
+export async function unreadUpdateCount(userId: string, email: string): Promise<number> {
+  const counts = await unreadHeaderCounts(userId, email);
+  return counts.notifications + counts.messages;
 }
 
 export async function listNotifications(userId: string, limit = 50, excludeTypes: string[] = []) {
@@ -119,5 +130,11 @@ export async function markNotificationsRead(userId: string): Promise<void> {
   await db
     .update(schema.notifications)
     .set({ readAt: new Date() })
-    .where(and(eq(schema.notifications.userId, userId), isNull(schema.notifications.readAt)));
+    .where(
+      and(
+        eq(schema.notifications.userId, userId),
+        isNull(schema.notifications.readAt),
+        notInArray(schema.notifications.type, ["message", "feedback"]),
+      ),
+    );
 }

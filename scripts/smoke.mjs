@@ -845,8 +845,8 @@ const subN = await page.locator(".acctstats .acctstat").nth(1).locator(".n").tex
 if (subN.trim() !== "1") fail("follower count should be 1, got " + subN);
 console.log("stats ok");
 
-// ---- that follow dropped an update. The one bell holds both notification
-// activity and message threads, with a combined unread badge.
+// ---- that follow dropped a notification. Messages and Notifications have
+// independent doors and unread badges.
 await page.goto(BASE + "/app");
 await page.locator(".caladd").waitFor();
 await expect(
@@ -854,7 +854,7 @@ await expect(
   "Updates bell shows the follow badge",
 );
 await page.locator('.brandbar-actions [aria-label^="Notifications"]').click();
-await page.getByRole("heading", { name: "Updates" }).waitFor();
+await page.getByRole("heading", { name: "Notifications" }).waitFor();
 // more than one person followed by now, so take the first rather than
 // tripping strict mode
 await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).first().isVisible(), "follow notification listed");
@@ -870,14 +870,11 @@ await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).first().
   if (blank) fail(`${blank} notification icons are the blank-circle fallback`);
   console.log("notification icon ok (a real glyph, not the fallback circle)");
 }
-await page.locator(".updateseg button", { hasText: "Messages" }).click();
-await page.getByText("No messages yet", { exact: false }).waitFor();
-await page.locator(".updateseg button", { hasText: "Notifications" }).click();
-await page.locator(".notifrow").first().waitFor();
 await page.goto(BASE + "/inbox");
-await page.waitForURL(/\/updates\?tab=messages/);
-await page.locator(".updateseg button.sel", { hasText: "Messages" }).waitFor();
-console.log("combined Notifications and Messages screen ok");
+await page.getByRole("heading", { name: "Messages" }).waitFor();
+await page.getByText("No messages yet", { exact: false }).waitFor();
+if (await page.locator(".updateseg").count()) fail("Messages and Notifications should not share a mode switch");
+console.log("separate Notifications and Messages screens ok");
 
 // ================= Phase 2: the weekly list =================
 const CRON_KEY = process.env.CRON_SECRET ?? "smoke-cron";
