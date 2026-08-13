@@ -2182,6 +2182,7 @@ button.ps-card { cursor: pointer; }
 .globaladd-place { display:grid; gap:12px; margin-top:18px; }
 .globaladd-place label { display:grid; gap:6px; font-size:13px; font-weight:600; }
 .globaladd-place input,.globaladd-place select { width:100%; min-height:48px; padding:0 13px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink); font:inherit; }
+.globaladd-place select { min-height:52px; padding-block:12px; }
 .inboxbtn { position: relative; }
 .inboxdot {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
