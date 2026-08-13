@@ -31,6 +31,7 @@ const placeKey = (value: string) =>
 export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<null | "class" | "place">(null);
+  const [classRole, setClassRole] = useState<null | "coaching" | "attending">(null);
   const [placeStep, setPlaceStep] = useState<"identity" | "details">("identity");
   const [data, setData] = useState<ComposerData | null>(null);
   const [pending, startTransition] = useTransition();
@@ -97,6 +98,7 @@ export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
   const close = () => {
     setOpen(false);
     setMode(null);
+    setClassRole(null);
     resetPlace();
   };
   const openChooser = () => {
@@ -114,6 +116,7 @@ export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
         return;
       }
       setData(loaded);
+      setClassRole(loaded.canCoach ? null : "attending");
       setMode(next);
     });
   };
@@ -377,6 +380,16 @@ export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
                   </button>
                 )}
                 {mode === "place" && (placeStep === "identity" ? placeIdentity : placeDetails)}
+                {mode === "class" && data?.canCoach && !classRole && (
+                  <div className="globaladd-role">
+                    <h2 id="globaladd-title">Add a class</h2>
+                    <p>Are you coaching or attending?</p>
+                    <div className="globaladd-role-options">
+                      <button type="button" onClick={() => setClassRole("coaching")}>Coaching</button>
+                      <button type="button" onClick={() => setClassRole("attending")}>Attending</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div
@@ -403,7 +416,7 @@ export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
                 </div>
               </div>
             )}
-            {data && mode === "class" && (
+            {data && mode === "class" && classRole && (
               <Adder
                 studios={data.studios}
                 templates={data.templates}
@@ -411,8 +424,11 @@ export function GlobalAdd({ floating = false }: { floating?: boolean } = {}) {
                 lastUsed={data.lastUsed}
                 subsCount={0}
                 firstPublish={false}
-                personal={{ canCoach: data.canCoach, event: false }}
-                onClose={() => setMode(null)}
+                personal={classRole === "attending" ? { canCoach: false, event: false } : undefined}
+                onClose={() => {
+                  setMode(null);
+                  setClassRole(null);
+                }}
                 onToast={toast}
                 onPublished={(message) => {
                   close();
