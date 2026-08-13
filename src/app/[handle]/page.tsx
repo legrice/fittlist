@@ -9,6 +9,7 @@ import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { PublicProfileView } from "@/components/PublicProfileView";
 import { MemberProfileView } from "@/components/MemberProfileView";
+import { jsonLd, profileJsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -69,11 +70,18 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     }
   }
   const isOwner = viewerId === user.id;
+  const structuredData = profileJsonLd(user, siteOrigin());
 
   // A member has the same kind of link and no schedule behind it, so their
   // profile is its own, much smaller page.
   if (user.kind === "fan") {
-    return <MemberProfileView user={user} isOwner={isOwner} viewerId={viewerId} tab="schedule" from={from} />;
+    return <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
+      <MemberProfileView user={user} isOwner={isOwner} viewerId={viewerId} tab="schedule" from={from} />
+    </>;
   }
-  return <PublicProfileView user={user} isOwner={isOwner} tab="schedule" from={from} />;
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
+    <PublicProfileView user={user} isOwner={isOwner} tab="schedule" from={from} />
+  </>;
 }

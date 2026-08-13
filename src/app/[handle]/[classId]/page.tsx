@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { viewerLook } from "@/lib/look";
 import { classDetail } from "@/app/actions/classdetail";
 import { ClassPage } from "@/components/ClassPage";
+import { classJsonLd, jsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   return {
     title,
     description,
+    alternates: { canonical: `${siteOrigin()}/${handle}/${c.id}` },
     openGraph: {
       title,
       description,
@@ -91,6 +93,7 @@ export default async function EventPage({ params, searchParams }: Props) {
 
   return (
     <div className="pub evpage" data-theme={user.theme} data-mode={await viewerLook()}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(classJsonLd(detail, siteOrigin())) }} />
       <ClassPage
         detail={detail}
         backHref={backHref}

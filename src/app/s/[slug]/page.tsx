@@ -6,6 +6,7 @@ import { siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { findStudio, StudioView } from "@/components/StudioView";
+import { jsonLd, studioJsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -68,5 +69,8 @@ export default async function StudioPage({ params, searchParams }: Props) {
       }
     }
   }
-  return <StudioView slug={slug} tab="auto" from={from} />;
+  return <>
+    {s ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(studioJsonLd(s, siteOrigin())) }} /> : null}
+    <StudioView slug={slug} tab="auto" from={from} />
+  </>;
 }
