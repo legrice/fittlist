@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { geocodeAddress } from "@/lib/geocode";
@@ -11,7 +11,49 @@ import { getSessionUserId } from "@/lib/session";
 import { PLACE_KINDS, STUDIO_TYPES, type PlaceKind } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
 
-export type StudioDto = { id: string; seq: number; name: string; address: string };
+export type StudioDto = {
+  id: string;
+  seq: number;
+  slug?: string | null;
+  name: string;
+  address: string;
+};
+
+export type StudioMatch = Required<Pick<StudioDto, "id" | "seq" | "name" | "address">> & {
+  slug: string | null;
+};
+
+// Names in a shared directory need a comparison form that ignores the tiny
+// differences people naturally type on a phone (spaces, punctuation and &).
+const studioKey = (value: string) =>
+  value
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+
+const studioMatch = (row: typeof schema.studios.$inferSelect): StudioMatch => ({
+  id: row.id,
+  seq: row.seq,
+  slug: row.slug,
+  name: row.name,
+  address: row.address,
+});
+
+/** Lightweight typeahead for every place-creation door. */
+export async function findStudioMatches(queryRaw: string): Promise<StudioMatch[]> {
+  const userId = await getSessionUserId();
+  const query = queryRaw.trim();
+  if (!userId || query.length < 2) return [];
+  const db = await getDb();
+  const rows = await db
+    .select()
+    .from(schema.studios)
+    .where(ilike(schema.studios.name, `%${query}%`))
+    .orderBy(asc(schema.studios.name))
+    .limit(5);
+  return rows.map(studioMatch);
+}
 
 const slugify = (s: string) =>
   s
@@ -44,7 +86,7 @@ export async function createStudio(
   nameRaw: string,
   addressRaw: string,
   kindRaw: PlaceKind = "studio",
-): Promise<{ ok: boolean; studio?: StudioDto; error?: string }> {
+): Promise<{ ok: boolean; studio?: StudioDto; duplicate?: StudioMatch; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const name = nameRaw.trim();
@@ -53,6 +95,17 @@ export async function createStudio(
   if (!address) return { ok: false, error: "Enter the location." };
   const placeKind = PLACE_KINDS.includes(kindRaw) ? kindRaw : "studio";
   const db = await getDb();
+  // Autocomplete is guidance; this is the actual guard. Keeping it here means
+  // the global composer, class adder and profile settings cannot bypass it.
+  const existing = await db.select().from(schema.studios).orderBy(asc(schema.studios.name));
+  const duplicate = existing.find((row) => studioKey(row.name) === studioKey(name));
+  if (duplicate) {
+    return {
+      ok: false,
+      duplicate: studioMatch(duplicate),
+      error: `${duplicate.name} is already on FittList.`,
+    };
+  }
   // A studio is a place, and a place has a point: one lookup at save,
   // best-effort, null on a miss.
   const geo = await geocodeAddress(address);
@@ -70,7 +123,13 @@ export async function createStudio(
     .returning();
   return {
     ok: true,
-    studio: { id: studio.id, seq: studio.seq, name: studio.name, address: studio.address },
+    studio: {
+      id: studio.id,
+      seq: studio.seq,
+      slug: studio.slug,
+      name: studio.name,
+      address: studio.address,
+    },
   };
 }
 
@@ -234,7 +293,7 @@ export async function myCoachStudios(): Promise<StudioDto[]> {
     .from(schema.studios)
     .where(inArray(schema.studios.id, picks.map((p) => p.studioId)));
   return rows
-    .map((s) => ({ id: s.id, seq: s.seq, name: s.name, address: s.address }))
+    .map((s) => ({ id: s.id, seq: s.seq, slug: s.slug, name: s.name, address: s.address }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -242,7 +301,7 @@ export async function myCoachStudios(): Promise<StudioDto[]> {
 export async function listAllStudios(): Promise<StudioDto[]> {
   const db = await getDb();
   const rows = await db.select().from(schema.studios).orderBy(asc(schema.studios.name));
-  return rows.map((s) => ({ id: s.id, seq: s.seq, name: s.name, address: s.address }));
+  return rows.map((s) => ({ id: s.id, seq: s.seq, slug: s.slug, name: s.name, address: s.address }));
 }
 
 export async function addCoachStudio(studioId: string): Promise<{ ok: boolean; error?: string }> {
