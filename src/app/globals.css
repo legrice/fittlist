@@ -422,6 +422,18 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wiz > .pad > p { font-size: 15px; color: var(--ol); line-height: 1.5; margin-bottom: 22px; }
 .wiz .flabel { margin-top: 16px; }
 .wiz .flabel:first-of-type { margin-top: 0; }
+.wiz .btn.si { background: var(--si); color: #fff; }
+.wiz .btn.si:disabled { background: color-mix(in srgb, var(--si) 32%, var(--card)); color: #fff; opacity: 1; }
+.wizlocate { width: auto; margin-bottom: 22px; background: var(--card); }
+.wizcategories { margin-bottom: 22px; }
+.wizcategories select.editinput { appearance: auto; background: var(--card); }
+.wizother { margin-top: 10px; }
+.wizcategory-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; max-height: 176px; overflow-y: auto; }
+.wizcategory {
+  padding: 9px 12px; border-radius: 10px; background: var(--card);
+  color: var(--ink); font-size: 13.5px; font-weight: 600;
+}
+.wizcategory.on { background: var(--si-soft); color: var(--si); }
 
 /* photo step */
 .wizphoto { display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 22px 0 6px; }
@@ -478,6 +490,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 
 /* The wizard's one big call, with air above it. */
 .wizfoot { margin-top: 26px; }
+.wizfoot .wizskip { display: block; margin: 14px auto 0; padding: 6px 12px; }
 
 /* Follow a few coaches: white rows with the directory's own pill. */
 .obfollist { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }

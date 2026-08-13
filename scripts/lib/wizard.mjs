@@ -1,8 +1,8 @@
 // Getting through the setup wizard in a test.
 //
-// The wizard is one shape for everyone now: Do you teach (the role question
-// moved here from the signup sheet), About you (the city is the one required
-// field), then Follow a few coaches (always drawn, empty state and all, so
+// The wizard is one shape for everyone now: role, required city, About you,
+// then nearby coaches with photos and a live schedule (always drawn, empty
+// state and all, so
 // this walk never has to guess whether the step exists). Every suite that
 // wants a set-up account goes through here rather than each one learning the
 // wizard's shape again.
@@ -13,7 +13,11 @@ export async function skipSetup(page, city = "Jersey City, NJ", teach = true) {
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.locator("#wLocation").fill(city);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await page.getByText("Follow a few coaches").waitFor();
+  if (teach) {
+    await page.locator("#wPrimary").selectOption("Strength");
+  }
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByText("Follow a few coaches near you").waitFor();
   await page.getByRole("button", { name: /find people later/ }).click();
   // Wait for the wizard to actually be done, not just for the last click to
   // land: finishing saves the profile, flips the teaching switch, writes

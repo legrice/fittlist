@@ -198,11 +198,13 @@ export async function updateProfile(input: {
   // which also took the "Request private session" button off their page.
   if (input.certifications !== undefined) set.certifications = cleanChips(input.certifications, 40, 12);
   if (input.highlights !== undefined) set.highlights = cleanChips(input.highlights, 60, 6);
-  // From the curated list only. Anything else is somebody's typo, and a filter
-  // built on typos is a filter nobody can use.
+  // Curated choices make most filtering consistent. Onboarding also offers
+  // one intentional write-in for a coach whose work is not represented yet;
+  // keep it short and normalized rather than throwing their category away.
   if (input.disciplines !== undefined)
     set.disciplines = [...new Set(input.disciplines)]
-      .filter((d) => (STUDIO_TYPES as readonly string[]).includes(d))
+      .map((d) => String(d).trim().replace(/\s+/g, " ").slice(0, 40))
+      .filter(Boolean)
       .slice(0, 4);
   if (input.availability !== undefined) {
     set.availability =

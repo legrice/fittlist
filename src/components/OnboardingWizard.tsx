@@ -4,12 +4,25 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LocationPicker } from "@/components/LocationPicker";
 import { updateProfile } from "@/app/actions/profile";
-import { completeOnboarding, suggestedCoaches } from "@/app/actions/onboarding";
+import { cityFromCoordinates, completeOnboarding, suggestedCoaches } from "@/app/actions/onboarding";
 import { setTeaching } from "@/app/actions/auth";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { takeAfterAuth } from "@/lib/afterauth";
 import { readPhotoPair } from "@/lib/photo";
 import type { GeoPlace } from "@/lib/geocode";
+import { STUDIO_TYPES } from "@/lib/studio";
+
+const COACH_TITLES: Record<string, string> = {
+  Yoga: "Yoga teacher",
+  Strength: "Strength coach",
+  Pilates: "Pilates instructor",
+  Boxing: "Boxing coach",
+  Cycling: "Cycling instructor",
+  "Run club": "Run coach",
+  Dance: "Dance instructor",
+  Mobility: "Mobility coach",
+  "Personal training": "Personal trainer",
+};
 
 /** Somebody worth following on the way in: loaded when the follow step
  *  opens, so the place picked on the page before can rank them by
@@ -25,15 +38,18 @@ export type SuggestedCoach = {
 };
 
 // The post-signup wizard, one shape for everyone, by Matt's call. The
-// username came first (AuthFlow's claim step), and then three pages here:
+// username came first (AuthFlow's claim step), and then four pages here:
 //
 //   1. Do you teach? The role question moved here from the signup sheet:
 //      asking before the account exists made the very first screen a form,
 //      and the answer is one tap that can change later in settings anyway
 //      (setTeaching is the same switch either way).
-//   2. About you: photo, tagline, a line or two, and the one required
-//      field, the city. Skippable except the city, which Discover needs.
-//   3. Follow a few coaches: the act the whole member side waits on,
+//   2. Location: a required city on its own, because every nearby result
+//      depends on it. The browser can fill it after permission.
+//   3. About you: coaches first identify what they teach, then everyone can
+//      add a photo and a few words. The details are optional, the coach's
+//      primary category is not.
+//   4. Follow a few local coaches: the act the whole member side waits on,
 //      offered while the app is still empty. Skippable in as many words.
 //
 // The studio-picking step is gone: publishing a class already writes the
@@ -56,7 +72,7 @@ export function OnboardingWizard({
   location: string;
 }) {
   const router = useRouter();
-  const TOTAL = 3;
+  const TOTAL = 4;
   const [step, setStep] = useState(1);
   // Null until they answer: the Continue under the cards stays off, because
   // the whole point of moving the question here is that it gets answered.
@@ -69,10 +85,15 @@ export function OnboardingWizard({
   // The picked place's point. Typed-but-unpicked text saves too (the server
   // geocodes it best-effort); the point is what ranks the next page.
   const [pPlace, setPPlace] = useState<GeoPlace | null>(null);
+  const [primaryCategory, setPrimaryCategory] = useState("");
+  const [otherPrimary, setOtherPrimary] = useState("");
+  const [otherCategories, setOtherCategories] = useState<string[]>([]);
   const [suggested, setSuggested] = useState<SuggestedCoach[] | null>(null);
   const [followed, setFollowed] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [skipWarning, setSkipWarning] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pickPhoto = (file: File) =>
@@ -104,6 +125,9 @@ export function OnboardingWizard({
         website: "",
         photo: pPhoto,
         photoThumb: pThumb,
+        disciplines: teach
+          ? [primaryCategory === "Other" ? otherPrimary : primaryCategory, ...otherCategories]
+          : [],
       });
       if (!res.ok) {
         setError(res.error ?? "Couldn't save. Try again.");
@@ -118,18 +142,51 @@ export function OnboardingWizard({
     });
   };
 
-  const toStep3 = () => {
+  const saveLocation = () => {
     setError("");
     if (!pLocation.trim()) {
       setError("Add your city first. It's how people find you.");
       return;
     }
     setStep(3);
-    // Loaded here rather than with the page, so the place just picked can
-    // put the nearest coaches first.
-    suggestedCoaches(pPlace ? { lat: pPlace.lat, lng: pPlace.lng } : null)
+  };
+
+  const toFollowStep = () => {
+    setError("");
+    const primary = primaryCategory === "Other" ? otherPrimary.trim() : primaryCategory;
+    if (teach && !primary) {
+      setError("Choose the primary category you teach.");
+      return;
+    }
+    if (teach) setPTitle(COACH_TITLES[primary] ?? primary);
+    setSkipWarning(false);
+    setStep(4);
+    suggestedCoaches(pLocation)
       .then(setSuggested)
       .catch(() => setSuggested([]));
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation || locating) return;
+    setError("");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        cityFromCoordinates(pos.coords.latitude, pos.coords.longitude)
+          .then((res) => {
+            if (res.ok && res.location) {
+              setPLocation(res.location);
+              setPPlace({ label: res.location, lat: res.lat!, lng: res.lng! });
+            } else setError("We couldn't find your city. Type it below instead.");
+          })
+          .finally(() => setLocating(false));
+      },
+      () => {
+        setLocating(false);
+        setError("Location access didn't work. Type your city below instead.");
+      },
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
   };
 
   const toggleFollow = (c: SuggestedCoach) => {
@@ -160,18 +217,11 @@ export function OnboardingWizard({
               <span key={i} className={`wizdot${i + 1 === step ? " on" : ""}${i + 1 < step ? " done" : ""}`} />
             ))}
           </div>
-          {/* Only the middle page is skippable: the role question is the
-              page, and the follow page carries its skip in its own button. */}
-          {step === 2 && (
-            <button className="wizskip" onClick={toStep3} disabled={pending}>
-              Skip for now
-            </button>
-          )}
         </div>
 
         {step === 1 && (
           <>
-            <h1>Do you teach?</h1>
+            <h1>How do you use fitness?</h1>
             <p>You can change this later in your profile.</p>
             <button
               type="button"
@@ -201,8 +251,73 @@ export function OnboardingWizard({
 
         {step === 2 && (
           <>
+            <h1>Where are you based?</h1>
+            <p>Your city helps us show you coaches and classes nearby.</p>
+            <button className="btn ghost wizlocate" type="button" onClick={useMyLocation} disabled={locating}>
+              {locating ? "Finding your city…" : "Use my location"}
+            </button>
+            <label className="flabel" htmlFor="wLocation">City and state</label>
+            <LocationPicker
+              id="wLocation"
+              value={pLocation}
+              onChange={(v, place) => {
+                setPLocation(v);
+                setPPlace(place);
+              }}
+            />
+            <div className="wizfoot">
+              <button className="btn si" onClick={saveLocation} disabled={pending || !pLocation.trim()}>
+                Continue
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
             <h1>About you.</h1>
-            <p>A face, a line, and your city. All of it can change later.</p>
+            <p>{teach ? "What do you teach? Then add a face and a few words." : "Add a face and a few words so people know who they're making plans with."}</p>
+            {teach && (
+              <div className="wizcategories">
+                <label className="flabel" htmlFor="wPrimary">Primary category</label>
+                <select
+                  id="wPrimary"
+                  className="editinput"
+                  value={primaryCategory}
+                  onChange={(e) => setPrimaryCategory(e.target.value)}
+                >
+                  <option value="">Choose one</option>
+                  {STUDIO_TYPES.map((type) => <option key={type} value={type}>{COACH_TITLES[type] ?? type}</option>)}
+                  <option value="Other">Other</option>
+                </select>
+                {primaryCategory === "Other" && (
+                  <input
+                    className="editinput wizother"
+                    value={otherPrimary}
+                    maxLength={40}
+                    placeholder="How would you describe what you teach?"
+                    onChange={(e) => setOtherPrimary(e.target.value)}
+                  />
+                )}
+                <span className="flabel">Other categories <span>· optional</span></span>
+                <div className="wizcategory-grid">
+                  {STUDIO_TYPES.filter((type) => type !== primaryCategory).map((type) => {
+                    const on = otherCategories.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        className={`wizcategory${on ? " on" : ""}`}
+                        aria-pressed={on}
+                        onClick={() => setOtherCategories((cur) => on ? cur.filter((x) => x !== type) : cur.length < 3 ? [...cur, type] : cur)}
+                      >
+                        {type}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="wizphoto wizphoto-row">
               {pPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -241,14 +356,14 @@ export function OnboardingWizard({
               />
             </div>
             <label className="flabel" htmlFor="wTitle">
-              {teach ? "Title" : "Tagline"} <span>· optional</span>
+              {teach ? "Profile title" : "Tagline"} <span>· optional</span>
             </label>
             <input
               id="wTitle"
               className="editinput"
               value={pTitle}
               maxLength={80}
-              placeholder={teach ? "Strength coach" : "Lifts heavy, runs slow"}
+              placeholder={teach ? (COACH_TITLES[primaryCategory] ?? "Strength coach") : "Lifts heavy, runs slow"}
               onChange={(e) => setPTitle(e.target.value)}
             />
             <label className="flabel" htmlFor="wAbout">
@@ -267,31 +382,25 @@ export function OnboardingWizard({
               }
               onChange={(e) => setPAbout(e.target.value)}
             />
-            {/* The one field here that isn't optional. Discover is organised
-                by city, so a profile without one can't be browsed to. */}
-            <label className="flabel" htmlFor="wLocation">
-              Location <span>· city and state, required</span>
-            </label>
-            <LocationPicker
-              id="wLocation"
-              value={pLocation}
-              onChange={(v, place) => {
-                setPLocation(v);
-                setPPlace(place);
-              }}
-            />
             <div className="wizfoot">
-              <button className="btn si" onClick={toStep3} disabled={pending}>
+              <button
+                className="btn si"
+                onClick={toFollowStep}
+                disabled={pending || (!!teach && (!primaryCategory || (primaryCategory === "Other" && !otherPrimary.trim())))}
+              >
                 Continue
+              </button>
+              <button className="wizskip" type="button" onClick={() => setSkipWarning(true)} disabled={pending}>
+                Skip for now
               </button>
             </div>
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
-            <h1>Follow a few coaches.</h1>
-            <p>Their weeks land in This Week. Skip if you&rsquo;d rather not.</p>
+            <h1>Follow a few coaches near you.</h1>
+            <p>Coaches in {pLocation.split(",")[0]} with classes coming up.</p>
             {suggested !== null && suggested.length === 0 && (
               <p className="microcopy">Nobody to suggest yet. You&rsquo;ll find people in Discover.</p>
             )}
@@ -346,6 +455,16 @@ export function OnboardingWizard({
         )}
 
         {error && <div className="errorcopy">{error}</div>}
+        {skipWarning && (
+          <div className="sheet-scrim" onClick={(e) => e.target === e.currentTarget && setSkipWarning(false)}>
+            <section className="sheet confirmsheet" role="dialog" aria-modal="true" aria-labelledby="skip-profile-title">
+              <h2 id="skip-profile-title">Profiles help people find you</h2>
+              <p>A photo and a few words make your profile feel local and real. It can even be your cat for now. You can always finish it later.</p>
+              <button className="btn si" type="button" onClick={() => setSkipWarning(false)}>Add my details</button>
+              <button className="confirm-keep" type="button" onClick={toFollowStep}>Skip anyway</button>
+            </section>
+          </div>
+        )}
       </div>
     </section>
   );

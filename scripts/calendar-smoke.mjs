@@ -30,11 +30,13 @@ await p.getByRole("button", { name: "Claim it" }).click();
 // look at, which is the quietest way for a check to stop meaning anything.
 await p.locator(".teachcard", { hasText: "Yes, I teach" }).click();
 await p.getByRole("button", { name: "Continue", exact: true }).click();
-await p.locator("#wTitle").fill("Strength & Mobility Coach");
-await p.locator("#wAbout").fill("Kettlebells, barbells, and getting people moving well.");
 await p.locator("#wLocation").fill("Montclair, NJ");
 await p.getByRole("button", { name: "Continue", exact: true }).click();
-await p.getByText("Follow a few coaches").waitFor();
+await p.locator("#wPrimary").selectOption("Strength");
+await p.locator("#wTitle").fill("Strength & Mobility Coach");
+await p.locator("#wAbout").fill("Kettlebells, barbells, and getting people moving well.");
+await p.getByRole("button", { name: "Continue", exact: true }).click();
+await p.getByText("Follow a few coaches near you").waitFor();
 await p.getByRole("button", { name: /find people later/ }).click();
 await p.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 });
 

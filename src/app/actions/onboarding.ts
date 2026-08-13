@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { avatarColor } from "@/lib/avatar";
-import { distanceKm } from "@/lib/geocode";
+import { publicSchedules } from "@/lib/coachweek";
+import { runsOn, todayIso, weekDates } from "@/lib/format";
 
 // Replace the coach's "I work here" studio set with the given ids (validated
 // against the shared directory). Used by the setup wizard's studios step.
@@ -57,7 +58,7 @@ export async function completeOnboarding(): Promise<{ ok: boolean }> {
  *  Coaches without coordinates rank after the near ones (photos first),
  *  because an unranked page beats an absent one. */
 export async function suggestedCoaches(
-  near: { lat: number; lng: number } | null,
+  city: string,
 ): Promise<
   { id: string; handle: string; name: string; photo: string | null; color: string; sub: string }[]
 > {
@@ -75,17 +76,27 @@ export async function suggestedCoaches(
         isNotNull(schema.users.handle),
       ),
     );
-  const listable = rows.filter((c) => !!c.handle && c.discoverable !== false);
-  const dist = (c: (typeof rows)[number]) =>
-    near && typeof c.locationLat === "number" && typeof c.locationLng === "number"
-      ? distanceKm(near, { lat: c.locationLat, lng: c.locationLng })
-      : Infinity;
-  listable.sort((a, b) => {
-    const da = dist(a);
-    const db2 = dist(b);
-    if (da !== db2) return da - db2;
-    return Number(!!b.photo) - Number(!!a.photo) || a.name.localeCompare(b.name);
-  });
+  const cityKey = city.split(",")[0]?.trim().toLowerCase();
+  const local = rows.filter(
+    (c) =>
+      !!c.handle &&
+      c.discoverable !== false &&
+      !!(c.photoThumb ?? c.photo) &&
+      !!cityKey &&
+      c.location?.split(",")[0]?.trim().toLowerCase() === cityKey,
+  );
+  const schedules = await publicSchedules(local);
+  const dates = weekDates(0, todayIso());
+  const activeIds = new Set<string>();
+  for (const c of schedules) {
+    if (!c.isPublic) continue;
+    for (const iso of dates) {
+      const d = new Date(`${iso}T00:00:00Z`);
+      if (runsOn(c, iso, (d.getUTCDay() + 6) % 7)) activeIds.add(c.ownerUserId);
+    }
+  }
+  const listable = local.filter((c) => activeIds.has(c.id));
+  listable.sort((a, b) => a.name.localeCompare(b.name));
   return listable.slice(0, 6).map((c) => ({
     id: c.id,
     handle: c.handle!,
@@ -94,4 +105,31 @@ export async function suggestedCoaches(
     color: avatarColor(c),
     sub: c.title?.trim() || c.disciplines.slice(0, 2).join(", "),
   }));
+}
+
+/** Turn the browser's coordinates into the same city label LocationPicker
+ * stores. Best effort: the manual picker remains available if lookup fails. */
+export async function cityFromCoordinates(
+  lat: number,
+  lng: number,
+): Promise<{ ok: boolean; location?: string; lat?: number; lng?: number }> {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { ok: false };
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`,
+      { headers: { "User-Agent": "fittlist.co (hello@fittlist.co)" }, signal: AbortSignal.timeout(3000) },
+    );
+    if (!res.ok) return { ok: false };
+    const data = (await res.json()) as {
+      address?: { city?: string; town?: string; village?: string; municipality?: string; state?: string; "ISO3166-2-lvl4"?: string; country?: string };
+    };
+    const a = data.address;
+    const city = a?.city ?? a?.town ?? a?.village ?? a?.municipality;
+    if (!city) return { ok: false };
+    const stateCode = a?.["ISO3166-2-lvl4"]?.replace(/^US-/, "");
+    const region = stateCode || a?.state || a?.country;
+    return { ok: true, location: region ? `${city}, ${region}` : city, lat, lng };
+  } catch {
+    return { ok: false };
+  }
 }
