@@ -13,6 +13,7 @@ export function AppHeader({
   unread = 0,
   home = "/week",
   nav,
+  settings = false,
 }: {
   /** Notifications and unread message threads share one Updates badge. */
   unread?: number;
@@ -23,6 +24,8 @@ export function AppHeader({
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
   nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string; profileHref?: string };
+  /** Settings is contextual to your own profile rather than global chrome. */
+  settings?: boolean;
 }) {
   return (
     <div className="brandbar">
@@ -49,7 +52,7 @@ export function AppHeader({
           match={["/updates", "/inbox"]}
           badge={unread > 0 ? <span className="inboxdot">{unread > 9 ? "9+" : unread}</span> : undefined}
         />
-        <SettingsGear header />
+        {settings && <SettingsGear header />}
       </div>
     </div>
   );
