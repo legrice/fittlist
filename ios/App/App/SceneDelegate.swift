@@ -9,7 +9,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let headerView = UIView()
     private let tabBar = UITabBar()
     private let tabIDs = ["following", "search", "schedule", "share", "you"]
-    private let fallbackRoutes = ["/feed", "/search", "/calendar", "/coachshare", "/you"]
+    private let fallbackRoutes = ["/feed", "/discover", "/calendar", "/coachshare", "/you"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
@@ -142,7 +142,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     @objc private func openHome() { navigate(tabID: "following", fallback: "/feed") }
-    @objc private func openSearch() { navigate(tabID: "search", fallback: "/search") }
+    @objc private func openSearch() { navigate(tabID: "search", fallback: "/discover") }
     @objc private func openUpdates() { navigate(fallback: "/updates") }
     @objc private func openSettings() { navigate(fallback: "/settings") }
 

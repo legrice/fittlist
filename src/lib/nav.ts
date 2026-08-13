@@ -13,8 +13,7 @@ export type NavItem = {
 };
 
 /**
- * Five durable places, with Discover pointing at the same coach search as
- * the header magnifier.
+ * Five durable places, with Discover pointing at the browse directory.
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
@@ -40,7 +39,7 @@ export function navTabs(
 ): NavItem[] {
   return [
     { id: "following", href: "/feed", icon: "group", label: "Following" },
-    { id: "search", href: "/search", icon: "search", label: "Discover" },
+    { id: "search", href: "/discover", icon: "search", label: "Discover" },
     {
       id: "schedule" as const,
       href: scheduleHref ?? "/calendar",
@@ -70,11 +69,9 @@ export function navTabs(
  *  still belongs to one (your own profile) passes `active` explicitly. */
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
-  // Discover is not a tab any more: it is the search button on Following and
-  // the plus at the end of the rail, both opening the same sheet. The routes
-  // stay reachable, and light Following, because that is where they open from.
-  if (pathname.startsWith("/discover")) return "following";
-  // Search is its own tab now, by Matt's call.
+  // Discover is the directory tab. Its focused search screen remains part of
+  // the same destination, so the tab stays lit while somebody is typing.
+  if (pathname.startsWith("/discover")) return "search";
   if (pathname.startsWith("/search")) return "search";
   if (pathname.startsWith("/feed")) return "following";
   // Calendar is a coach tool. /week is retained only as an old address.
