@@ -25,9 +25,9 @@ export type DiscoverFeed = {
   cats: string[];
   follows: number;
   today: string;
-  /** The This week rail: the people you follow, coaches and members mixed,
-   *  each carrying the freshness ring's state. Only people whose week was
-   *  touched in the last seven days make it on at all. */
+  /** The This week rail: everyone you follow, coaches and members mixed,
+   *  each carrying the freshness ring's state. People with something coming
+   *  up lead; empty weeks remain visible at the end. */
   myRail: RailPerson[];
   /** The rails under the schedule: every studio, the viewer's city first,
    *  and every listable coach with the viewer's follow state riding along. */
@@ -225,15 +225,16 @@ export async function buildDiscoverFeed(
   for (const i of items) if (i.classType) catCount.set(i.classType, (catCount.get(i.classType) ?? 0) + 1);
   const cats = [...catCount.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
 
-  // The This week rail: the people you follow who actually have something
-  // to share, by Matt's call. A face is only there when tapping it opens
-  // onto a published coaching schedule. Private attendance is not part of
-  // the relationship; the person teaching soonest leads.
+  // The This Week rail is the follow relationship itself, not a list of
+  // schedules that happen to be populated today. People teaching soonest
+  // lead; an empty week moves to the tail rather than making the person
+  // disappear.
   const peekedByTrainer = new Map(followRows.map((r) => [r.trainerUserId, r.peekedAt]));
   const followedUsers = followed.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, followed))
     : [];
-  const followedCoaches = followedUsers.filter((u) => u.kind !== "fan" && u.kind !== "gym");
+  const followedPeople = followedUsers.filter((u) => u.kind !== "gym" && !!u.handle);
+  const followedCoaches = followedPeople.filter((u) => u.kind !== "fan");
   const [theirClasses, theirSchedules] = await Promise.all([
     followed.length
       ? db
@@ -249,8 +250,8 @@ export async function buildDiscoverFeed(
     const at = r.createdAt?.getTime() ?? 0;
     if (at > (activityAt.get(r.userId) ?? 0)) activityAt.set(r.userId, at);
   }
-  // When their next teaching occurrence is. No entry means the face stays
-  // off the rail, because a circle that opens empty teaches people to stop.
+  // When their next teaching occurrence is. No entry means they sort after
+  // everyone with an active week.
   const nextAt = new Map<string, string>();
   const consider = (userId: string, at: string) => {
     const had = nextAt.get(userId);
@@ -268,8 +269,7 @@ export async function buildDiscoverFeed(
       consider(c.ownerUserId, `${iso}T${String(timeToMinutes(c.startTime)).padStart(4, "0")}`);
     }
   }
-  const myRail: RailPerson[] = followedCoaches
-    .filter((u) => nextAt.has(u.id))
+  const myRail: RailPerson[] = followedPeople
     .map((u) => {
       const peeked = peekedByTrainer.get(u.id)?.getTime() ?? 0;
       return {
@@ -279,12 +279,15 @@ export async function buildDiscoverFeed(
         photo: u.photoThumb ?? u.photo,
         color: avatarColor(u),
         fresh: (activityAt.get(u.id) ?? 0) > peeked,
-        nextAt: nextAt.get(u.id)!,
+        nextAt: nextAt.get(u.id) ?? null,
       };
     })
-    // Soonest first, by Matt's call: the face in front is the person whose
-    // next thing is nearest.
-    .sort((a, b) => (a.nextAt < b.nextAt ? -1 : a.nextAt > b.nextAt ? 1 : 0));
+    .sort((a, b) => {
+      if (a.nextAt && b.nextAt && a.nextAt !== b.nextAt) return a.nextAt < b.nextAt ? -1 : 1;
+      if (a.nextAt && !b.nextAt) return -1;
+      if (!a.nextAt && b.nextAt) return 1;
+      return a.name.localeCompare(b.name);
+    });
 
   // Studios near you: every studio in the directory, the viewer's own city
   // leading. "Closest" without asking for a pin on arrival: the city on

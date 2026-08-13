@@ -34,7 +34,7 @@ export type RailPerson = {
   /** Their week changed since you last opened it: the ring is orange. */
   fresh: boolean;
   /** When their next thing is, for the soonest-first order. */
-  nextAt: string;
+  nextAt: string | null;
 };
 
 /** A tile on the Studios near you rail: a rectangle, because a place is a
@@ -132,6 +132,7 @@ export function FollowingScreen({
   cats,
   todayIso,
   meId,
+  myRail,
   meKind,
   meFace,
   mode = "home",
@@ -276,11 +277,12 @@ export function FollowingScreen({
     [items, f, geo, isHome, coachFilter],
   );
 
-  const coachOptions = useMemo(() => {
-    const ids = new Set(items.map((item) => item.coachId));
-    return coaches.filter((coach) => ids.has(coach.id) && coach.id !== meId);
-  }, [coaches, items, meId]);
-  const selectedCoach = coachFilter && coachFilter !== SELF_FILTER ? coachById.get(coachFilter) ?? null : null;
+  const coachOptions = useMemo(
+    () => myRail.filter((person) => person.id !== meId),
+    [myRail, meId],
+  );
+  const railById = useMemo(() => new Map(myRail.map((person) => [person.id, person])), [myRail]);
+  const selectedCoach = coachFilter && coachFilter !== SELF_FILTER ? railById.get(coachFilter) ?? null : null;
   const selectedSelf = coachFilter === SELF_FILTER;
 
   // The rail of days: as far ahead as the feed itself looks, every day
@@ -564,7 +566,11 @@ export function FollowingScreen({
             {selectedSelf ? "Your classes this week" : `Classes with ${selectedCoach!.name.split(/\s+/)[0]}`}
           </span>
           <Link
-            href={selectedSelf ? (meKind === "coach" ? "/coachshare" : "/membershare") : `/${selectedCoach!.handle}?from=feed`}
+            href={selectedSelf
+              ? (meKind === "coach" ? "/coachshare" : "/membershare")
+              : selectedCoach?.handle
+                ? `/${selectedCoach.handle}?from=feed`
+                : "/feed"}
             className="feedfilter-link"
           >
             {selectedSelf ? "Share your week" : "View profile"} <Icon name="chevron_right" size={17} />
