@@ -79,116 +79,72 @@ export function PlanSheet({
   };
 
   return (
-    <div className="classoverlay">
-      <button className="ovcircle ovcircle-back" aria-label="Back" onClick={onClose}>
-        <Icon name="arrow_back" size={21} />
-      </button>
+    <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget && !pending) onClose(); }}>
+      <div className="sheet clspeek clsfull">
+        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={20} />
+        </button>
+        {p?.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="clsfull-photo" src={p.image} alt="" />
+        ) : (
+          <span className="clspeek-grab" aria-hidden="true" />
+        )}
 
-      {/* Scrolls inside, like the class overlay: the overlay's blur makes it
-          the containing block for fixed children, so the scroll has to live a
-          layer in for the pill to stay put. */}
-      <div className="classoverlay-scroll">
-      {missing ? (
-        <div className="classoverlay-body">
-          <p className="lead" style={{ textAlign: "center", marginTop: "30vh" }}>
+        {missing ? (
+          <p className="lead" style={{ textAlign: "center", margin: "56px 0" }}>
             That class isn&rsquo;t there any more.
           </p>
-        </div>
-      ) : !p ? (
-        <div className="classoverlay-body" aria-hidden="true" />
-      ) : (
-        <div className="classoverlay-body">
-          {p.image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="classoverlay-img" src={p.image} alt="" />
-          )}
-          {p.classType && <span className="evtype classoverlay-type">{p.classType}</span>}
-          <h2 className="classoverlay-nm">{p.name}</h2>
-          {/* No coach row to tap through to: the person named here is a name
-              somebody typed, not an account. */}
-          {p.withWho.trim() && <p className="plansheet-who">with {p.withWho}</p>}
+        ) : p ? (
+          <>
+            {p.classType && <p className="clsfull-kick">{p.classType}</p>}
+            <h2 className="clspeek-nm">{p.name}</h2>
+            {p.withWho.trim() && <p className="plansheet-who">with {p.withWho}</p>}
 
-          <div className="evfacts classoverlay-facts">
-            <div className="evfact">
-              <Icon name="event" size={22} />
-              <span className="evfact-txt">
-                <span className="t">
-                  {p.nextIso ? fmtDateLong(p.nextIso) : `${p.dayLabel}s`}
+            <div className="clsfull-facts">
+              <div className="clsfull-fact">
+                <span className="clsfull-ic"><Icon name="calendar_today" size={22} /></span>
+                <span className="clsfull-txt">
+                  <span className="t">{p.nextIso ? fmtDateLong(p.nextIso) : `${p.dayLabel}s`}</span>
+                  <span className="s">
+                    {p.hm}<span className="ps-ap">{p.ap}</span> · {p.durationMin} min
+                    {p.specificDate ? "" : " · every week"}
+                  </span>
                 </span>
-                <span className="s">
-                  {p.hm}
-                  <span className="ps-ap">{p.ap}</span> · {p.durationMin} min
-                  {p.specificDate ? "" : " · every week"}
-                </span>
-              </span>
+              </div>
+              {where && (
+                <div className="clsfull-fact">
+                  <span className="clsfull-ic"><Icon name="place" size={22} /></span>
+                  <span className="clsfull-txt"><span className="t">{where}</span></span>
+                </div>
+              )}
             </div>
-            {where && (
-              <div className="evfact">
-                <Icon name="place" size={22} />
-                <span className="evfact-txt">
-                  <span className="t">{where}</span>
-                </span>
+
+            {p.description?.trim() && (
+              <div className="clsfull-about">
+                <h3>About</h3>
+                <p>{p.description}</p>
               </div>
             )}
-          </div>
 
-          {p.description?.trim() && (
-            <>
-              <h3 className="ovsec-h">About</h3>
-              <p className="evdesc classoverlay-desc">{p.description}</p>
-            </>
-          )}
-
-          {p.links.length > 0 && (
-            <>
-              <h3 className="ovsec-h">Booking</h3>
-              <div className="bookout-links">
-                {p.links.map((l, i) => (
-                  <a
-                    key={i}
-                    className="btn si evbtn"
-                    href={l.url}
-                    target="_blank"
-                    rel="noopener nofollow"
-                  >
-                    Book via {l.label}
-                    <Icon name="north_east" size={20} className="evbtn-ico" />
-                  </a>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Said plainly, because it is the thing people ask about a list
-              that looks like a schedule. */}
-          <p className="plansheet-note">
-            Yours alone. Nothing here is on a public page, and nobody else can see it.
-          </p>
-
-          {/* The small orange link the class editor's own delete wears. A
-              Going mark comes back from the coach's page, so that one takes
-              Undo in a toast; this row was typed by hand and nothing brings it
-              back, which is what earns the question. */}
-          <div className="dangerzone">
-            <button className="deletelink" onClick={() => setConfirm(true)}>
-              Remove from your calendar
-            </button>
-          </div>
-        </div>
-      )}
+            <p className="plansheet-note">
+              Yours alone. Nothing here is on a public page, and nobody else can see it.
+            </p>
+            <div className="clspeek-cta">
+              <button className="clspeek-btn ghost" onClick={() => onEdit(p)}>Edit</button>
+              <button className="clspeek-btn ghost" onClick={() => setConfirm(true)}>Remove</button>
+            </div>
+            <div className="clsfull-cta">
+              <button className="clsfull-btn share" onClick={() => setCardOpen(true)}>Share</button>
+              {p.links.length > 0 && (
+                <a className="clsfull-btn book" href={p.links[0].url} target="_blank" rel="noopener nofollow">
+                  Book
+                </a>
+              )}
+            </div>
+          </>
+        ) : null}
       </div>
-
-      {p && (
-        <div className="classoverlay-cta">
-          <button className="ovcta-btn" onClick={() => onEdit(p)}>
-            <Icon name="edit" size={19} /> Edit
-          </button>
-          <span className="ovcta-div" aria-hidden="true" />
-          <button className="ovcta-btn" onClick={() => setCardOpen(true)}>
-            <Icon name="auto_awesome" size={19} /> Share
-          </button>
-        </div>
-      )}
 
       {confirm && p && (
         <div

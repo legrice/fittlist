@@ -21,6 +21,8 @@ import { studioPath } from "@/lib/studio";
 
 export type ClassDetail = {
   id: string;
+  /** The signed-in viewer owns this class and may edit it. */
+  mine: boolean;
   handle: string;
   coachName: string;
   coachPhoto: string | null;
@@ -339,6 +341,7 @@ export async function classDetail(
 
   return {
     id: c.id,
+    mine: isOwner,
     handle: base,
     coachName: who.name,
     coachPhoto: who.photo,

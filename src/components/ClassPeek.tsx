@@ -85,6 +85,38 @@ export type PeekClass = {
   mine: boolean;
 };
 
+/** One adapter for every class door. Lists may paint this shape themselves
+ * for an instant first frame; routes and generic openers already have the
+ * complete detail and come through here so they cannot drift to another
+ * sheet treatment. */
+export function peekFromDetail(detail: ClassDetail): PeekClass {
+  return {
+    id: detail.id,
+    iso: detail.whenIso,
+    name: detail.name,
+    when: detail.dateLong,
+    time: detail.time,
+    studio: detail.studioName ?? detail.location,
+    studioHref: detail.studioHref,
+    coach: detail.coachName
+      ? {
+          name: detail.coachName,
+          handle: detail.coachHandle,
+          photo: detail.coachPhoto,
+          color: detail.coachColor,
+        }
+      : null,
+    base: detail.handle,
+    mine: detail.mine,
+    preview: {
+      description: detail.description,
+      classType: detail.classType,
+      links: detail.links,
+      studioAddress: detail.studioAddress,
+    },
+  };
+}
+
 /** The by-line: their face and their name, and a door to their week when they
  *  have a page. A coach with no handle is a gym's account, which is a place
  *  rather than a person and has nothing to open. */
@@ -119,6 +151,7 @@ export function ClassPeek({
   onChanged,
   onToast,
   allowWeekAdd = true,
+  initialDetail = null,
 }: {
   cls: PeekClass;
   onClose: () => void;
@@ -131,6 +164,8 @@ export function ClassPeek({
   /** Reading/discovery surfaces keep RSVP but do not ask members to maintain
    * a second calendar. Calendar-owned surfaces may still opt into Add. */
   allowWeekAdd?: boolean;
+  /** A direct route or generic opener has already loaded the class. */
+  initialDetail?: ClassDetail | null;
 }) {
   const router = useRouter();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -139,7 +174,7 @@ export function ClassPeek({
   // The depth, loaded only when somebody asks for it. Most taps are somebody
   // checking a time, and a photograph and a description are a lot to send for
   // that; this way the sheet is instant and the detail is one tap behind it.
-  const [full, setFull] = useState<ClassDetail | null>(null);
+  const [full, setFull] = useState<ClassDetail | null>(initialDetail);
   const [loading, setLoading] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   // The viewer's mark, locally, so the button flips on the tap rather than
@@ -260,7 +295,7 @@ export function ClassPeek({
   // booking door are the sheet rather than a second tap behind it. The
   // summary fields paint instantly from the row while it arrives.
   useEffect(() => {
-    if (!detailKey) return undefined;
+    if (!detailKey || (initialDetail?.id === cls.id && initialDetail.whenIso === cls.iso)) return undefined;
     let live = true;
     setLoading(true);
     classDetail(detailKey, cls.id, cls.iso)
@@ -270,7 +305,7 @@ export function ClassPeek({
       live = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cls.id, cls.iso, cls.base]);
+  }, [cls.id, cls.iso, cls.base, initialDetail]);
 
   // Sharing a class leads with its designed image. A caller can still own the
   // interaction, but the standard path opens the card preview and keeps the

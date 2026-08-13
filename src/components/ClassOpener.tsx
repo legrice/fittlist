@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ClassSheet } from "@/components/ClassSheet";
+import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
+import { ClassPeek, peekFromDetail } from "@/components/ClassPeek";
+import { Toast, useToast } from "@/components/Toast";
 
 // Turns a server-rendered list of class rows into rows that open a sheet.
 //
@@ -18,9 +20,8 @@ export function ClassOpener({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState<{ classId: string; iso?: string; base?: string } | null>(
-    null,
-  );
+  const [open, setOpen] = useState<ClassDetail | null>(null);
+  const [toastMsg, toastOn, toast] = useToast();
 
   return (
     <>
@@ -37,24 +38,26 @@ export function ClassOpener({
           // A row can name its own base. A gym's class is addressed under the
           // studio, so a shift on a coach's page opens under the gym that
           // owns it rather than under the coach, which resolves to nothing.
-          setOpen({
-            classId: row.dataset.cid!,
-            iso: row.dataset.d || undefined,
-            base: row.dataset.base || undefined,
-          });
+          const base = row.dataset.base || handle;
+          void classDetail(base.replace(/^s\//, ""), row.dataset.cid!, row.dataset.d || undefined)
+            .then((detail) => {
+              if (detail) setOpen(detail);
+              else toast("That class isn't available");
+            });
         }}
       >
         {children}
       </div>
       {open && (
-        <ClassSheet
-          handle={open.base ?? handle}
-          classId={open.classId}
-          iso={open.iso}
+        <ClassPeek
+          cls={peekFromDetail(open)}
+          initialDetail={open}
           onClose={() => setOpen(null)}
           onChanged={() => router.refresh()}
+          onToast={toast}
         />
       )}
+      <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }
