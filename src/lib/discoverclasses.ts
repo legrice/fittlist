@@ -33,6 +33,9 @@ export type DirClass = {
   coachColor: string;
   studioName: string | null;
   where: string | null;
+  /** Search/filter location. A studio address when attached, otherwise the
+   *  class's own location. Kept off the row UI; it only answers where. */
+  location: string;
   /** The URL base the class page lives under: a handle, or s/{slug}. */
   base: string;
   /** Already in this viewer's plans. */
@@ -153,6 +156,7 @@ export function buildDiscoverClasses(input: {
         coachColor: avatarColor(owner),
         studioName: studio?.name ?? null,
         where: studio ? studio.name : c.location,
+        location: studio?.address ?? c.location ?? "",
         added: added.has(`${c.id}|${iso}`),
         mine: c.userId === viewerId || c.coachUserId === viewerId,
       });

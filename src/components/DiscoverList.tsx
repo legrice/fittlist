@@ -43,6 +43,7 @@ function rankByUse(values: (string | null | undefined)[]): string[] {
 /** Which of the directory's three halves is in front of you. */
 export type DiscoverHalf = "classes" | "coaches" | "studios";
 type DiscoverFilter = "when" | "type" | "location";
+const NEAR_ME = "__near_me__";
 
 // The directory, which has three halves: the classes, the coaches and the
 // places. The box is a door to the universal search; the tabs pick a half;
@@ -128,7 +129,7 @@ export function DiscoverList({
   // Nothing on by default. Opening Discover should show the whole directory;
   // a filter you didn't set is a list you can't explain, and the count on the
   // Filters chip would be reporting a choice nobody made.
-  void myCity;
+  const effectiveCity = selectedCity === NEAR_ME ? (myCity ?? "") : selectedCity;
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return people
@@ -142,8 +143,8 @@ export function DiscoverList({
           c.disciplines.some((d) => d.toLowerCase().includes(q)),
       )
       .filter((c) => !selectedType || c.disciplines.includes(selectedType))
-      .filter((c) => !selectedCity || c.location.toLowerCase().includes(selectedCity.toLowerCase()));
-  }, [people, query, selectedCity, selectedType]);
+      .filter((c) => !effectiveCity || c.location.toLowerCase().includes(effectiveCity.toLowerCase()));
+  }, [people, query, effectiveCity, selectedType]);
 
   const rangeBounds = useMemo(() => {
     const day = (offset: number) => {
@@ -174,9 +175,10 @@ export function DiscoverList({
           (c.coachName ?? "").toLowerCase().includes(q) ||
           (c.studioName ?? c.where ?? "").toLowerCase().includes(q);
         const matchesRange = !rangeBounds || (c.iso >= rangeBounds[0] && c.iso <= rangeBounds[1]);
-        return matchesQuery && matchesRange && (!selectedType || c.classType === selectedType);
+        const matchesLocation = !effectiveCity || c.location.toLowerCase().includes(effectiveCity.toLowerCase());
+        return matchesQuery && matchesRange && matchesLocation && (!selectedType || c.classType === selectedType);
       }),
-    [classes, query, rangeBounds, selectedType],
+    [classes, query, effectiveCity, rangeBounds, selectedType],
   );
 
   // A filter is only offered where it can narrow something: the types the
@@ -207,10 +209,10 @@ export function DiscoverList({
       // One vocabulary across the directory, so the same pick narrows both
       // halves: the yoga teachers, and the places that offer yoga.
       if (selectedType && !st.types.includes(selectedType)) return false;
-      if (selectedCity && !st.address.toLowerCase().includes(selectedCity.toLowerCase())) return false;
+      if (effectiveCity && !st.address.toLowerCase().includes(effectiveCity.toLowerCase())) return false;
       return true;
     });
-  }, [studios, query, selectedCity, selectedType]);
+  }, [studios, query, effectiveCity, selectedType]);
   // What the lens in front of you can actually be narrowed by, and nothing
   // else: the studios' own type vocabulary, on the Studios half only.
   const disciplines = useMemo(() => {
@@ -232,7 +234,11 @@ export function DiscoverList({
     ? rangeOptions
     : filterMenu === "type"
       ? [{ value: "", label: "Any type" }, ...(tab === "classes" ? classTypeOptions : disciplines).map((value) => ({ value, label: value }))]
-      : [{ value: "", label: "Any location" }, ...cities.map((value) => ({ value, label: value }))];
+      : [
+          { value: "", label: "Any location" },
+          ...(myCity ? [{ value: NEAR_ME, label: "Near me" }] : []),
+          ...cities.map((value) => ({ value, label: value })),
+        ];
   const filterValue = filterMenu === "when" ? classRange : filterMenu === "type" ? selectedType : selectedCity;
   const filterTitle = filterMenu === "when" ? "When" : filterMenu === "type" ? "Type" : "Location";
 
@@ -310,13 +316,13 @@ export function DiscoverList({
           {selectedType || "Any type"}
           <Icon name="expand_more" size={17} />
         </button>
-        {tab !== "classes" && cities.length > 0 && (
+        {(cities.length > 0 || !!myCity) && (
           <button
             type="button"
             className={`discover-filterpill${selectedCity ? " on" : ""}`}
             onClick={() => setFilterMenu("location")}
           >
-            {selectedCity || "Any location"}
+            {selectedCity === NEAR_ME ? "Near me" : selectedCity || "Any location"}
             <Icon name="expand_more" size={17} />
           </button>
         )}
