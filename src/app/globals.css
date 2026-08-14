@@ -8539,7 +8539,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .schedule-kind-tabs button {
   min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
-  background: var(--cl); color: var(--ink); font: inherit;
+  background: var(--card); color: var(--ink); font: inherit;
   font-size: 15px; font-weight: 600; cursor: pointer;
 }
 .schedule-kind-tabs button.on { background: var(--si); color: #fff; }
