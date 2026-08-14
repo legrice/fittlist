@@ -114,7 +114,7 @@ export function DesktopChrome({
         <section className="desktop-week-card">
           <strong>Your week in fitness.</strong>
           <p>Keep your schedule current, then share it from one place.</p>
-          <Link href={scheduleHref}>Open your schedule <Icon name="arrow_forward" size={18} /></Link>
+          <Link href={coach ? "/coachshare" : "/membershare"}>Share your week <Icon name="arrow_forward" size={18} /></Link>
         </section>
       </aside>
     </>
