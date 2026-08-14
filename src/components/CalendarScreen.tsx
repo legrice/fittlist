@@ -282,10 +282,10 @@ export function CalendarScreen({
           because two screens working it out separately is how they end up
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
-        {/* Calendar and its two views share one title row. The screen is
-            coaching-only, so there is no relationship filter to explain. */}
+        {/* Identity and view always share the first row. Coaches get one
+            additional row for the relationship filter; members do not. */}
         <div className="calbar">
-          <h1 className="calbar-t caltitle tab-page-title">Schedule</h1>
+          <h1 className="calbar-t caltitle tab-page-title">Your schedule</h1>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
@@ -293,16 +293,7 @@ export function CalendarScreen({
               accessible names, because a glyph on its own says nothing to a
               screen reader. */}
           {!bare && (
-            <div className="calbar-tools">
-              {!member && <label className="calfilter">
-                <select aria-label="Show schedule" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
-                  <option value="all">All</option>
-                  <option value="coaching">Coaching</option>
-                  <option value="added">Attending</option>
-                </select>
-                <Icon name="expand_more" size={17} />
-              </label>}
-              <div className="calseg" role="tablist" aria-label="Schedule view">
+            <div className="calseg" role="tablist" aria-label="Schedule view">
                 <button
                   role="tab"
                   aria-label="List"
@@ -333,13 +324,29 @@ export function CalendarScreen({
                 >
                   <Icon name="calendar_view_month" size={25} />
                 </button>
-              </div>
-              {/* No Share door here any more, by Matt's call: an arrow in
-                  the corner was one thing too many and nobody could say
-                  what it did. The Share tab is the way to the hub. */}
             </div>
           )}
         </div>
+        {!member && !bare && (
+          <div className="schedule-kind-tabs" role="tablist" aria-label="Schedule classes">
+            {([
+              ["all", "All"],
+              ["coaching", "Coaching"],
+              ["added", "Attending"],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={kind === value}
+                className={kind === value ? "on" : ""}
+                onClick={() => setKind(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 

@@ -8533,6 +8533,16 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* Page-title size, sharing its row with the view toggle. */
 .caltitle { font-size: 30px; padding: 0; }
+.schedule-kind-tabs {
+  display: flex; align-items: center; gap: 8px;
+  margin: -2px 0 12px;
+}
+.schedule-kind-tabs button {
+  min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
+  background: var(--cl); color: var(--ink); font: inherit;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.schedule-kind-tabs button.on { background: var(--si); color: #fff; }
 .info-page-action { display: inline-flex; width: auto; margin-top: 12px; text-decoration: none; }
 .aboutpage .about-kicker { margin-bottom: 8px; color: var(--ol); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }
