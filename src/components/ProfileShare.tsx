@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Icon } from "@/components/Icon";
+import { FittlistShareSheet } from "@/components/InAppShare";
 import { Toast, useToast } from "@/components/Toast";
 
 // Handing this page to somebody, from the corner of the picture, on every
@@ -13,27 +15,22 @@ import { Toast, useToast } from "@/components/Toast";
 // only way to send somebody a coach was to copy the address bar.
 export function ProfileShare({ path, name, pill = false, cta = false, ctaText = "Share profile" }: { path: string; name: string; pill?: boolean; cta?: boolean; ctaText?: string }) {
   const [toastMsg, toastOn, toast] = useToast();
-
-  const share = async () => {
-    const url = `${window.location.origin}${path}`;
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ title: `${name} on fittlist`, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      toast("Link copied");
-    } catch {
-      // a dismissed share sheet is not an error
-    }
-  };
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button className={cta ? "profile-share-cta-btn" : pill ? "actpill profile-share-pill" : "evback profshare-btn"} aria-label={`Share ${name}`} onClick={share}>
+      <button className={cta ? "profile-share-cta-btn" : pill ? "actpill profile-share-pill" : "evback profshare-btn"} aria-label={`Share ${name}`} onClick={() => setOpen(true)}>
         <Icon name="ios_share" size={21} />
         {pill ? <span>Share</span> : cta ? <span>{ctaText}</span> : null}
       </button>
+      {open && (
+        <FittlistShareSheet
+          title={`${name} on FittList`}
+          url={`${window.location.origin}${path}`}
+          onClose={() => setOpen(false)}
+          onToast={toast}
+        />
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

@@ -2886,6 +2886,28 @@ button.ps-card { cursor: pointer; }
 .newmessage-to { display: flex; align-items: center; gap: 12px; width: 100%; margin: 14px 0 4px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; }
 .newmessage-to > span:nth-child(2) { display: flex; flex: 1; min-width: 0; flex-direction: column; }
 .newmessage-to small { color: var(--ol); }
+.inappshare { margin-top: 18px; }
+.inappshare h3 { margin: 0 0 10px; font-size: 16px; }
+.inappshare-search {
+  display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 0 14px;
+  border-radius: var(--button-radius); background: var(--cl); color: var(--muted);
+}
+.inappshare-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; }
+.inappshare-people { display: flex; gap: 14px; margin-top: 14px; padding-bottom: 4px; overflow-x: auto; scrollbar-width: none; }
+.inappshare-people::-webkit-scrollbar { display: none; }
+.inappshare-people > button { display: grid; flex: 0 0 76px; justify-items: center; gap: 7px; border: 0; background: transparent; color: var(--ink); }
+.inappshare-people > button > span {
+  position: relative; display: grid; place-items: center; width: 66px; height: 66px;
+  overflow: visible; border-radius: 50%; background: var(--si); color: #fff; font-size: 22px;
+}
+.inappshare-people img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.inappshare-people i { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ok); color: #fff; }
+.inappshare-people b { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+.inappshare-people p { margin: 8px 0; color: var(--muted); font-size: 14px; }
+.inappshare-sheet { max-height: min(78dvh, 680px); overflow-y: auto; }
+.inappshare-sheet > h2 { margin-right: 44px; }
+.inappshare-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.inappshare-actions button { display: flex; min-height: 54px; align-items: center; justify-content: center; gap: 8px; border-radius: var(--button-radius); background: var(--cl); color: var(--ink); font: inherit; font-weight: 600; }
 
 /* Chat / thread view */
 .chatscreen { min-height: 100dvh; display: flex; flex-direction: column; background: var(--paper); }

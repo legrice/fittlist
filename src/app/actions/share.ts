@@ -2,51 +2,71 @@
 
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { avatarColor } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
 import { shareWeek } from "@/lib/shareweek";
-
-// The composer's data door. The picture is drawn by an image route, but the
-// screen still needs the same rows in words: the Classes sheet lists them, and
-// the count under it has to be the count on the picture. One loader answers
-// both (`shareWeek`), which is what stops the sheet and the image disagreeing.
 
 export type ShareRow = {
   key: string;
   iso: string;
-  /** "Wed 6:00p", the way the sheet says it. */
   when: string;
   name: string;
-  /** The place, and whose class it is, joined the way the picture joins them. */
   sub: string;
 };
 
-/**
- * Every class in the range, whether or not it is currently hidden.
- *
- * Deliberately session-derived rather than taking a user id: this is exported
- * from a `"use server"` file, so a parameter would be a callable endpoint for
- * reading anybody's week.
- */
-export async function shareRows(input: {
-  from: string;
-  days: number;
-}): Promise<ShareRow[]> {
+export async function shareRows(input: { from: string; days: number }): Promise<ShareRow[]> {
   const userId = await getSessionUserId();
   if (!userId) return [];
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return [];
   const days = Math.min(7, Math.max(1, Math.round(input.days) || 7));
-  // The hide set is the screen's own state and never reaches here: this is
-  // the whole range, and the sheet ticks its own boxes over the top.
   const week = await shareWeek(userId, input.from, days);
-  return week.flatMap((d) =>
-    d.items.map((i) => ({
-      key: i.key,
-      iso: i.iso,
-      when: `${d.day.slice(0, 3)} ${i.time}`,
-      name: i.name,
-      sub: [i.who, i.where].filter(Boolean).join(" · "),
-    })),
-  );
+  return week.flatMap((day) => day.items.map((item) => ({
+    key: item.key,
+    iso: item.iso,
+    when: `${day.day.slice(0, 3)} ${item.time}`,
+    name: item.name,
+    sub: [item.who, item.where].filter(Boolean).join(" · "),
+  })));
+}
+
+export type SharePerson = {
+  id: string;
+  name: string;
+  handle: string;
+  photo: string | null;
+  color: string;
+};
+
+export async function peopleForSharing(): Promise<SharePerson[]> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  const db = await getDb();
+  const rows = await db.select({
+    id: schema.users.id,
+    name: schema.users.name,
+    handle: schema.users.handle,
+    photo: schema.users.photo,
+    photoThumb: schema.users.photoThumb,
+    avatarColor: schema.users.avatarColor,
+    kind: schema.users.kind,
+    messagesOpen: schema.users.messagesOpen,
+  }).from(schema.users);
+
+  return rows
+    .filter((person) =>
+      person.id !== userId &&
+      person.kind !== "gym" &&
+      Boolean(person.handle) &&
+      person.messagesOpen
+    )
+    .map((person) => ({
+      id: person.id,
+      name: person.name.trim() || person.handle!,
+      handle: person.handle!,
+      photo: person.photoThumb ?? person.photo,
+      color: avatarColor(person),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
