@@ -53,7 +53,10 @@ export function navTabs(
     {
       id: "share",
       href: coach ? "/coachshare" : "/membershare",
-      icon: "arrow_outward",
+      // This tab is the creative studio, not the contextual "send this"
+      // action. Sparkles distinguish making a share image from the standard
+      // share glyph used on classes, profiles and links.
+      icon: "auto_awesome",
       label: "Share",
     },
     // Who you are, which is your page: the tab opens the profile everybody
