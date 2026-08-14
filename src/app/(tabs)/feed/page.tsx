@@ -19,20 +19,37 @@ export default async function DiscoverPage() {
   if (!me) redirect("/");
 
   const feed = await buildDiscoverFeed(userId, me);
-  const followed = new Set(feed.favIds);
-  const followingItems = feed.items.filter(
-    (item) => item.saved || followed.has(item.coachId) || (me.kind !== "fan" && item.coachId === userId),
+  const existingRail = new Map(feed.myRail.map((person) => [person.id, person]));
+  const activityPeople = new Map(
+    feed.items.flatMap((item) => item.goers).map((person) => [person.id, person]),
   );
+  const activityCoachIds = new Set(feed.items.map((item) => item.coachId));
+  const activityRail = [
+    ...feed.rail
+      .filter((coach) => activityCoachIds.has(coach.id))
+      .map((coach) => ({
+        id: coach.id,
+        name: coach.name,
+        handle: coach.handle,
+        photo: coach.photo,
+        color: coach.color,
+        fresh: existingRail.get(coach.id)?.fresh ?? false,
+        nextAt: existingRail.get(coach.id)?.nextAt ?? null,
+      })),
+    ...[...activityPeople.values()]
+      .filter((person) => !activityCoachIds.has(person.id) && person.id !== userId)
+      .map((person) => ({ ...person, fresh: false, nextAt: null })),
+  ];
   return (
     <FollowingScreen
-      items={followingItems}
+      items={feed.items}
       coaches={feed.rail}
       favIds={feed.favIds}
       cats={feed.cats}
       follows={feed.follows}
       todayIso={feed.today}
       meId={userId}
-      myRail={feed.myRail}
+      myRail={activityRail}
       meKind={me.kind === "fan" ? "member" : "coach"}
       meFace={{
         photo: me.photoThumb ?? me.photo,

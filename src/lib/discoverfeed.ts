@@ -142,10 +142,12 @@ export async function buildDiscoverFeed(
           lat: st?.lat ?? null,
           lng: st?.lng ?? null,
           saved: mineMarks.has(`${c.id}|${iso}`),
+          goers: [],
         });
       }
     }
   }
+
   // One class, one row, however many accounts list it. A studio's listing
   // and the coach's own, or two coaches co-listing a slot, are the same
   // class in the reader's terms: same name, same start, same place, same
@@ -163,6 +165,39 @@ export async function buildDiscoverFeed(
       items[w++] = i;
     }
     items.length = w;
+  }
+
+  // Public additions turn the class catalog into actual social activity.
+  // Attach the people after deduplication so the surviving class owns every
+  // attendance rather than a discarded duplicate quietly taking it along.
+  const itemKeys = new Set(items.map((item) => `${item.classId}|${item.iso}`));
+  const itemClassIds = [...new Set(items.map((item) => item.classId))];
+  const publicMarks = itemClassIds.length
+    ? await db
+        .select()
+        .from(schema.attendances)
+        .where(and(inArray(schema.attendances.classId, itemClassIds), eq(schema.attendances.isPublic, true)))
+    : [];
+  const goerIds = [...new Set(publicMarks.map((mark) => mark.userId))].filter(
+    (id) => !hidden.has(id),
+  );
+  const goerRows = goerIds.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, goerIds))
+    : [];
+  const goerById = new Map(goerRows.map((user) => [user.id, user]));
+  const itemByKey = new Map(items.map((item) => [`${item.classId}|${item.iso}`, item]));
+  for (const mark of publicMarks) {
+    const key = `${mark.classId}|${mark.occurrenceDate}`;
+    if (!itemKeys.has(key)) continue;
+    const user = goerById.get(mark.userId);
+    if (!user?.handle) continue;
+    itemByKey.get(key)?.goers.push({
+      id: user.id,
+      name: user.name.trim() || user.email.split("@")[0],
+      handle: user.handle,
+      photo: user.photoThumb ?? user.photo,
+      color: avatarColor(user),
+    });
   }
 
   // Soonest first. The rail was alphabetical, which is an order about the

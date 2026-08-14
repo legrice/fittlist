@@ -38,6 +38,14 @@ export type RailPerson = {
   nextAt: string | null;
 };
 
+export type FeedPerson = {
+  id: string;
+  name: string;
+  handle: string | null;
+  photo: string | null;
+  color: string;
+};
+
 /** A tile on the Studios near you rail: a rectangle, because a place is a
  *  room and a person is a face. Closest first, as honestly as we can say
  *  it: the viewer's own city leads on the server, and the rail re-sorts by
@@ -93,6 +101,8 @@ export type FeedItem = {
   /** The viewer already saved this occurrence: the corner ribbon starts
    *  filled. */
   saved: boolean;
+  /** People who publicly added this occurrence to their week. */
+  goers: FeedPerson[];
 };
 
 const TIMES = [
@@ -496,19 +506,6 @@ export function FollowingScreen({
     return p.length === 1 ? p[0] : `${p.length} places`;
   };
 
-  /* The branch experiment: the unfiltered home is activity, not another
-     rendering of Schedule. Real classes supply the useful objects; the
-     lightweight social framing is deliberately seeded until attendance
-     density can support it from the database. Selecting a face still turns
-     the same surface into that person's complete week. */
-  const socialFriendItem = homeRows.find((row) => row.item.coachId !== meId)?.item ?? null;
-  const socialCoach = coachOptions.find((coach) =>
-    homeRows.some((row) => row.item.coachId === coach.id),
-  ) ?? null;
-  const socialCoachItems = socialCoach
-    ? homeRows.filter((row) => row.item.coachId === socialCoach.id).slice(0, 3).map((row) => row.item)
-    : [];
-
   return (
     <>
       {!isHome && (
@@ -717,10 +714,8 @@ export function FollowingScreen({
                   <CalendarList days={homeDays} className="following-calendar-list" />
                 ) : (
                   <WeekSocialFeed
-                    friendItem={socialFriendItem}
-                    friendCoach={socialFriendItem ? coachById.get(socialFriendItem.coachId) ?? null : null}
-                    spotlightCoach={socialCoach}
-                    spotlightItems={socialCoachItems}
+                    items={homeRows.map((row) => row.item)}
+                    coachById={coachById}
                     onOpen={(item) => {
                       const coach = coachById.get(item.coachId) ?? null;
                       setPeek(peekOf(item, coach, favIds.includes(item.coachId)));
@@ -889,77 +884,87 @@ const renderRow =
   );
 
 function WeekSocialFeed({
-  friendItem,
-  friendCoach,
-  spotlightCoach,
-  spotlightItems,
+  items,
+  coachById,
   onOpen,
   onNotice,
 }: {
-  friendItem: FeedItem | null;
-  friendCoach: FeedCoach | null;
-  spotlightCoach: RailPerson | null;
-  spotlightItems: FeedItem[];
+  items: FeedItem[];
+  coachById: Map<string, FeedCoach>;
   onOpen: (item: FeedItem) => void;
   onNotice: (message: string, highlight?: string) => void;
 }) {
+  const attendance = items.flatMap((item) => item.goers.map((person) => ({ item, person })));
+  const coachSchedules = [...new Set(items.map((item) => item.coachId))]
+    .map((id) => ({ coach: coachById.get(id), items: items.filter((item) => item.coachId === id) }))
+    .filter((entry): entry is { coach: FeedCoach; items: FeedItem[] } => !!entry.coach && entry.items.length > 0);
+
   return (
     <div className="weekfeed">
       <div className="weekfeed-label">Happening this week</div>
 
-      {friendItem && (
-        <article className="weekpost">
-          <header className="weekpost-person">
-            <span className="weekpost-avatar weekpost-avatar-mock">J</span>
-            <div>
-              <strong>Joanne is going</strong>
-              <span>{daySectionLabel(friendItem.iso, "")}</span>
+      {attendance.map(({ item, person }) => {
+        const coach = coachById.get(item.coachId) ?? null;
+        return (
+          <article className="weekpost" key={`going-${person.id}-${item.key}`}>
+            <header className="weekpost-person">
+              <span className="weekpost-avatar" style={{ background: person.color }}>
+                {person.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={person.photo} alt="" />
+                ) : person.name.charAt(0)}
+              </span>
+              <div>
+                <strong>{person.name} is going</strong>
+                <span>{shortDay(item.iso)}</span>
+              </div>
+              {person.handle && <Link href={`/${person.handle}`}>View profile</Link>}
+            </header>
+            <p className="weekpost-copy">Join {person.name.split(/\s+/)[0]} for a class they added to their week.</p>
+            <button className="weekpost-class" type="button" onClick={() => onOpen(item)}>
+              <span className="weekpost-date">
+                <b>{item.hm}{item.ap}</b>
+                <small>{shortDay(item.iso)}</small>
+              </span>
+              <span className="weekpost-classcopy">
+                <strong>{item.name}</strong>
+                <span>{item.where ?? "Location to come"}</span>
+                {coach && <small>with {coach.name}</small>}
+              </span>
+              <Icon name="chevron_right" size={21} />
+            </button>
+            <div className="weekpost-action">
+              <FollowingAdd
+                classId={item.classId}
+                iso={item.iso}
+                name={item.name}
+                initialOn={item.saved}
+                onNotice={onNotice}
+              />
+              <span>{item.saved ? "Added to your week" : "Add to your week"}</span>
             </div>
-          </header>
-          <p className="weekpost-copy">Join Joanne for a class she added to her week.</p>
-          <button className="weekpost-class" type="button" onClick={() => onOpen(friendItem)}>
-            <span className="weekpost-date">
-              <b>{friendItem.hm}{friendItem.ap}</b>
-              <small>{shortDay(friendItem.iso)}</small>
-            </span>
-            <span className="weekpost-classcopy">
-              <strong>{friendItem.name}</strong>
-              <span>{friendItem.where ?? "Location to come"}</span>
-              {friendCoach && <small>with {friendCoach.name}</small>}
-            </span>
-            <Icon name="chevron_right" size={21} />
-          </button>
-          <div className="weekpost-action">
-            <FollowingAdd
-              classId={friendItem.classId}
-              iso={friendItem.iso}
-              name={friendItem.name}
-              initialOn={friendItem.saved}
-              onNotice={onNotice}
-            />
-            <span>{friendItem.saved ? "Added to your week" : "Add to your week"}</span>
-          </div>
-        </article>
-      )}
+          </article>
+        );
+      })}
 
-      {spotlightCoach && spotlightItems.length > 0 && (
-        <article className="weekpost weekpost-lineup">
+      {coachSchedules.map(({ coach, items: coachItems }) => (
+        <article className="weekpost weekpost-lineup" key={`coach-${coach.id}`}>
           <header className="weekpost-person">
-            <span className="weekpost-avatar" style={{ background: spotlightCoach.color }}>
-              {spotlightCoach.photo ? (
+            <span className="weekpost-avatar" style={{ background: coach.color }}>
+              {coach.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={spotlightCoach.photo} alt="" />
-              ) : spotlightCoach.name.charAt(0)}
+                <img src={coach.photo} alt="" />
+              ) : coach.name.charAt(0)}
             </span>
             <div>
-              <strong>{spotlightCoach.name}</strong>
+              <strong>{coach.name}</strong>
               <span>Coach schedule</span>
             </div>
-            {spotlightCoach.handle && <Link href={`/${spotlightCoach.handle}`}>View profile</Link>}
+            {coach.handle && <Link href={`/${coach.handle}`}>View profile</Link>}
           </header>
-          <h2>{spotlightCoach.name.split(/\s+/)[0]} is coaching {spotlightItems.length === 1 ? "a class" : `${spotlightItems.length} classes`} this week.</h2>
+          <h2>{coach.name.split(/\s+/)[0]} is coaching {coachItems.length === 1 ? "a class" : `${coachItems.length} classes`} this week.</h2>
           <div className="weekpost-schedule">
-            {spotlightItems.map((item) => (
+            {coachItems.map((item) => (
               <button key={item.key} type="button" onClick={() => onOpen(item)}>
                 <span><b>{shortDay(item.iso)}</b><small>{item.hm}{item.ap}</small></span>
                 <span><strong>{item.name}</strong><small>{item.where}</small></span>
@@ -968,19 +973,14 @@ function WeekSocialFeed({
             ))}
           </div>
         </article>
-      )}
+      ))}
 
-      <article className="weekpost weekpost-event">
-        <div className="weekpost-eventart" aria-hidden="true">
-          <span>NOV</span><strong>07</strong>
+      {attendance.length === 0 && coachSchedules.length === 0 && (
+        <div className="weekpost weekfeed-empty">
+          <h2>Nothing shared yet</h2>
+          <p>Classes and plans from people in the community will show up here.</p>
         </div>
-        <div className="weekpost-eventcopy">
-          <span>Coming up near you</span>
-          <h2>Hudson Fit Expo 2026</h2>
-          <p>A full day of classes, coaches, and local fitness in one place.</p>
-          <Link href="/discover?half=classes">See what&rsquo;s happening <Icon name="arrow_forward" size={18} /></Link>
-        </div>
-      </article>
+      )}
     </div>
   );
 }
