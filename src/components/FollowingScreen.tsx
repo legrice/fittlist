@@ -898,13 +898,16 @@ function WeekSocialFeed({
   const coachSchedules = [...new Set(items.map((item) => item.coachId))]
     .map((id) => ({ coach: coachById.get(id), items: items.filter((item) => item.coachId === id) }))
     .filter((entry): entry is { coach: FeedCoach; items: FeedItem[] } => !!entry.coach && entry.items.length > 0);
-  const visibleAttendance = attendance.slice(0, 5);
-  const visibleCoachSchedules = coachSchedules.slice(0, 6);
-  const livePosts = visibleAttendance.length + visibleCoachSchedules.length;
-  const futurePosts = FUTURE_WEEK_POSTS.slice(0, Math.max(12, 28 - livePosts));
+  const visibleAttendance = attendance.slice(0, 3);
+  const visibleCoachSchedules = coachSchedules.slice(0, 4);
+  const futurePosts = FUTURE_WEEK_POSTS.slice(0, 9);
 
   return (
     <div className="weekfeed">
+      {visibleCoachSchedules.slice(0, 2).map(({ coach, items: coachItems }) => (
+        <CoachSchedulePost key={`coach-top-${coach.id}`} coach={coach} items={coachItems} onOpen={onOpen} />
+      ))}
+
       {visibleAttendance.map(({ item, person }) => {
         const coach = coachById.get(item.coachId) ?? null;
         return (
@@ -935,16 +938,7 @@ function WeekSocialFeed({
               </span>
               <Icon name="chevron_right" size={21} />
             </button>
-            <div className="weekpost-action">
-              <FollowingAdd
-                classId={item.classId}
-                iso={item.iso}
-                name={item.name}
-                initialOn={item.saved}
-                onNotice={onNotice}
-              />
-              <span>{item.saved ? "Added to your week" : "Add to your week"}</span>
-            </div>
+            <GoingCluster item={item} onNotice={onNotice} />
           </article>
         );
       })}
@@ -999,11 +993,14 @@ function WeekSocialFeed({
             </header>
             <p className="weekpost-copy">{post.copy}</p>
             {classItem ? (
-              <button className="weekpost-class" type="button" onClick={() => onOpen(classItem)}>
-                <span className="weekpost-date"><b>{classItem.hm}{classItem.ap}</b><small>{shortDay(classItem.iso)}</small></span>
-                <span className="weekpost-classcopy"><strong>{classItem.name}</strong><span>{classItem.where ?? "Location to come"}</span></span>
-                <Icon name="chevron_right" size={21} />
-              </button>
+              <>
+                <button className="weekpost-class" type="button" onClick={() => onOpen(classItem)}>
+                  <span className="weekpost-date"><b>{classItem.hm}{classItem.ap}</b><small>{shortDay(classItem.iso)}</small></span>
+                  <span className="weekpost-classcopy"><strong>{classItem.name}</strong><span>{classItem.where ?? "Location to come"}</span></span>
+                  <Icon name="chevron_right" size={21} />
+                </button>
+                <GoingCluster item={classItem} onNotice={onNotice} aspirational />
+              </>
             ) : (
               <div className="weekpost-plan"><strong>{post.plan}</strong><span>{post.when}</span></div>
             )}
@@ -1011,32 +1008,8 @@ function WeekSocialFeed({
         );
       })}
 
-      {visibleCoachSchedules.map(({ coach, items: coachItems }) => (
-        <article className="weekpost weekpost-lineup" key={`coach-${coach.id}`}>
-          <header className="weekpost-person">
-            <span className="weekpost-avatar" style={{ background: coach.color }}>
-              {coach.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={coach.photo} alt="" />
-              ) : coach.name.charAt(0)}
-            </span>
-            <div>
-              <strong>{coach.name}</strong>
-              <span>Coach schedule</span>
-            </div>
-            {coach.handle && <Link href={`/${coach.handle}`}>View profile</Link>}
-          </header>
-          <h2>{coach.name.split(/\s+/)[0]} is coaching {coachItems.length === 1 ? "a class" : `${coachItems.length} classes`} this week.</h2>
-          <div className="weekpost-schedule">
-            {coachItems.map((item) => (
-              <button key={item.key} type="button" onClick={() => onOpen(item)}>
-                <span><b>{shortDay(item.iso)}</b><small>{item.hm}{item.ap}</small></span>
-                <span><strong>{item.name}</strong><small>{item.where}</small></span>
-                <Icon name="chevron_right" size={19} />
-              </button>
-            ))}
-          </div>
-        </article>
+      {visibleCoachSchedules.slice(2).map(({ coach, items: coachItems }) => (
+        <CoachSchedulePost key={`coach-more-${coach.id}`} coach={coach} items={coachItems} onOpen={onOpen} />
       ))}
 
       {attendance.length === 0 && coachSchedules.length === 0 && futurePosts.length === 0 && (
@@ -1045,6 +1018,90 @@ function WeekSocialFeed({
           <p>Classes and plans from people in the community will show up here.</p>
         </div>
       )}
+    </div>
+  );
+}
+
+function CoachSchedulePost({
+  coach,
+  items,
+  onOpen,
+}: {
+  coach: FeedCoach;
+  items: FeedItem[];
+  onOpen: (item: FeedItem) => void;
+}) {
+  return (
+    <article className="weekpost weekpost-lineup">
+      <header className="weekpost-person">
+        <span className="weekpost-avatar" style={{ background: coach.color }}>
+          {coach.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coach.photo} alt="" />
+          ) : coach.name.charAt(0)}
+        </span>
+        <div><strong>{coach.name}</strong><span>Coaching this week</span></div>
+        {coach.handle && <Link href={`/${coach.handle}`}>View profile</Link>}
+      </header>
+      <h2>{coach.name.split(/\s+/)[0]} is coaching {items.length === 1 ? "a class" : `${items.length} classes`} this week.</h2>
+      <div className="weekpost-schedule">
+        {items.map((item) => (
+          <button key={item.key} type="button" onClick={() => onOpen(item)}>
+            <span><b>{shortDay(item.iso)}</b><small>{item.hm}{item.ap}</small></span>
+            <span><strong>{item.name}</strong><small>{item.where}</small></span>
+            <Icon name="chevron_right" size={19} />
+          </button>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+const ASPIRATIONAL_GOERS = [
+  { id: "mock-jo", name: "Joanne", color: "#a44c78", photo: null, handle: null },
+  { id: "mock-dev", name: "Devon", color: "#325d8a", photo: null, handle: null },
+  { id: "mock-nia", name: "Nia", color: "#805f9c", photo: null, handle: null },
+  { id: "mock-sam", name: "Sam", color: "#ba6a40", photo: null, handle: null },
+] satisfies FeedPerson[];
+
+function GoingCluster({
+  item,
+  onNotice,
+  aspirational = false,
+}: {
+  item: FeedItem;
+  onNotice: (message: string, highlight?: string) => void;
+  aspirational?: boolean;
+}) {
+  const people = item.goers.length
+    ? item.goers.slice(0, 4)
+    : aspirational ? ASPIRATIONAL_GOERS : [];
+  const count = item.goers.length || (aspirational ? people.length : 0);
+  return (
+    <div className="weekpost-going">
+      {people.length > 0 && (
+        <span className="weekpost-goingfaces" aria-hidden="true">
+          {people.map((person) => (
+            <span key={person.id} style={{ background: person.color }}>
+              {person.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={person.photo} alt="" />
+              ) : person.name.charAt(0)}
+            </span>
+          ))}
+        </span>
+      )}
+      <span className="weekpost-goingcopy">
+        {count ? `${count} ${count === 1 ? "person is" : "people are"} going` : "Be the first to go"}
+      </span>
+      <FollowingAdd
+        classId={item.classId}
+        iso={item.iso}
+        name={item.name}
+        initialOn={item.saved}
+        onNotice={onNotice}
+      />
+      <span className="weekpost-goinglabel">{item.saved ? "You're in" : "Add yourself"}</span>
     </div>
   );
 }
