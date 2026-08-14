@@ -6858,6 +6858,19 @@ select.editinput.placekind-select {
 .weekpost-eventcopy h2 { margin: 9px 0 8px; font-size: 23px; line-height: 1.05; }
 .weekpost-eventcopy p { margin: 0 0 19px; color: var(--muted); font-size: 14px; line-height: 1.4; }
 .weekpost-eventcopy a { display: inline-flex; align-items: center; gap: 5px; color: var(--ink); font-size: 13.5px; font-weight: 600; text-decoration: none; }
+.weekpost-host > h2 { margin: 18px 0 7px; font-size: 22px; line-height: 1.12; }
+.weekpost-host > p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.4; }
+.weekpost-place-avatar { border-radius: 14px; }
+.weekpost-hostmeta {
+  margin-top: 16px; padding-top: 13px; display: flex; align-items: center; gap: 8px;
+  border-top: 1px solid var(--div); color: var(--ink); font-size: 13.5px; font-weight: 600;
+}
+.weekpost-plan {
+  margin-top: 13px; padding: 15px; display: grid; gap: 3px;
+  border-radius: 18px; background: var(--cl);
+}
+.weekpost-plan strong { font-size: 17px; }
+.weekpost-plan span { color: var(--muted); font-size: 13px; }
 @media (min-width: 700px) {
   .weekfeed { gap: 18px; }
   .weekpost { padding: 22px; }

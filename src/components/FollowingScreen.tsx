@@ -146,6 +146,7 @@ export function FollowingScreen({
   myRail,
   meKind,
   meFace,
+  nearStudios,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -712,6 +713,7 @@ export function FollowingScreen({
                   <WeekSocialFeed
                     items={homeRows.map((row) => row.item)}
                     coachById={coachById}
+                    studios={nearStudios}
                     onOpen={(item) => {
                       const coach = coachById.get(item.coachId) ?? null;
                       setPeek(peekOf(item, coach, favIds.includes(item.coachId)));
@@ -882,11 +884,13 @@ const renderRow =
 function WeekSocialFeed({
   items,
   coachById,
+  studios,
   onOpen,
   onNotice,
 }: {
   items: FeedItem[];
   coachById: Map<string, FeedCoach>;
+  studios: NearStudio[];
   onOpen: (item: FeedItem) => void;
   onNotice: (message: string, highlight?: string) => void;
 }) {
@@ -894,10 +898,14 @@ function WeekSocialFeed({
   const coachSchedules = [...new Set(items.map((item) => item.coachId))]
     .map((id) => ({ coach: coachById.get(id), items: items.filter((item) => item.coachId === id) }))
     .filter((entry): entry is { coach: FeedCoach; items: FeedItem[] } => !!entry.coach && entry.items.length > 0);
+  const visibleAttendance = attendance.slice(0, 5);
+  const visibleCoachSchedules = coachSchedules.slice(0, 6);
+  const livePosts = visibleAttendance.length + visibleCoachSchedules.length;
+  const futurePosts = FUTURE_WEEK_POSTS.slice(0, Math.max(12, 28 - livePosts));
 
   return (
     <div className="weekfeed">
-      {attendance.map(({ item, person }) => {
+      {visibleAttendance.map(({ item, person }) => {
         const coach = coachById.get(item.coachId) ?? null;
         return (
           <article className="weekpost" key={`going-${person.id}-${item.key}`}>
@@ -941,7 +949,69 @@ function WeekSocialFeed({
         );
       })}
 
-      {coachSchedules.map(({ coach, items: coachItems }) => (
+      {futurePosts.map((post, index) => {
+        const studio = studios.length ? studios[index % studios.length] : null;
+        const classItem = items.length ? items[index % items.length] : null;
+
+        if (post.kind === "event") {
+          return (
+            <article className="weekpost weekpost-event" key={post.key}>
+              <div className="weekpost-eventart" style={{ background: post.color }}>
+                <span>{post.month}</span>
+                <strong>{post.day}</strong>
+              </div>
+              <div className="weekpost-eventcopy">
+                <span>{post.eyebrow}</span>
+                <h2>{post.title}</h2>
+                <p>{post.copy}</p>
+                <Link href="/discover?tab=classes">See what&apos;s happening <Icon name="arrow_forward" size={17} /></Link>
+              </div>
+            </article>
+          );
+        }
+
+        if (post.kind === "studio") {
+          const name = studio?.name ?? post.studio;
+          return (
+            <article className="weekpost weekpost-host" key={post.key}>
+              <header className="weekpost-person">
+                <span className="weekpost-avatar weekpost-place-avatar" style={{ background: studio?.color ?? post.color }}>
+                  {studio?.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={studio.photo} alt="" />
+                  ) : name.charAt(0)}
+                </span>
+                <div><strong>{name}</strong><span>Studio</span></div>
+                {studio && <Link href={`/s/${studio.slug}`}>View studio</Link>}
+              </header>
+              <h2>{post.title}</h2>
+              <p>{post.copy}</p>
+              <div className="weekpost-hostmeta"><Icon name="calendar_today" size={18} /><span>{post.when}</span></div>
+            </article>
+          );
+        }
+
+        return (
+          <article className="weekpost" key={post.key}>
+            <header className="weekpost-person">
+              <span className="weekpost-avatar" style={{ background: post.color }}>{post.person.charAt(0)}</span>
+              <div><strong>{post.person}</strong><span>{post.city}</span></div>
+            </header>
+            <p className="weekpost-copy">{post.copy}</p>
+            {classItem ? (
+              <button className="weekpost-class" type="button" onClick={() => onOpen(classItem)}>
+                <span className="weekpost-date"><b>{classItem.hm}{classItem.ap}</b><small>{shortDay(classItem.iso)}</small></span>
+                <span className="weekpost-classcopy"><strong>{classItem.name}</strong><span>{classItem.where ?? "Location to come"}</span></span>
+                <Icon name="chevron_right" size={21} />
+              </button>
+            ) : (
+              <div className="weekpost-plan"><strong>{post.plan}</strong><span>{post.when}</span></div>
+            )}
+          </article>
+        );
+      })}
+
+      {visibleCoachSchedules.map(({ coach, items: coachItems }) => (
         <article className="weekpost weekpost-lineup" key={`coach-${coach.id}`}>
           <header className="weekpost-person">
             <span className="weekpost-avatar" style={{ background: coach.color }}>
@@ -969,7 +1039,7 @@ function WeekSocialFeed({
         </article>
       ))}
 
-      {attendance.length === 0 && coachSchedules.length === 0 && (
+      {attendance.length === 0 && coachSchedules.length === 0 && futurePosts.length === 0 && (
         <div className="weekpost weekfeed-empty">
           <h2>Nothing shared yet</h2>
           <p>Classes and plans from people in the community will show up here.</p>
@@ -978,6 +1048,38 @@ function WeekSocialFeed({
     </div>
   );
 }
+
+type FutureWeekPost =
+  | { kind: "event"; key: string; month: string; day: string; eyebrow: string; title: string; copy: string; color: string }
+  | { kind: "studio"; key: string; studio: string; title: string; copy: string; when: string; color: string }
+  | { kind: "plan"; key: string; person: string; city: string; copy: string; plan: string; when: string; color: string };
+
+/** A deliberately aspirational layer for the branch prototype. It lets Home
+ *  demonstrate the future mix before every city has enough live inventory;
+ *  real attendance and coach schedules still lead the feed above it. */
+const FUTURE_WEEK_POSTS: FutureWeekPost[] = [
+  { kind: "event", key: "hudson-expo", month: "SEP", day: "12", eyebrow: "One-day event", title: "Hudson Fit Expo", copy: "Classes, coaches, recovery, and a whole day to try something new.", color: "#cf3f08" },
+  { kind: "studio", key: "sound-social", studio: "Sound of Om", title: "Sound bath and tea after dark", copy: "A slower Friday night with room to stay and meet people after class.", when: "Friday · 7:30 PM", color: "#7155a6" },
+  { kind: "plan", key: "joanne-yoga", person: "Joanne", city: "Jersey City", copy: "Joanne added yoga to her week. Want to go together?", plan: "Morning flow", when: "Saturday · 9:00 AM", color: "#a44c78" },
+  { kind: "event", key: "park-run", month: "AUG", day: "22", eyebrow: "Community workout", title: "Sunrise run through Hamilton Park", copy: "An easy three miles, coffee afterward, and nobody gets left behind.", color: "#266a54" },
+  { kind: "studio", key: "ironbound-open", studio: "Ironbound Performance Athletics", title: "Community strength open house", copy: "Meet the coaches, try the room, and take a short strength class on the house.", when: "Sunday · 11:00 AM", color: "#1d1b15" },
+  { kind: "plan", key: "maya-pilates", person: "Maya", city: "Hoboken", copy: "Maya is taking her first reformer class this week.", plan: "Intro to reformer", when: "Tuesday · 6:30 PM", color: "#cb6d79" },
+  { kind: "event", key: "waterfront-yoga", month: "AUG", day: "29", eyebrow: "Outdoor class", title: "Yoga on the waterfront", copy: "Golden-hour movement with skyline views. Bring a mat and a friend.", color: "#e28b38" },
+  { kind: "studio", key: "cult-boxing", studio: "CULTR Fit Club", title: "Boxing basics workshop", copy: "A beginner-friendly afternoon for learning stance, footwork, and combinations.", when: "Saturday · 2:00 PM", color: "#214a69" },
+  { kind: "plan", key: "devon-lift", person: "Devon", city: "Montclair", copy: "Devon is lifting before work and looking for an accountability buddy.", plan: "Upper body strength", when: "Thursday · 6:15 AM", color: "#325d8a" },
+  { kind: "event", key: "recovery-market", month: "SEP", day: "05", eyebrow: "Wellness pop-up", title: "Recovery market", copy: "Massage, mobility, cold plunge, and local wellness people in one place.", color: "#884b87" },
+  { kind: "studio", key: "bodyby-community", studio: "BODYBY JC", title: "Pilates for a cause", copy: "A community mat class supporting the neighborhood food pantry.", when: "Wednesday · 6:00 PM", color: "#7a267e" },
+  { kind: "plan", key: "sam-sound", person: "Sam", city: "Jersey City", copy: "Sam added a sound bath to wind down after a long week.", plan: "Friday sound bath", when: "Friday · 8:00 PM", color: "#ba6a40" },
+  { kind: "event", key: "dance-block", month: "SEP", day: "19", eyebrow: "Neighborhood event", title: "Dance on the block", copy: "Three local teachers, two hours of music, and every level welcome.", color: "#d64f64" },
+  { kind: "studio", key: "asana-teacher", studio: "Asana Soul Practice", title: "Meet the teachers morning", copy: "Take three mini classes and find the teaching style that feels like yours.", when: "Sunday · 9:30 AM", color: "#d98542" },
+  { kind: "plan", key: "alex-kb", person: "Alex", city: "Brooklyn", copy: "Alex is trying kettlebells for the first time this week.", plan: "Kettlebell foundations", when: "Wednesday · 7:00 PM", color: "#497b66" },
+  { kind: "event", key: "trail-day", month: "OCT", day: "03", eyebrow: "Day trip", title: "Fall trail day", copy: "A social hike with mobility before and lunch together afterward.", color: "#9b542e" },
+  { kind: "studio", key: "arc-mobility", studio: "Studio Arc", title: "Mobility lab with Lydia", copy: "A practical workshop for shoulders, hips, and feeling better between workouts.", when: "Thursday · 7:00 PM", color: "#406b78" },
+  { kind: "plan", key: "nia-run", person: "Nia", city: "Jersey City", copy: "Nia planned a waterfront run and left room for friends to join.", plan: "Easy waterfront 5K", when: "Sunday · 8:30 AM", color: "#805f9c" },
+  { kind: "event", key: "coach-summit", month: "OCT", day: "17", eyebrow: "For coaches", title: "Local coach meetup", copy: "Share ideas, meet studio owners, and build something better together.", color: "#315b91" },
+  { kind: "studio", key: "retro-late", studio: "Retro Fitness", title: "Late-night lift", copy: "The lights go low, the playlist gets loud, and the floor stays open late.", when: "Friday · 9:00 PM", color: "#b53032" },
+  { kind: "plan", key: "chris-swim", person: "Chris", city: "Portland", copy: "Chris is getting back in the pool with an easy session this week.", plan: "Lap swim", when: "Monday · 7:00 AM", color: "#3277a4" },
+];
 
 function shortDay(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
