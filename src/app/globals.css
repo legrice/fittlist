@@ -2248,15 +2248,10 @@ button.ps-card { cursor: pointer; }
 .globaladd-chooser > .lead { margin: 5px 44px 0 0; }
 .addweek-options { display: grid; gap: 10px; margin-top: 20px; }
 .addweek-options > button {
-  display: grid; grid-template-columns: 48px minmax(0, 1fr) 20px;
-  align-items: center; gap: 13px; width: 100%; min-height: 78px;
-  padding: 12px 14px; border: 0; border-radius: var(--button-radius);
+  display: grid; grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center; gap: 12px; width: 100%; min-height: 78px;
+  padding: 14px 18px; border: 0; border-radius: var(--button-radius);
   background: var(--cl); color: var(--ink); text-align: left; cursor: pointer;
-}
-.addweek-option-icon {
-  display: grid; place-items: center; width: 48px; height: 48px;
-  border: 0; border-radius: var(--button-radius);
-  background: var(--si); color: #fff;
 }
 .addweek-option-copy { display: grid; gap: 2px; min-width: 0; }
 .addweek-option-copy b { font-size: 16.5px; line-height: 1.15; }
