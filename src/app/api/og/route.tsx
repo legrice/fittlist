@@ -15,6 +15,9 @@ const font = (file: string) => readFileSync(join(process.cwd(), "public/fonts", 
 export async function GET() {
   const t = STORY_THEMES.paper;
   const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon(t.accent)).toString("base64")}`;
+  const yogaUri = `data:image/png;base64,${readFileSync(
+    join(process.cwd(), "public/illustrations/following-empty.png"),
+  ).toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -24,39 +27,50 @@ export async function GET() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
+          alignItems: "stretch",
           justifyContent: "center",
           background: "#faf8f2",
           color: t.fg,
           fontFamily: "Delight",
-          textAlign: "center",
-          padding: "54px 80px",
+          padding: "50px 68px 44px",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={markUri} alt="" width={64} height={65} />
-        <span
-          style={{
-            fontSize: 104,
-            fontWeight: 800,
-            lineHeight: .92,
-            letterSpacing: -4,
-            marginTop: 38,
-          }}
-        >
-          Your week in fitness.
-        </span>
-        <span
-          style={{
-            fontSize: 34,
-            fontWeight: 600,
-            color: t.muted,
-            marginTop: 30,
-            lineHeight: 1.3,
-          }}
-        >
-          Build your fitness calendar. Share it. See what everyone else is up to.
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={markUri} alt="" width={42} height={43} />
+          <span style={{ fontSize: 38, fontWeight: 800, letterSpacing: -1.4 }}>FittList</span>
+        </div>
+        <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", width: 790, flexDirection: "column", alignItems: "flex-start" }}>
+            <span
+              style={{
+                fontSize: 96,
+                fontWeight: 800,
+                lineHeight: .92,
+                letterSpacing: -4,
+              }}
+            >
+              Your week in fitness.
+            </span>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: 700,
+                fontSize: 31,
+                fontWeight: 600,
+                color: t.muted,
+                marginTop: 28,
+                lineHeight: 1.28,
+              }}
+            >
+              <span>Build your fitness calendar. Share it.</span>
+              <span>See what everyone else is up to.</span>
+            </div>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={yogaUri} alt="" width={230} height={388} style={{ objectFit: "contain", alignSelf: "flex-end" }} />
+        </div>
       </div>
     ),
     {
