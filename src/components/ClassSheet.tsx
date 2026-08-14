@@ -11,6 +11,7 @@ import { reportClass } from "@/app/actions/reports";
 import { Adder } from "@/components/Adder";
 import { AgendaAvatar } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
+import { FittlistShareSheet } from "@/components/InAppShare";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { announceSaved } from "@/components/SaveEducation";
 import { readPhoto } from "@/lib/photo";
@@ -73,7 +74,7 @@ export function ClassSheet({
   const [markPublic, setMarkPublic] = useState(initial?.addedPublic ?? true);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-  const [canShareFiles, setCanShareFiles] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -201,10 +202,6 @@ export function ClassSheet({
     };
   }, [lookupKey, classId, iso, initial]);
 
-  useEffect(() => {
-    setCanShareFiles(typeof navigator !== "undefined" && typeof navigator.share === "function");
-  }, []);
-
   const toggle = () => {
     if (!c || pending) return;
     const next = !added;
@@ -238,26 +235,7 @@ export function ClassSheet({
     });
   };
 
-  const share = async () => {
-    if (!c) return;
-    // The moment you commit is the moment you'd text a friend, so once
-    // you're saved the share carries the sentence, not just the link. The
-    // group chat stays where it belongs; we just hand it something to say.
-    const invite = added ? `I'm going to ${c.name} on ${c.dateLong}. Come with me:` : null;
-    const url = added && c.myHandle ? `${c.shareUrl}&g=${c.myHandle}` : c.shareUrl;
-    try {
-      if (canShareFiles) {
-        await navigator.share(
-          invite ? { title: c.name, text: invite, url } : { title: c.name, url },
-        );
-        return;
-      }
-      await navigator.clipboard.writeText(invite ? `${invite} ${url}` : url);
-      toast(invite ? "Invite copied, ready to paste" : "Link copied, ready to paste");
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") toast(c.shareUrl);
-    }
-  };
+  const share = () => setShareOpen(true);
 
   const where = c?.studioName ?? c?.location ?? null;
   const showBook = !!c && c.links.length > 0 && !c.past;
@@ -995,6 +973,18 @@ export function ClassSheet({
           linkTitle={c.name}
           onClose={() => setCardOpen(false)}
           onToast={(m) => toast(m)}
+        />
+      )}
+      {shareOpen && c && (
+        <FittlistShareSheet
+          title={c.name}
+          url={added && c.myHandle ? `${c.shareUrl}&g=${c.myHandle}` : c.shareUrl}
+          onShareImage={() => {
+            setShareOpen(false);
+            setCardOpen(true);
+          }}
+          onClose={() => setShareOpen(false)}
+          onToast={toast}
         />
       )}
       {adminAdder && c && (

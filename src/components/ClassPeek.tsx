@@ -12,6 +12,7 @@ import { Adder } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { announceSaved } from "@/components/SaveEducation";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
+import { FittlistShareSheet } from "@/components/InAppShare";
 
 /**
  * A class, tapped.
@@ -176,6 +177,7 @@ export function ClassPeek({
   // that; this way the sheet is instant and the detail is one tap behind it.
   const [full, setFull] = useState<ClassDetail | null>(initialDetail);
   const [loading, setLoading] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   // The viewer's mark, locally, so the button flips on the tap rather than
   // the round trip. Null until touched; the loaded detail is the truth
@@ -307,12 +309,12 @@ export function ClassPeek({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cls.id, cls.iso, cls.base, initialDetail]);
 
-  // Sharing a class leads with its designed image. A caller can still own the
-  // interaction, but the standard path opens the card preview and keeps the
-  // plain link as a quieter option inside it.
+  // Share first means people and a link. The designed image is a deliberate
+  // second door inside that sheet, rather than making every share wait for an
+  // image editor when somebody only wants to text the class to a friend.
   const share = () => {
     if (onShare) return onShare();
-    setCardOpen(true);
+    setShareOpen(true);
   };
 
   const editClass = () => {
@@ -583,6 +585,19 @@ export function ClassPeek({
           )}
         </div>
       </div>
+
+      {shareOpen && (
+        <FittlistShareSheet
+          title={cls.name}
+          url={full?.shareUrl ?? `${window.location.origin}/${cls.base ?? "calendar"}/${cls.id}?d=${cls.iso}`}
+          onShareImage={() => {
+            setShareOpen(false);
+            setCardOpen(true);
+          }}
+          onClose={() => setShareOpen(false)}
+          onToast={onToast}
+        />
+      )}
 
       {cardOpen && (
         <ShareCardSheet

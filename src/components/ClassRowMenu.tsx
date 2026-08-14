@@ -2,6 +2,8 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/Icon";
+import { FittlistShareSheet } from "@/components/InAppShare";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast } from "@/components/Toast";
 import { reportClass } from "@/app/actions/reports";
 
@@ -46,6 +48,8 @@ export function ClassRowMenu({
   studio,
 }: ClassRowMenuProps) {
   const [open, setOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [pending, start] = useTransition();
   // Not useToast: that renders its element permanently, and this component
@@ -69,27 +73,6 @@ export function ClassRowMenu({
   // belongs to the page URL, not the lookup.
   const icsBase = base.startsWith("s/") ? base.slice(2) : base;
   const pagePath = `/${base}/${classId}?d=${iso}`;
-
-  const share = async () => {
-    const url = `${window.location.origin}${pagePath}`;
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ url });
-        setOpen(false);
-        return;
-      }
-      throw new Error("no tray");
-    } catch (err) {
-      if ((err as Error)?.name === "AbortError") return;
-      try {
-        await navigator.clipboard.writeText(url);
-        toast("Link copied, ready to paste");
-      } catch {
-        toast(url);
-      }
-      setOpen(false);
-    }
-  };
 
   const sendReport = (reason: string) => {
     if (pending) return;
@@ -178,12 +161,12 @@ export function ClassRowMenu({
                   </span>
                 </a>
               )}
-              <button className="setrow" onClick={share}>
+              <button className="setrow" onClick={() => { setOpen(false); setShareOpen(true); }}>
                 <span className="setrow-ic">
                   <Icon name="share" size={20} />
                 </span>
                 <span className="setrow-txt">
-                  <span className="t">Share the link</span>
+                    <span className="t">Share class</span>
                 </span>
               </button>
               <a
@@ -214,6 +197,33 @@ export function ClassRowMenu({
             </div>
           </div>
         </div>
+      )}
+
+      {shareOpen && (
+        <FittlistShareSheet
+          title={name}
+          url={`${window.location.origin}${pagePath}`}
+          onShareImage={() => {
+            setShareOpen(false);
+            setCardOpen(true);
+          }}
+          onClose={() => setShareOpen(false)}
+          onToast={toast}
+        />
+      )}
+
+      {cardOpen && (
+        <ShareCardSheet
+          path={`/api/card/class/${classId}`}
+          fileName={`fittlist-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
+          title="Share this class"
+          lead="A square picture of the class, made for sharing."
+          alt={`${name} as a card`}
+          linkUrl={`${window.location.origin}${pagePath}`}
+          linkTitle={name}
+          onClose={() => setCardOpen(false)}
+          onToast={toast}
+        />
       )}
 
       {open && reporting && (

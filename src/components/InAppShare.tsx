@@ -82,11 +82,13 @@ export function InAppShare({
 export function FittlistShareSheet({
   title,
   url,
+  onShareImage,
   onClose,
   onToast,
 }: {
   title: string;
   url: string;
+  onShareImage?: () => void;
   onClose: () => void;
   onToast: (message: string) => void;
 }) {
@@ -111,7 +113,12 @@ export function FittlistShareSheet({
         </button>
         <h2 id="inappshare-title">Share</h2>
         <InAppShare title={title} url={url} onToast={onToast} />
-        <div className="inappshare-actions">
+        <div className={`inappshare-actions${onShareImage ? " has-image" : ""}`}>
+          {onShareImage && (
+            <button className="inappshare-image" onClick={onShareImage}>
+              <Icon name="image" size={21} /><span>Share as an image</span>
+            </button>
+          )}
           <button onClick={copy}><Icon name="link" size={21} /><span>Copy link</span></button>
           <button onClick={more}><Icon name="ios_share" size={21} /><span>Share elsewhere</span></button>
         </div>

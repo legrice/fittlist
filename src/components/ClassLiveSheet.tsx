@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
+import { FittlistShareSheet } from "@/components/InAppShare";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 
 // The moment after publishing: the class is live, and the two ways to hand it
@@ -22,20 +23,10 @@ export function ClassLiveSheet({
   onToast: (msg: string) => void;
 }) {
   const [cardOpen, setCardOpen] = useState(false);
-
-  const shareLink = async () => {
-    const url = `${window.location.origin}/${handle}/${classId}`;
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ title: name, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      onToast("Link copied, ready to paste");
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") onToast(url);
-    }
-  };
+  const [shareOpen, setShareOpen] = useState(false);
+  const url = typeof window === "undefined"
+    ? `/${handle}/${classId}`
+    : `${window.location.origin}/${handle}/${classId}`;
 
   if (cardOpen) {
     return (
@@ -73,7 +64,7 @@ export function ClassLiveSheet({
           fills.
         </p>
         <div className="settingslist ownermenu">
-          <button className="setrow" onClick={shareLink}>
+          <button className="setrow" onClick={() => setShareOpen(true)}>
             <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Share the link</span>
@@ -91,6 +82,18 @@ export function ClassLiveSheet({
           </button>
         </div>
       </div>
+      {shareOpen && (
+        <FittlistShareSheet
+          title={name}
+          url={url}
+          onShareImage={() => {
+            setShareOpen(false);
+            setCardOpen(true);
+          }}
+          onClose={() => setShareOpen(false)}
+          onToast={onToast}
+        />
+      )}
     </div>
   );
 }

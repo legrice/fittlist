@@ -2913,6 +2913,7 @@ button.ps-card { cursor: pointer; }
 .inappshare-sheet > h2 { margin-right: 44px; }
 .inappshare-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
 .inappshare-actions button { display: flex; min-height: 54px; align-items: center; justify-content: center; gap: 8px; border-radius: var(--button-radius); background: var(--cl); color: var(--ink); font: inherit; font-weight: 600; }
+.inappshare-actions.has-image .inappshare-image { grid-column: 1 / -1; background: var(--ink); color: var(--card); }
 
 /* Chat / thread view */
 .chatscreen { min-height: 100dvh; display: flex; flex-direction: column; background: var(--paper); }
