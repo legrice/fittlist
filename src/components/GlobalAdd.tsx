@@ -4,12 +4,15 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { globalComposerData } from "@/app/actions/composer";
+import { setGoing } from "@/app/actions/going";
+import type { PersonalMatch } from "@/app/actions/personal";
 import {
   createStudio,
   findStudioMatches,
   type StudioMatch,
 } from "@/app/actions/studios";
 import { Adder } from "@/components/Adder";
+import { AddBrowse } from "@/components/AddBrowse";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { TypeMultiSelect } from "@/components/TypePicker";
@@ -36,7 +39,7 @@ export function GlobalAdd({
   classOnly?: boolean;
 } = {}) {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<null | "class" | "place">(null);
+  const [mode, setMode] = useState<null | "class" | "browse" | "personal" | "place">(null);
   const [classRole, setClassRole] = useState<null | "coaching" | "attending">(null);
   const [placeStep, setPlaceStep] = useState<"identity" | "details">("identity");
   const [data, setData] = useState<ComposerData | null>(null);
@@ -52,6 +55,7 @@ export function GlobalAdd({
   const [placeWebsite, setPlaceWebsite] = useState("");
   const [placeInstagram, setPlaceInstagram] = useState("");
   const [placeMatches, setPlaceMatches] = useState<StudioMatch[]>([]);
+  const [match, setMatch] = useState<PersonalMatch | null>(null);
   const [matching, setMatching] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [toastMsg, toastOn, toast] = useToast();
@@ -117,14 +121,14 @@ export function GlobalAdd({
         }
         setData(loaded);
         setClassRole(loaded.canCoach ? null : "attending");
-        setMode("class");
+        setMode(loaded.canCoach ? "class" : "browse");
         setOpen(true);
       });
       return;
     }
     setOpen(true);
   };
-  const choose = (next: "class" | "place") => {
+  const choose = (next: "class" | "personal" | "place") => {
     if (next === "place") {
       setMode(next);
       return;
@@ -136,7 +140,7 @@ export function GlobalAdd({
         return;
       }
       setData(loaded);
-      setClassRole(loaded.canCoach ? null : "attending");
+      setClassRole(next === "personal" ? "attending" : loaded.canCoach ? null : "attending");
       setMode(next);
     });
   };
@@ -381,6 +385,57 @@ export function GlobalAdd({
   const composer =
     open && typeof document !== "undefined"
       ? createPortal(
+          mode === "browse" && data ? (
+            <AddBrowse
+              onClose={close}
+              onAddNew={() => {
+                setClassRole("attending");
+                setMode("class");
+              }}
+              onEvent={() => setMode("personal")}
+              onNotice={(message) => {
+                toast(message);
+                router.refresh();
+              }}
+            />
+          ) : data && (mode === "class" || mode === "personal") && classRole ? (
+            <Adder
+              studios={data.studios}
+              templates={data.templates}
+              customTypes={data.customTypes}
+              lastUsed={data.lastUsed}
+              subsCount={0}
+              firstPublish={false}
+              personal={
+                mode === "personal"
+                  ? { canCoach: false, event: true, oneOff: true }
+                  : classRole === "attending"
+                    ? { canCoach: false, event: false, oneOff: true }
+                    : undefined
+              }
+              onClose={() => {
+                setMode(null);
+                setClassRole(null);
+              }}
+              onToast={toast}
+              onPublished={(message) => {
+                close();
+                toast(message);
+                router.refresh();
+              }}
+              onDeleted={(message) => {
+                close();
+                toast(message);
+                router.refresh();
+              }}
+              onMatch={(found) => {
+                setOpen(false);
+                setMode(null);
+                setClassRole(null);
+                setMatch(found);
+              }}
+            />
+          ) :
           <div
             className={`sheet-scrim globaladd-scrim${mode ? " flow" : " chooser"}`}
             onClick={(event) => {
@@ -405,8 +460,8 @@ export function GlobalAdd({
                     <h2 id="globaladd-title">Add a class</h2>
                     <p>Are you coaching or attending?</p>
                     <div className="globaladd-role-options">
-                      <button type="button" onClick={() => setClassRole("coaching")}>Coaching</button>
-                      <button type="button" onClick={() => setClassRole("attending")}>Attending</button>
+                      <button type="button" onClick={() => setClassRole("coaching")}>I&rsquo;m coaching</button>
+                      <button type="button" onClick={() => setMode("browse")}>I&rsquo;m attending</button>
                     </div>
                   </div>
                 )}
@@ -428,39 +483,13 @@ export function GlobalAdd({
                     <span>Add a class</span>
                     <Icon name="chevron_right" size={20} />
                   </button>
-                  <button onClick={() => choose("place")}>
-                    <i><Icon name="place" size={22} /></i>
-                    <span>Add a studio</span>
+                  <button disabled={pending} onClick={() => choose("personal")}>
+                    <i><Icon name="calendar_today" size={22} /></i>
+                    <span>Add a personal workout</span>
                     <Icon name="chevron_right" size={20} />
                   </button>
                 </div>
               </div>
-            )}
-            {data && mode === "class" && classRole && (
-              <Adder
-                studios={data.studios}
-                templates={data.templates}
-                customTypes={data.customTypes}
-                lastUsed={data.lastUsed}
-                subsCount={0}
-                firstPublish={false}
-                personal={classRole === "attending" ? { canCoach: false, event: false } : undefined}
-                onClose={() => {
-                  setMode(null);
-                  setClassRole(null);
-                }}
-                onToast={toast}
-                onPublished={(message) => {
-                  close();
-                  toast(message);
-                  router.refresh();
-                }}
-                onDeleted={(message) => {
-                  close();
-                  toast(message);
-                  router.refresh();
-                }}
-              />
             )}
           </div>,
           document.body,
@@ -478,6 +507,37 @@ export function GlobalAdd({
         <Icon name="add" size={24} />
       </button>
       {composer}
+      {match && typeof document !== "undefined" && createPortal(
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMatch(null); }}>
+          <div className="sheet confirmsheet" role="dialog" aria-modal="true">
+            <h2>That class is already on FittList</h2>
+            <p className="lead">
+              {match.name} with {match.coachName} is already listed at that time and place. Add the existing class so updates stay in sync.
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={pending}
+                onClick={() => startTransition(async () => {
+                  const result = await setGoing(match.classId, match.iso, true);
+                  if (!result.ok) {
+                    toast(result.error ?? "Couldn't add that");
+                    return;
+                  }
+                  toast(`${match.name} was added to your calendar`);
+                  setMatch(null);
+                  setOpen(false);
+                  router.refresh();
+                })}
+              >
+                Add existing class
+              </button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setMatch(null)}>Go back</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

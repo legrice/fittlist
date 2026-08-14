@@ -123,6 +123,12 @@ export async function addPersonalClass(input: {
       const hit = candidates.find((c) => {
         if (hidden.has(c.userId)) return false;
         if (!runsOn(c, iso, days[0])) return false;
+        // Time alone is not identity. Two gyms can both run a 6pm Strength
+        // class, so only offer the public occurrence when the place matches
+        // too. This is the guard that keeps a member from attaching their
+        // calendar to a similarly named class across town.
+        if (studio && c.studioId !== studio.id) return false;
+        if (!studio && c.studioId) return false;
         const haveName = fold(c.name);
         const nameClose =
           !!wantName && (haveName.includes(wantName) || wantName.includes(haveName));
@@ -148,6 +154,25 @@ export async function addPersonalClass(input: {
       }
     }
   }
+
+  // Repeated taps and a form resubmit should never create two copies in the
+  // same person's week. A personal workout may share a time with something
+  // else, so the identity includes its name and place as well as the slot.
+  const ownRows = await db
+    .select()
+    .from(schema.personalClasses)
+    .where(eq(schema.personalClasses.userId, userId));
+  const ownDuplicate = ownRows.some((row) => {
+    if (!days.includes(row.dayOfWeek) || row.startTime !== input.startTime) return false;
+    if ((row.specificDate ?? null) !== specificDate) return false;
+    if ((row.studioId ?? null) !== (studio?.id ?? null)) return false;
+    const sameName = row.name.trim().toLowerCase() === name.toLowerCase();
+    const sameFreePlace = studio
+      ? true
+      : row.location.trim().toLowerCase() === (input.location?.trim().toLowerCase() ?? "");
+    return sameName && sameFreePlace;
+  });
+  if (ownDuplicate) return { ok: false, error: "That is already in your week." };
 
   const mine = await db
     .select({ id: schema.personalClasses.id })

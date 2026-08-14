@@ -25,7 +25,7 @@ import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
-import { removePersonalClass, type PersonalDetail } from "@/app/actions/personal";
+import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -93,6 +93,8 @@ export function CalendarScreen({
   const [addOpen, setAddOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(openAdder && member);
   const [personalAdd, setPersonalAdd] = useState(false);
+  const [personalWorkout, setPersonalWorkout] = useState(false);
+  const [match, setMatch] = useState<PersonalMatch | null>(null);
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [removeConfirm, setRemoveConfirm] = useState<{
     key: string;
@@ -445,18 +447,25 @@ export function CalendarScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddChoice(false)}>
               <Icon name="close" size={18} />
             </button>
-            <h2 id="addrole-title">Add a class</h2>
-            <p className="lead">Are you coaching or attending?</p>
-            <div className="addrole-actions" role="group" aria-label="How are you joining this class?">
+            <h2 id="addrole-title">Add to your week</h2>
+            <p className="lead">What are you adding?</p>
+            <div className="addrole-actions" role="group" aria-label="What are you adding?">
               <button onClick={() => {
                 setAddChoice(false);
                 setPersonalAdd(false);
+                setPersonalWorkout(false);
                 setAddOpen(true);
-              }}>Coaching</button>
+              }}>A class I&rsquo;m coaching</button>
               <button onClick={() => {
                 setAddChoice(false);
                 setBrowseOpen(true);
-              }}>Attending</button>
+              }}>A class I&rsquo;m attending</button>
+              <button onClick={() => {
+                setAddChoice(false);
+                setPersonalAdd(true);
+                setPersonalWorkout(true);
+                setAddOpen(true);
+              }}>A personal workout</button>
             </div>
           </div>
         </div>
@@ -467,6 +476,13 @@ export function CalendarScreen({
           onAddNew={() => {
             setBrowseOpen(false);
             setPersonalAdd(true);
+            setPersonalWorkout(false);
+            setAddOpen(true);
+          }}
+          onEvent={() => {
+            setBrowseOpen(false);
+            setPersonalAdd(true);
+            setPersonalWorkout(true);
             setAddOpen(true);
           }}
           onNotice={(message, highlight) => {
@@ -483,15 +499,21 @@ export function CalendarScreen({
           lastUsed={lastUsed}
           subsCount={subsCount}
           firstPublish={bare}
-          personal={personalAdd ? { canCoach: !member } : undefined}
+          personal={
+            personalAdd
+              ? { canCoach: false, event: personalWorkout, oneOff: true }
+              : undefined
+          }
           onClose={() => {
             setAddOpen(false);
             setPersonalAdd(false);
+            setPersonalWorkout(false);
           }}
           onToast={toast}
           onPublished={(msg) => {
             setAddOpen(false);
             setPersonalAdd(false);
+            setPersonalWorkout(false);
             toast(msg);
             router.refresh();
           }}
@@ -501,7 +523,39 @@ export function CalendarScreen({
             toast(msg);
             router.refresh();
           }}
+          onMatch={(found) => {
+            setAddOpen(false);
+            setMatch(found);
+          }}
         />
+      )}
+      {match && (
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMatch(null); }}>
+          <div className="sheet confirmsheet" role="dialog" aria-modal="true">
+            <h2>That class is already on FittList</h2>
+            <p className="lead">
+              {match.name} with {match.coachName} is already listed at that time and place. Add the existing class so updates stay in sync.
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                onClick={() => startRemove(async () => {
+                  const result = await setGoing(match.classId, match.iso, true);
+                  if (!result.ok) {
+                    toast(result.error ?? "Couldn't add that");
+                    return;
+                  }
+                  toast(`${match.name} was added to your calendar`);
+                  setMatch(null);
+                  router.refresh();
+                })}
+              >
+                Add existing class
+              </button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setMatch(null)}>Go back</button>
+            </div>
+          </div>
+        </div>
       )}
       {peek && (
         <ClassPeek

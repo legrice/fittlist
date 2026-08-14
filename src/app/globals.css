@@ -7351,7 +7351,7 @@ select.editinput.placekind-select {
 .addrole-sheet { max-width: 420px; }
 .addrole-sheet h2 { margin: 4px 42px 4px 0; }
 .addrole-actions {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  display: grid; grid-template-columns: 1fr; gap: 8px;
   margin-top: 20px;
 }
 .addrole-actions button {

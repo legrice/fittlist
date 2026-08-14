@@ -818,7 +818,7 @@ export function FollowingScreen({
           allowWeekAdd={false}
         />
       )}
-      {isHome && <GlobalAdd floating classOnly />}
+      {isHome && <GlobalAdd floating />}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
   );

@@ -109,9 +109,9 @@ export function WeekScreen({
   const [justAdded, setJustAdded] = useState<string | null>(null);
   // The same sheet, opened straight onto its card.
   const [shareId, setShareId] = useState<string | null>(null);
-  // A public class already sits at that day and time; offer the real one, and
-  // keep the way back to "mine anyway" so the answer costs them nothing.
-  const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
+  // A public class already sits at that day, time and place. Reuse it rather
+  // than allowing a second copy to split the studio's schedule.
+  const [match, setMatch] = useState<{ m: PersonalMatch } | null>(null);
   const [pBusy, setPBusy] = useState(false);
   // "Is Jenny on fittlist?" — the invite sheet, opened from a personal row.
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -653,11 +653,10 @@ export function WeekScreen({
             toast(msg);
             router.refresh();
           }}
-          onMatch={(m, again) => {
+          onMatch={(m) => {
             // The match stands alone; two stacked sheets read as a collision.
-            // `again` still holds everything they typed.
             setAddOpen(false);
-            setMatch({ m, again });
+            setMatch({ m });
           }}
         />
       )}
@@ -773,17 +772,8 @@ export function WeekScreen({
               <button className="btn si" disabled={pBusy} onClick={addTheRealOne}>
                 Add {match.m.name}
               </button>
-              <button
-                className="btn ghost"
-                style={{ marginTop: 8 }}
-                disabled={pBusy}
-                onClick={() => {
-                  const { again } = match;
-                  setMatch(null);
-                  again();
-                }}
-              >
-                Add mine anyway
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setMatch(null)}>
+                Go back
               </button>
             </div>
           </div>

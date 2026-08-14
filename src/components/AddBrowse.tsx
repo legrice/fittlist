@@ -149,7 +149,7 @@ export function AddBrowse({
             </button>
             {onEvent && (
               <button className="tertiary addbrowse-ev" onClick={onEvent}>
-                Something else, not a class
+                Add a personal workout instead
               </button>
             )}
           </div>

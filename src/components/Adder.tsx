@@ -14,7 +14,7 @@ import {
   updatePersonalClass,
   type PersonalMatch,
 } from "@/app/actions/personal";
-import { createStudio } from "@/app/actions/studios";
+import { createStudio, findStudioMatches, type StudioMatch } from "@/app/actions/studios";
 import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
 import type { BookingLink } from "@/db/schema";
 import {
@@ -195,8 +195,8 @@ export function Adder({
           }
         : personal.event
           ? {
-              title: "New event",
-              lead: "Anything on your calendar: an appointment, a session, time you're keeping. Yours alone; nothing public.",
+              title: "Add a personal workout",
+              lead: "A run, lift, walk, or anything else you are doing. It stays in your week and out of the public class directory.",
             }
           : {
             title: "Add a class",
@@ -262,6 +262,8 @@ export function Adder({
   const [nsName, setNsName] = useState("");
   const [nsAddr, setNsAddr] = useState("");
   const [nsKind, setNsKind] = useState<PlaceKind>("studio");
+  const [nsMatches, setNsMatches] = useState<StudioMatch[]>([]);
+  const [nsMatching, setNsMatching] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
   // Studio-first: the class list is scoped to the chosen studio's catalog. A
@@ -271,6 +273,32 @@ export function Adder({
   const catalog = gym ? gym.catalog : fetched;
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const selectedStudio = studioId ? studioById.get(studioId) : undefined;
+
+  // Creating a place is the last resort, not the first. Check the shared
+  // directory while the name is being typed so a spelling variation does not
+  // become a second studio with a second class catalog.
+  useEffect(() => {
+    const query = nsName.trim();
+    if (stage !== "new" || query.length < 2) {
+      setNsMatches([]);
+      setNsMatching(false);
+      return;
+    }
+    let live = true;
+    setNsMatching(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const matches = await findStudioMatches(query, nsKind);
+        if (live) setNsMatches(matches);
+      } finally {
+        if (live) setNsMatching(false);
+      }
+    }, 220);
+    return () => {
+      live = false;
+      window.clearTimeout(timer);
+    };
+  }, [nsKind, nsName, stage]);
 
   // Load the studio's shared class catalog whenever the studio changes.
   useEffect(() => {
@@ -997,7 +1025,7 @@ export function Adder({
 
             <div className="adder-card">
             <label className="flabel" htmlFor="fName">
-              {isEvent ? "What is it" : "Class name"}
+                {isEvent ? "Workout" : "Class name"}
               {(gym || selectedStudio) && catalog.length > 0 && !isEdit && (
                 <span> · type new or pick one from this studio</span>
               )}
@@ -1006,7 +1034,7 @@ export function Adder({
               <input
                 type="text"
                 id="fName"
-                placeholder={isEvent ? "e.g. PT session, physio, flight home" : "e.g. Barbell Strength"}
+                placeholder={isEvent ? "e.g. Run, lift, morning walk" : "e.g. Barbell Strength"}
                 autoComplete="off"
                 value={name}
                 onFocus={() => setSugOpen(true)}
@@ -1097,7 +1125,7 @@ export function Adder({
               rows={3}
               placeholder={
                 isEvent
-                  ? "Anything worth remembering: an address, a booking number…"
+                  ? "Anything worth remembering about your plan…"
                   : "What to expect, what to bring, who it's for…"
               }
               onChange={(e) => setDescription(e.target.value)}
@@ -1411,6 +1439,30 @@ export function Adder({
               value={nsName}
               onChange={(e) => setNsName(e.target.value)}
             />
+            {(nsMatching || nsMatches.length > 0) && (
+              <div className="globaladd-matches" aria-live="polite">
+                <span>{nsMatching ? "Checking FittList…" : "Places already on FittList"}</span>
+                {nsMatches.map((match) => (
+                  <button
+                    key={match.id}
+                    type="button"
+                    onClick={() => {
+                      const existing = studios.find((studio) => studio.id === match.id);
+                      if (!existing) return;
+                      setStudioId(existing.id);
+                      setStage("class");
+                      onToast(`Using ${existing.name}`);
+                    }}
+                  >
+                    <span>
+                      <b>{match.name}</b>
+                      {match.address && <small>{match.address}</small>}
+                    </span>
+                    <em>Use this place</em>
+                  </button>
+                ))}
+              </div>
+            )}
             <label className="flabel" htmlFor="nsAddr">
               {nsKind === "virtual" ? "Link or online location" : "Location"}
             </label>
