@@ -2245,6 +2245,25 @@ button.ps-card { cursor: pointer; }
   backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px);
 }
 .globaladd-chooser { padding-top: 20px; }
+.globaladd-chooser > .lead { margin: 5px 44px 0 0; }
+.addweek-options { display: grid; gap: 10px; margin-top: 20px; }
+.addweek-options > button {
+  display: grid; grid-template-columns: 48px minmax(0, 1fr) 20px;
+  align-items: center; gap: 13px; width: 100%; min-height: 78px;
+  padding: 12px 14px; border: 0; border-radius: var(--button-radius);
+  background: var(--cl); color: var(--ink); text-align: left; cursor: pointer;
+}
+.addweek-option-icon {
+  display: grid; place-items: center; width: 48px; height: 48px;
+  border: 1px solid var(--line); border-radius: var(--button-radius);
+  background: var(--card); color: var(--ink);
+}
+.addweek-option-copy { display: grid; gap: 2px; min-width: 0; }
+.addweek-option-copy b { font-size: 16.5px; line-height: 1.15; }
+.addweek-option-copy small { color: var(--muted); font-size: 14px; line-height: 1.25; }
+.addweek-options > button > svg { color: var(--muted); }
+.addweek-options > button:active { background: var(--line); transform: scale(.99); }
+.addweek-options > button:disabled { opacity: .55; }
 .globaladd-chooser-options { display: grid; gap: 8px; margin-top: 18px; }
 .globaladd-chooser-options button {
   display: grid; grid-template-columns: 42px 1fr 20px; align-items: center; gap: 12px;

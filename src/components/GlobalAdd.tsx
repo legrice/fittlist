@@ -13,6 +13,7 @@ import {
 } from "@/app/actions/studios";
 import { Adder } from "@/components/Adder";
 import { AddBrowse } from "@/components/AddBrowse";
+import { AddWeekChoices } from "@/components/AddWeekChoices";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { TypeMultiSelect } from "@/components/TypePicker";
@@ -126,7 +127,15 @@ export function GlobalAdd({
       });
       return;
     }
-    setOpen(true);
+    startTransition(async () => {
+      const loaded = data ?? (await globalComposerData());
+      if (!loaded) {
+        toast("Sign in to add to FittList");
+        return;
+      }
+      setData(loaded);
+      setOpen(true);
+    });
   };
   const choose = (next: "class" | "personal" | "place") => {
     if (next === "place") {
@@ -476,19 +485,21 @@ export function GlobalAdd({
                 <button className="iconbtn sheetclose" aria-label="Close add menu" onClick={close}>
                   <Icon name="close" size={18} />
                 </button>
-                <h2 id="globaladd-chooser-title">Add to FittList</h2>
-                <div className="globaladd-chooser-options">
-                  <button disabled={pending} onClick={() => choose("class")}>
-                    <i><Icon name="activity" size={22} /></i>
-                    <span>Add a class</span>
-                    <Icon name="chevron_right" size={20} />
-                  </button>
-                  <button disabled={pending} onClick={() => choose("personal")}>
-                    <i><Icon name="calendar_today" size={22} /></i>
-                    <span>Add a personal workout</span>
-                    <Icon name="chevron_right" size={20} />
-                  </button>
-                </div>
+                <h2 id="globaladd-chooser-title">Add to your week</h2>
+                <p className="lead">What are you doing?</p>
+                <AddWeekChoices
+                  canCoach={Boolean(data?.canCoach)}
+                  disabled={pending}
+                  onCoach={() => {
+                    setClassRole("coaching");
+                    setMode("class");
+                  }}
+                  onAttend={() => {
+                    setClassRole("attending");
+                    setMode("browse");
+                  }}
+                  onPersonal={() => choose("personal")}
+                />
               </div>
             )}
           </div>,

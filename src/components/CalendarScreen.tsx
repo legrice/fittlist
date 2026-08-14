@@ -19,6 +19,7 @@ import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { PlanSheet } from "@/components/PlanSheet";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
+import { AddWeekChoices } from "@/components/AddWeekChoices";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
@@ -448,25 +449,26 @@ export function CalendarScreen({
               <Icon name="close" size={18} />
             </button>
             <h2 id="addrole-title">Add to your week</h2>
-            <p className="lead">What are you adding?</p>
-            <div className="addrole-actions" role="group" aria-label="What are you adding?">
-              <button onClick={() => {
+            <p className="lead">What are you doing?</p>
+            <AddWeekChoices
+              canCoach={!member}
+              onCoach={() => {
                 setAddChoice(false);
                 setPersonalAdd(false);
                 setPersonalWorkout(false);
                 setAddOpen(true);
-              }}>A class I&rsquo;m coaching</button>
-              <button onClick={() => {
+              }}
+              onAttend={() => {
                 setAddChoice(false);
                 setBrowseOpen(true);
-              }}>A class I&rsquo;m attending</button>
-              <button onClick={() => {
+              }}
+              onPersonal={() => {
                 setAddChoice(false);
                 setPersonalAdd(true);
                 setPersonalWorkout(true);
                 setAddOpen(true);
-              }}>A personal workout</button>
-            </div>
+              }}
+            />
           </div>
         </div>
       )}
