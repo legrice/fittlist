@@ -7845,6 +7845,17 @@ a.clspeek-by:active { opacity: .6; }
   padding-left: 18px; padding-right: 18px;
 }
 .shseg::-webkit-scrollbar { display: none; }
+@media (min-width: 1100px) {
+  /* The phone rail bleeds to the viewport edges. Inside the desktop shell,
+     those edges sit behind the fixed navigation columns, so keep the tabs
+     in the same centered content column as the page title and controls. */
+  .shseg {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
 .shseg-pill { flex: 0 0 auto; white-space: nowrap; }
 .shseg-pill {
   /* White with no stroke, by Matt's call: on the hub's gray the fill is
