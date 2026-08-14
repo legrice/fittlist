@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
@@ -177,6 +178,7 @@ export function FollowingScreen({
   // Today isn't selected; it only ever names this one day.
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
+  const [weekPeek, setWeekPeek] = useState<RailPerson | "self" | null>(null);
   const [find, setFind] = useState(false);
   const [weekIntro, setWeekIntro] = useState(false);
   // Nothing selected is the combined week. A face is an explicit filter,
@@ -527,12 +529,11 @@ export function FollowingScreen({
           <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
             <div className="tray-scroll">
               <button
-                className={`trayitem${coachFilter && !selectedSelf ? " dim" : ""}`}
-                aria-pressed={selectedSelf}
-                onClick={chooseSelf}
+                className="trayitem"
+                onClick={() => setWeekPeek("self")}
               >
                 <span
-                  className={`trayav trayav-you${selectedSelf ? " sel" : ""}`}
+                  className="trayav trayav-you"
                   style={{ background: meFace.color }}
                 >
                   {meFace.photo ? (
@@ -547,12 +548,11 @@ export function FollowingScreen({
               {coachOptions.map((coach) => (
                 <button
                   key={coach.id}
-                  className={`trayitem${coachFilter && coachFilter !== coach.id ? " dim" : ""}`}
-                  aria-pressed={coachFilter === coach.id}
-                  onClick={() => setCoachFilter(coachFilter === coach.id ? null : coach.id)}
+                  className="trayitem"
+                  onClick={() => setWeekPeek(coach)}
                 >
                   <span
-                    className={`trayav${coachFilter === coach.id ? " sel" : ""}`}
+                    className="trayav"
                     style={{ background: coach.color }}
                   >
                     {coach.photo ? (
@@ -843,6 +843,26 @@ export function FollowingScreen({
           onToast={notify}
           onChanged={() => {}}
           allowWeekAdd={false}
+        />
+      )}
+      {weekPeek === "self" && meId && (
+        <CoachPeek
+          id={meId}
+          name={meFace.name}
+          photo={meFace.photo}
+          color={meFace.color}
+          self
+          shareHref={meKind === "coach" ? "/coachshare" : "/membershare"}
+          onClose={() => setWeekPeek(null)}
+        />
+      )}
+      {weekPeek && weekPeek !== "self" && (
+        <CoachPeek
+          id={weekPeek.id}
+          name={weekPeek.name}
+          photo={weekPeek.photo}
+          color={weekPeek.color}
+          onClose={() => setWeekPeek(null)}
         />
       )}
       {isHome && <GlobalAdd floating />}
