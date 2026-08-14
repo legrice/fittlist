@@ -38,7 +38,7 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    { id: "following", href: "/feed", icon: "group", label: "This Week" },
+    { id: "following", href: "/feed", icon: "home", label: "Home" },
     { id: "search", href: "/discover", icon: "search", label: "Discover" },
     {
       id: "schedule" as const,
