@@ -519,10 +519,6 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <div className="following-title-row">
-            <h1 className="tab-page-title">Home</h1>
-            <Link className="following-manage" href="/following?from=feed">Manage</Link>
-          </div>
           <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
             <div className="tray-scroll">
               <button
@@ -901,8 +897,6 @@ function WeekSocialFeed({
 
   return (
     <div className="weekfeed">
-      <div className="weekfeed-label">Happening this week</div>
-
       {attendance.map(({ item, person }) => {
         const coach = coachById.get(item.coachId) ?? null;
         return (
