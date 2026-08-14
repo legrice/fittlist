@@ -13,6 +13,7 @@ import { InvitesBanner } from "@/components/InvitesBanner";
 import { NavBar } from "@/components/NavBar";
 import { lookMode } from "@/lib/darkmode";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
+import { DesktopChrome } from "@/components/DesktopChrome";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,22 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
 
   return (
     <section className="screen hasnav" data-mode={lookMode(me.look)}>
+      <DesktopChrome
+        coach={isCoach}
+        scheduleHref={scheduleHref}
+        profileHref={profileHref}
+        notificationUnread={unread.notifications}
+        messageUnread={unread.messages}
+        admin={isAdmin}
+        adminAttention={adminAttention}
+        person={{
+          name: me.name.trim() || me.email.split("@")[0],
+          location: me.location,
+          photo: me.photoThumb ?? me.photo,
+          color: face.color,
+          initial: face.initial,
+        }}
+      />
       <div className="pad">
         <AppHeader
           notificationUnread={unread.notifications}

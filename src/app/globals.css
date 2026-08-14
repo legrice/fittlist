@@ -331,8 +331,10 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .ob:has(.oblanding-mark) > .pad > .mark { display:none; }
 .oblanding-mark { display:flex; justify-content:center; margin-top:8px; color:var(--si); }
-.oblanding-logo { font-size:54px; --wm-ink:var(--si); --wm-mark:var(--si); }
-.oblanding-logo .wm-text { display:none; }
+/* The front door uses the complete brand, not the mark on its own. Orange
+   identifies FittList; the ink word keeps it from reading like an app icon
+   floating without a name. */
+.oblanding-logo { font-size:29px; --wm-ink:var(--ink); --wm-mark:var(--si); }
 .ob h1.ob-hero {
   margin:62px 0 22px; font-size:clamp(52px, 15vw, 76px); line-height:.94;
   letter-spacing:-.045em; text-align:center;
@@ -1155,7 +1157,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   content: ""; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 3px;
   border-radius: 2px; background: currentColor;
 }
-.daygrid-ev.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
+.daygrid-ev.ev-coaching { background: rgba(194, 65, 12, .16); color: var(--si-ink); }
 .daygrid-ev.ev-added { background: var(--cl); color: var(--ink); }
 .daygrid-ev.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
 [data-mode="dark"] .daygrid-ev.ev-coaching { color: #f09062; }
@@ -1359,7 +1361,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 600; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis;
 }
-.monthpill.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
+.monthpill.ev-coaching { background: rgba(194, 65, 12, .16); color: var(--si-ink); }
 .monthpill.ev-added { background: var(--cl); color: var(--ink); }
 .monthpill.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
 .monthmore { font-size: 10px; font-weight: 600; color: var(--ol); text-align: center; }
@@ -6741,6 +6743,144 @@ select.editinput.placekind-select {
 .screen.hasnav .brandbar .headnav-l { color: rgba(255, 255, 255, .7); }
 .screen.hasnav .brandbar .headnav-l:hover,
 .screen.hasnav .brandbar .headnav-l.on { color: #fff; border-bottom-color: #fff; }
+
+/* --------------------------------------------------------------------------
+   Desktop application frame
+
+   A wide screen is not a large phone. At 1100px the mobile chrome gives way
+   to three stable zones: navigation, the current page, and personal context.
+   Everything below this breakpoint remains the phone/iOS product unchanged.
+   -------------------------------------------------------------------------- */
+.desktop-left,
+.desktop-right { display: none; }
+
+@media (min-width: 1100px) {
+  body:has(.desktop-left) { background: var(--ground); }
+
+  .desktop-left {
+    position: fixed; inset: 0 auto 0 0; z-index: 30;
+    width: 236px; padding: 30px 20px 28px;
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--line); background: var(--paper);
+  }
+  .desktop-logo {
+    display: inline-flex; align-items: center; align-self: flex-start;
+    margin: 0 12px 34px; text-decoration: none;
+  }
+  .desktop-logo .wm { font-size: 25px; }
+  .desktop-nav { display: flex; flex-direction: column; gap: 5px; }
+  .desktop-nav-link {
+    position: relative; min-height: 46px; padding: 0 13px;
+    display: flex; align-items: center; gap: 13px;
+    border-radius: 14px; color: var(--muted); text-decoration: none;
+    font-size: 15px; font-weight: 600;
+  }
+  .desktop-nav-link:hover { background: var(--cl); color: var(--ink); }
+  .desktop-nav-link.on { background: var(--cl); color: var(--ink); }
+  .desktop-nav-link.on .icon { color: var(--si); }
+  .desktop-count {
+    min-width: 19px; height: 19px; margin-left: auto; padding: 0 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px; background: var(--ink); color: var(--paper);
+    font-size: 10px; line-height: 1;
+  }
+  .desktop-nav-spin { position: absolute; right: 13px; }
+  .desktop-create {
+    min-height: 48px; margin-top: 24px; padding: 0 16px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: var(--button-radius); background: var(--si); color: #fff;
+    text-decoration: none; font-size: 15px; font-weight: 600;
+  }
+  .desktop-create:hover { filter: brightness(.95); }
+
+  /* Leave real room for the rail instead of letting fixed chrome cover the
+     beginning of the page. The content column remains the reading focus. */
+  .screen.hasnav,
+  .pub.hasnav { padding-left: 236px; }
+  .screen.hasnav > .pad,
+  .pub.hasnav .profwrap { max-width: 748px; }
+
+  /* The wide shell owns navigation now; the phone header would repeat it. */
+  .screen.hasnav > .pad > .brandbar,
+  .pub.hasnav .profwrap > .brandbar { display: none; }
+
+  /* Profiles remain in the middle column. Their image becomes a contained,
+     rounded landscape rather than a mobile full-bleed hero stretched across
+     the desktop. A visitor's back control gets its own row above the image. */
+  .pub .profwrap { padding-top: 30px; }
+  .pub .pubhero-media {
+    height: 330px; margin: 20px 0 0; overflow: visible;
+    background: transparent;
+  }
+  .pub .pubhero-media:has(.profback) { margin-top: 76px; }
+  .pub .pubhero-media .pubhero-bg,
+  .pub .pubhero-media .pubhero-dim {
+    border-radius: 24px;
+  }
+  .pub .pubhero-media .profback {
+    top: -56px; left: 0;
+  }
+  .pub .pubhero-media .ownertop { top: 16px; right: 16px; }
+
+  /* The old desktop header links are kept for the 940–1099px bridge where
+     the bottom bar has already left but the full desktop frame has not begun. */
+}
+
+@media (min-width: 1380px) {
+  .desktop-right {
+    position: fixed; inset: 0 0 0 auto; z-index: 20;
+    width: 318px; padding: 30px 24px;
+    display: flex; flex-direction: column; gap: 16px;
+    border-left: 1px solid var(--line); background: var(--ground);
+  }
+  .screen.hasnav,
+  .pub.hasnav { padding-right: 318px; }
+  .desktop-profile-card,
+  .desktop-week-card {
+    padding: 20px; border: 1px solid var(--line); border-radius: 20px;
+    background: var(--paper);
+  }
+  .desktop-profile-kicker {
+    margin-bottom: 14px; color: var(--muted); font-size: 12px;
+    font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .desktop-profile-person {
+    display: flex; align-items: center; gap: 12px; text-decoration: none;
+  }
+  .desktop-profile-person > img,
+  .desktop-profile-person > span {
+    width: 54px; height: 54px; flex: 0 0 auto; border-radius: 16px;
+    object-fit: cover;
+  }
+  .desktop-profile-person > span {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 22px; font-weight: 600;
+  }
+  .desktop-profile-person div { min-width: 0; }
+  .desktop-profile-person strong,
+  .desktop-profile-person small { display: block; }
+  .desktop-profile-person strong {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 17px; line-height: 1.2;
+  }
+  .desktop-profile-person small {
+    margin-top: 4px; color: var(--muted); font-size: 13px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .desktop-profile-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 18px; }
+  .desktop-profile-actions a {
+    min-height: 40px; display: flex; align-items: center; justify-content: center;
+    border-radius: 13px; background: var(--cl); text-decoration: none;
+    font-size: 13.5px; font-weight: 600;
+  }
+  .desktop-profile-actions a:last-child { background: var(--ink); color: var(--paper); }
+  .desktop-week-card strong { display: block; font-size: 19px; line-height: 1.15; }
+  .desktop-week-card p { margin: 9px 0 16px; color: var(--muted); font-size: 13.5px; line-height: 1.4; }
+  .desktop-week-card a {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--si); text-decoration: none; font-size: 13.5px; font-weight: 600;
+  }
+}
 .tab-page-title {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 30px; line-height: 1.05; font-weight: 600;

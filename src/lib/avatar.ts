@@ -8,7 +8,7 @@
 export const AVATAR_COLORS: string[] = [
   // reds → warm oranges (the brand's neighbourhood)
   "#c0392b", "#d4453a", "#b83227", "#e05252", "#a93226", "#cf5b4a",
-  "#d2691e", "#dd6a35", "#c15f1d", "#e07b39", "#b4541a", "#e8894a",
+  "#d2691e", "#C2410C", "#c15f1d", "#e07b39", "#b4541a", "#e8894a",
   // ambers → olives
   "#c8871a", "#b8860b", "#d29b2b", "#a67c00", "#c9a227", "#8f7a1f",
   "#7d8b1e", "#6b8e23", "#8a9a25", "#5f7a1c", "#7a8f3a", "#4f6b18",

@@ -108,7 +108,7 @@ no Tailwind config to paste.
   --ol: #6b6555;           /* warm muted secondary text */
   --line: #e6dfcd;         /* warm cream dividers / input borders */
   --rule: #191502;         /* charcoal hairline rules */
-  --si: #dd6a35;           /* pleasant warm-orange accent + CTA */
+  --si: #C2410C;           /* FittList orange accent + CTA */
   --si-tint: #fbe4d2;      /* pale brand wash: tinted CTAs, selected tabs */
   --si-ink: #b9531f;       /* brand text/icons sitting on the wash */
   --go: #3d8b53;           /* "on" green for switches */

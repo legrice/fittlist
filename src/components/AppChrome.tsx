@@ -7,6 +7,7 @@ import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
+import { DesktopChrome } from "@/components/DesktopChrome";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
@@ -44,6 +45,7 @@ export async function AppChrome({
       photo: schema.users.photo,
       photoThumb: schema.users.photoThumb,
       avatarColor: schema.users.avatarColor,
+      location: schema.users.location,
       id: schema.users.id,
     })
     .from(schema.users)
@@ -73,18 +75,37 @@ export async function AppChrome({
   };
 
   const header = (
-    <AppHeader
-      notificationUnread={unread.notifications}
-      messageUnread={unread.messages}
-      // The logo goes Home, by Matt's call: /feed is the front door for
-      // everyone with the member side, whatever landingHref answers for
-      // sign-in.
-      home={fans ? "/feed" : "/app"}
-      nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
-      settings={active === "you"}
-      admin={isAdmin}
-      adminAttention={adminAttention}
-    />
+    <>
+      <DesktopChrome
+        coach={isCoach}
+        scheduleHref={scheduleHref}
+        profileHref={profileHref}
+        notificationUnread={unread.notifications}
+        messageUnread={unread.messages}
+        admin={isAdmin}
+        adminAttention={adminAttention}
+        active={active}
+        person={{
+          name: me.name.trim() || me.email.split("@")[0],
+          location: me.location,
+          photo: me.photoThumb ?? me.photo,
+          color: face.color,
+          initial: face.initial,
+        }}
+      />
+      <AppHeader
+        notificationUnread={unread.notifications}
+        messageUnread={unread.messages}
+        // The logo goes Home, by Matt's call: /feed is the front door for
+        // everyone with the member side, whatever landingHref answers for
+        // sign-in.
+        home={fans ? "/feed" : "/app"}
+        nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
+        settings={active === "you"}
+        admin={isAdmin}
+        adminAttention={adminAttention}
+      />
+    </>
   );
   if (!bar) return header;
   return (

@@ -44,7 +44,7 @@ const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" })
 // em size is what sets the drawing's height; 944 wide with an even margin.
 for (const [name, color] of [
   ["fittlist-lockup-black", "#111111"],
-  ["fittlist-lockup-color", "#dd6a35"],
+  ["fittlist-lockup-color", "#C2410C"],
 ]) {
   const w = 944;
   const h = 300;
@@ -65,7 +65,7 @@ for (const [name, color] of [
 // The mark on its own, square, for an icon-only filing or an app listing.
 for (const [name, color] of [
   ["fittlist-mark-black", "#111111"],
-  ["fittlist-mark-color", "#dd6a35"],
+  ["fittlist-mark-color", "#C2410C"],
 ]) {
   const s = 944;
   const html = shell(

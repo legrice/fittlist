@@ -11,7 +11,7 @@ import { chromium } from "playwright";
 import fs from "node:fs";
 import { brandIcon } from "../src/lib/brand.ts";
 
-const ORANGE = "#dd6a35"; // --si, the accent the whole app is built around
+const ORANGE = "#C2410C"; // --si, the accent the whole app is built around
 const WHITE = "#ffffff";
 
 // brandIcon's ink fills its 134x136 viewBox exactly, so the centre is the box
