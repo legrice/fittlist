@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
@@ -43,6 +43,13 @@ export async function peopleForSharing(): Promise<SharePerson[]> {
   const userId = await getSessionUserId();
   if (!userId) return [];
   const db = await getDb();
+  const [me] = await db.select({ email: schema.users.email }).from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return [];
+  const follows = await db
+    .select({ trainerUserId: schema.subscribers.trainerUserId })
+    .from(schema.subscribers)
+    .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
+  const followedIds = new Set(follows.map((follow) => follow.trainerUserId));
   const rows = await db.select({
     id: schema.users.id,
     name: schema.users.name,
@@ -61,12 +68,17 @@ export async function peopleForSharing(): Promise<SharePerson[]> {
       Boolean(person.handle) &&
       person.messagesOpen
     )
-    .map((person) => ({
-      id: person.id,
-      name: person.name.trim() || person.handle!,
-      handle: person.handle!,
-      photo: person.photoThumb ?? person.photo,
-      color: avatarColor(person),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .map((person) => {
+      const photo = person.photoThumb ?? person.photo;
+      return {
+        id: person.id,
+        name: person.name.trim() || person.handle!,
+        handle: person.handle!,
+        photo,
+        color: avatarColor(person),
+        priority: (followedIds.has(person.id) ? 2 : 0) + (photo ? 1 : 0),
+      };
+    })
+    .sort((a, b) => b.priority - a.priority || a.name.localeCompare(b.name))
+    .map(({ priority: _priority, ...person }) => person);
 }
