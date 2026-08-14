@@ -8,6 +8,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let bridge = CAPBridgeViewController()
     private let headerView = UIView()
     private let tabBar = UITabBar()
+    private var settingsButton: UIButton?
     private let tabIDs = ["following", "search", "schedule", "share", "you"]
     private let fallbackRoutes = ["/feed", "/discover", "/calendar", "/coachshare", "/you"]
 
@@ -37,7 +38,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
         tabBar.items = [
-            item("Following", "person.2", 0),
+            item("This Week", "person.2", 0),
             item("Discover", "magnifyingglass", 1),
             item("Schedule", "calendar", 2),
             item("Share", "arrow.up.right", 3),
@@ -86,10 +87,14 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         home.addTarget(self, action: #selector(openHome), for: .touchUpInside)
         headerView.addSubview(home)
 
+        let settings = headerButton(symbol: "gearshape", action: #selector(openSettings), label: "Settings")
+        settings.isHidden = true
+        settingsButton = settings
         let actions = UIStackView(arrangedSubviews: [
             headerButton(symbol: "magnifyingglass", action: #selector(openSearch), label: "Search"),
+            headerButton(symbol: "bubble.left", action: #selector(openMessages), label: "Messages"),
             headerButton(symbol: "bell", action: #selector(openUpdates), label: "Notifications"),
-            headerButton(symbol: "gearshape", action: #selector(openSettings), label: "Settings"),
+            settings,
         ])
         actions.translatesAutoresizingMaskIntoConstraints = false
         actions.axis = .horizontal
@@ -142,8 +147,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     @objc private func openHome() { navigate(tabID: "following", fallback: "/feed") }
-    @objc private func openSearch() { navigate(tabID: "search", fallback: "/discover") }
-    @objc private func openUpdates() { navigate(fallback: "/updates") }
+    @objc private func openSearch() { navigate(fallback: "/search") }
+    @objc private func openMessages() { navigate(fallback: "/inbox") }
+    @objc private func openUpdates() { navigate(fallback: "/notifications") }
     @objc private func openSettings() { navigate(fallback: "/settings") }
 
     private func item(_ title: String, _ symbol: String, _ tag: Int) -> UITabBarItem {
@@ -173,13 +179,18 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         controller.addUserScript(WKUserScript(
             source: """
             (() => {
-              const send = () => window.webkit.messageHandlers.fittlistRoute.postMessage(location.pathname);
+              const send = () => window.webkit.messageHandlers.fittlistRoute.postMessage({
+                path: location.pathname,
+                settings: !!document.querySelector('.brandbar [aria-label="Settings"]'),
+                active: document.querySelector('.navwrap a[aria-current="page"]')?.dataset.tab || null
+              });
+              const sendAfterRender = () => setTimeout(send, 80);
               const push = history.pushState.bind(history);
               const replace = history.replaceState.bind(history);
-              history.pushState = (...args) => { push(...args); send(); };
-              history.replaceState = (...args) => { replace(...args); send(); };
-              addEventListener('popstate', send);
-              addEventListener('hashchange', send);
+              history.pushState = (...args) => { push(...args); sendAfterRender(); };
+              history.replaceState = (...args) => { replace(...args); sendAfterRender(); };
+              addEventListener('popstate', sendAfterRender);
+              addEventListener('hashchange', sendAfterRender);
               document.addEventListener('click', event => {
                 const link = event.target.closest?.('a[href]');
                 if (!link) return;
@@ -193,7 +204,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
                   window.webkit.messageHandlers.fittlistExternal.postMessage(url.href);
                   return;
                 }
-                setTimeout(send, 0);
+                sendAfterRender();
               }, true);
               send();
             })();
@@ -230,9 +241,15 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             UIApplication.shared.open(url)
             return
         }
-        guard message.name == "fittlistRoute", let path = message.body as? String else { return }
+        guard message.name == "fittlistRoute",
+              let route = message.body as? [String: Any],
+              let path = route["path"] as? String else { return }
+        settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
+        let active = route["active"] as? String
+        let activeTags = ["following": 0, "search": 1, "discover": 1, "schedule": 2, "share": 3, "you": 4]
         let tag: Int?
-        if path == "/feed" || path == "/upcoming" { tag = 0 }
+        if let active, let activeTag = activeTags[active] { tag = activeTag }
+        else if path == "/feed" || path == "/upcoming" { tag = 0 }
         else if path == "/discover" || path == "/search" { tag = 1 }
         else if path == "/calendar" { tag = 2 }
         else if path.hasPrefix("/share") || path == "/coachshare" || path == "/membershare" { tag = 3 }

@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>FittList uses the camera when you choose to take a profile, class, or studio photo.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>FittList uses your location to show coaches, classes, and studios near you.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FittList uses photos you select for profiles, classes, studios, and share images.</string>
   <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
