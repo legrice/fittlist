@@ -6820,6 +6820,10 @@ select.editinput.placekind-select {
 }
 .weekpost-activityclass h2 { margin: 0 0 5px; font-size: 25px; line-height: 1.08; }
 .weekpost-activityclass > p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.35; }
+.weekpost-activitymeta {
+  margin-top: 17px; padding-top: 13px; display: flex; align-items: center; gap: 8px;
+  border-top: 1px solid var(--div); font-size: 13.5px; font-weight: 600;
+}
 .weekpost-activitycoach { margin-top: 8px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
 .weekpost-activitycoach > span {
   width: 24px; height: 24px; overflow: hidden; display: grid; place-items: center;

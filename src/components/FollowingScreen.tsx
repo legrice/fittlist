@@ -910,7 +910,6 @@ function WeekSocialFeed({
               )}
               <div>
                 <strong>{person.handle ? <Link href={`/${person.handle}`}>{person.name}</Link> : person.name} added this</strong>
-                <span>{shortDay(item.iso)}</span>
               </div>
             </header>
             <ActivityClassDetails item={item} coach={coach} onOpen={onOpen} />
@@ -1029,6 +1028,10 @@ function ActivityClassDetails({
           <small>Coached by {coach.name}</small>
         </div>
       )}
+      <div className="weekpost-activitymeta">
+        <Icon name="calendar_today" size={18} />
+        <span>{shortDay(item.iso)} · {item.hm}{item.ap}</span>
+      </div>
     </button>
   );
 }
@@ -1061,7 +1064,7 @@ function ClassActivityPost({
         )}
         <div>
           <strong>{coach.handle ? <Link href={`/${coach.handle}`}>{coach.name}</Link> : coach.name}</strong>
-          <span>Coaching · {shortDay(item.iso)}</span>
+          <span>Coaching</span>
         </div>
       </header>
       <ActivityClassDetails item={item} coach={null} onOpen={onOpen} />
