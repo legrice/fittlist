@@ -5,22 +5,22 @@ import { SettingsGear } from "@/components/SettingsGear";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
-// The same header on every signed-in screen: wordmark left, then Search,
-// Notifications and Settings right. Profile already has a permanent tab, so these
-// are the three useful actions somebody may need from anywhere in the app.
+// The same header on every signed-in screen: wordmark left, then the useful
+// global actions and the viewer's profile. Profile is contextual chrome rather
+// than another permanent destination in the bottom bar.
 export function AppHeader({
   notificationUnread = 0,
   messageUnread = 0,
   home = "/week",
   nav,
   settings = false,
+  profile,
   admin = false,
   adminAttention = 0,
 }: {
   notificationUnread?: number;
   messageUnread?: number;
-  /** Where the wordmark goes. The Following tab for anyone with the member
-      side, the schedule for a coach who doesn't have it yet. */
+  /** Where the wordmark goes. */
   home?: string;
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
@@ -28,6 +28,8 @@ export function AppHeader({
   nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string; profileHref?: string };
   /** Settings is contextual to your own profile rather than global chrome. */
   settings?: boolean;
+  /** Your profile is a contextual utility, not a permanent bottom tab. */
+  profile?: { href: string; photo: string | null; color: string; initial: string };
   /** Site operations are visible only to configured admins. */
   admin?: boolean;
   /** Number of unresolved reported listings. */
@@ -72,6 +74,16 @@ export function AppHeader({
           match="/notifications"
           badge={notificationUnread > 0 ? <span className="inboxdot">{notificationUnread > 9 ? "9+" : notificationUnread}</span> : undefined}
         />
+        {profile && (
+          <Link className="header-profile-link" href={profile.href} aria-label="Your profile">
+            {profile.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.photo} alt="" />
+            ) : (
+              <span style={{ background: profile.color }}>{profile.initial}</span>
+            )}
+          </Link>
+        )}
         {settings && <SettingsGear header />}
       </div>
     </div>

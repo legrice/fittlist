@@ -49,10 +49,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
-  // The Calendar tab points at one place now. It used to differ by kind,
-  // because a coach's calendar was /app and a member had their own at /week;
-  // a member has no calendar at all, so there is nothing to fork on and the
-  // tab is not drawn for them in the first place.
+  // Coaching and attending are two relationships inside one calendar, not
+  // separate products or destinations.
   const scheduleHref = "/calendar";
   // Profile opens your page, which is your handle. /you redirects there and is
   // the fallback for an account still mid-signup with no handle to point at.
@@ -85,21 +83,16 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           notificationUnread={unread.notifications}
           messageUnread={unread.messages}
-          // The wordmark goes Home, by Matt's call: /feed is the front
-          // door for everyone now, whatever landingHref answers for
-          // sign-in.
-          home="/feed"
+          // The calendar is the shared front door for every account type.
+          home="/calendar"
           nav={{ coach: isCoach, scheduleHref, profileHref }}
+          profile={{ href: profileHref, ...face }}
           admin={isAdmin}
           adminAttention={adminAttention}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      {/* The Profile tab wears the viewer's own face rather than a glyph: it
-          is the only tab naming a person rather than a place, and a picture is
-          both the fastest thing in the bar to recognise and what every app
-          anybody already uses puts on that door. */}
       <NavBar
         coach={isCoach}
         scheduleHref={scheduleHref}

@@ -13,7 +13,9 @@ export type NavItem = {
 };
 
 /**
- * Five durable places, with Discover pointing at the browse directory.
+ * Three durable places: your calendar, the things you deliberately follow,
+ * and the directory. Profile and sharing remain important, but they are
+ * contextual actions rather than places somebody has to keep navigating to.
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
@@ -30,41 +32,22 @@ export type NavItem = {
  * than a migration.
  */
 export function navTabs(
-  coach: boolean,
+  _coach: boolean,
   scheduleHref?: string,
   /** Your own profile. It is your public page, so it is your handle; the tab
    *  falls back to /you, which redirects there, for a shell that has not been
    *  handed the handle. */
-  profileHref?: string,
+  _profileHref?: string,
 ): NavItem[] {
   return [
-    { id: "following", href: "/feed", icon: "group", label: "This Week" },
-    { id: "search", href: "/discover", icon: "search", label: "Discover" },
     {
       id: "schedule" as const,
       href: scheduleHref ?? "/calendar",
       icon: "calendar_month",
-      label: "Schedule",
+      label: "Calendar",
     },
-    // Everyone's now, by Matt's call: it came off the member's bar while a
-    // member had nothing to give, and the hub is where they build the week
-    // they're going to before handing it on, so the tab is the way in. One
-    // screen, an address per kind, and the routes bounce a wrong arrival.
-    {
-      id: "share",
-      href: coach ? "/coachshare" : "/membershare",
-      // This tab is the creative studio, not the contextual "send this"
-      // action. Sparkles distinguish making a share image from the standard
-      // share glyph used on classes, profiles and links.
-      icon: "auto_awesome_outline",
-      label: "Share",
-    },
-    // Who you are, which is your page: the tab opens the profile everybody
-    // else sees rather than a settings screen wearing your name. Settings are
-    // the gear on it, and the studios and the rota are rows in there. A tab
-    // called Profile that opened a list of switches was the one place in the
-    // app where the word and the screen disagreed.
-    { id: "you", href: profileHref ?? "/you", icon: "account_circle", label: "Profile" },
+    { id: "following", href: "/feed", icon: "group", label: "Following" },
+    { id: "search", href: "/discover", icon: "search", label: "Discover" },
   ];
 }
 

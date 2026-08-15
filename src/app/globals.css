@@ -8647,3 +8647,56 @@ a.clspeek-by:active { opacity: .6; }
   .cityplaces { grid-template-columns:1fr; }
   .cityplaces a,.cityplaces a:nth-child(odd),.cityplaces a:nth-child(even){ padding:16px 0; }
 }
+
+/* Simplified core branch --------------------------------------------------
+   Calendar is the front door. Following is a quiet library, and Discover is
+   a finder rather than an endless feed. These surfaces deliberately share a
+   small vocabulary: white panels, 16px corners, and the same orange active
+   state. */
+.header-profile-link {
+  width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%;
+  overflow: hidden; display: grid; place-items: center; color: #fff;
+  text-decoration: none; font-size: 14px; font-weight: 600;
+}
+.header-profile-link img,.header-profile-link span { width: 100%; height: 100%; object-fit: cover; display: grid; place-items: center; }
+.following-library,.simple-discover { padding: 28px 0 96px; color: var(--ink); }
+.following-library-head h1 { margin: 0; font-size: 40px; line-height: 1; letter-spacing: -.045em; }
+.following-library-head p { margin: 9px 0 0; color: var(--muted); font-size: 17px; line-height: 1.35; }
+.following-library-tabs,.simple-discover-tabs { display: flex; gap: 9px; margin: 24px 0 18px; }
+.following-library-tabs button,.simple-discover-tabs button {
+  min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px;
+  background: #fff; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
+}
+.following-library-tabs button.on,.simple-discover-tabs button.on { background: var(--si); color: #fff; }
+.following-library-list { border-top: 1px solid var(--div); }
+.following-library-row { min-height: 88px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--div); }
+.following-library-row > a { min-width: 0; flex: 1; display: flex; align-items: center; gap: 14px; color: inherit; text-decoration: none; }
+.following-library-row > a > span:last-child { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.following-library-row strong,.simple-discover-grid strong { font-size: 18px; line-height: 1.15; }
+.following-library-row small,.simple-discover-grid small { color: var(--muted); font-size: 14px; line-height: 1.25; }
+.following-library-avatar { width: 58px; height: 58px; flex: 0 0 58px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; color: #fff; font-size: 22px; }
+.following-library-avatar.square { border-radius: 15px; }
+.following-library-empty,.simple-discover-empty { margin-top: 34px; padding: 44px 24px; border-radius: 22px; background: #fff; text-align: center; }
+.following-library-empty h2,.simple-discover-empty h2 { margin: 14px 0 7px; font-size: 25px; }
+.following-library-empty p,.simple-discover-empty p { max-width: 390px; margin: 0 auto 20px; color: var(--muted); font-size: 16px; line-height: 1.4; }
+.following-library-empty a,.simple-discover-empty button { min-height: 48px; padding: 0 22px; border: 0; border-radius: 16px; display: inline-flex; align-items: center; background: var(--ink); color: #fff; text-decoration: none; font: inherit; font-weight: 600; }
+.simple-discover-empty button:disabled { opacity: .4; }
+.simple-discover-empty small { display: block; max-width: 400px; margin: 15px auto 0; color: var(--muted); }
+.simple-discover-search { min-height: 56px; display: flex; align-items: center; gap: 11px; padding: 0 18px; border-radius: 18px; background: #fff; }
+.simple-discover-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 17px; }
+.simple-discover-filters { display: flex; gap: 9px; margin: 12px 0 24px; overflow-x: auto; scrollbar-width: none; }
+.simple-discover-filters::-webkit-scrollbar { display: none; }
+.simple-discover-filters label { position: relative; flex: 0 0 auto; }
+.simple-discover-filters label > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.simple-discover-filters select { min-height: 44px; padding: 0 38px 0 16px; border: 1px solid var(--div); border-radius: 999px; background: #fff; color: var(--ink); font: inherit; font-weight: 600; }
+.simple-discover-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.simple-discover-grid article,.simple-discover-grid > a { min-width: 0; min-height: 238px; padding: 22px 14px 17px; border-radius: 20px; background: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; color: inherit; text-decoration: none; }
+.simple-discover-grid article > a { min-width: 0; display: contents; color: inherit; text-decoration: none; }
+.simple-discover-grid img,.simple-discover-grid .avatar-empty { width: 108px; height: 108px; margin-bottom: 15px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; color: #fff; font-size: 34px; }
+.simple-discover-grid img.square,.simple-discover-grid .avatar-empty.square { width: 100%; height: 128px; border-radius: 15px; }
+.simple-discover-grid small { min-height: 36px; margin: 5px 0 11px; }
+.simple-discover-grid .disfollow { margin-top: auto; }
+@media (min-width: 900px) {
+  .following-library,.simple-discover { max-width: 720px; margin: 0 auto; }
+  .simple-discover-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}

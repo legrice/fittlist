@@ -285,7 +285,7 @@ export function CalendarScreen({
         {/* Identity and view always share the first row. Coaches get one
             additional row for the relationship filter; members do not. */}
         <div className="calbar">
-          <h1 className="calbar-t caltitle tab-page-title">Your schedule</h1>
+          <h1 className="calbar-t caltitle tab-page-title">Your calendar</h1>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels

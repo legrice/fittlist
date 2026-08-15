@@ -106,7 +106,7 @@ export function OnboardingWizard({
 
   // Save everything and land in the app. Reached only through the follow
   // step's own button, so the teach answer always exists by now.
-  const finish = () => {
+  const finish = (buildFirstWeek = false) => {
     setError("");
     if (!pLocation.trim()) {
       setStep(2);
@@ -139,7 +139,7 @@ export function OnboardingWizard({
       await completeOnboarding();
       // Back to whatever they were part way through, if signing in was in
       // the middle of something; otherwise each side's own front door.
-      router.push(takeAfterAuth() ?? (teach ? "/calendar" : landing));
+      router.push(takeAfterAuth() ?? (buildFirstWeek ? "/calendar?add=1" : landing));
       router.refresh();
     });
   };
@@ -455,8 +455,11 @@ export function OnboardingWizard({
               })}
             </div>
             <div className="wizfoot">
-              <button className="btn si" onClick={finish} disabled={pending}>
-                {pending ? "Finishing…" : followed.size ? "Continue" : "Skip, I'll find people later"}
+              <button className="btn si" onClick={() => finish(true)} disabled={pending}>
+                {pending ? "Finishing…" : "Build my first week"}
+              </button>
+              <button className="wizskip" type="button" onClick={() => finish(false)} disabled={pending}>
+                Skip. Let me freestyle.
               </button>
             </div>
           </>
