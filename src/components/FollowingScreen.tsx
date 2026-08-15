@@ -872,18 +872,19 @@ function WeekSocialFeed({
   onNotice: (message: string, highlight?: string) => void;
 }) {
   const attendance = items.flatMap((item) => item.goers.map((person) => ({ item, person })));
-  const coachSchedules = [...new Set(items.map((item) => item.coachId))]
-    .map((id) => ({ coach: coachById.get(id), items: items.filter((item) => item.coachId === id) }))
-    .filter((entry): entry is { coach: FeedCoach; items: FeedItem[] } => !!entry.coach && entry.items.length > 0);
   const visibleAttendance = attendance.slice(0, 3);
-  const visibleCoachSchedules = coachSchedules.slice(0, 4);
+  const attendedKeys = new Set(attendance.map(({ item }) => item.key));
+  const visibleCoaching = items.filter((item) => !attendedKeys.has(item.key)).slice(0, 4);
   const futurePosts = FUTURE_WEEK_POSTS.slice(0, 9);
 
   return (
     <div className="weekfeed">
-      {visibleCoachSchedules.slice(0, 2).map(({ coach, items: coachItems }) => (
-        <CoachSchedulePost key={`coach-top-${coach.id}`} coach={coach} items={coachItems} onOpen={onOpen} />
-      ))}
+      {visibleCoaching.slice(0, 2).map((item) => {
+        const coach = coachById.get(item.coachId) ?? null;
+        return coach ? (
+          <ClassActivityPost key={`coaching-${item.key}`} item={item} coach={coach} onOpen={onOpen} onNotice={onNotice} />
+        ) : null;
+      })}
 
       {visibleAttendance.map(({ item, person }) => {
         const coach = coachById.get(item.coachId) ?? null;
@@ -912,7 +913,7 @@ function WeekSocialFeed({
                 <span>{shortDay(item.iso)}</span>
               </div>
             </header>
-            <EmbeddedFeedClass item={item} coach={coach} onOpen={onOpen} />
+            <ActivityClassDetails item={item} coach={coach} onOpen={onOpen} />
             <GoingCluster item={item} onNotice={onNotice} />
           </article>
         );
@@ -977,11 +978,7 @@ function WeekSocialFeed({
             </header>
             {classItem ? (
               <>
-                <EmbeddedFeedClass
-                  item={classItem}
-                  coach={coachById.get(classItem.coachId) ?? null}
-                  onOpen={onOpen}
-                />
+                <ActivityClassDetails item={classItem} coach={coachById.get(classItem.coachId) ?? null} onOpen={onOpen} />
                 <GoingCluster item={classItem} onNotice={onNotice} aspirational />
               </>
             ) : (
@@ -991,11 +988,14 @@ function WeekSocialFeed({
         );
       })}
 
-      {visibleCoachSchedules.slice(2).map(({ coach, items: coachItems }) => (
-        <CoachSchedulePost key={`coach-more-${coach.id}`} coach={coach} items={coachItems} onOpen={onOpen} />
-      ))}
+      {visibleCoaching.slice(2).map((item) => {
+        const coach = coachById.get(item.coachId) ?? null;
+        return coach ? (
+          <ClassActivityPost key={`coaching-more-${item.key}`} item={item} coach={coach} onOpen={onOpen} onNotice={onNotice} />
+        ) : null;
+      })}
 
-      {attendance.length === 0 && coachSchedules.length === 0 && futurePosts.length === 0 && (
+      {attendance.length === 0 && visibleCoaching.length === 0 && futurePosts.length === 0 && (
         <div className="weekpost weekfeed-empty">
           <h2>Nothing shared yet</h2>
           <p>Classes and plans from people in the community will show up here.</p>
@@ -1005,9 +1005,7 @@ function WeekSocialFeed({
   );
 }
 
-/** Home embeds the same class row used by Schedule. The social action lives
- * below the row, so this instance intentionally carries no corner control. */
-function EmbeddedFeedClass({
+function ActivityClassDetails({
   item,
   coach,
   onOpen,
@@ -1016,40 +1014,42 @@ function EmbeddedFeedClass({
   coach: FeedCoach | null;
   onOpen: (item: FeedItem) => void;
 }) {
-  const row: WeekRow = {
-    key: item.key,
-    name: item.name,
-    where: item.where,
-    hm: item.hm,
-    ap: item.ap,
-    coach: coach ? { id: coach.id, name: coach.name, color: coach.color, photo: coach.photo } : null,
-    onTap: () => onOpen(item),
-  };
   return (
-    <div className="calendar-cardlist weekpost-embedded">
-      <div className="clrow"><ClassLine row={row} /></div>
-    </div>
+    <button className="weekpost-activityclass" type="button" onClick={() => onOpen(item)}>
+      <h2>{item.name}</h2>
+      <p>{item.where ?? "Location to come"}</p>
+      <div className="weekpost-activitymeta">
+        <Icon name="calendar_today" size={18} />
+        <span>{shortDay(item.iso)} · {item.hm}{item.ap}</span>
+      </div>
+      {coach && (
+        <div className="weekpost-activitycoach">
+          <span style={{ background: coach.color }}>
+            {coach.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coach.photo} alt="" />
+            ) : coach.name.charAt(0)}
+          </span>
+          <small>Coached by {coach.name}</small>
+        </div>
+      )}
+    </button>
   );
 }
 
-function CoachSchedulePost({
+function ClassActivityPost({
   coach,
-  items,
+  item,
   onOpen,
+  onNotice,
 }: {
   coach: FeedCoach;
-  items: FeedItem[];
+  item: FeedItem;
   onOpen: (item: FeedItem) => void;
+  onNotice: (message: string, highlight?: string) => void;
 }) {
-  const days = items.reduce<Array<{ iso: string; items: FeedItem[] }>>((groups, item) => {
-    const current = groups.at(-1);
-    if (current?.iso === item.iso) current.items.push(item);
-    else groups.push({ iso: item.iso, items: [item] });
-    return groups;
-  }, []);
-
   return (
-    <article className="weekpost weekpost-lineup">
+    <article className="weekpost weekpost-activity">
       <header className="weekpost-person">
         {coach.handle ? (
           <Link className="weekpost-avatar-link" href={`/${coach.handle}`} aria-label={`View ${coach.name}'s profile`}>
@@ -1065,23 +1065,11 @@ function CoachSchedulePost({
         )}
         <div>
           <strong>{coach.handle ? <Link href={`/${coach.handle}`}>{coach.name}</Link> : coach.name}</strong>
-          <span>Coaching this week</span>
+          <span>Coaching · {shortDay(item.iso)}</span>
         </div>
       </header>
-      <div className="weekpost-schedule">
-        {days.map((day) => (
-          <section className="weekpost-scheduleday" key={day.iso}>
-            <h3>{shortDay(day.iso)}</h3>
-            {day.items.map((item) => (
-              <button key={item.key} type="button" onClick={() => onOpen(item)}>
-                <span className="weekpost-scheduletime"><small>{item.hm}{item.ap}</small></span>
-                <span><strong>{item.name}</strong><small>{item.where}</small></span>
-                <Icon name="chevron_right" size={19} />
-              </button>
-            ))}
-          </section>
-        ))}
-      </div>
+      <ActivityClassDetails item={item} coach={null} onOpen={onOpen} />
+      <GoingCluster item={item} onNotice={onNotice} />
     </article>
   );
 }
