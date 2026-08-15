@@ -8537,7 +8537,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 
 /* The title and the two ways of looking, at the top of the calendar. */
-.calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
+.calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 10px; }
 .calbar-tools { display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px; }
 .calbar-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -8545,10 +8545,22 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* Page-title size, sharing its row with the view toggle. */
 .caltitle { font-size: 30px; padding: 0; }
+.calendar-title-share {
+  min-height: 42px; padding: 0 20px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink); color: var(--paper); text-decoration: none;
+  font-size: 15px; font-weight: 600;
+}
+.schedule-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 0 0 12px;
+}
+.schedule-toolbar.member { justify-content: flex-end; }
 .schedule-kind-tabs {
   display: flex; align-items: center; gap: 8px;
-  margin: -2px 0 12px;
+  min-width: 0; margin: 0; overflow-x: auto; scrollbar-width: none;
 }
+.schedule-kind-tabs::-webkit-scrollbar { display: none; }
 .schedule-kind-tabs button {
   min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
   background: var(--card); color: var(--ink); font: inherit;

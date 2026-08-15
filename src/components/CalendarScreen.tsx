@@ -282,17 +282,43 @@ export function CalendarScreen({
           because two screens working it out separately is how they end up
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
-        {/* Identity and view always share the first row. Coaches get one
-            additional row for the relationship filter; members do not. */}
+        {/* The calendar and its primary output share the first row. The view
+            controls live with the relationship filters below, so the title
+            no longer has three different jobs competing for space. */}
         <div className="calbar">
           <h1 className="calbar-t caltitle tab-page-title">Your calendar</h1>
-          {/* Two glyphs rather than two words. A list and a month grid both
+          <Link className="calendar-title-share" href={member ? "/membershare" : "/coachshare"}>
+            Share
+          </Link>
+        </div>
+        {!bare && (
+          <div className={`schedule-toolbar${member ? " member" : ""}`}>
+            {!member && (
+              <div className="schedule-kind-tabs" role="tablist" aria-label="Schedule classes">
+                {([
+                  ["all", "All"],
+                  ["coaching", "Coaching"],
+                  ["added", "Attending"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={kind === value}
+                    className={kind === value ? "on" : ""}
+                    onClick={() => setKind(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
               you read to find out which one you are on. The words stay as the
               accessible names, because a glyph on its own says nothing to a
               screen reader. */}
-          {!bare && (
             <div className="calseg" role="tablist" aria-label="Schedule view">
                 <button
                   role="tab"
@@ -325,26 +351,6 @@ export function CalendarScreen({
                   <Icon name="calendar_view_month" size={25} />
                 </button>
             </div>
-          )}
-        </div>
-        {!member && !bare && (
-          <div className="schedule-kind-tabs" role="tablist" aria-label="Schedule classes">
-            {([
-              ["all", "All"],
-              ["coaching", "Coaching"],
-              ["added", "Attending"],
-            ] as const).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={kind === value}
-                className={kind === value ? "on" : ""}
-                onClick={() => setKind(value)}
-              >
-                {label}
-              </button>
-            ))}
           </div>
         )}
         {view === "month" && <MonthHeadRow />}
