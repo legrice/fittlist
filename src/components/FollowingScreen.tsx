@@ -920,12 +920,10 @@ function WeekSocialFeed({
                 ) : person.name.charAt(0)}
               </span>
               <div>
-                <strong>{person.name} is going</strong>
+                <strong>{person.handle ? <Link href={`/${person.handle}`}>{person.name}</Link> : person.name} is going</strong>
                 <span>{shortDay(item.iso)}</span>
               </div>
-              {person.handle && <Link href={`/${person.handle}`}>View profile</Link>}
             </header>
-            <p className="weekpost-copy">Join {person.name.split(/\s+/)[0]} for a class they added to their week.</p>
             <button className="weekpost-class" type="button" onClick={() => onOpen(item)}>
               <span className="weekpost-date">
                 <b>{item.hm}{item.ap}</b>
@@ -1035,6 +1033,13 @@ function CoachSchedulePost({
   items: FeedItem[];
   onOpen: (item: FeedItem) => void;
 }) {
+  const days = items.reduce<Array<{ iso: string; items: FeedItem[] }>>((groups, item) => {
+    const current = groups.at(-1);
+    if (current?.iso === item.iso) current.items.push(item);
+    else groups.push({ iso: item.iso, items: [item] });
+    return groups;
+  }, []);
+
   return (
     <article className="weekpost weekpost-lineup">
       <header className="weekpost-person">
@@ -1044,17 +1049,23 @@ function CoachSchedulePost({
             <img src={coach.photo} alt="" />
           ) : coach.name.charAt(0)}
         </span>
-        <div><strong>{coach.name}</strong><span>Coaching this week</span></div>
-        {coach.handle && <Link href={`/${coach.handle}`}>View profile</Link>}
+        <div>
+          <strong>{coach.handle ? <Link href={`/${coach.handle}`}>{coach.name}</Link> : coach.name}</strong>
+          <span>Coaching this week</span>
+        </div>
       </header>
-      <h2>{coach.name.split(/\s+/)[0]} is coaching {items.length === 1 ? "a class" : `${items.length} classes`} this week.</h2>
       <div className="weekpost-schedule">
-        {items.map((item) => (
-          <button key={item.key} type="button" onClick={() => onOpen(item)}>
-            <span><b>{shortDay(item.iso)}</b><small>{item.hm}{item.ap}</small></span>
-            <span><strong>{item.name}</strong><small>{item.where}</small></span>
-            <Icon name="chevron_right" size={19} />
-          </button>
+        {days.map((day) => (
+          <section className="weekpost-scheduleday" key={day.iso}>
+            <h3>{shortDay(day.iso)}</h3>
+            {day.items.map((item) => (
+              <button key={item.key} type="button" onClick={() => onOpen(item)}>
+                <span className="weekpost-scheduletime"><small>{item.hm}{item.ap}</small></span>
+                <span><strong>{item.name}</strong><small>{item.where}</small></span>
+                <Icon name="chevron_right" size={19} />
+              </button>
+            ))}
+          </section>
         ))}
       </div>
     </article>
