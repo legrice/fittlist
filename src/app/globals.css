@@ -6760,7 +6760,8 @@ select.editinput.placekind-select {
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
 .following-head {
-  padding: 18px 0 8px;
+  margin: 0 -18px; padding: 18px 0 8px;
+  background: var(--card);
 }
 .following-title-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -6769,7 +6770,7 @@ select.editinput.placekind-select {
   margin: 0; font-size: 30px; line-height: 1.05; letter-spacing: -.02em;
 }
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
-.following-rail { margin: 14px -18px 0; }
+.following-rail { margin: 14px 0 0; }
 .following-rail .tray-scroll { padding-top: 6px; padding-bottom: 6px; }
 .following-rail::after {
   content: ""; position: absolute; left: 18px; right: 18px; bottom: -8px;
