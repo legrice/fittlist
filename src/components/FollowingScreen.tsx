@@ -950,6 +950,10 @@ function WeekSocialFeed({
         if (post.kind === "event") {
           return (
             <article className="weekpost weekpost-event" key={post.key}>
+              <header className="weekpost-person">
+                <span className="weekpost-avatar weekpost-event-avatar" style={{ background: post.color }}>F</span>
+                <div><strong>FittList local</strong><span>Featured event</span></div>
+              </header>
               <div className="weekpost-eventart" style={{ background: post.color }}>
                 <span>{post.month}</span>
                 <strong>{post.day}</strong>

@@ -6788,18 +6788,21 @@ select.editinput.placekind-select {
    than Schedule drawn a second time. Each post carries one social idea and
    one useful action; selecting a face above still reveals the shared
    CalendarList for that person's complete week. */
-.weekfeed { display: grid; gap: 14px; padding: 10px 0 30px; }
+.weekfeed {
+  margin: 0 -18px; display: grid; gap: 0; padding: 0 0 30px;
+  background: var(--card);
+}
 .weekfeed-label {
   padding: 2px 0 0; font-size: 13px; font-weight: 600;
   color: var(--muted); letter-spacing: .055em; text-transform: uppercase;
 }
 .weekpost {
-  padding: 18px; border: 1px solid var(--div); border-radius: 24px;
-  background: var(--card); color: var(--ink);
+  padding: 20px 18px 24px; border: 0; border-bottom: 8px solid var(--cl);
+  border-radius: 0; background: var(--card); color: var(--ink);
 }
 .weekpost-person { display: flex; align-items: center; gap: 11px; }
 .weekpost-avatar {
-  width: 42px; height: 42px; flex: 0 0 42px; overflow: hidden;
+  width: 40px; height: 40px; flex: 0 0 40px; overflow: hidden;
   display: grid; place-items: center; border-radius: 50%; color: #fff;
   font-weight: 600;
 }
@@ -6812,11 +6815,11 @@ select.editinput.placekind-select {
   margin-left: auto; color: var(--si); text-decoration: none;
   font-size: 13.5px; font-weight: 600;
 }
-.weekpost-copy { margin: 15px 0 12px; font-size: 17px; line-height: 1.35; }
+.weekpost-copy { margin: 17px 0 14px; font-size: 20px; line-height: 1.23; font-weight: 600; }
 .weekpost-class {
-  width: 100%; min-width: 0; padding: 15px; display: grid;
-  grid-template-columns: 66px minmax(0, 1fr) 22px; align-items: center; gap: 12px;
-  border: 0; border-radius: 18px; background: var(--cl); color: var(--ink);
+  width: 100%; min-width: 0; min-height: 164px; padding: 20px; display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 22px; align-items: end; gap: 14px;
+  border: 0; border-radius: 22px; background: var(--cl); color: var(--ink);
   text-align: left; cursor: pointer;
 }
 .weekpost-date { display: grid; gap: 3px; }
@@ -6826,8 +6829,8 @@ select.editinput.placekind-select {
 .weekpost-classcopy strong,
 .weekpost-classcopy span,
 .weekpost-classcopy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.weekpost-classcopy strong { font-size: 17px; }
-.weekpost-classcopy span { color: var(--muted); font-size: 14px; }
+.weekpost-classcopy strong { font-size: 21px; line-height: 1.08; white-space: normal; }
+.weekpost-classcopy span { color: var(--muted); font-size: 15px; }
 .weekpost-classcopy small { color: var(--muted); font-size: 12px; }
 .weekpost-action {
   min-height: 36px; margin-top: 11px; display: flex; align-items: center; gap: 7px;
@@ -6848,10 +6851,10 @@ select.editinput.placekind-select {
 .weekpost-goingcopy { margin-right: auto; }
 .weekpost-going .following-add { position: static; width: 30px; height: 30px; flex: 0 0 30px; }
 .weekpost-goinglabel { margin-left: 6px; color: var(--ink); font-weight: 600; }
-.weekpost-lineup > h2 { margin: 18px 0 13px; font-size: 22px; line-height: 1.12; }
+.weekpost-lineup > h2 { margin: 20px 0 15px; font-size: 24px; line-height: 1.12; }
 .weekpost-schedule { display: grid; border-top: 1px solid var(--div); }
 .weekpost-schedule button {
-  width: 100%; padding: 13px 0; display: grid;
+  width: 100%; padding: 16px 0; display: grid;
   grid-template-columns: 72px minmax(0, 1fr) 20px; align-items: center; gap: 10px;
   border: 0; border-bottom: 1px solid var(--div); background: transparent;
   color: var(--ink); text-align: left; cursor: pointer;
@@ -6860,19 +6863,21 @@ select.editinput.placekind-select {
 .weekpost-schedule b { font-size: 12px; text-transform: uppercase; }
 .weekpost-schedule strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
 .weekpost-schedule small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
-.weekpost-event { padding: 0; display: grid; grid-template-columns: 116px minmax(0, 1fr); overflow: hidden; }
+.weekpost-event { padding: 20px 18px 24px; display: grid; grid-template-columns: 1fr; overflow: hidden; }
+.weekpost-event > .weekpost-person { margin-bottom: 16px; }
+.weekpost-event-avatar { background: var(--si); font-size: 14px; }
 .weekpost-eventart {
-  min-height: 210px; padding: 18px 14px; display: flex; flex-direction: column;
-  justify-content: space-between; background: var(--si); color: #fff;
+  min-height: 238px; padding: 22px; display: flex; flex-direction: column;
+  justify-content: space-between; border-radius: 22px; background: var(--si); color: #fff;
 }
-.weekpost-eventart span { font-size: 13px; font-weight: 600; letter-spacing: .12em; }
-.weekpost-eventart strong { font-size: 46px; line-height: .9; letter-spacing: -.05em; }
-.weekpost-eventcopy { padding: 20px 18px; }
+.weekpost-eventart span { font-size: 14px; font-weight: 600; letter-spacing: .12em; }
+.weekpost-eventart strong { font-size: 72px; line-height: .82; letter-spacing: -.06em; }
+.weekpost-eventcopy { padding: 18px 2px 0; }
 .weekpost-eventcopy > span { color: var(--si); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-.weekpost-eventcopy h2 { margin: 9px 0 8px; font-size: 23px; line-height: 1.05; }
+.weekpost-eventcopy h2 { margin: 8px 0 7px; font-size: 24px; line-height: 1.05; }
 .weekpost-eventcopy p { margin: 0 0 19px; color: var(--muted); font-size: 14px; line-height: 1.4; }
 .weekpost-eventcopy a { display: inline-flex; align-items: center; gap: 5px; color: var(--ink); font-size: 13.5px; font-weight: 600; text-decoration: none; }
-.weekpost-host > h2 { margin: 18px 0 7px; font-size: 22px; line-height: 1.12; }
+.weekpost-host > h2 { margin: 20px 0 8px; font-size: 24px; line-height: 1.12; }
 .weekpost-host > p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.4; }
 .weekpost-place-avatar { border-radius: 14px; }
 .weekpost-hostmeta {
@@ -6880,14 +6885,15 @@ select.editinput.placekind-select {
   border-top: 1px solid var(--div); color: var(--ink); font-size: 13.5px; font-weight: 600;
 }
 .weekpost-plan {
-  margin-top: 13px; padding: 15px; display: grid; gap: 3px;
-  border-radius: 18px; background: var(--cl);
+  min-height: 150px; margin-top: 14px; padding: 20px; display: flex;
+  flex-direction: column; justify-content: flex-end; gap: 4px;
+  border-radius: 22px; background: var(--cl);
 }
-.weekpost-plan strong { font-size: 17px; }
-.weekpost-plan span { color: var(--muted); font-size: 13px; }
+.weekpost-plan strong { font-size: 21px; }
+.weekpost-plan span { color: var(--muted); font-size: 14px; }
 @media (min-width: 700px) {
-  .weekfeed { gap: 18px; }
-  .weekpost { padding: 22px; }
+  .weekfeed { margin-left: 0; margin-right: 0; border-left: 1px solid var(--div); border-right: 1px solid var(--div); }
+  .weekpost { padding: 24px; }
 }
 .screen.hasnav .brandbar {
   background: var(--ink); color: #fff; --wm-ink: #fff; --wm-mark: #fff;
