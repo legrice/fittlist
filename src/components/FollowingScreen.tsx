@@ -1029,10 +1029,6 @@ function ActivityClassDetails({
           <small>Coached by {coach.name}</small>
         </div>
       )}
-      <div className="weekpost-activitymeta">
-        <Icon name="calendar_today" size={18} />
-        <span>{shortDay(item.iso)} · {item.hm}{item.ap}</span>
-      </div>
     </button>
   );
 }
