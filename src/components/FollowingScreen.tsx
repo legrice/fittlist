@@ -924,18 +924,7 @@ function WeekSocialFeed({
                 <span>{shortDay(item.iso)}</span>
               </div>
             </header>
-            <button className="weekpost-class" type="button" onClick={() => onOpen(item)}>
-              <span className="weekpost-date">
-                <b>{item.hm}{item.ap}</b>
-                <small>{shortDay(item.iso)}</small>
-              </span>
-              <span className="weekpost-classcopy">
-                <strong>{item.name}</strong>
-                <span>{item.where ?? "Location to come"}</span>
-                {coach && <small>with {coach.name}</small>}
-              </span>
-              <Icon name="chevron_right" size={21} />
-            </button>
+            <EmbeddedFeedClass item={item} coach={coach} onOpen={onOpen} />
             <GoingCluster item={item} onNotice={onNotice} />
           </article>
         );
@@ -996,11 +985,11 @@ function WeekSocialFeed({
             <p className="weekpost-copy">{post.copy}</p>
             {classItem ? (
               <>
-                <button className="weekpost-class" type="button" onClick={() => onOpen(classItem)}>
-                  <span className="weekpost-date"><b>{classItem.hm}{classItem.ap}</b><small>{shortDay(classItem.iso)}</small></span>
-                  <span className="weekpost-classcopy"><strong>{classItem.name}</strong><span>{classItem.where ?? "Location to come"}</span></span>
-                  <Icon name="chevron_right" size={21} />
-                </button>
+                <EmbeddedFeedClass
+                  item={classItem}
+                  coach={coachById.get(classItem.coachId) ?? null}
+                  onOpen={onOpen}
+                />
                 <GoingCluster item={classItem} onNotice={onNotice} aspirational />
               </>
             ) : (
@@ -1020,6 +1009,33 @@ function WeekSocialFeed({
           <p>Classes and plans from people in the community will show up here.</p>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Home embeds the same class row used by Schedule. The social action lives
+ * below the row, so this instance intentionally carries no corner control. */
+function EmbeddedFeedClass({
+  item,
+  coach,
+  onOpen,
+}: {
+  item: FeedItem;
+  coach: FeedCoach | null;
+  onOpen: (item: FeedItem) => void;
+}) {
+  const row: WeekRow = {
+    key: item.key,
+    name: item.name,
+    where: item.where,
+    hm: item.hm,
+    ap: item.ap,
+    coach: coach ? { id: coach.id, name: coach.name, color: coach.color, photo: coach.photo } : null,
+    onTap: () => onOpen(item),
+  };
+  return (
+    <div className="calendar-cardlist weekpost-embedded">
+      <div className="clrow"><ClassLine row={row} /></div>
     </div>
   );
 }
