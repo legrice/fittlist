@@ -909,7 +909,7 @@ function WeekSocialFeed({
                 </span>
               )}
               <div>
-                <strong>{person.handle ? <Link href={`/${person.handle}`}>{person.name}</Link> : person.name} is going</strong>
+                <strong>{person.handle ? <Link href={`/${person.handle}`}>{person.name}</Link> : person.name} added this</strong>
                 <span>{shortDay(item.iso)}</span>
               </div>
             </header>
@@ -1109,7 +1109,7 @@ function GoingCluster({
         </span>
       )}
       <span className="weekpost-goingcopy">
-        {count ? `${count} ${count === 1 ? "person is" : "people are"} going` : "Be the first to go"}
+        {count ? `${count} ${count === 1 ? "person" : "people"} added this` : "Be the first to add this"}
       </span>
       <FollowingAdd
         classId={item.classId}
@@ -1118,7 +1118,7 @@ function GoingCluster({
         initialOn={item.saved}
         onNotice={onNotice}
       />
-      <span className="weekpost-goinglabel">{item.saved ? "You're in" : "Add yourself"}</span>
+      <span className="weekpost-goinglabel">{item.saved ? "Added to your week" : "Add to your week"}</span>
     </div>
   );
 }
