@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
-import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
@@ -837,7 +836,6 @@ export function FollowingScreen({
           allowWeekAdd={false}
         />
       )}
-      {isHome && <GlobalAdd floating />}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
   );
