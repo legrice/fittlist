@@ -1018,10 +1018,6 @@ function ActivityClassDetails({
     <button className="weekpost-activityclass" type="button" onClick={() => onOpen(item)}>
       <h2>{item.name}</h2>
       <p>{item.where ?? "Location to come"}</p>
-      <div className="weekpost-activitymeta">
-        <Icon name="calendar_today" size={18} />
-        <span>{shortDay(item.iso)} · {item.hm}{item.ap}</span>
-      </div>
       {coach && (
         <div className="weekpost-activitycoach">
           <span style={{ background: coach.color }}>
@@ -1033,6 +1029,10 @@ function ActivityClassDetails({
           <small>Coached by {coach.name}</small>
         </div>
       )}
+      <div className="weekpost-activitymeta">
+        <Icon name="calendar_today" size={18} />
+        <span>{shortDay(item.iso)} · {item.hm}{item.ap}</span>
+      </div>
     </button>
   );
 }

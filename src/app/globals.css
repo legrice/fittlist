@@ -6824,7 +6824,7 @@ select.editinput.placekind-select {
   margin-top: 17px; padding-top: 13px; display: flex; align-items: center; gap: 8px;
   border-top: 1px solid var(--div); font-size: 13.5px; font-weight: 600;
 }
-.weekpost-activitycoach { margin-top: 11px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.weekpost-activitycoach { margin-top: 8px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
 .weekpost-activitycoach > span {
   width: 24px; height: 24px; overflow: hidden; display: grid; place-items: center;
   border-radius: 50%; color: #fff; font-size: 10px; font-weight: 600;
