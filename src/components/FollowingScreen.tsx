@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
@@ -189,7 +188,6 @@ export function FollowingScreen({
   // Today isn't selected; it only ever names this one day.
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
-  const [weekPeek, setWeekPeek] = useState<RailPerson | "self" | null>(null);
   const [find, setFind] = useState(false);
   const [weekIntro, setWeekIntro] = useState(false);
   // Nothing selected is the combined week. A face is an explicit filter,
@@ -295,6 +293,7 @@ export function FollowingScreen({
     [myRail, meId],
   );
   const railById = useMemo(() => new Map(myRail.map((person) => [person.id, person])), [myRail]);
+  const meProfileHref = meId && railById.get(meId)?.handle ? `/${railById.get(meId)!.handle}` : "/you";
   const selectedCoach = coachFilter && coachFilter !== SELF_FILTER ? railById.get(coachFilter) ?? null : null;
   const selectedSelf = coachFilter === SELF_FILTER;
 
@@ -522,9 +521,9 @@ export function FollowingScreen({
         <header className="following-head">
           <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
             <div className="tray-scroll">
-              <button
+              <Link
                 className="trayitem"
-                onClick={() => setWeekPeek("self")}
+                href={meProfileHref}
               >
                 <span
                   className="trayav trayav-you"
@@ -538,12 +537,12 @@ export function FollowingScreen({
                   )}
                 </span>
                 <span className="trayitem-nm">Your week</span>
-              </button>
+              </Link>
               {coachOptions.map((coach) => (
-                <button
+                <Link
                   key={coach.id}
                   className="trayitem"
-                  onClick={() => setWeekPeek(coach)}
+                  href={coach.handle ? `/${coach.handle}` : "/discover?tab=coaches"}
                 >
                   <span
                     className="trayav"
@@ -557,7 +556,7 @@ export function FollowingScreen({
                     )}
                   </span>
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
-                </button>
+                </Link>
               ))}
               <Link className="trayitem trayitem-more" href="/discover?half=coaches" aria-label="Discover more coaches">
                 <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
@@ -838,26 +837,6 @@ export function FollowingScreen({
           allowWeekAdd={false}
         />
       )}
-      {weekPeek === "self" && meId && (
-        <CoachPeek
-          id={meId}
-          name={meFace.name}
-          photo={meFace.photo}
-          color={meFace.color}
-          self
-          shareHref={meKind === "coach" ? "/coachshare" : "/membershare"}
-          onClose={() => setWeekPeek(null)}
-        />
-      )}
-      {weekPeek && weekPeek !== "self" && (
-        <CoachPeek
-          id={weekPeek.id}
-          name={weekPeek.name}
-          photo={weekPeek.photo}
-          color={weekPeek.color}
-          onClose={() => setWeekPeek(null)}
-        />
-      )}
       {isHome && <GlobalAdd floating />}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
@@ -913,12 +892,23 @@ function WeekSocialFeed({
         return (
           <article className="weekpost" key={`going-${person.id}-${item.key}`}>
             <header className="weekpost-person">
-              <span className="weekpost-avatar" style={{ background: person.color }}>
-                {person.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={person.photo} alt="" />
-                ) : person.name.charAt(0)}
-              </span>
+              {person.handle ? (
+                <Link className="weekpost-avatar-link" href={`/${person.handle}`} aria-label={`View ${person.name}'s profile`}>
+                  <span className="weekpost-avatar" style={{ background: person.color }}>
+                    {person.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={person.photo} alt="" />
+                    ) : person.name.charAt(0)}
+                  </span>
+                </Link>
+              ) : (
+                <span className="weekpost-avatar" style={{ background: person.color }}>
+                  {person.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={person.photo} alt="" />
+                  ) : person.name.charAt(0)}
+                </span>
+              )}
               <div>
                 <strong>{person.handle ? <Link href={`/${person.handle}`}>{person.name}</Link> : person.name} is going</strong>
                 <span>{shortDay(item.iso)}</span>
@@ -960,14 +950,19 @@ function WeekSocialFeed({
           return (
             <article className="weekpost weekpost-host" key={post.key}>
               <header className="weekpost-person">
-                <span className="weekpost-avatar weekpost-place-avatar" style={{ background: studio?.color ?? post.color }}>
-                  {studio?.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={studio.photo} alt="" />
-                  ) : name.charAt(0)}
-                </span>
-                <div><strong>{name}</strong><span>Studio</span></div>
-                {studio && <Link href={`/s/${studio.slug}`}>View studio</Link>}
+                {studio ? (
+                  <Link className="weekpost-avatar-link" href={`/s/${studio.slug}`} aria-label={`View ${name}`}>
+                    <span className="weekpost-avatar weekpost-place-avatar" style={{ background: studio.color }}>
+                      {studio.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={studio.photo} alt="" />
+                      ) : name.charAt(0)}
+                    </span>
+                  </Link>
+                ) : (
+                  <span className="weekpost-avatar weekpost-place-avatar" style={{ background: post.color }}>{name.charAt(0)}</span>
+                )}
+                <div><strong>{studio ? <Link href={`/s/${studio.slug}`}>{name}</Link> : name}</strong><span>Studio</span></div>
               </header>
               <h2>{post.title}</h2>
               <p>{post.copy}</p>
@@ -1058,12 +1053,18 @@ function CoachSchedulePost({
   return (
     <article className="weekpost weekpost-lineup">
       <header className="weekpost-person">
-        <span className="weekpost-avatar" style={{ background: coach.color }}>
-          {coach.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={coach.photo} alt="" />
-          ) : coach.name.charAt(0)}
-        </span>
+        {coach.handle ? (
+          <Link className="weekpost-avatar-link" href={`/${coach.handle}`} aria-label={`View ${coach.name}'s profile`}>
+            <span className="weekpost-avatar" style={{ background: coach.color }}>
+              {coach.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={coach.photo} alt="" />
+              ) : coach.name.charAt(0)}
+            </span>
+          </Link>
+        ) : (
+          <span className="weekpost-avatar" style={{ background: coach.color }}>{coach.name.charAt(0)}</span>
+        )}
         <div>
           <strong>{coach.handle ? <Link href={`/${coach.handle}`}>{coach.name}</Link> : coach.name}</strong>
           <span>Coaching this week</span>
