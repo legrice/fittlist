@@ -193,6 +193,18 @@ export function MemberAccount({
         </>
       )}
 
+      <h3 className="setgroup-h">Community</h3>
+      <div className="settingslist">
+        <a className="setrow" href="/groups">
+          <span className="setrow-ic"><Icon name="groups" size={24} /></span>
+          <span className="setrow-txt">
+            <span className="t">Your groups</span>
+            <span className="s">Create a group and keep everyone&rsquo;s calendars together</span>
+          </span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+        </a>
+      </div>
+
       {/* One list of four rows, each opening a sub-screen, each subtitle
           saying where the setting stands so the top level answers most of it
           without a tap. It was two headed groups and nine rows on one

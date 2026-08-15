@@ -146,6 +146,37 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// A lightweight home for a real-world fitness community: the yoga teachers
+// from a group chat, a run club, or a few friends who train together. Groups
+// deliberately do not have a feed or their own class model. Their useful job
+// is to keep a stable roster of people whose existing FittList calendars can
+// be opened from one place.
+export const groups = pgTable("groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  location: text("location").notNull().default(""),
+  type: text("type").notNull().default("Community"),
+  ownerUserId: uuid("owner_user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const groupMembers = pgTable(
+  "group_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id").notNull().references(() => groups.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    role: text("role").notNull().default("member"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("group_members_group_user").on(t.groupId, t.userId),
+    index("group_members_user").on(t.userId),
+  ],
+);
+
 // Invite-only beta: an email must be invited before it can create an account.
 // Existing accounts are never checked (only the new-user branch consults this).
 export const invites = pgTable("invites", {

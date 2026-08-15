@@ -89,6 +89,18 @@ export async function purgeUser(
   await db.delete(schema.coachStudios).where(eq(schema.coachStudios.userId, id));
   await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, id));
   await db.delete(schema.eventAttendances).where(eq(schema.eventAttendances.userId, id));
+  // Groups owned by the account go with it; memberships in other groups simply
+  // disappear. Children must be removed before their group or user FK.
+  const ownGroups = await db
+    .select({ id: schema.groups.id })
+    .from(schema.groups)
+    .where(eq(schema.groups.ownerUserId, id));
+  const ownGroupIds = ownGroups.map((group) => group.id);
+  if (ownGroupIds.length) {
+    await db.delete(schema.groupMembers).where(inArray(schema.groupMembers.groupId, ownGroupIds));
+    await db.delete(schema.groups).where(inArray(schema.groups.id, ownGroupIds));
+  }
+  await db.delete(schema.groupMembers).where(eq(schema.groupMembers.userId, id));
   await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 
   // Shared records they created — keep, just drop the attribution FK.
