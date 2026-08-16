@@ -48,7 +48,6 @@ import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/
 /** How far the list runs. Long enough that scrolling is the way to next month
  *  and short enough that a coach with a standing Tuesday is not handed two
  *  hundred identical rows; Month is the view for anything further out. */
-const LIST_DAYS = 56;
 
 type View = "list" | "month";
 
@@ -118,6 +117,7 @@ export function CalendarScreen({
   const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const savedByIso = useMemo(
@@ -140,8 +140,8 @@ export function CalendarScreen({
    *  light week rather than as a wall of empty headings. */
   const days: WeekDayRows[] = useMemo(() => {
     const out: WeekDayRows[] = [];
-    const start = Date.parse(`${todayIso}T00:00:00Z`);
-    for (let i = 0; i < LIST_DAYS; i++) {
+    const start = Date.parse(`${todayIso}T00:00:00Z`) + weekOffset * 7 * 864e5;
+    for (let i = 0; i < 7; i++) {
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
@@ -166,7 +166,7 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             coach: viewer,
-            tag: c.shift ? "You · Shift" : "You",
+            tag: "Coaching",
             tagTone: "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
@@ -185,8 +185,8 @@ export function CalendarScreen({
           !i.personal && i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
-        tag: i.personal ? "Added by you" : undefined,
-        tagTone: i.personal ? "personal" as const : undefined,
+        tag: i.personal ? "Personal" : "Attending",
+        tagTone: i.personal ? "personal" as const : "attending" as const,
         onTap: i.personal
           ? () => setPlan(i.id)
           : () => setPeek(peekOfAdded(i)),
@@ -217,7 +217,16 @@ export function CalendarScreen({
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, kind, savedByIso, router, viewer]);
+  }, [classes, todayIso, studioById, handle, kind, savedByIso, router, viewer, weekOffset]);
+
+  const weekRange = useMemo(() => {
+    const start = new Date(Date.parse(`${todayIso}T00:00:00Z`) + weekOffset * 7 * 864e5);
+    const end = new Date(start.getTime() + 6 * 864e5);
+    const month = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
+    return `${month.format(start)} ${start.getUTCDate()}–${
+      start.getUTCMonth() === end.getUTCMonth() ? "" : `${month.format(end)} `
+    }${end.getUTCDate()}`;
+  }, [todayIso, weekOffset]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -285,48 +294,32 @@ export function CalendarScreen({
         {/* Identity and view always share the first row. Coaches get one
             additional row for the relationship filter; members do not. */}
         <div className="calbar">
-          <h1 className="calbar-t caltitle tab-page-title">Your schedule</h1>
+          <div className="calbar-tools">
+            <h1 className="calbar-t caltitle tab-page-title">Your schedule</h1>
+            <Link className="calbar-share" href={member ? "/membershare" : "/coachshare"} aria-label="Share your schedule">
+              <Icon name="ios_share" size={23} />
+            </Link>
+          </div>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
               you read to find out which one you are on. The words stay as the
               accessible names, because a glyph on its own says nothing to a
               screen reader. */}
-          {!bare && (
-            <div className="calseg" role="tablist" aria-label="Schedule view">
-                <button
-                  role="tab"
-                  aria-label="List"
-                  aria-selected={view === "list"}
-                  className={view === "list" ? "on" : ""}
-                  onClick={() => {
-                    // Coming back from the month, land at the top of the
-                    // list: the month scroll can be months deep, and a
-                    // shorter view inherits that offset as a random landing.
-                    if (view !== "list") window.scrollTo({ top: 0 });
-                    setView("list");
-                  }}
-                >
-                  <Icon name="calendar_view_day" size={25} />
-                </button>
-                <button
-                  role="tab"
-                  aria-label="Month"
-                  aria-selected={view === "month"}
-                  className={view === "month" ? "on" : ""}
-                  onClick={() => {
-                    // A view switch swaps what is in front of you and moves
-                    // nothing: arriving mid-scroll slid the card over the
-                    // header, which read as the calendar going full screen.
-                    if (view !== "month") window.scrollTo({ top: 0 });
-                    setView("month");
-                  }}
-                >
-                  <Icon name="calendar_view_month" size={25} />
-                </button>
-            </div>
-          )}
         </div>
+        {!bare && (
+          <div className={`calendar-view-row${view === "month" ? " month" : ""}`}>
+            {view === "list" && <div className="weeknav" aria-label="Week">
+              <button type="button" aria-label="Previous week" onClick={() => setWeekOffset((n) => n - 1)}><Icon name="chevron_left" size={22} /></button>
+              <strong>{weekRange}</strong>
+              <button type="button" aria-label="Next week" onClick={() => setWeekOffset((n) => n + 1)}><Icon name="chevron_right" size={22} /></button>
+            </div>}
+            <div className="calseg" role="tablist" aria-label="Schedule view">
+              <button role="tab" aria-label="List" aria-selected={view === "list"} className={view === "list" ? "on" : ""} onClick={() => setView("list")}><Icon name="calendar_view_day" size={25} /></button>
+              <button role="tab" aria-label="Month" aria-selected={view === "month"} className={view === "month" ? "on" : ""} onClick={() => setView("month")}><Icon name="calendar_view_month" size={25} /></button>
+            </div>
+          </div>
+        )}
         {!member && !bare && (
           <div className="schedule-kind-tabs" role="tablist" aria-label="Schedule classes">
             {([
@@ -434,7 +427,7 @@ export function CalendarScreen({
           to do, and the title row's corner belongs to Share now. */}
       {!bare && !(kind === "added" && days.length === 0) && (
         <button className="wkfab" aria-label="Add a class" onClick={openAdd}>
-          <Icon name="add" size={28} />
+          <Icon name="add" size={22} /><span>Add</span>
         </button>
       )}
       {addChoice && (

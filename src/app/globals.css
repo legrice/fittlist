@@ -59,6 +59,32 @@ html[data-native="ios"] .screen.hasnav > .pad {
    frame, so absolute-positioned chrome (fab, toast, sheets, bars) is fixed. */
 
 :root {
+  /* FittList core palette. New UI should consume these semantic tokens;
+     the legacy aliases below map to them while older surfaces migrate. */
+  --color-lime: #9FE870;
+  --color-lime-pressed: #8BD85D;
+  --color-lime-soft: #E6F8D5;
+  --color-olive: #405D16;
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+  --color-background: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F2F2F0;
+  --color-surface-hover: #EAEAE7;
+  --color-border: #DEDEDB;
+  --color-border-strong: #C7C7C2;
+  --color-text-primary: #000000;
+  --color-text-secondary: #6B6B68;
+  --color-text-muted: #92928D;
+  --color-coaching: #9FE870;
+  --color-coaching-text: #000000;
+  --color-attending: #DCC8FF;
+  --color-attending-text: #211731;
+  --color-personal: #FFD8C2;
+  --color-personal-text: #582713;
+  --radius-control: 18px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
   /* Delight typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
      the original fittlist palette (à la the meetgen reference boards).
 
@@ -73,35 +99,35 @@ html[data-native="ios"] .screen.hasnav > .pad {
      and light are not the same axis, so the hue is unchanged and only the
      lightness moved; a lift that also desaturated would have traded drab for
      grey, which is the other way to lose the brand. */
-  --cl: #f3f3f0;           /* quiet neutral fill for controls and selected surfaces */
-  --cl-d: #e9e9e5;         /* one step down for controls that need more contrast */
-  --paper: #ffffff;        /* one uninterrupted content surface */
+  --cl: var(--color-surface-muted);
+  --cl-d: var(--color-surface-hover);
+  --paper: var(--color-surface);
   /* The screen behind the card. The app reads as two layers: the header
      (and whatever else is chrome) sits on this quiet warm gray, and the
      content rides the paper with rounded top corners over it. It merged
      onto the paper for a build and came back apart, by Matt's call: one
      surface needed a drawn edge to say where content starts, and the two
      tones say it without one. */
-  --shell: #ffffff;
+  --shell: var(--color-background);
   /* The outline the view toggle wears. It went nearly ink for a build and
      stepped back to this wash, by Matt's call: worth the try, but the
      black frames shouted on every row. The class boxes wore it too until
      the gradient concept landed them borderless on the gray. */
-  --edge: color-mix(in srgb, var(--ink) 18%, transparent);
+  --edge: var(--color-border);
   /* The tabs shell's Health-style ground: a light pleasant warmth at the
      very top flowing down into the warm gray. It went flat for a moment,
      by Matt's call, and came straight back by the same voice: the fade
      is something to look at, and a flat page had nothing. The ground
      stays warm (#f1efe9, from the cool #eef0f1) so the fade settles into
      its own family rather than bridging a clash. */
-  --grad-top: #f8dcc6;
-  --grad-mid: #f3e6db;
-  --ground: #ffffff;
-  --card: #ffffff;
-  --ink: #191502;          /* warm charcoal - text + dark surfaces */
-  --ol: #6d6d67;           /* neutral muted secondary text */
+  --grad-top: var(--color-background);
+  --grad-mid: var(--color-background);
+  --ground: var(--color-background);
+  --card: var(--color-surface);
+  --ink: var(--color-text-primary);
+  --ol: var(--color-text-secondary);
   --date-heading-weight: 600; /* one hierarchy across every schedule */
-  --line: #e7e7e2;         /* quiet field edges */
+  --line: var(--color-border);
   /* The rule between rows, and its weight, as two tokens.
      They were one: every divider in the app was a 1px `--line`, the same
      hairline an input border wears, and a list of classes read as text
@@ -114,7 +140,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
      the type a weight lighter, the page read as ruled paper. Colour is what
      separates a divider from an edge here, not thickness. The token stays
      because one number for every rule in the app is worth having. */
-  --div: #deded8;
+  --div: var(--color-border);
   /* The day bands. The page's own ground, so the band reads as nothing but a
      date over a rule, which is what it should be: it was `--cl` (a bar), then
      a tint a shade off the paper, and it is the paper now.
@@ -125,10 +151,10 @@ html[data-native="ios"] .screen.hasnav > .pad {
      follows it: a paper band on a white card read as a cream bar again. */
   --band: var(--paper);
   --divw: 1px;
-  --rule: #191502;         /* charcoal hairline rules */
-  --si: #C2410C;           /* the brand orange, everywhere it appears */
-  --si-tint: #F7E3DA;      /* pale brand wash: tinted CTAs, selected tabs */
-  --si-ink: #8B2F0B;       /* accessible dark orange text sitting on the wash */
+  --rule: var(--color-black);
+  --si: var(--color-lime);
+  --si-tint: var(--color-lime-soft);
+  --si-ink: var(--color-olive);
 
   /* What a row is to you, said as the colour of the bar down its left. One
      token per relationship and nothing else in the app introduces another:
@@ -140,9 +166,9 @@ html[data-native="ios"] .screen.hasnav > .pad {
      competing with the three that carry meaning made the week read as a
      paint chart. */
   --rel-saved: var(--ink);
-  --rel-coaching: #C2410C;
-  --rel-personal: #0C8BC2;
-  --rel-personal-bg: #D1F3FF;
+  --rel-coaching: var(--color-coaching);
+  --rel-personal: var(--color-personal);
+  --rel-personal-bg: var(--color-personal);
   --rel-personal-ink: #0B3B4F;
   /* A class somebody added that nobody has claimed: grey, because it is a
      record without an owner and the colour should not promise otherwise. */
@@ -8729,6 +8755,277 @@ a.clspeek-by:active { opacity: .6; }
   background: var(--card); color: var(--si); cursor: pointer; text-decoration: none;
 }
 .calbar-share:active { transform: scale(.94); }
+
+/* --------------------------------------------------------------------------
+   Calendar reference surface — FittList's lime design system.
+
+   This is intentionally expressed through the shared calendar primitives,
+   not page-specific markup. Every list rendered by CalendarList therefore
+   keeps the same time gutter, card, type badge and day rhythm.
+   -------------------------------------------------------------------------- */
+.calendar-view-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+.calendar-view-row.month { justify-content: flex-end; }
+.weeknav {
+  min-width: 0;
+  min-height: 52px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+  color: var(--color-text-primary);
+}
+.weeknav button {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.weeknav button:active { background: var(--color-surface-hover); }
+.weeknav strong {
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 700;
+}
+.calendar-view-row .calseg {
+  min-height: 52px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+.calendar-view-row .calseg button {
+  width: 48px;
+  height: 44px;
+  border-radius: 15px;
+}
+.calendar-view-row .calseg button.on {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+.calbar { padding-bottom: 16px; }
+.calbar-tools { gap: 12px; }
+.caltitle {
+  font-size: clamp(30px, 8vw, 36px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.calbar-share {
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface-muted);
+  color: var(--color-black);
+}
+.schedule-kind-tabs {
+  gap: 10px;
+  margin: 0 0 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.schedule-kind-tabs::-webkit-scrollbar { display: none; }
+.schedule-kind-tabs button {
+  min-height: 46px;
+  padding: 0 24px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-muted);
+  color: var(--color-black);
+  font-size: 15px;
+  font-weight: 700;
+}
+.schedule-kind-tabs button.on {
+  background: var(--color-lime);
+  color: var(--color-black);
+}
+
+.calendar-cardlist .dayblock + .dayblock { margin-top: 30px; }
+.calendar-cardlist .dayband {
+  position: static;
+  margin: 0;
+  padding: 0 0 12px;
+  background: transparent;
+}
+.calendar-cardlist .dayband-d {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.calendar-cardlist .dayrows {
+  gap: 14px;
+  margin-top: 0;
+}
+.calendar-cardlist .clline {
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
+  column-gap: 12px;
+  row-gap: 5px;
+  align-items: center;
+  align-content: center;
+  min-height: 0;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: none;
+}
+.calendar-cardlist .clline:active {
+  opacity: 1;
+  background: var(--color-surface-hover);
+}
+.calendar-cardlist .clline-t {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: baseline;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.calendar-cardlist .clline-ap { font-size: 12px; font-weight: 700; }
+.calendar-cardlist .clline-dur { display: none; }
+.calendar-cardlist .clline-nm {
+  grid-column: 2 / 4;
+  grid-row: 1;
+  padding-right: 0;
+  align-self: baseline;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--color-text-primary);
+}
+.calendar-cardlist .clline-w {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  margin-top: 0;
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+}
+.calendar-cardlist .clline-by {
+  grid-column: 2;
+  grid-row: 3;
+  min-width: 0;
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+.calendar-cardlist .clline-av { width: 26px; height: 26px; }
+.calendar-cardlist .clline-tag {
+  grid-column: 3;
+  grid-row: 3;
+  justify-self: end;
+  min-height: 30px;
+  margin: 4px 0 0;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.calendar-cardlist .clline-tag-coaching {
+  background: var(--color-coaching);
+  color: var(--color-coaching-text);
+}
+.calendar-cardlist .clline-tag-attending {
+  background: var(--color-attending);
+  color: var(--color-attending-text);
+}
+.calendar-cardlist .clline-tag-personal {
+  background: var(--color-personal);
+  color: var(--color-personal-text);
+}
+.calendar-cardlist .clline-extra {
+  grid-column: 2 / 4;
+  grid-row: 4;
+}
+.calendar-cardlist .calendar-attending-check { display: none; }
+
+.wkfab {
+  right: 18px;
+  bottom: calc(108px + env(safe-area-inset-bottom));
+  width: auto;
+  min-width: 108px;
+  height: 54px;
+  padding: 0 24px;
+  gap: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-lime);
+  color: var(--color-black);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: none;
+}
+.wkfab:active { background: var(--color-lime-pressed); }
+
+/* The three primary destinations use the same quiet, bordered container as
+   the calendar controls. This deliberately replaces the old edge-to-edge
+   glass bar: the navigation is a surface, not an effect. */
+.navwrap {
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  max-width: 608px;
+}
+.navbar {
+  padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
+  border: 1px solid var(--color-border);
+  border-radius: 28px;
+  background: var(--color-white);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.navtab {
+  min-height: 60px;
+  padding: 7px 0 8px;
+  border-radius: 20px;
+  color: var(--color-black);
+  font-weight: 700;
+}
+.navtab.on {
+  background: transparent;
+  color: var(--color-olive);
+}
+.navtab.on .navglyph { background: var(--color-lime-soft); }
+.navglyph {
+  width: 46px;
+  height: 32px;
+  border-radius: 12px;
+}
+.navtab:active { background: var(--color-surface-hover); }
+.navav,
+.navface-photo,
+.navface-initial { border-radius: 999px; }
+
+@media (max-width: 390px) {
+  .calendar-cardlist .clline {
+    grid-template-columns: 82px minmax(0, 1fr) auto;
+    padding: 18px 16px;
+  }
+  .calendar-cardlist .clline-tag { padding-inline: 11px; }
+  .schedule-kind-tabs button { padding-inline: 20px; }
+}
 
 /* The rail's answer, in words. A filtered list is otherwise indistinguishable
    from a quiet one: five faces with a ring on one and a shorter list under
