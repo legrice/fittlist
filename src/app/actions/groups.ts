@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
@@ -91,6 +91,42 @@ export async function setGroupShareMode(groupId: string, mode: "selected" | "pub
   return { ok: true } as const;
 }
 
+export async function shareClassWithGroups(classId: string, groupIds: string[]) {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in to share a class." } as const;
+  const db = await getDb();
+  const [row] = await db.select({ owner: schema.classes.userId, seriesId: schema.classes.seriesId })
+    .from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!row || row.owner !== userId) return { ok: false, error: "That class is not on your teaching schedule." } as const;
+  const wanted = [...new Set(groupIds.filter(Boolean))];
+  if (!wanted.length) return { ok: true } as const;
+  const memberships = await db.select({ groupId: schema.groupMembers.groupId })
+    .from(schema.groupMembers)
+    .where(and(eq(schema.groupMembers.userId, userId), inArray(schema.groupMembers.groupId, wanted)));
+  if (!memberships.length) return { ok: false, error: "Join a group before posting to it." } as const;
+  await db.insert(schema.groupClassShares).values(memberships.map(({ groupId }) => ({ groupId, userId, seriesId: row.seriesId }))).onConflictDoNothing();
+  for (const { groupId } of memberships) {
+    const [group] = await db.select({ slug: schema.groups.slug }).from(schema.groups).where(eq(schema.groups.id, groupId));
+    if (group) revalidatePath(`/g/${group.slug}`);
+  }
+  return { ok: true } as const;
+}
+
+export async function shareTeachingSeriesWithGroup(groupId: string, seriesId: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in to add to this group." } as const;
+  const db = await getDb();
+  const [membership] = await db.select({ id: schema.groupMembers.id }).from(schema.groupMembers)
+    .where(and(eq(schema.groupMembers.groupId, groupId), eq(schema.groupMembers.userId, userId)));
+  const [owned] = await db.select({ id: schema.classes.id }).from(schema.classes)
+    .where(and(eq(schema.classes.seriesId, seriesId), eq(schema.classes.userId, userId)));
+  if (!membership || !owned) return { ok: false, error: "That class cannot be added here." } as const;
+  await db.insert(schema.groupClassShares).values({ groupId, userId, seriesId }).onConflictDoNothing();
+  const [group] = await db.select({ slug: schema.groups.slug }).from(schema.groups).where(eq(schema.groups.id, groupId));
+  if (group) revalidatePath(`/g/${group.slug}`);
+  return { ok: true } as const;
+}
+
 export async function updateGroup(input: {
   id: string;
   name: string;
@@ -124,6 +160,7 @@ export async function deleteGroup(groupId: string) {
   const db = await getDb();
   const [group] = await db.select().from(schema.groups).where(eq(schema.groups.id, groupId));
   if (!group || group.ownerUserId !== userId) return { ok: false, error: "Only the organizer can delete this group." } as const;
+  await db.delete(schema.groupClassShares).where(eq(schema.groupClassShares.groupId, groupId));
   await db.delete(schema.groupMembers).where(eq(schema.groupMembers.groupId, groupId));
   await db.delete(schema.groups).where(eq(schema.groups.id, groupId));
   revalidatePath("/groups");

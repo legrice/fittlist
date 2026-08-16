@@ -8807,3 +8807,20 @@ a.clspeek-by:active { opacity: .6; }
   .following-library,.simple-discover { max-width: 720px; margin: 0 auto; }
   .simple-discover-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
 }
+/* One class, several audiences. The controls read like destinations rather
+   than a second publishing system, because the coach's schedule stays the
+   source of truth. */
+.class-audiences{margin:22px 0 4px;padding:18px;border-radius:18px;background:var(--soft)}
+.class-audiences h3{margin:0 0 4px;font-size:18px}
+.class-audiences>p{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.35}
+.class-audiences label{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--div);cursor:pointer}
+.class-audiences input{width:20px;height:20px;accent-color:var(--si);flex:0 0 auto}
+.class-audiences span{display:flex;flex-direction:column;gap:2px}
+.class-audiences small{color:var(--muted);font-size:13px}
+.group-existing-choice,.group-existing-add>button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;border:0;border-radius:18px;background:var(--soft);padding:16px 18px;text-align:left;color:var(--ink)}
+.group-existing-choice{margin:16px 0 10px}
+.group-existing-choice span,.group-existing-add>button span{display:flex;min-width:0;flex-direction:column;gap:3px}
+.group-existing-choice b,.group-existing-add b{font-size:17px}
+.group-existing-choice small,.group-existing-add small{font-size:14px;color:var(--muted)}
+.group-existing-add{display:flex;flex-direction:column;gap:10px}
+.group-existing-add .lead{margin-bottom:8px}

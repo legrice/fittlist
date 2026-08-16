@@ -29,6 +29,7 @@ import {
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
 import { readPhoto } from "@/lib/photo";
+import { shareClassWithGroups } from "@/app/actions/groups";
 
 export type AdderPrefill = {
   name: string;
@@ -127,6 +128,8 @@ export function Adder({
   onPublished,
   onDeleted,
   onMatch,
+  audienceGroups = [],
+  initialGroupIds = [],
 }: {
   studios: StudioDto[];
   templates: TemplateDto[];
@@ -153,6 +156,8 @@ export function Adder({
    *  and `again` is this same form resubmitted for "mine anyway", so the
    *  answer doesn't cost them everything they typed. */
   onMatch?: (m: PersonalMatch, again: () => void) => void;
+  audienceGroups?: { id: string; name: string }[];
+  initialGroupIds?: string[];
 }) {
   const isEdit = Boolean(prefill?.classId);
   // Yours alone, and already saved. Kept apart from isEdit because that one
@@ -245,7 +250,8 @@ export function Adder({
   // The Public/Private control is off the form for now (see the note where it
   // rendered), so this is state without a setter: new classes are public, and
   // an edit keeps whatever the class already was.
-  const [isPublic] = useState<boolean>(gym ? true : prefill?.isPublic ?? true);
+  const [isPublic, setIsPublic] = useState<boolean>(gym ? true : prefill?.isPublic ?? true);
+  const [groupIds, setGroupIds] = useState<Set<string>>(() => new Set(initialGroupIds));
   // Ask people to RSVP: a save the organizer can see. Coaching only, and
   // deliberately nothing more (no capacity, no waitlist): capacity is the
   // line that turns RSVP into a booking system.
@@ -515,7 +521,7 @@ export function Adder({
   };
 
   const publish = () => {
-    if (!whenChosen || !durValid || (!isEvent && !isGym && !studioId)) return;
+    if (!whenChosen || !durValid || needsStudio) return;
     startTransition(async () => {
       const input = {
         name,
@@ -555,6 +561,14 @@ export function Adder({
       if (!res.ok) {
         onToast(res.error ?? "Something went wrong");
         return;
+      }
+      const createdClassId = !gym && !isEdit && !isPersonal ? (res as { id?: string }).id : undefined;
+      if (createdClassId && groupIds.size) {
+        const shared = await shareClassWithGroups(createdClassId, [...groupIds]);
+        if (!shared.ok) {
+          onPublished(shared.error ?? "The class was saved, but could not be added to the group.");
+          return;
+        }
       }
       // What the server actually made, not how many days were picked: the grid
       // is days times times, and a second pass over a class skips the slots
@@ -1252,10 +1266,36 @@ export function Adder({
             </button>
             </div>
 
+            {!gym && !isEdit && !isPersonal && (
+              <section className="class-audiences" aria-labelledby="class-audiences-title">
+                <h3 id="class-audiences-title">Where should this appear?</h3>
+                <p>Your schedule is the source. Choose who else can see the same class.</p>
+                <label>
+                  <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />
+                  <span><b>Public</b><small>Show it on your profile and in FittList.</small></span>
+                </label>
+                {audienceGroups.map((group) => (
+                  <label key={group.id}>
+                    <input
+                      type="checkbox"
+                      checked={groupIds.has(group.id)}
+                      onChange={(event) => setGroupIds((current) => {
+                        const next = new Set(current);
+                        if (event.target.checked) next.add(group.id);
+                        else next.delete(group.id);
+                        return next;
+                      })}
+                    />
+                    <span><b>{group.name}</b><small>Post this class to the group calendar.</small></span>
+                  </label>
+                ))}
+              </section>
+            )}
+
             <div className="publishwrap">
               <button
                 className="btn si"
-                disabled={!whenChosen || pending || (!isEvent && !isGym && !studioId)}
+                disabled={!whenChosen || pending || needsStudio}
                 onClick={publish}
               >
                 {pending ? (isEdit || isPersonalEdit ? "Saving…" : "Publishing…") : publishLabel}

@@ -97,9 +97,11 @@ export async function purgeUser(
     .where(eq(schema.groups.ownerUserId, id));
   const ownGroupIds = ownGroups.map((group) => group.id);
   if (ownGroupIds.length) {
+    await db.delete(schema.groupClassShares).where(inArray(schema.groupClassShares.groupId, ownGroupIds));
     await db.delete(schema.groupMembers).where(inArray(schema.groupMembers.groupId, ownGroupIds));
     await db.delete(schema.groups).where(inArray(schema.groups.id, ownGroupIds));
   }
+  await db.delete(schema.groupClassShares).where(eq(schema.groupClassShares.userId, id));
   await db.delete(schema.groupMembers).where(eq(schema.groupMembers.userId, id));
   await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 

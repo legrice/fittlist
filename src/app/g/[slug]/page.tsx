@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
@@ -10,7 +10,9 @@ import { GroupManageButton } from "@/components/GroupManageButton";
 import { Icon } from "@/components/Icon";
 import { GroupSharingControl } from "@/components/GroupSharingControl";
 import { shareWeek } from "@/lib/shareweek";
-import { todayIso } from "@/lib/format";
+import { DAYS, fmtTime, runsOn, todayIso } from "@/lib/format";
+import { rangeDates } from "@/lib/shareweek";
+import { GlobalAdd } from "@/components/GlobalAdd";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,13 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const invited = group.visibility === "private" && invite === group.inviteToken;
   const canSeeGroup = group.visibility !== "private" || joined || invited;
   const viewerMembership = viewerId ? members.find((member) => member.id === viewerId) : null;
+  const selectedShares = canSeeGroup
+    ? await db.select().from(schema.groupClassShares).where(eq(schema.groupClassShares.groupId, group.id))
+    : [];
+  const selectedSeries = [...new Set(selectedShares.map((share) => share.seriesId))];
+  const selectedRows = selectedSeries.length
+    ? await db.select().from(schema.classes).where(inArray(schema.classes.seriesId, selectedSeries))
+    : [];
   const sharedMembers = canSeeGroup ? members.filter((member) => member.shareMode === "public-week") : [];
   const sharedWeeks = await Promise.all(sharedMembers.map(async (member) => ({ member, days: await shareWeek(member.id, todayIso(), 7) })));
   const combined = new Map<string, { day: string; items: { key: string; time: string; startTime: string; name: string; where: string; member: typeof members[number] }[] }>();
@@ -37,6 +46,27 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     const current = combined.get(day.iso) ?? { day: day.day, items: [] };
     current.items.push(...day.items.map((item) => ({ key: `${member.id}.${item.key}`, time: item.time, startTime: item.startTime, name: item.name, where: item.where, member })));
     combined.set(day.iso, current);
+  }
+  // Selected classes can be group-only, so read them directly instead of
+  // routing through shareWeek (which correctly hides private classes from a
+  // public profile). The group membership is the audience permission here.
+  const memberById = new Map(members.map((member) => [member.id, member]));
+  const studioIds = [...new Set(selectedRows.map((row) => row.studioId).filter((id): id is string => !!id))];
+  const studios = studioIds.length ? await db.select({ id: schema.studios.id, name: schema.studios.name }).from(schema.studios).where(inArray(schema.studios.id, studioIds)) : [];
+  const studioName = new Map(studios.map((studio) => [studio.id, studio.name]));
+  for (const iso of rangeDates(todayIso(), 7)) {
+    const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    for (const row of selectedRows) {
+      if (!runsOn(row, iso, dow)) continue;
+      const member = memberById.get(row.userId);
+      if (!member) continue;
+      const current = combined.get(iso) ?? { day: `${DAYS[dow]} ${new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`, items: [] };
+      const key = `${member.id}.${row.id}.${iso}`;
+      if (!current.items.some((item) => item.key === key)) {
+        current.items.push({ key, time: fmtTime(row.startTime), startTime: row.startTime, name: row.name, where: (row.studioId && studioName.get(row.studioId)) || row.location || "", member });
+      }
+      combined.set(iso, current);
+    }
   }
 
   return <section className="screen group-public-screen">
@@ -52,6 +82,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             {(group.visibility !== "private" || joined || invited) && <GroupJoinButton groupId={group.id} initial={joined} signedIn={!!viewerId} inviteToken={invited ? invite : undefined} />}
             {canSeeGroup && <GroupShareButton name={group.name} inviteToken={viewerId === group.ownerUserId && group.visibility === "private" ? group.inviteToken : undefined} />}
             {viewerId === group.ownerUserId && <GroupManageButton group={{ id: group.id, name: group.name, description: group.description, location: group.location, type: group.type, visibility: group.visibility }} />}
+            {joined && <GlobalAdd floating defaultGroupId={group.id} groupName={group.name} />}
           </div>
         </div>
         {!canSeeGroup ? <section className="group-private"><h2>This group is private</h2><p>Ask an organizer for an invite link to see its shared week and members.</p></section> : <>

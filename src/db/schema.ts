@@ -183,6 +183,26 @@ export const groupMembers = pgTable(
   ],
 );
 
+// A class remains owned by the coach and lives on their calendar. This table
+// only says which groups may also show it; it never creates a second class to
+// drift out of sync. `seriesId` shares the whole recurring class, including
+// every weekday row the coach adds later.
+export const groupClassShares = pgTable(
+  "group_class_shares",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id").notNull().references(() => groups.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    seriesId: uuid("series_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("group_class_shares_group_series").on(t.groupId, t.seriesId),
+    index("group_class_shares_group").on(t.groupId),
+    index("group_class_shares_user").on(t.userId),
+  ],
+);
+
 // Invite-only beta: an email must be invited before it can create an account.
 // Existing accounts are never checked (only the new-user branch consults this).
 export const invites = pgTable("invites", {

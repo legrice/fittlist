@@ -20,6 +20,7 @@ import { TypeMultiSelect } from "@/components/TypePicker";
 import { readPhoto } from "@/lib/photo";
 import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import { shareTeachingSeriesWithGroup } from "@/app/actions/groups";
 
 type ComposerData = {
   studios: StudioDto[];
@@ -27,6 +28,8 @@ type ComposerData = {
   customTypes: string[];
   lastUsed: LastUsed;
   canCoach: boolean;
+  groups: { id: string; name: string }[];
+  teaching: { seriesId: string; name: string; where: string; days: number[]; startTime: string }[];
 };
 
 const placeKey = (value: string) =>
@@ -35,12 +38,16 @@ const placeKey = (value: string) =>
 export function GlobalAdd({
   floating = false,
   classOnly = false,
+  defaultGroupId,
+  groupName,
 }: {
   floating?: boolean;
   classOnly?: boolean;
+  defaultGroupId?: string;
+  groupName?: string;
 } = {}) {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<null | "class" | "browse" | "personal" | "place">(null);
+  const [mode, setMode] = useState<null | "class" | "browse" | "personal" | "place" | "existing">(null);
   const [classRole, setClassRole] = useState<null | "coaching" | "attending">(null);
   const [placeStep, setPlaceStep] = useState<"identity" | "details">("identity");
   const [data, setData] = useState<ComposerData | null>(null);
@@ -415,6 +422,8 @@ export function GlobalAdd({
               lastUsed={data.lastUsed}
               subsCount={0}
               firstPublish={false}
+              audienceGroups={data.groups}
+              initialGroupIds={defaultGroupId ? [defaultGroupId] : []}
               personal={
                 mode === "personal"
                   ? { canCoach: false, event: true, oneOff: true }
@@ -464,6 +473,32 @@ export function GlobalAdd({
                   </button>
                 )}
                 {mode === "place" && (placeStep === "identity" ? placeIdentity : placeDetails)}
+                {mode === "existing" && data && defaultGroupId && (
+                  <div className="group-existing-add">
+                    <h2 id="globaladd-title">Add from your schedule</h2>
+                    <p className="lead">Choose a class you already teach. It stays on your schedule and also appears in {groupName ?? "this group"}.</p>
+                    {data.teaching.length ? data.teaching.map((item) => (
+                      <button
+                        type="button"
+                        key={item.seriesId}
+                        disabled={pending}
+                        onClick={() => startTransition(async () => {
+                          const result = await shareTeachingSeriesWithGroup(defaultGroupId, item.seriesId);
+                          if (!result.ok) {
+                            toast(result.error ?? "Couldn’t add that class");
+                            return;
+                          }
+                          close();
+                          toast(`${item.name} was added to ${groupName ?? "the group"}`);
+                          router.refresh();
+                        })}
+                      >
+                        <span><b>{item.name}</b><small>{[item.where, item.startTime].filter(Boolean).join(" · ")}</small></span>
+                        <Icon name="add" size={20} />
+                      </button>
+                    )) : <p className="empty">You don’t have a teaching class to add yet. Create one instead.</p>}
+                  </div>
+                )}
                 {mode === "class" && data?.canCoach && !classRole && (
                   <div className="globaladd-role">
                     <h2 id="globaladd-title">Add a class</h2>
@@ -485,8 +520,14 @@ export function GlobalAdd({
                 <button className="iconbtn sheetclose" aria-label="Close add menu" onClick={close}>
                   <Icon name="close" size={18} />
                 </button>
-                <h2 id="globaladd-chooser-title">Add to your week</h2>
-                <p className="lead">What are you doing?</p>
+                <h2 id="globaladd-chooser-title">{defaultGroupId ? `Add to ${groupName ?? "this group"}` : "Add to your week"}</h2>
+                <p className="lead">{defaultGroupId ? "Use something already on your schedule, or create something new." : "What are you doing?"}</p>
+                {defaultGroupId && data?.canCoach && (
+                  <button className="group-existing-choice" type="button" onClick={() => setMode("existing")}>
+                    <span><b>Add from your schedule</b><small>A class you already teach</small></span>
+                    <Icon name="chevron_right" size={20} />
+                  </button>
+                )}
                 <AddWeekChoices
                   canCoach={Boolean(data?.canCoach)}
                   disabled={pending}
