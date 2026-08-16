@@ -8827,9 +8827,9 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calbar-share {
   width: auto;
-  height: 46px;
-  min-width: 46px;
-  padding: 0 18px;
+  height: 42px;
+  min-width: 42px;
+  padding: 0 14px;
   gap: 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
@@ -8841,15 +8841,15 @@ a.clspeek-by:active { opacity: .6; }
   white-space: nowrap;
 }
 .schedule-kind-tabs {
-  gap: 10px;
+  gap: 8px;
   margin: 0 0 24px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .schedule-kind-tabs::-webkit-scrollbar { display: none; }
 .schedule-kind-tabs button {
-  min-height: 46px;
-  padding: 0 24px;
+  min-height: 42px;
+  padding: 0 18px;
   flex: 0 0 auto;
   border: 0;
   border-radius: var(--radius-pill);
