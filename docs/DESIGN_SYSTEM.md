@@ -38,6 +38,14 @@ All text buttons use the shared `.btn` primitive and its variants. Feature
 classes may change width or layout, but not radius, color meaning, font, or
 pressed/disabled behavior.
 
+## Typography
+
+- Delight is the product typeface.
+- `700` is reserved for short display headlines and decisive actions.
+- Dense product copy and schedules stay at `400–600`.
+- All-caps is a display treatment for onboarding and feature stories, never
+  ordinary page navigation or long-form copy.
+
 ## Navigation and dismissal
 
 - Back is always top-left and means return to the previous screen or step.

@@ -224,8 +224,14 @@ export function DiscoverList({
                     (person.name.trim().charAt(0) || "?").toUpperCase()
                   )}
                 </span>
-                <strong>{person.name}</strong>
-                {person.location && <small className="discover-person-location">{person.location}</small>}
+                <span className="discover-person-copy">
+                  <strong>{person.name}</strong>
+                  <small className="discover-person-location">
+                    {[person.title || person.disciplines.slice(0, 2).join(" · "), person.location]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                </span>
               </Link>
               <RowFollow
                 handle={person.handle}

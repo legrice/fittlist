@@ -59,9 +59,9 @@ export function YouDashboard({
       </section>
 
       <div className="youactions">
-        <Link className="btn si" href="/settings?edit=1">Edit profile</Link>
-        <Link className="btn ghost" href={`/${me.handle}`}>Preview profile</Link>
-        <Link className="btn ghost" href={shareHref}>Share profile</Link>
+        <Link className="btn si" href={`/${me.handle}`}>Preview public profile</Link>
+        <Link className="btn ghost" href="/settings?edit=1">Edit profile</Link>
+        <Link className="btn ghost youshare" href={shareHref}>Share profile</Link>
       </div>
 
       <FavoriteRail

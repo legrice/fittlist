@@ -1,14 +1,10 @@
 // The type scale's ceiling, held.
 //
-// 600 is the heaviest weight the app uses. It has been 900 (which the family
-// does not ship, so it rendered as 800), then 800, then 700, and each step
-// down was a judgement about how a screen of class names reads. What makes the
-// cap real rather than a convention is that the 700 and 800 faces are not
-// declared at all: a rule asking for 700 gets the 600 file synthesised or
-// snapped, which looks almost right and is the kind of drift nobody sees.
+// 700 is reserved for display headlines and decisive actions. Dense product
+// surfaces (especially schedules) should remain at 600 or below.
 //
-// So this checks both ends. No rule may ask for more than 600, and no face
-// heavier than 600 may be declared. The Satori share image is exempt and is
+// So this checks both ends. No rule may ask for more than 700, and no face
+// heavier than 700 may be declared. The Satori share image is exempt and is
 // not CSS: it is a 1080px canvas seen at a glance, loads its own static TTFs,
 // and keeps 700 and 800.
 //
@@ -16,7 +12,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const MAX = 600;
+const MAX = 700;
 const css = readFileSync("src/app/globals.css", "utf8");
 const bad = [];
 

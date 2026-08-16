@@ -35,15 +35,15 @@ html[data-native="ios"] .screen.hasnav > .pad {
 }
 
 /* Delight, the brand typeface, self-hosted as woff2.
-   Three faces, because 600 is the ceiling now: the 700 and the 800 are not
-   declared and so cannot be reached, which is what makes the cap real rather
-   than a convention. Two fewer files to fetch, as well.
+   Four faces: 700 is reserved for display headlines and decisive actions;
+   readable product copy continues to live at 400–600.
    (Static TTF copies of 400/600/700/800 still live in /public/fonts for the
    Satori share image, which is a 1080px canvas seen at a glance and keeps its
    heavier weights.) */
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Delight'; src: url('/fonts/delight-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
 /* The poster's guest faces (the Type picker's personalities): the same TTFs
    satori draws with, so the picker's sample rows show the truth. Loaded
    lazily by font-display: swap; only the picker and nothing else uses them. */
@@ -62,13 +62,9 @@ html[data-native="ios"] .screen.hasnav > .pad {
   /* Delight typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
      the original fittlist palette (à la the meetgen reference boards).
 
-     The type scale is 400/500/600 and 600 is the ceiling. It went to 800
-     (900 in the sheet, which the family does not ship and so rendered as 800),
-     came down to 700, and is here: at 700 a screen of class names read as a
-     shout, and the pairing that works is the one the profile head already
-     had, a 600 name over a 400 line of what and where. Nothing in the app is
-     heavier than its own title. The poster keeps 800, because it is a 1080px
-     canvas seen at a glance rather than a page somebody reads.
+     Product typography stays at 400/500/600. The 700 face is available for
+     short display headlines and primary actions, where confidence helps;
+     dense schedules and supporting copy deliberately remain quieter.
 
      The whole set lifted one step toward white, keeping its warmth. The
      creams were mixed for a page of white cards floating on them: with the
@@ -86,7 +82,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
      onto the paper for a build and came back apart, by Matt's call: one
      surface needed a drawn edge to say where content starts, and the two
      tones say it without one. */
-  --shell: #f7f7f5;
+  --shell: #ffffff;
   /* The outline the view toggle wears. It went nearly ink for a build and
      stepped back to this wash, by Matt's call: worth the try, but the
      black frames shouted on every row. The class boxes wore it too until
@@ -100,7 +96,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
      its own family rather than bridging a clash. */
   --grad-top: #f8dcc6;
   --grad-mid: #f3e6db;
-  --ground: #f7f7f5;
+  --ground: #ffffff;
   --card: #ffffff;
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6d6d67;           /* neutral muted secondary text */
@@ -291,7 +287,7 @@ a { color: inherit; }
 }
 @media (min-width: 940px) { .topnav { display: none; } }
 
-h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -.008em; line-height: 1.05; }
+h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.018em; line-height: 1.05; }
 .daylabel {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase; padding: 16px 0 8px;
@@ -334,10 +330,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12px;
   letter-spacing: .06em; text-transform: uppercase;
 }
-/* Headings and buttons sit at 600. 700 was doing the shouting for a typeface
-   that doesn't need it, and at these sizes the lighter weight reads cleaner
-   without giving up any of the hierarchy. */
-.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 31px; letter-spacing: -.01em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
+/* Setup uses the confident display weight; supporting copy stays quiet. */
+.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 31px; letter-spacing: -.02em; line-height: 1.04; margin-bottom: 12px; color: var(--ink); }
 /* The one line the landing is built around, so it gets the room. */
 .ob h1.ob-hero { font-size: 46px; letter-spacing: -.006em; margin-bottom: 14px; }
 .ob p { font-size: 15px; color: var(--ol); line-height: 1.55; margin-bottom: 22px; }
@@ -349,7 +343,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .ob input.code { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; font-weight: 600; }
 .ob input::placeholder { color: #b3ac97; }
 .ob input:focus { outline: none; border-color: var(--si); }
-.ob .btn { background: var(--ink); color: var(--paper); box-shadow: var(--soft-shadow); }
+.ob .btn { background: var(--si); color: #fff; box-shadow: none; }
 .ob .microcopy {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .07em;
   color: var(--ol); margin-top: 14px; text-align: center;
@@ -372,7 +366,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .oblanding-logo { font-size:29px; --wm-ink:var(--ink); --wm-mark:var(--si); }
 .ob h1.ob-hero {
   margin:62px 0 22px; font-size:clamp(52px, 15vw, 76px); line-height:.94;
-  letter-spacing:-.045em; text-align:center;
+  letter-spacing:-.045em; text-align:center; text-transform:uppercase;
 }
 .ob p.oblanding-sub {
   margin:0; color:var(--muted); font-size:18px; line-height:1.42; text-align:center;
@@ -380,8 +374,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .oblanding-illustration { flex:1 1 150px; min-height:110px; }
 .oblanding-actions { display:flex; flex-direction:column; gap:12px; }
 .ob .oblanding-actions .btn {
-  width:100%; min-height:58px; border-radius:14px; box-shadow:none;
-  font-size:18px; font-weight:600;
+  width:100%; min-height:58px; border-radius:var(--radius-pill); box-shadow:none;
+  font-size:18px; font-weight:700;
 }
 .ob .oblanding-actions .obsignup { background:var(--si); color:#fff; }
 .ob .oblanding-actions .oblogin {
@@ -677,11 +671,11 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .iconbtn:hover { border-color: var(--ink); color: var(--ink); }
 
 .btn {
-  /* Primary and secondary actions share one deeply rounded rectangle. */
+  /* Primary and secondary actions share one confident Wise-like pill. */
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: var(--control-height); background: var(--si); color: #fff; font-weight: 600; font-size: 16.5px;
+  min-height: var(--control-height); background: var(--si); color: #fff; font-weight: 700; font-size: 16px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  padding: 16px 22px; border-radius: var(--button-radius); width: 100%; transition: transform .08s;
+  padding: 14px 22px; border-radius: var(--radius-pill); width: 100%; transition: transform .08s;
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
@@ -1756,7 +1750,7 @@ button.bl-band { cursor: pointer; }
 .brandbar .wordmark { font-size: 23px; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
 .calbar-title {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.012em; line-height: 1;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1;
   color: var(--ink); margin: 24px 0;
 }
 /* Dashboard strip under the header: quick links to the most-reached-for
@@ -5301,9 +5295,9 @@ select.editinput.placekind-select {
   display: flex; gap: var(--space-1); padding: var(--space-2) 0 0;
 }
 .discover-tabs > :is(button, a) {
-  min-height: 48px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill);
-  background: var(--card); color: var(--ink); font: inherit; font-size: 15px; font-weight: 600;
-  box-shadow: none; border: 1px solid var(--line); text-decoration: none;
+  min-height: 40px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill);
+  background: var(--cl); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700;
+  box-shadow: none; text-decoration: none;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .discover-tabs > :is(button, a).on { background: var(--si); color: #fff; box-shadow: none; }
@@ -5317,8 +5311,8 @@ select.editinput.placekind-select {
 .discover-filterrow::-webkit-scrollbar { display:none; }
 .discover-filterpill {
   flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:5px;
-  height:38px; max-width:190px; padding:0 14px; border:1px solid var(--line); border-radius:999px;
-  background:var(--card); color:var(--ink); font:inherit; font-size:14px; font-weight:600;
+  height:38px; max-width:190px; padding:0 14px; border:0; border-radius:999px;
+  background:var(--cl); color:var(--ink); font:inherit; font-size:14px; font-weight:600;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .discover-filterpill svg { flex:0 0 auto; }
@@ -5326,27 +5320,29 @@ select.editinput.placekind-select {
 .discover-filter-sheet { padding-top:var(--space-2); }
 .discover-filter-options { margin:var(--space-2) 0 0; }
 .discover-person-grid {
-  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-2); margin-top:var(--space-2);
+  display:flex; flex-direction:column; gap:0; margin-top:var(--space-1);
 }
 .discover-person-tile {
-  position:relative; display:flex; flex-direction:column; align-items:center; min-width:0;
-  padding:var(--space-2) var(--space-1); border-radius:var(--radius-control); background:var(--card); text-align:center; text-decoration:none;
-  box-shadow:none; border:1px solid var(--line);
+  position:relative; display:flex; align-items:center; min-width:0; gap:12px;
+  padding:12px 0; border-radius:0; background:transparent; text-align:left; text-decoration:none;
+  box-shadow:none; border:0; border-bottom:1px solid var(--line);
 }
-.discover-person-main { display:flex; flex-direction:column; align-items:center; min-width:0; width:100%; text-decoration:none; }
+.discover-person-main { display:flex; flex-direction:row; align-items:center; gap:12px; min-width:0; flex:1 1 auto; text-decoration:none; }
 .discover-person-face {
-  display:flex; align-items:center; justify-content:center; width:86px; height:86px; border-radius:50%;
-  overflow:hidden; color:#fff; font-size:28px;
+  display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%;
+  overflow:hidden; color:#fff; font-size:18px; flex:0 0 56px;
 }
 .discover-person-face img { width:100%; height:100%; object-fit:cover; }
+.discover-person-copy { min-width:0; flex:1 1 auto; }
 .discover-person-main strong {
-  max-width:100%; margin-top:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  display:block; max-width:100%; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .discover-person-location {
   display:block; max-width:100%; margin-top:3px; overflow:hidden; text-overflow:ellipsis;
-  color:var(--muted); font-size:12.5px; line-height:1.25; white-space:nowrap;
+  color:var(--muted); font-size:13.5px; line-height:1.3; white-space:nowrap;
 }
-.discover-person-tile > .disfollow { margin-top:8px; padding:6px 13px; font-size:12.5px; }
+.discover-person-tile > .disfollow { flex:0 0 auto; margin:0; padding:8px 14px; border:0; border-radius:var(--radius-pill); background:var(--cl); font-size:12.5px; font-weight:700; }
+.discover-person-tile > .disfollow.on { background:var(--ink); color:var(--paper); }
 .discover-studio-grid {
   display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-2); margin-top:var(--space-2);
 }
@@ -5372,7 +5368,7 @@ select.editinput.placekind-select {
 .discover-loading-search { height: 56px; margin: var(--space-2) 0 var(--space-1); border-radius: var(--radius-pill); }
 .discover-loading-filters { margin-bottom: var(--space-2); }
 .discover-loading-filters span { width: 136px; height: 40px; border-radius: var(--radius-pill); }
-.discover-loading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.discover-loading-grid { display:flex; flex-direction:column; gap:0; }
 .discover-loading-card {
   min-height: 208px; padding: var(--space-2); border: 1px solid var(--line);
   border-radius: var(--radius-control); display: flex; flex-direction: column; align-items: center;
@@ -6493,11 +6489,12 @@ select.editinput.placekind-select {
 .youavatar { width: 86px; height: 86px; border-radius: 24px; object-fit: cover; flex: none; }
 .youavatar-empty { display: grid; place-items: center; color: #fff; font-size: 32px; font-weight: 600; }
 .youidentity-copy { min-width: 0; }
-.youidentity-copy h1 { margin: 0 0 3px; font-size: 30px; line-height: 1.02; letter-spacing: -.04em; }
+.youidentity-copy h1 { margin: 0 0 3px; font-size: 30px; line-height: 1.02; letter-spacing: -.04em; font-weight:700; }
 .youidentity-copy p { margin: 0; color: var(--ol); font-size: 15px; line-height: 1.35; }
 .youidentity-copy span { display: block; margin-top: 4px; color: var(--ol); font-size: 13px; }
-.youactions { display: grid; grid-template-columns: 1.1fr 1.2fr 1fr; gap: 8px; margin-top: 18px; }
+.youactions { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:8px; margin-top:18px; }
 .youactions .btn { min-width: 0; min-height: 46px; padding-inline: 10px; font-size: 14px; }
+.youactions .youshare { grid-column:1 / -1; justify-self:start; width:auto; min-height:40px; padding-inline:16px; background:var(--cl); color:var(--ink); }
 .yousection { margin-top: 30px; }
 .yousection-head { display: flex; align-items: baseline; justify-content: space-between; }
 .yousection h2 { margin: 0 0 13px; font-size: 21px; letter-spacing: -.025em; }
@@ -6899,12 +6896,16 @@ select.editinput.placekind-select {
 .following-coach-context .feedfilter-txt { font-size: 17px; }
 .following-coach-context .feedfilter-link { font-size: 14px; }
 .screen.hasnav .brandbar {
-  background: var(--ink); color: #fff; --wm-ink: #fff; --wm-mark: #fff;
+  background: var(--paper); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--si);
+  border-bottom: 1px solid var(--line);
 }
-.screen.hasnav .brandbar .iconbtn { color: #fff; }
-.screen.hasnav .brandbar .headnav-l { color: rgba(255, 255, 255, .7); }
+.screen.hasnav .brandbar .iconbtn {
+  width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: var(--cl);
+}
+.screen.hasnav .brandbar .iconbtn:active { background: var(--cl-d); }
+.screen.hasnav .brandbar .headnav-l { color: var(--ol); }
 .screen.hasnav .brandbar .headnav-l:hover,
-.screen.hasnav .brandbar .headnav-l.on { color: #fff; border-bottom-color: #fff; }
+.screen.hasnav .brandbar .headnav-l.on { color: var(--ink); border-bottom-color: var(--si); }
 
 /* --------------------------------------------------------------------------
    Desktop application frame
