@@ -113,7 +113,7 @@ export function StudioOwnerBar({
       }
       setConfirmingDelete(false);
       onClose();
-      router.replace("/discover?half=studios");
+      router.replace("/discover?half=places");
       router.refresh();
     });
 
