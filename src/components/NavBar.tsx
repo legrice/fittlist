@@ -62,9 +62,7 @@ export function NavBar({
                     </span>
                   )
                 ) : (
-                  // 26, the face's own size: a glyph even two pixels bigger
-                  // than the photo beside it makes the face the odd tab out.
-                  <Icon name={t.icon} size={26} />
+                  <Icon name={t.icon} size={22} />
                 )}
               </span>
               <span>{t.label}</span>
