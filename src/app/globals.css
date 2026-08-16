@@ -155,10 +155,21 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --si-soft: #f7e6d6;
   --sa: #d6d1b3;
   --yellow: #f5f200;
-  --radius: 16px;
-  /* One silhouette for actions throughout the product. Pills remain reserved
-     for filters, tabs, status and compact follow/action rails. */
-  --button-radius: 16px;
+  /* Shape system. These four values are the complete product vocabulary:
+     small contained details, ordinary controls/surfaces, bottom sheets, and
+     truly pill-shaped filters/status controls. Feature CSS should consume a
+     token rather than introduce another radius. */
+  --radius-sm: 10px;
+  --radius-control: 16px;
+  --radius-sheet: 28px;
+  --radius-pill: 999px;
+  --radius: var(--radius-control);
+  --button-radius: var(--radius-control);
+  /* Shared geometry. A visible icon can be smaller, but every lone-icon
+     control keeps the same accessible target and every page keeps one gutter. */
+  --tap-size: 44px;
+  --page-gutter: 20px;
+  --control-height: 48px;
   /* Elevation is expressed with surface contrast and rules, not shadows. */
   --soft-shadow: none;
   --soft-shadow-lg: none;
@@ -173,7 +184,10 @@ body {
   overflow-x: hidden; /* clip the page-slide transition, no horizontal scrollbar */
 }
 button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outline-offset: 2px; border-radius: 6px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--si) 72%, transparent);
+  outline-offset: 2px;
+}
 a { color: inherit; }
 
 .screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
@@ -628,7 +642,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .loctag .swd { width: 7px; height: 7px; border-radius: 2px; }
 .editrow { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
 .iconbtn {
-  width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--line);
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill); border: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--ol);
   overflow: hidden; flex-shrink: 0;
 }
@@ -644,14 +658,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .btn {
   /* Primary and secondary actions share one deeply rounded rectangle. */
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--ink); color: #fff; font-weight: 600; font-size: 16.5px;
+  min-height: var(--control-height); background: var(--si); color: #fff; font-weight: 600; font-size: 16.5px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   padding: 16px 22px; border-radius: var(--button-radius); width: 100%; transition: transform .08s;
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
-.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
-.btn.si { background: var(--ink); color: var(--paper); }
+.btn.ghost { background: var(--cl); color: var(--ink); border: 0; }
+.btn.si { background: var(--si); color: #fff; }
 .btn[disabled] { opacity: .45; pointer-events: none; }
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
@@ -708,8 +722,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
      and act on, so legibility wins over the hint of the page beneath. The
      scrim behind it already says where you came from. */
   background: var(--card); color: var(--ink);
-  width: 100%; border-radius: 16px 16px 0 0;
-  padding: 14px 20px var(--pad-b); animation: up .22s ease; max-height: 94%; overflow-y: auto;
+  width: 100%; border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  padding: 18px var(--page-gutter) var(--pad-b); animation: up .22s ease; max-height: 94%; overflow-y: auto;
   overscroll-behavior: contain; /* don't chain scroll to the page behind */
 }
 [data-mode="dark"] .sheet { background: var(--card); }
@@ -732,12 +746,12 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet { position: relative; }
 .sheetclose {
-  position: absolute; top: 14px; right: 16px; z-index: 2;
-  width: 38px; height: 38px; border-radius: 999px;
-  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  position: absolute; top: 16px; right: var(--page-gutter); z-index: 2;
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill);
+  background: var(--cl); border: 0; color: var(--ink);
   display: flex; align-items: center; justify-content: center;
 }
-.sheetclose:active { background: #f6f1e5; }
+.sheetclose:active { background: var(--cl-d); }
 .sheet h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
 .sheet p.lead { font-size: 13px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 /* The informational sheets (the badges' explainers, the community note) are
@@ -2723,10 +2737,10 @@ button.ps-card { cursor: pointer; }
 /* The visible way out, up in the corner where every sheet puts it. */
 .avoverlay-close {
   position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 16px;
-  width: 40px; height: 40px; border-radius: 999px;
-  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill);
+  background: var(--cl); border: 0; color: var(--ink);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--soft-shadow);
+  box-shadow: none;
 }
 /* Photo + its status read as one thing; the actions are another. The big gap
    stays between the two groups. */
@@ -2929,7 +2943,10 @@ button.ps-card { cursor: pointer; }
   background: var(--cl); border-bottom: 1px solid var(--line);
   padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
 }
-.chatback { width: 38px; height: 38px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); flex-shrink: 0; }
+.chatback {
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill);
+  background: var(--cl); border: 0; color: var(--ink); flex-shrink: 0;
+}
 .chattop-txt { display: flex; flex-direction: column; min-width: 0; }
 .chattop-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chattop-sub { font-size: 12px; color: var(--ol); text-decoration: none; }
@@ -3129,7 +3146,9 @@ button.ps-card { cursor: pointer; }
 .viewmore:active { transform: scale(.97); }
 [data-mode="dark"] .viewmore { background: var(--card); border: 1px solid var(--line); }
 
-.pubhead .evback { flex-shrink: 0; width: 38px; height: 38px; margin-bottom: 14px; }
+.pubhead .evback {
+  flex-shrink: 0; width: var(--tap-size); height: var(--tap-size); margin-bottom: 14px;
+}
 /* Bigger, and lifted off the paper. It is the first thing on the page and the
    only photograph on it, so it can carry the weight. */
 .profav {
@@ -3357,7 +3376,8 @@ button.ps-card { cursor: pointer; }
 .shoutout-empty .shoutout-give { margin-top:18px; }
 .shoutout-give-after { width:100%; margin-top:14px; }
 .shoutout-list { display:grid; gap:12px; }
-.shoutout-card { padding:20px; border-radius:18px; background:var(--card); box-shadow:0 1px 2px rgba(21,20,7,.05),0 7px 20px rgba(21,20,7,.06); }
+.shoutout-card { padding:20px 0; border-radius:0; background:transparent; box-shadow:none; }
+.shoutout-card + .shoutout-card { border-top: var(--divw) solid var(--div); }
 .shoutout-card > p { margin:0; font-size:20px; line-height:1.32; font-weight:600; }
 .shoutout-card > span { display:block; margin-top:11px; color:var(--muted); font-size:14px; }
 .shoutout-actions { display:flex; flex-wrap:wrap; gap:14px; margin-top:16px; padding-top:14px; border-top:1px solid var(--div); }
@@ -3483,10 +3503,10 @@ select.editinput.placekind-select {
 .acctwrap > * { max-width: 660px; margin-left: auto; margin-right: auto; }
 .accttop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .acctclose {
-  width: 38px; height: 38px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
-  color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill); background: var(--cl); border: 0;
+  color: var(--ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.acctclose:active { background: #efe8d8; }
+.acctclose:active { background: var(--cl-d); }
 .acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.012em; color: var(--ink); margin: 0; }
 /* Who this is, at the top of settings: face left, name and title beside it,
    Edit on the end. A row on the paper, not a card: it's the label on the
@@ -3700,9 +3720,8 @@ select.editinput.placekind-select {
 /* The dots, and the gear beside them: one circle shape, two identities. They
    share the look and nothing else, so .ownermore keeps meaning the dots. */
 .ownermore, .ownergear {
-  /* White with the same light outline as the share pill beside it. */
-  width: 38px; height: 38px; border-radius: 999px; background: var(--card);
-  border: 1px solid var(--line); color: var(--ink);
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill); background: var(--cl);
+  border: 0; color: var(--ink);
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
 .ownermore:active, .ownergear:active { background: var(--cl); }
@@ -4195,10 +4214,10 @@ select.editinput.placekind-select {
 }
 /* An arrow in a circle: a real target, and unmistakably "back". */
 .evback {
-  width: 42px; height: 42px; border-radius: 999px;
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill);
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--card); color: var(--ink);
-  border: 1px solid var(--line); box-shadow: var(--soft-shadow);
+  background: var(--cl); color: var(--ink);
+  border: 0; box-shadow: none;
   transition: transform .08s;
 }
 .evback:active { transform: scale(.93); }
@@ -4536,7 +4555,7 @@ select.editinput.placekind-select {
 }
 .confirm-modal {
   background: var(--card); color: var(--ink); width: 100%; max-width: 360px;
-  border-radius: 20px; padding: 24px 22px calc(22px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-control); padding: 24px 22px calc(22px + env(safe-area-inset-bottom));
   box-shadow: var(--soft-shadow-lg); text-align: center; animation: up .18s ease;
 }
 .confirm-modal h3 {
@@ -5718,10 +5737,10 @@ select.editinput.placekind-select {
 [data-mode="dark"] .classoverlay { background: rgba(20, 19, 16, .8); }
 .ovcircle {
   position: fixed; top: calc(14px + env(safe-area-inset-top)); z-index: 2;
-  width: 40px; height: 40px; border-radius: 999px;
-  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill);
+  background: var(--cl); border: 0; color: var(--ink);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--soft-shadow); cursor: pointer;
+  box-shadow: none; cursor: pointer;
 }
 .ovcircle:active { transform: scale(.93); }
 .ovcircle-back { left: 16px; }
@@ -7664,15 +7683,15 @@ select.editinput.placekind-select {
    floats over whatever scrolls beneath it. */
 .clspeek-x.clsfull-x {
   position: sticky; top: 2px; z-index: 6;
-  display: flex; margin-left: auto; margin-bottom: -42px;
-  width: 42px; height: 42px; background: var(--card);
-  box-shadow: none; border: 1px solid var(--line);
+  display: flex; margin-left: auto; margin-bottom: calc(-1 * var(--tap-size));
+  width: var(--tap-size); height: var(--tap-size); background: var(--cl);
+  box-shadow: none; border: 0;
 }
 .clspeek-x.clsfull-more {
   position: sticky; top: 2px; z-index: 7;
-  display: flex; margin-bottom: -42px;
-  width: 42px; height: 42px; background: var(--card);
-  box-shadow: none; border: 1px solid var(--line);
+  display: flex; margin-bottom: calc(-1 * var(--tap-size));
+  width: var(--tap-size); height: var(--tap-size); background: var(--cl);
+  box-shadow: none; border: 0;
 }
 .clsfull-menu {
   position: sticky; top: 50px; z-index: 8;
@@ -7795,7 +7814,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .clspeek-door:active { opacity: .6; }
 .clspeek-x {
-  flex-shrink: 0; width: 46px; height: 46px; border-radius: 999px;
+  flex-shrink: 0; width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill);
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--cl); border: none; color: var(--ink); cursor: pointer;
 }
