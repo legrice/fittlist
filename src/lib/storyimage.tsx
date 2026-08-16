@@ -161,9 +161,9 @@ export function renderStory(model: StoryModel) {
           fontFamily: "Delight",
         }}
       >
-        {/* The original thick brand stripe, back as a Decoration and the
-            default one. Not content, so it bleeds to the very edge and
-            costs the rows nothing. */}
+        {/* The stripe is the base card's only decorative brand gesture. The
+            open layout keeps it slim; expressive styles retain the original
+            weight. It bleeds to the edge and costs the rows nothing. */}
         {deco === "top" && (
           <div
             style={{
@@ -173,7 +173,7 @@ export function renderStory(model: StoryModel) {
               // Both canvases are 1080 wide. Not "100%": satori resolves
               // that against the content box and the bar stops 172px short.
               width: 1080,
-              height: 26,
+              height: layout === "plain" ? 18 : 26,
               background: t.accent,
               display: "flex",
             }}

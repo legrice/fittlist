@@ -145,10 +145,10 @@ export type StoryTheme = {
   lockupAccent?: string; // swap the lockup's Sienna row when it would vanish on bg
 };
 export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
-  // The first colourway wears the site's own gradient, by Matt's call: the
-  // warm top fading into the warm gray, so the default poster and the app
-  // it came from are one thing.
-  paper: { label: "Cream", bg: "linear-gradient(180deg, #f8dcc6 0%, #f3e6db 38%, #f1efe9 78%)", fg: "#191502", accent: "#C2410C", muted: "#6b6555", faint: "#8a8570", time: "#3a3526", lockup: "ink" },
+  // The base card is the brand at its quietest: an open off-white canvas,
+  // black type, and one lime edge. Olive carries small copy and the mark so
+  // neither has to rely on lime for contrast at share-image scale.
+  paper: { label: "FittList", bg: "#FAFAF8", fg: "#000000", accent: "#9FE870", muted: "#405D16", faint: "#6B6B68", time: "#000000", lockup: "ink", lockupAccent: "#405D16" },
   iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#C2410C", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
   moss: { label: "Moss", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
   pop: { label: "Pop", bg: "#C2410C", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
@@ -227,7 +227,7 @@ export type StoryStyle = {
 export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
   plain: {
     label: "Classic",
-    description: "The clean open schedule",
+    description: "Open, crisp, and unmistakably FittList",
     layout: "plain",
     theme: "paper",
     typeface: "standard",
