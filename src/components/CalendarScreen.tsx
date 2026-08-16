@@ -20,6 +20,7 @@ import { PlanSheet } from "@/components/PlanSheet";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
+import { FittlistShareSheet } from "@/components/InAppShare";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
@@ -118,6 +119,7 @@ export function CalendarScreen({
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [weekOffset, setWeekOffset] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const savedByIso = useMemo(
@@ -296,9 +298,10 @@ export function CalendarScreen({
         <div className="calbar">
           <div className="calbar-tools">
             <h1 className="calbar-t caltitle tab-page-title">Your schedule</h1>
-            <Link className="calbar-share" href={member ? "/membershare" : "/coachshare"} aria-label="Share your schedule">
+            <button className="calbar-share" type="button" onClick={() => setShareOpen(true)} aria-label="Share your schedule">
               <Icon name="ios_share" size={23} />
-            </Link>
+              <span>Share</span>
+            </button>
           </div>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
@@ -376,6 +379,19 @@ export function CalendarScreen({
         />
       )}
       </div>
+
+      {shareOpen && (
+        <FittlistShareSheet
+          title={`${viewer.name}'s fitness schedule`}
+          url={`${window.location.origin}/${handle ?? "calendar"}`}
+          onShareImage={() => {
+            setShareOpen(false);
+            router.push(member ? "/membershare" : "/coachshare");
+          }}
+          onClose={() => setShareOpen(false)}
+          onToast={toast}
+        />
+      )}
 
       {/* The overlay header: nothing at rest, a glass bar once you're deep,
           naming the day (or month) under it with the toggle and Add along

@@ -8826,12 +8826,19 @@ a.clspeek-by:active { opacity: .6; }
   color: var(--color-text-primary);
 }
 .calbar-share {
-  width: 46px;
+  width: auto;
   height: 46px;
+  min-width: 46px;
+  padding: 0 18px;
+  gap: 8px;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius-pill);
   background: var(--color-surface-muted);
   color: var(--color-black);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 .schedule-kind-tabs {
   gap: 10px;
