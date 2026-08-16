@@ -269,7 +269,7 @@ a { color: inherit; }
 .wm .wm-ico svg { height: 100%; width: auto; display: block; }
 .wm .wm-text { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 1em; letter-spacing: -.008em; white-space: nowrap; }
 .wm .wm-beta {
-  align-self: flex-start; margin-top: .05em; background: var(--si); color: #fff;
+  align-self: flex-start; margin-top: .05em; background: var(--si); color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: .42em;
   letter-spacing: .06em; text-transform: uppercase; padding: .28em .55em; border-radius: 999px;
   line-height: 1;
@@ -352,7 +352,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
    site. Sits above the headline, in the CTA orange so it reads as good news. */
 .invitetag {
   display: inline-block; margin-bottom: 10px; padding: 6px 12px; border-radius: 999px;
-  background: var(--si); color: #fff;
+  background: var(--si); color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12px;
   letter-spacing: .06em; text-transform: uppercase;
 }
@@ -369,7 +369,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .ob input.code { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; font-weight: 600; }
 .ob input::placeholder { color: #b3ac97; }
 .ob input:focus { outline: none; border-color: var(--si); }
-.ob .btn { background: var(--si); color: #fff; box-shadow: none; }
+.ob .btn { background: var(--si); color: var(--color-black); box-shadow: none; }
 .ob .microcopy {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .07em;
   color: var(--ol); margin-top: 14px; text-align: center;
@@ -403,7 +403,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   width:100%; min-height:58px; border-radius:var(--radius-pill); box-shadow:none;
   font-size:18px; font-weight:700;
 }
-.ob .oblanding-actions .obsignup { background:var(--si); color:#fff; }
+.ob .oblanding-actions .obsignup { background:var(--si); color:var(--color-black); }
 .ob .oblanding-actions .oblogin {
   background:#fff; color:var(--ink); border:1px solid var(--line);
 }
@@ -479,8 +479,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wiz > .pad > p { font-size: 15px; color: var(--ol); line-height: 1.5; margin-bottom: 22px; }
 .wiz .flabel { margin-top: 16px; }
 .wiz .flabel:first-of-type { margin-top: 0; }
-.wiz .btn.si { background: var(--si); color: #fff; }
-.wiz .btn.si:disabled { background: color-mix(in srgb, var(--si) 32%, var(--card)); color: #fff; opacity: 1; }
+.wiz .btn.si { background: var(--si); color: var(--color-black); }
+.wiz .btn.si:disabled { background: color-mix(in srgb, var(--si) 32%, var(--card)); color: var(--color-black); opacity: 1; }
 .wizback {
   width: 44px; height: 44px; margin: 0 0 22px; border: 1px solid var(--line);
   border-radius: 14px; background: var(--card); color: var(--ink); cursor: pointer;
@@ -699,14 +699,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .btn {
   /* Primary and secondary actions share one confident Wise-like pill. */
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: var(--control-height); background: var(--si); color: #fff; font-weight: 700; font-size: 16px;
+  min-height: var(--control-height); background: var(--si); color: var(--color-black); font-weight: 700; font-size: 16px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   padding: 14px 22px; border-radius: var(--radius-pill); width: 100%; transition: transform .08s;
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
 .btn.ghost { background: var(--cl); color: var(--ink); border: 0; }
-.btn.si { background: var(--si); color: #fff; }
+.btn.si { background: var(--si); color: var(--color-black); }
 .btn[disabled] { opacity: .45; pointer-events: none; }
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
@@ -1051,7 +1051,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   /* Brand orange, back by request: the one button that makes a coach's page
      exist gets the one loud colour. It tried being glass and read as
      furniture. */
-  background: var(--si); color: #fff;
+  background: var(--si); color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   box-shadow: none;
   transition: transform .08s;
@@ -1146,7 +1146,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   display: grid; place-items: center;
 }
 .calpicker-d.today .n { box-shadow: inset 0 0 0 1.5px var(--line); }
-.calpicker-d.sel .n { background: var(--si); color: #fff; box-shadow: none; }
+.calpicker-d.sel .n { background: var(--si); color: var(--color-black); box-shadow: none; }
 .calpicker-dot {
   position: absolute; bottom: 1px; width: 4px; height: 4px; border-radius: 999px;
   background: var(--ol);
@@ -1204,7 +1204,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 600; font-size: 15px; color: var(--ink);
 }
 .daystrip-day.today .daystrip-n { box-shadow: inset 0 0 0 1.5px var(--line); }
-.daystrip-day.sel .daystrip-n { background: var(--si); color: #fff; box-shadow: none; }
+.daystrip-day.sel .daystrip-n { background: var(--si); color: var(--color-black); box-shadow: none; }
 .daygrid-head {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: var(--date-heading-weight); font-size: 17px; text-align: center; margin: 14px 0 10px;
@@ -1425,7 +1425,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px; font-weight: 600; color: var(--ink); padding: 0;
 }
-.monthday.today .monthday-n { background: var(--si); color: #fff; }
+.monthday.today .monthday-n { background: var(--si); color: var(--color-black); }
 .monthpill {
   display: block; border-radius: 5px; padding: 2px 4px; font-size: 10px;
   font-weight: 600; white-space: nowrap; overflow: hidden;
@@ -1465,7 +1465,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 44; height: 46px; padding: 0 22px 0 18px; border-radius: 999px;
   display: inline-flex; align-items: center; gap: 6px;
-  background: var(--si); border: none; color: #fff;
+  background: var(--si); border: none; color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 14px; cursor: pointer;
   box-shadow: none;
@@ -2347,7 +2347,7 @@ button.ps-card { cursor: pointer; }
   min-height: 56px; border: 0; border-radius: 16px; background: var(--cl);
   color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
 }
-.globaladd-role-options button:first-child { background: var(--si); color: #fff; }
+.globaladd-role-options button:first-child { background: var(--si); color: var(--color-black); }
 .globaladd-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:18px; }
 .globaladd-list > button { display:flex; min-width:0; min-height:86px; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:12px 8px; border-radius:16px; background:var(--ground); text-align:center; }
 .globaladd-list > button:disabled { opacity:.55; }
@@ -2371,7 +2371,7 @@ button.ps-card { cursor: pointer; }
 .inboxbtn { position: relative; }
 .inboxdot {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
-  border-radius: 999px; background: var(--si); color: #fff; font-size: 11px; font-weight: 600;
+  border-radius: 999px; background: var(--si); color: var(--color-black); font-size: 11px; font-weight: 600;
   display: flex; align-items: center; justify-content: center; border: 1px solid var(--paper);
 }
 /* Your week (/week): the shortlist. A list, not a calendar — no grid, no empty
@@ -2546,7 +2546,7 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
   background: var(--cl-d); color: var(--ink);
 }
-.reportcount.hot { background: var(--si); color: #fff; }
+.reportcount.hot { background: var(--si); color: var(--color-black); }
 .admincard-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .admincard-actions .btn { width: auto; padding: 9px 14px; font-size: 13px; border-radius: var(--button-radius); }
 .reportlist { display: flex; flex-direction: column; gap: 12px; }
@@ -2929,7 +2929,7 @@ button.ps-card { cursor: pointer; }
 .inboxrow.unread .inboxrow-preview { color: var(--ink); font-weight: 600; }
 .inboxrow-badge {
   flex-shrink: 0; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
-  background: var(--si); color: #fff; font-size: 12px; font-weight: 600;
+  background: var(--si); color: var(--color-black); font-size: 12px; font-weight: 600;
   display: flex; align-items: center; justify-content: center;
 }
 .updates-actions { display: flex; align-items: center; gap: 8px; }
@@ -2965,7 +2965,7 @@ button.ps-card { cursor: pointer; }
 .inappshare-people > button > span {
   position: relative; display: grid; place-items: center; flex: 0 0 66px;
   width: 66px; height: 66px; min-width: 66px; min-height: 66px; aspect-ratio: 1;
-  overflow: visible; border-radius: 50%; background: var(--si); color: #fff; font-size: 22px;
+  overflow: visible; border-radius: 50%; background: var(--si); color: var(--color-black); font-size: 22px;
 }
 .inappshare-people img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; clip-path: circle(50%); }
 .inappshare-people i { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ok); color: #fff; }
@@ -3006,7 +3006,7 @@ button.ps-card { cursor: pointer; }
   white-space: pre-wrap; word-break: break-word;
 }
 .chatmsg.theirs .chatbubble { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 6px; color: var(--ink); }
-.chatmsg.mine .chatbubble { background: var(--si); color: #fff; border-bottom-right-radius: 6px; }
+.chatmsg.mine .chatbubble { background: var(--si); color: var(--color-black); border-bottom-right-radius: 6px; }
 .chatreply {
   position: sticky; bottom: 0; display: flex; flex-direction: column; gap: 8px;
   background: var(--paper); border-top: 1px solid var(--line);
@@ -3694,7 +3694,7 @@ select.editinput.placekind-select {
 }
 .invbanner-ic {
   flex-shrink: 0; width: 30px; height: 30px; border-radius: 999px;
-  background: var(--si); color: #fff; display: flex; align-items: center; justify-content: center;
+  background: var(--si); color: var(--color-black); display: flex; align-items: center; justify-content: center;
 }
 .invbanner-txt { display: flex; flex-direction: column; min-width: 0; }
 .invbanner-txt b {
@@ -3722,7 +3722,7 @@ select.editinput.placekind-select {
    list, it just doesn't disappear into it. */
 .setrow-hi { box-shadow: inset 3px 0 0 var(--si); }
 .setrow-hi .setrow-ic {
-  width: 30px; height: 30px; border-radius: 999px; background: var(--si); color: #fff;
+  width: 30px; height: 30px; border-radius: 999px; background: var(--si); color: var(--color-black);
   align-items: center; justify-content: center; margin: -3px -2px -3px -1px;
 }
 .setrow-hi .setrow-txt .t { color: var(--si); }
@@ -4618,7 +4618,7 @@ select.editinput.placekind-select {
 /* Coach or member, on the card. Colour rather than wording, so the eye can
    sort a mixed list without reading it. */
 .adminbadge.kind-coach { background: var(--ink); color: var(--paper); }
-.adminbadge.kind-member { background: var(--si); color: #fff; }
+.adminbadge.kind-member { background: var(--si); color: var(--color-black); }
 .adminremove { margin-top: 10px; font-weight: 600; font-size: 13px; color: #a8452a; }
 .admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--si-soft); }
 .admindanger p { font-size: 13px; color: #8a3c22; line-height: 1.45; margin-bottom: 10px; }
@@ -4791,7 +4791,7 @@ select.editinput.placekind-select {
 /* Initial-fallback avatar circles read as brand-orange chips on dark. The
    coach's own two (.usericon-initial, .acctavatar-empty) carry their palette
    colour inline in both modes, so they aren't in this list. */
-[data-mode="dark"] .inboxrow-av { background: var(--si); color: #fff; }
+[data-mode="dark"] .inboxrow-av { background: var(--si); color: var(--color-black); }
 /* ---- the coach's public page + event pages in dark ---- */
 [data-mode="dark"] .proflink,
 [data-mode="dark"] .profstudio {
@@ -4800,7 +4800,7 @@ select.editinput.placekind-select {
 /* The fittlist row still leads. Ink on dark is the background, so it wears the
    brand colour there instead. Defined after the tint above, which it ties with. */
 [data-mode="dark"] .contactlist .proflink-first {
-  background: var(--si); color: #fff; border-color: transparent;
+  background: var(--si); color: var(--color-black); border-color: transparent;
 }
 [data-mode="dark"] .proflink:active,
 [data-mode="dark"] .profstudio:active { background: #2c2718; }
@@ -4966,7 +4966,7 @@ select.editinput.placekind-select {
 .feedav-img-empty {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 26px;
-  color: #fff; background: var(--si);
+  color: var(--color-black); background: var(--si);
 }
 /* The ring says picked, in the coach's own accent: the same colour their
    rows wear down the left, so picking a face lights everything theirs. The
@@ -5021,7 +5021,7 @@ select.editinput.placekind-select {
 .ps-ecoachav-empty {
   display: flex; align-items: center; justify-content: center; font-size: 12px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  color: #fff; background: var(--si);
+  color: var(--color-black); background: var(--si);
 }
 .ps-ecoach-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* A face in a settings row's icon slot, for the shift transfer lists. Sized
@@ -5326,7 +5326,7 @@ select.editinput.placekind-select {
   box-shadow: none; text-decoration: none;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.discover-tabs > :is(button, a).on { background: var(--si); color: #fff; box-shadow: none; }
+.discover-tabs > :is(button, a).on { background: var(--si); color: var(--color-black); box-shadow: none; }
 .dissearchrow.discover-searchrow { margin: var(--space-2) 0 var(--space-1); padding-top: 0; }
 .discover-searchrow .dissearch { box-shadow: none; }
 .discover-searchrow .dissearch:focus-within { box-shadow: 0 0 0 3px var(--si); }
@@ -5342,7 +5342,7 @@ select.editinput.placekind-select {
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .discover-filterpill svg { flex:0 0 auto; }
-.discover-filterpill.on { background:var(--si); border-color:var(--si); color:#fff; }
+.discover-filterpill.on { background:var(--si); border-color:var(--si); color:var(--color-black); }
 .discover-filter-sheet { padding-top:var(--space-2); }
 .discover-filter-options { margin:var(--space-2) 0 0; }
 .discover-person-grid {
@@ -5548,7 +5548,7 @@ select.editinput.placekind-select {
 .disrow-av-empty {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 19px;
-  color: #fff; background: var(--si);
+  color: var(--color-black); background: var(--si);
 }
 .disrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .disrow-txt .nm {
@@ -5677,7 +5677,7 @@ select.editinput.placekind-select {
 .shstart { padding: 34px 10px 20px; text-align: center; }
 .shstart h2 { font-size: 24px; line-height: 1.15; margin: 0 0 12px; }
 .shstart p { font-size: 14px; line-height: 1.55; color: var(--ol); margin: 0 auto 10px; max-width: 320px; }
-.shstart .btn { width: 100%; margin-top: 14px; background: var(--si); color: #fff; }
+.shstart .btn { width: 100%; margin-top: 14px; background: var(--si); color: var(--color-black); }
 
 /* the photo picker inside the member profile sheet */
 .mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }
@@ -6426,7 +6426,7 @@ select.editinput.placekind-select {
 .clspill:active { transform: scale(.97); }
 .clscount {
   display: inline-grid; place-items: center; min-width: 19px; height: 19px;
-  border-radius: 999px; background: var(--si); color: #fff;
+  border-radius: 999px; background: var(--si); color: var(--color-black);
   font-size: 11px; font-weight: 600; padding: 0 5px;
   /* Out of the line box entirely, so it can never push the pill taller. */
   line-height: 1; flex: 0 0 auto;
@@ -6488,7 +6488,7 @@ select.editinput.placekind-select {
 }
 .acctinvite p { margin: 4px 0 0; font-size: 13px; line-height: 1.4; color: var(--ol); }
 .acctinvite-btn {
-  flex: 0 0 auto; border: 0; background: var(--si); color: #fff;
+  flex: 0 0 auto; border: 0; background: var(--si); color: var(--color-black);
   font-family: inherit; font-size: 14px; font-weight: 600;
   padding: 11px 20px; border-radius: var(--button-radius); cursor: pointer;
 }
@@ -6529,7 +6529,7 @@ select.editinput.placekind-select {
   border-radius: 999px; background: var(--cl); color: var(--ink); text-decoration: none;
   font-size: 13.5px; font-weight: 600;
 }
-.youquickactions a:first-child { background: var(--si); color: #fff; }
+.youquickactions a:first-child { background: var(--si); color: var(--color-black); }
 .yougroup-title { margin: 0 0 12px; font-size: 20px; line-height: 1.15; letter-spacing: -.025em; }
 .youfavorites-title { margin-top: 34px; margin-bottom: -12px; }
 .yousection { margin-top: 26px; }
@@ -6603,7 +6603,7 @@ select.editinput.placekind-select {
 .pubtab-cnt {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
-  background: var(--si); color: #fff;
+  background: var(--si); color: var(--color-black);
   font-size: 11.5px; font-weight: 600; letter-spacing: 0;
 }
 
@@ -6747,15 +6747,15 @@ select.editinput.placekind-select {
   display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 19px; font-weight: 600; line-height: 1.2;
 }
-.daychip.sel { background: var(--si); border-color: var(--si); color: #fff; }
-.daychip.sel .daychip-dow { color: rgba(255, 255, 255, .82); }
+.daychip.sel { background: var(--si); border-color: var(--si); color: var(--color-black); }
+.daychip.sel .daychip-dow { color: rgba(0, 0, 0, .68); }
 .lenchip {
   flex: 0 0 auto; width: 44px; height: 44px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--card); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 17px; font-weight: 600; color: var(--ink);
 }
-.lenchip.sel { background: var(--si); border-color: var(--si); color: #fff; }
+.lenchip.sel { background: var(--si); border-color: var(--si); color: var(--color-black); }
 /* An empty week is an offer rather than a broken picture, and the offer is
    loud enough to read as the next thing to do. */
 .compwarn { background: var(--si); }
@@ -6999,7 +6999,7 @@ select.editinput.placekind-select {
   .desktop-create {
     min-height: 48px; margin-top: 24px; padding: 0 16px;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    border-radius: var(--button-radius); background: var(--si); color: #fff;
+  border-radius: var(--button-radius); background: var(--si); color: var(--color-black);
     text-decoration: none; font-size: 15px; font-weight: 600;
   }
   .desktop-create:hover { filter: brightness(.95); }
@@ -7314,7 +7314,7 @@ select.editinput.placekind-select {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 13.5px; font-weight: 600; color: var(--ol); white-space: nowrap;
 }
-.daytab.on { background: var(--si); color: #fff; }
+.daytab.on { background: var(--si); color: var(--color-black); }
 /* Why Today isn't selected, said once, in the quiet gray a notice wears. */
 .daynote {
   text-align: center; font-size: 13.5px; color: var(--ol);
@@ -7324,7 +7324,7 @@ select.editinput.placekind-select {
    way to a louder one. */
 .dayempty { text-align: center; font-size: 14.5px; color: var(--ol); padding: 46px 0; }
 /* The picked one goes brand orange, by Matt's call. */
-.calpills .catpill.on { background: var(--si); border-color: var(--si); color: #fff; }
+.calpills .catpill.on { background: var(--si); border-color: var(--si); color: var(--color-black); }
 
 /* RSVP's two lines on the class sheet: the count once somebody is in,
    and where the name goes, said before the tap. */
@@ -7721,7 +7721,7 @@ select.editinput.placekind-select {
 /* Brand orange with white words, by Matt's call: the one thing to do on
    an empty screen wears the one loud colour. */
 .wkempty-cta { margin-top: 22px; width: 100%; }
-.btn.si.wkempty-cta { background: var(--si); color: #fff; }
+.btn.si.wkempty-cta { background: var(--si); color: var(--color-black); }
 .wkempty-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7748,7 +7748,7 @@ select.editinput.placekind-select {
   position: fixed; right: 18px; bottom: calc(96px + env(safe-area-inset-bottom));
   z-index: 44; width: 64px; height: 64px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--si); color: #fff; border: none; cursor: pointer;
+  background: var(--si); color: var(--color-black); border: none; cursor: pointer;
   box-shadow: none;
 }
 .wkfab:active { transform: scale(.95); }
@@ -7859,7 +7859,7 @@ select.editinput.placekind-select {
 .clsfull-btn.book { background: var(--ink); color: #fff; }
 /* A shift's one act, in the footer slot a member's Book takes: the date is
    yours to manage, not to book. */
-.clsfull-btn.manage { background: var(--si); color: #fff; }
+.clsfull-btn.manage { background: var(--si); color: var(--color-black); }
 /* The booking doors, as the buttons they are: each one is the act this
    sheet exists for, in the same brand pill Book itself wears. */
 .bookbtns { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
@@ -7950,7 +7950,7 @@ a.clspeek-by:active { opacity: .6; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 17px; font-weight: 600; cursor: pointer; text-decoration: none;
 }
-.clspeek-btn.si { background: var(--si); color: #fff; border: 1px solid var(--si); }
+.clspeek-btn.si { background: var(--si); color: var(--color-black); border: 1px solid var(--si); }
 .clspeek-btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
 .clspeek-btn:active { transform: scale(.97); }
 /* The rarest of the three and the only one nothing undoes, so it is a link
@@ -8029,7 +8029,7 @@ a.clspeek-by:active { opacity: .6; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 15.5px; font-weight: 600; cursor: pointer;
 }
-.shseg-pill.on { background: var(--si); color: #fff; }
+.shseg-pill.on { background: var(--si); color: var(--color-black); }
 /* The rail under the colours: Dates, Classes, Message, each a small
    labelled door to its sheet. What the picture covers, what's on it,
    what it says. It scrolls rather than splitting the width three ways:
@@ -8054,7 +8054,7 @@ a.clspeek-by:active { opacity: .6; }
    wins the cascade and the chip goes white. */
 .shctrl.shctrl-add {
   flex-direction: row; align-items: center; min-width: 0;
-  background: var(--si); color: #fff;
+  background: var(--si); color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 15px;
 }
@@ -8112,7 +8112,7 @@ a.clspeek-by:active { opacity: .6; }
 /* The save is this screen's one loud call, and the concept paints it brand:
    the rest of the app's .btn.si went ink in the orange retreat, so the hub
    says it locally. */
-.shcta .btn.si { background: var(--si); color: #fff; }
+.shcta .btn.si { background: var(--si); color: var(--color-black); }
 .shedit {
   align-self: center; display: inline-flex; align-items: center; gap: 2px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -8212,7 +8212,7 @@ a.clspeek-by:active { opacity: .6; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 15.5px; font-weight: 600;
 }
-.shday.on { background: var(--si); color: #fff; }
+.shday.on { background: var(--si); color: var(--color-black); }
 /* The Today preset in the Dates sheet: the shday's own drawing at its
    natural width, above the dropdown it saves a trip through. */
 .shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }
@@ -8662,7 +8662,7 @@ a.clspeek-by:active { opacity: .6; }
 .folist-dir { margin-top: 6px; }
 /* Brand orange with white words, the empty-state CTA rule. */
 .empty-block .folfind { margin-top: 18px; display: inline-block; padding-left: 28px; padding-right: 28px; }
-.btn.si.folfind { background: var(--si); color: #fff; }
+.btn.si.folfind { background: var(--si); color: var(--color-black); }
 
 /* The overlay header: hidden at rest, fading in once the page has
    scrolled, the day (or month) under it on the left and the screen's own
@@ -8720,7 +8720,7 @@ a.clspeek-by:active { opacity: .6; }
   background: var(--card); color: var(--ink); font: inherit;
   font-size: 15px; font-weight: 600; cursor: pointer;
 }
-.schedule-kind-tabs button.on { background: var(--si); color: #fff; }
+.schedule-kind-tabs button.on { background: var(--si); color: var(--color-black); }
 .info-page-action { display: inline-flex; width: auto; margin-top: 12px; text-decoration: none; }
 .aboutpage .about-kicker { margin-bottom: 8px; color: var(--ol); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }
@@ -9068,14 +9068,14 @@ a.clspeek-by:active { opacity: .6; }
 .cityhero>p:first-of-type { margin:0 0 10px; color:var(--si); font-size:15px; font-weight:600; }
 .cityhero h1 { max-width:820px; margin:0; font-size:clamp(42px,8vw,78px); line-height:.96; letter-spacing:-.055em; }
 .citylede { max-width:650px; margin:24px 0 30px; color:var(--muted); font-size:clamp(19px,3vw,24px); line-height:1.35; }
-.citycta { display:inline-flex; min-height:50px; align-items:center; padding:0 24px; border-radius:16px; background:var(--si); color:#fff; font-weight:600; text-decoration:none; }
+.citycta { display:inline-flex; min-height:50px; align-items:center; padding:0 24px; border-radius:16px; background:var(--si); color:var(--color-black); font-weight:600; text-decoration:none; }
 .citysection { padding:34px 0; border-top:1px solid var(--div); }
 .citysection-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:22px; }
 .citysection-head h2 { margin:0; font-size:30px; letter-spacing:-.035em; }
 .citysection-head span { color:var(--muted); }
 .citygrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
 .cityperson { display:flex; min-width:0; gap:15px; align-items:center; padding:18px; border-radius:20px; background:var(--wash); color:inherit; text-decoration:none; }
-.cityperson>img,.cityperson>span { width:74px; height:74px; flex:0 0 74px; border-radius:50%; object-fit:cover; display:grid; place-items:center; background:var(--si); color:#fff; font-size:28px; }
+.cityperson>img,.cityperson>span { width:74px; height:74px; flex:0 0 74px; border-radius:50%; object-fit:cover; display:grid; place-items:center; background:var(--si); color:var(--color-black); font-size:28px; }
 .cityperson div { min-width:0; }
 .cityperson h3 { margin:0 0 3px; font-size:20px; }
 .cityperson p,.cityperson small { display:block; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
