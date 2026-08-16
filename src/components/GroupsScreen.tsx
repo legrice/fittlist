@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createGroup } from "@/app/actions/groups";
 import { Icon } from "@/components/Icon";
 
-export function GroupsScreen({ groups }: { groups: { id: string; slug: string; name: string; description: string; location: string; type: string; members: number; owner: boolean }[] }) {
+export function GroupsScreen({ groups }: { groups: { id: string; slug: string; name: string; description: string; location: string; type: string; visibility: string; members: number; owner: boolean }[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
@@ -18,6 +18,7 @@ export function GroupsScreen({ groups }: { groups: { id: string; slug: string; n
       type: String(form.get("type") ?? "Community"),
       location: String(form.get("location") ?? ""),
       description: String(form.get("description") ?? ""),
+      visibility: form.get("visibility") === "private" ? "private" : "public",
     });
     if (!result.ok) return setError(result.error);
     router.push(`/g/${result.slug}`);
@@ -38,7 +39,7 @@ export function GroupsScreen({ groups }: { groups: { id: string; slug: string; n
         <span className="group-card-copy">
           <strong>{group.name}</strong>
           <span>{[group.type, group.location].filter(Boolean).join(" · ")}</span>
-          <small>{group.members} {group.members === 1 ? "member" : "members"}{group.owner ? " · You manage this" : ""}</small>
+          <small>{group.visibility === "private" ? "Private" : "Public"} · {group.members} {group.members === 1 ? "member" : "members"}{group.owner ? " · You manage this" : ""}</small>
         </span>
         <Icon name="chevron_right" size={21} />
       </a>)}
@@ -62,6 +63,7 @@ export function GroupsScreen({ groups }: { groups: { id: string; slug: string; n
             <label>Location<input name="location" maxLength={80} placeholder="Jersey City, NJ" /></label>
           </div>
           <label>About<textarea name="description" maxLength={280} rows={3} placeholder="Who this group is for and what you do together." /></label>
+          <fieldset className="group-visibility"><legend>Who can join?</legend><label><input type="radio" name="visibility" value="public" defaultChecked /><span><strong>Public</strong><small>Anyone can find and join it.</small></span></label><label><input type="radio" name="visibility" value="private" /><span><strong>Private</strong><small>Only people with an invite can join.</small></span></label></fieldset>
           {error && <p className="formerror">{error}</p>}
           <button className="btn si" disabled={pending}>{pending ? "Creating…" : "Create group"}</button>
         </form>

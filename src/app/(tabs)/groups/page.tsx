@@ -18,6 +18,7 @@ export default async function GroupsPage() {
       description: schema.groups.description,
       location: schema.groups.location,
       type: schema.groups.type,
+      visibility: schema.groups.visibility,
       ownerUserId: schema.groups.ownerUserId,
       members: sql<number>`count(${schema.groupMembers.id})::int`,
       createdAt: schema.groups.createdAt,

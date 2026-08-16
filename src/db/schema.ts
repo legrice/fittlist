@@ -158,6 +158,8 @@ export const groups = pgTable("groups", {
   description: text("description").notNull().default(""),
   location: text("location").notNull().default(""),
   type: text("type").notNull().default("Community"),
+  visibility: text("visibility").notNull().default("public"),
+  inviteToken: text("invite_token").notNull().unique(),
   ownerUserId: uuid("owner_user_id").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -169,6 +171,10 @@ export const groupMembers = pgTable(
     groupId: uuid("group_id").notNull().references(() => groups.id),
     userId: uuid("user_id").notNull().references(() => users.id),
     role: text("role").notNull().default("member"),
+    // A group never owns a second calendar. Members explicitly decide
+    // whether their existing public week appears in the group's combined
+    // view; "selected" keeps everything out until they choose otherwise.
+    shareMode: text("share_mode").notNull().default("selected"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

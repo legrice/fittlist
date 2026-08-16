@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
@@ -22,6 +23,7 @@ export async function createGroup(input: {
   description?: string;
   location?: string;
   type?: string;
+  visibility?: "public" | "private";
 }) {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in to create a group." } as const;
@@ -45,6 +47,8 @@ export async function createGroup(input: {
       description: clean(input.description ?? "", 280),
       location: clean(input.location ?? "", 80),
       type: clean(input.type ?? "Community", 50) || "Community",
+      visibility: input.visibility === "private" ? "private" : "public",
+      inviteToken: randomUUID().replaceAll("-", ""),
       ownerUserId: userId,
     })
     .returning({ id: schema.groups.id, slug: schema.groups.slug });
@@ -53,7 +57,7 @@ export async function createGroup(input: {
   return { ok: true, slug: group.slug } as const;
 }
 
-export async function setGroupMembership(groupId: string, joining: boolean) {
+export async function setGroupMembership(groupId: string, joining: boolean, inviteToken?: string) {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in to join this group." } as const;
   const db = await getDb();
@@ -61,6 +65,9 @@ export async function setGroupMembership(groupId: string, joining: boolean) {
   if (!group) return { ok: false, error: "That group is no longer here." } as const;
   if (!joining && group.ownerUserId === userId) {
     return { ok: false, error: "The person who created a group can’t leave it." } as const;
+  }
+  if (joining && group.visibility === "private" && inviteToken !== group.inviteToken) {
+    return { ok: false, error: "This private group needs a valid invite." } as const;
   }
   if (joining) {
     await db.insert(schema.groupMembers).values({ groupId, userId }).onConflictDoNothing();
@@ -72,12 +79,25 @@ export async function setGroupMembership(groupId: string, joining: boolean) {
   return { ok: true } as const;
 }
 
+export async function setGroupShareMode(groupId: string, mode: "selected" | "public-week") {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in to change what you share." } as const;
+  const db = await getDb();
+  const [membership] = await db.select().from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, groupId), eq(schema.groupMembers.userId, userId)));
+  if (!membership) return { ok: false, error: "Join the group before sharing with it." } as const;
+  await db.update(schema.groupMembers).set({ shareMode: mode }).where(eq(schema.groupMembers.id, membership.id));
+  const [group] = await db.select({ slug: schema.groups.slug }).from(schema.groups).where(eq(schema.groups.id, groupId));
+  if (group) revalidatePath(`/g/${group.slug}`);
+  return { ok: true } as const;
+}
+
 export async function updateGroup(input: {
   id: string;
   name: string;
   description?: string;
   location?: string;
   type?: string;
+  visibility?: "public" | "private";
 }) {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in to manage this group." } as const;
@@ -91,6 +111,7 @@ export async function updateGroup(input: {
     description: clean(input.description ?? "", 280),
     location: clean(input.location ?? "", 80),
     type: clean(input.type ?? "Community", 50) || "Community",
+    visibility: input.visibility === "private" ? "private" : "public",
   }).where(eq(schema.groups.id, input.id));
   revalidatePath(`/g/${group.slug}`);
   revalidatePath("/groups");

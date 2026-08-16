@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { deleteGroup, updateGroup } from "@/app/actions/groups";
 import { Icon } from "@/components/Icon";
 
-type Group = { id: string; name: string; description: string; location: string; type: string };
+type Group = { id: string; name: string; description: string; location: string; type: string; visibility: string };
 
 export function GroupManageButton({ group }: { group: Group }) {
   const router = useRouter();
@@ -22,6 +22,7 @@ export function GroupManageButton({ group }: { group: Group }) {
       type: String(form.get("type") ?? "Community"),
       location: String(form.get("location") ?? ""),
       description: String(form.get("description") ?? ""),
+      visibility: form.get("visibility") === "private" ? "private" : "public",
     });
     if (!result.ok) return setError(result.error);
     setOpen(false);
@@ -50,6 +51,7 @@ export function GroupManageButton({ group }: { group: Group }) {
             <label>Location<input name="location" maxLength={80} defaultValue={group.location} /></label>
           </div>
           <label>About<textarea name="description" maxLength={280} rows={3} defaultValue={group.description} /></label>
+          <fieldset className="group-visibility"><legend>Who can join?</legend><label><input type="radio" name="visibility" value="public" defaultChecked={group.visibility !== "private"} /><span><strong>Public</strong><small>Anyone can find and join it.</small></span></label><label><input type="radio" name="visibility" value="private" defaultChecked={group.visibility === "private"} /><span><strong>Private</strong><small>Only people with an invite can join.</small></span></label></fieldset>
           {error && <p className="formerror">{error}</p>}
           <button className="btn si" disabled={pending}>{pending ? "Saving…" : "Save changes"}</button>
           {!confirming ? <button type="button" className="group-delete-link" onClick={() => setConfirming(true)}>Delete group</button> : <div className="group-delete-confirm">

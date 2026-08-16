@@ -8735,6 +8735,12 @@ a.clspeek-by:active { opacity: .6; }
 .group-form input,.group-form textarea { width: 100%; border: 1px solid var(--div); border-radius: 16px; background: var(--paper); color: var(--ink); padding: 14px 16px; font: inherit; font-weight: 400; outline: none; }
 .group-form input { min-height: 54px; }
 .group-form textarea { resize: vertical; line-height: 1.4; }
+.group-visibility { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.group-visibility legend { grid-column: 1/-1; margin-bottom: 7px; font-weight: 600; }
+.group-visibility label { min-height: 78px; padding: 13px; border: 1px solid var(--div); border-radius: 16px; flex-direction: row; align-items: flex-start; cursor: pointer; }
+.group-visibility input { width: 18px; min-height: 18px; margin: 3px 3px 0 0; }
+.group-visibility span { display: flex; flex-direction: column; gap: 2px; }
+.group-visibility small { color: var(--muted); font-size: 13px; font-weight: 400; line-height: 1.3; }
 .group-form input:focus,.group-form textarea:focus { border-color: var(--ink); }
 .group-form-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .formerror { margin: 0; color: #a42b1d; }
@@ -8755,6 +8761,31 @@ a.clspeek-by:active { opacity: .6; }
 .group-delete-confirm .btn { min-height: 44px; flex: 1; }
 .group-delete-confirm .danger { background: #a42b1d; color: #fff; }
 .group-roster { padding-top: 30px; }
+.group-private { padding: 54px 0; text-align: center; }
+.group-private h2,.group-week h2,.group-about h2 { margin: 0; font-size: 28px; }
+.group-private p,.group-week > p,.group-about p { margin: 6px 0 0; color: var(--muted); line-height: 1.45; }
+.group-sharing { margin: 24px 0 0; padding: 20px; border-radius: 20px; background: var(--soft); }
+.group-sharing > div:first-child strong { font-size: 18px; }
+.group-sharing p { margin: 4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.group-sharing-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 15px; }
+.group-sharing-options button { min-height: 48px; border: 0; border-radius: 14px; background: var(--paper); color: var(--ink); font: inherit; font-weight: 600; }
+.group-sharing-options button.active { background: var(--ink); color: var(--paper); }
+.group-sharing > a { display: inline-block; margin-top: 14px; color: var(--si); font-weight: 600; }
+.group-anchor-nav { position: sticky; top: var(--brandbar-h, 0px); z-index: 3; display: flex; gap: 26px; margin-top: 28px; padding: 16px 0 13px; border-bottom: 1px solid var(--div); background: var(--paper); }
+.group-anchor-nav a { color: inherit; text-decoration: none; font-weight: 600; }
+.group-week { padding: 30px 0 0; scroll-margin-top: 80px; }
+.group-week-days { margin-top: 20px; }
+.group-week-days > section { margin-top: 24px; }
+.group-week-days h3 { margin: 0 0 8px; padding-bottom: 9px; border-bottom: 1px solid var(--div); font-size: 17px; }
+.group-week-item { display: grid; grid-template-columns: 70px minmax(0,1fr); gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--div); color: inherit; text-decoration: none; }
+.group-week-item time { font-weight: 600; }
+.group-week-item span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.group-week-item strong { font-size: 18px; }
+.group-week-item small { color: var(--muted); font-size: 14px; }
+.group-week-empty { margin-top: 18px; padding: 28px 22px; border: 1px dashed var(--div); border-radius: 18px; text-align: center; }
+.group-week-empty p { margin: 5px 0 0; color: var(--muted); }
+.group-roster { scroll-margin-top: 80px; }
+.group-about { padding: 34px 0 10px; scroll-margin-top: 80px; }
 .group-roster h2 { margin: 0; font-size: 28px; }
 .group-roster > p { margin: 5px 0 20px; color: var(--muted); }
 .group-member-list { border-top: 1px solid var(--div); }
@@ -8768,6 +8799,7 @@ a.clspeek-by:active { opacity: .6; }
   .groups-head { align-items: stretch; flex-direction: column; }
   .groups-create { align-self: flex-start; }
   .group-form-pair { grid-template-columns: 1fr; }
+  .group-visibility,.group-sharing-options { grid-template-columns: 1fr; }
   .group-create-sheet { padding: 25px 20px calc(24px + env(safe-area-inset-bottom)); }
   .group-public { padding-top: 28px; }
 }
