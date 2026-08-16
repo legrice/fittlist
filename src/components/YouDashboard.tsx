@@ -68,6 +68,7 @@ export function YouDashboard({
         title="People"
         empty="Save the people whose calendars you want close by."
         addHref="/discover?seg=coaches"
+        kind="people"
       >
         {people.map((person) => (
           <Link className="youfav" href={`/${person.handle}`} key={person.id}>
@@ -87,6 +88,7 @@ export function YouDashboard({
         title="Places"
         empty="Keep the studios and spaces you love in one place."
         addHref="/discover?seg=studios"
+        kind="places"
       >
         {places.map((place) => (
           <Link className="youfav" href={`/s/${place.slug}`} key={place.id}>
@@ -106,6 +108,7 @@ export function YouDashboard({
         title="Groups"
         empty="Groups will give your crew one shared place for everyone’s plans."
         addHref="/groups/new"
+        kind="groups"
       />
 
       <AccountGroup title="Your account">
@@ -173,18 +176,20 @@ function FavoriteRail({
   title,
   empty,
   addHref,
+  kind,
   children,
 }: {
   title: string;
   empty: string;
   addHref: string;
+  kind: "people" | "places" | "groups";
   children?: React.ReactNode;
 }) {
   const hasItems = !!children;
   return (
     <section className="yousection">
       <div className="yousection-head"><h2>{title}</h2></div>
-      <div className="youfavrail">
+      <div className={`youfavrail youfavrail-${kind}`}>
         {children}
         <Link className="youfav youfav-add" href={addHref}>
           <span><Icon name="add" size={28} /></span>

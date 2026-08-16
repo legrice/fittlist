@@ -6513,6 +6513,7 @@ select.editinput.placekind-select {
 .youfavrail::-webkit-scrollbar { display: none; }
 .youfav { width: 104px; flex: 0 0 104px; color: var(--ink); text-decoration: none; }
 .youfav > img, .youfav > span { width: 82px; height: 82px; border-radius: 22px; display: grid; place-items: center; object-fit: cover; background: var(--soft); font-size: 25px; }
+.youfavrail-people .youfav > img, .youfavrail-people .youfav > span { border-radius: 999px; }
 .youfav strong, .youfav small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .youfav strong { margin-top: 8px; font-size: 14px; }
 .youfav small { margin-top: 2px; color: var(--ol); font-size: 12px; }
