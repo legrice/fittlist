@@ -55,8 +55,10 @@ pressed/disabled behavior.
 
 ## Layout and spacing
 
-- Page and sheet gutter: 20px.
-- Spacing scale: 4, 8, 12, 16, 20, 24, 32, and 48px.
+- Page and sheet gutter: 24px.
+- Structural spacing uses an 8px grid: 8, 16, 24, 32, 40, 48, and 64px.
+- A 4px adjustment is allowed only inside a component for optical alignment;
+  it must never become the gap between sections.
 - Page titles share one vertical position beneath the app header.
 - Calendar rows, date headers, and dividers use shared components everywhere.
 

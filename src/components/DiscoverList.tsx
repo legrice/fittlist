@@ -2,12 +2,20 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useBandTop } from "@/components/CalendarBits";
-import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import { RowFollow } from "@/components/RowFollow";
 import type { DirClass } from "@/lib/discoverclasses";
+
+// The class agenda is the heaviest of Explore's three views. Keep it out of
+// the initial Coaches bundle and request it only when the Classes route is in
+// front of somebody.
+const ClassResults = dynamic(
+  () => import("@/components/ClassResults").then((module) => module.ClassResults),
+  { loading: () => <div className="discover-inline-loading">Loading classes…</div> },
+);
 
 /**
  * The date range filter is gone, and the whole fortnight is what you get.
@@ -96,30 +104,14 @@ export function DiscoverList({
   // one happens), so the act that unlocks the app is one tap from opening the
   // tab. Anything whose own word names a different half has to deep-link past
   // this, or the button contradicts the screen it opens.
-  const [tab, setTab] = useState<DiscoverHalf>(startHalf);
+  const tab = startHalf;
   const [query, setQuery] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [classRange, setClassRange] = useState<"all" | "today" | "tomorrow" | "weekend" | "7">("all");
   const [filterMenu, setFilterMenu] = useState<DiscoverFilter | null>(null);
-  // The half goes in the URL as you switch, because leaving it in state alone
-  // meant a profile's back arrow returned you to Classes however you got
-  // there: the arrow pops history, and the entry it popped to had forgotten
-  // which half you were reading. replaceState rather than a router call, so
-  // the switch stays a client-side toggle and doesn't refetch the page; the
-  // server only reads `half` when somebody arrives cold, which is exactly
-  // what a pop back is.
-  const pick = (next: DiscoverHalf) => {
-    setTab(next);
-    setQuery("");
-    setSelectedType("");
-    setSelectedCity("");
-    setClassRange("all");
-    if (typeof window !== "undefined") {
-      const url = next === "coaches" ? "/discover" : `/discover?half=${next}`;
-      window.history.replaceState(null, "", url);
-    }
-  };
+  // The active directory lives in the URL. Each route now fetches only its
+  // own inventory, so Coaches never waits for hidden Classes or Studios data.
   // The Classes half's types. A rail like the other two halves wear now,
   // rather than a bottom sheet: the sheet existed because the type list was
   // long enough to run off a rail's edge, and a rail that scrolls sideways
@@ -252,30 +244,33 @@ export function DiscoverList({
   return (
     <>
       <div className="discover-tabs" role="tablist" aria-label="Discover sections">
-        <button
+        <Link
           role="tab"
           className={tab === "coaches" ? "on" : ""}
           aria-selected={tab === "coaches"}
-          onClick={() => pick("coaches")}
+          href="/discover"
+          prefetch={false}
         >
           Coaches
-        </button>
-        <button
+        </Link>
+        <Link
           role="tab"
           className={tab === "classes" ? "on" : ""}
           aria-selected={tab === "classes"}
-          onClick={() => pick("classes")}
+          href="/discover?half=classes"
+          prefetch={false}
         >
           Classes
-        </button>
-        <button
+        </Link>
+        <Link
           role="tab"
           className={tab === "studios" ? "on" : ""}
           aria-selected={tab === "studios"}
-          onClick={() => pick("studios")}
+          href="/discover?half=studios"
+          prefetch={false}
         >
           Studios
-        </button>
+        </Link>
       </div>
 
       <div className="dissearchrow discover-searchrow">
@@ -371,11 +366,17 @@ export function DiscoverList({
           </div>
         ) : (
           <div className="discover-studio-grid">
-            {shownStudios.map((st) => (
+            {shownStudios.map((st, index) => (
               <Link href={`/s/${st.slug}?from=discover`} className="discover-studio-tile" key={st.id}>
                 {st.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={st.photo} alt="" />
+                  <img
+                    src={st.photo}
+                    alt=""
+                    loading={index < 4 ? "eager" : "lazy"}
+                    fetchPriority={index < 2 ? "high" : "auto"}
+                    decoding="async"
+                  />
                 ) : (
                   <span className="discover-studio-placeholder" style={{ background: st.color }}>
                     {(st.name.trim().charAt(0) || "?").toUpperCase()}
@@ -398,13 +399,19 @@ export function DiscoverList({
         </div>
       ) : (
         <div className="discover-person-grid">
-          {shown.map((c) => (
+          {shown.map((c, index) => (
             <div className="discover-person-tile" key={c.id}>
               <Link href={`/${c.handle}?from=discover`} className="discover-person-main">
                 <span className="discover-person-face" style={{ background: c.color }}>
                   {c.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.photo} alt="" />
+                    <img
+                      src={c.photo}
+                      alt=""
+                      loading={index < 4 ? "eager" : "lazy"}
+                      fetchPriority={index < 2 ? "high" : "auto"}
+                      decoding="async"
+                    />
                   ) : (
                     (c.name.trim().charAt(0) || "?").toUpperCase()
                   )}

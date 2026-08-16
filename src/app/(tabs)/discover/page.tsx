@@ -6,7 +6,7 @@ import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { buildDiscoverClasses } from "@/lib/discoverclasses";
-import { runsOn, todayIso } from "@/lib/format";
+import { todayIso } from "@/lib/format";
 import { DiscoverList, type DiscoverHalf } from "@/components/DiscoverList";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import { avatarColor } from "@/lib/avatar";
@@ -28,6 +28,9 @@ export default async function DiscoverPage({
   const { half } = await searchParams;
   const startHalf: DiscoverHalf =
     half === "classes" || half === "studios" ? half : "coaches";
+  const needsPeople = startHalf === "coaches";
+  const needsClasses = startHalf === "classes";
+  const needsStudios = startHalf === "studios" || needsClasses;
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
@@ -44,30 +47,36 @@ export default async function DiscoverPage({
   // three ways, so the users, the schedules and the studios are fetched once
   // and shared: the classes half fetching its own ran `publicSchedules`
   // twice and scanned the users twice to draw one page.
-  const [everyone, hidden, followRows, askRows, marks, studioRows] = await Promise.all([
+  const [everyone, cityRows, hidden, followRows, askRows, marks, studioRows] = await Promise.all([
     // Gyms come along: they own classes and have no handle, so a
     // handle-filtered query would drop every rota in the directory.
-    db.select().from(schema.users),
-    hiddenFrom(userId),
-    db
+    needsPeople || needsClasses ? db.select().from(schema.users) : Promise.resolve([]),
+    // Studio addresses predate structured city fields. Keep the tiny location
+    // vocabulary that lets us recover "Jersey City" from those legacy rows,
+    // without loading whole profiles or any schedules on the Studios tab.
+    needsStudios && !needsClasses
+      ? db.select({ location: schema.users.location }).from(schema.users)
+      : Promise.resolve([]),
+    needsPeople || needsClasses ? hiddenFrom(userId) : Promise.resolve(new Set<string>()),
+    needsPeople ? db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
-      .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+      .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))) : Promise.resolve([]),
     // Pending asks at gated coaches, so their rows can say Requested rather
     // than offering a Follow that would double-file the ask.
-    db
+    needsPeople ? db
       .select({ trainerUserId: schema.followRequests.trainerUserId })
       .from(schema.followRequests)
-      .where(eq(schema.followRequests.requesterUserId, userId)),
+      .where(eq(schema.followRequests.requesterUserId, userId)) : Promise.resolve([]),
     // The viewer's own marks, for the ribbon on a class row.
-    db
+    needsClasses ? db
       .select({
         classId: schema.attendances.classId,
         occurrenceDate: schema.attendances.occurrenceDate,
       })
       .from(schema.attendances)
-      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, today))),
-    db.select().from(schema.studios).orderBy(schema.studios.name),
+      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, today))) : Promise.resolve([]),
+    needsStudios ? db.select().from(schema.studios).orderBy(schema.studios.name) : Promise.resolve([]),
   ]);
   const allRows = everyone.filter((r) => !!r.handle && r.discoverable);
   const rows = allRows.filter((r) => !hidden.has(r.id));
@@ -77,9 +86,9 @@ export default async function DiscoverPage({
   // the coach counts and the classes list alike. The gyms' own rotas come
   // beside them: a gym owns its classes and has no handle to find them by,
   // so the ids come from the users already in hand.
-  const gymIds = everyone.filter((u) => u.kind === "gym").map((u) => u.id);
+  const gymIds = needsClasses ? everyone.filter((u) => u.kind === "gym").map((u) => u.id) : [];
   const [schedRows, gymRows] = await Promise.all([
-    publicSchedules(rows),
+    needsClasses ? publicSchedules(rows) : Promise.resolve([]),
     gymIds.length
       ? db
           .select()
@@ -87,23 +96,6 @@ export default async function DiscoverPage({
           .where(and(inArray(schema.classes.userId, gymIds), eq(schema.classes.isPublic, true)))
       : Promise.resolve([]),
   ]);
-  const classRows = schedRows.filter((c) => c.isPublic);
-
-  // "Classes this week" — the signal that a page is actually live, and the
-  // thing a fan is deciding on.
-  const start = new Date(`${today}T00:00:00Z`);
-  const weekCount = new Map<string, number>();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(start);
-    d.setUTCDate(start.getUTCDate() + i);
-    const iso = d.toISOString().slice(0, 10);
-    const dow = (d.getUTCDay() + 6) % 7;
-    for (const c of classRows) {
-      if (runsOn(c, iso, dow)) {
-        weekCount.set(c.ownerUserId, (weekCount.get(c.ownerUserId) ?? 0) + 1);
-      }
-    }
-  }
   const following = new Set(followRows.map((r) => r.trainerUserId));
   const requested = new Set(askRows.map((r) => r.trainerUserId));
   const joinedAt = new Map(rows.map((r) => [r.id, r.createdAt?.getTime() ?? 0]));
@@ -114,11 +106,7 @@ export default async function DiscoverPage({
     // are how you narrow it. The quality bar stays a coach's alone: their
     // page has to be worth opening (a schedule, or enough profile), while a
     // member's row is just the person, which is all it claims to be.
-    .filter((r) =>
-      r.kind === "fan"
-        ? !!r.name.trim()
-        : !!r.name.trim() && !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
-    )
+    .filter((r) => !!r.name.trim())
     .filter((r) => r.id !== userId)
     .map((r) => ({
       id: r.id,
@@ -128,7 +116,10 @@ export default async function DiscoverPage({
       photo: r.photoThumb ?? r.photo,
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
-      classesThisWeek: weekCount.get(r.id) ?? 0,
+      // Explore no longer expands every coach's recurrence just to decorate a
+      // hidden count. The classes tab owns that heavier query and loads only
+      // when somebody asks for classes.
+      classesThisWeek: 0,
       following: following.has(r.id),
       requested: requested.has(r.id),
       availability: r.kind === "fan" ? null : r.availability,
@@ -146,8 +137,11 @@ export default async function DiscoverPage({
   // conventionally comma-separated, the city is the part before state/ZIP.
   const looksLikeStreet = (value: string) =>
     /^\d/.test(value) || /\b(st|street|ave|avenue|rd|road|blvd|boulevard|dr|drive|ln|lane|way|pl|place)\b/i.test(value);
-  const profileCities = people
-    .map((person) => person.location.split(",")[0]?.trim() ?? "")
+  const profileCities = [
+    ...people.map((person) => person.location),
+    ...cityRows.map((row) => row.location?.trim() ?? ""),
+  ]
+    .map((location) => location.split(",")[0]?.trim() ?? "")
     .filter((city) => city && !looksLikeStreet(city));
   const knownCities = [...new Set(profileCities)].sort((a, b) => b.length - a.length);
   const studioCities = studioRows.map((studio) => {
@@ -200,7 +194,7 @@ export default async function DiscoverPage({
       <DiscoverList
         people={people}
         studios={studios}
-        classes={buildDiscoverClasses({
+        classes={needsClasses ? buildDiscoverClasses({
           viewerId: userId,
           owners: everyone,
           hidden,
@@ -208,7 +202,7 @@ export default async function DiscoverPage({
           gymRows,
           studios: studioRows,
           marks,
-        })}
+        }) : []}
         todayIso={today}
         cities={cities}
         myCity={me.location?.trim() || null}
