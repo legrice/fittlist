@@ -5,9 +5,9 @@ import { SettingsGear } from "@/components/SettingsGear";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
-// The same header on every signed-in screen: wordmark left, then Search,
-// Notifications and Settings right. Profile already has a permanent tab, so these
-// are the three useful actions somebody may need from anywhere in the app.
+// The same header on every signed-in screen: wordmark left, then conversations,
+// activity and search. Profile already has a permanent tab, so these are the
+// three useful actions somebody may need from anywhere in the app.
 export function AppHeader({
   notificationUnread = 0,
   messageUnread = 0,
@@ -47,7 +47,7 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* Admin first when present, then search, conversations and activity. */}
+        {/* Admin stays contextual; the universal actions keep one fixed order. */}
         {admin && (
           <HeaderIconLink
             label={`Admin${adminAttention ? `, ${adminAttention} unresolved ${adminAttention === 1 ? "report" : "reports"}` : ""}`}
@@ -57,7 +57,6 @@ export function AppHeader({
             badge={adminAttention > 0 ? <span className="inboxdot">{adminAttention > 9 ? "9+" : adminAttention}</span> : undefined}
           />
         )}
-        <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
         <HeaderIconLink
           label={`Messages${messageUnread ? `, ${messageUnread} unread` : ""}`}
           icon="chat_bubble"
@@ -72,6 +71,7 @@ export function AppHeader({
           match="/notifications"
           badge={notificationUnread > 0 ? <span className="inboxdot">{notificationUnread > 9 ? "9+" : notificationUnread}</span> : undefined}
         />
+        <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
         {settings && <SettingsGear header />}
       </div>
     </div>

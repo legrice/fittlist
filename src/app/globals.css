@@ -6922,9 +6922,9 @@ select.editinput.placekind-select {
   border-bottom: 1px solid var(--line);
 }
 .screen.hasnav .brandbar .iconbtn {
-  width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: var(--cl);
+  width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: transparent;
 }
-.screen.hasnav .brandbar .iconbtn:active { background: var(--cl-d); }
+.screen.hasnav .brandbar .iconbtn:active { background: var(--cl); }
 .screen.hasnav .brandbar .headnav-l { color: var(--ol); }
 .screen.hasnav .brandbar .headnav-l:hover,
 .screen.hasnav .brandbar .headnav-l.on { color: var(--ink); border-bottom-color: var(--si); }
