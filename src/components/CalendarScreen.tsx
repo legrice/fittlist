@@ -353,16 +353,10 @@ export function CalendarScreen({
       {bare ? (
         <WeekEmpty
           first
-          title={member ? "Nothing added yet" : "Your schedule is empty"}
-          body={member ? "Follow a coach or add a class." : "Put the classes you teach up here."}
-          cta={member ? undefined : "Add a class"}
-          onCta={member ? undefined : openAdd}
-          actions={member ? (
-            <div className="calendar-empty-actions">
-              <Link className="btn ghost" href="/search">Find a coach</Link>
-              <button className="btn si" type="button" onClick={openAdd}>Add a class</button>
-            </div>
-          ) : undefined}
+          title="Your week starts here"
+          body="Add what you’re doing this week."
+          cta="Add to your week"
+          onCta={openAdd}
         />
       ) : view === "month" ? (
         <MonthScroll
@@ -378,15 +372,9 @@ export function CalendarScreen({
         <WeekEmpty
           first={kind === "added"}
           title={kind === "added" ? "Nothing added yet" : ""}
-          body={kind === "added" ? "Follow a coach or add a class." : ""}
-          cta={kind === "added" ? undefined : "Add a class"}
-          onCta={kind === "added" ? undefined : () => setAddChoice(true)}
-          actions={kind === "added" ? (
-            <div className="calendar-empty-actions">
-              <Link className="btn ghost" href="/search">Find a coach</Link>
-              <button className="btn si" type="button" onClick={() => setBrowseOpen(true)}>Add a class</button>
-            </div>
-          ) : undefined}
+          body={kind === "added" ? "Add what you’re doing this week." : ""}
+          cta={kind === "added" ? "Add to your week" : "Add a class"}
+          onCta={kind === "added" ? openAdd : () => setAddChoice(true)}
         />
       ) : (
         <CalendarList
