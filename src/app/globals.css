@@ -426,6 +426,21 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wiz .flabel:first-of-type { margin-top: 0; }
 .wiz .btn.si { background: var(--si); color: #fff; }
 .wiz .btn.si:disabled { background: color-mix(in srgb, var(--si) 32%, var(--card)); color: #fff; opacity: 1; }
+.wizback {
+  width: 44px; height: 44px; margin: 0 0 22px; border: 1px solid var(--line);
+  border-radius: 14px; background: var(--card); color: var(--ink); cursor: pointer;
+  font: inherit; font-size: 24px; line-height: 1;
+}
+.wizteach { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+.wizteach h2 { margin: 0 0 12px; font-size: 18px; }
+.switchrow {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 16px; border-radius: 16px; background: var(--card); cursor: pointer;
+}
+.switchrow > span { display: flex; flex-direction: column; gap: 4px; }
+.switchrow strong { font-size: 16px; }
+.switchrow small { color: var(--ol); font-size: 13px; line-height: 1.35; }
+.switchrow input { width: 22px; height: 22px; accent-color: var(--si); flex: 0 0 auto; }
 .wizlocate { width: auto; margin-bottom: 22px; background: var(--card); }
 .wizcategories { margin-bottom: 22px; }
 .wizcategories select.editinput { appearance: auto; background: var(--card); }

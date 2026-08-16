@@ -510,7 +510,7 @@ export function ScheduleScreen({
           home={showFanView ? landing : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
-          nav={showFanView ? { active: "schedule", scheduleHref: "/app" } : undefined}
+          nav={showFanView ? { active: "calendar", scheduleHref: "/calendar" } : undefined}
         />
 
         {invitesLeft !== 0 && <InvitesBanner />}
@@ -1080,7 +1080,7 @@ export function ScheduleScreen({
         />
       )}
 
-      {showFanView && <NavBar active="schedule" scheduleHref="/app" />}
+      {showFanView && <NavBar active="calendar" scheduleHref="/calendar" />}
 
       {adder.open && (
         <Adder

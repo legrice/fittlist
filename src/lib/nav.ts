@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "following" | "discover" | "search" | "share" | "schedule" | "you" | "none";
+export type NavTab = "calendar" | "explore" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -13,7 +13,8 @@ export type NavItem = {
 };
 
 /**
- * Five durable places, with Discover pointing at the browse directory.
+ * Three durable places: make your calendar, find things worth adding, and
+ * manage the person behind it.
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
@@ -30,7 +31,7 @@ export type NavItem = {
  * than a migration.
  */
 export function navTabs(
-  coach: boolean,
+  _coach: boolean,
   scheduleHref?: string,
   /** Your own profile. It is your public page, so it is your handle; the tab
    *  falls back to /you, which redirects there, for a shell that has not been
@@ -38,33 +39,14 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    { id: "following", href: "/feed", icon: "group", label: "This Week" },
-    { id: "search", href: "/discover", icon: "search", label: "Discover" },
     {
-      id: "schedule" as const,
+      id: "calendar" as const,
       href: scheduleHref ?? "/calendar",
       icon: "calendar_month",
-      label: "Schedule",
+      label: "Calendar",
     },
-    // Everyone's now, by Matt's call: it came off the member's bar while a
-    // member had nothing to give, and the hub is where they build the week
-    // they're going to before handing it on, so the tab is the way in. One
-    // screen, an address per kind, and the routes bounce a wrong arrival.
-    {
-      id: "share",
-      href: coach ? "/coachshare" : "/membershare",
-      // This tab is the creative studio, not the contextual "send this"
-      // action. Sparkles distinguish making a share image from the standard
-      // share glyph used on classes, profiles and links.
-      icon: "auto_awesome_outline",
-      label: "Share",
-    },
-    // Who you are, which is your page: the tab opens the profile everybody
-    // else sees rather than a settings screen wearing your name. Settings are
-    // the gear on it, and the studios and the rota are rows in there. A tab
-    // called Profile that opened a list of switches was the one place in the
-    // app where the word and the screen disagreed.
-    { id: "you", href: profileHref ?? "/you", icon: "account_circle", label: "Profile" },
+    { id: "explore", href: "/discover", icon: "search", label: "Explore" },
+    { id: "you", href: profileHref ?? "/you", icon: "account_circle", label: "You" },
   ];
 }
 
@@ -74,27 +56,17 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   // Discover is the directory tab. Its focused search screen remains part of
   // the same destination, so the tab stays lit while somebody is typing.
-  if (pathname.startsWith("/discover")) return "search";
-  if (pathname.startsWith("/search")) return "search";
-  if (pathname.startsWith("/feed")) return "following";
+  if (pathname.startsWith("/discover")) return "explore";
+  if (pathname.startsWith("/search")) return "explore";
   // Calendar is a coach tool. /week is retained only as an old address.
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app"))
-    return "schedule";
-  if (pathname.startsWith("/week")) return "schedule";
+    return "calendar";
+  if (pathname.startsWith("/week")) return "calendar";
   // /you is the old settings screen and is a redirect onto your profile now;
   // /settings is where those rows moved. Both belong to the Profile tab, and
   // the profile itself passes `active` explicitly, because a handle is not a
   // pathname anything here can recognise.
   if (pathname.startsWith("/you") || pathname.startsWith("/settings")) return "you";
-  // The hub is /membershare or /coachshare by kind, by Matt's call; /share
-  // is the old composer and /sharehub the hub's first address, both still
-  // landing somewhere real.
-  if (
-    pathname.startsWith("/membershare") ||
-    pathname.startsWith("/coachshare") ||
-    pathname.startsWith("/share")
-  )
-    return "share";
   return "none";
 }
 
@@ -111,7 +83,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
  * a member's all ask this one function, which is why they answer alike.
  */
 export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
-  if (from === "discover") return { href: "/discover", label: "Back to Discover" };
+  if (from === "discover") return { href: "/discover", label: "Back to Explore" };
   if (from === "search") return { href: "/search", label: "Back to search" };
   // The Home tab is parked, so its token answers like anything unknown:
   // the front door. Old links carrying ?from=home still land somewhere real.
@@ -119,10 +91,10 @@ export function backToFor(from: string | undefined, signedIn: boolean): { href: 
   // door, which is the calendar now. Old links carrying ?from=following and
   // ?from=home still land somewhere real, which is the whole reason this
   // function never answers null.
-  if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
+  if (from === "schedule") return { href: "/calendar", label: "Back to your calendar" };
   // The cold-open fallback is the calendar: it has to land somewhere every
   // signed-in viewer can actually open, and /week sends a coach to /app.
   // Following for a signed-in viewer: it is the one screen everybody has, and
   // a member has no calendar to be sent back to.
-  return signedIn ? { href: "/feed", label: "Back to This Week" } : { href: "/", label: "Back" };
+  return signedIn ? { href: "/calendar", label: "Back to your calendar" } : { href: "/", label: "Back" };
 }

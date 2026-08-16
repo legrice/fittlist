@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { landingHref } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 
@@ -18,11 +17,10 @@ export default async function WelcomePage() {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!user?.handle) redirect("/");
-  if (user.onboardedAt) redirect(await landingHref());
+  if (user.onboardedAt) redirect("/calendar");
 
   return (
     <OnboardingWizard
-      landing={await landingHref()}
       name={user.name}
       photo={user.photo}
       title={user.title ?? ""}
