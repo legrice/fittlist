@@ -54,9 +54,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // a member has no calendar at all, so there is nothing to fork on and the
   // tab is not drawn for them in the first place.
   const scheduleHref = "/calendar";
-  // Profile opens your page, which is your handle. /you redirects there and is
-  // the fallback for an account still mid-signup with no handle to point at.
-  const profileHref = me.handle ? `/${me.handle}` : "/you";
+  // You is the private account dashboard. The public page remains available
+  // from Preview profile inside it; mixing those two surfaces made editing,
+  // favorites and settings feel like public-profile content.
+  const profileHref = "/you";
   const face = {
     photo: me.photoThumb ?? me.photo,
     color: avatarColor(me),
@@ -85,10 +86,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           notificationUnread={unread.notifications}
           messageUnread={unread.messages}
-          // The wordmark goes Home, by Matt's call: /feed is the front
-          // door for everyone now, whatever landingHref answers for
-          // sign-in.
-          home="/feed"
+          home="/calendar"
           nav={{ coach: isCoach, scheduleHref, profileHref }}
           admin={isAdmin}
           adminAttention={adminAttention}
