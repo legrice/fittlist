@@ -79,8 +79,9 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-text-primary: #000000;
   --color-text-secondary: #6B6B68;
   --color-text-muted: #92928D;
-  --color-coaching: var(--color-lime);
-  --color-coaching-text: #000000;
+  --color-coaching: #CFE7FF;
+  --color-coaching-soft: #EAF4FF;
+  --color-coaching-text: #163B5C;
   --color-attending: #DCC8FF;
   --color-attending-text: #211731;
   --color-personal: #FFD8C2;
@@ -1160,7 +1161,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* The kind filters live in a sheet behind the header's filter glyph now:
    a switch per kind, each row wearing its colour as a dot. */
 .kindfilter-dot { display: inline-block; width: 12px; height: 12px; border-radius: 999px; }
-.kindfilter-coaching { background: var(--si); }
+.kindfilter-coaching { background: var(--color-coaching); }
 .kindfilter-added { background: var(--ink); }
 .kindfilter-private { background: #3b82cc; }
 /* A kind you have none of. Not a switch, because a filter over nothing can
@@ -1231,10 +1232,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   content: ""; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 3px;
   border-radius: 2px; background: currentColor;
 }
-.daygrid-ev.ev-coaching { background: var(--color-lime-soft); color: var(--si-ink); }
+.daygrid-ev.ev-coaching { background: var(--color-coaching-soft); color: var(--color-coaching-text); }
 .daygrid-ev.ev-added { background: var(--cl); color: var(--ink); }
 .daygrid-ev.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
-[data-mode="dark"] .daygrid-ev.ev-coaching { color: var(--color-lime); }
+[data-mode="dark"] .daygrid-ev.ev-coaching { color: var(--color-coaching-text); }
 [data-mode="dark"] .daygrid-ev.ev-added { color: var(--ink); }
 [data-mode="dark"] .daygrid-ev.ev-private { color: #85b8e8; }
 .daygrid-evnm {
@@ -8932,7 +8933,7 @@ a.clspeek-by:active { opacity: .6; }
   margin-top: 7px; padding: 3px 9px; border-radius: 999px;
   font-size: 11px; line-height: 1.2;
 }
-.clline-tag-coaching { background: var(--si-tint); color: var(--si-ink); }
+.clline-tag-coaching { background: var(--color-coaching); color: var(--color-coaching-text); }
 .clline-tag-personal { background: var(--rel-personal-bg); color: var(--rel-personal-ink); }
 /* A tagged class that also names a coach puts the person one line below. */
 .clline-tag + .clline-by { grid-row: 4; }
@@ -9478,7 +9479,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-cardlist .clline-tag-coaching {
   background: var(--color-coaching);
-  color: var(--color-olive);
+  color: var(--color-coaching-text);
 }
 .calendar-cardlist .clline-tag-attending {
   background: var(--color-attending);
