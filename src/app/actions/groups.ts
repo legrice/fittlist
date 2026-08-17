@@ -22,6 +22,15 @@ function databaseCode(error: unknown): string {
   return "";
 }
 
+function databaseColumn(error: unknown): string {
+  let current = error;
+  for (let depth = 0; depth < 4 && current && typeof current === "object"; depth++) {
+    if ("column" in current && typeof current.column === "string") return current.column;
+    current = "cause" in current ? current.cause : null;
+  }
+  return "";
+}
+
 export async function checkGroupHandle(value: string) {
   const slug = groupHandle(value);
   if (slug.length < 3) return { ok: false, slug, error: "Use at least 3 letters or numbers." } as const;
@@ -75,10 +84,10 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     // the base group migration and the newer purpose migration. Purpose and
     // organizer membership enrich the group, but neither may block creation.
     stage = "core group insert";
-    // Deliberately use explicit SQL here. Drizzle includes every schema column
-    // as DEFAULT even when values omit it, which defeats compatibility with a
-    // database whose later group columns are still being reconciled.
-    const inserted = await db.execute<{ id: string }>(sql`insert into "groups" ("name", "slug", "owner_user_id") values (${name}, ${slug}, ${ownerUserId}) returning "id"`);
+    // Deliberately use explicit SQL here. A partially applied migration left
+    // newer NOT NULL columns without their intended defaults in production,
+    // so creation supplies every required group value directly.
+    const inserted = await db.execute<{ id: string }>(sql`insert into "groups" ("name", "slug", "owner_user_id", "visibility", "purpose") values (${name}, ${slug}, ${ownerUserId}, ${visibility}, ${purpose}) returning "id"`);
     const group = inserted.rows[0];
     if (!group) return { ok: false, error: "We couldn’t create the group. Please try again." } as const;
     try {
@@ -96,9 +105,10 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
   } catch (error) {
     console.error("createGroup failed", error);
     const code = databaseCode(error);
+    const column = databaseColumn(error);
     if (code === "23505") return { ok: false, error: "That group link was just taken. Go back and choose another." } as const;
     if (code === "42703" || code === "42P01") return { ok: false, error: "Group storage is still updating. Please try once more in a moment." } as const;
-    return { ok: false, error: `Group creation stopped at ${stage}${code ? ` (${code})` : ""}.` } as const;
+    return { ok: false, error: `Group creation stopped at ${stage}${code ? ` (${code}${column ? `: ${column}` : ""})` : ""}.` } as const;
   }
 }
 

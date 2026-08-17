@@ -624,6 +624,13 @@
       "when": 1787004377241,
       "tag": "0088_repair_group_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1787009066550,
+      "tag": "0089_repair_group_defaults",
+      "breakpoints": true
     }
   ]
 }
