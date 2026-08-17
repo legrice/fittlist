@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 export default async function SavedPage() {
   const data = await youDashboardData();
   if (!data) redirect("/welcome");
-  return <SavedScreen people={data.people} places={data.places} groups={data.groups} />;
+  return <SavedScreen people={data.people} places={data.places} yourGroups={data.yourGroups} favoriteGroups={data.favoriteGroups} invitations={data.groupInvitations} />;
 }

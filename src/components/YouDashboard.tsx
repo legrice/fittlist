@@ -25,6 +25,18 @@ export type YouFavoriteGroup = {
   name: string;
   slug: string;
   memberCount: number;
+  role: string | null;
+  nextClass: string | null;
+  nextDate: string | null;
+  faces: { id: string; name: string; photo: string | null; color: string }[];
+};
+
+export type YouGroupInvitation = {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  inviterName: string;
 };
 
 export type YouDashboardData = {
@@ -39,7 +51,9 @@ export type YouDashboardData = {
   };
   people: YouFavoritePerson[];
   places: YouFavoritePlace[];
-  groups: YouFavoriteGroup[];
+  yourGroups: YouFavoriteGroup[];
+  favoriteGroups: YouFavoriteGroup[];
+  groupInvitations: YouGroupInvitation[];
   managed: { id: string; name: string; slug: string; admin: boolean }[];
   shareHref: string;
   isAdmin: boolean;
