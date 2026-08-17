@@ -13,7 +13,7 @@ export function SavedScreen({
   return (
     <main className="savedpage">
       <header className="savedhead">
-        <h1>Saved</h1>
+        <h1>Favorites</h1>
         <p>People, places, and groups you want close by.</p>
       </header>
 

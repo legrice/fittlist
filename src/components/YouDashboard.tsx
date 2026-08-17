@@ -95,17 +95,25 @@ export function YouDashboard({
 
       <AccountGroup title="Settings">
         <TeachToggle on={me.coaching} canTurnOn account />
-        <SettingsRow icon="account_circle" title="Your page" detail="Handle, contact info, availability" view="page" onOpen={onOpenSettings} />
-        <SettingsRow icon="event" title="Schedule & sync" detail="Google, Apple and Outlook, your week as text" view="calendar" onOpen={onOpenSettings} />
-        <SettingsRow icon="public_off" title="Privacy & reach" detail="Messages, listing, and approvals" view="reach" onOpen={onOpenSettings} />
-        <SettingsRow icon="lock" title="Account" detail="Login, notifications, appearance" view="account" onOpen={onOpenSettings} />
-        {isAdmin && <AccountRow icon="admin_panel_settings" title="Admin" detail="Site operations and reports" href="/admin" />}
+        <SettingsRow icon="account_circle" title="Profile & public page" detail="Profile, handle, contact info, and availability" view="page" onOpen={onOpenSettings} />
+        <SettingsRow icon="event" title="Calendar & sync" detail="Google, Apple and Outlook, your week as text" view="calendar" onOpen={onOpenSettings} />
+        <SettingsRow icon="public_off" title="Privacy & communication" detail="Messages, listing, approvals, and removed people" view="reach" onOpen={onOpenSettings} />
+        <SettingsRow icon="lock" title="Account & preferences" detail="Login, notifications, appearance, and account access" view="account" onOpen={onOpenSettings} />
+      </AccountGroup>
+
+      {isAdmin && (
+        <AccountGroup title="Admin tools">
+          <AccountRow icon="admin_panel_settings" title="Admin" detail="Site operations and reports" href="/admin" />
+        </AccountGroup>
+      )}
+
+      <AccountGroup title="Support & legal">
         <AccountRow icon="forum" title="Help and support" detail="Get help with FittList" href="/support" />
-        <AccountRow icon="shield" title="Privacy" detail="Read our privacy policy" href="/privacy" />
+        <AccountRow icon="mail" title="Send feedback" detail="Tell us what you think" href="/feedback" />
+        <AccountRow icon="shield" title="Privacy policy" detail="How FittList handles your information" href="/privacy" />
       </AccountGroup>
 
       <AccountGroup title="Actions">
-        <AccountRow icon="mail" title="Send feedback" detail="Tell us what you think" href="/feedback" />
         <form action={logout} className="youlogout">
           <button className="youaccount-row" type="submit">
             <span className="youaccount-icon"><Icon name="arrow_outward" size={20} /></span>

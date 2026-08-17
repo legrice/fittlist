@@ -14,7 +14,8 @@ export type NavItem = {
 
 /**
  * Calendar is the signed-in front door. Discover finds people and places;
- * Saved keeps separate shortcuts to the ones this person wants nearby.
+ * Favorites keeps separate shortcuts to the people, places, and groups this
+ * person wants nearby. Saved is reserved for classes on their calendar.
  */
 export function navTabs(
   _coach: boolean,
@@ -32,7 +33,7 @@ export function navTabs(
       label: "Calendar",
     },
     { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
-    { id: "saved", href: "/saved", icon: "favorite", label: "Saved" },
+    { id: "saved", href: "/saved", icon: "favorite", label: "Favorites" },
   ];
 }
 

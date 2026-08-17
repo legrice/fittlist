@@ -383,10 +383,10 @@ export function ProfileSheet({
   const availLabel = (avail && AVAIL_LABEL[avail]) || "Not shown on your page";
 
   const VIEW_TITLE: Record<Exclude<View, "home">, string> = {
-    page: "Your page",
-    calendar: "Schedule & sync",
-    reach: "Privacy & reach",
-    account: "Account",
+    page: "Profile & public page",
+    calendar: "Calendar & sync",
+    reach: "Privacy & communication",
+    account: "Account & preferences",
     security: "Login & security",
     contact: "Contact info",
     availability: "Availability",
@@ -526,7 +526,7 @@ export function ProfileSheet({
           <button className="setrow" onClick={() => openView("page")}>
             <span className="setrow-ic"><Icon name="account_circle" size={24} /></span>
             <span className="setrow-txt">
-              <span className="t">Your page</span>
+              <span className="t">Profile &amp; public page</span>
               <span className="s">Handle, contact info, availability</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
@@ -534,7 +534,7 @@ export function ProfileSheet({
           <button className="setrow" onClick={() => openView("calendar")}>
             <span className="setrow-ic"><Icon name="event" size={24} /></span>
             <span className="setrow-txt">
-              <span className="t">Schedule &amp; sync</span>
+              <span className="t">Calendar &amp; sync</span>
               <span className="s">
                 {googleConfigured && connected ? "Google connected" : "Google"}, Apple and Outlook,
                 your week as text
@@ -545,7 +545,7 @@ export function ProfileSheet({
           <button className="setrow" onClick={() => openView("reach")}>
             <span className="setrow-ic"><Icon name="public_off" size={24} /></span>
             <span className="setrow-txt">
-              <span className="t">Privacy &amp; reach</span>
+              <span className="t">Privacy &amp; communication</span>
               <span className="s">
                 {`Messages ${messagesOpen ? "on" : "off"}`}
                 {showFanView ? ` · ${discoverable ? "Listed" : "Not listed"}` : ""}
@@ -557,7 +557,7 @@ export function ProfileSheet({
           <button className="setrow" onClick={() => openView("account")}>
             <span className="setrow-ic"><Icon name="lock" size={24} /></span>
             <span className="setrow-txt">
-              <span className="t">Account</span>
+              <span className="t">Account &amp; preferences</span>
               <span className="s">Login, notifications, appearance</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>

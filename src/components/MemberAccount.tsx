@@ -21,10 +21,10 @@ import { Toast, useToast } from "@/components/Toast";
 type MView = "profile" | "calendar" | "reach" | "account";
 
 const VIEW_TITLE: Record<MView, string> = {
-  profile: "Your page",
-  calendar: "Schedule & sync",
-  reach: "Privacy & reach",
-  account: "Account",
+  profile: "Profile & public page",
+  calendar: "Calendar & sync",
+  reach: "Privacy & communication",
+  account: "Account & preferences",
 };
 
 // A member's account. Smaller than a coach's by design: no studio page, no
@@ -208,7 +208,7 @@ export function MemberAccount({
         <button className="setrow" onClick={() => setView("profile")}>
           <span className="setrow-ic"><Icon name="account_circle" size={24} /></span>
           <span className="setrow-txt">
-            <span className="t">Your page</span>
+            <span className="t">Profile &amp; public page</span>
             <span className="s">Your name, photo, handle and where you are</span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
@@ -216,7 +216,7 @@ export function MemberAccount({
         <button className="setrow" onClick={() => setView("calendar")}>
           <span className="setrow-ic"><Icon name="event" size={24} /></span>
           <span className="setrow-txt">
-            <span className="t">Schedule &amp; sync</span>
+            <span className="t">Calendar &amp; sync</span>
             <span className="s">Your week in Apple, Google or Outlook</span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
@@ -224,7 +224,7 @@ export function MemberAccount({
         <button className="setrow" onClick={() => setView("reach")}>
           <span className="setrow-ic"><Icon name="public_off" size={24} /></span>
           <span className="setrow-txt">
-            <span className="t">Privacy &amp; reach</span>
+            <span className="t">Privacy &amp; communication</span>
             <span className="s">
               {`Messages ${messagesOpen ? "on" : "off"}`}
               {` · ${discoverable ? "Listed" : "Not listed"}`}
@@ -236,7 +236,7 @@ export function MemberAccount({
         <button className="setrow" onClick={() => setView("account")}>
           <span className="setrow-ic"><Icon name="lock" size={24} /></span>
           <span className="setrow-txt">
-            <span className="t">Account</span>
+            <span className="t">Account &amp; preferences</span>
             <span className="s">Notifications, appearance</span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
