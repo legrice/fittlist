@@ -668,11 +668,11 @@ export function ScheduleScreen({
                           {!p.personal && (
                             <button
                               className="evcard-add on"
-                              aria-label={`Added ${p.name}. Tap to remove it from your schedule.`}
+                              aria-label={`Saved ${p.name}. Tap to remove it from your schedule.`}
                               onClick={() => removeGoing(p)}
                             >
                               <Icon name="check_circle" size={22} />
-                              <span className="evcard-add-t">Added</span>
+                              <span className="evcard-add-t">Saved</span>
                             </button>
                           )}
                           </div>

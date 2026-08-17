@@ -867,7 +867,7 @@ function FollowingAdd({
         return;
       }
       onNotice(
-        next ? `${name} was added to your calendar` : `${name} was removed from your calendar`,
+        next ? `${name} was saved to your calendar` : `${name} was removed from your calendar`,
         next ? `${classId}.${iso}` : undefined,
       );
     });
@@ -877,7 +877,7 @@ function FollowingAdd({
       className={`following-add${on ? " on" : ""}`}
       type="button"
       disabled={busy}
-      aria-label={on ? `Remove ${name} from your calendar` : `Add ${name} to your calendar`}
+      aria-label={on ? `Remove ${name} from your calendar` : `Save ${name} to your calendar`}
       aria-pressed={on}
       onClick={toggle}
     >

@@ -1682,6 +1682,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 
 /* iOS Safari zooms into any focused form control under 16px - never go below. */
 input, select, textarea { font-size: max(1em, 16px); }
+/* iOS zooms the viewport when any focused text control computes below 16px.
+   Search is used in sheets and headers with more specific selectors, so this
+   explicit invariant prevents a local style from ever reintroducing zoom. */
+input[type="search"] { font-size: 16px !important; }
 
 /* ============================================================
    "Blocks" theme - edge-to-edge color bands, one per studio,
@@ -8996,7 +9000,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .addbrowse-search input {
   width: 100%; min-width: 0; padding: 0; border: 0; outline: 0;
-  background: transparent; color: var(--ink); font: inherit; font-size: 15px;
+  background: transparent; color: var(--ink); font: inherit; font-size: 16px;
 }
 .disflat .rowsave {
   top: 10px; right: 10px; bottom: auto;

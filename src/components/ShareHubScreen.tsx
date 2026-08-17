@@ -901,7 +901,7 @@ export function ShareHubScreen({
                 {(
                   [
                     ["coaching", "Coaching"],
-                    ["saved", "Added"],
+                    ["saved", "Saved"],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -944,7 +944,7 @@ export function ShareHubScreen({
                         <span className="shpick-titleline">
                           <span className="t">{it.name}</span>
                           <span className={`shclass-tag ${it.coaching ? "coaching" : "saved"}`}>
-                            {it.coaching ? "Coaching" : "Added"}
+                            {it.coaching ? "Coaching" : "Saved"}
                           </span>
                         </span>
                         <span className="s">
@@ -1002,7 +1002,7 @@ export function ShareHubScreen({
           onToast={toast}
           onPublished={() => {
             setAddOpen(false);
-            toast("Added to your week");
+            toast("Saved to your week");
             refreshWeek();
           }}
           onDeleted={(msg) => {
@@ -1068,7 +1068,7 @@ export function ShareHubScreen({
                   setMatchBusy(false);
                   setMatch(null);
                   if (res.ok) {
-                    toast("Added to your week");
+                    toast("Saved to your week");
                     refreshWeek();
                   } else {
                     toast(res.error ?? "Couldn't add it");

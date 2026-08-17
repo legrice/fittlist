@@ -460,7 +460,7 @@ export function Adder({
             : mineOnly
               ? isEvent
                 ? "Add to your calendar"
-                : "Add to your plans"
+                : "Save to your plans"
               : isPublic
                 ? "Publish class"
                 : "Save class";
@@ -508,8 +508,8 @@ export function Adder({
       isEvent
         ? "Added to your calendar"
         : n > 1
-          ? `Added ${n} classes to your plans`
-          : "Added to your plans",
+          ? `Saved ${n} classes to your plans`
+          : "Saved to your plans",
       res.id,
     );
   };

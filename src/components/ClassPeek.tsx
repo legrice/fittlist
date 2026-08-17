@@ -586,7 +586,7 @@ export function ClassPeek({
                       onToast(
                         full.rsvp
                           ? "RSVP’d. It’s on your calendar."
-                          : "Added to your week",
+                          : "Saved to your week",
                         `${cls.id}.${cls.iso}`,
                       );
                     } else {

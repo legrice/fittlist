@@ -49,7 +49,7 @@ export function SaveEducation({ shareHref }: { shareHref: string }) {
         <span className="saveeducation-icon" aria-hidden="true">
           <Icon name="check_circle" size={24} />
         </span>
-        <h2>Added to your week</h2>
+        <h2>Saved to your week</h2>
         <p className="lead">
           It&rsquo;s now part of your week. Open Schedule to see it there, or share your
           updated week with friends.

@@ -63,12 +63,12 @@ export function ClassCardActions({
       {canAdd && (
         <button
           className={`evcard-add${on ? " on" : ""}`}
-          aria-label={on ? "Added to your plans" : "Add to your plans"}
+          aria-label={on ? "Saved to your plans" : "Save to your plans"}
           aria-pressed={on}
           onClick={toggle}
         >
           <Icon name={on ? "check_circle" : "add_circle"} size={22} />
-          <span className="evcard-add-t">{on ? "Added" : "Add"}</span>
+          <span className="evcard-add-t">{on ? "Saved" : "Save"}</span>
         </button>
       )}
       {/* The same note every other Add answers with, naming the list it
@@ -77,7 +77,7 @@ export function ClassCardActions({
         {justAdded && (
           <>
             <Icon name="check_circle" size={18} />
-            <span className="favtoast-t">Added {name}. Followers can see it.</span>
+            <span className="favtoast-t">Saved {name}. Followers can see it.</span>
             {/* See it lands on the week with this occurrence marked, so the
                 note hands over to the thing itself rather than to a list to
                 search. */}

@@ -62,10 +62,10 @@ export function NotifyCta({
   // Requested survives it (approve-first still gates who may favorite).
   const label = account
     ? following
-      ? "Following"
+      ? "Favorited"
       : requested
         ? "Requested"
-        : "Follow"
+        : "Add to favorites"
     : subscribed
       ? "On the list"
       : "Subscribe";
@@ -77,20 +77,20 @@ export function NotifyCta({
           const wasRequest = requested && !following;
           setFollowing(false);
           setRequested(false);
-          toast(wasRequest ? "Request withdrawn" : `Unfollowed ${firstName}`);
+          toast(wasRequest ? "Favorite request withdrawn" : `${firstName} removed from favorites`);
         } else toast(res.error ?? "Something went wrong");
       } else {
         const res = await followTrainer(handle);
         if (res.ok) {
           if (res.requested) {
             setRequested(true);
-            toast(`Asked to follow ${firstName}`);
+            toast(`Favorite request sent to ${firstName}`);
           } else {
             setFollowing(true);
             // The hint says where their classes went; the toast only says the
             // tap landed, so they don't both fire.
-            if (followHintOff()) toast(`You're following ${firstName}`);
-            else setHint(true);
+            toast(`${firstName} added to favorites`);
+            if (!followHintOff()) setHint(true);
           }
         } else toast(res.error ?? "Something went wrong");
       }
@@ -170,7 +170,8 @@ export function NotifyCta({
         onClick={onCta}
       >
         {/* A tick on the yes state, so the pill reports rather than offers. */}
-        {(following || subscribed) && <Icon name="check" size={compact ? 15 : 17} />}
+        {account && <Icon name="favorite" size={compact ? 15 : 17} />}
+        {!account && (following || subscribed) && <Icon name="check" size={compact ? 15 : 17} />}
         {label}
       </button>
 

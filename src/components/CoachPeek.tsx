@@ -115,7 +115,7 @@ export function CoachPeek({
         <button
           className={`following-add${on ? " on" : ""}`}
           onClick={() => save(item.classId, item.iso, !on)}
-          aria-label={on ? `Added to your week: ${item.name}` : `Add ${item.name} to your week`}
+          aria-label={on ? `Saved to your week: ${item.name}` : `Save ${item.name} to your week`}
         >
           <Icon name={on ? "check" : "add_circle"} size={24} />
         </button>

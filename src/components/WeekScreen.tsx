@@ -723,7 +723,7 @@ export function WeekScreen({
       {justAdded && (
         <div className="folhint weekadded" role="status" aria-live="polite">
           <p className="folhint-t">
-            {personalEvent ? "Added to your calendar." : "Added to your plans."}
+            {personalEvent ? "Added to your calendar." : "Saved to your plans."}
           </p>
           <div className="folhint-row">
             <button

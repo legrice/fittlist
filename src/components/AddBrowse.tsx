@@ -45,7 +45,7 @@ export function AddBrowse({
       else {
         if (on) announceSaved(classId, iso);
         onNotice?.(
-          on ? `${name} was added to your calendar` : `${name} was removed from your calendar`,
+          on ? `${name} was saved to your calendar` : `${name} was removed from your calendar`,
           on ? `${classId}.${iso}` : undefined,
         );
       }
@@ -125,10 +125,10 @@ export function AddBrowse({
                     <button
                       className={`peekadd${on ? " on" : ""}`}
                       onClick={() => on ? setRemoveConfirm({ classId: it.classId, iso: it.iso, name: it.name }) : save(it.classId, it.iso, it.name, true)}
-                      aria-label={on ? `Added to your week: ${it.name}` : `Add ${it.name} to your week`}
+                      aria-label={on ? `Saved to your week: ${it.name}` : `Save ${it.name} to your week`}
                     >
                       <Icon name={on ? "check" : "add_circle"} size={on ? 24 : 22} />
-                      {!on && <span>Add</span>}
+                      {!on && <span>Save</span>}
                     </button>
                   )}
                 </div>
@@ -142,10 +142,10 @@ export function AddBrowse({
           // what isn't listed is never a full scroll away, by Matt's call.
           <div className="addbrowse-foot publishwrap">
             <p className="durnote">
-              Can&rsquo;t find it? Add it to your calendar yourself.
+              Can&rsquo;t find it? Save it to your calendar yourself.
             </p>
             <button className="btn si" onClick={onAddNew}>
-              + Add a class you&rsquo;re attending
+              Save a class that isn&rsquo;t listed
             </button>
             {onEvent && (
               <button className="tertiary addbrowse-ev" onClick={onEvent}>
@@ -159,7 +159,7 @@ export function AddBrowse({
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setRemoveConfirm(null); }}>
           <div className="sheet confirmsheet" role="dialog" aria-modal="true">
             <h2>Remove this from your calendar?</h2>
-            <p className="lead">{removeConfirm.name} comes off your calendar. You can add it again any time.</p>
+            <p className="lead">{removeConfirm.name} comes off your calendar. You can save it again any time.</p>
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => {
                 save(removeConfirm.classId, removeConfirm.iso, removeConfirm.name, false);

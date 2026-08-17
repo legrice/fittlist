@@ -565,7 +565,7 @@ export function CalendarScreen({
                     toast(result.error ?? "Couldn't add that");
                     return;
                   }
-                  toast(`${match.name} was added to your calendar`);
+                  toast(`${match.name} was saved to your calendar`);
                   setMatch(null);
                   router.refresh();
                 })}

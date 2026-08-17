@@ -732,8 +732,8 @@ export function ClassSheet({
                           ? "You RSVP'd"
                           : "RSVP"
                         : added
-                          ? "Added to your week"
-                          : "Add to your week"
+                          ? "Saved to your week"
+                          : "Save to your week"
                     }
                     onClick={toggle}
                   >
@@ -741,7 +741,7 @@ export function ClassSheet({
                         cut into it. On an RSVP class the word changes with
                         the deal: a save the organizer can see. */}
                     <Icon name={added ? "check_circle" : "add_circle"} size={21} />
-                    {c.rsvp ? (added ? "" : "RSVP") : added ? "" : "Add"}
+                    {c.rsvp ? (added ? "" : "RSVP") : added ? "" : "Save"}
                   </button>
                 )}
               </>
@@ -1085,7 +1085,7 @@ export function ClassSheet({
           they will look for it on. */}
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
         <Icon name="check_circle" size={18} />
-        <span className="favtoast-t">Added to your week. Followers can see it.</span>
+        <span className="favtoast-t">Saved to your week. Followers can see it.</span>
         <Link
           className="favtoast-link"
           href={c ? `/week?hl=${encodeURIComponent(`${c.id}.${c.whenIso}`)}` : "/week"}
