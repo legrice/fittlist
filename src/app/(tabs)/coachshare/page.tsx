@@ -1,4 +1,4 @@
-import { hubPage } from "../membershare/page";
+import { hubPage } from "../membershare/hub";
 
 export const dynamic = "force-dynamic";
 
