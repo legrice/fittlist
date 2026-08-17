@@ -19,13 +19,7 @@ export type YouFavoritePlace = {
   types: string[];
 };
 
-export function YouDashboard({
-  me,
-  people,
-  places,
-  managed,
-  shareHref,
-}: {
+export type YouDashboardData = {
   me: {
     name: string;
     handle: string;
@@ -38,7 +32,15 @@ export function YouDashboard({
   places: YouFavoritePlace[];
   managed: { id: string; name: string; slug: string; admin: boolean }[];
   shareHref: string;
-}) {
+};
+
+export function YouDashboard({
+  me,
+  people,
+  places,
+  managed,
+  shareHref,
+}: YouDashboardData) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   return (
     <main className="youpage">

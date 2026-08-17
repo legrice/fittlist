@@ -2421,6 +2421,17 @@ button.ps-card { cursor: pointer; }
   background: transparent;
   animation: none;
 }
+.header-profile-sheet { position: relative; }
+.header-profile-sheet .youpage {
+  padding: 8px var(--page-gutter) 40px;
+}
+.header-profile-close {
+  position: absolute;
+  top: 14px;
+  right: var(--page-gutter);
+  z-index: 3;
+  background: var(--color-surface-muted);
+}
 .brandbar-avatar img,
 .brandbar-avatar > span {
   display: grid;
