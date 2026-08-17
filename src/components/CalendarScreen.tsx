@@ -328,7 +328,7 @@ export function CalendarScreen({
             ) : <span />}
             <div className="calseg" role="tablist" aria-label="Schedule view">
               <button role="tab" aria-label="List" aria-selected={view === "list"} className={view === "list" ? "on" : ""} onClick={() => setView("list")}><Icon name="calendar_view_day" size={25} /></button>
-              <button role="tab" aria-label="Month" aria-selected={view === "month"} className={view === "month" ? "on" : ""} onClick={() => setView("month")}><Icon name="calendar_view_month" size={25} /></button>
+              <button role="tab" aria-label="Month" aria-selected={view === "month"} className={view === "month" ? "on" : ""} onClick={() => setView("month")}><Icon name="calendar_month" size={25} /></button>
             </div>
           </div>
         )}
@@ -444,7 +444,7 @@ export function CalendarScreen({
                 setView("month");
               }}
             >
-              <Icon name="calendar_view_month" size={25} />
+              <Icon name="calendar_month" size={25} />
             </button>
           </div>
         </ScrollHead>
