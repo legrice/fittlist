@@ -66,6 +66,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-lime-soft: #E6F8D5;
   --color-action: #E94B2C;
   --color-action-pressed: #D83E22;
+  --color-action-soft: #FBE4DE;
   --color-olive: #405D16;
   --color-black: #000000;
   --color-white: #FFFFFF;
@@ -78,7 +79,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-text-primary: #000000;
   --color-text-secondary: #6B6B68;
   --color-text-muted: #92928D;
-  --color-coaching: #9FE870;
+  --color-coaching: var(--color-lime);
   --color-coaching-text: #000000;
   --color-attending: #DCC8FF;
   --color-attending-text: #211731;
@@ -176,7 +177,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
      record without an owner and the colour should not promise otherwise. */
   --rel-added: #ACACAC;
   --go: #3d8b53;           /* "on" green for switches */
-  --si-soft: #f7e6d6;
+  --si-soft: var(--color-lime-soft);
   --sa: #d6d1b3;
   --yellow: #f5f200;
   /* Shape system. These four values are the complete product vocabulary:
@@ -1230,10 +1231,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   content: ""; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 3px;
   border-radius: 2px; background: currentColor;
 }
-.daygrid-ev.ev-coaching { background: rgba(194, 65, 12, .16); color: var(--si-ink); }
+.daygrid-ev.ev-coaching { background: var(--color-lime-soft); color: var(--si-ink); }
 .daygrid-ev.ev-added { background: var(--cl); color: var(--ink); }
 .daygrid-ev.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
-[data-mode="dark"] .daygrid-ev.ev-coaching { color: #f09062; }
+[data-mode="dark"] .daygrid-ev.ev-coaching { color: var(--color-lime); }
 [data-mode="dark"] .daygrid-ev.ev-added { color: var(--ink); }
 [data-mode="dark"] .daygrid-ev.ev-private { color: #85b8e8; }
 .daygrid-evnm {
@@ -4706,7 +4707,7 @@ select.editinput.placekind-select {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
   font-weight: 600; color: var(--ol); background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px;
 }
-.adminbadge.warn { color: #a85327; background: var(--si-soft); border-color: transparent; }
+.adminbadge.warn { color: #a85327; background: var(--color-action-soft); border-color: transparent; }
 .adminaction { width: 100%; margin-top: 12px; }
 .adminlink { display: flex; gap: 8px; margin-top: 12px; }
 .adminlink input {
@@ -4837,7 +4838,7 @@ select.editinput.placekind-select {
 .adminbadge.kind-coach { background: var(--ink); color: var(--paper); }
 .adminbadge.kind-member { background: var(--si); color: var(--color-black); }
 .adminremove { margin-top: 10px; font-weight: 600; font-size: 13px; color: #a8452a; }
-.admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--si-soft); }
+.admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--color-action-soft); }
 .admindanger p { font-size: 13px; color: #8a3c22; line-height: 1.45; margin-bottom: 10px; }
 .admindanger .adminaddform-row { margin-top: 0; }
 
@@ -4904,8 +4905,8 @@ select.editinput.placekind-select {
   /* Warm like the light ground: the cool #16171a had the same clash with
      the warm dark surfaces that the light side's cool gray had. */
   --ground: #17150f;
-  --si-tint: #3f2413;
-  --si-ink: #f0a071;
+  --si-tint: #26351d;
+  --si-ink: #b9f590;
   --card: #211c13;
   --ink: #f3efe3;
   --ol: #a89f8a;
@@ -4915,7 +4916,8 @@ select.editinput.placekind-select {
   --cl: #272115;
   --cl-d: #322b1b;
   --sa: #3d3826;
-  --si-soft: #3a2a1c;
+  --si-soft: #26351d;
+  --color-action-soft: #3f211a;
   --soft-shadow: none;
   --soft-shadow-lg: none;
   background: var(--paper);
