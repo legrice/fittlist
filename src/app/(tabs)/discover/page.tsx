@@ -8,6 +8,7 @@ import { todayIso } from "@/lib/format";
 import { DiscoverList, type DiscoverHalf } from "@/components/DiscoverList";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import { avatarColor } from "@/lib/avatar";
+import { addBrowse } from "@/app/actions/discover";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +26,9 @@ export default async function DiscoverPage({
   const startHalf: DiscoverHalf =
     half === "places" || half === "studios"
       ? "places"
-      : half === "groups"
-        ? "groups"
-        : "people";
-  const needsPeople = startHalf === "people";
-  const needsPlaces = startHalf === "places";
+      : half === "people" || half === "coaches"
+        ? "people"
+        : "for-you";
 
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
@@ -39,25 +38,20 @@ export default async function DiscoverPage({
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
 
-  const [everyone, cityRows, hidden, followRows, askRows, studioRows] = await Promise.all([
-    needsPeople ? db.select().from(schema.users) : Promise.resolve([]),
-    needsPlaces
-      ? db.select({ location: schema.users.location }).from(schema.users)
-      : Promise.resolve([]),
-    needsPeople ? hiddenFrom(userId) : Promise.resolve(new Set<string>()),
-    needsPeople
-      ? db
+  const [everyone, cityRows, hidden, followRows, askRows, studioRows, upcoming] = await Promise.all([
+    db.select().from(schema.users),
+    db.select({ location: schema.users.location }).from(schema.users),
+    hiddenFrom(userId),
+    db
           .select({ trainerUserId: schema.subscribers.trainerUserId })
           .from(schema.subscribers)
-          .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)))
-      : Promise.resolve([]),
-    needsPeople
-      ? db
+          .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+    db
           .select({ trainerUserId: schema.followRequests.trainerUserId })
           .from(schema.followRequests)
-          .where(eq(schema.followRequests.requesterUserId, userId))
-      : Promise.resolve([]),
-    needsPlaces ? db.select().from(schema.studios).orderBy(schema.studios.name) : Promise.resolve([]),
+          .where(eq(schema.followRequests.requesterUserId, userId)),
+    db.select().from(schema.studios).orderBy(schema.studios.name),
+    addBrowse(),
   ]);
 
   const rows = everyone.filter(
@@ -137,6 +131,7 @@ export default async function DiscoverPage({
       cities={cities}
       myCity={me.location?.trim() || null}
       startHalf={startHalf}
+      upcoming={upcoming ?? []}
       backHref="/feed"
       hideBack
     />

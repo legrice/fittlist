@@ -64,6 +64,8 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-lime: #9FE870;
   --color-lime-pressed: #8BD85D;
   --color-lime-soft: #E6F8D5;
+  --color-action: #E94B2C;
+  --color-action-pressed: #D83E22;
   --color-olive: #405D16;
   --color-black: #000000;
   --color-white: #FFFFFF;
@@ -699,14 +701,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .btn {
   /* Primary and secondary actions share one confident Wise-like pill. */
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: var(--control-height); background: var(--si); color: var(--color-black); font-weight: 700; font-size: 16px;
+  min-height: var(--control-height); background: var(--color-action); color: var(--color-white); font-weight: 700; font-size: 16px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   padding: 14px 22px; border-radius: var(--radius-pill); width: 100%; transition: transform .08s;
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
 .btn.ghost { background: var(--cl); color: var(--ink); border: 0; }
-.btn.si { background: var(--si); color: var(--color-black); }
+.btn.si { background: var(--color-action); color: var(--color-white); }
 .btn[disabled] { opacity: .45; pointer-events: none; }
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
@@ -5593,6 +5595,28 @@ select.editinput.placekind-select {
 .discover-studio-tile strong { margin-top:8px; font-size:16px; }
 .discover-studio-tile small { margin-top:2px; color:var(--muted); font-size:13px; }
 .discover-inline-loading { padding: var(--space-4) 0; color: var(--ol); text-align: center; }
+.discover-for-you { padding-bottom: var(--space-3); }
+.discover-welcome { padding: var(--space-3) 0 var(--space-1); }
+.discover-welcome h1 { margin: 0; max-width: 420px; font-size: clamp(30px, 8vw, 40px); line-height: 1.02; letter-spacing: -.035em; }
+.discover-welcome p { margin: 10px 0 0; max-width: 430px; color: var(--muted); font-size: 16px; line-height: 1.4; }
+.discover-section { margin-top: 34px; }
+.discover-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.discover-section-head h2 { margin: 0; font-size: 24px; line-height: 1.08; }
+.discover-section-head a { color: var(--ink); font-size: 14px; font-weight: 700; text-decoration: none; }
+.discover-event-rail {
+  display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none;
+  margin: 0 calc(-1 * var(--page-gutter)); padding: 0 var(--page-gutter) 4px;
+}
+.discover-event-rail::-webkit-scrollbar { display: none; }
+.discover-event-card {
+  flex: 0 0 220px; min-height: 148px; padding: 18px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  border-radius: var(--radius-card); background: var(--color-surface-muted);
+  color: var(--ink); text-decoration: none;
+}
+.discover-event-card small { color: var(--muted); font-size: 12.5px; font-weight: 700; }
+.discover-event-card strong { margin-top: 20px; font-size: 19px; line-height: 1.08; }
+.discover-event-card span { margin-top: auto; padding-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.3; }
 
 /* Explore paints its above-the-fold structure immediately while the active
    directory is loading. This is the same geometry as the real screen, so the
@@ -9469,3 +9493,9 @@ a.clspeek-by:active { opacity: .6; }
   .cityplaces { grid-template-columns:1fr; }
   .cityplaces a,.cityplaces a:nth-child(odd),.cityplaces a:nth-child(even){ padding:16px 0; }
 }
+
+/* Primary actions have their own warm signal. Lime remains a calendar and
+   selection colour, so an action never disappears into a status. */
+.btn:not(.ghost) { background: var(--color-action); color: var(--color-white); }
+.btn:not(.ghost):active { background: var(--color-action-pressed); }
+[data-mode="dark"] .btn:not(.ghost) { color: var(--color-white); }
