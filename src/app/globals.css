@@ -7286,6 +7286,7 @@ select.editinput.placekind-select {
 }
 .calendar-share-sheet .shpage-embedded {
   width: 100%; max-width: none; max-height: 94dvh; overflow-y: auto;
+  margin: 0;
   padding: 24px var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
 }
 .calendar-share-sheet .shpage-title { padding-right: 58px; }
