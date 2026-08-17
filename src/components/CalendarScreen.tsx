@@ -453,7 +453,7 @@ export function CalendarScreen({
       <div className="calendar-bottom-actions" aria-label="Schedule actions">
         <button className="calendar-bottom-share" type="button" onClick={() => setShareOpen(true)}>
           <span className="calendar-bottom-share-icon" aria-hidden="true">
-            <Icon name="send" size={19} />
+            <Icon name="share" size={19} />
           </span>
           <span>Share</span>
         </button>
