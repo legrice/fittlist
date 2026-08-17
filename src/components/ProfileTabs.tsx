@@ -6,6 +6,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useBandTop, useStuck } from "@/components/CalendarBits";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
+import Link from "next/link";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
@@ -57,6 +58,7 @@ export function ProfileTabs({
   ownerTop,
   backTo,
   stickAction,
+  sectionToggle = false,
   children,
 }: {
   /** The page's own URL: "/matt" for a person, "/s/ironbound" for a studio.
@@ -108,9 +110,12 @@ export function ProfileTabs({
   /** A compact copy of the Follow control, across from the small name in the
    *  stuck bar, so scrolling never carries someone away from the yes. */
   stickAction?: ReactNode;
+  /** People use two true views rather than anchors in one long document:
+   *  Schedule is the bare profile URL and Info is /about. */
+  sectionToggle?: boolean;
   children: ReactNode;
 }) {
-  const [activeSection, setActiveSection] = useState(tabs[0]?.key ?? tab);
+  const [activeSection, setActiveSection] = useState(tab);
   const tracked = useRef(false);
   const stickRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
@@ -156,6 +161,10 @@ export function ProfileTabs({
   }, [tab, trackSchedule, trackHandle]);
 
   useEffect(() => {
+    if (sectionToggle) {
+      setActiveSection(tab);
+      return;
+    }
     const sections = tabs
       .map((t) => document.getElementById(`profile-${t.key}`))
       .filter((el): el is HTMLElement => !!el);
@@ -169,7 +178,7 @@ export function ProfileTabs({
     );
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
-  }, [tabs]);
+  }, [sectionToggle, tab, tabs]);
 
   // The first tab is the bare URL: it's what the link is for, and an About page
   // somebody hasn't filled in is an awkward first thing to land on. The old
@@ -179,16 +188,18 @@ export function ProfileTabs({
   // dot stays a sibling of the link inside it: a button in a link is not a
   // thing.
   const tabLink = (t: TabDef, i: number) => {
-    void i;
+    const href = sectionToggle
+      ? (i === 0 ? base : `${base}/${t.key}`)
+      : `#profile-${t.key}`;
     const link = (
-      <a
-        href={`#profile-${t.key}`}
+      <Link
+        href={href}
         aria-current={activeSection === t.key ? "location" : undefined}
         className={`pubtab${activeSection === t.key ? " sel" : ""}`}
         onClick={() => setActiveSection(t.key)}
       >
         {t.label}
-      </a>
+      </Link>
     );
     // The info dot only rides its tab while that tab is the one you are
     // on, by Matt's call: pinned to an unselected pill it read as a stray
@@ -285,7 +296,7 @@ export function ProfileTabs({
           </div>
         )}
       </div>
-      <div className="pubpanel">{children}</div>
+      <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}`}>{children}</div>
       <section className="profile-share-cta">
         <h2>{sharePrompt}</h2>
         <ProfileShare path={base} name={name} cta ctaText={shareLabel} />

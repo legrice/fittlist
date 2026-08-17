@@ -174,13 +174,12 @@ export async function MemberProfileView({
             that makes the other two read as the same app. */}
         <ProfileTabs
           base={`/${user.handle ?? ""}`}
-          tab={tab}
+          tab={tab === "schedule" ? "schedule" : "about"}
           tabs={[
             { key: "schedule", label: "Schedule" },
             { key: "about", label: "Info" },
-            ...(visitedStudios.length ? [{ key: "studios", label: "Studios" }] : []),
-            { key: "shoutouts", label: "Shoutouts" },
           ]}
+          sectionToggle
           /* The coach page's full-bleed hero, by Matt's call: the photo when
              there is one, the person's own colour when there isn't, so a
              member's page is the same page rather than a lesser layout. */
@@ -244,8 +243,7 @@ export async function MemberProfileView({
             )
           }
         >
-        {/* The bio already lives beneath the action pills. Info is reserved
-            for structured profile details when members gain them. */}
+        {tab === "schedule" ? (
         <section id="profile-schedule" className="profile-anchor-section">
         {week.length > 0 ? (
           <div className="memwk">
@@ -260,6 +258,7 @@ export async function MemberProfileView({
           <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p></div>
         )}
         </section>
+        ) : (
         <section id="profile-about" className="profile-anchor-section">
           <h2 className="profile-section-title">Info</h2>
           <ProfileInfoEmpty
@@ -267,23 +266,26 @@ export async function MemberProfileView({
             firstName={firstName}
             owner={isOwner}
           />
-        </section>
-        {visitedStudios.length > 0 && (
-          <section id="profile-studios" className="profile-anchor-section">
+          {visitedStudios.length > 0 && (
+            <div className="profile-info-section">
             <h2 className="profile-section-title">Studios</h2>
             <div className="profile-studio-group">
               <h3 className="profile-studio-group-title">Places I&rsquo;ve been</h3>
               <ProfileStudioRail studios={visitedStudios} />
             </div>
-          </section>
+            </div>
+          )}
+          <div className="profile-info-section">
+            <ProfileShoutouts
+              handle={user.handle ?? undefined}
+              name={name}
+              signedIn={!!viewerId}
+              owner={isOwner}
+              initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+            />
+          </div>
+        </section>
         )}
-        <ProfileShoutouts
-          handle={user.handle ?? undefined}
-          name={name}
-          signedIn={!!viewerId}
-          owner={isOwner}
-          initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
-        />
         </ProfileTabs>
       </div>
     </div>

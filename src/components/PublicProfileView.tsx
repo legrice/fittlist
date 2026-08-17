@@ -449,13 +449,12 @@ export async function PublicProfileView({
         >
         <ProfileTabs
           base={`/${handle}`}
-          tab={tab}
+          tab={tab === "schedule" ? "schedule" : "about"}
           tabs={[
             { key: "schedule", label: "Schedule" },
             { key: "about", label: "Info" },
-            ...(studios ? [{ key: "studios", label: "Studios" }] : []),
-            { key: "shoutouts", label: "Shoutouts" },
           ]}
+          sectionToggle
           name={user.name}
           summary={user.about}
           sharePrompt={isOwner ? "Let people know where to find you." : `Know someone who should know ${user.name.trim().split(/\s+/)[0] || user.name}?`}
@@ -575,13 +574,14 @@ export async function PublicProfileView({
               to show means no tab) and Contact is a sheet now, so both fall
               back to the schedule rather than rendering an empty page under a
               tab that isn't there. */}
+          {tab === "schedule" ? (
           <section id="profile-schedule" className="profile-anchor-section">{schedule}</section>
+          ) : (
           <section id="profile-about" className="profile-anchor-section">
             <h2 className="profile-section-title">Info</h2>
             {about}
-          </section>
-          {studios ? (
-            <section id="profile-studios" className="profile-anchor-section">
+            {studios ? (
+            <div className="profile-info-section">
               <h2 className="profile-section-title">Studios</h2>
               {coachStudios.length > 0 && (
                 <div className="profile-studio-group">
@@ -595,15 +595,19 @@ export async function PublicProfileView({
                   <ProfileStudioRail studios={visitedStudios} />
                 </div>
               )}
-            </section>
-          ) : null}
-          <ProfileShoutouts
-            handle={handle}
-            name={user.name}
-            signedIn={!!viewerId}
-            owner={isOwner}
-            initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
-          />
+            </div>
+            ) : null}
+            <div className="profile-info-section">
+              <ProfileShoutouts
+                handle={handle}
+                name={user.name}
+                signedIn={!!viewerId}
+                owner={isOwner}
+                initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+              />
+            </div>
+          </section>
+          )}
         </ProfileTabs>
         </FollowSync>
         {/* No Add class here. This page is where you look at your week, and
