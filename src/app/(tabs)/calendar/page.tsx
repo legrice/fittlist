@@ -8,6 +8,8 @@ import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { myWeek } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
+import { shareWeek } from "@/lib/shareweek";
+import type { HubItem } from "@/components/ShareHubScreen";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +40,9 @@ export default async function CalendarPage({
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
   const member = me.kind === "fan";
+  const today = todayIso();
 
-  const [classRows, studioRows, templateRows, customTypeRows, subRows] = await Promise.all([
+  const [classRows, studioRows, templateRows, customTypeRows, subRows, savedDays, shareDays] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym
     // shifts folded in, because a coach who is on Thursday at seven has to be
     // able to see that they are on Thursday at seven.
@@ -55,6 +58,8 @@ export default async function CalendarPage({
       .select({ id: schema.subscribers.id })
       .from(schema.subscribers)
       .where(eq(schema.subscribers.trainerUserId, userId)),
+    myWeek(userId),
+    shareWeek(userId, today, 14),
   ]);
 
   const studioById = new Map(studioRows.map((st) => [st.id, st]));
@@ -107,10 +112,21 @@ export default async function CalendarPage({
         studioId: templates[0].studioId,
       }
     : { startTime: "06:00", durationMin: 50, studioId: studios[0]?.id ?? null };
+  const shareItems: HubItem[] = shareDays.flatMap((day) =>
+    day.items.map((item) => ({
+      key: item.key,
+      iso: item.iso,
+      time: item.time,
+      name: item.name,
+      where: item.where,
+      own: item.own,
+      coaching: item.coaching,
+    })),
+  );
 
   return (
     <CalendarScreen
-      savedDays={await myWeek(userId)}
+      savedDays={savedDays}
       handle={me.handle}
       viewer={{
         id: me.id,
@@ -119,7 +135,7 @@ export default async function CalendarPage({
         color: avatarColor(me),
       }}
       classes={classes}
-      todayIso={todayIso()}
+      todayIso={today}
       studios={studios}
       templates={templates}
       customTypes={customTypeRows.map((r) => r.name)}
@@ -127,6 +143,9 @@ export default async function CalendarPage({
       subsCount={subRows.length}
       openAdder={add === "1"}
       member={member}
+      shareItems={shareItems}
+      shareDefaultFrom={shareDays[0]?.iso ?? today}
+      savedHeadline={me.storyPrefs?.headline ?? ""}
     />
   );
 }

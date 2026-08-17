@@ -7170,6 +7170,22 @@ select.editinput.placekind-select {
 }
 .shpage-title { padding: 2px 0 10px; }
 .shpage-back { margin-bottom: 16px; }
+.calendar-share-sheet {
+  width: 100%; max-width: 1120px; max-height: 94dvh; padding: 0;
+  overflow: hidden;
+}
+.calendar-share-sheet .shpage-embedded {
+  width: 100%; max-width: none; max-height: 94dvh; overflow-y: auto;
+  padding: 24px var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
+}
+.calendar-share-sheet .shpage-title { padding-right: 58px; }
+@media (min-width: 940px) {
+  .calendar-share-scrim { align-items: flex-end; padding: 24px 24px 0; }
+  .calendar-share-sheet {
+    max-width: 1120px;
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  }
+}
 .following-days { display: flex; flex-direction: column; gap: 24px; }
 .following-day-h {
   position: sticky; top: 0; z-index: 6;

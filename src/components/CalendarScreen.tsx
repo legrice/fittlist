@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Adder, type AdderPrefill } from "@/components/Adder";
@@ -20,7 +20,7 @@ import { PlanSheet } from "@/components/PlanSheet";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
-import { FittlistShareSheet } from "@/components/InAppShare";
+import { ShareHubScreen, type HubItem } from "@/components/ShareHubScreen";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
@@ -65,6 +65,9 @@ export function CalendarScreen({
   savedDays = [],
   openAdder = false,
   member = false,
+  shareItems,
+  shareDefaultFrom,
+  savedHeadline,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -86,6 +89,9 @@ export function CalendarScreen({
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
+  shareItems: HubItem[];
+  shareDefaultFrom: string;
+  savedHeadline: string;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
@@ -119,6 +125,19 @@ export function CalendarScreen({
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
+
+  useEffect(() => {
+    if (!shareOpen) return;
+    document.body.classList.add("sheet-open");
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShareOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.classList.remove("sheet-open");
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [shareOpen]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const savedByIso = useMemo(
@@ -347,16 +366,43 @@ export function CalendarScreen({
       </div>
 
       {shareOpen && (
-        <FittlistShareSheet
-          title={`${viewer.name}'s fitness schedule`}
-          url={`${window.location.origin}/${handle ?? "calendar"}`}
-          onShareImage={() => {
-            setShareOpen(false);
-            router.push(member ? "/membershare" : "/coachshare");
+        <div
+          className="sheet-scrim calendar-share-scrim"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShareOpen(false);
           }}
-          onClose={() => setShareOpen(false)}
-          onToast={toast}
-        />
+        >
+          <section
+            className="sheet calendar-share-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Share your week"
+          >
+            <button
+              type="button"
+              className="sheetclose calendar-share-close"
+              aria-label="Close share editor"
+              onClick={() => setShareOpen(false)}
+            >
+              <Icon name="close" size={24} />
+            </button>
+            <ShareHubScreen
+              embedded
+              coach={!member}
+              handle={handle ?? ""}
+              name={viewer.name}
+              items={shareItems}
+              defaultFrom={shareDefaultFrom}
+              today={todayIso}
+              savedHeadline={savedHeadline}
+              studios={studios}
+              templates={templates}
+              customTypes={customTypes}
+              lastUsed={lastUsed}
+            />
+          </section>
+        </div>
       )}
 
       {/* The overlay header: nothing at rest, a glass bar once you're deep,

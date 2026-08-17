@@ -58,6 +58,7 @@ const plusDays = (iso: string, n: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 
 export function ShareHubScreen({
+  embedded = false,
   coach,
   handle,
   name,
@@ -70,6 +71,9 @@ export function ShareHubScreen({
   customTypes,
   lastUsed,
 }: {
+  /** Render inside another surface (the calendar's share sheet). The sheet
+   *  owns dismissal, so the editor does not add a second back control. */
+  embedded?: boolean;
   /** Both kinds get the full sheet: the week, the card, the QR code and
    *  the text. What `coach` still decides is the week's subject (teaching
    *  against saved), the fallback headline, and whether the hub carries
@@ -404,12 +408,14 @@ export function ShareHubScreen({
   return (
     <>
       {/* `shpage` is the marker the gradient opt-out keys on. */}
-      <div className="cardwrap shpage">
-        <div className="shpage-back">
-          <BackLink className="evback" href="/calendar" anywhere label="Back to calendar">
-            <Icon name="arrow_back" size={23} />
-          </BackLink>
-        </div>
+      <div className={`cardwrap shpage${embedded ? " shpage-embedded" : ""}`}>
+        {!embedded && (
+          <div className="shpage-back">
+            <BackLink className="evback" href="/calendar" anywhere label="Back to calendar">
+              <Icon name="arrow_back" size={23} />
+            </BackLink>
+          </div>
+        )}
         <h1 className="tab-page-title shpage-title">Share</h1>
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
