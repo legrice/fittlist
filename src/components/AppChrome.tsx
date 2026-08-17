@@ -63,9 +63,9 @@ export async function AppChrome({
   // quietly overrode the Calendar tab's href on every screen outside the tabs
   // layout, which is most of them.
   const scheduleHref = "/calendar";
-  // Profile is your own page. It falls back to /you (a redirect) for an
-  // account still mid-signup, which has no handle to point at yet.
-  const profileHref = me.handle ? `/${me.handle}` : "/you";
+  // The header avatar is the private You/account door. Public profiles stay
+  // available from Preview profile inside that screen.
+  const profileHref = "/you";
   const face = {
     photo: me.photoThumb ?? me.photo,
     color: avatarColor(me),
