@@ -1,4 +1,4 @@
-import { and, eq, inArray, or } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -113,86 +113,18 @@ export async function StudioView({
     .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
     .where(eq(schema.shoutouts.targetStudioId, s.id));
 
-  // The gym's own week, if it runs one. Seven days from today, expanded the
-  // same way every other surface expands a recurrence.
   let days: StudioDay[] = [];
-  if (s.accountUserId) {
-    const rows = (
-      await db
-        .select()
-        .from(schema.classes)
-        .where(
-          and(eq(schema.classes.userId, s.accountUserId), eq(schema.classes.studioId, s.id)),
-        )
-    ).filter((c) => c.isPublic);
-    // Who is coaching, when the studio says so: the standing coach from the
-    // rota, with that date's cover winning over the class, the same rule the
-    // rota itself lives by. Off, the week lists classes without names, which
-    // some gyms prefer; on is the default for a verified studio.
-    let coachOf = new Map<string, { name: string; photo: string | null; color: string }>();
-    let covers: (typeof schema.shiftCovers.$inferSelect)[] = [];
-    if (s.showCoaches && rows.length) {
-      covers = await db
-        .select()
-        .from(schema.shiftCovers)
-        .where(inArray(schema.shiftCovers.classId, rows.map((c) => c.id)));
-      const ids = [
-        ...new Set(
-          [...rows.map((c) => c.coachUserId), ...covers.map((cv) => cv.coachUserId)].filter(
-            (x): x is string => !!x,
-          ),
-        ),
-      ];
-      if (ids.length) {
-        const people = await db
-          .select()
-          .from(schema.users)
-          .where(inArray(schema.users.id, ids));
-        coachOf = new Map(
-          people.map((u) => [u.id, { name: u.name, photo: u.photo, color: avatarColor(u) }]),
-        );
-      }
-    }
-    const coverBy = new Map(covers.map((cv) => [`${cv.classId}|${cv.occurrenceDate}`, cv.coachUserId]));
-    const start = new Date(`${todayIso()}T00:00:00Z`);
-    for (let i = 0; i < 7; i++) {
-      const dt = new Date(start);
-      dt.setUTCDate(start.getUTCDate() + i);
-      const iso = dt.toISOString().slice(0, 10);
-      const dow = (dt.getUTCDay() + 6) % 7;
-      const items = rows
-        .filter((c) => runsOn(c, iso, dow))
-        // Been and gone comes off here too: a schedule is what's still coming.
-        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
-        .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
-        .map((c) => {
-          const key = `${c.id}|${iso}`;
-          const onIt = coverBy.has(key) ? coverBy.get(key) : c.coachUserId;
-          const who = s.showCoaches && onIt ? coachOf.get(onIt) : undefined;
-          return {
-            id: c.id,
-            name: c.name,
-            startTime: c.startTime,
-            durationMin: c.durationMin,
-            coachName: who?.name ?? null,
-            coachPhoto: who?.photo ?? null,
-            coachColor: who?.color ?? null,
-          };
-        });
-      if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
-    }
-  }
-  // The commons builds the week before the studio arrives: an unclaimed
-  // studio's schedule is drawn from the public classes coaches list here.
+  // The studio calendar is temporarily the commons: public classes coaches
+  // have associated with this place. This deliberately ignores whether the
+  // studio account also owns schedule records until the full scheduling
+  // product has one authoritative ownership model.
   // Members' own entries used to join it as plain rows and no longer do, by
   // Matt's call: a member building their share week types classes here by
   // the dozen now, and what they add stays off every public page but their
   // own. The details still land in the studio's catalog, so the next person
   // typing the class gets them back; the catalog is memory, not a listing.
-  // Gone the moment somebody claims the page either way: from then on what
-  // it says is theirs to say.
   let community = false;
-  if (!s.accountUserId && !access.claimed) {
+  {
     const pubAll = await db
       .select()
       .from(schema.classes)
@@ -255,7 +187,7 @@ export async function StudioView({
     community = days.length > 0;
   }
 
-  const hasSchedule = !!s.accountUserId || community;
+  const hasSchedule = community;
   // The viewer's going marks used to load here so each row's ribbon could
   // say Added. The ribbon left every list when plans did, and the new rows
   // carry no add at all, so the query went with it: a query nobody reads is
@@ -429,7 +361,7 @@ export async function StudioView({
 
         {tab === "schedule" && (
         <section id="profile-schedule" className="profile-anchor-section">
-          {community && (
+          {community && !access.claimed && (
             <CommunityNote
               studioId={s.id}
               name={s.name}

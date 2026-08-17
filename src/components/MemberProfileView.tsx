@@ -20,6 +20,7 @@ import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 import { ProfileAbout } from "@/components/ProfileAbout";
+import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -248,14 +249,7 @@ export async function MemberProfileView({
         {tab === "schedule" ? (
         <section id="profile-schedule" className="profile-anchor-section">
         {week.length > 0 ? (
-          <div className="memwk">
-            {week.map((day) => (
-              <div key={day.iso} className="memwk-day">
-                <div className="memwk-band">{day.label}</div>
-                {day.items.map((it) => <MemberWeekRow key={`${it.classId}.${it.iso}`} it={it} />)}
-              </div>
-            ))}
-          </div>
+          <CalendarList days={memberCalendarDays(week)} />
         ) : (
           <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p></div>
         )}
@@ -302,27 +296,24 @@ export async function MemberProfileView({
 
 /** One row of the member's week. A mark at a real class links to its page;
  *  one of their own is plain text, because there is no page behind it. */
-function MemberWeekRow({ it }: { it: SharedWeekItem }) {
-  const sub = [it.coachName ? `with ${it.coachName}` : "", it.where ?? ""]
-    .filter(Boolean)
-    .join(" · ");
-  const body = (
-    <>
-      <span className="memwk-time">
-        {it.hm}
-        <em>{it.ap}</em>
-      </span>
-      <span className="memwk-txt">
-        <span className="memwk-nm">{it.name}</span>
-        {sub && <span className="memwk-sub">{sub}</span>}
-      </span>
-    </>
-  );
-  return it.handle ? (
-    <Link className="memwk-row" href={`/${it.handle}/${it.classId}?d=${it.iso}`}>
-      {body}
-    </Link>
-  ) : (
-    <div className="memwk-row">{body}</div>
-  );
+function memberCalendarDays(week: { iso: string; label: string; items: SharedWeekItem[] }[]): WeekDayRows[] {
+  return week.map((day) => ({
+    iso: day.iso,
+    label: day.label,
+    rows: day.items.map((it) => ({
+      key: `${it.classId}.${it.iso}`,
+      name: it.name,
+      where: it.where,
+      hm: it.hm,
+      ap: it.ap,
+      dur: `${it.durationMin} min`,
+      coach: it.coachName
+        ? { id: it.handle ?? it.coachName, name: it.coachName, color: "var(--color-coaching)", photo: null }
+        : null,
+      href: it.handle ? `/${it.handle}/${it.classId}?d=${it.iso}` : null,
+      classId: it.classId,
+      iso: it.iso,
+      base: it.handle ?? undefined,
+    })),
+  }));
 }
