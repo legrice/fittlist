@@ -28,7 +28,7 @@ export async function groupClassOptions(): Promise<GroupClassChoice[]> {
   });
 }
 
-export async function createGroup(input: { name: string; description?: string; memberIds: string[]; classes?: { classId: string; iso: string }[] }) {
+export async function createGroup(input: { name: string; description?: string; visibility?: "public" | "unlisted" | "private"; memberIds: string[]; classes?: { classId: string; iso: string }[] }) {
   const ownerUserId = await getSessionUserId();
   if (!ownerUserId) return { ok: false, error: "Sign in to create a group." } as const;
   const name = input.name.trim().replace(/\s+/g, " ");
@@ -40,6 +40,10 @@ export async function createGroup(input: { name: string; description?: string; m
   const db = await getDb();
   const [owner] = await db.select({ email: schema.users.email }).from(schema.users).where(eq(schema.users.id, ownerUserId));
   if (!owner) return { ok: false, error: "Account not found." } as const;
+  const visibility = ["public", "unlisted", "private"].includes(input.visibility ?? "") ? input.visibility! : "unlisted";
+  const stem = name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 42) || "group";
+  let slug = stem;
+  for (let suffix = 2; await db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.slug, slug)).limit(1).then((rows) => rows.length > 0); suffix++) slug = `${stem}-${suffix}`;
   const requestedIds = [...new Set(input.memberIds)].filter((id) => id !== ownerUserId).slice(0, 30);
   const allowedIds = requestedIds.length
     ? (await db
@@ -56,14 +60,28 @@ export async function createGroup(input: { name: string; description?: string; m
   const allowedClasses = requestedClasses.filter((item) => allowedClassKeys.has(`${item.classId}|${item.iso}`));
 
   const group = await db.transaction(async (tx) => {
-    const [created] = await tx.insert(schema.groups).values({ name, description, ownerUserId }).returning({ id: schema.groups.id });
+    const [created] = await tx.insert(schema.groups).values({ name, slug, description, visibility, ownerUserId }).returning({ id: schema.groups.id });
     await tx.insert(schema.groupMembers).values([
-      { groupId: created.id, userId: ownerUserId },
+      { groupId: created.id, userId: ownerUserId, role: "owner" },
       ...allowedIds.map((userId) => ({ groupId: created.id, userId })),
     ]);
     if (allowedClasses.length) await tx.insert(schema.groupClasses).values(allowedClasses.map((item) => ({ groupId: created.id, classId: item.classId, occurrenceDate: item.iso })));
     return created;
   });
   revalidatePath("/saved");
-  return { ok: true, id: group.id } as const;
+  return { ok: true, id: group.id, slug } as const;
+}
+
+export async function toggleGroupFavorite(slug: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, signedOut: true } as const;
+  const db = await getDb();
+  const [group] = await db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.slug, slug));
+  if (!group) return { ok: false } as const;
+  const [existing] = await db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, userId)));
+  if (existing) await db.delete(schema.groupFavorites).where(eq(schema.groupFavorites.id, existing.id));
+  else await db.insert(schema.groupFavorites).values({ groupId: group.id, userId });
+  revalidatePath(`/g/${slug}`);
+  revalidatePath("/saved");
+  return { ok: true, selected: !existing } as const;
 }

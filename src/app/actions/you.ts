@@ -16,7 +16,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me?.handle || !me.onboardedAt) return null;
 
-  const [favoriteRows, placeRows, groupMembershipRows, managed] = await Promise.all([
+  const [favoriteRows, placeRows, groupMembershipRows, groupFavoriteRows, managed] = await Promise.all([
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
@@ -33,6 +33,10 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       .select({ groupId: schema.groupMembers.groupId })
       .from(schema.groupMembers)
       .where(eq(schema.groupMembers.userId, userId)),
+    db
+      .select({ groupId: schema.groupFavorites.groupId })
+      .from(schema.groupFavorites)
+      .where(eq(schema.groupFavorites.userId, userId)),
     myStaffStudios(),
   ]);
 
@@ -66,14 +70,14 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     photo: place.photo,
     types: place.types,
   }));
-  const groupIds = [...new Set(groupMembershipRows.map((row) => row.groupId))];
+  const groupIds = [...new Set([...groupMembershipRows, ...groupFavoriteRows].map((row) => row.groupId))];
   const groupRows = groupIds.length
     ? await db
-        .select({ id: schema.groups.id, name: schema.groups.name, memberCount: count(schema.groupMembers.id) })
+        .select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, memberCount: count(schema.groupMembers.id) })
         .from(schema.groups)
         .innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
         .where(inArray(schema.groups.id, groupIds))
-        .groupBy(schema.groups.id, schema.groups.name, schema.groups.createdAt)
+        .groupBy(schema.groups.id, schema.groups.name, schema.groups.slug, schema.groups.createdAt)
         .orderBy(desc(schema.groups.createdAt))
     : [];
 

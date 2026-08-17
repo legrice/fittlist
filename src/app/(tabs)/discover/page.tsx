@@ -24,7 +24,9 @@ export default async function DiscoverPage({
   // Explore, so an old class link returns to People rather than resurrecting
   // the catalog.
   const startHalf: DiscoverHalf | undefined =
-    half === "places" || half === "studios"
+    half === "groups"
+      ? "groups"
+      : half === "places" || half === "studios"
       ? "places"
       : half === "people" || half === "coaches"
         ? "people"
@@ -40,7 +42,7 @@ export default async function DiscoverPage({
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
 
-  const [everyone, cityRows, hidden, followRows, askRows, studioRows, favoriteStudioRows, upcoming] = await Promise.all([
+  const [everyone, cityRows, hidden, followRows, askRows, studioRows, favoriteStudioRows, upcoming, publicGroups] = await Promise.all([
     db.select().from(schema.users),
     db.select({ location: schema.users.location }).from(schema.users),
     hiddenFrom(userId),
@@ -55,6 +57,7 @@ export default async function DiscoverPage({
     db.select().from(schema.studios).orderBy(schema.studios.name),
     db.select({ studioId: schema.studioEndorsements.targetStudioId }).from(schema.studioEndorsements).where(and(eq(schema.studioEndorsements.endorserUserId, userId), eq(schema.studioEndorsements.trait, "been_here"))),
     addBrowse(),
+    db.select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, description: schema.groups.description }).from(schema.groups).where(eq(schema.groups.visibility, "public")),
   ]);
 
   const rows = everyone.filter(
@@ -139,6 +142,7 @@ export default async function DiscoverPage({
       myLng={me.locationLng}
       startHalf={startHalf}
       upcoming={upcoming ?? []}
+      groups={publicGroups}
       backHref="/feed"
       hideBack
     />

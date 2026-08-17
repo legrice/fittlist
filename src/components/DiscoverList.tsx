@@ -8,7 +8,7 @@ import { FavoritePersonButton } from "@/components/FavoritePersonButton";
 import { FavoritePlaceButton } from "@/components/FavoritePlaceButton";
 import type { BrowseDay } from "@/app/actions/discover";
 
-export type DiscoverHalf = "people" | "places" | "classes";
+export type DiscoverHalf = "people" | "places" | "classes" | "groups";
 type AllSheet = DiscoverHalf | null;
 
 export function DiscoverList({
@@ -20,6 +20,7 @@ export function DiscoverList({
   upcoming = [],
   myLat = null,
   myLng = null,
+  groups = [],
 }: {
   people: DirPerson[];
   studios?: DirStudio[];
@@ -31,6 +32,7 @@ export function DiscoverList({
   hideBack?: boolean;
   startHalf?: DiscoverHalf;
   upcoming?: BrowseDay[];
+  groups?: { id: string; name: string; slug: string; description: string | null }[];
 }) {
   const [query, setQuery] = useState("");
   const [allSheet, setAllSheet] = useState<AllSheet>(startHalf ?? null);
@@ -49,6 +51,7 @@ export function DiscoverList({
       .some((value) => value.toLowerCase().includes(q));
     return matchesQuery;
   }), [studios, q]);
+  const shownGroups = useMemo(() => groups.filter((group) => !q || `${group.name} ${group.description ?? ""}`.toLowerCase().includes(q)), [groups, q]);
 
   const allUpcoming = useMemo(() => upcoming
     .flatMap((day) => day.items.map((item) => ({ ...item, day: day.label })))
@@ -96,16 +99,20 @@ export function DiscoverList({
         <DiscoverSection title="Places to explore" onSeeAll={() => setAllSheet("places")}>
           {shownStudios.length ? <StudioGrid studios={shownStudios.slice(0, 6)} /> : <p className="discover-section-empty">No places match this search.</p>}
         </DiscoverSection>
+        <DiscoverSection title="Groups to explore" onSeeAll={() => setAllSheet("groups")}>
+          {shownGroups.length ? <GroupGrid groups={shownGroups.slice(0, 6)} /> : <p className="discover-section-empty">No public groups match this search yet.</p>}
+        </DiscoverSection>
       </div>
 
       {allSheet && <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setAllSheet(null); }}>
         <div className="sheet discover-all-sheet">
           <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAllSheet(null)}><Icon name="close" size={18} /></button>
-          <h2>{allSheet === "classes" ? "Upcoming classes" : allSheet === "people" ? "Coaches to explore" : "Places to explore"}</h2>
+          <h2>{allSheet === "classes" ? "Upcoming classes" : allSheet === "people" ? "Coaches to explore" : allSheet === "groups" ? "Groups to explore" : "Places to explore"}</h2>
           <div className="discover-all-content">
             {allSheet === "classes" && <><div className="discover-class-filters" aria-label="Class filters"><label><span>Type</span><select value={classType} onChange={(event) => setClassType(event.target.value)}><option value="">All types</option>{classTypes.map((value) => <option value={value} key={value}>{value}</option>)}</select></label><label><span>Distance</span><select value={distance} onChange={(event) => setDistance(event.target.value)} disabled={myLat == null || myLng == null}><option value="">Any distance</option><option value="1">Within 1 mile</option><option value="5">Within 5 miles</option><option value="10">Within 10 miles</option><option value="25">Within 25 miles</option></select></label></div>{(myLat == null || myLng == null) && <p className="discover-distance-note">Add your location in your profile to filter by distance.</p>}{filteredUpcoming.length ? <div className="discover-event-list">{filteredUpcoming.map((item) => <DiscoverEvent item={item} teacher={teacherFor(item.attributionName)} key={`${item.classId}.${item.iso}`} />)}</div> : <p className="discover-section-empty">No classes match these filters.</p>}</>}
             {allSheet === "people" && <div className="discover-person-grid">{activePeople.map((person, index) => <DiscoverPerson person={person} index={index} activity={activityFor(person)} key={person.id} />)}</div>}
             {allSheet === "places" && <StudioGrid studios={shownStudios} />}
+            {allSheet === "groups" && <GroupGrid groups={shownGroups} />}
           </div>
         </div>
       </div>}
@@ -144,4 +151,8 @@ function DiscoverPerson({ person, index, activity = person.classesThisWeek }: { 
 
 function StudioGrid({ studios }: { studios: DirStudio[] }) {
   return <div className="discover-studio-grid">{studios.map((studio, index) => <div className="discover-studio-tile" key={studio.id}><Link href={`/s/${studio.slug}?from=discover`}><span className="discover-studio-media">{studio.photo ? <img src={studio.photo} alt="" loading={index < 4 ? "eager" : "lazy"} /> : <span className="discover-studio-placeholder" style={{ background: studio.color }}>{(studio.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><strong>{studio.name}</strong><small>{studio.types.slice(0, 2).join(" · ") || "Fitness space"}</small></Link><FavoritePlaceButton studio={studio} /></div>)}</div>;
+}
+
+function GroupGrid({ groups }: { groups: { id: string; name: string; slug: string; description: string | null }[] }) {
+  return <div className="discover-group-grid">{groups.map((group) => <Link className="discover-group-tile" href={`/g/${group.slug}?from=discover`} key={group.id}><span><Icon name="groups" size={28} /></span><strong>{group.name}</strong><small>{group.description || "Open group"}</small></Link>)}</div>;
 }

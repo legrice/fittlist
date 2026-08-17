@@ -886,7 +886,9 @@ export const groups = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
     description: text("description"),
+    visibility: text("visibility").notNull().default("unlisted"),
     ownerUserId: uuid("owner_user_id").notNull().references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -899,11 +901,26 @@ export const groupMembers = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
     userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("member"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex("group_members_group_user").on(t.groupId, t.userId),
     index("group_members_user").on(t.userId),
+  ],
+);
+
+export const groupFavorites = pgTable(
+  "group_favorites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("group_favorites_group_user").on(t.groupId, t.userId),
+    index("group_favorites_user").on(t.userId),
   ],
 );
 

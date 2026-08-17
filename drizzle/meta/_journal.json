@@ -603,6 +603,13 @@
       "when": 1786997781316,
       "tag": "0085_petite_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1786998230374,
+      "tag": "0086_steady_quentin_quire",
+      "breakpoints": true
     }
   ]
 }

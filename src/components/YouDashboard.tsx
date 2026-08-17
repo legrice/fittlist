@@ -23,6 +23,7 @@ export type YouFavoritePlace = {
 export type YouFavoriteGroup = {
   id: string;
   name: string;
+  slug: string;
   memberCount: number;
 };
 
