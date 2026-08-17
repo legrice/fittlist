@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, gte, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
@@ -16,7 +16,7 @@ function groupHandle(value: string) {
 function databaseCode(error: unknown): string {
   let current = error;
   for (let depth = 0; depth < 4 && current && typeof current === "object"; depth++) {
-    if ("code" in current && typeof current.code === "string") return current.code;
+    if ("code" in current && (typeof current.code === "string" || typeof current.code === "number")) return String(current.code);
     current = "cause" in current ? current.cause : null;
   }
   return "";
@@ -51,17 +51,21 @@ export async function groupClassOptions(): Promise<GroupClassChoice[]> {
 }
 
 export async function createGroup(input: { name: string; slug: string; purpose: GroupPurpose; visibility: "public" | "unlisted" | "private" }) {
+  let stage = "session";
   try {
     const ownerUserId = await getSessionUserId();
     if (!ownerUserId) return { ok: false, error: "Sign in to create a group." } as const;
     const name = input.name.trim().replace(/\s+/g, " ");
     if (name.length < 2) return { ok: false, error: "Give your group a name." } as const;
     if (name.length > 60) return { ok: false, error: "Keep the name under 60 characters." } as const;
+    stage = "database connection";
     const db = await getDb();
+    stage = "account check";
     const [owner] = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, ownerUserId));
     if (!owner) return { ok: false, error: "Account not found." } as const;
     const slug = groupHandle(input.slug);
     if (slug.length < 3) return { ok: false, error: "Choose a group link with at least 3 letters or numbers." } as const;
+    stage = "handle check";
     const [existing] = await db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.slug, slug));
     if (existing) return { ok: false, error: "That group link is already taken." } as const;
     const visibility = ["public", "unlisted", "private"].includes(input.visibility) ? input.visibility : "unlisted";
@@ -70,7 +74,12 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     // Keep the essential insert compatible with databases that are between
     // the base group migration and the newer purpose migration. Purpose and
     // organizer membership enrich the group, but neither may block creation.
-    const [group] = await db.insert(schema.groups).values({ name, slug, ownerUserId }).returning({ id: schema.groups.id });
+    stage = "core group insert";
+    // Deliberately use explicit SQL here. Drizzle includes every schema column
+    // as DEFAULT even when values omit it, which defeats compatibility with a
+    // database whose later group columns are still being reconciled.
+    const inserted = await db.execute<{ id: string }>(sql`insert into "groups" ("name", "slug", "owner_user_id") values (${name}, ${slug}, ${ownerUserId}) returning "id"`);
+    const group = inserted.rows[0];
     if (!group) return { ok: false, error: "We couldn’t create the group. Please try again." } as const;
     try {
       await db.update(schema.groups).set({ purpose, visibility }).where(eq(schema.groups.id, group.id));
@@ -89,7 +98,7 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     const code = databaseCode(error);
     if (code === "23505") return { ok: false, error: "That group link was just taken. Go back and choose another." } as const;
     if (code === "42703" || code === "42P01") return { ok: false, error: "Group storage is still updating. Please try once more in a moment." } as const;
-    return { ok: false, error: "We couldn’t reach group storage. Please try again." } as const;
+    return { ok: false, error: `Group creation stopped at ${stage}${code ? ` (${code})` : ""}.` } as const;
   }
 }
 
