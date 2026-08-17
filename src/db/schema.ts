@@ -886,6 +886,7 @@ export const groups = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
+    description: text("description"),
     ownerUserId: uuid("owner_user_id").notNull().references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -903,6 +904,21 @@ export const groupMembers = pgTable(
   (t) => [
     uniqueIndex("group_members_group_user").on(t.groupId, t.userId),
     index("group_members_user").on(t.userId),
+  ],
+);
+
+export const groupClasses = pgTable(
+  "group_classes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    classId: uuid("class_id").notNull().references(() => classes.id, { onDelete: "cascade" }),
+    occurrenceDate: date("occurrence_date", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("group_classes_group_class_date").on(t.groupId, t.classId, t.occurrenceDate),
+    index("group_classes_group").on(t.groupId),
   ],
 );
 

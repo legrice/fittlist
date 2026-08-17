@@ -596,6 +596,13 @@
       "when": 1786995349794,
       "tag": "0084_cooing_talon",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1786997781316,
+      "tag": "0085_petite_leper_queen",
+      "breakpoints": true
     }
   ]
 }

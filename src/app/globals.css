@@ -5673,14 +5673,30 @@ select.editinput.placekind-select {
 .create-group-sheet { max-height:min(84dvh,720px); overflow-y:auto; padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom)); }
 .create-group-sheet > h2 { margin-bottom:6px; padding-right:48px; }
 .create-group-intro { margin:0 0 22px; color:var(--muted); font-size:14px; line-height:1.4; }
+.create-group-progress { padding-right:48px; margin-bottom:24px; }
+.create-group-progress > span { display:block; margin-bottom:9px; color:var(--muted); font-size:12px; font-weight:700; }
+.create-group-progress > div { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.create-group-progress i { height:5px; border-radius:var(--radius-pill); background:var(--color-surface-muted); }
+.create-group-progress i.on { background:var(--color-lime); }
+.create-group-step > h2 { margin:0 48px 7px 0; font-size:26px; }
+.create-group-step > p { margin:0 0 22px; color:var(--muted); font-size:14px; line-height:1.4; }
 .create-group-name { display:block; }
 .create-group-name > span { display:block; margin-bottom:7px; font-size:13px; font-weight:700; }
-.create-group-name input {
-  width:100%; height:52px; padding:0 15px; border:1px solid var(--line); border-radius:var(--radius-control);
+.create-group-name :is(input,textarea) {
+  width:100%; padding:0 15px; border:1px solid var(--line); border-radius:var(--radius-control);
   background:var(--paper); color:var(--ink); font:inherit; font-size:17px; outline:none;
 }
-.create-group-name input:focus { border-color:var(--ink); }
-.create-group-people { margin-top:24px; }
+.create-group-name input { height:52px; }
+.create-group-name textarea { min-height:132px; padding-top:14px; resize:vertical; line-height:1.45; }
+.create-group-name :is(input,textarea):focus { border-color:var(--ink); }
+.create-group-count { display:block; margin-top:7px; color:var(--muted); text-align:right; font-size:12px; }
+.create-group-search {
+  height:50px; padding:0 14px; display:flex; align-items:center; gap:9px;
+  border:1px solid var(--line); border-radius:var(--radius-control); background:var(--paper);
+}
+.create-group-search:focus-within { border-color:var(--ink); }
+.create-group-search input { min-width:0; flex:1; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; font-size:16px; }
+.create-group-people { margin-top:12px; }
 .create-group-people h3 { margin:0 0 8px; font-size:17px; }
 .create-group-people > p { margin:10px 0 0; color:var(--muted); font-size:14px; line-height:1.4; }
 .create-group-person {
@@ -5688,10 +5704,26 @@ select.editinput.placekind-select {
   display:grid; grid-template-columns:44px minmax(0,1fr) 28px; align-items:center; gap:11px;
   background:none; color:var(--ink); font:inherit; text-align:left;
 }
-.create-group-person > :is(img,span) { width:44px; height:44px; display:grid; place-items:center; border-radius:50%; object-fit:cover; color:#fff; }
-.create-group-person > svg { color:var(--muted); }
-.create-group-person.on > svg { color:var(--color-action); }
-.create-group-submit { margin-top:24px; }
+.create-group-person > img,
+.create-group-person > span:first-child { width:44px; height:44px; display:grid; place-items:center; border-radius:50%; object-fit:cover; color:#fff; }
+.create-group-person-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.create-group-person-copy small { color:var(--muted); font-size:13px; }
+.create-group-person > .icon { color:var(--muted); }
+.create-group-person.on > .icon { color:var(--color-action); }
+.create-group-classes { display:flex; flex-direction:column; gap:9px; }
+.create-group-classes > p { color:var(--muted); font-size:14px; line-height:1.4; }
+.create-group-class {
+  width:100%; min-height:68px; padding:11px 14px; display:flex; align-items:center; justify-content:space-between; gap:14px;
+  border:1px solid var(--line); border-radius:var(--radius-control); background:var(--paper); color:var(--ink); font:inherit; text-align:left;
+}
+.create-group-class > span { min-width:0; display:flex; flex-direction:column; gap:4px; }
+.create-group-class small { color:var(--muted); font-size:13px; }
+.create-group-class.on { border-color:var(--ink); }
+.create-group-class.on > .icon { color:var(--color-action); }
+.create-group-actions { display:flex; gap:10px; margin-top:24px; }
+.create-group-actions .btn { margin:0; }
+.create-group-actions .ghost { flex:0 0 34%; }
+.create-group-submit { flex:1; }
 
 /* Explore paints its above-the-fold structure immediately while the active
    directory is loading. This is the same geometry as the real screen, so the
