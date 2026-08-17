@@ -24,7 +24,7 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
   const [membership] = viewerId ? await db.select().from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, viewerId))) : [];
   const [invitation] = viewerId ? await db.select({ role: schema.groupInvitations.role }).from(schema.groupInvitations).where(and(eq(schema.groupInvitations.groupId, group.id), eq(schema.groupInvitations.inviteeUserId, viewerId))) : [];
   if (group.visibility === "private" && !membership && !invitation) notFound();
-  const manager = membership?.role === "owner" || membership?.role === "admin";
+  const manager = group.ownerUserId === viewerId || membership?.role === "owner" || membership?.role === "admin";
   const [dashboard, setupClasses] = manager ? await Promise.all([youDashboardData(), groupClassOptions()]) : [null, []];
   const [favorite] = viewerId ? await db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, viewerId))) : [];
   const memberRows = await db.select({ id: schema.users.id, name: schema.users.name, photo: schema.users.photo, avatarColor: schema.users.avatarColor, role: schema.groupMembers.role }).from(schema.groupMembers).innerJoin(schema.users, eq(schema.groupMembers.userId, schema.users.id)).where(eq(schema.groupMembers.groupId, group.id));

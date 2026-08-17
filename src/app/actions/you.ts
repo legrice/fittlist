@@ -17,7 +17,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me?.handle || !me.onboardedAt) return null;
 
-  const [favoriteRows, placeRows, groupMembershipRows, groupFavoriteRows, groupInvitationRows, managed] = await Promise.all([
+  const [favoriteRows, placeRows, groupMembershipRows, ownedGroupRows, groupFavoriteRows, groupInvitationRows, managed] = await Promise.all([
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
@@ -34,6 +34,10 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       .select({ groupId: schema.groupMembers.groupId, role: schema.groupMembers.role })
       .from(schema.groupMembers)
       .where(eq(schema.groupMembers.userId, userId)),
+    db
+      .select({ groupId: schema.groups.id })
+      .from(schema.groups)
+      .where(eq(schema.groups.ownerUserId, userId)),
     db
       .select({ groupId: schema.groupFavorites.groupId })
       .from(schema.groupFavorites)
@@ -75,13 +79,13 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     photo: place.photo,
     types: place.types,
   }));
-  const membershipByGroup = new Map(groupMembershipRows.map((row) => [row.groupId, row.role]));
-  const groupIds = [...new Set([...groupMembershipRows, ...groupFavoriteRows].map((row) => row.groupId))];
+  const membershipByGroup = new Map<string, string>([...ownedGroupRows.map((row) => [row.groupId, "owner"] as const), ...groupMembershipRows.map((row) => [row.groupId, row.role] as const)]);
+  const groupIds = [...new Set([...groupMembershipRows, ...ownedGroupRows, ...groupFavoriteRows].map((row) => row.groupId))];
   const groupBaseRows = groupIds.length
     ? await db
         .select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, memberCount: count(schema.groupMembers.id) })
         .from(schema.groups)
-        .innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
+        .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
         .where(inArray(schema.groups.id, groupIds))
         .groupBy(schema.groups.id, schema.groups.name, schema.groups.slug, schema.groups.createdAt)
         .orderBy(desc(schema.groups.createdAt))

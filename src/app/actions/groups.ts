@@ -58,19 +58,29 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     const visibility = ["public", "unlisted", "private"].includes(input.visibility) ? input.visibility : "unlisted";
     const purpose: GroupPurpose = ["plan", "community", "event"].includes(input.purpose) ? input.purpose : "plan";
 
-    // The group and its organizer are the only atomic requirement. Optional
-    // people/classes are attached afterwards so one stale favorite or removed
-    // class can never prevent the group itself from being created.
-    const group = await db.transaction(async (tx) => {
-      const [created] = await tx.insert(schema.groups).values({ name, slug, purpose, visibility, ownerUserId }).returning({ id: schema.groups.id });
-      await tx.insert(schema.groupMembers).values({ groupId: created.id, userId: ownerUserId, role: "owner" }).onConflictDoNothing();
-      return created;
-    });
-    revalidatePath("/saved");
+    // Keep the essential insert compatible with databases that are between
+    // the base group migration and the newer purpose migration. Purpose and
+    // organizer membership enrich the group, but neither may block creation.
+    const [group] = await db.insert(schema.groups).values({ name, slug, visibility, ownerUserId }).returning({ id: schema.groups.id });
+    if (!group) return { ok: false, error: "We couldn’t create the group. Please try again." } as const;
+    try {
+      await db.update(schema.groups).set({ purpose }).where(eq(schema.groups.id, group.id));
+    } catch (error) {
+      console.error("createGroup could not save purpose", error);
+    }
+    try {
+      await db.insert(schema.groupMembers).values({ groupId: group.id, userId: ownerUserId, role: "owner" }).onConflictDoNothing();
+    } catch (error) {
+      console.error("createGroup could not save organizer membership", error);
+    }
+    try { revalidatePath("/saved"); } catch (error) { console.error("createGroup could not refresh favorites", error); }
     return { ok: true, id: group.id, slug } as const;
   } catch (error) {
     console.error("createGroup failed", error);
-    return { ok: false, error: "We couldn’t create the group. Your choices are still here, so please try again." } as const;
+    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    if (code === "23505") return { ok: false, error: "That group link was just taken. Go back and choose another." } as const;
+    if (code === "42703" || code === "42P01") return { ok: false, error: "Group storage is still updating. Please try once more in a moment." } as const;
+    return { ok: false, error: "We couldn’t reach group storage. Please try again." } as const;
   }
 }
 

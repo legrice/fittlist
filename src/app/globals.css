@@ -5760,8 +5760,8 @@ select.editinput.placekind-select {
 .create-group-actions .formerror { margin:0 0 10px; }
 .create-group-actions .btn { margin:0; }
 .create-group-actions .ghost { flex:0 0 34%; }
-.create-group-submit { flex:1; background:var(--color-lime); color:var(--color-black); }
-.create-group-submit:hover { background:var(--color-lime-pressed); }
+.create-group-actions .create-group-submit { flex:1; background:var(--color-lime); color:var(--color-black); }
+.create-group-actions .create-group-submit:hover { background:var(--color-lime-pressed); }
 
 .group-main { padding:24px 20px calc(110px + env(safe-area-inset-bottom)); }
 .group-hero { padding:28px 0 30px; border-bottom:1px solid var(--line); }
