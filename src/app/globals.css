@@ -7343,6 +7343,24 @@ select.editinput.placekind-select {
     text-decoration: none; font-size: 15px; font-weight: 600;
   }
   .desktop-create:hover { filter: brightness(.95); }
+  .desktop-profile-link {
+    min-height: 52px; margin-top: auto; padding: 6px 13px;
+    display: flex; align-items: center; gap: 12px;
+    border-radius: 14px; color: var(--ink); text-decoration: none;
+    font-size: 15px; font-weight: 600;
+  }
+  .desktop-profile-link:hover,
+  .desktop-profile-link.on { background: var(--cl); }
+  .desktop-profile-link img,
+  .desktop-profile-avatar-empty {
+    width: 36px; height: 36px; flex: 0 0 36px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    object-fit: cover; color: var(--color-black); font-size: 14px;
+  }
+  .desktop-profile-link.on img,
+  .desktop-profile-link.on .desktop-profile-avatar-empty {
+    box-shadow: 0 0 0 2px var(--color-lime);
+  }
 
   /* Leave real room for the rail instead of letting fixed chrome cover the
      beginning of the page. The content column remains the reading focus. */

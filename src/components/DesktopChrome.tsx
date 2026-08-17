@@ -89,6 +89,19 @@ export function DesktopChrome({
           <Icon name="add" size={21} />
           Add a class
         </Link>
+        <Link
+          className={`desktop-profile-link${pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
+          href={profileHref}
+          aria-current={pathname.startsWith(profileHref) ? "page" : undefined}
+        >
+          {person.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={person.photo} alt="" />
+          ) : (
+            <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>
+          )}
+          <span>Profile</span>
+        </Link>
       </aside>
 
       <aside className="desktop-right" aria-label="Your profile">
