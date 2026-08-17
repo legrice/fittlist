@@ -631,6 +631,13 @@
       "when": 1787009066550,
       "tag": "0089_repair_group_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1787010545252,
+      "tag": "0090_nifty_marvel_boy",
+      "breakpoints": true
     }
   ]
 }

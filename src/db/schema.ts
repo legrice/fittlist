@@ -890,6 +890,7 @@ export const groups = pgTable(
     description: text("description"),
     purpose: text("purpose").notNull().default("plan"),
     visibility: text("visibility").notNull().default("unlisted"),
+    inviteToken: text("invite_token").notNull().unique(),
     ownerUserId: uuid("owner_user_id").notNull().references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

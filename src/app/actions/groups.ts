@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
@@ -79,6 +80,7 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     if (existing) return { ok: false, error: "That group link is already taken." } as const;
     const visibility = ["public", "unlisted", "private"].includes(input.visibility) ? input.visibility : "unlisted";
     const purpose: GroupPurpose = ["plan", "community", "event"].includes(input.purpose) ? input.purpose : "plan";
+    const inviteToken = randomBytes(24).toString("hex");
 
     // Keep the essential insert compatible with databases that are between
     // the base group migration and the newer purpose migration. Purpose and
@@ -87,7 +89,7 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     // Deliberately use explicit SQL here. A partially applied migration left
     // newer NOT NULL columns without their intended defaults in production,
     // so creation supplies every required group value directly.
-    const inserted = await db.execute<{ id: string }>(sql`insert into "groups" ("name", "slug", "owner_user_id", "visibility", "purpose") values (${name}, ${slug}, ${ownerUserId}, ${visibility}, ${purpose}) returning "id"`);
+    const inserted = await db.execute<{ id: string }>(sql`insert into "groups" ("name", "slug", "owner_user_id", "visibility", "purpose", "invite_token") values (${name}, ${slug}, ${ownerUserId}, ${visibility}, ${purpose}, ${inviteToken}) returning "id"`);
     const group = inserted.rows[0];
     if (!group) return { ok: false, error: "We couldn’t create the group. Please try again." } as const;
     try {
