@@ -13,6 +13,15 @@ function groupHandle(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 42);
 }
 
+function databaseCode(error: unknown): string {
+  let current = error;
+  for (let depth = 0; depth < 4 && current && typeof current === "object"; depth++) {
+    if ("code" in current && typeof current.code === "string") return current.code;
+    current = "cause" in current ? current.cause : null;
+  }
+  return "";
+}
+
 export async function checkGroupHandle(value: string) {
   const slug = groupHandle(value);
   if (slug.length < 3) return { ok: false, slug, error: "Use at least 3 letters or numbers." } as const;
@@ -61,10 +70,10 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     // Keep the essential insert compatible with databases that are between
     // the base group migration and the newer purpose migration. Purpose and
     // organizer membership enrich the group, but neither may block creation.
-    const [group] = await db.insert(schema.groups).values({ name, slug, visibility, ownerUserId }).returning({ id: schema.groups.id });
+    const [group] = await db.insert(schema.groups).values({ name, slug, ownerUserId }).returning({ id: schema.groups.id });
     if (!group) return { ok: false, error: "We couldn’t create the group. Please try again." } as const;
     try {
-      await db.update(schema.groups).set({ purpose }).where(eq(schema.groups.id, group.id));
+      await db.update(schema.groups).set({ purpose, visibility }).where(eq(schema.groups.id, group.id));
     } catch (error) {
       console.error("createGroup could not save purpose", error);
     }
@@ -77,7 +86,7 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     return { ok: true, id: group.id, slug } as const;
   } catch (error) {
     console.error("createGroup failed", error);
-    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    const code = databaseCode(error);
     if (code === "23505") return { ok: false, error: "That group link was just taken. Go back and choose another." } as const;
     if (code === "42703" || code === "42P01") return { ok: false, error: "Group storage is still updating. Please try once more in a moment." } as const;
     return { ok: false, error: "We couldn’t reach group storage. Please try again." } as const;
