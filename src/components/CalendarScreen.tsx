@@ -127,17 +127,19 @@ export function CalendarScreen({
   const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
-    if (!shareOpen) return;
+    if (!shareOpen && !menuOpen) return;
     document.body.classList.add("sheet-open");
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShareOpen(false);
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      setShareOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.classList.remove("sheet-open");
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [shareOpen]);
+  }, [shareOpen, menuOpen]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const savedByIso = useMemo(

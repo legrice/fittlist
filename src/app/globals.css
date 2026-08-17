@@ -9191,10 +9191,11 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-header-share:active { transform:scale(.94); }
 .calendar-drawer-scrim {
   position:fixed; inset:0; z-index:95; background:rgba(0,0,0,.34); display:flex; align-items:stretch;
+  overscroll-behavior:contain; touch-action:none;
 }
 .calendar-drawer {
   width:min(84vw,360px); min-height:100%; padding:calc(18px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
-  overflow-y:auto; background:var(--paper); color:var(--ink); box-shadow:10px 0 28px rgba(0,0,0,.12);
+  overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; background:var(--paper); color:var(--ink); box-shadow:10px 0 28px rgba(0,0,0,.12);
 }
 .calendar-drawer-head { min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .calendar-drawer-head h2 { margin:0; font-size:25px; letter-spacing:-.025em; }
