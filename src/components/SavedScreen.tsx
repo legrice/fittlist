@@ -41,9 +41,13 @@ function CreateGroupSheet({ people, classes, onClose }: { people: YouFavoritePer
   const visiblePeople = people.filter((person) => `${person.name} ${person.title}`.toLowerCase().includes(search.trim().toLowerCase()));
   const submit = () => start(async () => {
     setError("");
-    const result = await createGroup({ name, description, visibility, memberIds: selected, classes: classes.filter((item) => selectedClasses.includes(`${item.classId}|${item.iso}`)).map(({ classId, iso }) => ({ classId, iso })) });
-    if (!result.ok) { setError(result.error); return; }
-    router.push(`/g/${result.slug}`);
+    try {
+      const result = await createGroup({ name, description, visibility, memberIds: selected, classes: classes.filter((item) => selectedClasses.includes(`${item.classId}|${item.iso}`)).map(({ classId, iso }) => ({ classId, iso })) });
+      if (!result.ok) { setError(result.error); return; }
+      router.push(`/g/${result.slug}`);
+    } catch {
+      setError("We couldn’t create the group. Your choices are still here, so please try again.");
+    }
   });
   return <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget && !pending) onClose(); }}>
     <div className="sheet create-group-sheet">
