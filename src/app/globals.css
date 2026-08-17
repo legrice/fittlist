@@ -8830,7 +8830,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-bottom-actions button {
   pointer-events: auto;
-  height: 52px;
+  height: 60px;
   border: 0;
   border-radius: var(--radius-pill);
   font: inherit;
@@ -8840,15 +8840,16 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-bottom-share {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 22px;
+  gap: 10px;
+  padding: 0 28px;
+  font-size: 17px;
   background: var(--color-white);
   color: var(--color-black);
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
 .calendar-bottom-share .icon { color: var(--color-lime); }
 .calendar-bottom-add {
-  width: 52px;
+  width: 60px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
