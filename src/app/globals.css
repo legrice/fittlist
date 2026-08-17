@@ -8505,6 +8505,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* Which cell lives where: the clock's column and the class's, with the
    attribution line under both of the class's. */
+.clline-head { display: contents; }
 .clline-t { grid-column: 1; grid-row: 1; }
 .clline-dur { grid-column: 1; grid-row: 2; }
 .clline-nm { grid-row: 1; }
@@ -8998,14 +8999,21 @@ a.clspeek-by:active { opacity: .6; }
   background: var(--color-surface-hover);
 }
 .calendar-cardlist .clline-t {
-  grid-column: 1 / 3;
-  grid-row: 1;
   justify-self: start;
   font-size: 16px;
   font-weight: 700;
   color: var(--color-text-primary);
 }
 .calendar-cardlist .clline-ap { font-size: 12px; font-weight: 700; }
+.calendar-cardlist .clline-head {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 .calendar-cardlist .clline-dur { display: none; }
 .calendar-cardlist .clline-nm {
   grid-column: 1 / 3;
@@ -9036,9 +9044,8 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-cardlist .clline-av { width: 26px; height: 26px; }
 .calendar-cardlist .clline-tag {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+  position: static;
+  flex: 0 0 auto;
   min-height: 24px;
   margin: 0;
   padding: 0 14px;
@@ -9050,9 +9057,6 @@ a.clspeek-by:active { opacity: .6; }
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
-}
-.calendar-cardlist .clline:not(:has(.clline-by)) .clline-tag {
-  grid-column: auto;
 }
 .calendar-cardlist .clline-tag-coaching {
   background: var(--color-coaching);
@@ -9069,9 +9073,6 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clline-extra {
   grid-column: 1 / 3;
   grid-row: 5;
-}
-.calendar-cardlist .clline:has(.clline-tag) .clline-t {
-  padding-right: 76px;
 }
 .calendar-cardlist .calendar-attending-check { display: none; }
 
@@ -9143,11 +9144,7 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-cardlist .clline {
     padding: 18px 16px;
   }
-  .calendar-cardlist .clline-tag {
-    top: 18px;
-    right: 16px;
-    padding-inline: 10px;
-  }
+  .calendar-cardlist .clline-tag { padding-inline: 10px; }
   .schedule-kind-tabs button { padding-inline: 20px; }
 }
 

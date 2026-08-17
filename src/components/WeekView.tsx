@@ -177,19 +177,21 @@ export function ClassLine({ row }: { row: WeekRow }) {
           <span className="clline-by-name">{row.coach.name}</span>
         </span>
       )}
-      <span className="clline-t">
-        {row.hm}
-        <span className="clline-ap">{row.ap.toUpperCase()}</span>
+      <span className="clline-head">
+        <span className="clline-t">
+          {row.hm}
+          <span className="clline-ap">{row.ap.toUpperCase()}</span>
+        </span>
+        {row.tag && (
+          <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
+            {row.tag}
+          </span>
+        )}
       </span>
       <span className="clline-nm">{row.name}</span>
       {row.dur && <span className="clline-dur">{row.dur}</span>}
       {row.where && (
         <span className="clline-w">{row.where}</span>
-      )}
-      {row.tag && (
-        <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
-          {row.tag}
-        </span>
       )}
       {row.extra && <span className="clline-extra">{row.extra}</span>}
     </>
