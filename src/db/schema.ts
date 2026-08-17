@@ -878,6 +878,34 @@ export const studioEndorsements = pgTable(
   ],
 );
 
+// Private crews a person keeps together. Groups begin as a lightweight
+// favorites organizer; shared scheduling and conversation can build on the
+// same membership graph without changing how a group is created.
+export const groups = pgTable(
+  "groups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    ownerUserId: uuid("owner_user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("groups_owner_created").on(t.ownerUserId, t.createdAt)],
+);
+
+export const groupMembers = pgTable(
+  "group_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("group_members_group_user").on(t.groupId, t.userId),
+    index("group_members_user").on(t.userId),
+  ],
+);
+
 // A short, personal recommendation. Unlike badges these are freeform, and
 // unlike reviews they are never scored or published by default: the person
 // or place receiving one decides whether it belongs on their public profile.

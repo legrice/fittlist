@@ -589,6 +589,13 @@
       "when": 1786532251912,
       "tag": "0083_gigantic_william_stryker",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1786995349794,
+      "tag": "0084_cooing_talon",
+      "breakpoints": true
     }
   ]
 }

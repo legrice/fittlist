@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
 import { myStaffStudios } from "@/app/actions/gym";
 import type { YouDashboardData, YouFavoritePerson, YouFavoritePlace } from "@/components/YouDashboard";
 import { getDb, schema } from "@/db";
@@ -16,7 +16,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me?.handle || !me.onboardedAt) return null;
 
-  const [favoriteRows, placeRows, managed] = await Promise.all([
+  const [favoriteRows, placeRows, groupMembershipRows, managed] = await Promise.all([
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
@@ -29,6 +29,10 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
         eq(schema.studioEndorsements.endorserUserId, userId),
         eq(schema.studioEndorsements.trait, "been_here"),
       )),
+    db
+      .select({ groupId: schema.groupMembers.groupId })
+      .from(schema.groupMembers)
+      .where(eq(schema.groupMembers.userId, userId)),
     myStaffStudios(),
   ]);
 
@@ -62,6 +66,16 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     photo: place.photo,
     types: place.types,
   }));
+  const groupIds = [...new Set(groupMembershipRows.map((row) => row.groupId))];
+  const groupRows = groupIds.length
+    ? await db
+        .select({ id: schema.groups.id, name: schema.groups.name, memberCount: count(schema.groupMembers.id) })
+        .from(schema.groups)
+        .innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
+        .where(inArray(schema.groups.id, groupIds))
+        .groupBy(schema.groups.id, schema.groups.name, schema.groups.createdAt)
+        .orderBy(desc(schema.groups.createdAt))
+    : [];
 
   return {
     me: {
@@ -75,6 +89,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     },
     people,
     places,
+    groups: groupRows,
     managed: managed.filter((place) => place.admin),
     shareHref: me.kind === "fan" ? "/membershare" : "/coachshare",
     isAdmin: adminEmails().includes(me.email.toLowerCase()),

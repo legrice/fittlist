@@ -20,6 +20,12 @@ export type YouFavoritePlace = {
   types: string[];
 };
 
+export type YouFavoriteGroup = {
+  id: string;
+  name: string;
+  memberCount: number;
+};
+
 export type YouDashboardData = {
   me: {
     name: string;
@@ -32,6 +38,7 @@ export type YouDashboardData = {
   };
   people: YouFavoritePerson[];
   places: YouFavoritePlace[];
+  groups: YouFavoriteGroup[];
   managed: { id: string; name: string; slug: string; admin: boolean }[];
   shareHref: string;
   isAdmin: boolean;
