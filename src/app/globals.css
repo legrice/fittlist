@@ -7169,6 +7169,7 @@ select.editinput.placekind-select {
   letter-spacing: -.02em; color: var(--ink);
 }
 .shpage-title { padding: 2px 0 10px; }
+.shpage-back { margin-bottom: 16px; }
 .following-days { display: flex; flex-direction: column; gap: 24px; }
 .following-day-h {
   position: sticky; top: 0; z-index: 6;

@@ -14,6 +14,7 @@ import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
 import { setGoing } from "@/app/actions/going";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -404,6 +405,11 @@ export function ShareHubScreen({
     <>
       {/* `shpage` is the marker the gradient opt-out keys on. */}
       <div className="cardwrap shpage">
+        <div className="shpage-back">
+          <BackLink className="evback" href="/calendar" anywhere label="Back to calendar">
+            <Icon name="arrow_back" size={23} />
+          </BackLink>
+        </div>
         <h1 className="tab-page-title shpage-title">Share</h1>
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
