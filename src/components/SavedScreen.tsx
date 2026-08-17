@@ -18,6 +18,7 @@ export function SavedScreen({
       </header>
 
       <SavedRail
+        kind="people"
         title="People"
         empty="Save the people whose calendars you want close by. Each calendar stays separate."
         addHref="/discover"
@@ -37,6 +38,7 @@ export function SavedScreen({
       </SavedRail>
 
       <SavedRail
+        kind="places"
         title="Places"
         empty="Save studios and spaces to find their schedules again quickly."
         addHref="/discover?half=places"
@@ -56,6 +58,7 @@ export function SavedScreen({
       </SavedRail>
 
       <SavedRail
+        kind="groups"
         title="Groups"
         empty="Groups will give your crew one shared place for plans you mean to combine."
         addHref="/discover?half=groups"
@@ -68,16 +71,18 @@ function SavedRail({
   title,
   empty,
   addHref,
+  kind,
   children,
 }: {
   title: string;
   empty: string;
   addHref: string;
+  kind: "people" | "places" | "groups";
   children?: ReactNode;
 }) {
   const hasItems = Children.count(children) > 0;
   return (
-    <section className="yousection savedsection">
+    <section className={`yousection savedsection savedsection-${kind}`}>
       <div className="yousection-head"><h2>{title}</h2></div>
       <div className="youfavrail">
         {children}

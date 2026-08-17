@@ -6718,7 +6718,7 @@ select.editinput.placekind-select {
 }
 .savedsection + .savedsection { margin-top: 30px; }
 .youaccount-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.youavatar { width: 88px; height: 88px; border-radius: 26px; object-fit: cover; flex: none; }
+.youavatar { width: 88px; height: 88px; border-radius: 999px; object-fit: cover; flex: none; }
 .youavatar-empty { display: grid; place-items: center; color: #fff; font-size: 32px; font-weight: 600; }
 .youaccount-head h1 {
   max-width: 100%; margin: 13px 0 3px; font-size: 29px; line-height: 1;
@@ -6748,6 +6748,20 @@ select.editinput.placekind-select {
 .youfav { width: 104px; flex: 0 0 104px; color: var(--ink); text-decoration: none; }
 .youfav > img, .youfav > span { width: 82px; height: 82px; border-radius: 22px; display: grid; place-items: center; object-fit: cover; background: var(--soft); font-size: 25px; }
 .youfavrail-people .youfav > img, .youfavrail-people .youfav > span { border-radius: 999px; }
+.savedsection-people .youfav > img,
+.savedsection-people .youfav > span { border-radius: 999px; }
+.savedsection-places .youfav {
+  width: 196px;
+  flex-basis: 196px;
+}
+.savedsection-places .youfav > img,
+.savedsection-places .youfav > span {
+  width: 196px;
+  height: 142px;
+  border-radius: 18px;
+}
+.savedsection-places .youfav strong { margin-top: 9px; font-size: 16.5px; }
+.savedsection-places .youfav small { font-size: 14px; }
 .youfav strong, .youfav small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .youfav strong { margin-top: 8px; font-size: 14px; }
 .youfav small { margin-top: 2px; color: var(--ol); font-size: 12px; }
