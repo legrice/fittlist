@@ -6975,8 +6975,8 @@ select.editinput.placekind-select {
 .following-coach-context .feedfilter-txt { font-size: 17px; }
 .following-coach-context .feedfilter-link { font-size: 14px; }
 .screen.hasnav .brandbar {
-  background: var(--paper); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--si);
-  border-bottom: 1px solid var(--line);
+  background: var(--ground); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--ink);
+  border-bottom: 0;
 }
 .screen.hasnav .brandbar .iconbtn {
   width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: transparent;
