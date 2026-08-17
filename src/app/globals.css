@@ -9017,20 +9017,20 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-bottom-share {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 28px;
+  gap: 12px;
+  padding: 0 22px 0 8px;
   font-size: 17px;
   background: var(--color-white);
   color: var(--color-black);
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
 .calendar-bottom-share-icon {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 34px;
+  flex: 0 0 44px;
   border-radius: 50%;
   background: var(--color-lime);
   color: var(--color-black);
@@ -9045,7 +9045,11 @@ a.clspeek-by:active { opacity: .6; }
   color: var(--color-black);
 }
 .calendar-bottom-actions button:active { transform: scale(.96); }
-.calendar-cardwrap { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+.calendar-cardwrap {
+  margin-top: 0;
+  padding-top: 4px;
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+}
 .schedule-kind-tabs button {
   min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
   background: var(--card); color: var(--ink); font: inherit;
