@@ -26,6 +26,7 @@ import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
+import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -219,7 +220,7 @@ export async function PublicProfileView({
   }
 
   const hasInfo = Boolean(
-    user.disciplines.length || user.highlights.length || user.certifications.length,
+    user.about?.trim() || user.disciplines.length || user.highlights.length || user.certifications.length,
   );
   const about = hasInfo ? (
     <>
@@ -456,7 +457,7 @@ export async function PublicProfileView({
           ]}
           sectionToggle
           name={user.name}
-          summary={user.about}
+          summary={null}
           sharePrompt={isOwner ? "Let people know where to find you." : `Know someone who should know ${user.name.trim().split(/\s+/)[0] || user.name}?`}
           shareLabel={isOwner ? "Share your profile" : "Share their profile"}
           title={user.title ?? ""}
@@ -542,24 +543,7 @@ export async function PublicProfileView({
               </div>
             )
           }
-          closingContent={
-            <>
-              <ProfileEndorsements
-                handle={handle}
-                firstName={user.name.trim().split(/\s+/)[0] || user.name}
-                initial={endorsementCounts}
-                mine={viewerId ? endorsementRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
-                owner={isOwner}
-              />
-              <ProfileShoutouts
-                handle={handle}
-                name={user.name}
-                signedIn={!!viewerId}
-                owner={isOwner}
-                initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
-              />
-            </>
-          }
+          closingContent={null}
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
@@ -606,6 +590,26 @@ export async function PublicProfileView({
               )}
             </div>
             ) : null}
+            {user.about?.trim() && (
+              <div className="profile-info-section">
+                <h2 className="profile-section-title">About</h2>
+                <ProfileAbout text={user.about} />
+              </div>
+            )}
+            <ProfileEndorsements
+              handle={handle}
+              firstName={user.name.trim().split(/\s+/)[0] || user.name}
+              initial={endorsementCounts}
+              mine={viewerId ? endorsementRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
+              owner={isOwner}
+            />
+            <ProfileShoutouts
+              handle={handle}
+              name={user.name}
+              signedIn={!!viewerId}
+              owner={isOwner}
+              initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+            />
           </section>
           )}
         </ProfileTabs>

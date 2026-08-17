@@ -19,6 +19,7 @@ import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
+import { ProfileAbout } from "@/components/ProfileAbout";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -195,7 +196,7 @@ export async function MemberProfileView({
             ) : undefined
           }
           name={name}
-          summary={user.about}
+          summary={null}
           sharePrompt={isOwner ? "Let people know where to find you." : `Know someone who should know ${firstName}?`}
           shareLabel={isOwner ? "Share your profile" : "Share their profile"}
           title={user.title ?? ""}
@@ -242,15 +243,7 @@ export async function MemberProfileView({
               </div>
             )
           }
-          closingContent={
-            <ProfileShoutouts
-              handle={user.handle ?? undefined}
-              name={name}
-              signedIn={!!viewerId}
-              owner={isOwner}
-              initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
-            />
-          }
+          closingContent={null}
         >
         {tab === "schedule" ? (
         <section id="profile-schedule" className="profile-anchor-section">
@@ -270,11 +263,13 @@ export async function MemberProfileView({
         ) : (
         <section id="profile-about" className="profile-anchor-section">
           <h2 className="profile-section-title">Info</h2>
-          <ProfileInfoEmpty
-            handle={user.handle ?? ""}
-            firstName={firstName}
-            owner={isOwner}
-          />
+          {!user.about?.trim() && visitedStudios.length === 0 && (
+            <ProfileInfoEmpty
+              handle={user.handle ?? ""}
+              firstName={firstName}
+              owner={isOwner}
+            />
+          )}
           {visitedStudios.length > 0 && (
             <div className="profile-info-section">
             <h2 className="profile-section-title">Studios</h2>
@@ -284,6 +279,19 @@ export async function MemberProfileView({
             </div>
             </div>
           )}
+          {user.about?.trim() && (
+            <div className="profile-info-section">
+              <h2 className="profile-section-title">About</h2>
+              <ProfileAbout text={user.about} />
+            </div>
+          )}
+          <ProfileShoutouts
+            handle={user.handle ?? undefined}
+            name={name}
+            signedIn={!!viewerId}
+            owner={isOwner}
+            initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+          />
         </section>
         )}
         </ProfileTabs>

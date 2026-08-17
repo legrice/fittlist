@@ -4137,7 +4137,7 @@ select.editinput.placekind-select {
 
 /* Identity returns to the photograph, while the useful content begins below. */
 .pubhero-media {
-  height: calc(286px + var(--head-top, 0px));
+  height: calc(256px + var(--head-top, 0px));
   margin-top: calc(-1 * var(--head-top, 0px));
 }
 .pubidentity-overlay {
@@ -7360,7 +7360,7 @@ select.editinput.placekind-select {
      the desktop. A visitor's back control gets its own row above the image. */
   .pub .profwrap { padding-top: 30px; }
   .pub .pubhero-media {
-    height: 330px; margin: 20px 0 0; overflow: visible;
+    height: 300px; margin: 20px 0 0; overflow: visible;
     background: transparent;
   }
   .pub .pubhero-media:has(.profback) { margin-top: 76px; }

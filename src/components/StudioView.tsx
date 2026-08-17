@@ -350,10 +350,10 @@ export async function StudioView({
             },
             { key: "about", label: "Info" },
             { key: "coaches", label: "Coaches" },
-            { key: "shoutouts", label: "Shoutouts" },
           ]}
+          sectionToggle
           name={s.name}
-          summary={s.about}
+          summary={null}
           sharePrompt="Know someone who would love this place?"
           shareLabel="Share this place"
           title={s.types.slice(0, 2).join(" · ") || placeKindLabel(s.placeKind)}
@@ -424,18 +424,10 @@ export async function StudioView({
               />
             </div>
           }
-          endorsement={
-            <ProfileEndorsements
-              handle={s.slug ?? s.id}
-              studioSlug={s.slug ?? s.id}
-              firstName={s.name}
-              initial={studioEndorsementCounts}
-              mine={viewerId ? studioBadgeRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
-              owner={false}
-            />
-          }
+          endorsement={null}
         >
 
+        {tab === "schedule" && (
         <section id="profile-schedule" className="profile-anchor-section">
           {community && (
             <CommunityNote
@@ -460,7 +452,9 @@ export async function StudioView({
             </div>
           )}
         </section>
+        )}
 
+        {tab === "about" && (
         <section id="profile-about" className="profile-anchor-section">
         <h2 className="profile-section-title">Info</h2>
         {/* What kind of place this is, first thing under the tabs: it is the
@@ -500,8 +494,25 @@ export async function StudioView({
             </span>
           </a>
         </div>}
+        <ProfileEndorsements
+          handle={s.slug ?? s.id}
+          studioSlug={s.slug ?? s.id}
+          firstName={s.name}
+          initial={studioEndorsementCounts}
+          mine={viewerId ? studioBadgeRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
+          owner={false}
+        />
+        <ProfileShoutouts
+          studioSlug={s.slug ?? s.id}
+          name={s.name}
+          signedIn={signedIn}
+          owner={access.isManager}
+          initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+        />
         </section>
+        )}
 
+        {tab === "coaches" && (
         <section id="profile-coaches" className="profile-anchor-section">
         <h2 className="profile-section-title">Coaches</h2>
           {coaches.length === 0 ? (
@@ -547,14 +558,7 @@ export async function StudioView({
           </div>
           )}
         </section>
-
-        <ProfileShoutouts
-          studioSlug={s.slug ?? s.id}
-          name={s.name}
-          signedIn={signedIn}
-          owner={access.isManager}
-          initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
-        />
+        )}
 
         </ProfileTabs>
 
