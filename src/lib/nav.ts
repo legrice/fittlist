@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "calendar" | "you" | "none";
+export type NavTab = "calendar" | "discover" | "saved" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -13,11 +13,8 @@ export type NavItem = {
 };
 
 /**
- * Two durable places: the calendar itself and the person behind it.
- *
- * The calendar is the product and the account is where somebody manages the
- * person, favorites and settings behind it. Search remains a door in the
- * header, not a third place somebody has to understand.
+ * Calendar is the signed-in front door. Discover finds people and places;
+ * Saved keeps separate shortcuts to the ones this person wants nearby.
  */
 export function navTabs(
   _coach: boolean,
@@ -34,7 +31,8 @@ export function navTabs(
       icon: "calendar_month",
       label: "Calendar",
     },
-    { id: "you", href: profileHref ?? "/you", icon: "account_circle", label: "You" },
+    { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
+    { id: "saved", href: "/saved", icon: "favorite", label: "Saved" },
   ];
 }
 
@@ -46,11 +44,8 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app"))
     return "calendar";
   if (pathname.startsWith("/week")) return "calendar";
-  // /you is the old settings screen and is a redirect onto your profile now;
-  // /settings is where those rows moved. Both belong to the Profile tab, and
-  // the profile itself passes `active` explicitly, because a handle is not a
-  // pathname anything here can recognise.
-  if (pathname.startsWith("/you") || pathname.startsWith("/settings")) return "you";
+  if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
+  if (pathname.startsWith("/saved")) return "saved";
   return "none";
 }
 

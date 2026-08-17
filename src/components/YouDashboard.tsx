@@ -36,8 +36,6 @@ export type YouDashboardData = {
 
 export function YouDashboard({
   me,
-  people,
-  places,
   managed,
   shareHref,
 }: YouDashboardData) {
@@ -64,54 +62,6 @@ export function YouDashboard({
         <Link href="/settings?edit=1">Edit profile</Link>
         <Link href={shareHref}>Share</Link>
       </div>
-
-      <h2 className="yougroup-title youfavorites-title">Favorites</h2>
-      <FavoriteRail
-        title="People"
-        empty="Save the people whose calendars you want close by."
-        addHref="/discover?seg=coaches"
-        kind="people"
-      >
-        {people.map((person) => (
-          <Link className="youfav" href={`/${person.handle}`} key={person.id}>
-            {person.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={person.photo} alt="" />
-            ) : (
-              <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>
-            )}
-            <strong>{person.name}</strong>
-            {person.title && <small>{person.title}</small>}
-          </Link>
-        ))}
-      </FavoriteRail>
-
-      <FavoriteRail
-        title="Places"
-        empty="Keep the studios and spaces you love in one place."
-        addHref="/discover?seg=studios"
-        kind="places"
-      >
-        {places.map((place) => (
-          <Link className="youfav" href={`/s/${place.slug}`} key={place.id}>
-            {place.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={place.photo} alt="" />
-            ) : (
-              <span>{place.name.charAt(0).toUpperCase()}</span>
-            )}
-            <strong>{place.name}</strong>
-            {place.types.length > 0 && <small>{place.types.slice(0, 2).join(" · ")}</small>}
-          </Link>
-        ))}
-      </FavoriteRail>
-
-      <FavoriteRail
-        title="Groups"
-        empty="Groups will give your crew one shared place for everyone’s plans."
-        addHref="/groups/new"
-        kind="groups"
-      />
 
       <AccountGroup title="Your account">
         <AccountRow icon="forum" title="Messages" detail="Your conversations" href="/inbox" />
@@ -171,34 +121,5 @@ function AccountRow({ icon, title, detail, href }: { icon: string; title: string
       </span>
       <Icon className="youaccount-chevron" name="chevron_right" size={19} />
     </Link>
-  );
-}
-
-function FavoriteRail({
-  title,
-  empty,
-  addHref,
-  kind,
-  children,
-}: {
-  title: string;
-  empty: string;
-  addHref: string;
-  kind: "people" | "places" | "groups";
-  children?: React.ReactNode;
-}) {
-  const hasItems = !!children;
-  return (
-    <section className="yousection">
-      <div className="yousection-head"><h2>{title}</h2></div>
-      <div className={`youfavrail youfavrail-${kind}`}>
-        {children}
-        <Link className="youfav youfav-add" href={addHref}>
-          <span><Icon name="add" size={28} /></span>
-          <strong>{hasItems ? "Add more" : "Add"}</strong>
-        </Link>
-      </div>
-      {!hasItems && <p className="youemptycopy">{empty}</p>}
-    </section>
   );
 }

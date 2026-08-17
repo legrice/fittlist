@@ -13,6 +13,7 @@ import { InvitesBanner } from "@/components/InvitesBanner";
 import { lookMode } from "@/lib/darkmode";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
+import { NavBar } from "@/components/NavBar";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +87,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           notificationUnread={unread.notifications}
           messageUnread={unread.messages}
           home="/calendar"
-          nav={{ coach: isCoach, scheduleHref, profileHref }}
           admin={isAdmin}
           adminAttention={adminAttention}
           face={face}
@@ -95,6 +95,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
+      <NavBar coach={isCoach} scheduleHref={scheduleHref} profileHref={profileHref} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

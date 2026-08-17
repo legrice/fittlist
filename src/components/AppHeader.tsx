@@ -4,15 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { HeaderAccountButton } from "@/components/HeaderAccountButton";
-import { HeaderNav } from "@/components/HeaderNav";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
 type HeaderFace = { photo: string | null; color: string; initial: string };
 
-// The same compact header on every signed-in screen: wordmark left, then
-// search and the viewer's account. New messages and notifications collapse
+// The same compact header on every signed-in screen: wordmark left and the
+// viewer's account. Navigation and discovery live in the bottom bar. New messages and notifications collapse
 // into one activity dot on the avatar instead of competing with the calendar.
 export function AppHeader({
   notificationUnread = 0,
@@ -89,18 +88,7 @@ export function AppHeader({
       <Link className="brandbar-home" href={home} aria-label="Home">
         <Wordmark variant="ink" />
       </Link>
-      {nav && (
-        <HeaderNav
-          coach={nav.coach}
-          active={nav.active}
-          scheduleHref={nav.scheduleHref}
-          profileHref={nav.profileHref}
-        />
-      )}
       <div className="brandbar-actions">
-        <Link className="iconbtn inboxbtn" href="/search" aria-label="Search">
-          <Icon name="search" size={23} />
-        </Link>
         <HeaderAccountButton
           face={face}
           unread={notificationUnread > 0 || messageUnread > 0}

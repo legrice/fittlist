@@ -97,8 +97,6 @@ export async function AppChrome({
         // Calendar is the signed-in front door. Keeping this explicit makes
         // screens outside the tab layout (including Search) agree with it.
         home="/calendar"
-        nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
-        settings={active === "you"}
         admin={isAdmin}
         adminAttention={adminAttention}
         face={face}
@@ -115,7 +113,6 @@ export async function AppChrome({
         scheduleHref={scheduleHref}
         profileHref={profileHref}
         active={active}
-        face={face}
       />
     </>
   );
