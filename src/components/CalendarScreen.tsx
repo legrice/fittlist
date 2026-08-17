@@ -418,7 +418,7 @@ export function CalendarScreen({
 
       <div className="calendar-bottom-actions" aria-label="Schedule actions">
         <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
-          <Icon name="add" size={24} />
+          <Icon name="add" size={28} />
         </button>
       </div>
       {addChoice && (

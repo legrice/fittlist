@@ -9164,13 +9164,19 @@ a.clspeek-by:active { opacity: .6; }
   color: var(--color-black);
 }
 .calendar-bottom-share-icon .icon { display: block; }
-.calendar-bottom-add {
-  width: 60px;
+.calendar-bottom-actions .calendar-bottom-add {
+  width: 64px;
+  height: 64px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--color-lime);
   color: var(--color-black);
+}
+.calendar-bottom-actions .calendar-bottom-add .icon path {
+  stroke: currentColor;
+  stroke-width: 22;
+  stroke-linejoin: round;
 }
 .calendar-bottom-actions button:active { transform: scale(.96); }
 .calendar-page-header {
