@@ -8221,18 +8221,20 @@ select.editinput.placekind-select {
   margin: 0 0 10px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 18px; font-weight: 600; color: var(--ink);
 }
-.clsfull-linkrows { display: flex; flex-direction: column; }
+.clsfull-linkrows { display: flex; flex-direction: column; gap: 10px; }
 .clsfull-linkrows a,
 .clsfull-linksection > button {
-  width: 100%; min-height: 48px; padding: 0;
+  width: 100%; min-height: 56px; padding: 0 16px;
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  border: 0; background: transparent; color: var(--ink); text-decoration: none;
-  font: 600 16px 'Delight', 'Helvetica Neue', Arial, sans-serif; text-align: left;
+  border: 1px solid var(--color-border); border-radius: var(--radius-control);
+  background: var(--card); color: var(--ink); text-decoration: none;
+  font: 600 16.5px 'Delight', 'Helvetica Neue', Arial, sans-serif; text-align: left;
   cursor: pointer;
 }
-.clsfull-linkrows a + a { border-top: 1px solid var(--div); }
+.clsfull-linkrows a:active,
+.clsfull-linksection > button:active { transform: scale(.985); background: var(--cl); }
 .clsfull-linkrows .icon,
-.clsfull-linksection > button .icon { flex: 0 0 auto; color: var(--ol); }
+.clsfull-linksection > button .icon { flex: 0 0 auto; color: var(--ink); }
 /* Pinned to the sheet's bottom edge, the way the adder's publish button is:
    it offsets against the sheet's own bottom padding so it sits flush. */
 .clsfull-cta {
