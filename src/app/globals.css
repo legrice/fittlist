@@ -696,6 +696,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   flex-shrink: 0;
 }
 .icon svg { display: block; }
+.share-arrow-forward svg { transform: scaleX(-1); }
 .iconbtn:hover { border-color: var(--ink); color: var(--ink); }
 
 .btn {

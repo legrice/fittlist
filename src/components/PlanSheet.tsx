@@ -148,7 +148,7 @@ export function PlanSheet({
                 <h3>Share</h3>
                 <button type="button" onClick={() => setCardOpen(true)}>
                   <span>Share this class</span>
-                  <Icon name="reply" size={20} />
+                  <Icon name="reply" size={20} className="share-arrow-forward" />
                 </button>
               </section>
             </div>
