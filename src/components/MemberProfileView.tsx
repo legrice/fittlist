@@ -21,6 +21,7 @@ import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
+import { ClassOpener } from "@/components/ClassOpener";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -249,7 +250,9 @@ export async function MemberProfileView({
         {tab === "schedule" ? (
         <section id="profile-schedule" className="profile-anchor-section">
         {week.length > 0 ? (
-          <CalendarList days={memberCalendarDays(week)} />
+          <ClassOpener handle="">
+            <CalendarList days={memberCalendarDays(week)} />
+          </ClassOpener>
         ) : (
           <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p></div>
         )}
