@@ -42,6 +42,8 @@ const MAT: Record<string, string> = {
     "m313-440 196 196q12 12 11.5 28T508-188q-12 11-28 11.5T452-188L188-452q-6-6-8.5-13t-2.5-15q0-8 2.5-15t8.5-13l264-264q11-11 27.5-11t28.5 11q12 12 12 28.5T508-715L313-520h447q17 0 28.5 11.5T800-480q0 17-11.5 28.5T760-440H313Z",
   arrow_forward:
     "M647-440l-196 196q-12 12-11.5 28T452-188q12 11 28 11.5T508-188l264-264q6-6 8.5-13t2.5-15q0-8-2.5-15t-8.5-13l-264-264q-11-11-27.5-11t-28.5 11q-12 12-12 28.5T452-715l195 195h-447q-17 0-28.5 11.5T160-480q0 17 11.5 28.5T200-440h447Z",
+  forward:
+    "M12 8V4l8 8-8 8v-4c-4.42 0-7.36 1.42-9.46 4.88C3.39 15.99 6.18 11.12 12 8Z",
   arrow_outward:
     "M640-624 284-268q-11 11-28 11t-28-11q-11-11-11-28t11-28l356-356H280q-17 0-28.5-11.5T240-720q0-17 11.5-28.5T280-760h400q17 0 28.5 11.5T720-720v400q0 17-11.5 28.5T680-280q-17 0-28.5-11.5T640-320v-304Z",
   auto_awesome:
@@ -186,7 +188,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
 // 960-unit Symbols set used by the rest of MAT. Drawing them in the 960-unit
 // viewBox put the artwork outside the visible canvas, which left the sparkle
 // badges looking like they had no icon at all.
-const MAT_24 = new Set(["auto_awesome", "auto_awesome_outline"]);
+const MAT_24 = new Set(["auto_awesome", "auto_awesome_outline", "forward"]);
 
 /** The house size and weight. The size kept the Phosphor era's bump (the type
  *  went up, so the glyphs had to); the weight is Lucide's own drawing, one

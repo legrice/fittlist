@@ -8805,7 +8805,7 @@ a.clspeek-by:active { opacity: .6; }
   color: var(--color-black);
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
-.calendar-bottom-share .icon { color: var(--color-olive); }
+.calendar-bottom-share .icon { color: var(--color-lime); }
 .calendar-bottom-add {
   width: 52px;
   display: inline-flex;
