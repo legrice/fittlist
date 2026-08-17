@@ -130,17 +130,31 @@ export function PlanSheet({
             <p className="plansheet-note">
               Yours alone. Nothing here is on a public page, and nobody else can see it.
             </p>
+            <div className="clsfull-sections">
+              {p.links.length > 0 && (
+                <section className="clsfull-linksection">
+                  <h3>Where to book</h3>
+                  <div className="clsfull-linkrows">
+                    {p.links.map((link) => (
+                      <a key={link.url} href={link.url} target="_blank" rel="noopener nofollow">
+                        <span>{link.label}</span>
+                        <Icon name="north_east" size={19} />
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              )}
+              <section className="clsfull-linksection">
+                <h3>Share</h3>
+                <button type="button" onClick={() => setCardOpen(true)}>
+                  <span>Share this class</span>
+                  <Icon name="reply" size={20} />
+                </button>
+              </section>
+            </div>
             <div className="clspeek-cta">
               <button className="clspeek-btn ghost" onClick={() => onEdit(p)}>Edit</button>
               <button className="clspeek-btn ghost" onClick={() => setConfirm(true)}>Remove</button>
-            </div>
-            <div className="clsfull-cta">
-              <button className="clsfull-btn share" onClick={() => setCardOpen(true)}>Share</button>
-              {p.links.length > 0 && (
-                <a className="clsfull-btn book" href={p.links[0].url} target="_blank" rel="noopener nofollow">
-                  Book
-                </a>
-              )}
             </div>
           </>
         ) : null}

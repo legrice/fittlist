@@ -353,7 +353,6 @@ export function ClassPeek({
   const description = full?.description ?? cls.preview?.description ?? null;
   const classType = full?.classType ?? cls.preview?.classType ?? null;
   const bookLinks = !cls.mine ? (full?.links ?? cls.preview?.links ?? []) : [];
-  const [bookOpen, setBookOpen] = useState(false);
 
   const run = (scope: "occurrence" | "all") =>
     start(async () => {
@@ -507,6 +506,31 @@ export function ClassPeek({
           </div>
         )}
 
+        {!cls.mine && (bookLinks.length > 0 || full) && (
+          <div className="clsfull-sections">
+            {bookLinks.length > 0 && (
+              <section className="clsfull-linksection">
+                <h3>Where to book</h3>
+                <div className="clsfull-linkrows">
+                  {bookLinks.map((link) => (
+                    <a key={link.url} href={link.url} target="_blank" rel="noopener nofollow">
+                      <span>{link.label}</span>
+                      <Icon name="north_east" size={19} />
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )}
+            <section className="clsfull-linksection">
+              <h3>Share</h3>
+              <button type="button" onClick={share}>
+                <span>Share this class</span>
+                <Icon name="reply" size={20} />
+              </button>
+            </section>
+          </div>
+        )}
+
         {/* Your own class keeps its working controls above the footer: they
             are about changing the thing, where the footer is about handing
             it on. A shift's one control rides the footer instead, beside
@@ -533,8 +557,10 @@ export function ClassPeek({
           <p className="clspeek-rsvpnote">Your name goes to whoever runs it when you RSVP.</p>
         )}
 
-        {/* The footer, pinned to the sheet's bottom edge: Save (or RSVP)
-            when it applies, then the outlined Share and the ink Book action. */}
+        {/* The footer is reserved for a calendar state change. Booking and
+            sharing are useful details above, not the primary purpose of the
+            sheet. */}
+        {(cls.mine && cls.shift || full?.canAdd && (full.rsvp || allowWeekAdd)) && (
         <div className="clsfull-cta">
           {cls.mine && cls.shift && (
             <button className="clsfull-btn manage" onClick={openManage}>
@@ -544,7 +570,7 @@ export function ClassPeek({
           {full?.canAdd && (full.rsvp || allowWeekAdd) &&
             (() => {
               const on = savedNow ?? full.added;
-              const word = full.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Added" : "Add";
+              const word = full.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Remove from calendar" : "Save to calendar";
               return (
                 <button
                   className={`clsfull-btn save${on ? " on" : ""}`}
@@ -563,6 +589,8 @@ export function ClassPeek({
                           : "Added to your week",
                         `${cls.id}.${cls.iso}`,
                       );
+                    } else {
+                      onToast("Removed from your calendar");
                     }
                     setSaveBusy(false);
                     onChanged();
@@ -575,15 +603,8 @@ export function ClassPeek({
                 </button>
               );
             })()}
-          <button className="clsfull-btn share" onClick={share}>
-            Share
-          </button>
-          {bookLinks.length > 0 && (
-            <button className="clsfull-btn book" onClick={() => setBookOpen(true)}>
-              Book
-            </button>
-          )}
         </div>
+        )}
       </div>
 
       {shareOpen && (
@@ -612,41 +633,6 @@ export function ClassPeek({
           onClose={() => setCardOpen(false)}
           onToast={onToast}
         />
-      )}
-
-      {/* The booking doors, as a sheet: Book brings up the options rather
-          than jumping to somebody else's site unannounced, and each row says
-          whose site it opens. */}
-      {bookOpen && (
-        <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
-          <div className="sheet clspeek">
-            <span className="clspeek-grab" aria-hidden="true" />
-            <div className="clspeek-head">
-              <div className="clspeek-titles">
-                <h2 className="clspeek-nm">Book</h2>
-              </div>
-              <button className="clspeek-x" aria-label="Close" onClick={() => setBookOpen(false)}>
-                <Icon name="close" size={20} />
-              </button>
-            </div>
-            {/* Real buttons, not rows: each is the one act this sheet exists
-                for, and a grey row read as a setting. */}
-            <div className="bookbtns">
-              {bookLinks.map((l) => (
-                <a
-                  key={l.url}
-                  className="bookbtn"
-                  href={l.url}
-                  target="_blank"
-                  rel="noopener nofollow"
-                >
-                  Book via {l.label}
-                  <Icon name="north_east" size={19} />
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
       )}
 
       {manage && (

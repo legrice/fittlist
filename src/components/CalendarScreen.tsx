@@ -207,7 +207,7 @@ export function CalendarScreen({
           !i.personal && i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
-        tag: i.personal ? "Personal" : "Attending",
+        tag: i.personal ? "Personal" : "Saved",
         tagTone: i.personal ? "personal" as const : "attending" as const,
         onTap: i.personal
           ? () => setPlan(i.id)
@@ -310,7 +310,7 @@ export function CalendarScreen({
                 {([
                   ["all", "All"],
                   ["coaching", "Coaching"],
-                  ["added", "Attending"],
+                  ["added", "Saved"],
                 ] as const).map(([value, label]) => (
                   <button
                     key={value}

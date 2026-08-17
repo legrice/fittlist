@@ -8086,6 +8086,25 @@ select.editinput.placekind-select {
   margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--ink);
   white-space: pre-wrap; overflow-wrap: anywhere;
 }
+.clsfull-sections { margin-top: 26px; border-top: 1px solid var(--div); }
+.clsfull-linksection { padding: 20px 0; }
+.clsfull-linksection + .clsfull-linksection { border-top: 1px solid var(--div); }
+.clsfull-linksection h3 {
+  margin: 0 0 10px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 18px; font-weight: 600; color: var(--ink);
+}
+.clsfull-linkrows { display: flex; flex-direction: column; }
+.clsfull-linkrows a,
+.clsfull-linksection > button {
+  width: 100%; min-height: 48px; padding: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  border: 0; background: transparent; color: var(--ink); text-decoration: none;
+  font: 600 16px 'Delight', 'Helvetica Neue', Arial, sans-serif; text-align: left;
+  cursor: pointer;
+}
+.clsfull-linkrows a + a { border-top: 1px solid var(--div); }
+.clsfull-linkrows .icon,
+.clsfull-linksection > button .icon { flex: 0 0 auto; color: var(--ol); }
 /* Pinned to the sheet's bottom edge, the way the adder's publish button is:
    it offsets against the sheet's own bottom padding so it sits flush. */
 .clsfull-cta {
