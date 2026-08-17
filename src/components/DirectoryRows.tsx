@@ -60,6 +60,8 @@ export type DirStudio = {
   hasSchedule: boolean;
   /** Behind the initial when there's no photo, same sixty a coach draws from. */
   color: string;
+  /** The viewer keeps this place in Favorites. */
+  favorited?: boolean;
 };
 
 /** A person: the whole row links to their page, chevron in the corner.

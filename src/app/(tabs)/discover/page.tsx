@@ -23,12 +23,14 @@ export default async function DiscoverPage({
   // People / Places / Groups. Classes now belongs to calendar creation, not
   // Explore, so an old class link returns to People rather than resurrecting
   // the catalog.
-  const startHalf: DiscoverHalf =
+  const startHalf: DiscoverHalf | undefined =
     half === "places" || half === "studios"
       ? "places"
       : half === "people" || half === "coaches"
         ? "people"
-        : "for-you";
+        : half === "classes"
+          ? "classes"
+          : undefined;
 
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
@@ -38,7 +40,7 @@ export default async function DiscoverPage({
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
 
-  const [everyone, cityRows, hidden, followRows, askRows, studioRows, upcoming] = await Promise.all([
+  const [everyone, cityRows, hidden, followRows, askRows, studioRows, favoriteStudioRows, upcoming] = await Promise.all([
     db.select().from(schema.users),
     db.select({ location: schema.users.location }).from(schema.users),
     hiddenFrom(userId),
@@ -51,6 +53,7 @@ export default async function DiscoverPage({
           .from(schema.followRequests)
           .where(eq(schema.followRequests.requesterUserId, userId)),
     db.select().from(schema.studios).orderBy(schema.studios.name),
+    db.select({ studioId: schema.studioEndorsements.targetStudioId }).from(schema.studioEndorsements).where(and(eq(schema.studioEndorsements.endorserUserId, userId), eq(schema.studioEndorsements.trait, "been_here"))),
     addBrowse(),
   ]);
 
@@ -102,6 +105,7 @@ export default async function DiscoverPage({
     .sort((a, b) => a.localeCompare(b));
 
   const today = todayIso();
+  const favoriteStudios = new Set(favoriteStudioRows.map((row) => row.studioId));
   const studioShuffleRank = (id: string) => {
     let hash = 2166136261;
     for (const char of `${today}|${id}`) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
@@ -117,6 +121,7 @@ export default async function DiscoverPage({
       types: studio.types,
       hasSchedule: !!studio.accountUserId,
       color: avatarColor({ id: studio.id }),
+      favorited: favoriteStudios.has(studio.id),
     }))
     .sort(
       (a, b) =>
