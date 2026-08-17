@@ -118,7 +118,6 @@ export function CalendarScreen({
   const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
-  const [weekOffset, setWeekOffset] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
@@ -142,8 +141,10 @@ export function CalendarScreen({
    *  light week rather than as a wall of empty headings. */
   const days: WeekDayRows[] = useMemo(() => {
     const out: WeekDayRows[] = [];
-    const start = Date.parse(`${todayIso}T00:00:00Z`) + weekOffset * 7 * 864e5;
-    for (let i = 0; i < 7; i++) {
+    const start = Date.parse(`${todayIso}T00:00:00Z`);
+    // List is a continuous upcoming schedule, not a disguised week view.
+    // Eight weeks keeps it useful without rendering an unbounded recurrence.
+    for (let i = 0; i < 56; i++) {
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
@@ -219,16 +220,7 @@ export function CalendarScreen({
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, kind, savedByIso, router, viewer, weekOffset]);
-
-  const weekRange = useMemo(() => {
-    const start = new Date(Date.parse(`${todayIso}T00:00:00Z`) + weekOffset * 7 * 864e5);
-    const end = new Date(start.getTime() + 6 * 864e5);
-    const month = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
-    return `${month.format(start)} ${start.getUTCDate()}–${
-      start.getUTCMonth() === end.getUTCMonth() ? "" : `${month.format(end)} `
-    }${end.getUTCDate()}`;
-  }, [todayIso, weekOffset]);
+  }, [classes, todayIso, studioById, handle, kind, savedByIso, router, viewer]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -311,12 +303,7 @@ export function CalendarScreen({
               screen reader. */}
         </div>
         {!bare && (
-          <div className={`calendar-view-row${view === "month" ? " month" : ""}`}>
-            {view === "list" && <div className="weeknav" aria-label="Week">
-              <button type="button" aria-label="Previous week" onClick={() => setWeekOffset((n) => n - 1)}><Icon name="chevron_left" size={22} /></button>
-              <strong>{weekRange}</strong>
-              <button type="button" aria-label="Next week" onClick={() => setWeekOffset((n) => n + 1)}><Icon name="chevron_right" size={22} /></button>
-            </div>}
+          <div className="calendar-view-row month">
             <div className="calseg" role="tablist" aria-label="Schedule view">
               <button role="tab" aria-label="List" aria-selected={view === "list"} className={view === "list" ? "on" : ""} onClick={() => setView("list")}><Icon name="calendar_view_day" size={25} /></button>
               <button role="tab" aria-label="Month" aria-selected={view === "month"} className={view === "month" ? "on" : ""} onClick={() => setView("month")}><Icon name="calendar_view_month" size={25} /></button>

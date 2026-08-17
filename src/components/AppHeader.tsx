@@ -1,26 +1,28 @@
 import Link from "next/link";
 import { HeaderIconLink } from "@/components/HeaderIconLink";
 import { HeaderNav } from "@/components/HeaderNav";
-import { SettingsGear } from "@/components/SettingsGear";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
-// The same header on every signed-in screen: wordmark left, then conversations,
-// activity and search. Profile already has a permanent tab, so these are the
-// three useful actions somebody may need from anywhere in the app.
+type HeaderFace = { photo: string | null; color: string; initial: string };
+
+// The same compact header on every signed-in screen: wordmark left, then
+// search and the viewer's account. New messages and notifications collapse
+// into one activity dot on the avatar instead of competing with the calendar.
 export function AppHeader({
   notificationUnread = 0,
   messageUnread = 0,
-  home = "/week",
+  home = "/calendar",
   nav,
   settings = false,
   admin = false,
   adminAttention = 0,
+  face,
+  profileHref = "/you",
 }: {
   notificationUnread?: number;
   messageUnread?: number;
-  /** Where the wordmark goes. The Following tab for anyone with the member
-      side, the schedule for a coach who doesn't have it yet. */
+  /** Where the wordmark goes. The calendar is the signed-in front door. */
   home?: string;
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
@@ -32,6 +34,8 @@ export function AppHeader({
   admin?: boolean;
   /** Number of unresolved reported listings. */
   adminAttention?: number;
+  face?: HeaderFace;
+  profileHref?: string;
 }) {
   return (
     <div className="brandbar">
@@ -47,32 +51,16 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* Admin stays contextual; the universal actions keep one fixed order. */}
-        {admin && (
-          <HeaderIconLink
-            label={`Admin${adminAttention ? `, ${adminAttention} unresolved ${adminAttention === 1 ? "report" : "reports"}` : ""}`}
-            icon="admin_panel_settings"
-            href="/admin"
-            match="/admin"
-            badge={adminAttention > 0 ? <span className="inboxdot">{adminAttention > 9 ? "9+" : adminAttention}</span> : undefined}
-          />
-        )}
-        <HeaderIconLink
-          label={`Messages${messageUnread ? `, ${messageUnread} unread` : ""}`}
-          icon="chat_bubble"
-          href="/inbox"
-          match="/inbox"
-          badge={messageUnread > 0 ? <span className="inboxdot">{messageUnread > 9 ? "9+" : messageUnread}</span> : undefined}
-        />
-        <HeaderIconLink
-          label={`Notifications${notificationUnread ? `, ${notificationUnread} unread` : ""}`}
-          icon="notifications"
-          href="/notifications"
-          match="/notifications"
-          badge={notificationUnread > 0 ? <span className="inboxdot">{notificationUnread > 9 ? "9+" : notificationUnread}</span> : undefined}
-        />
         <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
-        {settings && <SettingsGear header />}
+        <Link className="brandbar-avatar" href={profileHref} aria-label={`Your profile${notificationUnread || messageUnread ? ", new activity" : ""}`}>
+          {face?.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={face.photo} alt="" />
+          ) : (
+            <span style={{ background: face?.color ?? "var(--color-surface-muted)" }}>{face?.initial ?? "?"}</span>
+          )}
+          {(notificationUnread > 0 || messageUnread > 0) && <i aria-hidden="true" />}
+        </Link>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "calendar" | "explore" | "you" | "none";
+export type NavTab = "calendar" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -13,22 +13,11 @@ export type NavItem = {
 };
 
 /**
- * Three durable places: make your calendar, find things worth adding, and
- * manage the person behind it.
+ * Two durable places: the calendar itself and the person behind it.
  *
- * This is the simplification the whole build is named for. The app had grown
- * a screen for every idea anybody had, and the answer is not a better bottom
- * bar, it is fewer things: build a calendar, share a calendar, follow a
- * calendar. Discover earns a tab as a frequent destination while keeping the
- * header shortcut; settings are not a tab (they are the gear on Profile), and adding a class is
- * not a tab (it is the plus on Calendar). A tab is a place you live, not every
- * door in the building.
- *
- * A coach is not a different account, only a `users.kind` that carries a
- * calendar. Turning "I teach too" on in settings adds the Calendar tab and
- * lists them in Discover; turning it off takes both away. Same account, same
- * profile, no second signup, which is what makes the upgrade a decision rather
- * than a migration.
+ * The calendar is the product and the account is where somebody manages the
+ * person, favorites and settings behind it. Search remains a door in the
+ * header, not a third place somebody has to understand.
  */
 export function navTabs(
   _coach: boolean,
@@ -45,7 +34,6 @@ export function navTabs(
       icon: "calendar_month",
       label: "Calendar",
     },
-    { id: "explore", href: "/discover", icon: "search", label: "Explore" },
     { id: "you", href: profileHref ?? "/you", icon: "account_circle", label: "You" },
   ];
 }
@@ -54,11 +42,7 @@ export function navTabs(
  *  still belongs to one (your own profile) passes `active` explicitly. */
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
-  // Discover is the directory tab. Its focused search screen remains part of
-  // the same destination, so the tab stays lit while somebody is typing.
-  if (pathname.startsWith("/discover")) return "explore";
-  if (pathname.startsWith("/search")) return "explore";
-  // Calendar is a coach tool. /week is retained only as an old address.
+  // /week is retained only as an old address for the calendar.
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app"))
     return "calendar";
   if (pathname.startsWith("/week")) return "calendar";

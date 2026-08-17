@@ -2302,6 +2302,37 @@ button.ps-card { cursor: pointer; }
 /* Standing on an icon's own screen fills its glyph in, the way the tab bar
    marks its active tab. First path only keeps multi-part glyphs intact. */
 .brandbar-actions .iconbtn.onroute svg path:first-of-type { fill: currentColor; }
+.brandbar-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: var(--color-black);
+  text-decoration: none;
+}
+.brandbar-avatar img,
+.brandbar-avatar > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 700;
+}
+.brandbar-avatar > i {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--color-white);
+  border-radius: 999px;
+  background: #d62f3a;
+}
 
 /* Global creation stays on the page that opened it. The solid sheet reaches
    through the safe area while the darker scrim puts the page behind it. */

@@ -90,6 +90,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           nav={{ coach: isCoach, scheduleHref, profileHref }}
           admin={isAdmin}
           adminAttention={adminAttention}
+          face={face}
+          profileHref={profileHref}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}

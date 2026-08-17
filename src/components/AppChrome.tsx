@@ -104,6 +104,8 @@ export async function AppChrome({
         settings={active === "you"}
         admin={isAdmin}
         adminAttention={adminAttention}
+        face={face}
+        profileHref={profileHref}
       />
     </>
   );
