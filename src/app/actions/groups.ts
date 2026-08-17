@@ -60,15 +60,28 @@ export async function createGroup(input: { name: string; description?: string; v
       : new Set<string>();
     const allowedClasses = requestedClasses.filter((item) => allowedClassKeys.has(`${item.classId}|${item.iso}`));
 
+    // The group and its organizer are the only atomic requirement. Optional
+    // people/classes are attached afterwards so one stale favorite or removed
+    // class can never prevent the group itself from being created.
     const group = await db.transaction(async (tx) => {
       const [created] = await tx.insert(schema.groups).values({ name, slug, description, visibility, ownerUserId }).returning({ id: schema.groups.id });
-      await tx.insert(schema.groupMembers).values([
-        { groupId: created.id, userId: ownerUserId, role: "owner" },
-        ...allowedIds.map((userId) => ({ groupId: created.id, userId })),
-      ]).onConflictDoNothing();
-      if (allowedClasses.length) await tx.insert(schema.groupClasses).values(allowedClasses.map((item) => ({ groupId: created.id, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing();
+      await tx.insert(schema.groupMembers).values({ groupId: created.id, userId: ownerUserId, role: "owner" }).onConflictDoNothing();
       return created;
     });
+    if (allowedIds.length) {
+      try {
+        await db.insert(schema.groupMembers).values(allowedIds.map((userId) => ({ groupId: group.id, userId }))).onConflictDoNothing();
+      } catch (error) {
+        console.error("createGroup could not attach optional members", error);
+      }
+    }
+    if (allowedClasses.length) {
+      try {
+        await db.insert(schema.groupClasses).values(allowedClasses.map((item) => ({ groupId: group.id, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing();
+      } catch (error) {
+        console.error("createGroup could not attach optional classes", error);
+      }
+    }
     revalidatePath("/saved");
     return { ok: true, id: group.id, slug } as const;
   } catch (error) {
