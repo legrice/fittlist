@@ -18,11 +18,15 @@ export function DiscoverList({
   hideBack = false,
   startHalf,
   upcoming = [],
+  myLat = null,
+  myLng = null,
 }: {
   people: DirPerson[];
   studios?: DirStudio[];
   cities: string[];
   myCity?: string | null;
+  myLat?: number | null;
+  myLng?: number | null;
   backHref: string;
   hideBack?: boolean;
   startHalf?: DiscoverHalf;
@@ -30,6 +34,8 @@ export function DiscoverList({
 }) {
   const [query, setQuery] = useState("");
   const [allSheet, setAllSheet] = useState<AllSheet>(startHalf ?? null);
+  const [classType, setClassType] = useState("");
+  const [distance, setDistance] = useState("");
   const q = query.trim().toLowerCase();
 
   const shownPeople = useMemo(() => people.filter((person) => {
@@ -48,6 +54,15 @@ export function DiscoverList({
     .flatMap((day) => day.items.map((item) => ({ ...item, day: day.label })))
     .filter((item) => !q || [item.name, item.where, item.attributionName]
       .some((value) => (value ?? "").toLowerCase().includes(q))), [upcoming, q]);
+  const classTypes = useMemo(() => [...new Set(allUpcoming.map((item) => item.classType).filter((value): value is string => !!value))].sort(), [allUpcoming]);
+  const filteredUpcoming = useMemo(() => allUpcoming.filter((item) => {
+    if (classType && item.classType !== classType) return false;
+    if (distance) {
+      if (myLat == null || myLng == null || item.lat == null || item.lng == null) return false;
+      if (milesBetween(myLat, myLng, item.lat, item.lng) > Number(distance)) return false;
+    }
+    return true;
+  }), [allUpcoming, classType, distance, myLat, myLng]);
 
   const activityByName = upcoming.flatMap((day) => day.items).reduce((counts, item) => {
     const key = item.attributionName.trim().toLowerCase();
@@ -88,7 +103,7 @@ export function DiscoverList({
           <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAllSheet(null)}><Icon name="close" size={18} /></button>
           <h2>{allSheet === "classes" ? "Upcoming classes" : allSheet === "people" ? "Coaches to explore" : "Places to explore"}</h2>
           <div className="discover-all-content">
-            {allSheet === "classes" && <div className="discover-event-list">{allUpcoming.map((item) => <DiscoverEvent item={item} teacher={teacherFor(item.attributionName)} key={`${item.classId}.${item.iso}`} />)}</div>}
+            {allSheet === "classes" && <><div className="discover-class-filters" aria-label="Class filters"><label><span>Type</span><select value={classType} onChange={(event) => setClassType(event.target.value)}><option value="">All types</option>{classTypes.map((value) => <option value={value} key={value}>{value}</option>)}</select></label><label><span>Distance</span><select value={distance} onChange={(event) => setDistance(event.target.value)} disabled={myLat == null || myLng == null}><option value="">Any distance</option><option value="1">Within 1 mile</option><option value="5">Within 5 miles</option><option value="10">Within 10 miles</option><option value="25">Within 25 miles</option></select></label></div>{(myLat == null || myLng == null) && <p className="discover-distance-note">Add your location in your profile to filter by distance.</p>}{filteredUpcoming.length ? <div className="discover-event-list">{filteredUpcoming.map((item) => <DiscoverEvent item={item} teacher={teacherFor(item.attributionName)} key={`${item.classId}.${item.iso}`} />)}</div> : <p className="discover-section-empty">No classes match these filters.</p>}</>}
             {allSheet === "people" && <div className="discover-person-grid">{activePeople.map((person, index) => <DiscoverPerson person={person} index={index} activity={activityFor(person)} key={person.id} />)}</div>}
             {allSheet === "places" && <StudioGrid studios={shownStudios} />}
           </div>
@@ -98,6 +113,14 @@ export function DiscoverList({
       {!hideBack && <Link className="logoutbtn" href={backHref}>Back to your week</Link>}
     </>
   );
+}
+
+function milesBetween(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const radians = (degrees: number) => degrees * Math.PI / 180;
+  const dLat = radians(lat2 - lat1);
+  const dLng = radians(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function DiscoverSection({ title, onSeeAll, children }: { title: string; onSeeAll: () => void; children: ReactNode }) {

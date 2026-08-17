@@ -5628,7 +5628,7 @@ select.editinput.placekind-select {
 .discover-event-card {
   position:relative; flex:0 0 220px; min-height:146px; padding:16px;
   display: flex; flex-direction: column; align-items: flex-start;
-  border-radius: var(--radius-card); background: var(--color-surface-muted);
+  border:1px solid var(--color-border); border-radius:var(--radius-card); background:var(--color-white);
   color: var(--ink); text-decoration: none;
 }
 .discover-event-card small { max-width:135px; color:var(--muted); font-size:12.5px; font-weight:700; }
@@ -5652,6 +5652,14 @@ select.editinput.placekind-select {
 .discover-all-sheet { max-height:min(82dvh,760px); display:flex; flex-direction:column; }
 .discover-all-sheet > h2 { flex:0 0 auto; padding-right:52px; }
 .discover-all-content { min-height:0; overflow-y:auto; padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom)); }
+.discover-class-filters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0 4px; }
+.discover-class-filters label > span { display:block; margin:0 0 6px; color:var(--muted); font-size:12px; font-weight:700; }
+.discover-class-filters select {
+  width:100%; min-width:0; height:44px; padding:0 32px 0 12px; border:1px solid var(--color-border);
+  border-radius:var(--radius-control); background:var(--color-white); color:var(--ink); font:inherit; font-size:14px;
+}
+.discover-class-filters select:disabled { opacity:.5; }
+.discover-distance-note { margin:7px 0 0; color:var(--muted); font-size:12px; line-height:1.35; }
 .discover-event-list { display:flex; flex-direction:column; gap:8px; margin-top:var(--space-2); }
 .discover-event-list .discover-event-card { flex-basis:auto; width:100%; min-height:138px; }
 

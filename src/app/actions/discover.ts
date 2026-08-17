@@ -145,6 +145,8 @@ export type BrowseDay = {
     ap: string;
     durationMin: number;
     classType: string | null;
+    lat: number | null;
+    lng: number | null;
     where: string | null;
     coachName: string;
     attribution: "coached" | "added";
@@ -193,6 +195,8 @@ export async function addBrowse(): Promise<BrowseDay[] | null> {
         ap: i.ap,
         durationMin: i.durationMin,
         classType: i.classType,
+        lat: i.lat,
+        lng: i.lng,
         where: i.where,
         coachName: coachName.get(i.coachId) ?? "",
         attribution: "coached",

@@ -135,6 +135,8 @@ export default async function DiscoverPage({
       studios={studios}
       cities={cities}
       myCity={me.location?.trim() || null}
+      myLat={me.locationLat}
+      myLng={me.locationLng}
       startHalf={startHalf}
       upcoming={upcoming ?? []}
       backHref="/feed"
