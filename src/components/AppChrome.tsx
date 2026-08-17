@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { fansVisible } from "@/lib/flags";
 import { unreadHeaderCounts } from "@/lib/notify";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { AppHeader } from "@/components/AppHeader";
@@ -54,8 +53,7 @@ export async function AppChrome({
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [fans, unread, adminAttention] = await Promise.all([
-    fansVisible(),
+  const [unread, adminAttention] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
     isAdmin ? adminAttentionCount() : Promise.resolve(0),
   ]);
@@ -96,10 +94,9 @@ export async function AppChrome({
       <AppHeader
         notificationUnread={unread.notifications}
         messageUnread={unread.messages}
-        // The logo goes Home, by Matt's call: /feed is the front door for
-        // everyone with the member side, whatever landingHref answers for
-        // sign-in.
-        home={fans ? "/feed" : "/app"}
+        // Calendar is the signed-in front door. Keeping this explicit makes
+        // screens outside the tab layout (including Search) agree with it.
+        home="/calendar"
         nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
         settings={active === "you"}
         admin={isAdmin}
