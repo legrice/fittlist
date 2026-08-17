@@ -3712,6 +3712,46 @@ select.editinput.placekind-select {
 .setrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px; color: #191502; }
 .setrow-txt .s { font-size: 12px; color: var(--ol); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setrow-chev { color: rgba(25, 21, 2, .3); flex-shrink: 0; display: flex; }
+
+/* Settings is an account index, not a dense utility menu. Give its rows the
+   larger, more legible scale used by the account references without changing
+   the compact setrow pattern used inside the app's action sheets. */
+.acctwrap .setgroup-h {
+  margin: 28px 2px 8px;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+  text-transform: none;
+  color: var(--ink);
+}
+.acctwrap .settingslist { margin-top: 0; }
+.acctwrap .setrow {
+  min-height: 76px;
+  gap: 16px;
+  padding: 14px 2px;
+}
+.acctwrap .setrow-ic {
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+.acctwrap .setrow-ic svg {
+  width: 27px;
+  height: 27px;
+}
+.acctwrap .setrow-txt .t {
+  font-size: 17px;
+  line-height: 1.25;
+}
+.acctwrap .setrow-txt .s {
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: normal;
+}
 /* "You have invites": said once, at the top, then never again. */
 .invbanner {
   display: flex; align-items: stretch; gap: 0; margin: 14px 0 4px;
