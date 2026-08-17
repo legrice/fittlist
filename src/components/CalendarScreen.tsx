@@ -297,7 +297,7 @@ export function CalendarScreen({
       <header className="calendar-page-header">
         <button type="button" className="calendar-menu-button" aria-label="Open calendar menu" onClick={() => setMenuOpen(true)}><Icon name="menu" size={26} /></button>
         <h1>Calendar</h1>
-        <button type="button" className="calendar-header-share" onClick={() => setShareOpen(true)} aria-label="Share your calendar"><Icon name="bolt" size={23} /></button>
+        <button type="button" className="calendar-header-share" onClick={() => setShareOpen(true)} aria-label="Share your calendar"><span className="calendar-header-share-icon"><Icon name="bolt_filled" size={22} /></span><span>Share</span></button>
       </header>
 
       {menuOpen && <div className="calendar-drawer-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
