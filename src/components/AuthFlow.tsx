@@ -47,7 +47,7 @@ export function AuthFlow({
   inviter = null,
   claimAs = "coach",
   fans = false,
-  landing = "/week",
+  landing = "/calendar",
 }: {
   startStage: "email" | "claim";
   via?: string | null;
@@ -127,8 +127,7 @@ export function AuthFlow({
   }, [stage]);
 
   const pendingFan = useRef(claimAs === "fan");
-  // Everyone claims a name and a link. Only after that does the destination
-  // differ: a coach lands on their schedule, a member on their week.
+  // Everyone claims a name and a link, then lands on the same calendar.
   const proceed = (needsProfile: boolean, fan = false) => {
     pendingFan.current = fan;
     if (fan) setRole("fan");
@@ -136,7 +135,7 @@ export function AuthFlow({
     // Somebody who tapped Follow on a coach's page came here to do that, not
     // to read their own feed. The wizard consumes it instead when there's one
     // still to come, so this only reads it when the flow ends here.
-    else router.push(takeAfterAuth() ?? (fans || fan ? landing : "/app"));
+    else router.push(takeAfterAuth() ?? landing);
   };
 
   const submitPassword = () => {

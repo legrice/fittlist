@@ -7,7 +7,7 @@ import { createSession } from "@/lib/session";
 import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { pushSignupPing } from "@/lib/push";
 import { siteOrigin } from "@/lib/format";
-import { fansEnabled, landingHref } from "@/lib/flags";
+import { landingHref } from "@/lib/flags";
 import { sessionSecret } from "@/lib/secret";
 import { signupSource } from "@/lib/attribution";
 
@@ -54,5 +54,5 @@ export async function POST(req: Request) {
   }
   await createSession(user.id);
   if (!user.handle) return toLogin(via ? `via=${encodeURIComponent(via)}` : "");
-  return Response.redirect(`${siteOrigin()}${fansEnabled() ? await landingHref() : "/app"}`, 302);
+  return Response.redirect(`${siteOrigin()}${await landingHref()}`, 302);
 }

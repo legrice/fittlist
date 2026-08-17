@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { consumeMagicToken } from "@/app/actions/auth";
-import { fansEnabled, landingHref } from "@/lib/flags";
+import { landingHref } from "@/lib/flags";
 import { siteOrigin } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -22,14 +22,11 @@ export async function GET(req: Request) {
   // Signed in by email alone: prompt for a password so the next browser, or the
   // next device, isn't another trip through the inbox.
   const setpw = result.noPassword ? "?setpw=1" : "";
-  if (result.fan) {
-    return NextResponse.redirect(`${origin}/feed${setpw}`);
-  }
   if (result.needsProfile) {
     const q = result.via ? `?via=${encodeURIComponent(result.via)}` : "";
     return NextResponse.redirect(`${origin}/${q}`);
   }
-  // Following is home for coaches too now; /feed also renders the
-  // set-a-password prompt.
-  return NextResponse.redirect(`${origin}${fansEnabled() ? await landingHref() : "/app"}${setpw}`);
+  // Every established account lands on the same calendar. The calendar also
+  // renders the set-a-password prompt when this login came from email.
+  return NextResponse.redirect(`${origin}${await landingHref()}${setpw}`);
 }
