@@ -10,7 +10,6 @@ import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
-import { NavBar } from "@/components/NavBar";
 import { lookMode } from "@/lib/darkmode";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
@@ -96,16 +95,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      {/* The Profile tab wears the viewer's own face rather than a glyph: it
-          is the only tab naming a person rather than a place, and a picture is
-          both the fastest thing in the bar to recognise and what every app
-          anybody already uses puts on that door. */}
-      <NavBar
-        coach={isCoach}
-        scheduleHref={scheduleHref}
-        profileHref={profileHref}
-        face={face}
-      />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

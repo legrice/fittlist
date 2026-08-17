@@ -24,7 +24,7 @@ html[data-native="ios"] .navwrap { display: none; }
 html[data-native="ios"] .brandbar { display: none; }
 /* UIKit's material bar overlays the web view, just like the website's fixed
    bar. Keep the last content and floating action reachable above it. */
-html[data-native="ios"] .cardwrap { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+html[data-native="ios"] .cardwrap { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
 html[data-native="ios"] .hasnav .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
 /* The website lets its brand row sit behind the page as content scrolls. That
    stacking model can still paint over a sticky child inside WKWebView, so the
@@ -5112,7 +5112,7 @@ select.editinput.placekind-select {
      page, settings, chat, admin, the tabs), so nothing jumps width when you
      move between them on a desktop. Making the app properly desktop-shaped
      is a later project; being consistent isn't. */
-  padding: var(--space-2) var(--page-gutter) calc(112px + env(safe-area-inset-bottom));
+  padding: var(--space-2) var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
 /* A screen that draws the card manages its own bottom clearance: the card has
@@ -5139,7 +5139,7 @@ select.editinput.placekind-select {
   background: transparent;
   border-radius: 28px 28px 0 0;
   margin: var(--space-1) calc(-1 * var(--page-gutter)) 0;
-  padding: var(--space-2) var(--page-gutter) calc(112px + env(safe-area-inset-bottom));
+  padding: var(--space-2) var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
   /* Positioned so it paints above the pinned header it slides over. No
      z-index: DOM order does it, and a number here would start a stacking
      context that traps the day bands' own z under whatever comes later. */
@@ -8747,6 +8747,72 @@ a.clspeek-by:active { opacity: .6; }
   display: flex; align-items: center; gap: 8px;
   margin: -2px 0 12px;
 }
+.calendar-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.calendar-control-row .schedule-kind-tabs {
+  min-width: 0;
+  margin: 0;
+}
+.calendar-control-row .schedule-kind-tabs button {
+  min-height: 38px;
+  padding-inline: 14px;
+  font-size: 14px;
+}
+.calendar-control-row .calseg {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 3px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+.calendar-control-row .calseg button {
+  width: 42px;
+  height: 38px;
+  border-radius: 15px;
+}
+.calendar-bottom-actions {
+  position: fixed;
+  left: 18px;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 35;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+.calendar-bottom-actions button {
+  pointer-events: auto;
+  height: 52px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.calendar-bottom-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 22px;
+  background: var(--color-surface-muted);
+  color: var(--color-black);
+}
+.calendar-bottom-add {
+  width: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-lime);
+  color: var(--color-black);
+}
+.calendar-bottom-actions button:active { transform: scale(.96); }
+.calendar-cardwrap { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .schedule-kind-tabs button {
   min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
   background: var(--card); color: var(--ink); font: inherit;

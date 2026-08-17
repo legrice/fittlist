@@ -4,13 +4,10 @@ import WebKit
 
 /// One native navigation shell around the existing Capacitor bridge. FittList
 /// keeps one web product while the highest-value app surfaces become native.
-final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler {
+final class FittListShellViewController: UIViewController, WKScriptMessageHandler {
     private let bridge = CAPBridgeViewController()
     private let headerView = UIView()
-    private let tabBar = UITabBar()
     private var settingsButton: UIButton?
-    private let tabIDs = ["following", "search", "schedule", "share", "you"]
-    private let fallbackRoutes = ["/feed", "/discover", "/calendar", "/coachshare", "/you"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
@@ -25,28 +22,6 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
         configureHeader()
 
-        tabBar.translatesAutoresizingMaskIntoConstraints = false
-        tabBar.delegate = self
-        tabBar.isTranslucent = true
-        tabBar.tintColor = UIColor(red: 199 / 255, green: 71 / 255, blue: 10 / 255, alpha: 1)
-        tabBar.unselectedItemTintColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 0.72)
-        let appearance = UITabBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterial)
-        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.48)
-        appearance.shadowColor = .clear
-        tabBar.standardAppearance = appearance
-        tabBar.scrollEdgeAppearance = appearance
-        tabBar.items = [
-            item("This Week", "person.2", 0),
-            item("Discover", "magnifyingglass", 1),
-            item("Schedule", "calendar", 2),
-            item("Share", "arrow.up.right", 3),
-            item("Profile", "person.crop.circle", 4),
-        ]
-        tabBar.selectedItem = tabBar.items?.first
-        view.addSubview(tabBar)
-
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -55,13 +30,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             bridge.view.topAnchor.constraint(equalTo: headerView.bottomAnchor),
             bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            // The page continues behind the translucent bar. Stopping the web
-            // view at the bar's top left UIKit's ink background showing through
-            // as a solid footer and gave the material nothing to blur.
             bridge.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            tabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
         installWebHooks()
@@ -146,15 +115,11 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         }.withRenderingMode(.alwaysTemplate)
     }
 
-    @objc private func openHome() { navigate(tabID: "following", fallback: "/feed") }
+    @objc private func openHome() { navigate(fallback: "/calendar") }
     @objc private func openSearch() { navigate(fallback: "/search") }
     @objc private func openMessages() { navigate(fallback: "/inbox") }
     @objc private func openUpdates() { navigate(fallback: "/notifications") }
     @objc private func openSettings() { navigate(fallback: "/settings") }
-
-    private func item(_ title: String, _ symbol: String, _ tag: Int) -> UITabBarItem {
-        UITabBarItem(title: title, image: UIImage(systemName: symbol), tag: tag)
-    }
 
     private func installWebHooks() {
         bridge.loadViewIfNeeded()
@@ -163,8 +128,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         controller.add(self, name: "fittlistExternal")
         bridge.webView?.allowsBackForwardNavigationGestures = true
 
-        // Mark the document before it paints so the HTML fallback bar never
-        // flashes underneath the real native tab bar.
+        // Mark the document before it paints so the web header does not flash
+        // underneath the native header.
         controller.addUserScript(WKUserScript(
             source: """
             document.documentElement.dataset.native = 'ios';
@@ -182,7 +147,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
               const send = () => window.webkit.messageHandlers.fittlistRoute.postMessage({
                 path: location.pathname,
                 settings: !!document.querySelector('.brandbar [aria-label="Settings"]'),
-                active: document.querySelector('.navwrap a[aria-current="page"]')?.dataset.tab || null
+                active: null
               });
               const sendAfterRender = () => setTimeout(send, 80);
               const push = history.pushState.bind(history);
@@ -214,22 +179,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         ))
     }
 
-    func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
-        guard tabIDs.indices.contains(item.tag) else { return }
-        navigate(tabID: tabIDs[item.tag], fallback: fallbackRoutes[item.tag])
-    }
-
-    private func navigate(tabID: String? = nil, fallback: String) {
-        // Click the existing Next.js tab when it is present. Although hidden by
-        // the native marker, it keeps role-aware destinations (especially the
-        // coach/member Share split), client navigation and cached state intact.
-        // The fallback covers signed-out and transitional pages without tabs.
+    private func navigate(fallback: String) {
         bridge.webView?.evaluateJavaScript("""
-          (() => {
-            const tabID = \(tabID.map { "'\($0)'" } ?? "null");
-            const link = tabID && document.querySelector(`.navwrap a[data-tab="${tabID}"]`);
-            if (link) link.click(); else window.location.assign('\(fallback)');
-          })();
+          window.location.assign('\(fallback)');
         """)
     }
 
@@ -242,22 +194,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             return
         }
         guard message.name == "fittlistRoute",
-              let route = message.body as? [String: Any],
-              let path = route["path"] as? String else { return }
+              let route = message.body as? [String: Any] else { return }
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
-        let active = route["active"] as? String
-        let activeTags = ["following": 0, "search": 1, "discover": 1, "schedule": 2, "share": 3, "you": 4]
-        let tag: Int?
-        if let active, let activeTag = activeTags[active] { tag = activeTag }
-        else if path == "/feed" || path == "/upcoming" { tag = 0 }
-        else if path == "/discover" || path == "/search" { tag = 1 }
-        else if path == "/calendar" { tag = 2 }
-        else if path.hasPrefix("/share") || path == "/coachshare" || path == "/membershare" { tag = 3 }
-        else if path == "/you" || path == "/settings" { tag = 4 }
-        else { tag = nil }
-        if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
-            tabBar.selectedItem = next
-        }
     }
 }
 

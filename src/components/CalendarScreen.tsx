@@ -278,56 +278,39 @@ export function CalendarScreen({
       <HighlightOnLand />
       {/* The card starts right under the app header, and the title and the
           view switch are the first things inside it. */}
-      <div className="cardwrap">
+      <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
           where every day band underneath pins: one writer for that number,
           because two screens working it out separately is how they end up
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
-        {/* Identity and view always share the first row. Coaches get one
-            additional row for the relationship filter; members do not. */}
-        <div className="calbar">
-          <div className="calbar-tools">
-            <h1 className="calbar-t caltitle tab-page-title">Your schedule</h1>
-            <button className="calbar-share" type="button" onClick={() => setShareOpen(true)} aria-label="Share your schedule">
-              <Icon name="ios_share" size={23} />
-              <span>Share</span>
-            </button>
-          </div>
-          {/* Two glyphs rather than two words. A list and a month grid both
-              draw themselves in an icon better than they name themselves: the
-              shapes are the answer, where "List" and "Month" are two labels
-              you read to find out which one you are on. The words stay as the
-              accessible names, because a glyph on its own says nothing to a
-              screen reader. */}
-        </div>
         {!bare && (
-          <div className="calendar-view-row month">
+          <div className="calendar-control-row">
+            {!member ? (
+              <div className="schedule-kind-tabs" role="tablist" aria-label="Schedule classes">
+                {([
+                  ["all", "All"],
+                  ["coaching", "Coaching"],
+                  ["added", "Attending"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={kind === value}
+                    className={kind === value ? "on" : ""}
+                    onClick={() => setKind(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : <span />}
             <div className="calseg" role="tablist" aria-label="Schedule view">
               <button role="tab" aria-label="List" aria-selected={view === "list"} className={view === "list" ? "on" : ""} onClick={() => setView("list")}><Icon name="calendar_view_day" size={25} /></button>
               <button role="tab" aria-label="Month" aria-selected={view === "month"} className={view === "month" ? "on" : ""} onClick={() => setView("month")}><Icon name="calendar_view_month" size={25} /></button>
             </div>
-          </div>
-        )}
-        {!member && !bare && (
-          <div className="schedule-kind-tabs" role="tablist" aria-label="Schedule classes">
-            {([
-              ["all", "All"],
-              ["coaching", "Coaching"],
-              ["added", "Attending"],
-            ] as const).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={kind === value}
-                className={kind === value ? "on" : ""}
-                onClick={() => setKind(value)}
-              >
-                {label}
-              </button>
-            ))}
           </div>
         )}
         {view === "month" && <MonthHeadRow />}
@@ -338,8 +321,6 @@ export function CalendarScreen({
           first
           title="Your week starts here"
           body="Add what you’re doing this week."
-          cta="Add to your week"
-          onCta={openAdd}
         />
       ) : view === "month" ? (
         <MonthScroll
@@ -356,8 +337,6 @@ export function CalendarScreen({
           first={kind === "added"}
           title={kind === "added" ? "Nothing added yet" : ""}
           body={kind === "added" ? "Add what you’re doing this week." : ""}
-          cta={kind === "added" ? "Add to your week" : "Add a class"}
-          onCta={kind === "added" ? openAdd : () => setAddChoice(true)}
         />
       ) : (
         <CalendarList
@@ -425,14 +404,15 @@ export function CalendarScreen({
         </ScrollHead>
       )}
 
-      {/* Add floats bottom right, under the thumb, the same spot and dress
-          as Following's search: adding is what somebody opens this screen
-          to do, and the title row's corner belongs to Share now. */}
-      {!bare && !(kind === "added" && days.length === 0) && (
-        <button className="wkfab" aria-label="Add a class" onClick={openAdd}>
-          <Icon name="add" size={22} /><span>Add</span>
+      <div className="calendar-bottom-actions" aria-label="Schedule actions">
+        <button className="calendar-bottom-share" type="button" onClick={() => setShareOpen(true)}>
+          <Icon name="ios_share" size={21} />
+          <span>Share</span>
         </button>
-      )}
+        <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
+          <Icon name="add" size={24} />
+        </button>
+      </div>
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
