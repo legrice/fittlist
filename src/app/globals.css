@@ -4353,6 +4353,17 @@ select.editinput.placekind-select {
   font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif; cursor: pointer;
 }
 .profile-share-cta-btn:active { transform: scale(.985); }
+.profile-closing-content {
+  margin-top: 34px;
+  padding-top: 28px;
+  border-top: 8px solid var(--shell);
+}
+.profile-closing-content .profile-props { margin-top: 0; padding-top: 0; border-top: 0; }
+.profile-closing-content .profile-shoutouts {
+  margin-top: 34px;
+  padding-top: 28px;
+  border-top: 1px solid var(--div);
+}
 .profile-studio-rail { gap: 14px; padding-top: 2px; padding-bottom: 8px; }
 .profile-studio-rail .strail-item { width: 196px; }
 .profile-studio-rail .strail-ph { width: 196px; height: 142px; border-radius: 18px; }

@@ -242,6 +242,15 @@ export async function MemberProfileView({
               </div>
             )
           }
+          closingContent={
+            <ProfileShoutouts
+              handle={user.handle ?? undefined}
+              name={name}
+              signedIn={!!viewerId}
+              owner={isOwner}
+              initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+            />
+          }
         >
         {tab === "schedule" ? (
         <section id="profile-schedule" className="profile-anchor-section">
@@ -275,15 +284,6 @@ export async function MemberProfileView({
             </div>
             </div>
           )}
-          <div className="profile-info-section">
-            <ProfileShoutouts
-              handle={user.handle ?? undefined}
-              name={name}
-              signedIn={!!viewerId}
-              owner={isOwner}
-              initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
-            />
-          </div>
         </section>
         )}
         </ProfileTabs>

@@ -542,14 +542,23 @@ export async function PublicProfileView({
               </div>
             )
           }
-          endorsement={
-            <ProfileEndorsements
-              handle={handle}
-              firstName={user.name.trim().split(/\s+/)[0] || user.name}
-              initial={endorsementCounts}
-              mine={viewerId ? endorsementRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
-              owner={isOwner}
-            />
+          closingContent={
+            <>
+              <ProfileEndorsements
+                handle={handle}
+                firstName={user.name.trim().split(/\s+/)[0] || user.name}
+                initial={endorsementCounts}
+                mine={viewerId ? endorsementRows.filter((r) => r.endorserUserId === viewerId).map((r) => r.trait) : []}
+                owner={isOwner}
+              />
+              <ProfileShoutouts
+                handle={handle}
+                name={user.name}
+                signedIn={!!viewerId}
+                owner={isOwner}
+                initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+              />
+            </>
           }
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
@@ -597,15 +606,6 @@ export async function PublicProfileView({
               )}
             </div>
             ) : null}
-            <div className="profile-info-section">
-              <ProfileShoutouts
-                handle={handle}
-                name={user.name}
-                signedIn={!!viewerId}
-                owner={isOwner}
-                initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
-              />
-            </div>
           </section>
           )}
         </ProfileTabs>

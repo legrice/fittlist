@@ -59,6 +59,7 @@ export function ProfileTabs({
   backTo,
   stickAction,
   sectionToggle = false,
+  closingContent,
   children,
 }: {
   /** The page's own URL: "/matt" for a person, "/s/ironbound" for a studio.
@@ -113,6 +114,9 @@ export function ProfileTabs({
   /** People use two true views rather than anchors in one long document:
    *  Schedule is the bare profile URL and Info is /about. */
   sectionToggle?: boolean;
+  /** Social proof that closes a person's profile after its useful content
+   *  and share prompt. */
+  closingContent?: ReactNode;
   children: ReactNode;
 }) {
   const [activeSection, setActiveSection] = useState(tab);
@@ -301,6 +305,7 @@ export function ProfileTabs({
         <h2>{sharePrompt}</h2>
         <ProfileShare path={base} name={name} cta ctaText={shareLabel} />
       </section>
+      {closingContent && <div className="profile-closing-content">{closingContent}</div>}
       </div>
     </>
   );
