@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AddBrowse } from "@/components/AddBrowse";
 import {
@@ -95,7 +94,8 @@ export function CalendarScreen({
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
-  const [kind, setKind] = useState<"all" | "coaching" | "added">(member ? "added" : "all");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [visible, setVisible] = useState({ coaching: !member, saved: true, personal: true });
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addOpen, setAddOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
@@ -233,13 +233,13 @@ export function CalendarScreen({
       };
       });
       const rows = [
-        ...(kind === "added" ? [] : coachingRows),
-        ...(kind === "coaching" ? [] : addedRows),
+        ...(visible.coaching ? coachingRows : []),
+        ...addedRows.filter((row) => row.tagTone === "personal" ? visible.personal : visible.saved),
       ].sort((a, b) => atOf(a) - atOf(b));
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, kind, savedByIso, router, viewer]);
+  }, [classes, todayIso, studioById, handle, visible, savedByIso, router, viewer]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -264,13 +264,13 @@ export function CalendarScreen({
         at: atOf(i),
       }));
       const rows = [
-        ...(kind === "added" ? [] : coachingRows),
-        ...(kind === "coaching" ? [] : addedRows),
+        ...(visible.coaching ? coachingRows : []),
+        ...addedRows.filter((row) => row.kind === "private" ? visible.personal : visible.saved),
       ].sort((a, b) => a.at - b.at);
       if (rows.length) m.set(iso, rows);
     }
     return m;
-  }, [classes, todayIso, kind, savedByIso]);
+  }, [classes, todayIso, visible, savedByIso]);
 
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
@@ -294,8 +294,29 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      {/* The card starts right under the app header, and the title and the
-          view switch are the first things inside it. */}
+      <header className="calendar-page-header">
+        <button type="button" className="calendar-menu-button" aria-label="Open calendar menu" onClick={() => setMenuOpen(true)}><Icon name="menu" size={26} /></button>
+        <h1>Calendar</h1>
+        <button type="button" className="calendar-header-share" onClick={() => setShareOpen(true)} aria-label="Share your calendar"><Icon name="bolt" size={23} /></button>
+      </header>
+
+      {menuOpen && <div className="calendar-drawer-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
+        <aside className="calendar-drawer" aria-label="Calendar controls">
+          <div className="calendar-drawer-head"><h2>Calendar</h2><button type="button" className="iconbtn" aria-label="Close calendar menu" onClick={() => setMenuOpen(false)}><Icon name="close" size={20} /></button></div>
+          <section className="calendar-drawer-section">
+            <h3>View</h3>
+            {([ ["list", "List", "calendar_view_day"], ["month", "Month", "calendar_month"] ] as const).map(([value, label, icon]) => <button type="button" className={`calendar-drawer-row${view === value ? " on" : ""}`} onClick={() => { setView(value); setMenuOpen(false); }} key={value}><Icon name={icon} size={22} /><span>{label}</span>{view === value && <Icon name="check" size={20} />}</button>)}
+          </section>
+          <section className="calendar-drawer-section">
+            <h3>My calendar</h3>
+            {([...(member ? [] : [["coaching", "Coaching"]] as const), ["saved", "Saved"], ["personal", "Personal"]] as const).map(([value, label]) => {
+              const on = visible[value];
+              return <button type="button" className="calendar-drawer-row calendar-check-row" aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`}>{on && <Icon name="check" size={16} />}</span><span>{label}</span></button>;
+            })}
+          </section>
+        </aside>
+      </div>}
+
       <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
@@ -303,34 +324,6 @@ export function CalendarScreen({
           because two screens working it out separately is how they end up
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
-        {!bare && (
-          <div className="calendar-control-row">
-            {!member ? (
-              <div className="schedule-kind-tabs" role="tablist" aria-label="Schedule classes">
-                {([
-                  ["all", "All"],
-                  ["coaching", "Coaching"],
-                  ["added", "Saved"],
-                ] as const).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="tab"
-                    aria-selected={kind === value}
-                    className={kind === value ? "on" : ""}
-                    onClick={() => setKind(value)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            ) : <span />}
-            <div className="calseg" role="tablist" aria-label="Schedule view">
-              <button role="tab" aria-label="List" aria-selected={view === "list"} className={view === "list" ? "on" : ""} onClick={() => setView("list")}><Icon name="calendar_view_day" size={25} /></button>
-              <button role="tab" aria-label="Month" aria-selected={view === "month"} className={view === "month" ? "on" : ""} onClick={() => setView("month")}><Icon name="calendar_month" size={25} /></button>
-            </div>
-          </div>
-        )}
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
@@ -352,14 +345,13 @@ export function CalendarScreen({
         // changes it: the same Add the title row carries, where somebody
         // reading "nothing coming up" is already looking.
         <WeekEmpty
-          first={kind === "added"}
-          title={kind === "added" ? "Nothing added yet" : ""}
-          body={kind === "added" ? "Add what you’re doing this week." : ""}
+          first
+          title="Nothing showing"
+          body="Choose calendars from the menu, or add something to your week."
         />
       ) : (
         <CalendarList
           days={days}
-          footer={kind === "added" ? <Link className="calendar-attending-share" href={member ? "/membershare" : "/coachshare"}>Share your week</Link> : undefined}
         />
       )}
       </div>
@@ -408,7 +400,7 @@ export function CalendarScreen({
           naming the day (or month) under it with the toggle and Add along
           for the ride, so the two things the title row offered are never a
           long scroll away. */}
-      {!bare && !(kind === "added" && days.length === 0) && (
+      {!bare && days.length > 0 && (
         <ScrollHead
           on={view === "month" ? scrolled : !!topDay}
           label={
@@ -419,43 +411,10 @@ export function CalendarScreen({
               : topDay
           }
           sub={view === "month" ? <MonthHeadRow /> : undefined}
-        >
-          <div className="calseg" role="tablist" aria-label="Schedule view, overlay">
-            <button
-              role="tab"
-              aria-label="List"
-              aria-selected={view === "list"}
-              className={view === "list" ? "on" : ""}
-              onClick={() => {
-                window.scrollTo({ top: 0 });
-                setView("list");
-              }}
-            >
-              <Icon name="calendar_view_day" size={25} />
-            </button>
-            <button
-              role="tab"
-              aria-label="Month"
-              aria-selected={view === "month"}
-              className={view === "month" ? "on" : ""}
-              onClick={() => {
-                window.scrollTo({ top: 0 });
-                setView("month");
-              }}
-            >
-              <Icon name="calendar_month" size={25} />
-            </button>
-          </div>
-        </ScrollHead>
+        />
       )}
 
       <div className="calendar-bottom-actions" aria-label="Schedule actions">
-        <button className="calendar-bottom-share" type="button" onClick={() => setShareOpen(true)}>
-          <span className="calendar-bottom-share-icon" aria-hidden="true">
-            <Icon name="reply" size={23} className="share-arrow-forward" />
-          </span>
-          <span>Share</span>
-        </button>
         <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
           <Icon name="add" size={24} />
         </button>
