@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import { HeaderIconLink } from "@/components/HeaderIconLink";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { HeaderNav } from "@/components/HeaderNav";
+import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
@@ -37,6 +42,48 @@ export function AppHeader({
   face?: HeaderFace;
   profileHref?: string;
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+
+  if (pathname === "/search") {
+    const updateSearch = (value: string) => {
+      setSearch(value);
+      window.dispatchEvent(new CustomEvent("fittlist:search-query", { detail: value }));
+    };
+    return (
+      <div className="brandbar brandbar-searching">
+        <button
+          type="button"
+          className="header-search-back"
+          aria-label="Back"
+          onClick={() => {
+            if (window.history.length > 1) router.back();
+            else router.push(home);
+          }}
+        >
+          <Icon name="arrow_back" size={24} />
+        </button>
+        <div className="header-search-field">
+          <Icon name="search" size={21} />
+          <input
+            className="header-search-input"
+            value={search}
+            onChange={(event) => updateSearch(event.target.value)}
+            placeholder="Search FittList"
+            aria-label="Search FittList"
+            autoFocus
+          />
+          {search && (
+            <button type="button" aria-label="Clear search" onClick={() => updateSearch("")}>
+              <Icon name="close" size={18} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="brandbar">
       <Link className="brandbar-home" href={home} aria-label="Home">
@@ -51,16 +98,14 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
-        <Link className="brandbar-avatar" href={profileHref} aria-label={`Your profile${notificationUnread || messageUnread ? ", new activity" : ""}`}>
-          {face?.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={face.photo} alt="" />
-          ) : (
-            <span style={{ background: face?.color ?? "var(--color-surface-muted)" }}>{face?.initial ?? "?"}</span>
-          )}
-          {(notificationUnread > 0 || messageUnread > 0) && <i aria-hidden="true" />}
+        <Link className="iconbtn inboxbtn" href="/search" aria-label="Search">
+          <Icon name="search" size={23} />
         </Link>
+        <HeaderAccountButton
+          face={face}
+          unread={notificationUnread > 0 || messageUnread > 0}
+          fallbackHref={profileHref}
+        />
       </div>
     </div>
   );

@@ -77,23 +77,23 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const [asked, setAsked] = useState("");
   const [recent, setRecent] = useState<RecentHit[]>([]);
   const [recentExpanded, setRecentExpanded] = useState(false);
-  const box = useRef<HTMLInputElement>(null);
   // Only the newest request may paint, or a slow short query can replace the
   // answer to the longer name somebody has already finished typing.
   const run = useRef(0);
 
   useEffect(() => {
-    box.current?.focus();
-    const timer = setTimeout(() => box.current?.focus(), 300);
     setRecent(readRecents());
     try {
       localStorage.removeItem("fl-recent-locations");
     } catch {
       // Nothing stored is a valid starting state.
     }
-    return () => {
-      clearTimeout(timer);
-    };
+  }, []);
+
+  useEffect(() => {
+    const receive = (event: Event) => setQ((event as CustomEvent<string>).detail ?? "");
+    window.addEventListener("fittlist:search-query", receive);
+    return () => window.removeEventListener("fittlist:search-query", receive);
   }, []);
 
   useEffect(() => {
@@ -162,27 +162,6 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
 
   return (
     <>
-      <div className="dissearchrow">
-        <div className="dissearch">
-          <Icon name="search" size={21} className="dissearch-ic" />
-          <input
-            ref={box}
-            className="dissearch-in"
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            placeholder="Search coaches, classes, or studios"
-            aria-label="Search coaches, classes, or studios"
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-          />
-          {q && (
-            <button type="button" className="dissearch-x" onClick={() => setQ("")} aria-label="Clear">
-              <Icon name="close" size={19} />
-            </button>
-          )}
-        </div>
-      </div>
-
       {short ? (
         <>
           {recent.length > 0 && (

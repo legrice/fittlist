@@ -1490,11 +1490,11 @@ console.log("discover ok (the row's pill agrees with the profile)");
   if (await fan.locator(".srchseg, .disrow-studio, .callist, .clline").count())
     fail("coach search should have no studio/class controls or rows");
 
-  const input = fan.locator(".dissearch-in").first();
+  const input = fan.locator(".header-search-input").first();
   if ((await input.getAttribute("placeholder")) !== "Search coaches")
     fail("the search box should promise coaches only");
   // The box takes the caret on arrival, so the keyboard is already up.
-  if (!(await fan.evaluate(() => document.activeElement?.classList.contains("dissearch-in"))))
+  if (!(await fan.evaluate(() => document.activeElement?.classList.contains("header-search-input"))))
     fail("the search box should be focused on arrival");
 
   // One letter is not a question: the floor keeps a stray keystroke from

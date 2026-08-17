@@ -2303,6 +2303,11 @@ button.ps-card { cursor: pointer; }
    marks its active tab. First path only keeps multi-part glyphs intact. */
 .brandbar-actions .iconbtn.onroute svg path:first-of-type { fill: currentColor; }
 .brandbar-avatar {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
   position: relative;
   display: grid;
   place-items: center;
@@ -2310,6 +2315,105 @@ button.ps-card { cursor: pointer; }
   height: 38px;
   color: var(--color-black);
   text-decoration: none;
+}
+
+.brandbar.brandbar-searching {
+  justify-content: flex-start;
+  gap: 10px;
+}
+.header-search-back {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  color: var(--color-black);
+}
+.header-search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  color: var(--color-black);
+}
+.header-search-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 17px;
+}
+.header-search-field input::placeholder { color: var(--color-text-muted); }
+.header-search-field button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.header-account-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, .46);
+}
+.header-account-sheet {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  max-height: calc(100dvh - max(24px, env(safe-area-inset-top)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 28px 28px 0 0;
+  background: var(--color-surface);
+  padding: 10px 0 env(safe-area-inset-bottom);
+}
+.header-account-grabber {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  width: 56px;
+  height: 5px;
+  margin: 0 auto 4px;
+  border-radius: 999px;
+  background: var(--color-border-strong);
+}
+.header-account-loading {
+  position: relative;
+  min-height: 220px;
+  padding: 72px 24px 24px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+.header-account-loading .acctclose { position: absolute; top: 12px; right: 20px; }
+.header-account-sheet .acctwrap {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  min-height: 0;
+  overflow: visible;
+  padding-top: 4px;
+  background: transparent;
+  animation: none;
 }
 .brandbar-avatar img,
 .brandbar-avatar > span {
