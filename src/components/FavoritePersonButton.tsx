@@ -34,5 +34,5 @@ export function FavoritePersonButton({ person }: { person: DirPerson }) {
     router.refresh();
   });
   const label = favorited ? "Favorited" : requested ? "Requested" : "Add to favorites";
-  return <><button type="button" className={`discover-favorite-person${favorited || requested ? " on" : ""}`} disabled={pending} onClick={toggle} aria-label={`${label}: ${person.name}`}><Icon name="favorite" size={17} /><span>{label}</span></button><Toast msg={toastMsg} on={toastOn} /></>;
+  return <><button type="button" className={`discover-favorite-person${favorited || requested ? " on" : ""}`} disabled={pending} onClick={toggle} aria-label={`${label}: ${person.name}`}><Icon name={favorited ? "favorite_filled" : "favorite"} size={17} /><span>{label}</span></button><Toast msg={toastMsg} on={toastOn} /></>;
 }

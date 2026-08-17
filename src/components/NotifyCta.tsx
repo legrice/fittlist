@@ -170,7 +170,7 @@ export function NotifyCta({
         onClick={onCta}
       >
         {/* A tick on the yes state, so the pill reports rather than offers. */}
-        {account && <Icon name="favorite" size={compact ? 15 : 17} />}
+        {account && <Icon name={following ? "favorite_filled" : "favorite"} size={compact ? 15 : 17} />}
         {!account && (following || subscribed) && <Icon name="check" size={compact ? 15 : 17} />}
         {label}
       </button>

@@ -10,12 +10,10 @@ import type { BrowseDay } from "@/app/actions/discover";
 
 export type DiscoverHalf = "people" | "places" | "classes";
 type AllSheet = DiscoverHalf | null;
-const NEAR_ME = "__near_me__";
 
 export function DiscoverList({
   people,
   studios = [],
-  myCity = null,
   backHref,
   hideBack = false,
   startHalf,
@@ -31,23 +29,20 @@ export function DiscoverList({
   upcoming?: BrowseDay[];
 }) {
   const [query, setQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState(myCity ? NEAR_ME : "");
-  const [areaOpen, setAreaOpen] = useState(false);
   const [allSheet, setAllSheet] = useState<AllSheet>(startHalf ?? null);
-  const effectiveCity = selectedCity === NEAR_ME ? (myCity ?? "") : selectedCity;
   const q = query.trim().toLowerCase();
 
   const shownPeople = useMemo(() => people.filter((person) => {
     const matchesQuery = !q || [person.name, person.title, person.location, person.handle, ...person.disciplines]
       .some((value) => value.toLowerCase().includes(q));
-    return matchesQuery && (!effectiveCity || person.location.toLowerCase().includes(effectiveCity.toLowerCase()));
-  }), [people, q, effectiveCity]);
+    return matchesQuery;
+  }), [people, q]);
 
   const shownStudios = useMemo(() => studios.filter((studio) => {
     const matchesQuery = !q || [studio.name, studio.address, ...studio.types]
       .some((value) => value.toLowerCase().includes(q));
-    return matchesQuery && (!effectiveCity || studio.address.toLowerCase().includes(effectiveCity.toLowerCase()));
-  }), [studios, q, effectiveCity]);
+    return matchesQuery;
+  }), [studios, q]);
 
   const allUpcoming = useMemo(() => upcoming
     .flatMap((day) => day.items.map((item) => ({ ...item, day: day.label })))
@@ -75,27 +70,6 @@ export function DiscoverList({
           {query && <button type="button" className="dissearch-x" onClick={() => setQuery("")} aria-label="Clear search"><Icon name="close" size={19} /></button>}
         </label>
       </div>
-
-      <div className="discover-filterrow" aria-label="Discover area">
-        <button type="button" className={`discover-filterpill${selectedCity ? " on" : ""}`} onClick={() => setAreaOpen(true)}>
-          {selectedCity === NEAR_ME ? `Near ${myCity?.split(",")[0] ?? "me"}` : "Everywhere"}
-          <Icon name="expand_more" size={17} />
-        </button>
-      </div>
-
-      {areaOpen && <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setAreaOpen(false); }}>
-        <div className="sheet discover-filter-sheet">
-          <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAreaOpen(false)}><Icon name="close" size={18} /></button>
-          <h2>Distance</h2>
-          <div className="discover-filter-options">
-            {[{ value: "", label: "Everywhere" }, ...(myCity ? [{ value: NEAR_ME, label: `Near ${myCity.split(",")[0]}` }] : [])].map((option) => (
-              <button type="button" className="clsopt" key={option.value} onClick={() => { setSelectedCity(option.value); setAreaOpen(false); }}>
-                <span>{option.label}</span>{option.value === selectedCity && <Icon className="clsopt-on" name="check" size={21} />}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>}
 
       <div className="discover-for-you">
         <DiscoverSection title="Upcoming classes" onSeeAll={() => setAllSheet("classes")}>
@@ -133,9 +107,11 @@ function DiscoverSection({ title, onSeeAll, children }: { title: string; onSeeAl
 type UpcomingItem = BrowseDay["items"][number] & { day: string };
 function DiscoverEvent({ item, teacher }: { item: UpcomingItem; teacher?: DirPerson }) {
   return <Link className="discover-event-card" href={`/${item.base}/${item.classId}?d=${item.iso}&from=discover`}>
-    <small>{item.day} · {item.hm}{item.ap.toLowerCase()}</small>
+    <small>{item.day} • {item.hm}{item.ap.toLowerCase()}</small>
+    {item.classType && <span className="discover-event-type">{item.classType}</span>}
     <strong>{item.name}</strong>
-    <span className="discover-event-teacher"><span className="discover-event-avatar" style={{ background: teacher?.color }}>{teacher?.photo ? <img src={teacher.photo} alt="" /> : (item.attributionName.trim().charAt(0) || "?").toUpperCase()}</span><span>{[item.attributionName, item.where].filter(Boolean).join(" · ")}</span></span>
+    <span className="discover-event-studio">{item.where || "Location to come"}</span>
+    <span className="discover-event-teacher"><span className="discover-event-avatar" style={{ background: teacher?.color }}>{teacher?.photo ? <img src={teacher.photo} alt="" /> : (item.attributionName.trim().charAt(0) || "?").toUpperCase()}</span><span>{item.attributionName}</span></span>
   </Link>;
 }
 
