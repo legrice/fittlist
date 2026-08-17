@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { Icon } from "@/components/Icon";
+import { TeachToggle } from "@/components/TeachToggle";
 
 export type YouFavoritePerson = {
   id: string;
@@ -27,6 +28,7 @@ export type YouDashboardData = {
     location: string;
     photo: string | null;
     color: string;
+    coaching: boolean;
   };
   people: YouFavoritePerson[];
   places: YouFavoritePlace[];
@@ -83,6 +85,7 @@ export function YouDashboard({
       )}
 
       <AccountGroup title="Settings">
+        <TeachToggle on={me.coaching} canTurnOn account />
         <AccountRow icon="settings" title="Settings" detail="Privacy, appearance, and account" href="/settings" />
         <AccountRow icon="forum" title="Help and support" detail="Get help with FittList" href="/support" />
         <AccountRow icon="shield" title="Privacy" detail="Read our privacy policy" href="/privacy" />

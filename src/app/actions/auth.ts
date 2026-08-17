@@ -464,6 +464,7 @@ export async function setTeaching(on: boolean): Promise<{ ok: boolean; error?: s
     .set({ kind: on ? "coach" : "fan", discoverable: on ? true : me.discoverable })
     .where(eq(schema.users.id, userId));
   revalidatePath("/settings");
+  revalidatePath("/you");
   revalidatePath("/calendar");
   revalidatePath("/feed");
   return { ok: true };

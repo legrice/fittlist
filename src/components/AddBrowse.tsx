@@ -142,10 +142,10 @@ export function AddBrowse({
           // what isn't listed is never a full scroll away, by Matt's call.
           <div className="addbrowse-foot publishwrap">
             <p className="durnote">
-              Can&rsquo;t find it? Add it and it shows up here for everyone else too.
+              Can&rsquo;t find it? Add it to your calendar yourself.
             </p>
             <button className="btn si" onClick={onAddNew}>
-              + Add a class that isn&rsquo;t here
+              + Add a class you&rsquo;re attending
             </button>
             {onEvent && (
               <button className="tertiary addbrowse-ev" onClick={onEvent}>

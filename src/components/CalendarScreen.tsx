@@ -96,9 +96,9 @@ export function CalendarScreen({
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [kind, setKind] = useState<"all" | "coaching" | "added">(member ? "added" : "all");
-  const [addChoice, setAddChoice] = useState(openAdder && !member);
+  const [addChoice, setAddChoice] = useState(openAdder);
   const [addOpen, setAddOpen] = useState(false);
-  const [browseOpen, setBrowseOpen] = useState(openAdder && member);
+  const [browseOpen, setBrowseOpen] = useState(false);
   const [personalAdd, setPersonalAdd] = useState(false);
   const [personalWorkout, setPersonalWorkout] = useState(false);
   const [match, setMatch] = useState<PersonalMatch | null>(null);
@@ -287,8 +287,7 @@ export function CalendarScreen({
   // nothing on their coaching calendar.
   const bare = classes.length === 0 && savedDays.every((day) => day.items.length === 0);
   const openAdd = () => {
-    if (member) setBrowseOpen(true);
-    else setAddChoice(true);
+    setAddChoice(true);
   };
 
   return (

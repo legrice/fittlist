@@ -70,6 +70,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       location: me.location?.trim() ?? "",
       photo: me.photoThumb ?? me.photo,
       color: avatarColor(me),
+      coaching: me.kind !== "fan",
     },
     people,
     places,
