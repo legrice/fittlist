@@ -34,13 +34,18 @@ export type YouDashboardData = {
   places: YouFavoritePlace[];
   managed: { id: string; name: string; slug: string; admin: boolean }[];
   shareHref: string;
+  isAdmin: boolean;
 };
+
+export type ProfileSettingsView = "page" | "calendar" | "reach" | "account";
 
 export function YouDashboard({
   me,
   managed,
   shareHref,
-}: YouDashboardData) {
+  isAdmin,
+  onOpenSettings,
+}: YouDashboardData & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   return (
     <main className="youpage">
@@ -61,7 +66,11 @@ export function YouDashboard({
 
       <div className="youquickactions" aria-label="Profile actions">
         <Link href={`/${me.handle}`}>View profile</Link>
-        <Link href="/settings?edit=1">Edit profile</Link>
+        {onOpenSettings ? (
+          <button type="button" onClick={() => onOpenSettings("page")}>Edit profile</button>
+        ) : (
+          <Link href="/settings?edit=1">Edit profile</Link>
+        )}
         <Link href={shareHref}>Share</Link>
       </div>
 
@@ -86,7 +95,11 @@ export function YouDashboard({
 
       <AccountGroup title="Settings">
         <TeachToggle on={me.coaching} canTurnOn account />
-        <AccountRow icon="settings" title="Settings" detail="Privacy, appearance, and account" href="/settings" />
+        <SettingsRow icon="account_circle" title="Your page" detail="Handle, contact info, availability" view="page" onOpen={onOpenSettings} />
+        <SettingsRow icon="event" title="Schedule & sync" detail="Google, Apple and Outlook, your week as text" view="calendar" onOpen={onOpenSettings} />
+        <SettingsRow icon="public_off" title="Privacy & reach" detail="Messages, listing, and approvals" view="reach" onOpen={onOpenSettings} />
+        <SettingsRow icon="lock" title="Account" detail="Login, notifications, appearance" view="account" onOpen={onOpenSettings} />
+        {isAdmin && <AccountRow icon="admin_panel_settings" title="Admin" detail="Site operations and reports" href="/admin" />}
         <AccountRow icon="forum" title="Help and support" detail="Get help with FittList" href="/support" />
         <AccountRow icon="shield" title="Privacy" detail="Read our privacy policy" href="/privacy" />
       </AccountGroup>
@@ -102,6 +115,31 @@ export function YouDashboard({
         </form>
       </AccountGroup>
     </main>
+  );
+}
+
+function SettingsRow({
+  icon,
+  title,
+  detail,
+  view,
+  onOpen,
+}: {
+  icon: string;
+  title: string;
+  detail: string;
+  view: ProfileSettingsView;
+  onOpen?: (view: ProfileSettingsView) => void;
+}) {
+  if (!onOpen) {
+    return <AccountRow icon={icon} title={title} detail={detail} href="/settings" />;
+  }
+  return (
+    <button className="youaccount-row" type="button" onClick={() => onOpen(view)}>
+      <span className="youaccount-icon"><Icon name={icon} size={20} /></span>
+      <span className="youaccount-copy"><strong>{title}</strong><small>{detail}</small></span>
+      <Icon className="youaccount-chevron" name="chevron_right" size={19} />
+    </button>
   );
 }
 

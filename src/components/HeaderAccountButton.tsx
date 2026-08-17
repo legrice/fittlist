@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { youDashboardData } from "@/app/actions/you";
+import { settingsSheetData, type SettingsSheetData } from "@/app/actions/settings";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
-import { YouDashboard, type YouDashboardData } from "@/components/YouDashboard";
+import { MemberAccount } from "@/components/MemberAccount";
+import { ProfileSheet } from "@/components/ProfileSheet";
+import { YouDashboard, type ProfileSettingsView, type YouDashboardData } from "@/components/YouDashboard";
 
 type HeaderFace = { photo: string | null; color: string; initial: string };
 
@@ -20,6 +23,8 @@ export function HeaderAccountButton({
 }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<YouDashboardData | null>(null);
+  const [settingsData, setSettingsData] = useState<SettingsSheetData | null>(null);
+  const [settingsView, setSettingsView] = useState<ProfileSettingsView | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -40,9 +45,10 @@ export function HeaderAccountButton({
   const show = async () => {
     setOpen(true);
     try {
-      const next = await youDashboardData();
-      if (next) {
+      const [next, nextSettings] = await Promise.all([youDashboardData(), settingsSheetData()]);
+      if (next && nextSettings) {
         setData(next);
+        setSettingsData(nextSettings);
         return;
       }
     } catch {
@@ -54,6 +60,8 @@ export function HeaderAccountButton({
   const close = () => {
     setOpen(false);
     setData(null);
+    setSettingsData(null);
+    setSettingsView(null);
   };
 
   return (
@@ -91,8 +99,27 @@ export function HeaderAccountButton({
               <button type="button" className="iconbtn header-profile-close" aria-label="Close" onClick={close}>
                 <Icon name="close" size={20} />
               </button>
-              {data ? (
-                <YouDashboard {...data} />
+              {data && settingsData ? (
+                settingsView ? (
+                  settingsData.kind === "coach" ? (
+                    <ProfileSheet
+                      {...settingsData.coach}
+                      anim="none"
+                      detailOnly
+                      initialView={settingsView}
+                      onClose={() => setSettingsView(null)}
+                    />
+                  ) : (
+                    <MemberAccount
+                      {...settingsData.fan}
+                      detailOnly
+                      initialView={settingsView === "page" ? "profile" : settingsView}
+                      onClose={() => setSettingsView(null)}
+                    />
+                  )
+                ) : (
+                  <YouDashboard {...data} onOpenSettings={setSettingsView} />
+                )
               ) : (
                 <div className="header-account-loading"><p>Opening your profile&hellip;</p></div>
               )}

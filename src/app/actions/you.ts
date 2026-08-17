@@ -5,6 +5,7 @@ import { myStaffStudios } from "@/app/actions/gym";
 import type { YouDashboardData, YouFavoritePerson, YouFavoritePlace } from "@/components/YouDashboard";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { adminEmails } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
 
 /** The one data source for the standalone You page and its header sheet. */
@@ -76,5 +77,6 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     places,
     managed: managed.filter((place) => place.admin),
     shareHref: me.kind === "fan" ? "/membershare" : "/coachshare",
+    isAdmin: adminEmails().includes(me.email.toLowerCase()),
   };
 }

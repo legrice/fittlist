@@ -84,6 +84,8 @@ export function ProfileSheet({
   messagesOpen = true,
   look,
   onClose,
+  initialView = "home",
+  detailOnly = false,
 }: {
   handle: string;
   anim?: "up" | "left" | "none";
@@ -132,10 +134,12 @@ export function ProfileSheet({
   look: string | null;
   /** Unused as a page: a tab is not a thing you close. */
   onClose?: () => void;
+  initialView?: View;
+  detailOnly?: boolean;
 }) {
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>(initialView);
 
   const [shareOpen, setShareOpen] = useState(false);
   // Share is one door with five ways behind it now, not five tiles across
@@ -201,7 +205,10 @@ export function ProfileSheet({
   }, [toast]);
 
   const openView = (v: View) => setView(v);
-  const goBack = () => setView("home");
+  const goBack = () => {
+    if (detailOnly) onClose?.();
+    else setView("home");
+  };
 
   const goProfile = () => router.push(`/${handle}`);
 
@@ -391,6 +398,7 @@ export function ProfileSheet({
     <>
       <div
         className={`acctwrap${page ? " acct-page" : ""}${anim === "left" ? " acct-from-left" : ""}${anim === "none" ? " acct-noanim" : ""}`}
+        hidden={detailOnly}
         role={page ? undefined : "dialog"}
         aria-label={page ? undefined : "Your account"}
       >

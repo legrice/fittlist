@@ -51,6 +51,9 @@ export function MemberAccount({
   discoverable = true,
   approveFollowers = false,
   messagesOpen = true,
+  initialView = null,
+  detailOnly = false,
+  onClose,
 }: {
   /** The studios they run. A member can be a manager: addStudioManager only
    *  refuses a gym's own account. */
@@ -74,13 +77,16 @@ export function MemberAccount({
   discoverable?: boolean;
   approveFollowers?: boolean;
   messagesOpen?: boolean;
+  initialView?: MView | null;
+  detailOnly?: boolean;
+  onClose?: () => void;
 }) {
   const router = useRouter();
   // The same four sub-screens the coach's account opens, one level deep.
   // Each is a bottom sheet over this page, and the rows inside them are the
   // very same components: two layouts for one idea is how they drift, and
   // the leaves were already shared.
-  const [view, setView] = useState<MView | null>(null);
+  const [view, setView] = useState<MView | null>(initialView);
   const [shareMenu, setShareMenu] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -105,6 +111,7 @@ export function MemberAccount({
 
   return (
     <>
+      <div hidden={detailOnly}>
       {/* Who this is, then the two things you do with it. The same tile,
           the same pair and the same weights the coach's account wears: a
           member's settings were a different screen doing the same job, and
@@ -278,6 +285,7 @@ export function MemberAccount({
           </button>
         </form>
       </div>
+      </div>
 
       {/* The four sub-screens. Each holds the rows that used to sit under a
           heading on the main scroll, and every one of them is a component the
@@ -287,11 +295,11 @@ export function MemberAccount({
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setView(null);
+            if (e.target === e.currentTarget) detailOnly ? onClose?.() : setView(null);
           }}
         >
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setView(null)}>
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => detailOnly ? onClose?.() : setView(null)}>
               <Icon name="close" size={18} />
             </button>
             <h2>{VIEW_TITLE[view]}</h2>
