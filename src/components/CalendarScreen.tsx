@@ -721,6 +721,7 @@ function peekOfAdded(item: WeekItem): PeekClass {
         }
       : null,
     base: item.handle,
+    saved: true,
     mine: false,
   };
 }

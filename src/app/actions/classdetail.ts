@@ -182,13 +182,15 @@ export async function classDetail(
   // test alone would offer the coach on the rota a button that setGoing then
   // refuses; a button that fails is worse than no button.
   const teaching = !!viewerId && c.coachUserId === viewerId;
-  // Attendance is an organizer-facing RSVP, not a general-purpose member
-  // calendar. Ordinary classes keep their booking door and share controls.
-  const canAdd =
-    c.rsvp && !isOwner && !teaching && !!viewerId && c.isPublic && !past && (await fansVisible());
+  // Saving is the viewer's calendar state. RSVP changes who can see that
+  // state, not whether the class can live on the viewer's calendar at all.
+  // Keep the control available on an old saved occurrence too: adding is
+  // blocked after it starts, but somebody must always be able to remove it.
+  const saveEligible =
+    !isOwner && !teaching && !!viewerId && c.isPublic && (await fansVisible());
   let added = false;
   let addedPublic: boolean | null = null;
-  if (canAdd) {
+  if (saveEligible) {
     const [row] = await db
       .select({ id: schema.attendances.id, isPublic: schema.attendances.isPublic })
       .from(schema.attendances)
@@ -202,6 +204,7 @@ export async function classDetail(
     added = !!row;
     if (row) addedPublic = row.isPublic !== false;
   }
+  const canAdd = saveEligible && (!past || added);
 
   // The coach's roster for this occurrence. These people marked Going at this
   // coach, so showing the coach is what the mark meant; it stops there. A

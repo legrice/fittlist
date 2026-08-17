@@ -83,6 +83,9 @@ export type PeekClass = {
    * it to somebody, which is what Manage offers.
    */
   shift?: boolean;
+  /** The opening row already knows this occurrence is on the viewer's
+   * calendar, so Remove can paint before the detail request returns. */
+  saved?: boolean;
   mine: boolean;
 };
 
@@ -108,6 +111,7 @@ export function peekFromDetail(detail: ClassDetail): PeekClass {
         }
       : null,
     base: detail.handle,
+    saved: detail.added,
     mine: detail.mine,
     preview: {
       description: detail.description,
@@ -560,21 +564,22 @@ export function ClassPeek({
         {/* The footer is reserved for a calendar state change. Booking and
             sharing are useful details above, not the primary purpose of the
             sheet. */}
-        {(cls.mine && cls.shift || full?.canAdd && (full.rsvp || allowWeekAdd)) && (
+        {(cls.mine && cls.shift || cls.saved || full?.canAdd && (full.rsvp || allowWeekAdd)) && (
         <div className="clsfull-cta">
           {cls.mine && cls.shift && (
             <button className="clsfull-btn manage" onClick={openManage}>
               {loading ? "Opening…" : "Manage shift"}
             </button>
           )}
-          {full?.canAdd && (full.rsvp || allowWeekAdd) &&
+          {(cls.saved || full?.canAdd && (full.rsvp || allowWeekAdd)) &&
             (() => {
-              const on = savedNow ?? full.added;
-              const word = full.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Remove from calendar" : "Save to calendar";
+              const on = savedNow ?? cls.saved ?? full?.added ?? false;
+              const word = full?.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Remove from calendar" : "Save to calendar";
               return (
                 <button
                   className={`clsfull-btn save${on ? " on" : ""}`}
                   disabled={saveBusy}
+                  aria-pressed={on}
                   onClick={async () => {
                     if (saveBusy) return;
                     setSaveBusy(true);
@@ -584,7 +589,7 @@ export function ClassPeek({
                     else if (!on) {
                       announceSaved(cls.id, cls.iso);
                       onToast(
-                        full.rsvp
+                        full?.rsvp
                           ? "RSVP’d. It’s on your calendar."
                           : "Saved to your week",
                         `${cls.id}.${cls.iso}`,
@@ -596,7 +601,7 @@ export function ClassPeek({
                     onChanged();
                   }}
                 >
-                  {!full.rsvp && (
+                  {!full?.rsvp && (
                     <Icon name={on ? "check_circle" : "add_circle"} size={20} />
                   )}
                   {word}
