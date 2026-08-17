@@ -1,12 +1,25 @@
 "use server";
 
-import { and, eq, gte, inArray, isNull } from "drizzle-orm";
+import { and, eq, gte, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, todayIso } from "@/lib/format";
 
 export type GroupClassChoice = { classId: string; iso: string; name: string; detail: string };
+export type GroupPurpose = "plan" | "community" | "event";
+
+function groupHandle(value: string) {
+  return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 42);
+}
+
+export async function checkGroupHandle(value: string) {
+  const slug = groupHandle(value);
+  if (slug.length < 3) return { ok: false, slug, error: "Use at least 3 letters or numbers." } as const;
+  const db = await getDb();
+  const [existing] = await db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.slug, slug));
+  return existing ? { ok: false, slug, error: "That group link is already taken." } as const : { ok: true, slug } as const;
+}
 
 export async function groupClassOptions(): Promise<GroupClassChoice[]> {
   const userId = await getSessionUserId();
@@ -28,66 +41,97 @@ export async function groupClassOptions(): Promise<GroupClassChoice[]> {
   });
 }
 
-export async function createGroup(input: { name: string; description?: string; visibility?: "public" | "unlisted" | "private"; memberIds: string[]; classes?: { classId: string; iso: string }[] }) {
+export async function createGroup(input: { name: string; slug: string; purpose: GroupPurpose; visibility: "public" | "unlisted" | "private" }) {
   try {
     const ownerUserId = await getSessionUserId();
     if (!ownerUserId) return { ok: false, error: "Sign in to create a group." } as const;
     const name = input.name.trim().replace(/\s+/g, " ");
     if (name.length < 2) return { ok: false, error: "Give your group a name." } as const;
     if (name.length > 60) return { ok: false, error: "Keep the name under 60 characters." } as const;
-    const description = input.description?.trim().replace(/\s+/g, " ") || null;
-    if (description && description.length > 280) return { ok: false, error: "Keep the description under 280 characters." } as const;
-
     const db = await getDb();
-    const [owner] = await db.select({ email: schema.users.email }).from(schema.users).where(eq(schema.users.id, ownerUserId));
+    const [owner] = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, ownerUserId));
     if (!owner) return { ok: false, error: "Account not found." } as const;
-    const visibility = ["public", "unlisted", "private"].includes(input.visibility ?? "") ? input.visibility! : "unlisted";
-    const stem = name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 42) || "group";
-    let slug = stem;
-    for (let suffix = 2; await db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.slug, slug)).limit(1).then((rows) => rows.length > 0); suffix++) slug = `${stem}-${suffix}`;
-    const requestedIds = [...new Set(input.memberIds)].filter((id) => id !== ownerUserId).slice(0, 30);
-    const allowedIds = requestedIds.length
-      ? [...new Set((await db
-        .select({ id: schema.users.id })
-        .from(schema.users)
-        .innerJoin(schema.subscribers, eq(schema.subscribers.trainerUserId, schema.users.id))
-        .where(and(eq(schema.subscribers.email, owner.email), isNull(schema.subscribers.optedOutAt), inArray(schema.users.id, requestedIds))))
-          .map((row) => row.id))]
-      : [];
-    const requestedClasses = [...new Map((input.classes ?? []).filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.iso)).map((item) => [`${item.classId}|${item.iso}`, item])).values()].slice(0, 30);
-    const allowedClassKeys = requestedClasses.length
-      ? new Set((await db.select({ classId: schema.attendances.classId, iso: schema.attendances.occurrenceDate }).from(schema.attendances).where(and(eq(schema.attendances.userId, ownerUserId), inArray(schema.attendances.classId, requestedClasses.map((item) => item.classId))))).map((row) => `${row.classId}|${row.iso}`))
-      : new Set<string>();
-    const allowedClasses = requestedClasses.filter((item) => allowedClassKeys.has(`${item.classId}|${item.iso}`));
+    const slug = groupHandle(input.slug);
+    if (slug.length < 3) return { ok: false, error: "Choose a group link with at least 3 letters or numbers." } as const;
+    const [existing] = await db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.slug, slug));
+    if (existing) return { ok: false, error: "That group link is already taken." } as const;
+    const visibility = ["public", "unlisted", "private"].includes(input.visibility) ? input.visibility : "unlisted";
+    const purpose: GroupPurpose = ["plan", "community", "event"].includes(input.purpose) ? input.purpose : "plan";
 
     // The group and its organizer are the only atomic requirement. Optional
     // people/classes are attached afterwards so one stale favorite or removed
     // class can never prevent the group itself from being created.
     const group = await db.transaction(async (tx) => {
-      const [created] = await tx.insert(schema.groups).values({ name, slug, description, visibility, ownerUserId }).returning({ id: schema.groups.id });
+      const [created] = await tx.insert(schema.groups).values({ name, slug, purpose, visibility, ownerUserId }).returning({ id: schema.groups.id });
       await tx.insert(schema.groupMembers).values({ groupId: created.id, userId: ownerUserId, role: "owner" }).onConflictDoNothing();
       return created;
     });
-    if (allowedIds.length) {
-      try {
-        await db.insert(schema.groupMembers).values(allowedIds.map((userId) => ({ groupId: group.id, userId }))).onConflictDoNothing();
-      } catch (error) {
-        console.error("createGroup could not attach optional members", error);
-      }
-    }
-    if (allowedClasses.length) {
-      try {
-        await db.insert(schema.groupClasses).values(allowedClasses.map((item) => ({ groupId: group.id, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing();
-      } catch (error) {
-        console.error("createGroup could not attach optional classes", error);
-      }
-    }
     revalidatePath("/saved");
     return { ok: true, id: group.id, slug } as const;
   } catch (error) {
     console.error("createGroup failed", error);
     return { ok: false, error: "We couldn’t create the group. Your choices are still here, so please try again." } as const;
   }
+}
+
+async function groupManager(slug: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  const db = await getDb();
+  const [row] = await db.select({ groupId: schema.groups.id, role: schema.groupMembers.role }).from(schema.groups).innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
+  return row && (row.role === "owner" || row.role === "admin") ? { db, userId, ...row } : null;
+}
+
+export async function updateGroupDescription(slug: string, value: string) {
+  const manager = await groupManager(slug);
+  if (!manager) return { ok: false, error: "Only group admins can edit this." } as const;
+  const description = value.trim().replace(/\s+/g, " ");
+  if (description.length > 280) return { ok: false, error: "Keep the description under 280 characters." } as const;
+  await manager.db.update(schema.groups).set({ description: description || null }).where(eq(schema.groups.id, manager.groupId));
+  revalidatePath(`/g/${slug}`);
+  return { ok: true } as const;
+}
+
+export async function addGroupClasses(slug: string, choices: { classId: string; iso: string }[]) {
+  const manager = await groupManager(slug);
+  if (!manager) return { ok: false, error: "Only group admins can add classes." } as const;
+  const requested = [...new Map(choices.filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.iso)).map((item) => [`${item.classId}|${item.iso}`, item])).values()].slice(0, 30);
+  if (!requested.length) return { ok: false, error: "Choose at least one class." } as const;
+  const saved = await manager.db.select({ classId: schema.attendances.classId, iso: schema.attendances.occurrenceDate }).from(schema.attendances).where(and(eq(schema.attendances.userId, manager.userId), inArray(schema.attendances.classId, requested.map((item) => item.classId))));
+  const allowed = new Set(saved.map((item) => `${item.classId}|${item.iso}`));
+  const rows = requested.filter((item) => allowed.has(`${item.classId}|${item.iso}`));
+  if (!rows.length) return { ok: false, error: "Save the class to your calendar first." } as const;
+  await manager.db.insert(schema.groupClasses).values(rows.map((item) => ({ groupId: manager.groupId, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing();
+  revalidatePath(`/g/${slug}`);
+  return { ok: true } as const;
+}
+
+export async function inviteGroupPeople(slug: string, userIds: string[], role: "member" | "admin") {
+  const manager = await groupManager(slug);
+  if (!manager) return { ok: false, error: "Only group admins can invite people." } as const;
+  const ids = [...new Set(userIds)].filter((id) => id !== manager.userId).slice(0, 30);
+  if (!ids.length) return { ok: false, error: "Choose at least one person." } as const;
+  const users = await manager.db.select({ id: schema.users.id }).from(schema.users).where(inArray(schema.users.id, ids));
+  if (!users.length) return { ok: false, error: "Those people are no longer available." } as const;
+  await manager.db.insert(schema.groupInvitations).values(users.map((user) => ({ groupId: manager.groupId, inviteeUserId: user.id, invitedByUserId: manager.userId, role }))).onConflictDoUpdate({ target: [schema.groupInvitations.groupId, schema.groupInvitations.inviteeUserId], set: { role, invitedByUserId: manager.userId } });
+  revalidatePath(`/g/${slug}`);
+  return { ok: true, count: users.length } as const;
+}
+
+export async function respondToGroupInvitation(slug: string, accept: boolean) {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false } as const;
+  const db = await getDb();
+  const [invite] = await db.select({ id: schema.groupInvitations.id, groupId: schema.groupInvitations.groupId, role: schema.groupInvitations.role }).from(schema.groupInvitations).innerJoin(schema.groups, eq(schema.groups.id, schema.groupInvitations.groupId)).where(and(eq(schema.groups.slug, slug), eq(schema.groupInvitations.inviteeUserId, userId)));
+  if (!invite) return { ok: false } as const;
+  await db.transaction(async (tx) => {
+    if (accept && invite.role === "admin") await tx.insert(schema.groupMembers).values({ groupId: invite.groupId, userId, role: "admin" }).onConflictDoUpdate({ target: [schema.groupMembers.groupId, schema.groupMembers.userId], set: { role: "admin" } });
+    else if (accept) await tx.insert(schema.groupMembers).values({ groupId: invite.groupId, userId, role: "member" }).onConflictDoNothing();
+    await tx.delete(schema.groupInvitations).where(eq(schema.groupInvitations.id, invite.id));
+  });
+  revalidatePath(`/g/${slug}`);
+  revalidatePath("/saved");
+  return { ok: true } as const;
 }
 
 export async function toggleGroupFavorite(slug: string) {

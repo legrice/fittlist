@@ -888,6 +888,7 @@ export const groups = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull().unique(),
     description: text("description"),
+    purpose: text("purpose").notNull().default("plan"),
     visibility: text("visibility").notNull().default("unlisted"),
     ownerUserId: uuid("owner_user_id").notNull().references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -921,6 +922,22 @@ export const groupFavorites = pgTable(
   (t) => [
     uniqueIndex("group_favorites_group_user").on(t.groupId, t.userId),
     index("group_favorites_user").on(t.userId),
+  ],
+);
+
+export const groupInvitations = pgTable(
+  "group_invitations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    inviteeUserId: uuid("invitee_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    invitedByUserId: uuid("invited_by_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("member"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("group_invitations_group_invitee").on(t.groupId, t.inviteeUserId),
+    index("group_invitations_invitee").on(t.inviteeUserId),
   ],
 );
 

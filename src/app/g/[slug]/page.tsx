@@ -7,8 +7,11 @@ import { clockParts, fmtDayHeaderRel, todayIso } from "@/lib/format";
 import { AppChrome } from "@/components/AppChrome";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { GroupActions } from "@/components/GroupActions";
+import { GroupSetup } from "@/components/GroupSetup";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
+import { groupClassOptions, type GroupPurpose } from "@/app/actions/groups";
+import { youDashboardData } from "@/app/actions/you";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +22,10 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
   if (!group) notFound();
   const viewerId = await getSessionUserId();
   const [membership] = viewerId ? await db.select().from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, viewerId))) : [];
-  if (group.visibility === "private" && !membership) notFound();
+  const [invitation] = viewerId ? await db.select({ role: schema.groupInvitations.role }).from(schema.groupInvitations).where(and(eq(schema.groupInvitations.groupId, group.id), eq(schema.groupInvitations.inviteeUserId, viewerId))) : [];
+  if (group.visibility === "private" && !membership && !invitation) notFound();
+  const manager = membership?.role === "owner" || membership?.role === "admin";
+  const [dashboard, setupClasses] = manager ? await Promise.all([youDashboardData(), groupClassOptions()]) : [null, []];
   const [favorite] = viewerId ? await db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, viewerId))) : [];
   const memberRows = await db.select({ id: schema.users.id, name: schema.users.name, photo: schema.users.photo, avatarColor: schema.users.avatarColor, role: schema.groupMembers.role }).from(schema.groupMembers).innerJoin(schema.users, eq(schema.groupMembers.userId, schema.users.id)).where(eq(schema.groupMembers.groupId, group.id));
   const selections = await db.select().from(schema.groupClasses).where(eq(schema.groupClasses.groupId, group.id));
@@ -46,5 +52,7 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
     byDay.set(selection.occurrenceDate, rows);
   }
   const days: WeekDayRows[] = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([iso, rows]) => ({ iso, label: fmtDayHeaderRel(iso, today), today: iso === today, rows }));
-  return <div className="pub group-page hasnav"><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><span className="group-visibility">{group.visibility === "public" ? "Public group" : group.visibility === "private" ? "Private group" : "Anyone with the link"}</span><h1>{group.name}</h1>{group.description && <p>{group.description}</p>}<GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} owner={membership?.role === "owner"} /></header><section className="group-section"><h2>Upcoming</h2>{days.length ? <ClassOpener handle=""><CalendarList days={days} /></ClassOpener> : <div className="empty-block"><h2>No classes yet</h2><p>The group&rsquo;s calendar is ready when the first plan is.</p></div>}</section><section className="group-section"><h2>People</h2><div className="group-people">{memberRows.map((member) => <div className="group-person" key={member.id}>{member.photo ? <img src={member.photo} alt="" /> : <span style={{ background: avatarColor(member) }}>{member.name.charAt(0).toUpperCase()}</span>}<strong>{member.name}</strong>{member.role === "owner" && <small>Organizer</small>}</div>)}</div></section></main></div></div>;
+  const emptyCopy: Record<GroupPurpose, string> = { plan: "Add a class you’re going to and invite people to join you.", community: "Add the first class or session to start the community calendar.", event: "Add the first class, session, or meetup to build the event schedule." };
+  const purpose = (["plan", "community", "event"].includes(group.purpose) ? group.purpose : "plan") as GroupPurpose;
+  return <div className="pub group-page hasnav"><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><span className="group-visibility">{group.visibility === "public" ? "Public group" : group.visibility === "private" ? "Private group" : "Anyone with the link"} · fittlist.co/g/{group.slug}</span><h1>{group.name}</h1>{group.description && <p>{group.description}</p>}<GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} manager={manager} invitationRole={invitation?.role} /></header>{manager && <GroupSetup slug={slug} name={group.name} purpose={purpose} description={group.description ?? ""} people={dashboard?.people ?? []} classes={setupClasses} />}<section className="group-section"><h2>Upcoming</h2>{days.length ? <ClassOpener handle=""><CalendarList days={days} /></ClassOpener> : <div className="empty-block"><h2>Nothing planned yet</h2><p>{emptyCopy[purpose]}</p></div>}</section><section className="group-section"><h2>People</h2><div className="group-people">{memberRows.map((member) => <div className="group-person" key={member.id}>{member.photo ? <img src={member.photo} alt="" /> : <span style={{ background: avatarColor(member) }}>{member.name.charAt(0).toUpperCase()}</span>}<strong>{member.name}</strong>{member.role === "owner" ? <small>Owner</small> : member.role === "admin" ? <small>Admin</small> : <small>Member</small>}</div>)}</div></section></main></div></div>;
 }
