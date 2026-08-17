@@ -7290,6 +7290,7 @@ select.editinput.placekind-select {
   padding: 24px var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
 }
 .calendar-share-sheet .shpage-title { padding-right: 58px; }
+.calendar-share-sheet .shseg { margin-top: var(--space-1); }
 @media (min-width: 940px) {
   .calendar-share-scrim { align-items: flex-end; padding: 24px 24px 0; }
   .calendar-share-sheet {
