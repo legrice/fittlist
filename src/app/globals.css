@@ -9614,6 +9614,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-drawer-row.on { font-weight:700; }
 .calendar-view-choice { grid-template-columns:40px minmax(0,1fr) 28px; }
 .calendar-view-choice-icon { width:36px; height:36px; display:grid; place-items:center; border-radius:50%; background:var(--color-surface-muted); }
+.calendar-view-choice .calendar-check { border-radius:50%; }
 .calendar-view-choice .calendar-check.on { border-color:transparent; background:var(--color-black); color:var(--color-white); }
 .calendar-check-row { grid-template-columns:34px minmax(0,1fr); }
 .calendar-category-row { grid-template-columns:40px minmax(0,1fr) 28px; }

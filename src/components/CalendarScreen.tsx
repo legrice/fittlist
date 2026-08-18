@@ -371,7 +371,7 @@ export function CalendarScreen({
             <h3>View</h3>
             {([['list','calendar_view_day','List'],['month','calendar_month','Month']] as const).map(([value,icon,label]) => {
               const on=view===value;
-              return <button type="button" className="calendar-drawer-row calendar-view-choice" aria-pressed={on} onClick={()=>{setView(value);setMenuOpen(false);}} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span><span className={`calendar-check${on?' on':''}`}>{on&&<Icon name="check" size={16}/>}</span></button>;
+              return <button type="button" className="calendar-drawer-row calendar-view-choice" aria-pressed={on} onClick={()=>{setView(value);setMenuOpen(false);}} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span><span className={`calendar-check${on?' on':''}`} /></button>;
             })}
           </section>
           <section className="calendar-drawer-section">
