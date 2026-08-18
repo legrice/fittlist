@@ -64,9 +64,11 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-lime: #9FE870;
   --color-lime-pressed: #8BD85D;
   --color-lime-soft: #E6F8D5;
-  --color-action: #E94B2C;
-  --color-action-pressed: #D83E22;
-  --color-action-soft: #FBE4DE;
+  --color-action: var(--color-lime);
+  --color-action-pressed: var(--color-lime-pressed);
+  --color-action-soft: var(--color-lime-soft);
+  --color-favorite: #D62F3A;
+  --color-danger-soft: #FCE8E8;
   --color-olive: #405D16;
   --color-black: #000000;
   --color-white: #FFFFFF;
@@ -89,8 +91,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --radius-control: 18px;
   --radius-card: 20px;
   --radius-pill: 999px;
-  /* Delight typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
-     the original fittlist palette (à la the meetgen reference boards).
+  /* Delight typeface. Warm charcoal ink, cream ground, and bright lime CTA.
 
      Product typography stays at 400/500/600. The 700 face is available for
      short display headlines and primary actions, where confidence helps;
@@ -327,9 +328,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   text-transform: uppercase; color: var(--ol);
 }
 
-/* auth - warm cream screen à la the meetgen reference: centered wordmark, a
-   dark charcoal hero tile with the orange mark, big charcoal headline, muted
-   copy, a warm-orange CTA. */
+/* Auth: warm cream screen, confident type, and the shared lime action color. */
 .ob { justify-content: center; background: var(--cl); color: var(--ink); }
 .ob .pad { padding: calc(26px + env(safe-area-inset-top)) 22px calc(30px + env(safe-area-inset-bottom)); width: 100%; max-width: 428px; margin: 0 auto; }
 .ob .mark { position: static; display: flex; justify-content: flex-start; font-size: 22px; margin: 0 -22px 26px; padding: 0 22px 16px; border-bottom: 1px solid var(--line); }
@@ -352,8 +351,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obhero-app { height: auto; aspect-ratio: 1; background: #1c1a17; }
 .obhero-app::before { content: none; }
 .obhero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* "You're in" — the difference between arriving with an invite and finding the
-   site. Sits above the headline, in the CTA orange so it reads as good news. */
+/* "You're in" distinguishes an invitation from an ordinary arrival. */
 .invitetag {
   display: inline-block; margin-bottom: 10px; padding: 6px 12px; border-radius: 999px;
   background: var(--si); color: var(--color-black);
@@ -397,9 +395,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   display:block; height:100%; border-radius:inherit; background:var(--color-black);
   transition:width .24s ease;
 }
-/* The front door uses the complete brand, not the mark on its own. Orange
-   identifies FittList; the ink word keeps it from reading like an app icon
-   floating without a name. */
+/* The front door uses the complete brand rather than the mark alone. */
 .oblanding-logo { font-size:29px; --wm-ink:var(--ink); --wm-mark:var(--si); }
 .oblanding-track {
   display:flex; flex:1 1 auto; min-height:0; overflow-x:auto; overflow-y:hidden;
@@ -730,14 +726,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .btn {
   /* Primary and secondary actions share one confident Wise-like pill. */
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: var(--control-height); background: var(--color-action); color: var(--color-white); font-weight: 700; font-size: 16px;
+  min-height: var(--control-height); background: var(--color-action); color: var(--color-black); font-weight: 700; font-size: 16px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   padding: 14px 22px; border-radius: var(--radius-pill); width: 100%; transition: transform .08s;
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
 .btn.ghost { background: var(--cl); color: var(--ink); border: 0; }
-.btn.si { background: var(--color-action); color: var(--color-white); }
+.btn.si { background: var(--color-action); color: var(--color-black); }
 .btn[disabled] { opacity: .45; pointer-events: none; }
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
@@ -1079,9 +1075,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   bottom: calc(22px + env(safe-area-inset-bottom));
   display: inline-flex; align-items: center; gap: 8px;
   padding: 15px 22px 15px 18px; border-radius: 999px;
-  /* Brand orange, back by request: the one button that makes a coach's page
-     exist gets the one loud colour. It tried being glass and read as
-     furniture. */
+  /* The one button that makes a coach's page exist gets the action color. */
   background: var(--si); color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   box-shadow: none;
@@ -1356,7 +1350,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    Today wears a dot instead, and it is the only band that does. It is the one
    heading somebody is looking for when they open the app, and until now the
    word "Today" was the only thing marking it, which meant reading headings to
-   find the place you already meant to be. Brand orange, because this is the
+     find the place you already meant to be. Bright green, because this is the
    list's one spot of it and the colour means "here" rather than teaching:
    nothing else in a band is coloured, so it cannot be mistaken for the
    relationship bars down the left. */
@@ -1412,7 +1406,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    grid dims them. */
 .callist .ps-pastday { opacity: .55; }
 /* The month, whole and airy: no cell boxes, a hairline between week rows,
-   the day number big and centred with today filled in the brand orange, and
+   the day number big and centred with today filled in bright green, and
    tinted pills (the kind's colour as a wash with the colour's own ink) so
    the grid reads as a calendar rather than a wall of chips. Cells are
    buttons so a full day is a tap into the list; past and out-of-month days
@@ -1476,7 +1470,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .monthmore { font-size: 10px; font-weight: 600; color: var(--ol); text-align: center; }
 /* The two persistent doors: Today bottom left (back to now) and Add bottom
-   right, in the brand orange. Share is not down here; it sits in the header's
+   right, in bright green. Share is not down here; it sits in the header's
    cluster beside the view and filter buttons, because adding is the thing
    somebody opens this screen to do and the reachable corner belongs to the
    primary action. A quiet border gives the control its edge.
@@ -3401,7 +3395,7 @@ button.ps-card { cursor: pointer; }
 .sharepill {
   display: inline-flex; align-items: center; gap: 6px; height: 38px;
   padding: 0 16px; border-radius: 999px; cursor: pointer;
-  /* White with a light outline; the horn keeps the brand orange. */
+  /* White with a light outline; the horn keeps the action green. */
   background: var(--card); border: 1px solid var(--line); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px;
 }
@@ -3461,7 +3455,7 @@ button.ps-card { cursor: pointer; }
    rather than floating past the end of it: same vertical box, same 3px
    border, inked in when the tab it explains is the selected one. It sits
    tight to the word for the same reason, because a glyph with a tab's worth
-   of air on either side reads as a fourth tab. Brand orange, which is the
+   of air on either side reads as a fourth tab. The action color is the
    one colour on this row that says "there is something to tap here". */
 /* A tab and its info dot as one capsule: the wash draws around the pair, so
    the dot reads as part of the tab rather than a fourth one beside it. The
@@ -4784,7 +4778,7 @@ select.editinput.placekind-select {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
   font-weight: 600; color: var(--ol); background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px;
 }
-.adminbadge.warn { color: #a85327; background: var(--color-action-soft); border-color: transparent; }
+.adminbadge.warn { color: #8B1E28; background: var(--color-danger-soft); border-color: transparent; }
 .adminaction { width: 100%; margin-top: 12px; }
 .adminlink { display: flex; gap: 8px; margin-top: 12px; }
 .adminlink input {
@@ -4915,7 +4909,7 @@ select.editinput.placekind-select {
 .adminbadge.kind-coach { background: var(--ink); color: var(--paper); }
 .adminbadge.kind-member { background: var(--si); color: var(--color-black); }
 .adminremove { margin-top: 10px; font-weight: 600; font-size: 13px; color: #a8452a; }
-.admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--color-action-soft); }
+.admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--color-danger-soft); }
 .admindanger p { font-size: 13px; color: #8a3c22; line-height: 1.45; margin-bottom: 10px; }
 .admindanger .adminaddform-row { margin-top: 0; }
 
@@ -4994,7 +4988,8 @@ select.editinput.placekind-select {
   --cl-d: #322b1b;
   --sa: #3d3826;
   --si-soft: #26351d;
-  --color-action-soft: #3f211a;
+  --color-action-soft: #26351d;
+  --color-danger-soft: #3A2023;
   --soft-shadow: none;
   --soft-shadow-lg: none;
   background: var(--paper);
@@ -5073,8 +5068,7 @@ select.editinput.placekind-select {
   background: var(--card); color: var(--ink); border-color: var(--line);
 }
 [data-mode="dark"] .sheetclose:active { background: #2c2718; }
-/* Default buttons invert (bg follows --ink, now light) — flip their text dark.
-   Orange CTAs keep white text. */
+/* Default buttons invert (bg follows --ink, now light), so their text flips. */
 [data-mode="dark"] .btn { color: #191502; }
 /* The toast pill is --ink, which flips light in dark mode — so its text has
    to flip with it. */
@@ -5681,7 +5675,7 @@ select.editinput.placekind-select {
   font:inherit; font-size:12px; font-weight:700;
 }
 .discover-favorite-person svg { color:var(--muted); }
-.discover-favorite-person.on svg { color:var(--color-action); }
+.discover-favorite-person.on svg { color:var(--color-favorite); }
 .discover-studio-grid {
   display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-2); margin-top:var(--space-2);
 }
@@ -5698,7 +5692,7 @@ select.editinput.placekind-select {
   display:grid; place-items:center; border:0; border-radius:50%; background:rgba(255,255,255,.94);
   color:var(--muted); box-shadow:0 1px 8px rgba(0,0,0,.12);
 }
-.discover-favorite-place.on { color:var(--color-action); }
+.discover-favorite-place.on { color:var(--color-favorite); }
 .discover-studio-tile strong,
 .discover-studio-tile small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .discover-studio-tile strong { margin-top:8px; font-size:16px; }
@@ -5790,7 +5784,7 @@ select.editinput.placekind-select {
 .group-handle > div:focus-within { border-color:var(--ink); }
 .group-handle > div > span { flex:none; color:var(--muted); font-size:16px; }
 .group-handle > div > input { min-width:0; height:50px; padding:0 14px 0 2px; border:0; outline:0; }
-.group-handle-status { margin:7px 0 0 !important; color:var(--color-action) !important; font-size:13px !important; font-weight:700; }
+.group-handle-status { margin:7px 0 0 !important; color:var(--color-favorite) !important; font-size:13px !important; font-weight:700; }
 .group-handle-status.ok { color:var(--color-coaching-text) !important; }
 .create-group-purpose { display:flex; flex-direction:column; gap:9px; }
 .create-group-purpose button { width:100%; min-height:84px; padding:13px 14px; display:grid; grid-template-columns:28px minmax(0,1fr) 24px; align-items:center; gap:12px; border:1px solid var(--line); border-radius:var(--radius-control); background:var(--paper); color:var(--ink); font:inherit; text-align:left; }
@@ -8019,7 +8013,7 @@ select.editinput.placekind-select {
 /* A quiet day is a line, not a screenful: the tabs right above it are the
    way to a louder one. */
 .dayempty { text-align: center; font-size: 14.5px; color: var(--ol); padding: 46px 0; }
-/* The picked one goes brand orange, by Matt's call. */
+/* The picked one uses the shared bright green. */
 .calpills .catpill.on { background: var(--si); border-color: var(--si); color: var(--color-black); }
 
 /* RSVP's two lines on the class sheet: the count once somebody is in,
@@ -8414,8 +8408,7 @@ select.editinput.placekind-select {
   margin: 10px auto 0; font-size: 16.5px; line-height: 1.5; color: var(--ol);
   max-width: 34ch;
 }
-/* Brand orange with white words, by Matt's call: the one thing to do on
-   an empty screen wears the one loud colour. */
+/* The one thing to do on an empty screen wears the shared action green. */
 .wkempty-cta { margin-top: 22px; width: 100%; }
 .btn.si.wkempty-cta { background: var(--si); color: var(--color-black); }
 .wkempty-actions {
@@ -8696,8 +8689,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* The ring is the whole selected state, and it sits outside the circle so the
    face is never cropped by its own highlight. */
-/* Brand orange, by Matt's call, the same warmth the current nav tab wears:
-   it was ink for a stretch on the state-not-action argument. */
+/* The selected avatar uses the same green as the current navigation tab. */
 .trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si); }
 /* Everyone else steps back when one is picked, rather than disappearing: the
    rail has to stay the same length or the one you want moves under your
@@ -9244,8 +9236,7 @@ a.clspeek-by:active { opacity: .6; }
 .clline-t {
   display: flex; align-items: baseline; gap: 2px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  /* Ink, not the brand orange, by Matt's call: orange is for the loudest
-     calls to action only, and a column of orange clocks was the loudest
+  /* Ink, not the action green: a column of colored clocks was the loudest
      thing on every list. A step under the name, by Matt's call. */
   font-size: 15.5px; font-weight: 600; color: var(--ink); white-space: nowrap;
 }
@@ -9382,7 +9373,7 @@ a.clspeek-by:active { opacity: .6; }
    reads the same way everywhere. A touch of top air before the first
    divider. */
 .folist-dir { margin-top: 6px; }
-/* Brand orange with white words, the empty-state CTA rule. */
+/* Empty-state CTAs use the shared bright green. */
 .empty-block .folfind { margin-top: 18px; display: inline-block; padding-left: 28px; padding-right: 28px; }
 .btn.si.folfind { background: var(--si); color: var(--color-black); }
 
@@ -9606,8 +9597,7 @@ a.clspeek-by:active { opacity: .6; }
 .calbar-share {
   flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; border: none;
   display: inline-flex; align-items: center; justify-content: center;
-  /* The glyph in brand orange, by Matt's call; the tab bar's Share stays
-     ink, because down there the orange means "you are here". */
+  /* The glyph uses the shared action green. */
   background: var(--card); color: var(--si); cursor: pointer; text-decoration: none;
 }
 .calbar-share:active { transform: scale(.94); }
@@ -9964,8 +9954,7 @@ a.clspeek-by:active { opacity: .6; }
   .cityplaces a,.cityplaces a:nth-child(odd),.cityplaces a:nth-child(even){ padding:16px 0; }
 }
 
-/* Primary actions have their own warm signal. Lime remains a calendar and
-   selection colour, so an action never disappears into a status. */
-.btn:not(.ghost) { background: var(--color-action); color: var(--color-white); }
+/* Bright lime is the single primary-action signal across the product. */
+.btn:not(.ghost) { background: var(--color-action); color: var(--color-black); }
 .btn:not(.ghost):active { background: var(--color-action-pressed); }
-[data-mode="dark"] .btn:not(.ghost) { color: var(--color-white); }
+[data-mode="dark"] .btn:not(.ghost) { color: var(--color-black); }

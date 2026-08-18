@@ -51,7 +51,7 @@ export function monthLabel(ym: string, todayIso: string) {
 }
 
 /** The two persistent doors under every calendar view: Today bottom left (back
- *  to now, in the list) and Add bottom right, in the brand orange.
+ *  to now, in the list) and Add bottom right, in bright green.
  *
  *  Share is not here. It is up in the header's cluster beside the view and
  *  filter buttons (`CalShare`), and these two have traded places three times
