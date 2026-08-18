@@ -9575,8 +9575,8 @@ a.clspeek-by:active { opacity: .6; }
   color:var(--color-black);
 }
 .calendar-bottom-actions .calendar-bottom-add .icon path {
-  fill:var(--color-white);
-  stroke:var(--color-white);
+  fill:var(--color-black);
+  stroke:var(--color-black);
   stroke-width:32;
   stroke-linejoin: round;
 }
