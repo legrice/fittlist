@@ -178,7 +178,7 @@ export function AddBrowse({
               Can&rsquo;t find it? Save it to your calendar yourself.
             </p>
             <button className="btn si" onClick={onAddNew}>
-              Save a class that isn&rsquo;t listed
+              Add a class that isn&rsquo;t listed
             </button>
             {onEvent && (
               <button className="tertiary addbrowse-ev" onClick={onEvent}>

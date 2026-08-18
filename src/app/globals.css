@@ -9269,7 +9269,7 @@ a.clspeek-by:active { opacity: .6; }
 .following-add:disabled { opacity: .55; }
 .addbrowse-search {
   display: flex; align-items: center; gap: 9px; margin: 4px 0 18px;
-  padding: 0 13px; min-height: 46px; border-radius: 14px; background: var(--card);
+  padding: 0 13px; min-height: 46px; border: var(--divw) solid var(--div); border-radius: 14px; background: var(--card);
   color: var(--ol);
 }
 .addbrowse-search input {
