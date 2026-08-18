@@ -113,11 +113,12 @@ export function CoachPeek({
       const on = marks[key] ?? item.saved;
       const corner = !self && !scheduleOnly ? (
         <button
-          className={`following-add${on ? " on" : ""}`}
+          className={`calendar-save-action following-add${on ? " on" : ""}`}
           onClick={() => save(item.classId, item.iso, !on)}
           aria-label={on ? `Saved to your week: ${item.name}` : `Save ${item.name} to your week`}
         >
           <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
+          <span>{on ? "Saved" : "Save"}</span>
         </button>
       ) : undefined;
       return {

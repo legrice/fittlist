@@ -294,7 +294,7 @@ export function CalendarScreen({
           coach:person ? { id:person.id, name:person.name, photo:person.photo, color:person.color } : null,
           overlayColor:person?.color,
           href:`/${event.base}/${event.classId}?d=${event.iso}&from=schedule`,
-          corner:<button type="button" className="calendar-overlay-save" onClick={() => startRemove(async () => {
+          corner:<button type="button" className="calendar-save-action calendar-overlay-save" onClick={() => startRemove(async () => {
             setOverlaySaved((current) => ({...current,[key]:true}));
             const result=await setGoing(event.classId,event.iso,true);
             if(!result.ok){setOverlaySaved((current)=>({...current,[key]:false}));toast(result.error??"Couldn't save that class");return;}

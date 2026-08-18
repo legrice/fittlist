@@ -874,7 +874,7 @@ function FollowingAdd({
   };
   return (
     <button
-      className={`following-add${on ? " on" : ""}`}
+      className={`calendar-save-action following-add${on ? " on" : ""}`}
       type="button"
       disabled={busy}
       aria-label={on ? `Remove ${name} from your calendar` : `Save ${name} to your calendar`}
@@ -882,6 +882,7 @@ function FollowingAdd({
       onClick={toggle}
     >
       <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
+      <span>{on ? "Saved" : "Save"}</span>
     </button>
   );
 }

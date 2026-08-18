@@ -62,7 +62,7 @@ export function ClassCardActions({
           reaches nothing. */}
       {canAdd && (
         <button
-          className={`evcard-add${on ? " on" : ""}`}
+          className={`calendar-save-action evcard-add${on ? " on" : ""}`}
           aria-label={on ? "Saved to your plans" : "Save to your plans"}
           aria-pressed={on}
           onClick={toggle}
