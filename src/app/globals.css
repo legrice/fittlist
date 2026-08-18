@@ -5760,9 +5760,9 @@ select.editinput.placekind-select {
 .discover-calendar-list .clrow:has(.calendar-overlay-save) .clline-by { padding-right:76px; }
 .calendar-overlay-save.saved { background:var(--color-attending); border-color:transparent; }
 .discover-saved-sheet { max-height:min(78dvh,620px); }
-.discover-saved-head { min-height:62px; margin-top:38px; display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px; }
-.discover-saved-head>span { width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:var(--color-attending); color:var(--color-black); }
-.discover-saved-head h2 { min-height:0!important; margin:0; padding:0!important; display:block!important; font-size:22px; }
+.discover-saved-head { min-height:62px; margin-top:38px; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; }
+.discover-saved-head h2 { min-height:0!important; margin:0; padding:0!important; display:flex!important; align-items:center; gap:7px; color:var(--color-black); font-size:clamp(17px,4.5vw,20px); white-space:nowrap; }
+.discover-saved-head h2 svg { flex:0 0 auto; }
 .discover-saved-head p { margin:3px 0 0; color:var(--color-text-secondary); font-size:13px; }
 .discover-saved-head>button { padding:7px 0; border:0; background:none; color:var(--color-black); font:inherit; font-weight:700; text-decoration:underline; }
 .discover-saved-groups { margin-top:22px; padding-top:18px; border-top:1px solid var(--color-border); }
