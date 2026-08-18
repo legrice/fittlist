@@ -31,6 +31,12 @@ const landingSlides = [
     placeholder: "Calendar illustration",
   },
   {
+    eyebrow: "Share",
+    title: "Share your schedule anywhere.",
+    body: "Send your week as a link or turn it into an image ready to share on Instagram.",
+    placeholder: "Schedule sharing illustration",
+  },
+  {
     eyebrow: "Discover",
     title: "Find your next class.",
     body: "Explore upcoming classes, coaches, studios, and fitness groups around you.",
