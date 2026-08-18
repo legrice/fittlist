@@ -122,6 +122,7 @@ export function CalendarScreen({
   const [selectedFavorites, setSelectedFavorites] = useState<string[]>([]);
   const [overlaySaved, setOverlaySaved] = useState<Record<string,boolean>>({});
   const activeFilterCount = Number(visible.coaching) + Number(visible.saved) + Number(visible.personal);
+  const favoriteSelectionKey = `fl-calendar-favorites:${viewer.id}`;
 
   const ensureComposer = useCallback(() => {
     if (composerData) return;
@@ -142,7 +143,31 @@ export function CalendarScreen({
     setMenuOpen(true);
     if (!favoriteData) startFavoriteLoading(async () => setFavoriteData(await loadFavoriteCalendars() ?? { people:[], events:[] }));
   };
-  const toggleFavorite = (id:string) => setSelectedFavorites((current) => current.includes(id) ? current.filter((value) => value !== id) : current.length < 2 ? [...current,id] : current);
+  const rememberFavoriteSelection = useCallback((ids:string[]) => {
+    const next=ids.slice(0,2);
+    setSelectedFavorites(next);
+    try { localStorage.setItem(favoriteSelectionKey,JSON.stringify(next)); } catch { /* private mode */ }
+  },[favoriteSelectionKey]);
+  const toggleFavorite = (id:string) => rememberFavoriteSelection(selectedFavorites.includes(id) ? selectedFavorites.filter((value) => value !== id) : selectedFavorites.length < 2 ? [...selectedFavorites,id] : selectedFavorites);
+
+  useEffect(() => {
+    let stored:string[]=[];
+    try {
+      const value=JSON.parse(localStorage.getItem(favoriteSelectionKey) ?? "[]");
+      if(Array.isArray(value)) stored=value.filter((id):id is string=>typeof id==="string").slice(0,2);
+    } catch { /* malformed or unavailable storage */ }
+    if(!stored.length) return;
+    setSelectedFavorites(stored);
+    let cancelled=false;
+    void loadFavoriteCalendars().then((data)=>{
+      if(cancelled||!data)return;
+      setFavoriteData(data);
+      const available=new Set(data.people.map((person)=>person.id));
+      const valid=stored.filter((id)=>available.has(id));
+      rememberFavoriteSelection(valid);
+    });
+    return ()=>{cancelled=true;};
+  },[favoriteSelectionKey,rememberFavoriteSelection]);
 
   useEffect(() => {
     if (!shareOpen && !menuOpen) return;
@@ -393,7 +418,7 @@ export function CalendarScreen({
         </aside>
       </div>}
 
-      {selectedFavorites.length>0 && <div className="calendar-overlay-context"><span>Showing your calendar + {selectedFavorites.map((id)=>favoriteData?.people.find((person)=>person.id===id)?.name).filter(Boolean).join(" + ")}</span><button type="button" onClick={()=>setSelectedFavorites([])}>Clear</button></div>}
+      {selectedFavorites.length>0 && <div className="calendar-overlay-context"><span>Showing your calendar + {selectedFavorites.map((id)=>favoriteData?.people.find((person)=>person.id===id)?.name).filter(Boolean).join(" + ")}</span><button type="button" onClick={()=>rememberFavoriteSelection([])}>Clear</button></div>}
 
       <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
