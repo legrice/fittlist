@@ -8318,9 +8318,24 @@ select.editinput.placekind-select {
 
 /* The Add screen's browse foot: the two ways out when the class you mean
    is not on the list. */
-.sheet.addbrowse { background: var(--ground); }
+.sheet.addbrowse {
+  height:min(88dvh,760px); max-height:88dvh; padding-top:20px;
+  display:flex; flex-direction:column; overflow:hidden;
+  border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
+  background:var(--ground);
+}
 .addbrowse-intro { margin: 4px 0 0; color: var(--ol); font-size: 14px; line-height: 1.35; }
+.addbrowse .peekhead,
+.addbrowse-search,
+.addbrowse-filters { flex:0 0 auto; }
+.addbrowse-results {
+  min-height:0; flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain;
+  margin:4px calc(-1 * var(--page-gutter)) 0;
+  padding:0 var(--page-gutter) 16px;
+}
 .addbrowse-foot {
+  position:static; flex:0 0 auto;
+  margin:0 calc(-1 * var(--page-gutter)) calc(-1 * var(--pad-b));
   padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
   background: var(--ground);
 }

@@ -38,6 +38,11 @@ export function AddBrowse({
     addBrowse().then((data) => setBrowse(data ?? { days: [], myLat: null, myLng: null }));
   }, []);
 
+  useEffect(() => {
+    document.body.classList.add("sheet-open");
+    return () => document.body.classList.remove("sheet-open");
+  }, []);
+
   const days = browse?.days ?? null;
 
   const save = (classId: string, iso: string, name: string, on: boolean) => {
@@ -82,10 +87,10 @@ export function AddBrowse({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="sheet sheet-full peeksheet addbrowse">
+      <div className="sheet peeksheet addbrowse" role="dialog" aria-modal="true" aria-labelledby="addbrowse-title">
         <div className="peekhead">
           <div className="peekhead-txt">
-            <h2 className="peekhead-nm">Add a class</h2>
+            <h2 className="peekhead-nm" id="addbrowse-title">Add a class</h2>
             <p className="addbrowse-intro">Discover classes from coaches near you.</p>
           </div>
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
@@ -124,51 +129,53 @@ export function AddBrowse({
           </label>
         </div>
 
-        {!days && <p className="peekempty">Looking at the week&hellip;</p>}
-        {days && days.length === 0 && (
-          <p className="peekempty">Nothing listed near you this week yet.</p>
-        )}
+        <div className="addbrowse-results">
+          {!days && <p className="peekempty">Looking at the week&hellip;</p>}
+          {days && days.length === 0 && (
+            <p className="peekempty">Nothing listed near you this week yet.</p>
+          )}
 
-        {days && days.length > 0 && shownDays.length === 0 && (
-          <p className="peekempty">No classes match these filters.</p>
-        )}
+          {days && days.length > 0 && shownDays.length === 0 && (
+            <p className="peekempty">No classes match these filters.</p>
+          )}
 
-        {shownDays.map((d) => (
-          <div key={d.iso} className="peekday">
-            <p className="peekday-h">{d.label}</p>
-            {d.items.map((it) => {
-              const key = `${it.classId}|${it.iso}`;
-              const on = marks[key] ?? it.saved;
-              return (
-                <div key={key} className="peekrow">
-                  <Link className="peekrow-go" href={`/${it.base}/${it.classId}?d=${it.iso}`}>
-                    <span className="peekrow-nm">{it.name}</span>
-                    <span className="peekrow-sub">
-                      {it.hm}
-                      <span className="peekrow-ap">{it.ap.toLowerCase()}</span>
-                      {it.where ? ` · ${it.where}` : ""}
-                    </span>
-                    {it.attributionName && (
-                      <span className="peekrow-by">
-                        {it.attribution === "added" ? "Added by" : "Coached by"} {it.attributionName}
+          {shownDays.map((d) => (
+            <div key={d.iso} className="peekday">
+              <p className="peekday-h">{d.label}</p>
+              {d.items.map((it) => {
+                const key = `${it.classId}|${it.iso}`;
+                const on = marks[key] ?? it.saved;
+                return (
+                  <div key={key} className="peekrow">
+                    <Link className="peekrow-go" href={`/${it.base}/${it.classId}?d=${it.iso}`}>
+                      <span className="peekrow-nm">{it.name}</span>
+                      <span className="peekrow-sub">
+                        {it.hm}
+                        <span className="peekrow-ap">{it.ap.toLowerCase()}</span>
+                        {it.where ? ` · ${it.where}` : ""}
                       </span>
+                      {it.attributionName && (
+                        <span className="peekrow-by">
+                          {it.attribution === "added" ? "Added by" : "Coached by"} {it.attributionName}
+                        </span>
+                      )}
+                    </Link>
+                    {!it.own && (
+                      <button
+                        className={`peekadd${on ? " on" : ""}`}
+                        onClick={() => on ? setRemoveConfirm({ classId: it.classId, iso: it.iso, name: it.name }) : save(it.classId, it.iso, it.name, true)}
+                        aria-label={on ? `Saved to your week: ${it.name}` : `Save ${it.name} to your week`}
+                      >
+                        <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
+                        {!on && <span>Save</span>}
+                      </button>
                     )}
-                  </Link>
-                  {!it.own && (
-                    <button
-                      className={`peekadd${on ? " on" : ""}`}
-                      onClick={() => on ? setRemoveConfirm({ classId: it.classId, iso: it.iso, name: it.name }) : save(it.classId, it.iso, it.name, true)}
-                      aria-label={on ? `Saved to your week: ${it.name}` : `Save ${it.name} to your week`}
-                    >
-                      <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
-                      {!on && <span>Save</span>}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
 
         {days && (
           // publishwrap: the sheet's own sticky footer, so the way to add
