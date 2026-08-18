@@ -98,7 +98,7 @@ export function ProfileTabs({
   /** About copy shown once beneath the action pills. */
   summary?: string | null;
   /** Closing growth loop, worded for a person or a studio by its caller. */
-  sharePrompt: string;
+  sharePrompt?: string;
   shareLabel?: string;
   /** Beside the name: only a studio uses it now, for the Verified badge that
    *  explains why the pencil is missing. */
@@ -301,10 +301,12 @@ export function ProfileTabs({
         )}
       </div>
       <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}`}>{children}</div>
-      <section className="profile-share-cta">
-        <h2>{sharePrompt}</h2>
-        <ProfileShare path={base} name={name} cta ctaText={shareLabel} />
-      </section>
+      {sharePrompt && (
+        <section className="profile-share-cta">
+          <h2>{sharePrompt}</h2>
+          <ProfileShare path={base} name={name} cta ctaText={shareLabel} />
+        </section>
+      )}
       {closingContent && <div className="profile-closing-content">{closingContent}</div>}
       </div>
     </>

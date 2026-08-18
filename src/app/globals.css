@@ -2505,6 +2505,10 @@ button.ps-card { cursor: pointer; }
 .addweek-options > .addweek-option-coaching:active { background: var(--color-coaching-soft); }
 .addweek-options > .addweek-option-saved:active { background: color-mix(in srgb, var(--color-attending) 82%, white); }
 .addweek-options > .addweek-option-personal:active { background: color-mix(in srgb, var(--color-personal) 82%, white); }
+.profile-empty-message {
+  width: 100%; margin-top: 16px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
 .globaladd-chooser-options { display: grid; gap: 8px; margin-top: 18px; }
 .globaladd-chooser-options button {
   display: grid; grid-template-columns: 42px 1fr 20px; align-items: center; gap: 12px;

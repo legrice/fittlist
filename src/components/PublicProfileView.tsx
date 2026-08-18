@@ -29,6 +29,7 @@ import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
+import { ScheduleNudge } from "@/components/ScheduleNudge";
 
 // A continuous forward window, long enough that even a one-class-a-week
 // schedule can fill seven populated days before View more runs dry.
@@ -322,10 +323,8 @@ export async function PublicProfileView({
         ) : (
           <div className="empty-block profile-empty-small">
             <h2>Nothing on the calendar</h2>
-            <p>
-              {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email
-              the moment they do.
-            </p>
+            <p>{user.name} hasn&rsquo;t posted classes yet.</p>
+            {canMessage && <ScheduleNudge handle={handle} name={user.name} signedIn={signedIn} />}
           </div>
         )
       ) : (
@@ -458,8 +457,6 @@ export async function PublicProfileView({
           sectionToggle
           name={user.name}
           summary={null}
-          sharePrompt={isOwner ? "Let people know where to find you." : `Know someone who should know ${user.name.trim().split(/\s+/)[0] || user.name}?`}
-          shareLabel={isOwner ? "Share your profile" : "Share their profile"}
           title={user.title ?? ""}
           location={user.location ?? ""}
           trackSchedule={!isOwner}

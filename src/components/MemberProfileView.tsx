@@ -22,6 +22,7 @@ import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
+import { ScheduleNudge } from "@/components/ScheduleNudge";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -199,8 +200,6 @@ export async function MemberProfileView({
           }
           name={name}
           summary={null}
-          sharePrompt={isOwner ? "Let people know where to find you." : `Know someone who should know ${firstName}?`}
-          shareLabel={isOwner ? "Share your profile" : "Share their profile"}
           title={user.title ?? ""}
           location={user.location ?? ""}
           avatar={
@@ -254,7 +253,7 @@ export async function MemberProfileView({
             <CalendarList days={memberCalendarDays(week)} />
           </ClassOpener>
         ) : (
-          <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p></div>
+          <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p>{canMessage && user.handle && <ScheduleNudge handle={user.handle} name={name} signedIn={!!viewerId} />}</div>
         )}
         </section>
         ) : (

@@ -16,11 +16,13 @@ export function MessageComposer({
   handle,
   coachName,
   signedIn,
+  initialMessage = "",
   onDone,
 }: {
   handle: string;
   coachName: string;
   signedIn: boolean;
+  initialMessage?: string;
   /** Called once it's away, so a sheet can close itself or say so. */
   onDone?: () => void;
 }) {
@@ -28,7 +30,7 @@ export function MessageComposer({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(initialMessage);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const first = coachName.trim().split(/\s+/)[0] || coachName;
