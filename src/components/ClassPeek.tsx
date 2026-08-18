@@ -602,7 +602,7 @@ export function ClassPeek({
                   }}
                 >
                   {!full?.rsvp && (
-                    <Icon name={on ? "check_circle" : "add_circle"} size={20} />
+                    <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
                   )}
                   {word}
                 </button>

@@ -271,7 +271,7 @@ export function CalendarScreen({
             const result=await setGoing(event.classId,event.iso,true);
             if(!result.ok){setOverlaySaved((current)=>({...current,[key]:false}));toast(result.error??"Couldn't save that class");return;}
             toast(`${event.name} was saved to your calendar`);router.refresh();
-          })}><Icon name="add" size={17}/>Save</button>,
+          })}><Icon name="bookmark" size={17}/>Save</button>,
         };
       });
       const rows = [

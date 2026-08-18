@@ -671,7 +671,7 @@ export function ScheduleScreen({
                               aria-label={`Saved ${p.name}. Tap to remove it from your schedule.`}
                               onClick={() => removeGoing(p)}
                             >
-                              <Icon name="check_circle" size={22} />
+                              <Icon name="bookmark_added" size={22} />
                               <span className="evcard-add-t">Saved</span>
                             </button>
                           )}

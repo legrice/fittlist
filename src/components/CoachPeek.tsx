@@ -117,7 +117,7 @@ export function CoachPeek({
           onClick={() => save(item.classId, item.iso, !on)}
           aria-label={on ? `Saved to your week: ${item.name}` : `Save ${item.name} to your week`}
         >
-          <Icon name={on ? "check" : "add_circle"} size={24} />
+          <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
         </button>
       ) : undefined;
       return {

@@ -740,7 +740,7 @@ export function ClassSheet({
                     {/* An empty ribbon, then the same ribbon with the tick
                         cut into it. On an RSVP class the word changes with
                         the deal: a save the organizer can see. */}
-                    <Icon name={added ? "check_circle" : "add_circle"} size={21} />
+                    <Icon name={added ? "bookmark_added" : "bookmark"} size={21} />
                     {c.rsvp ? (added ? "" : "RSVP") : added ? "" : "Save"}
                   </button>
                 )}
