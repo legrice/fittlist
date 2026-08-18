@@ -9547,13 +9547,13 @@ a.clspeek-by:active { opacity: .6; }
   cursor: pointer;
 }
 .calendar-bottom-share {
-  width: min(38vw, 160px);
+  width:auto;
   height: 60px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0;
+  padding:0 18px;
   background: var(--color-white);
   color: var(--color-black);
   border: 2px solid var(--color-lime) !important;
@@ -9567,8 +9567,8 @@ a.clspeek-by:active { opacity: .6; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-lime);
-  color: var(--color-black);
+  background:var(--color-white);
+  color:var(--color-lime);
 }
 .calendar-bottom-actions .calendar-bottom-add .icon path {
   stroke: currentColor;
