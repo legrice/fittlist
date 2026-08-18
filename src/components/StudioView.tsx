@@ -359,7 +359,6 @@ export async function StudioView({
           endorsement={null}
         >
 
-        {tab === "schedule" && (
         <section id="profile-schedule" className="profile-anchor-section">
           {community && !access.claimed && (
             <CommunityNote
@@ -384,9 +383,7 @@ export async function StudioView({
             </div>
           )}
         </section>
-        )}
 
-        {tab === "about" && (
         <section id="profile-about" className="profile-anchor-section">
         <h2 className="profile-section-title">Info</h2>
         {/* What kind of place this is, first thing under the tabs: it is the
@@ -442,9 +439,7 @@ export async function StudioView({
           initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
         />
         </section>
-        )}
 
-        {tab === "coaches" && (
         <section id="profile-coaches" className="profile-anchor-section">
         <h2 className="profile-section-title">Coaches</h2>
           {coaches.length === 0 ? (
@@ -490,7 +485,6 @@ export async function StudioView({
           </div>
           )}
         </section>
-        )}
 
         </ProfileTabs>
 

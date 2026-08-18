@@ -157,12 +157,12 @@ export function ProfileTabs({
   // Count one "schedule open" per visit. It used to fire when the scroll-spy
   // reached the schedule section; landing on the URL is the event now.
   useEffect(() => {
-    if (tab !== "schedule" || !trackSchedule || !trackHandle || tracked.current) return;
+    if (activeSection !== "schedule" || !trackSchedule || !trackHandle || tracked.current) return;
     tracked.current = true;
     const url = `/api/track/schedule/${trackHandle}`;
     if (typeof navigator !== "undefined" && navigator.sendBeacon) navigator.sendBeacon(url);
     else fetch(url, { method: "POST", keepalive: true }).catch(() => {});
-  }, [tab, trackSchedule, trackHandle]);
+  }, [activeSection, trackSchedule, trackHandle]);
 
   useEffect(() => {
     if (sectionToggle) {
@@ -184,6 +184,22 @@ export function ProfileTabs({
     return () => observer.disconnect();
   }, [sectionToggle, tab, tabs]);
 
+  // Profile sections are already part of the page. Keep the identity/header
+  // mounted and swap only the panel, while still giving every section its
+  // own shareable URL. Native history also makes the browser Back button walk
+  // through tab choices without asking the server to rebuild the profile.
+  useEffect(() => {
+    if (!sectionToggle) return;
+    const readPath = () => {
+      const path = window.location.pathname.replace(/\/$/, "") || "/";
+      const cleanBase = base.replace(/\/$/, "") || "/";
+      const next = path === cleanBase ? tabs[0]?.key : tabs.find((item) => path === `${cleanBase}/${item.key}`)?.key;
+      if (next) setActiveSection(next);
+    };
+    window.addEventListener("popstate", readPath);
+    return () => window.removeEventListener("popstate", readPath);
+  }, [base, sectionToggle, tabs]);
+
   // The first tab is the bare URL: it's what the link is for, and an About page
   // somebody hasn't filled in is an awkward first thing to land on. The old
   // suffix still resolves, because people have already sent that link.
@@ -200,7 +216,13 @@ export function ProfileTabs({
         href={href}
         aria-current={activeSection === t.key ? "location" : undefined}
         className={`pubtab${activeSection === t.key ? " sel" : ""}`}
-        onClick={() => setActiveSection(t.key)}
+        onClick={(event) => {
+          if (sectionToggle) {
+            event.preventDefault();
+            if (activeSection !== t.key) window.history.pushState(null, "", href);
+          }
+          setActiveSection(t.key);
+        }}
       >
         {t.label}
       </Link>
@@ -300,7 +322,7 @@ export function ProfileTabs({
           </div>
         )}
       </div>
-      <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}`}>{children}</div>
+      <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}`} data-active={sectionToggle ? activeSection : undefined}>{children}</div>
       {sharePrompt && (
         <section className="profile-share-cta">
           <h2>{sharePrompt}</h2>

@@ -564,9 +564,7 @@ export async function PublicProfileView({
               to show means no tab) and Contact is a sheet now, so both fall
               back to the schedule rather than rendering an empty page under a
               tab that isn't there. */}
-          {tab === "schedule" ? (
           <section id="profile-schedule" className="profile-anchor-section">{schedule}</section>
-          ) : (
           <section id="profile-about" className="profile-anchor-section">
             <h2 className="profile-section-title">Info</h2>
             {about}
@@ -608,7 +606,6 @@ export async function PublicProfileView({
               initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
             />
           </section>
-          )}
         </ProfileTabs>
         </FollowSync>
         {/* No Add class here. This page is where you look at your week, and

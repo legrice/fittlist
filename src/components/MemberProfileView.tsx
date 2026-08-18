@@ -246,7 +246,6 @@ export async function MemberProfileView({
           }
           closingContent={null}
         >
-        {tab === "schedule" ? (
         <section id="profile-schedule" className="profile-anchor-section">
         {week.length > 0 ? (
           <ClassOpener handle="">
@@ -256,7 +255,6 @@ export async function MemberProfileView({
           <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p>{canMessage && user.handle && <ScheduleNudge handle={user.handle} name={name} signedIn={!!viewerId} />}</div>
         )}
         </section>
-        ) : (
         <section id="profile-about" className="profile-anchor-section">
           <h2 className="profile-section-title">Info</h2>
           {!user.about?.trim() && visitedStudios.length === 0 && (
@@ -289,7 +287,6 @@ export async function MemberProfileView({
             initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
           />
         </section>
-        )}
         </ProfileTabs>
       </div>
     </div>
