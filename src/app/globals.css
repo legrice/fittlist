@@ -4289,12 +4289,12 @@ select.editinput.placekind-select {
 .profacts .followpill {
   min-height: 36px;
   padding: 9px 14px;
-  border: 0;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   background: #fff;
   box-shadow: none;
 }
-.pubhead.pubhead-hero .profacts .actpill-primary { border: 0; background: #fff; }
+.pubhead.pubhead-hero .profacts .actpill-primary { border: 1px solid var(--color-border); background: #fff; }
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
 .profacts .studio-been-here.on { background: var(--ink); color: var(--paper); }
