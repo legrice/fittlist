@@ -9556,7 +9556,7 @@ a.clspeek-by:active { opacity: .6; }
   padding:0 18px;
   background: var(--color-white);
   color: var(--color-black);
-  border: 2px solid var(--color-lime) !important;
+  border:0 !important;
   border-radius: var(--radius-pill);
 }
 .calendar-bottom-share,
@@ -9575,8 +9575,9 @@ a.clspeek-by:active { opacity: .6; }
   color:var(--color-black);
 }
 .calendar-bottom-actions .calendar-bottom-add .icon path {
+  fill:var(--color-white);
   stroke:var(--color-white);
-  stroke-width: 22;
+  stroke-width:32;
   stroke-linejoin: round;
 }
 .calendar-bottom-actions button:active { transform: scale(.96); }
