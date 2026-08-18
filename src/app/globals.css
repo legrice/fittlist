@@ -5754,7 +5754,7 @@ select.editinput.placekind-select {
 .discover-class-filters { display:flex; gap:10px; overflow-x:auto; margin:14px calc(-1 * var(--page-gutter)) 4px; padding:0 var(--page-gutter) 4px; scrollbar-width:none; }
 .discover-class-filters::-webkit-scrollbar { display:none; }
 .discover-class-filters label { flex:0 0 min(44vw,190px); }
-.discover-filters-pill { position:relative; flex:0 0 auto; height:44px; padding:0 16px; display:inline-flex; align-items:center; gap:7px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); color:var(--ink); font:inherit; font-size:14px; font-weight:700; }
+.discover-filters-pill { position:relative; flex:0 0 44px; width:44px; height:44px; padding:0; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); color:var(--ink); }
 .discover-filters-pill.on { border-color:var(--ink); }
 .discover-filters-pill>span { position:absolute; top:-7px; right:-5px; min-width:20px; height:20px; padding:0 5px; display:grid; place-items:center; border-radius:999px; background:var(--color-lime); color:var(--color-black); font-size:11px; }
 .discover-class-filters select {
