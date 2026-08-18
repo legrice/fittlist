@@ -4338,7 +4338,8 @@ select.editinput.placekind-select {
 .pubhead.pubhead-hero .profacts .actpill-primary { border: 1px solid var(--color-border); background: #fff; }
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
-.profacts .studio-been-here.on { background: var(--ink); color: var(--paper); }
+.profacts .studio-been-here.on { border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+.profacts .studio-been-here.on .icon { color:var(--color-favorite); }
 .pubhead.pubhead-hero .profacts .followpill.favorite.on,
 .profacts .followpill.favorite.on { border:1px solid var(--line); background:var(--paper); color:var(--ink); }
 .profacts .followpill.favorite.on .icon { color:var(--color-favorite); }
@@ -5749,7 +5750,7 @@ select.editinput.placekind-select {
 .discover-all-sheet { max-height:min(82dvh,760px); display:flex; flex-direction:column; }
 .discover-all-sheet > h2 { flex:0 0 auto; padding-right:52px; }
 .discover-all-content { min-height:0; overflow-y:auto; padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom)); }
-.discover-class-filters { display:flex; gap:10px; overflow-x:auto; margin:14px calc(-1 * var(--page-gutter)) 4px; padding:0 var(--page-gutter) 4px; scrollbar-width:none; }
+.discover-class-filters { display:flex; gap:10px; overflow-x:auto; margin:6px calc(-1 * var(--page-gutter)) 4px; padding:8px var(--page-gutter) 4px; scrollbar-width:none; }
 .discover-class-filters::-webkit-scrollbar { display:none; }
 .discover-class-filters label { flex:0 0 min(44vw,190px); }
 .discover-filters-pill { position:relative; flex:0 0 44px; width:44px; height:44px; padding:0; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); color:var(--ink); }
