@@ -1,6 +1,7 @@
 export default function DiscoverLoading() {
   return (
     <div className="discover-loading" aria-label="Loading Explore" aria-busy="true">
+      <h1 className="discover-page-title">Discover</h1>
       <div className="discover-loading-tabs" aria-hidden="true">
         <span />
         <span />

@@ -5547,6 +5547,9 @@ select.editinput.placekind-select {
   display: inline-flex; align-items: center; justify-content: center;
 }
 .discover-tabs > :is(button, a).on { background: var(--si); color: var(--color-black); box-shadow: none; }
+.discover-page-title {
+  margin:18px 0 20px; font-size:34px; line-height:1.05; letter-spacing:-.025em;
+}
 .dissearchrow.discover-searchrow { margin: 0 0 var(--space-1); padding-top: 0; }
 .discover-searchrow .dissearch { box-shadow: none; }
 .discover-searchrow .dissearch:focus-within { box-shadow: 0 0 0 3px var(--si); }

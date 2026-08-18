@@ -81,6 +81,7 @@ export function DiscoverList({
 
   return (
     <>
+      <h1 className="discover-page-title">Discover</h1>
       <div className="dissearchrow discover-searchrow">
         <label className="dissearch">
           <Icon name="search" size={20} className="dissearch-ic" />
