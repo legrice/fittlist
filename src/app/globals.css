@@ -5760,7 +5760,12 @@ select.editinput.placekind-select {
    of the member side. The form stays flat: one name, then familiar people. */
 .saved-group-card { border:0; background:none; color:inherit; font:inherit; text-align:left; }
 .saved-group-card > span { background:var(--si-tint); color:var(--si-ink); }
-.create-group-sheet { max-height:min(84dvh,720px); overflow-y:auto; padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom)); }
+.create-group-scrim { overscroll-behavior:none; }
+.create-group-sheet {
+  max-height:min(84dvh,720px); overflow-x:hidden; overflow-y:auto;
+  padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom));
+  overscroll-behavior:contain; touch-action:pan-y;
+}
 .create-group-sheet > h2 { margin-bottom:6px; padding-right:48px; }
 .create-group-intro { margin:0 0 22px; color:var(--muted); font-size:14px; line-height:1.4; }
 .create-group-progress { padding-right:48px; margin-bottom:24px; }

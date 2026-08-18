@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Children, useState, useTransition, type ReactNode } from "react";
+import { Children, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { checkGroupHandle, createGroup, respondToGroupInvitation, type GroupPurpose } from "@/app/actions/groups";
 import { Icon } from "@/components/Icon";
@@ -48,6 +48,7 @@ function SavedRail({ title, empty, addHref, onAdd, kind, children }: { title:str
 
 export function CreateGroupSheet({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const sheetRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -57,6 +58,16 @@ export function CreateGroupSheet({ onClose }: { onClose: () => void }) {
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("unlisted");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  useEffect(() => {
+    sheetRef.current?.scrollTo({ top: 0 });
+  }, [step]);
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !pending) onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, pending]);
   const cleanSlug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 42);
   const validateHandle = async () => {
     const result = await checkGroupHandle(slug);
@@ -79,13 +90,13 @@ export function CreateGroupSheet({ onClose }: { onClose: () => void }) {
       setError("We couldn’t create the group. Your choices are still here, so please try again.");
     }
   });
-  return <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget && !pending) onClose(); }}>
-    <div className="sheet create-group-sheet">
+  return <div className="sheet-scrim create-group-scrim" onClick={(event) => { if (event.target === event.currentTarget && !pending) onClose(); }}>
+    <div ref={sheetRef} className="sheet create-group-sheet" role="dialog" aria-modal="true" aria-labelledby="create-group-title">
       <button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
       <div className="create-group-progress" aria-label={`Step ${step + 1} of 3`}><span>Step {step + 1} of 3</span><div>{[0, 1, 2].map((item) => <i className={item <= step ? "on" : ""} key={item} />)}</div></div>
-      {step === 0 && <div className="create-group-step"><h2>Name your group</h2><p>This creates the name and shareable link. You can fill out everything else after the group exists.</p><label className="create-group-name"><span>Group name</span><input autoFocus maxLength={60} value={name} onChange={(event) => { const value = event.target.value; setName(value); if (!slugEdited) setSlug(cleanSlug(value)); }} placeholder="Saturday run crew" /></label><label className="create-group-name group-handle"><span>Group link</span><div><span>fittlist.co/g/</span><input maxLength={42} value={slug} onChange={(event) => { setSlugEdited(true); setSlug(cleanSlug(event.target.value)); setSlugStatus(""); }} onBlur={validateHandle} placeholder="saturday-run-crew" /></div></label>{slugStatus && <p className={`group-handle-status${slugStatus.includes("available") ? " ok" : ""}`}>{slugStatus}</p>}</div>}
-      {step === 1 && <div className="create-group-step"><h2>What is this group for?</h2><p>This helps us make the first empty state useful. You can still use every group feature.</p><div className="create-group-purpose">{([['plan','Plan classes together','Make it easy to say “I’m going. Join me.”','event_available'],['community','Share a community calendar','Keep members and teachers informed in one place.','groups'],['event','Organize an event','Build a one-off schedule such as an expo or meetup.','calendar_month']] as const).map(([value,title,detail,icon]) => <button type="button" className={purpose === value ? "on" : ""} onClick={() => setPurpose(value)} key={value}><Icon name={icon} size={24} /><span><strong>{title}</strong><small>{detail}</small></span><Icon name={purpose === value ? "check_circle" : "chevron_right"} size={20} /></button>)}</div></div>}
-      {step === 2 && <div className="create-group-step"><h2>Who can see it?</h2><p>You can change this later.</p><div className="create-group-visibility">{([['unlisted','Anyone with the link','Share it before making it discoverable.'],['public','Public and discoverable','Anyone can find and favorite it.'],['private','Private','Only members and invited people can open it.']] as const).map(([value,title,detail]) => <button type="button" className={visibility === value ? "on" : ""} onClick={() => setVisibility(value)} key={value}><Icon name={visibility === value ? "check_circle" : "add_circle"} size={22} /><span><strong>{title}</strong><small>{detail}</small></span></button>)}</div></div>}
+      {step === 0 && <div className="create-group-step"><h2 id="create-group-title">Name your group</h2><p>This creates the name and shareable link. You can fill out everything else after the group exists.</p><label className="create-group-name"><span>Group name</span><input maxLength={60} value={name} onChange={(event) => { const value = event.target.value; setName(value); if (!slugEdited) setSlug(cleanSlug(value)); }} placeholder="Saturday run crew" /></label><label className="create-group-name group-handle"><span>Group link</span><div><span>fittlist.co/g/</span><input maxLength={42} value={slug} onChange={(event) => { setSlugEdited(true); setSlug(cleanSlug(event.target.value)); setSlugStatus(""); }} onBlur={validateHandle} placeholder="saturday-run-crew" /></div></label>{slugStatus && <p className={`group-handle-status${slugStatus.includes("available") ? " ok" : ""}`}>{slugStatus}</p>}</div>}
+      {step === 1 && <div className="create-group-step"><h2 id="create-group-title">What is this group for?</h2><p>This helps us make the first empty state useful. You can still use every group feature.</p><div className="create-group-purpose">{([['plan','Plan classes together','Make it easy to say “I’m going. Join me.”','event_available'],['community','Share a community calendar','Keep members and teachers informed in one place.','groups'],['event','Organize an event','Build a one-off schedule such as an expo or meetup.','calendar_month']] as const).map(([value,title,detail,icon]) => <button type="button" className={purpose === value ? "on" : ""} onClick={() => setPurpose(value)} key={value}><Icon name={icon} size={24} /><span><strong>{title}</strong><small>{detail}</small></span><Icon name={purpose === value ? "check_circle" : "chevron_right"} size={20} /></button>)}</div></div>}
+      {step === 2 && <div className="create-group-step"><h2 id="create-group-title">Who can see it?</h2><p>You can change this later.</p><div className="create-group-visibility">{([['unlisted','Anyone with the link','Share it before making it discoverable.'],['public','Public and discoverable','Anyone can find and favorite it.'],['private','Private','Only members and invited people can open it.']] as const).map(([value,title,detail]) => <button type="button" className={visibility === value ? "on" : ""} onClick={() => setVisibility(value)} key={value}><Icon name={visibility === value ? "check_circle" : "add_circle"} size={22} /><span><strong>{title}</strong><small>{detail}</small></span></button>)}</div></div>}
       <div className="create-group-actions">{error && <p className="formerror" role="alert">{error}</p>}<div>{step > 0 && <button type="button" className="btn ghost" disabled={pending} onClick={() => setStep((current) => current - 1)}>Back</button>}<button type="button" className="btn create-group-submit" disabled={pending || step === 0 && (name.trim().length < 2 || slug.length < 3)} onClick={step === 2 ? submit : next}>{pending ? step === 2 ? "Creating group…" : "Checking link…" : step === 2 ? "Create group" : "Continue"}</button></div></div>
     </div>
   </div>;
