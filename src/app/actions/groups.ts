@@ -189,6 +189,22 @@ export async function updateGroupDescription(slug: string, value: string) {
   return { ok: true } as const;
 }
 
+export async function updateGroupDetails(slug: string, input: { name: string; photo: string | null }) {
+  const manager = await groupManager(slug);
+  if (!manager) return { ok: false, error: "Only group admins can edit this." } as const;
+  const name = input.name.trim().replace(/\s+/g, " ");
+  if (name.length < 2) return { ok: false, error: "Give your group a name." } as const;
+  if (name.length > 60) return { ok: false, error: "Keep the name under 60 characters." } as const;
+  const photo = input.photo?.trim() || null;
+  if (photo && (!photo.startsWith("data:image/") || photo.length > 2_000_000)) {
+    return { ok: false, error: "Choose a smaller image." } as const;
+  }
+  await manager.db.update(schema.groups).set({ name, photo }).where(eq(schema.groups.id, manager.groupId));
+  revalidatePath(`/g/${slug}`);
+  revalidatePath("/saved");
+  return { ok: true } as const;
+}
+
 export async function updateGroupVisibility(slug: string, visibility: "public" | "unlisted" | "private") {
   const manager = await groupManager(slug);
   if (!manager) return { ok: false, error: "Only group admins can change privacy." } as const;

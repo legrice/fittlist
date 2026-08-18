@@ -2509,6 +2509,15 @@ button.ps-card { cursor: pointer; }
   width: 100%; margin-top: 16px;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
 }
+.group-details-photo { display:flex; align-items:center; gap:16px; margin:20px 0; }
+.group-details-photo > button {
+  width:88px; height:88px; padding:0; border:1px solid var(--color-border); border-radius:var(--radius-control);
+  overflow:hidden; background:var(--color-surface-muted); display:grid; place-items:center; cursor:pointer;
+}
+.group-details-photo img { width:100%; height:100%; object-fit:cover; }
+.group-details-photo > div { display:grid; gap:6px; }
+.group-details-photo > div > button { padding:0; border:0; background:none; color:var(--color-text-secondary); text-align:left; text-decoration:underline; cursor:pointer; }
+.group-hero-photo { width:112px; height:112px; margin:8px 0 16px; border-radius:var(--radius-control); object-fit:cover; display:block; }
 .globaladd-chooser-options { display: grid; gap: 8px; margin-top: 18px; }
 .globaladd-chooser-options button {
   display: grid; grid-template-columns: 42px 1fr 20px; align-items: center; gap: 12px;
