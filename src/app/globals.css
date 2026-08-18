@@ -4313,6 +4313,7 @@ select.editinput.placekind-select {
 .pubhead:not(.pubhead-hero) .pubidentity-paper { padding-top: 58px; }
 .pubhead:not(.pubhead-hero):not(:has(.profback)) .pubidentity-paper { padding-top: 20px; }
 .pubpanel-toggle > .profile-anchor-section { display:none; }
+.pubpanel-toggle > :is(#profile-about,#profile-coaches) { margin-top:0; padding-top:0; border-top:0; }
 .pubpanel-toggle[data-active="schedule"] > #profile-schedule,
 .pubpanel-toggle[data-active="about"] > #profile-about,
 .pubpanel-toggle[data-active="coaches"] > #profile-coaches { display:block; }
