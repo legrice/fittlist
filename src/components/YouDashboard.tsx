@@ -54,7 +54,7 @@ export type YouDashboardData = {
   yourGroups: YouFavoriteGroup[];
   favoriteGroups: YouFavoriteGroup[];
   groupInvitations: YouGroupInvitation[];
-  managed: { id: string; name: string; slug: string; admin: boolean }[];
+  managed: { id: string; name: string; slug: string; admin: boolean; photo: string | null }[];
   shareHref: string;
   isAdmin: boolean;
   unread: { messages: number; notifications: number };
@@ -111,6 +111,7 @@ export function YouDashboard({
               title={place.name}
               detail="Schedule and shifts"
               href={`/s/${place.slug}/shifts`}
+              avatar={{ photo: place.photo, name: place.name }}
               key={place.id}
             />
           ))}
@@ -184,10 +185,10 @@ function AccountGroup({ title, children }: { title: string; children: React.Reac
   );
 }
 
-function AccountRow({ icon, title, detail, href, count = 0 }: { icon: string; title: string; detail?: string; href: string; count?: number }) {
+function AccountRow({ icon, title, detail, href, count = 0, avatar }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string } }) {
   return (
     <Link className="youaccount-row" href={href}>
-      <span className="youaccount-icon"><Icon name={icon} size={20} /></span>
+      {avatar ? <span className="youaccount-icon youaccount-place-avatar">{avatar.photo ? <img src={avatar.photo} alt="" /> : <span>{(avatar.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span> : <span className="youaccount-icon"><Icon name={icon} size={20} /></span>}
       <span className="youaccount-copy">
         <strong>{title}</strong>
         {detail && <small>{detail}</small>}

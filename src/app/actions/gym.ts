@@ -1998,7 +1998,7 @@ export async function staffView(studioId: string): Promise<StaffView | null> {
  * and a stranger to the list that was supposed to link them to it.
  */
 export async function myStaffStudios(): Promise<
-  { id: string; name: string; slug: string; admin: boolean }[]
+  { id: string; name: string; slug: string; admin: boolean; photo: string | null }[]
 > {
   const userId = await getSessionUserId();
   if (!userId) return [];
@@ -2028,7 +2028,7 @@ export async function myStaffStudios(): Promise<
   if (!ids.length) return [];
   const rows = await db.select().from(schema.studios).where(inArray(schema.studios.id, ids));
   return rows
-    .map((s) => ({ id: s.id, name: s.name, slug: s.slug ?? s.id, admin: runs.has(s.id) }))
+    .map((s) => ({ id: s.id, name: s.name, slug: s.slug ?? s.id, admin: runs.has(s.id), photo: s.photo }))
     // The places you run first: they carry the work that only you can do.
     .sort((a, b) => Number(b.admin) - Number(a.admin) || a.name.localeCompare(b.name));
 }
