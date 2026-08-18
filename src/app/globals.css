@@ -9379,7 +9379,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-bottom-actions button:active { transform: scale(.96); }
 .calendar-page-header {
   min-height:64px; display:grid; grid-template-columns:minmax(0,1fr) auto 44px; align-items:center; gap:8px;
-  margin:0 0 4px; background:var(--ground);
+  margin:4px 0; background:var(--ground);
 }
 .calendar-page-header h1 { margin:0; font-size:34px; line-height:1.05; letter-spacing:-.025em; }
 .calendar-menu-button,
