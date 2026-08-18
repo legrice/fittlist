@@ -362,7 +362,7 @@ export function CalendarScreen({
             {([...(member ? [] : [["coaching", "Coaching"]] as const), ["saved", "Saved"], ["personal", "Personal"]] as const).map(([value, label]) => {
               const on = visible[value];
               const icon = value === "coaching" ? "event_available" : value === "saved" ? "bookmark" : "activity";
-              return <button type="button" className="calendar-drawer-row calendar-category-row" aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-category-icon calendar-category-icon-${value}`}><Icon name={icon} size={20} /></span><span>{label}</span><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`}>{on && <Icon name="check" size={16} />}</span></button>;
+              return <button type="button" className={`calendar-drawer-row calendar-category-row calendar-category-row-${value}${on ? " on" : ""}`} aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-category-icon calendar-category-icon-${value}`}><Icon name={icon} size={20} /></span><span>{label}</span><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`} /></button>;
             })}
           </section>
           <section className="calendar-drawer-section calendar-favorite-section">

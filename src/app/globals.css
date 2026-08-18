@@ -9607,13 +9607,16 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-view-choice-icon { width:36px; height:36px; display:grid; place-items:center; border-radius:50%; background:var(--color-surface-muted); }
 .calendar-view-choice .calendar-check.on { border-color:transparent; background:var(--color-black); color:var(--color-white); }
 .calendar-check-row { grid-template-columns:34px minmax(0,1fr); }
-.calendar-category-row { grid-template-columns:40px minmax(0,1fr) 28px; }
+.calendar-category-row { min-height:54px; margin:4px 0; padding:7px 8px; grid-template-columns:40px minmax(0,1fr) 28px; border:1.5px solid transparent; border-radius:var(--radius-control); }
+.calendar-category-row-coaching.on { border-color:var(--color-coaching); }
+.calendar-category-row-saved.on { border-color:var(--color-attending); }
+.calendar-category-row-personal.on { border-color:var(--color-personal); }
 .calendar-category-icon {
-  width:36px; height:36px; display:grid; place-items:center; border-radius:50%;
+  width:36px; height:36px; display:grid; place-items:center; border-radius:50%; background:var(--color-surface-muted); color:var(--color-text-secondary);
 }
-.calendar-category-icon-coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
-.calendar-category-icon-saved { background:var(--color-attending); color:var(--color-attending-text); }
-.calendar-category-icon-personal { background:var(--color-personal); color:var(--color-personal-text); }
+.calendar-category-row-coaching.on .calendar-category-icon { background:var(--color-coaching); color:var(--color-coaching-text); }
+.calendar-category-row-saved.on .calendar-category-icon { background:var(--color-attending); color:var(--color-attending-text); }
+.calendar-category-row-personal.on .calendar-category-icon { background:var(--color-personal); color:var(--color-personal-text); }
 .calendar-category-row .calendar-check { margin-left:auto; }
 .calendar-check {
   width:23px; height:23px; border:2px solid var(--color-border-strong); border-radius:6px;
@@ -9623,9 +9626,8 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-check-coaching.on { background:var(--color-coaching); }
 .calendar-check-saved.on { background:var(--color-attending); }
 .calendar-check-personal.on { background:var(--color-personal); }
-.calendar-check-coaching:not(.on) { border-color:var(--color-coaching); background:var(--color-coaching-soft); }
-.calendar-check-saved:not(.on) { border-color:var(--color-attending); background:color-mix(in srgb,var(--color-attending) 35%,white); }
-.calendar-check-personal:not(.on) { border-color:var(--color-personal); background:color-mix(in srgb,var(--color-personal) 35%,white); }
+.calendar-category-row .calendar-check:not(.on) { border-radius:50%; background:var(--color-white); }
+.calendar-category-row .calendar-check.on { border-radius:50%; }
 .screen:has(.calendar-page-header) .btn:not(.ghost) { background:var(--color-lime); color:var(--color-black); }
 .calendar-cardwrap {
   margin-top: 0;
