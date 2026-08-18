@@ -8392,8 +8392,11 @@ select.editinput.placekind-select {
      collapse to the more negative one, so -54 (the X's 42 plus the 12 of
      padding) is what puts the picture at the sheet's very top edge, sliding
      under the pinned circle. */
-  display: block; margin: -54px -20px 20px; width: calc(100% + 40px);
-  height: 250px; object-fit: cover; border-radius: 16px 16px 0 0;
+  display: block;
+  margin: -54px calc(-1 * var(--page-gutter)) 20px;
+  width: calc(100% + var(--page-gutter) + var(--page-gutter));
+  height: 250px; object-fit: cover;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
 }
 /* Sticky, not absolute: the sheet is its own scroller, and an absolute X
    rode the photograph away, leaving a long class with no visible way off.
