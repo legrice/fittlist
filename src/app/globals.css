@@ -1468,6 +1468,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   background: var(--color-personal);
   color: var(--color-personal-text);
 }
+.monthpill.ev-overlay { background:var(--color-white); border:1px solid currentColor; }
 .monthmore { font-size: 10px; font-weight: 600; color: var(--ol); text-align: center; }
 /* The two persistent doors: Today bottom left (back to now) and Add bottom
    right, in bright green. Share is not down here; it sits in the header's
@@ -9744,6 +9745,25 @@ a.clspeek-by:active { opacity: .6; }
   opacity: 1;
   background: var(--color-surface-hover);
 }
+.calendar-cardlist .clline-overlay { border-left:4px solid var(--overlay-color, var(--color-border-strong)); }
+.calendar-overlay-save {
+  position:absolute; right:16px; bottom:16px; min-height:34px; padding:0 12px;
+  display:inline-flex; align-items:center; gap:4px; border:1px solid var(--color-border);
+  border-radius:var(--radius-pill); background:var(--color-white); color:var(--color-black);
+  font:inherit; font-size:12px; font-weight:700; cursor:pointer;
+}
+.calendar-cardlist .clrow:has(.calendar-overlay-save) .clline-by { padding-right:72px; }
+.calendar-overlay-context {
+  margin:0 0 12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  border:1px solid var(--color-border); border-radius:var(--radius-control); background:var(--color-white);
+  color:var(--color-text-secondary); font-size:12px; font-weight:700;
+}
+.calendar-overlay-context span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-overlay-context button { padding:0; border:0; background:none; color:var(--color-black); font:inherit; font-weight:700; }
+.calendar-favorite-section > :is(p,small) { margin:6px 0; color:var(--color-text-secondary); font-size:12px; line-height:1.4; }
+.calendar-favorite-row img,.calendar-favorite-avatar { width:32px; height:32px; display:grid; place-items:center; border-radius:50%; object-fit:cover; color:white; font-size:12px; }
+.calendar-favorite-row .calendar-check { margin-left:auto; }
+.calendar-favorite-row:disabled { opacity:.42; }
 .calendar-cardlist .clline-t {
   justify-self: start;
   font-size: 16px;

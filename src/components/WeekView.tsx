@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { ClassRowMenu, type ClassRowMenuProps } from "@/components/ClassRowMenu";
 
 /**
@@ -47,6 +47,8 @@ export type WeekRow = {
   tag?: string;
   /** Optional relationship color for compact ownership badges. */
   tagTone?: "coaching" | "attending" | "personal";
+  /** A temporary favorite-calendar overlay, distinct from your own statuses. */
+  overlayColor?: string;
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
@@ -199,7 +201,8 @@ export function ClassLine({ row }: { row: WeekRow }) {
   if (row.href)
     return (
       <a
-        className="clline"
+        className={`clline${row.overlayColor ? " clline-overlay" : ""}`}
+        style={row.overlayColor ? ({ "--overlay-color":row.overlayColor } as CSSProperties) : undefined}
         href={row.href}
         data-cid={row.classId}
         data-d={row.iso}
@@ -209,12 +212,12 @@ export function ClassLine({ row }: { row: WeekRow }) {
         {inner}
       </a>
     );
-  if (!row.onTap) return <div className="clline">{inner}</div>;
+  if (!row.onTap) return <div className={`clline${row.overlayColor ? " clline-overlay" : ""}`} style={row.overlayColor ? ({ "--overlay-color":row.overlayColor } as CSSProperties) : undefined}>{inner}</div>;
   return (
     // The data keys ride the button too, when the row has them: the landing
     // highlight (?hl) finds a row by them, and a row that opens a sheet
     // instead of navigating is still the row the highlight means.
-    <button className="clline" onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
+    <button className={`clline${row.overlayColor ? " clline-overlay" : ""}`} style={row.overlayColor ? ({ "--overlay-color":row.overlayColor } as CSSProperties) : undefined} onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
       {inner}
     </button>
   );

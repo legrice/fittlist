@@ -27,7 +27,7 @@ import type { ClassDto, StudioDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
-import { loadCalendarComposerData, loadCalendarShareData, type CalendarComposerData } from "@/app/actions/calendar-data";
+import { loadCalendarComposerData, loadCalendarShareData, loadFavoriteCalendars, type CalendarComposerData, type FavoriteCalendarData } from "@/app/actions/calendar-data";
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -115,6 +115,10 @@ export function CalendarScreen({
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
   const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string } | null>(null);
   const [loadingTools, startTools] = useTransition();
+  const [favoriteData, setFavoriteData] = useState<FavoriteCalendarData | null>(null);
+  const [favoriteLoading, startFavoriteLoading] = useTransition();
+  const [selectedFavorites, setSelectedFavorites] = useState<string[]>([]);
+  const [overlaySaved, setOverlaySaved] = useState<Record<string,boolean>>({});
 
   const ensureComposer = useCallback(() => {
     if (composerData) return;
@@ -131,6 +135,11 @@ export function CalendarScreen({
       if (data) setShareData(data);
     });
   };
+  const openFilters = () => {
+    setMenuOpen(true);
+    if (!favoriteData) startFavoriteLoading(async () => setFavoriteData(await loadFavoriteCalendars() ?? { people:[], events:[] }));
+  };
+  const toggleFavorite = (id:string) => setSelectedFavorites((current) => current.includes(id) ? current.filter((value) => value !== id) : current.length < 2 ? [...current,id] : current);
 
   useEffect(() => {
     if (!shareOpen && !menuOpen) return;
@@ -158,6 +167,14 @@ export function CalendarScreen({
       ),
     [savedDays, gone],
   );
+  const favoriteByIso = useMemo(() => {
+    const map = new Map<string,FavoriteCalendarData["events"]>();
+    for (const event of favoriteData?.events ?? []) {
+      if (!selectedFavorites.includes(event.personId) || overlaySaved[`${event.classId}|${event.iso}`]) continue;
+      map.set(event.iso,[...(map.get(event.iso) ?? []),event]);
+    }
+    return map;
+  },[favoriteData,selectedFavorites,overlaySaved]);
   const atOf = (r: { hm: string; ap: string }) => {
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
@@ -240,14 +257,32 @@ export function CalendarScreen({
         ),
       };
       });
+      const favoriteRows = (favoriteByIso.get(iso) ?? []).map((event) => {
+        const person = favoriteData?.people.find((item) => item.id === event.personId);
+        const key = `${event.classId}|${event.iso}`;
+        return {
+          key:`overlay|${event.personId}|${key}`, classId:event.classId, iso:event.iso, base:event.base,
+          name:event.name, where:event.where, hm:event.hm, ap:event.ap,
+          coach:person ? { id:person.id, name:person.name, photo:person.photo, color:person.color } : null,
+          overlayColor:person?.color,
+          href:`/${event.base}/${event.classId}?d=${event.iso}&from=schedule`,
+          corner:<button type="button" className="calendar-overlay-save" onClick={() => startRemove(async () => {
+            setOverlaySaved((current) => ({...current,[key]:true}));
+            const result=await setGoing(event.classId,event.iso,true);
+            if(!result.ok){setOverlaySaved((current)=>({...current,[key]:false}));toast(result.error??"Couldn't save that class");return;}
+            toast(`${event.name} was saved to your calendar`);router.refresh();
+          })}><Icon name="add" size={17}/>Save</button>,
+        };
+      });
       const rows = [
         ...(visible.coaching ? coachingRows : []),
         ...addedRows.filter((row) => row.tagTone === "personal" ? visible.personal : visible.saved),
+        ...favoriteRows,
       ].sort((a, b) => atOf(a) - atOf(b));
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, visible, savedByIso, router, viewer]);
+  }, [classes, todayIso, studioById, handle, visible, savedByIso, favoriteByIso, favoriteData, router, viewer]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -271,14 +306,16 @@ export function CalendarScreen({
         name: i.name,
         at: atOf(i),
       }));
+      const favoriteRows = (favoriteByIso.get(iso) ?? []).map((event) => ({ kind:"overlay" as const, name:event.name, at:atOf(event), color:favoriteData?.people.find((person)=>person.id===event.personId)?.color }));
       const rows = [
         ...(visible.coaching ? coachingRows : []),
         ...addedRows.filter((row) => row.kind === "private" ? visible.personal : visible.saved),
+        ...favoriteRows,
       ].sort((a, b) => a.at - b.at);
       if (rows.length) m.set(iso, rows);
     }
     return m;
-  }, [classes, todayIso, visible, savedByIso]);
+  }, [classes, todayIso, visible, savedByIso, favoriteByIso, favoriteData]);
 
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
@@ -309,7 +346,7 @@ export function CalendarScreen({
           <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={20} /></button>
           <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={20} /></button>
         </div>
-        <button type="button" className="calendar-menu-button" aria-label="Filter calendar" onClick={() => setMenuOpen(true)}><Icon name="tune" size={22} /></button>
+        <button type="button" className="calendar-menu-button" aria-label="Filter calendar" onClick={openFilters}><Icon name="tune" size={22} /></button>
       </header>
 
       {menuOpen && <div className="calendar-drawer-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
@@ -322,8 +359,17 @@ export function CalendarScreen({
               return <button type="button" className="calendar-drawer-row calendar-check-row" aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`}>{on && <Icon name="check" size={16} />}</span><span>{label}</span></button>;
             })}
           </section>
+          <section className="calendar-drawer-section calendar-favorite-section">
+            <h3>Favorite calendars</h3>
+            {favoriteLoading ? <p>Finding active calendars…</p> : favoriteData?.people.length ? <>{favoriteData.people.map((person) => {
+              const on=selectedFavorites.includes(person.id); const full=!on&&selectedFavorites.length>=2;
+              return <button type="button" className="calendar-drawer-row calendar-favorite-row" aria-pressed={on} disabled={full} onClick={()=>toggleFavorite(person.id)} key={person.id}>{person.photo?<img src={person.photo} alt="" loading="lazy" decoding="async"/>:<span className="calendar-favorite-avatar" style={{background:person.color}}>{person.name.charAt(0).toUpperCase()}</span>}<span>{person.name}</span><span className={`calendar-check${on?" on":""}`} style={on?{background:person.color}:undefined}>{on&&<Icon name="check" size={16}/>}</span></button>;
+            })}<small>Show up to two calendars at a time.</small></> : <p>No favorites have upcoming classes yet.</p>}
+          </section>
         </aside>
       </div>}
+
+      {selectedFavorites.length>0 && <div className="calendar-overlay-context"><span>Showing your calendar + {selectedFavorites.map((id)=>favoriteData?.people.find((person)=>person.id===id)?.name).filter(Boolean).join(" + ")}</span><button type="button" onClick={()=>setSelectedFavorites([])}>Clear</button></div>}
 
       <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
@@ -335,7 +381,7 @@ export function CalendarScreen({
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
-      {bare ? (
+      {bare && selectedFavorites.length===0 ? (
         <WeekEmpty
           first
           title="Your week starts here"
@@ -408,7 +454,7 @@ export function CalendarScreen({
           naming the day (or month) under it with the toggle and Add along
           for the ride, so the two things the title row offered are never a
           long scroll away. */}
-      {!bare && days.length > 0 && (
+      {(!bare || selectedFavorites.length > 0) && days.length > 0 && (
         <ScrollHead
           on={view === "month" ? scrolled : !!topDay}
           label={
