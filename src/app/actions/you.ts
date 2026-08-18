@@ -9,6 +9,8 @@ import { adminEmails } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
 import { todayIso } from "@/lib/format";
 import { unreadHeaderCounts } from "@/lib/notify";
+import { publicSchedules } from "@/lib/coachweek";
+import { occurrenceEnded, runsOn } from "@/lib/format";
 
 /** The one data source for the standalone You page and its header sheet. */
 export async function youDashboardData(): Promise<YouDashboardData | null> {
@@ -56,6 +58,26 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const peopleData = personIds.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, personIds))
     : [];
+  const today = todayIso();
+  const [favoriteSchedules, favoriteAttendances] = peopleData.length ? await Promise.all([
+    publicSchedules(peopleData),
+    db
+      .select({ userId: schema.attendances.userId })
+      .from(schema.attendances)
+      .where(and(
+        inArray(schema.attendances.userId, personIds),
+        eq(schema.attendances.isPublic, true),
+        gte(schema.attendances.occurrenceDate, today),
+      )),
+  ]) : [[], []];
+  const activeCalendarIds = new Set(favoriteAttendances.map((row) => row.userId));
+  for (let offset = 0; offset < 56; offset++) {
+    const iso = new Date(Date.parse(`${today}T00:00:00Z`) + offset * 864e5).toISOString().slice(0, 10);
+    const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    for (const row of favoriteSchedules) {
+      if (row.isPublic && runsOn(row, iso, dow) && !occurrenceEnded(iso, row.startTime, row.durationMin)) activeCalendarIds.add(row.ownerUserId);
+    }
+  }
   const peopleById = new Map(peopleData.map((person) => [person.id, person]));
   const people: YouFavoritePerson[] = personIds.flatMap((id) => {
     const person = peopleById.get(id);
@@ -67,6 +89,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       photo: person.photoThumb ?? person.photo,
       color: avatarColor(person),
       title: person.title?.trim() ?? "",
+      hasCalendar: activeCalendarIds.has(person.id),
     }];
   });
 
