@@ -197,27 +197,19 @@ export async function toggleGroupReaction(slug: string, postId: string, reaction
   return { ok:true, selected:!existing } as const;
 }
 
-export async function updateGroupDescription(slug: string, value: string) {
-  const manager = await groupManager(slug);
-  if (!manager) return { ok: false, error: "Only group admins can edit this." } as const;
-  const description = value.trim().replace(/\s+/g, " ");
-  if (description.length > 280) return { ok: false, error: "Keep the description under 280 characters." } as const;
-  await manager.db.update(schema.groups).set({ description: description || null }).where(eq(schema.groups.id, manager.groupId));
-  revalidatePath(`/g/${slug}`);
-  return { ok: true } as const;
-}
-
-export async function updateGroupDetails(slug: string, input: { name: string; photo: string | null }) {
+export async function updateGroupDetails(slug: string, input: { name: string; description: string; photo: string | null }) {
   const manager = await groupManager(slug);
   if (!manager) return { ok: false, error: "Only group admins can edit this." } as const;
   const name = input.name.trim().replace(/\s+/g, " ");
   if (name.length < 2) return { ok: false, error: "Give your group a name." } as const;
   if (name.length > 60) return { ok: false, error: "Keep the name under 60 characters." } as const;
+  const description = input.description.trim().replace(/\s+/g, " ");
+  if (description.length > 280) return { ok: false, error: "Keep the about under 280 characters." } as const;
   const photo = input.photo?.trim() || null;
   if (photo && (!photo.startsWith("data:image/") || photo.length > 2_000_000)) {
     return { ok: false, error: "Choose a smaller image." } as const;
   }
-  await manager.db.update(schema.groups).set({ name, photo }).where(eq(schema.groups.id, manager.groupId));
+  await manager.db.update(schema.groups).set({ name, description: description || null, photo }).where(eq(schema.groups.id, manager.groupId));
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
   return { ok: true } as const;
