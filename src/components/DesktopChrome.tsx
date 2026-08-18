@@ -70,12 +70,12 @@ export function DesktopChrome({
           <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox">
             <Icon name="chat_bubble" size={22} />
             <span>Messages</span>
-            {messageUnread > 0 && <b className="desktop-count">{messageUnread > 9 ? "9+" : messageUnread}</b>}
+            {messageUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${messageUnread} unread messages`}>{messageUnread > 99 ? "99+" : messageUnread}</b>}
           </Link>
           <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications">
             <Icon name="notifications" size={22} />
             <span>Notifications</span>
-            {notificationUnread > 0 && <b className="desktop-count">{notificationUnread > 9 ? "9+" : notificationUnread}</b>}
+            {notificationUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread} unread notifications`}>{notificationUnread > 99 ? "99+" : notificationUnread}</b>}
           </Link>
           {admin && (
             <Link className={`desktop-nav-link${pathname.startsWith("/admin") ? " on" : ""}`} href="/admin">

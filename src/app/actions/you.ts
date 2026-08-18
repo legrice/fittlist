@@ -8,6 +8,7 @@ import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
 import { todayIso } from "@/lib/format";
+import { unreadHeaderCounts } from "@/lib/notify";
 
 /** The one data source for the standalone You page and its header sheet. */
 export async function youDashboardData(): Promise<YouDashboardData | null> {
@@ -17,7 +18,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me?.handle || !me.onboardedAt) return null;
 
-  const [favoriteRows, placeRows, groupMembershipRows, ownedGroupRows, groupFavoriteRows, groupInvitationRows, managed] = await Promise.all([
+  const [favoriteRows, placeRows, groupMembershipRows, ownedGroupRows, groupFavoriteRows, groupInvitationRows, managed, unread] = await Promise.all([
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
@@ -47,6 +48,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       .from(schema.groupInvitations)
       .where(eq(schema.groupInvitations.inviteeUserId, userId)),
     myStaffStudios(),
+    unreadHeaderCounts(userId, me.email),
   ]);
 
   const personIds = [...new Set(favoriteRows.map((row) => row.trainerUserId))]
@@ -138,5 +140,6 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     managed: managed.filter((place) => place.admin),
     shareHref: me.kind === "fan" ? "/membershare" : "/coachshare",
     isAdmin: adminEmails().includes(me.email.toLowerCase()),
+    unread,
   };
 }

@@ -57,6 +57,7 @@ export type YouDashboardData = {
   managed: { id: string; name: string; slug: string; admin: boolean }[];
   shareHref: string;
   isAdmin: boolean;
+  unread: { messages: number; notifications: number };
 };
 
 export type ProfileSettingsView = "page" | "calendar" | "reach" | "account";
@@ -66,6 +67,7 @@ export function YouDashboard({
   managed,
   shareHref,
   isAdmin,
+  unread,
   onOpenSettings,
 }: YouDashboardData & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
@@ -97,8 +99,8 @@ export function YouDashboard({
       </div>
 
       <AccountGroup title="Your account">
-        <AccountRow icon="forum" title="Messages" detail="Your conversations" href="/inbox" />
-        <AccountRow icon="notifications" title="Notifications" detail="Updates about your account and activity" href="/notifications" />
+        <AccountRow icon="forum" title="Messages" detail="Your conversations" href="/inbox" count={unread.messages} />
+        <AccountRow icon="notifications" title="Notifications" detail="Updates about your account and activity" href="/notifications" count={unread.notifications} />
       </AccountGroup>
 
       {managed.length > 0 && (
@@ -182,7 +184,7 @@ function AccountGroup({ title, children }: { title: string; children: React.Reac
   );
 }
 
-function AccountRow({ icon, title, detail, href }: { icon: string; title: string; detail?: string; href: string }) {
+function AccountRow({ icon, title, detail, href, count = 0 }: { icon: string; title: string; detail?: string; href: string; count?: number }) {
   return (
     <Link className="youaccount-row" href={href}>
       <span className="youaccount-icon"><Icon name={icon} size={20} /></span>
@@ -190,6 +192,7 @@ function AccountRow({ icon, title, detail, href }: { icon: string; title: string
         <strong>{title}</strong>
         {detail && <small>{detail}</small>}
       </span>
+      {count > 0 && <b className="youaccount-unread" aria-label={`${count} unread`}>{count > 99 ? "99+" : count}</b>}
       <Icon className="youaccount-chevron" name="chevron_right" size={19} />
     </Link>
   );
