@@ -24,6 +24,7 @@ export type YouFavoriteGroup = {
   id: string;
   name: string;
   slug: string;
+  photo: string | null;
   memberCount: number;
   role: string | null;
   nextClass: string | null;

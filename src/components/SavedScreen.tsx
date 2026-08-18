@@ -28,7 +28,7 @@ export function SavedScreen({ people, places, yourGroups, favoriteGroups, invita
 
 function GroupRailCard({ group }: { group: YouFavoriteGroup }) {
   const nextDate = group.nextDate ? new Date(`${group.nextDate}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) : null;
-  return <Link className="youfav saved-group-card" href={`/g/${group.slug}`}><span><Icon name="groups" size={30} /></span><strong>{group.name}</strong><small>{group.nextClass ? `${nextDate} · ${group.nextClass}` : `${group.memberCount} ${group.memberCount === 1 ? "member" : "members"}`}</small></Link>;
+  return <Link className="youfav saved-group-card" href={`/g/${group.slug}`}>{group.photo ? <img src={group.photo} alt="" /> : <span><Icon name="groups" size={30} /></span>}<strong>{group.name}</strong><small>{group.nextClass ? `${nextDate} · ${group.nextClass}` : `${group.memberCount} ${group.memberCount === 1 ? "member" : "members"}`}</small></Link>;
 }
 
 function GroupInvitationCard({ invite }: { invite: YouGroupInvitation }) {

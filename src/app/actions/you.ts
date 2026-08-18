@@ -85,11 +85,11 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const groupIds = [...new Set([...groupMembershipRows, ...ownedGroupRows, ...groupFavoriteRows].map((row) => row.groupId))];
   const groupBaseRows = groupIds.length
     ? await db
-        .select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, memberCount: count(schema.groupMembers.id) })
+        .select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, photo: schema.groups.photo, memberCount: count(schema.groupMembers.id) })
         .from(schema.groups)
         .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
         .where(inArray(schema.groups.id, groupIds))
-        .groupBy(schema.groups.id, schema.groups.name, schema.groups.slug, schema.groups.createdAt)
+        .groupBy(schema.groups.id, schema.groups.name, schema.groups.slug, schema.groups.photo, schema.groups.createdAt)
         .orderBy(desc(schema.groups.createdAt))
     : [];
   const [groupMemberRows, groupClassRows] = groupIds.length ? await Promise.all([
