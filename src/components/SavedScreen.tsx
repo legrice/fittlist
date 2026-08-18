@@ -17,7 +17,7 @@ export function SavedScreen({ people, places, yourGroups, favoriteGroups, invita
   return <main className="savedpage">
     <header className="savedhead"><h1>Favorites</h1></header>
     <SavedRail kind="people" title="People" empty="Favorite people to keep their individual calendars close by." addHref="/discover">
-      {calendarPeople.map((person) => <Link className="youfav" href={`/${person.handle}?from=saved`} key={person.id}>{person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<strong>{person.name}</strong>{person.title && <small>{person.title}</small>}</Link>)}
+      {calendarPeople.map((person) => <Link className="youfav" href={`/${person.handle}?from=saved`} key={person.id}>{person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<strong>{person.name}</strong>{person.coaching ? <small className="youfav-coaching">Coaching</small> : person.title ? <small>{person.title}</small> : null}</Link>)}
     </SavedRail>
     <SavedRail kind="places" title="Studios" empty="Favorite studios to find their schedules again quickly." addHref="/discover?half=places">
       {places.map((place) => <Link className="youfav" href={`/s/${place.slug}?from=saved`} key={place.id}>{place.photo ? <img src={place.photo} alt="" loading="lazy" decoding="async" /> : <span>{place.name.charAt(0).toUpperCase()}</span>}<strong>{place.name}</strong>{place.types.length > 0 && <small>{place.types.slice(0, 2).join(" · ")}</small>}</Link>)}

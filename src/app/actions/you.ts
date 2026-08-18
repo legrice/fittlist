@@ -89,6 +89,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       photo: person.photoThumb ?? person.photo,
       color: avatarColor(person),
       title: person.title?.trim() ?? "",
+      coaching: person.kind !== "fan",
       hasCalendar: activeCalendarIds.has(person.id),
     }];
   });

@@ -10,6 +10,7 @@ export type YouFavoritePerson = {
   photo: string | null;
   color: string;
   title: string;
+  coaching: boolean;
   hasCalendar: boolean;
 };
 
