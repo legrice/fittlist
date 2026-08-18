@@ -7786,15 +7786,30 @@ select.editinput.placekind-select {
 .shpage-back { margin-bottom: 16px; }
 .calendar-share-sheet {
   width: 100%; max-width: 1120px; max-height: 94dvh; padding: 0;
-  overflow: hidden;
+  overflow: hidden; background:var(--color-surface-muted);
 }
 .calendar-share-sheet .shpage-embedded {
   width: 100%; max-width: none; max-height: 94dvh; overflow-y: auto;
   margin: 0;
   padding: 24px var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
+  background:var(--color-surface-muted);
 }
 .calendar-share-sheet .shpage-title { padding-right: 58px; }
 .calendar-share-sheet .shseg { margin-top: var(--space-1); }
+.calendar-share-sheet .sheetclose {
+  background:var(--color-white); border:1px solid var(--color-border);
+}
+.calendar-share-sheet .shseg-pill,
+.calendar-share-sheet .shctrl,
+.calendar-share-sheet .btn.ghost {
+  border:1px solid var(--color-border);
+  background:var(--color-white);
+}
+.calendar-share-sheet .shseg-pill.on,
+.calendar-share-sheet .shctrl.shctrl-add {
+  border-color:var(--color-lime);
+  background:var(--color-lime);
+}
 @media (min-width: 940px) {
   .calendar-share-scrim { align-items: flex-end; padding: 24px 24px 0; }
   .calendar-share-sheet {
