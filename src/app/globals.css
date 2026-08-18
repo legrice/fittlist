@@ -5972,10 +5972,13 @@ select.editinput.placekind-select {
 .group-settings-list > button > .icon:last-child { color:var(--muted); }
 .group-settings-back { margin:0 0 20px; padding:0; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink); font:inherit; font-size:14px; font-weight:700; }
 .group-current-members { margin-bottom:22px; }
-.group-current-members > div { min-height:60px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr); align-items:center; gap:11px; border-bottom:1px solid var(--line); }
+.group-current-members > div { min-height:60px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:11px; border-bottom:1px solid var(--line); }
 .group-current-members > div > img, .group-current-members > div > span:first-child { width:44px; height:44px; display:grid; place-items:center; border-radius:50%; object-fit:cover; color:#fff; }
 .group-current-members > div > span:last-child { display:flex; flex-direction:column; gap:3px; }
 .group-current-members small { color:var(--muted); font-size:12px; }
+.group-member-remove,.group-leave { border:0; background:transparent; color:var(--ink); font:inherit; font-size:13px; font-weight:700; }
+.group-leave { width:100%; min-height:48px; margin-top:24px; border:1px solid var(--line); border-radius:var(--radius-control); }
+.group-members .btn.danger { background:var(--color-danger-soft); color:var(--ink); }
 .group-people { display:flex; gap:18px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none; }
 .group-person { flex:0 0 88px; display:flex; flex-direction:column; align-items:center; text-align:center; }
 .group-person :is(img,span) { width:68px; height:68px; border-radius:50%; display:grid; place-items:center; object-fit:cover; color:#fff; }

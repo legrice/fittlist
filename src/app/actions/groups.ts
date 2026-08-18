@@ -271,6 +271,32 @@ export async function respondToGroupInvitation(slug: string, accept: boolean) {
   return { ok: true } as const;
 }
 
+export async function leaveGroup(slug: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok:false, error:"Sign in to leave this group." } as const;
+  const db = await getDb();
+  const [membership] = await db.select({ id:schema.groupMembers.id, role:schema.groupMembers.role }).from(schema.groupMembers).innerJoin(schema.groups, eq(schema.groups.id, schema.groupMembers.groupId)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
+  if (!membership) return { ok:false, error:"You’re not a member of this group." } as const;
+  if (membership.role === "owner") return { ok:false, error:"The owner can’t leave the group." } as const;
+  await db.delete(schema.groupMembers).where(eq(schema.groupMembers.id, membership.id));
+  revalidatePath(`/g/${slug}`);
+  revalidatePath("/saved");
+  return { ok:true } as const;
+}
+
+export async function removeGroupMember(slug: string, memberUserId: string) {
+  const manager = await groupManager(slug);
+  if (!manager) return { ok:false, error:"Only group admins can remove members." } as const;
+  if (memberUserId === manager.userId) return { ok:false, error:"Use Leave group to remove yourself." } as const;
+  const [membership] = await manager.db.select({ id:schema.groupMembers.id, role:schema.groupMembers.role }).from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, manager.groupId), eq(schema.groupMembers.userId, memberUserId)));
+  if (!membership) return { ok:false, error:"That person is no longer in the group." } as const;
+  if (membership.role === "owner") return { ok:false, error:"The group owner can’t be removed." } as const;
+  await manager.db.delete(schema.groupMembers).where(eq(schema.groupMembers.id, membership.id));
+  revalidatePath(`/g/${slug}`);
+  revalidatePath("/saved");
+  return { ok:true } as const;
+}
+
 export async function toggleGroupFavorite(slug: string) {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, signedOut: true } as const;
