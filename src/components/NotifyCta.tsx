@@ -179,7 +179,7 @@ export function NotifyCta({
           sticky is a stacking context on mobile, and trapped there the sheet
           paints under the card and the tab bar. */}
       <BodyPortal>
-      <FollowHint name={firstName} on={hint} onClose={() => setHint(false)} />
+      <FollowHint name={firstName} handle={handle} on={hint} onClose={() => setHint(false)} />
 
       {open && (
         <div

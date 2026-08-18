@@ -74,7 +74,7 @@ export function RowFollow({
       >
         {following ? "Following" : requested ? "Requested" : "Follow"}
       </button>
-      <FollowHint name={first} on={hint} onClose={() => setHint(false)} />
+      <FollowHint name={first} handle={handle} on={hint} onClose={() => setHint(false)} />
     </>
   );
 }

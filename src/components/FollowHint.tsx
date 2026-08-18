@@ -35,10 +35,12 @@ export function followHintOff(): boolean {
  */
 export function FollowHint({
   name,
+  handle,
   on,
   onClose,
 }: {
   name: string;
+  handle: string;
   on: boolean;
   onClose: () => void;
 }) {
@@ -50,11 +52,11 @@ export function FollowHint({
   return (
     <div className="folhint" role="status" aria-live="polite">
       <p className="folhint-t">
-        {name} leads your Discover now. Their next class shows under their face.
+        You favorited {name}. See them in your Favorites.
       </p>
       <div className="folhint-row">
-        <Link className="folhint-go" href="/feed" onClick={onClose}>
-          See it
+        <Link className="folhint-go" href={`/saved?highlight=${encodeURIComponent(handle)}`} onClick={onClose}>
+          See them
         </Link>
         <button
           className="folhint-off"

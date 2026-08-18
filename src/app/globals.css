@@ -7172,6 +7172,8 @@ select.editinput.placekind-select {
 .youfavrail-people .youfav > img, .youfavrail-people .youfav > span { border-radius: 999px; }
 .savedsection-people .youfav > img,
 .savedsection-people .youfav > span { border-radius: 999px; }
+.savedsection-people .youfav-highlight > :is(img,span) { animation:favorite-arrival-ring 1.8s ease-out both; }
+@keyframes favorite-arrival-ring { 0%,35% { box-shadow:0 0 0 5px var(--color-lime); } 100% { box-shadow:0 0 0 5px transparent; } }
 .savedsection-places .youfav {
   width: 196px;
   flex-basis: 196px;

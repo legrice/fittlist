@@ -4,8 +4,9 @@ import { SavedScreen } from "@/components/SavedScreen";
 
 export const dynamic = "force-dynamic";
 
-export default async function SavedPage() {
+export default async function SavedPage({ searchParams }: { searchParams:Promise<{highlight?:string}> }) {
   const data = await youDashboardData();
   if (!data) redirect("/welcome");
-  return <SavedScreen people={data.people} places={data.places} yourGroups={data.yourGroups} favoriteGroups={data.favoriteGroups} invitations={data.groupInvitations} />;
+  const { highlight } = await searchParams;
+  return <SavedScreen people={data.people} places={data.places} yourGroups={data.yourGroups} favoriteGroups={data.favoriteGroups} invitations={data.groupInvitations} highlight={highlight?.toLowerCase() ?? null} />;
 }
