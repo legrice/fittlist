@@ -22,6 +22,33 @@ import Link from "next/link";
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
 
+const landingSlides = [
+  {
+    eyebrow: "Your calendar",
+    title: "Build your week in fitness.",
+    body: "Keep the classes you coach, classes you save, and personal workouts together in one clear calendar.",
+    placeholder: "Calendar screenshot",
+  },
+  {
+    eyebrow: "Discover",
+    title: "Find your next class.",
+    body: "Explore upcoming classes, coaches, studios, and fitness groups around you.",
+    placeholder: "Discover screenshot",
+  },
+  {
+    eyebrow: "Favorites",
+    title: "See what your people are doing.",
+    body: "Favorite the people and places you care about, then open their calendars whenever you want to make a plan.",
+    placeholder: "Profile screenshot",
+  },
+  {
+    eyebrow: "Groups",
+    title: "Make fitness plans together.",
+    body: "Create a group, add classes from the catalog, and keep everyone updated without trading phone numbers.",
+    placeholder: "Group screenshot",
+  },
+] as const;
+
 const GoogleG = () => (
   <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
     <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.7 9.5 24 9.5z" />
@@ -78,6 +105,8 @@ export function AuthFlow({
     startStage === "claim" ? "claim" : "landing",
   );
   const [sheet, setSheet] = useState<SheetMode | null>(null);
+  const [landingSlide, setLandingSlide] = useState(0);
+  const landingTrackRef = useRef<HTMLDivElement>(null);
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
   const [role, setRole] = useState<"coach" | "fan">(claimAs);
   const [bio, setBio] = useState(false);
@@ -261,35 +290,68 @@ export function AuthFlow({
             <div className="oblanding-mark" aria-hidden="true">
               <Wordmark variant="ink" className="oblanding-logo" />
             </div>
-            <h1 className="ob-hero">Your week<br />in fitness.</h1>
-            <p className="oblanding-sub">Build your fitness calendar.<br />Share it. See what everyone else is up to.</p>
-            <div className="oblanding-illustration" aria-hidden="true" />
-            <div className="oblanding-actions">
-              <button className="btn obsignup" onClick={() => { setError(""); setSheet("signup"); }}>
-                Sign up free
-              </button>
-              <button className="btn oblogin" onClick={() => { setError(""); setSheet("login"); }}>
-                Log in
-              </button>
+            <div
+              ref={landingTrackRef}
+              className="oblanding-track"
+              onScroll={(event) => {
+                const track = event.currentTarget;
+                if (!track.clientWidth) return;
+                setLandingSlide(Math.max(0, Math.min(landingSlides.length - 1, Math.round(track.scrollLeft / track.clientWidth))));
+              }}
+            >
+              {landingSlides.map((slide) => (
+                <article className="oblanding-slide" key={slide.eyebrow}>
+                  <div className="oblanding-shot" role="img" aria-label={`${slide.placeholder} placeholder`}>
+                    <Icon name="image" size={28} />
+                    <span>{slide.placeholder}</span>
+                  </div>
+                  <p className="oblanding-eyebrow">{slide.eyebrow}</p>
+                  <h1>{slide.title}</h1>
+                  <p className="oblanding-sub">{slide.body}</p>
+                </article>
+              ))}
             </div>
-            {(providers.google || providers.apple) && (
-              <div className="obalts" style={{ marginTop: 16 }}>
-                {providers.google && (
-                  <a className="obalt google" href={`/api/google/login${viaQ}`}>
-                    <GoogleG /> Continue with Google
-                  </a>
-                )}
-                {providers.apple && (
-                  <a className="obalt apple" href={`/api/apple/login${viaQ}`}>
-                    <AppleLogo /> Continue with Apple
-                  </a>
-                )}
+            <div className="oblanding-dots" role="tablist" aria-label="Welcome slides">
+              {landingSlides.map((slide, index) => (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-label={`Show ${slide.eyebrow}`}
+                  aria-selected={landingSlide === index}
+                  className={landingSlide === index ? "on" : ""}
+                  key={slide.eyebrow}
+                  onClick={() => landingTrackRef.current?.scrollTo({ left: landingTrackRef.current.clientWidth * index, behavior: "smooth" })}
+                />
+              ))}
+            </div>
+            <div className="oblanding-footer">
+              <div className="oblanding-actions">
+                <button className="btn obsignup" onClick={() => { setError(""); setSheet("signup"); }}>
+                  Sign up
+                </button>
+                <button className="btn oblogin" onClick={() => { setError(""); setSheet("login"); }}>
+                  Log in
+                </button>
               </div>
-            )}
-            {error && <div className="errorcopy">{error}</div>}
-            <p className="oblanding-legal">
-              By signing up, you agree to FittList&rsquo;s <span>Terms of Use</span> and <Link href="/privacy">Privacy Policy</Link>.
-            </p>
+              {(providers.google || providers.apple) && (
+                <div className="obalts" style={{ marginTop: 16 }}>
+                  {providers.google && (
+                    <a className="obalt google" href={`/api/google/login${viaQ}`}>
+                      <GoogleG /> Continue with Google
+                    </a>
+                  )}
+                  {providers.apple && (
+                    <a className="obalt apple" href={`/api/apple/login${viaQ}`}>
+                      <AppleLogo /> Continue with Apple
+                    </a>
+                  )}
+                </div>
+              )}
+              {error && <div className="errorcopy">{error}</div>}
+              <p className="oblanding-legal">
+                By signing up, you agree to FittList&rsquo;s <span>Terms of Use</span> and <Link href="/privacy">Privacy Policy</Link>.
+              </p>
+            </div>
           </>
         )}
 
