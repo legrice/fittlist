@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AddBrowse } from "@/components/AddBrowse";
@@ -366,7 +367,7 @@ export function CalendarScreen({
             {favoriteLoading ? <p>Finding active calendars…</p> : favoriteData?.people.length ? <>{favoriteData.people.map((person) => {
               const on=selectedFavorites.includes(person.id); const full=!on&&selectedFavorites.length>=2;
               return <button type="button" className="calendar-drawer-row calendar-favorite-row" aria-pressed={on} disabled={full} onClick={()=>toggleFavorite(person.id)} key={person.id}>{person.photo?<img src={person.photo} alt="" loading="lazy" decoding="async"/>:<span className="calendar-favorite-avatar" style={{background:person.color}}>{person.name.charAt(0).toUpperCase()}</span>}<span>{person.name}</span><span className={`calendar-check${on?" on":""}`} style={on?{background:person.color}:undefined}>{on&&<Icon name="check" size={16}/>}</span></button>;
-            })}</> : <p>No favorites have upcoming classes yet.</p>}
+            })}</> : <div className="calendar-favorite-empty"><span><Icon name="travel_explore" size={24}/></span><strong>Find favorite calendars</strong><p>Favorite people with upcoming classes, then their calendars will appear here.</p><Link href="/discover?half=people" onClick={()=>setMenuOpen(false)}>Discover people</Link></div>}
           </section>
         </aside>
       </div>}
