@@ -9559,6 +9559,10 @@ a.clspeek-by:active { opacity: .6; }
   border: 2px solid var(--color-lime) !important;
   border-radius: var(--radius-pill);
 }
+.calendar-bottom-share,
+.calendar-bottom-actions .calendar-bottom-add {
+  box-shadow:0 4px 14px rgba(0,0,0,.14);
+}
 .calendar-bottom-actions .calendar-bottom-add {
   flex:0 0 60px;
   width:60px;
@@ -9567,11 +9571,11 @@ a.clspeek-by:active { opacity: .6; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background:var(--color-white);
-  color:var(--color-lime);
+  background:var(--color-lime);
+  color:var(--color-black);
 }
 .calendar-bottom-actions .calendar-bottom-add .icon path {
-  stroke: currentColor;
+  stroke:var(--color-white);
   stroke-width: 22;
   stroke-linejoin: round;
 }
