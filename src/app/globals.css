@@ -9580,7 +9580,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-menu-button,
 .calendar-header-share { width:44px; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); }
-.calendar-header-share { width:auto; padding:0 14px; gap:7px; border:0; box-shadow:0 3px 10px rgba(0,0,0,.12); font:inherit; font-weight:700; }
+.calendar-header-share { width:auto; padding:0 13px; gap:7px; border:0; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.12); font:inherit; font-weight:700; }
 .calendar-menu-button:active,
 .calendar-header-share:active { transform:scale(.94); }
 .calendar-drawer-scrim {
