@@ -426,7 +426,7 @@ export function AuthFlow({
                 ? invited || inviter
                   ? "Claim your invite"
                   : "Sign up with email"
-                : "Sign in"}
+                : "Log in"}
             </h2>
             {/* Two sentences, built rather than picked: what this role gets,
                 then how to get in. The old chain let the beta gate swallow the
