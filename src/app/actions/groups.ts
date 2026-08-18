@@ -9,6 +9,7 @@ import { clockParts, dowOfDate, runsOn, todayIso, weekDates } from "@/lib/format
 import { addNotification } from "@/lib/notify";
 
 export type GroupClassChoice = { classId: string; iso: string; name: string; detail: string };
+export type GroupDestination = { id: string; name: string; slug: string };
 export type GroupPurpose = "plan" | "community" | "event";
 
 function groupHandle(value: string) {
@@ -61,6 +62,23 @@ export async function groupClassOptions(): Promise<GroupClassChoice[]> {
     const time = clockParts(item.startTime);
     return [{ classId: mark.classId, iso: mark.iso, name: item.name, detail: `${date} · ${time.hm} ${time.ap}` }];
   });
+}
+
+/** Groups whose calendar the current person is allowed to edit. */
+export async function managedGroupDestinations(): Promise<GroupDestination[]> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  const db = await getDb();
+  const [memberRows, ownedRows] = await Promise.all([
+    db.select({ id:schema.groups.id, name:schema.groups.name, slug:schema.groups.slug })
+      .from(schema.groupMembers)
+      .innerJoin(schema.groups, eq(schema.groups.id, schema.groupMembers.groupId))
+      .where(and(eq(schema.groupMembers.userId, userId), inArray(schema.groupMembers.role, ["owner", "admin"]))),
+    db.select({ id:schema.groups.id, name:schema.groups.name, slug:schema.groups.slug })
+      .from(schema.groups)
+      .where(eq(schema.groups.ownerUserId, userId)),
+  ]);
+  return [...new Map([...ownedRows, ...memberRows].map((group) => [group.id, group])).values()];
 }
 
 export async function createGroup(input: { name: string; slug: string; purpose: GroupPurpose; visibility: "public" | "unlisted" | "private" }) {

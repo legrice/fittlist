@@ -5756,6 +5756,21 @@ select.editinput.placekind-select {
 .discover-event-list { display:flex; flex-direction:column; gap:var(--space-3); margin-top:var(--space-3); }
 .discover-event-list .discover-event-card { flex-basis:auto; width:100%; min-height:138px; }
 .discover-calendar-list { margin-top:var(--space-3); padding-bottom:calc(92px + env(safe-area-inset-bottom)); }
+.discover-calendar-list .clline-tag { background:var(--color-surface-muted); color:var(--color-black); }
+.discover-calendar-list .clrow:has(.calendar-overlay-save) .clline-by { padding-right:76px; }
+.calendar-overlay-save.saved { background:var(--color-attending); border-color:transparent; }
+.discover-saved-sheet { max-height:min(78dvh,620px); }
+.discover-saved-head { min-height:62px; margin-top:38px; display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px; }
+.discover-saved-head>span { width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:var(--color-attending); color:var(--color-black); }
+.discover-saved-head h2 { min-height:0!important; margin:0; padding:0!important; display:block!important; font-size:22px; }
+.discover-saved-head p { margin:3px 0 0; color:var(--color-text-secondary); font-size:13px; }
+.discover-saved-head>button { padding:7px 0; border:0; background:none; color:var(--color-black); font:inherit; font-weight:700; text-decoration:underline; }
+.discover-saved-groups { margin-top:22px; padding-top:18px; border-top:1px solid var(--color-border); }
+.discover-saved-groups h3 { margin:0 0 8px; font-size:18px; }
+.discover-saved-groups>button { width:100%; min-height:58px; padding:8px 0; display:grid; grid-template-columns:40px minmax(0,1fr) 24px; align-items:center; gap:11px; border:0; border-bottom:1px solid var(--color-border); background:none; color:var(--color-black); font:inherit; text-align:left; }
+.discover-saved-groups>button>span { width:38px; height:38px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime-soft); }
+.discover-saved-groups>button:disabled { opacity:.55; }
+.discover-saved-groups>p { margin:8px 0; color:var(--color-text-secondary); font-size:14px; }
 .discover-event-day > h2 { margin:0 0 var(--space-1); font-size:20px; line-height:1.15; }
 .discover-event-day > div { display:flex; flex-direction:column; gap:var(--space-1); }
 .discover-group-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
