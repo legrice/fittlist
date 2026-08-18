@@ -18,17 +18,20 @@ export function AddWeekChoices({
   const choices = [
     ...(canCoach
       ? [{
+          kind: "coaching",
           title: "Teaching a class",
           detail: "I’m the coach",
           onClick: onCoach,
         }]
       : []),
     {
+      kind: "saved",
       title: "Taking a class",
       detail: "I’m attending",
       onClick: onAttend,
     },
     {
+      kind: "personal",
       title: "Working out on my own",
       detail: "Just for me",
       onClick: onPersonal,
@@ -38,7 +41,7 @@ export function AddWeekChoices({
   return (
     <div className="addweek-options" role="group" aria-label="What are you doing?">
       {choices.map((choice) => (
-        <button key={choice.title} type="button" disabled={disabled} onClick={choice.onClick}>
+        <button className={`addweek-option-${choice.kind}`} key={choice.title} type="button" disabled={disabled} onClick={choice.onClick}>
           <span className="addweek-option-copy">
             <b>{choice.title}</b>
             <small>{choice.detail}</small>

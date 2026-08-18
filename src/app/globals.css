@@ -2487,6 +2487,24 @@ button.ps-card { cursor: pointer; }
 .addweek-options > button > svg { color: var(--muted); }
 .addweek-options > button:active { background: var(--line); transform: scale(.99); }
 .addweek-options > button:disabled { opacity: .55; }
+.addweek-options > .addweek-option-coaching {
+  background: var(--color-coaching); color: var(--color-coaching-text);
+}
+.addweek-options > .addweek-option-saved {
+  background: var(--color-attending); color: var(--color-attending-text);
+}
+.addweek-options > .addweek-option-personal {
+  background: var(--color-personal); color: var(--color-personal-text);
+}
+.addweek-options > .addweek-option-coaching small,
+.addweek-options > .addweek-option-coaching > svg,
+.addweek-options > .addweek-option-saved small,
+.addweek-options > .addweek-option-saved > svg,
+.addweek-options > .addweek-option-personal small,
+.addweek-options > .addweek-option-personal > svg { color: inherit; }
+.addweek-options > .addweek-option-coaching:active { background: var(--color-coaching-soft); }
+.addweek-options > .addweek-option-saved:active { background: color-mix(in srgb, var(--color-attending) 82%, white); }
+.addweek-options > .addweek-option-personal:active { background: color-mix(in srgb, var(--color-personal) 82%, white); }
 .globaladd-chooser-options { display: grid; gap: 8px; margin-top: 18px; }
 .globaladd-chooser-options button {
   display: grid; grid-template-columns: 42px 1fr 20px; align-items: center; gap: 12px;
