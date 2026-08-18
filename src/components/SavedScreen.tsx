@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition, type ReactNode } from "react";
+import { Children, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { checkGroupHandle, createGroup, respondToGroupInvitation, type GroupPurpose } from "@/app/actions/groups";
 import { Icon } from "@/components/Icon";
@@ -9,21 +9,26 @@ import type { YouFavoriteGroup, YouFavoritePerson, YouFavoritePlace, YouGroupInv
 
 export function SavedScreen({ people, places, yourGroups, favoriteGroups, invitations }: { people: YouFavoritePerson[]; places: YouFavoritePlace[]; yourGroups: YouFavoriteGroup[]; favoriteGroups: YouFavoriteGroup[]; invitations: YouGroupInvitation[] }) {
   const [groupOpen, setGroupOpen] = useState(false);
-  const [tab, setTab] = useState<"groups" | "favorites">("groups");
+  const groups = [...yourGroups, ...favoriteGroups];
   return <main className="savedpage">
-    <header className="savedhead"><h1>Favorites</h1><div className="saved-tabs" role="tablist"><button type="button" role="tab" aria-selected={tab === "groups"} className={tab === "groups" ? "on" : ""} onClick={() => setTab("groups")}>Groups</button><button type="button" role="tab" aria-selected={tab === "favorites"} className={tab === "favorites" ? "on" : ""} onClick={() => setTab("favorites")}>People &amp; studios</button></div></header>
-    {tab === "groups" ? <div className="saved-groups-view">
-      {invitations.length > 0 && <section className="saved-block"><h2>Invitations</h2><div className="saved-invitations">{invitations.map((invite) => <GroupInvitationCard invite={invite} key={invite.id} />)}</div></section>}
-      <section className="saved-block"><div className="saved-block-head saved-groups-head"><h2>Your groups</h2><button type="button" className="saved-group-add-button" aria-label="Create group" onClick={() => setGroupOpen(true)}><Icon name="add" size={24} /></button></div><div className="saved-group-grid">{yourGroups.map((group) => <GroupCard group={group} key={group.id} />)}</div>{yourGroups.length === 0 && <div className="saved-group-empty"><h3>Plan classes together</h3><p>Create a group, add classes from the catalog, and invite your people.</p></div>}</section>
-      {favoriteGroups.length > 0 && <section className="saved-block"><div className="saved-block-head"><div><h2>Favorite groups</h2><p>Public groups you saved without joining.</p></div></div><div className="saved-group-grid">{favoriteGroups.map((group) => <GroupCard group={group} key={group.id} />)}</div></section>}
-    </div> : <div className="saved-favorites-view"><FavoriteList title="People" empty="Favorite people to keep their individual calendars close by." addHref="/discover">{people.map((person) => <Link className="saved-favorite-row person" href={`/${person.handle}`} key={person.id}>{person.photo ? <img src={person.photo} alt="" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<div><strong>{person.name}</strong><small>{person.title || "View calendar"}</small></div><Icon name="chevron_right" size={18} /></Link>)}</FavoriteList><FavoriteList title="Studios" empty="Favorite studios to return to their schedules quickly." addHref="/discover?half=places">{places.map((place) => <Link className="saved-favorite-row place" href={`/s/${place.slug}`} key={place.id}>{place.photo ? <img src={place.photo} alt="" /> : <span>{place.name.charAt(0).toUpperCase()}</span>}<div><strong>{place.name}</strong><small>{place.types.slice(0, 2).join(" · ") || "View schedule"}</small></div><Icon name="chevron_right" size={18} /></Link>)}</FavoriteList></div>}
+    <header className="savedhead"><h1>Favorites</h1></header>
+    <SavedRail kind="people" title="People" empty="Favorite people to keep their individual calendars close by." addHref="/discover">
+      {people.map((person) => <Link className="youfav" href={`/${person.handle}`} key={person.id}>{person.photo ? <img src={person.photo} alt="" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<strong>{person.name}</strong>{person.title && <small>{person.title}</small>}</Link>)}
+    </SavedRail>
+    <SavedRail kind="places" title="Studios" empty="Favorite studios to find their schedules again quickly." addHref="/discover?half=places">
+      {places.map((place) => <Link className="youfav" href={`/s/${place.slug}`} key={place.id}>{place.photo ? <img src={place.photo} alt="" /> : <span>{place.name.charAt(0).toUpperCase()}</span>}<strong>{place.name}</strong>{place.types.length > 0 && <small>{place.types.slice(0, 2).join(" · ")}</small>}</Link>)}
+    </SavedRail>
+    {invitations.length > 0 && <section className="saved-block saved-rail-invitations"><h2>Invitations</h2><div className="saved-invitations">{invitations.map((invite) => <GroupInvitationCard invite={invite} key={invite.id} />)}</div></section>}
+    <SavedRail kind="groups" title="Groups" empty="Make a group for the people you plan and train with." onAdd={() => setGroupOpen(true)}>
+      {groups.map((group) => <GroupRailCard group={group} key={group.id} />)}
+    </SavedRail>
     {groupOpen && <CreateGroupSheet onClose={() => setGroupOpen(false)} />}
   </main>;
 }
 
-function GroupCard({ group }: { group: YouFavoriteGroup }) {
+function GroupRailCard({ group }: { group: YouFavoriteGroup }) {
   const nextDate = group.nextDate ? new Date(`${group.nextDate}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) : null;
-  return <Link className="saved-group-large" href={`/g/${group.slug}`}><div className="saved-group-card-top"><span className="saved-group-icon"><Icon name="groups" size={25} /></span>{group.role && <span className="saved-group-role">{group.role === "owner" ? "Owner" : group.role === "admin" ? "Admin" : "Member"}</span>}</div><h3>{group.name}</h3>{group.nextClass ? <p><strong>{nextDate}</strong> · {group.nextClass}</p> : <p>No classes planned yet</p>}<div className="saved-group-card-bottom"><div className="saved-group-faces">{group.faces.map((face) => face.photo ? <img src={face.photo} alt="" key={face.id} /> : <span style={{ background: face.color }} key={face.id}>{face.name.charAt(0).toUpperCase()}</span>)}</div><small>{group.memberCount} {group.memberCount === 1 ? "member" : "members"}</small><Icon name="chevron_right" size={17} /></div></Link>;
+  return <Link className="youfav saved-group-card" href={`/g/${group.slug}`}><span><Icon name="groups" size={30} /></span><strong>{group.name}</strong><small>{group.nextClass ? `${nextDate} · ${group.nextClass}` : `${group.memberCount} ${group.memberCount === 1 ? "member" : "members"}`}</small></Link>;
 }
 
 function GroupInvitationCard({ invite }: { invite: YouGroupInvitation }) {
@@ -35,9 +40,10 @@ function GroupInvitationCard({ invite }: { invite: YouGroupInvitation }) {
   return <article className="saved-invitation"><span><Icon name="groups" size={25} /></span><div><strong>{invite.name}</strong><small>{invite.inviterName} invited you as {invite.role === "admin" ? "an admin" : "a member"}.</small></div><div><button type="button" disabled={pending} onClick={() => respond(false)}>Decline</button><button type="button" disabled={pending} onClick={() => respond(true)}>{pending ? "Joining…" : "Join"}</button></div></article>;
 }
 
-function FavoriteList({ title, empty, addHref, children }: { title: string; empty: string; addHref: string; children: ReactNode }) {
-  const count = Array.isArray(children) ? children.length : children ? 1 : 0;
-  return <section className="saved-list"><div className="saved-block-head"><div><h2>{title}</h2></div><Link href={addHref}><Icon name="add" size={20} />Add</Link></div>{count ? <div>{children}</div> : <p className="saved-list-empty">{empty}</p>}</section>;
+function SavedRail({ title, empty, addHref, onAdd, kind, children }: { title:string; empty:string; addHref?:string; onAdd?:()=>void; kind:"people"|"places"|"groups"; children?:ReactNode }) {
+  const hasItems=Children.count(children)>0;
+  const addContents=<><span><Icon name="add" size={28}/></span><strong>{hasItems?"Add more":"Add"}</strong></>;
+  return <section className={`yousection savedsection savedsection-${kind}`}><div className="yousection-head"><h2>{title}</h2></div><div className="youfavrail">{children}{onAdd?<button type="button" className="youfav youfav-add" onClick={onAdd}>{addContents}</button>:<Link className="youfav youfav-add" href={addHref!}>{addContents}</Link>}</div>{!hasItems&&<p className="youemptycopy">{empty}</p>}</section>;
 }
 
 function CreateGroupSheet({ onClose }: { onClose: () => void }) {
