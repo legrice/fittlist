@@ -121,7 +121,7 @@ export function CalendarScreen({
   const [favoriteLoading, startFavoriteLoading] = useTransition();
   const [selectedFavorites, setSelectedFavorites] = useState<string[]>([]);
   const [overlaySaved, setOverlaySaved] = useState<Record<string,boolean>>({});
-  const activeFilterCount = Number(visible.coaching) + Number(visible.saved) + Number(visible.personal);
+  const activeFilterCount = Number(visible.coaching) + Number(visible.saved) + Number(visible.personal) + selectedFavorites.length;
   const favoriteSelectionKey = `fl-calendar-favorites:${viewer.id}`;
 
   const ensureComposer = useCallback(() => {
