@@ -141,7 +141,7 @@ export default async function DiscoverPage({
       myLat={me.locationLat}
       myLng={me.locationLng}
       startHalf={startHalf}
-      upcoming={upcoming ?? []}
+      upcoming={upcoming?.days ?? []}
       groups={publicGroups}
       backHref="/feed"
       hideBack

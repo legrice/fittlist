@@ -157,13 +157,19 @@ export type BrowseDay = {
   }[];
 };
 
+export type AddBrowseData = {
+  days: BrowseDay[];
+  myLat: number | null;
+  myLng: number | null;
+};
+
 /**
  * The Add screen's browse list: the same feed Discover draws, the next
  * seven days of it, with the viewer's saved state on every row so the
  * ribbons start right. One builder behind both (buildDiscoverFeed), so
  * Add can never offer a class Discover would not.
  */
-export async function addBrowse(): Promise<BrowseDay[] | null> {
+export async function addBrowse(): Promise<AddBrowseData | null> {
   const userId = await getSessionUserId();
   if (!userId) return null;
   const db = await getDb();
@@ -206,7 +212,11 @@ export async function addBrowse(): Promise<BrowseDay[] | null> {
       },
     ]);
   }
-  return [...byIso.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([iso, items]) => ({ iso, label: fmtDayHeaderRel(iso, feed.today), items }));
+  return {
+    days: [...byIso.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([iso, items]) => ({ iso, label: fmtDayHeaderRel(iso, feed.today), items })),
+    myLat: me.locationLat,
+    myLng: me.locationLng,
+  };
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { addBrowse, type BrowseDay } from "@/app/actions/discover";
+import { addBrowse, type AddBrowseData } from "@/app/actions/discover";
 import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { announceSaved } from "@/components/SaveEducation";
@@ -26,15 +26,19 @@ export function AddBrowse({
   onNotice?: (message: string, highlight?: string) => void;
   onClose: () => void;
 }) {
-  const [days, setDays] = useState<BrowseDay[] | null>(null);
+  const [browse, setBrowse] = useState<AddBrowseData | null>(null);
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
+  const [classType, setClassType] = useState("");
+  const [distance, setDistance] = useState("");
   const [removeConfirm, setRemoveConfirm] = useState<{ classId: string; iso: string; name: string } | null>(null);
   const [, start] = useTransition();
 
   useEffect(() => {
-    addBrowse().then((d) => setDays(d ?? []));
+    addBrowse().then((data) => setBrowse(data ?? { days: [], myLat: null, myLng: null }));
   }, []);
+
+  const days = browse?.days ?? null;
 
   const save = (classId: string, iso: string, name: string, on: boolean) => {
     const key = `${classId}|${iso}`;
@@ -53,12 +57,21 @@ export function AddBrowse({
   };
 
   const needle = query.trim().toLowerCase();
+  const classTypes = [...new Set((days ?? []).flatMap((day) =>
+    day.items.map((item) => item.classType).filter((value): value is string => !!value),
+  ))].sort();
   const shownDays = (days ?? [])
     .map((day) => ({
       ...day,
-      items: day.items.filter((it) =>
-        !needle || [it.name, it.where, it.attributionName].some((value) => value?.toLowerCase().includes(needle)),
-      ),
+      items: day.items.filter((it) => {
+        if (needle && ![it.name, it.where, it.attributionName].some((value) => value?.toLowerCase().includes(needle))) return false;
+        if (classType && it.classType !== classType) return false;
+        if (distance) {
+          if (browse?.myLat == null || browse.myLng == null || it.lat == null || it.lng == null) return false;
+          if (milesBetween(browse.myLat, browse.myLng, it.lat, it.lng) > Number(distance)) return false;
+        }
+        return true;
+      }),
     }))
     .filter((day) => day.items.length > 0);
 
@@ -91,13 +104,33 @@ export function AddBrowse({
           />
         </div>
 
+        <div className="discover-class-filters addbrowse-filters" aria-label="Class filters">
+          <label>
+            <span>Type</span>
+            <select value={classType} onChange={(event) => setClassType(event.target.value)}>
+              <option value="">All types</option>
+              {classTypes.map((type) => <option value={type} key={type}>{type}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Distance</span>
+            <select value={distance} onChange={(event) => setDistance(event.target.value)} disabled={browse?.myLat == null || browse.myLng == null}>
+              <option value="">Any distance</option>
+              <option value="1">Within 1 mile</option>
+              <option value="5">Within 5 miles</option>
+              <option value="10">Within 10 miles</option>
+              <option value="25">Within 25 miles</option>
+            </select>
+          </label>
+        </div>
+
         {!days && <p className="peekempty">Looking at the week&hellip;</p>}
         {days && days.length === 0 && (
           <p className="peekempty">Nothing listed near you this week yet.</p>
         )}
 
-        {days && needle && shownDays.length === 0 && (
-          <p className="peekempty">No classes match &ldquo;{query.trim()}&rdquo;.</p>
+        {days && days.length > 0 && shownDays.length === 0 && (
+          <p className="peekempty">No classes match these filters.</p>
         )}
 
         {shownDays.map((d) => (
@@ -172,4 +205,13 @@ export function AddBrowse({
       )}
     </div>
   );
+}
+
+function milesBetween(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const radians = (degrees: number) => degrees * Math.PI / 180;
+  const dLat = radians(lat2 - lat1);
+  const dLng = radians(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
