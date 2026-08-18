@@ -9789,6 +9789,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-overlay-context span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .calendar-overlay-context button { padding:0; border:0; background:none; color:var(--color-black); font:inherit; font-weight:700; }
 .calendar-favorite-section > :is(p,small) { margin:6px 0; color:var(--color-text-secondary); font-size:12px; line-height:1.4; }
+.calendar-favorite-section > small { display:block; margin:-2px 0 8px; }
 .calendar-favorite-row img,.calendar-favorite-avatar { width:32px; height:32px; display:grid; place-items:center; border-radius:50%; object-fit:cover; color:white; font-size:12px; }
 .calendar-favorite-row .calendar-check { margin-left:auto; }
 .calendar-favorite-row:disabled { opacity:.42; }

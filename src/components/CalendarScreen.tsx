@@ -361,10 +361,11 @@ export function CalendarScreen({
           </section>
           <section className="calendar-drawer-section calendar-favorite-section">
             <h3>Favorite calendars</h3>
+            <small>Show up to two calendars at a time.</small>
             {favoriteLoading ? <p>Finding active calendars…</p> : favoriteData?.people.length ? <>{favoriteData.people.map((person) => {
               const on=selectedFavorites.includes(person.id); const full=!on&&selectedFavorites.length>=2;
               return <button type="button" className="calendar-drawer-row calendar-favorite-row" aria-pressed={on} disabled={full} onClick={()=>toggleFavorite(person.id)} key={person.id}>{person.photo?<img src={person.photo} alt="" loading="lazy" decoding="async"/>:<span className="calendar-favorite-avatar" style={{background:person.color}}>{person.name.charAt(0).toUpperCase()}</span>}<span>{person.name}</span><span className={`calendar-check${on?" on":""}`} style={on?{background:person.color}:undefined}>{on&&<Icon name="check" size={16}/>}</span></button>;
-            })}<small>Show up to two calendars at a time.</small></> : <p>No favorites have upcoming classes yet.</p>}
+            })}</> : <p>No favorites have upcoming classes yet.</p>}
           </section>
         </aside>
       </div>}
