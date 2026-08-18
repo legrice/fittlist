@@ -9569,7 +9569,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-bottom-actions button:active { transform: scale(.96); }
 .calendar-tool-loading { min-height:180px; display:grid; place-items:center; color:var(--color-text-secondary); font-weight:700; }
 .calendar-page-header {
-  min-height:64px; display:grid; grid-template-columns:minmax(0,1fr) 44px 44px; align-items:center; gap:8px;
+  min-height:64px; display:grid; grid-template-columns:minmax(0,1fr) auto 44px; align-items:center; gap:8px;
   margin:4px 0; background:var(--ground);
 }
 .calendar-page-header h1 { margin:0; font-size:34px; line-height:1.05; letter-spacing:-.025em; }
@@ -9580,7 +9580,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-menu-button,
 .calendar-header-share { width:44px; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); }
-.calendar-header-share { border:0; box-shadow:0 3px 10px rgba(0,0,0,.12); }
+.calendar-header-share { width:auto; padding:0 14px; gap:7px; border:0; box-shadow:0 3px 10px rgba(0,0,0,.12); font:inherit; font-weight:700; }
 .calendar-menu-button:active,
 .calendar-header-share:active { transform:scale(.94); }
 .calendar-drawer-scrim {

@@ -343,7 +343,7 @@ export function CalendarScreen({
       <HighlightOnLand />
       <header className="calendar-page-header">
         <h1>Calendar</h1>
-        <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={22} /></button>
+        <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         <button type="button" className="calendar-menu-button" aria-label="Filter calendar" onClick={openFilters}><Icon name="tune" size={22} /></button>
       </header>
 
