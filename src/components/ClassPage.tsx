@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useSlideBack } from "@/components/BackLink";
-import { ClassSheet } from "@/components/ClassSheet";
+import { ClassPeek, peekFromDetail } from "@/components/ClassPeek";
+import { Toast, useToast } from "@/components/Toast";
 import type { ClassDetail } from "@/app/actions/classdetail";
 
 // The shared-link door to a class: the same overlay the lists open, worn as a
@@ -23,16 +24,15 @@ export function ClassPage({
 }) {
   const back = useSlideBack();
   const router = useRouter();
+  const [toastMsg,toastOn,toast]=useToast();
+  void backLabel; void claimVia;
   return (
-    <ClassSheet
-      handle={detail.handle}
-      classId={detail.id}
-      iso={detail.whenIso}
-      initial={detail}
-      backLabel={backLabel}
-      claimVia={claimVia}
+    <><ClassPeek
+      cls={peekFromDetail(detail)}
+      initialDetail={detail}
       onClose={() => back(backHref)}
       onChanged={() => router.refresh()}
-    />
+      onToast={toast}
+    /><Toast msg={toastMsg} on={toastOn}/></>
   );
 }

@@ -18,7 +18,7 @@ import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AgendaAvatar, DayBand } from "@/components/Agenda";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { ClassLiveSheet } from "@/components/ClassLiveSheet";
-import { ClassSheet } from "@/components/ClassSheet";
+import { ClassPeekLoader } from "@/components/ClassPeekLoader";
 import { PlanSheet } from "@/components/PlanSheet";
 import { mergeIntoGym } from "@/app/actions/gym";
 import type { PersonalMatch } from "@/app/actions/personal";
@@ -791,8 +791,8 @@ export function ScheduleScreen({
       )}
 
       {shiftOpen && (
-        <ClassSheet
-          handle={shiftOpen.base}
+        <ClassPeekLoader
+          base={shiftOpen.base}
           classId={shiftOpen.classId}
           iso={shiftOpen.iso}
           onClose={() => setShiftOpen(null)}
@@ -869,8 +869,8 @@ export function ScheduleScreen({
 
       {/* A going mark's class, opened as the sheet it opens as everywhere. */}
       {going && (
-        <ClassSheet
-          handle={going.base}
+        <ClassPeekLoader
+          base={going.base}
           classId={going.classId}
           iso={going.iso}
           onClose={() => setGoingOpen(null)}

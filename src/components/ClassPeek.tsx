@@ -23,13 +23,8 @@ import { FittlistShareSheet } from "@/components/InAppShare";
  * because a member has no calendar to add it to any more: they read the week
  * of the people they follow, and that is the whole relationship.
  *
- * The old class sheet was a full-screen overlay with a photograph, a
- * description, booking links, a Going pill, the coach's roster and an admin
- * photo tool behind a menu. It answered every question anybody had ever had
- * about a class. This answers the three somebody actually taps for: when,
- * where, and whose. The class page at /{handle}/{classId} still wears the old
- * overlay for a link somebody was sent; reconciling the two is its own commit
- * and it should end with this one winning.
+ * This is also the direct-link event view, so a class looks the same whether
+ * it opened from a calendar row or from a link somebody was sent.
  */
 export type PeekClass = {
   id: string;

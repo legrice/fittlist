@@ -63,7 +63,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 // The page is a thin shell around the class overlay: classDetail() decides
 // what this viewer may see (private stays owner-only, blocked sees nothing,
-// ?d= pins the occurrence), and ClassSheet renders it exactly as the lists
+// ?d= pins the occurrence), and the current event sheet renders it exactly as the lists
 // do. The shell's own job is the 404, the coach's theme, and where back goes.
 export default async function EventPage({ params, searchParams }: Props) {
   const { handle, classId } = await params;
