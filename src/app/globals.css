@@ -9506,12 +9506,12 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-menu-button { width:44px; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); }
 .calendar-header-share {
-  gap:6px; padding:3px 14px 3px 3px; border:1px solid var(--color-border-strong);
-  background:var(--color-white); font:inherit; font-size:14px; font-weight:700; color:var(--color-black);
+  gap:2px; padding:3px 10px 3px 3px; border:1px solid var(--color-border-strong);
+  background:var(--color-white); font:inherit; font-size:13px; font-weight:700; color:var(--color-black);
 }
 .calendar-header-share-icon {
-  width:36px; height:36px; flex:0 0 36px; display:grid; place-items:center; border-radius:50%;
-  background:var(--color-black); color:var(--color-white);
+  width:30px; height:36px; flex:0 0 30px; display:grid; place-items:center; border-radius:50%;
+  background:transparent; color:var(--color-black);
 }
 .calendar-menu-button:active,
 .calendar-header-share:active { transform:scale(.94); }

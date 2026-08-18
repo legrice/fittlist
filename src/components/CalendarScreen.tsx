@@ -298,7 +298,7 @@ export function CalendarScreen({
       <HighlightOnLand />
       <header className="calendar-page-header">
         <h1>Calendar</h1>
-        <button type="button" className="calendar-header-share" onClick={() => setShareOpen(true)} aria-label="Share your calendar"><span className="calendar-header-share-icon"><Icon name="reply" className="share-arrow-forward" size={22} /></span><span>Share</span></button>
+        <button type="button" className="calendar-header-share" onClick={() => setShareOpen(true)} aria-label="Share your week"><span className="calendar-header-share-icon"><Icon name="reply" className="share-arrow-forward" size={22} /></span><span>Share your week</span></button>
         <button type="button" className="calendar-menu-button" aria-label="Filter calendar" onClick={() => setMenuOpen(true)}><Icon name="tune" size={22} /></button>
       </header>
 
