@@ -288,7 +288,9 @@ export function AuthFlow({
         {stage === "landing" && (
           <>
             <div className="oblanding-mark" aria-hidden="true">
-              <Wordmark variant="ink" className="oblanding-logo" />
+              <span className="oblanding-progress-track">
+                <span style={{ width: `${((landingSlide + 1) / landingSlides.length) * 100}%` }} />
+              </span>
             </div>
             <div
               ref={landingTrackRef}
@@ -309,19 +311,6 @@ export function AuthFlow({
                   <h1>{slide.title}</h1>
                   <p className="oblanding-sub">{slide.body}</p>
                 </article>
-              ))}
-            </div>
-            <div className="oblanding-dots" role="tablist" aria-label="Welcome slides">
-              {landingSlides.map((slide, index) => (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-label={`Show ${slide.eyebrow}`}
-                  aria-selected={landingSlide === index}
-                  className={landingSlide === index ? "on" : ""}
-                  key={slide.eyebrow}
-                  onClick={() => landingTrackRef.current?.scrollTo({ left: landingTrackRef.current.clientWidth * index, behavior: "smooth" })}
-                />
               ))}
             </div>
             <div className="oblanding-footer">
