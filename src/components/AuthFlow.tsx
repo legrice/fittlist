@@ -25,33 +25,23 @@ type SheetMode = "signup" | "login";
 
 const landingSlides = [
   {
-    eyebrow: "Your calendar",
     title: "Build your week in fitness.",
-    body: "Keep the classes you coach, classes you save, and personal workouts together in one clear calendar.",
     placeholder: "Calendar illustration",
   },
   {
-    eyebrow: "Share",
     title: "Share your schedule anywhere.",
-    body: "Send your week as a link or turn it into an image ready to share on Instagram.",
     placeholder: "Schedule sharing illustration",
   },
   {
-    eyebrow: "Discover",
-    title: "Find your next class.",
-    body: "Explore upcoming classes, coaches, studios, and fitness groups around you.",
+    title: "Find the best in fitness near you.",
     placeholder: "Discover illustration",
   },
   {
-    eyebrow: "Favorites",
-    title: "See what your people are doing.",
-    body: "Favorite the people and places you care about, then open their calendars whenever you want to make a plan.",
+    title: "Keep up with your favorites.",
     placeholder: "Favorites illustration",
   },
   {
-    eyebrow: "Groups",
     title: "Make fitness plans together.",
-    body: "Create a group, add classes from the catalog, and keep everyone updated without trading phone numbers.",
     placeholder: "Group illustration",
   },
 ] as const;
@@ -319,14 +309,12 @@ export function AuthFlow({
               }}
             >
               {landingSlides.map((slide) => (
-                <article className="oblanding-slide" key={slide.eyebrow}>
+                <article className="oblanding-slide" key={slide.title}>
                   <div className="oblanding-shot" role="img" aria-label={`${slide.placeholder} placeholder`}>
                     <Icon name="image" size={28} />
                     <span>{slide.placeholder}</span>
                   </div>
-                  <p className="oblanding-eyebrow">{slide.eyebrow}</p>
                   <h1>{slide.title}</h1>
-                  <p className="oblanding-sub">{slide.body}</p>
                 </article>
               ))}
             </div>
