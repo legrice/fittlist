@@ -121,8 +121,10 @@ export function CalendarScreen({
   const [favoriteLoading, startFavoriteLoading] = useTransition();
   const [selectedFavorites, setSelectedFavorites] = useState<string[]>([]);
   const [overlaySaved, setOverlaySaved] = useState<Record<string,boolean>>({});
+  const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
   const activeFilterCount = Number(visible.coaching) + Number(visible.saved) + Number(visible.personal) + selectedFavorites.length;
   const favoriteSelectionKey = `fl-calendar-favorites:${viewer.id}`;
+  const calendarStateKey = `fl-calendar-state:${viewer.id}`;
 
   const ensureComposer = useCallback(() => {
     if (composerData) return;
@@ -149,6 +151,29 @@ export function CalendarScreen({
     try { localStorage.setItem(favoriteSelectionKey,JSON.stringify(next)); } catch { /* private mode */ }
   },[favoriteSelectionKey]);
   const toggleFavorite = (id:string) => rememberFavoriteSelection(selectedFavorites.includes(id) ? selectedFavorites.filter((value) => value !== id) : selectedFavorites.length < 2 ? [...selectedFavorites,id] : selectedFavorites);
+
+  useEffect(() => {
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(calendarStateKey) ?? "null");
+      if (stored && typeof stored === "object") {
+        const state = stored as { view?: unknown; visible?: Record<string, unknown> };
+        if (state.view === "list" || state.view === "month") setView(state.view);
+        if (state.visible) {
+          setVisible({
+            coaching: member ? false : typeof state.visible.coaching === "boolean" ? state.visible.coaching : true,
+            saved: typeof state.visible.saved === "boolean" ? state.visible.saved : true,
+            personal: typeof state.visible.personal === "boolean" ? state.visible.personal : true,
+          });
+        }
+      }
+    } catch { /* malformed or unavailable storage */ }
+    setCalendarStateLoaded(true);
+  }, [calendarStateKey, member]);
+
+  useEffect(() => {
+    if (!calendarStateLoaded) return;
+    try { localStorage.setItem(calendarStateKey, JSON.stringify({ view, visible })); } catch { /* private mode */ }
+  }, [calendarStateKey, calendarStateLoaded, view, visible]);
 
   useEffect(() => {
     let stored:string[]=[];
