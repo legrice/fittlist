@@ -7016,6 +7016,11 @@ select.editinput.placekind-select {
 .saved-block-head { margin-bottom:14px; display:flex; align-items:flex-end; justify-content:space-between; gap:18px; }
 .saved-block-head p { margin:4px 0 0; color:var(--muted); font-size:14px; }
 .saved-block-head > :is(button,a) { min-height:40px; padding:0 14px; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:var(--radius-pill); background:var(--card); color:var(--ink); font:inherit; font-size:14px; font-weight:700; text-decoration:none; }
+.saved-groups-head { align-items:center; }
+.saved-block-head > .saved-group-add-button {
+  width:44px; min-height:44px; padding:0; justify-content:center; border:0; border-radius:50%;
+  background:var(--color-lime); color:var(--color-black);
+}
 .saved-group-grid { display:grid; grid-template-columns:1fr; gap:11px; }
 .saved-group-large { padding:18px; display:block; border:1px solid var(--line); border-radius:var(--radius-card); background:var(--card); color:var(--ink); text-decoration:none; }
 .saved-group-card-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -7029,10 +7034,6 @@ select.editinput.placekind-select {
 .saved-group-card-bottom > .icon { margin-left:auto; color:var(--muted); }
 .saved-group-faces { display:flex; }
 .saved-group-faces :is(img,span) { width:29px; height:29px; margin-right:-7px; display:grid; place-items:center; border:2px solid var(--card); border-radius:50%; object-fit:cover; color:#fff; font-size:11px; }
-.saved-create-group { min-height:120px; padding:18px; display:flex; align-items:center; gap:14px; border:1.5px dashed var(--color-border-strong); border-radius:var(--radius-card); background:transparent; color:var(--ink); font:inherit; text-align:left; }
-.saved-create-group > .icon { width:44px; height:44px; padding:8px; border-radius:14px; background:var(--color-lime); color:var(--color-black); }
-.saved-create-group > span { display:flex; flex-direction:column; gap:4px; }
-.saved-create-group small { color:var(--muted); font-size:13px; }
 .saved-group-empty { margin-top:12px; padding:20px; border-radius:var(--radius-card); background:var(--color-lime-soft); }
 .saved-group-empty h3 { margin:0 0 6px; font-size:20px; }
 .saved-group-empty p { margin:0; color:var(--muted); font-size:14px; line-height:1.45; }
