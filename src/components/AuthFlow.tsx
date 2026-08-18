@@ -29,7 +29,7 @@ const landingSlides = [
     placeholder: "Calendar illustration",
   },
   {
-    title: "Share your schedule anywhere.",
+    title: "Share your calendar anywhere.",
     placeholder: "Schedule sharing illustration",
   },
   {
