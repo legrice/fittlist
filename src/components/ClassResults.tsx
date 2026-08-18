@@ -1,7 +1,7 @@
 "use client";
 
 import { ClassOpener } from "@/components/ClassOpener";
-import { ClassLine, DayBand } from "@/components/WeekView";
+import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import type { DirClass } from "@/lib/discoverclasses";
 
 /** One day, one band: the grouped shape every schedule in the app takes.
@@ -42,42 +42,26 @@ export function ClassResults({
   todayIso: string;
   from: "discover" | "search";
 }) {
+  const days:WeekDayRows[] = groupClassDays(classes).map((day) => ({
+    iso: day.iso,
+    label: bandLabel(day.iso, todayIso),
+    today: day.iso === todayIso,
+    rows: day.items.map((c) => ({
+      key: `${c.classId}|${c.iso}`,
+      name: c.name,
+      where: c.where,
+      hm: c.hm,
+      ap: c.ap,
+      coach: c.coachName ? { id:c.classId, name:c.coachName, color:c.coachColor, photo:c.coachPhoto } : null,
+      href: `/${c.base}/${c.classId}?d=${c.iso}&from=${from}`,
+      classId: c.classId,
+      iso: c.iso,
+      base: c.base,
+    })),
+  }));
   return (
     <ClassOpener handle="">
-      <div className="cardwrap">
-        {groupClassDays(classes).map((d) => (
-          <section key={d.iso} className="dayblock">
-            <DayBand label={bandLabel(d.iso, todayIso)} today={d.iso === todayIso} />
-            <div className="disflat">
-              {d.items.map((c) => (
-                <div key={`${c.classId}|${c.iso}`} className="clrow">
-                  <ClassLine
-                    row={{
-                      key: `${c.classId}|${c.iso}`,
-                      name: c.name,
-                      where: c.where,
-                      hm: c.hm,
-                      ap: c.ap,
-                      coach: c.coachName
-                        ? {
-                            id: c.classId,
-                            name: c.coachName,
-                            color: c.coachColor,
-                            photo: c.coachPhoto,
-                          }
-                        : null,
-                      href: `/${c.base}/${c.classId}?d=${c.iso}&from=${from}`,
-                      classId: c.classId,
-                      iso: c.iso,
-                      base: c.base,
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      <CalendarList days={days} />
     </ClassOpener>
   );
 }
