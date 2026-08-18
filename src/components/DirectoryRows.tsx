@@ -56,6 +56,7 @@ export type DirStudio = {
   slug: string;
   name: string;
   address: string;
+  placeKind: string;
   lat?: number | null;
   lng?: number | null;
   photo: string | null;

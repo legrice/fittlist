@@ -176,7 +176,7 @@ export async function discoverStudios(): Promise<DirStudio[]> {
   ]);
   const favorites = new Set(favoriteRows.map((row) => row.studioId));
   return studios.map((studio) => ({
-    id:studio.id, slug:studio.slug ?? studio.id, name:studio.name, address:studio.address,
+    id:studio.id, slug:studio.slug ?? studio.id, name:studio.name, address:studio.address, placeKind:studio.placeKind,
     lat:studio.lat, lng:studio.lng,
     photo:studio.photo, types:studio.types, hasSchedule:!!studio.accountUserId,
     color:avatarColor({ id:studio.id }), favorited:favorites.has(studio.id),
