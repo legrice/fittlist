@@ -4341,6 +4341,9 @@ select.editinput.placekind-select {
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
 .profacts .studio-been-here.on { background: var(--ink); color: var(--paper); }
+.pubhead.pubhead-hero .profacts .followpill.favorite.on,
+.profacts .followpill.favorite.on { border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+.profacts .followpill.favorite.on .icon { color:var(--color-favorite); }
 .studio-been-count {
   min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;

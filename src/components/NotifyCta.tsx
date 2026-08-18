@@ -164,7 +164,7 @@ export function NotifyCta({
   return (
     <>
       <button
-        className={`followpill${compact ? " mini" : ""}${following || subscribed ? " on" : ""}`}
+        className={`followpill${account ? " favorite" : ""}${compact ? " mini" : ""}${following || subscribed ? " on" : ""}`}
         disabled={pending}
         aria-pressed={account ? following : subscribed}
         onClick={onCta}
