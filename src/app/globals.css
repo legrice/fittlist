@@ -9577,6 +9577,14 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-drawer-row.on { font-weight:700; }
 .calendar-check-row { grid-template-columns:34px minmax(0,1fr); }
+.calendar-category-row { grid-template-columns:40px minmax(0,1fr) 28px; }
+.calendar-category-icon {
+  width:36px; height:36px; display:grid; place-items:center; border-radius:50%;
+}
+.calendar-category-icon-coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
+.calendar-category-icon-saved { background:var(--color-attending); color:var(--color-attending-text); }
+.calendar-category-icon-personal { background:var(--color-personal); color:var(--color-personal-text); }
+.calendar-category-row .calendar-check { margin-left:auto; }
 .calendar-check {
   width:23px; height:23px; border:2px solid var(--color-border-strong); border-radius:6px;
   display:grid; place-items:center; color:var(--color-black);
@@ -9585,6 +9593,9 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-check-coaching.on { background:var(--color-coaching); }
 .calendar-check-saved.on { background:var(--color-attending); }
 .calendar-check-personal.on { background:var(--color-personal); }
+.calendar-check-coaching:not(.on) { border-color:var(--color-coaching); background:var(--color-coaching-soft); }
+.calendar-check-saved:not(.on) { border-color:var(--color-attending); background:color-mix(in srgb,var(--color-attending) 35%,white); }
+.calendar-check-personal:not(.on) { border-color:var(--color-personal); background:color-mix(in srgb,var(--color-personal) 35%,white); }
 .screen:has(.calendar-page-header) .btn:not(.ghost) { background:var(--color-lime); color:var(--color-black); }
 .calendar-cardwrap {
   margin-top: 0;
