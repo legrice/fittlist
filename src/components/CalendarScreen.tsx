@@ -298,17 +298,16 @@ export function CalendarScreen({
       <HighlightOnLand />
       <header className="calendar-page-header">
         <h1>Calendar</h1>
-        <button type="button" className="calendar-header-share" onClick={() => setShareOpen(true)} aria-label="Share your week"><span className="calendar-header-share-icon"><Icon name="reply" className="share-arrow-forward" size={22} /></span><span>Share your week</span></button>
+        <div className="calendar-view-toggle" role="group" aria-label="Calendar view">
+          <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={20} /></button>
+          <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={20} /></button>
+        </div>
         <button type="button" className="calendar-menu-button" aria-label="Filter calendar" onClick={() => setMenuOpen(true)}><Icon name="tune" size={22} /></button>
       </header>
 
       {menuOpen && <div className="calendar-drawer-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
         <aside className="calendar-drawer" aria-label="Calendar controls">
           <div className="calendar-drawer-head"><h2>Calendar</h2><button type="button" className="iconbtn" aria-label="Close calendar menu" onClick={() => setMenuOpen(false)}><Icon name="close" size={20} /></button></div>
-          <section className="calendar-drawer-section">
-            <h3>View</h3>
-            {([ ["list", "List", "calendar_view_day"], ["month", "Month", "calendar_month"] ] as const).map(([value, label, icon]) => <button type="button" className={`calendar-drawer-row${view === value ? " on" : ""}`} onClick={() => { setView(value); setMenuOpen(false); }} key={value}><Icon name={icon} size={22} /><span>{label}</span>{view === value && <Icon name="check" size={20} />}</button>)}
-          </section>
           <section className="calendar-drawer-section">
             <h3>My calendar</h3>
             {([...(member ? [] : [["coaching", "Coaching"]] as const), ["saved", "Saved"], ["personal", "Personal"]] as const).map(([value, label]) => {
@@ -417,6 +416,9 @@ export function CalendarScreen({
       )}
 
       <div className="calendar-bottom-actions" aria-label="Schedule actions">
+        <button className="calendar-bottom-share" aria-label="Share your week" onClick={() => setShareOpen(true)}>
+          <Icon name="reply" className="share-arrow-forward" size={22} />
+        </button>
         <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
           <Icon name="add" size={28} />
         </button>
