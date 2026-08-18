@@ -9535,13 +9535,13 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-bottom-actions {
   position: fixed;
-  left: auto;
+  left: 18px;
   right: 18px;
   bottom: calc(78px + env(safe-area-inset-bottom));
   z-index: 35;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   pointer-events: none;
@@ -9556,20 +9556,21 @@ a.clspeek-by:active { opacity: .6; }
   cursor: pointer;
 }
 .calendar-bottom-share {
-  width: 64px;
-  height: 64px !important;
+  width: min(38vw, 160px);
+  height: 60px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 0;
   background: var(--color-white);
   color: var(--color-black);
   border: 2px solid var(--color-lime) !important;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
 }
 .calendar-bottom-actions .calendar-bottom-add {
-  width: 64px;
-  height: 64px;
+  width: min(38vw, 160px);
+  height: 60px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

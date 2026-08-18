@@ -474,6 +474,7 @@ export function CalendarScreen({
       <div className="calendar-bottom-actions" aria-label="Schedule actions">
         <button className="calendar-bottom-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}>
           <Icon name="reply" className="share-arrow-forward" size={22} />
+          <span>Share</span>
         </button>
         <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
           <Icon name="add" size={28} />
