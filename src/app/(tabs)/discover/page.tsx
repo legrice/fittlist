@@ -57,7 +57,7 @@ export default async function DiscoverPage({
     db.select().from(schema.studios).orderBy(schema.studios.name),
     db.select({ studioId: schema.studioEndorsements.targetStudioId }).from(schema.studioEndorsements).where(and(eq(schema.studioEndorsements.endorserUserId, userId), eq(schema.studioEndorsements.trait, "been_here"))),
     addBrowse(),
-    db.select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, description: schema.groups.description }).from(schema.groups).where(eq(schema.groups.visibility, "public")),
+    db.select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, description: schema.groups.description, purpose:schema.groups.purpose }).from(schema.groups).where(eq(schema.groups.visibility, "public")),
   ]);
 
   const rows = everyone.filter(

@@ -5550,6 +5550,15 @@ select.editinput.placekind-select {
 .discover-page-title {
   margin:18px 0 20px; font-size:34px; line-height:1.05; letter-spacing:-.025em;
 }
+.discover-title-row { min-height:64px; margin:4px 0; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.discover-title-row h1 { margin:0; font-size:34px; line-height:1.05; letter-spacing:-.025em; }
+.discover-title-row > button { width:44px; height:44px; padding:0; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); color:var(--color-black); }
+.discover-directory-tabs { display:flex; gap:22px; overflow-x:auto; border-bottom:1px solid var(--line); scrollbar-width:none; }
+.discover-directory-tabs::-webkit-scrollbar { display:none; }
+.discover-directory-tabs button { flex:0 0 auto; min-height:48px; padding:0; border:0; border-bottom:3px solid transparent; background:transparent; color:var(--muted); font:inherit; font-size:15px; font-weight:700; }
+.discover-directory-tabs button.on { color:var(--ink); border-bottom-color:var(--ink); }
+.discover-tab-filters { margin:18px 0 6px; }
+.discover-tab-empty { margin:22px 0 0; padding:28px 18px; border-radius:var(--radius-card); background:var(--color-surface-muted); color:var(--muted); font-size:14px; line-height:1.45; text-align:center; }
 .dissearchrow.discover-searchrow { margin: 0 0 var(--space-1); padding-top: 0; }
 .discover-searchrow .dissearch { box-shadow: none; }
 .discover-searchrow .dissearch:focus-within { box-shadow: 0 0 0 3px var(--si); }
