@@ -2526,13 +2526,9 @@ button.ps-card { cursor: pointer; }
 .addweek-options > .addweek-option-personal:active { background: color-mix(in srgb, var(--color-personal) 82%, white); }
 .addweek-options.selectable > button { min-height:78px; border:1.5px solid var(--color-border); background:var(--color-white); color:var(--color-black); }
 .addweek-options.selectable > button small { color:var(--muted); }
-.addweek-options.selectable > .addweek-option-coaching.selected { border-color:var(--color-coaching); }
-.addweek-options.selectable > .addweek-option-saved.selected { border-color:var(--color-attending); }
-.addweek-options.selectable > .addweek-option-personal.selected { border-color:var(--color-personal); }
-.addweek-radio { width:23px; height:23px; justify-self:end; border:2px solid var(--color-border-strong); border-radius:50%; background:var(--color-white); }
-.addweek-option-coaching.selected .addweek-radio { border-color:var(--color-coaching); background:var(--color-coaching); }
-.addweek-option-saved.selected .addweek-radio { border-color:var(--color-attending); background:var(--color-attending); }
-.addweek-option-personal.selected .addweek-radio { border-color:var(--color-personal); background:var(--color-personal); }
+.addweek-options.selectable > button.selected { border-color:var(--color-black); }
+.addweek-radio { width:23px; height:23px; justify-self:end; border:2px solid var(--color-black); border-radius:50%; background:var(--color-white); color:var(--color-white); display:grid; place-items:center; }
+.addweek-options.selectable > button.selected .addweek-radio { background:var(--color-black); }
 .addrole-continue { width:100%; min-height:52px; margin-top:18px; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font:inherit; font-weight:700; }
 .addrole-continue:disabled { opacity:.42; }
 .profile-empty-message {

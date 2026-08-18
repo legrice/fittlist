@@ -50,7 +50,7 @@ export function AddWeekChoices({
             <b>{choice.title}</b>
             <small>{choice.detail}</small>
           </span>
-          {onSelect ? <span className="addweek-radio" /> : <Icon name="chevron_right" size={20} />}
+          {onSelect ? <span className="addweek-radio">{selected === choice.kind && <Icon name="check" size={15} />}</span> : <Icon name="chevron_right" size={20} />}
         </button>
       ))}
     </div>
