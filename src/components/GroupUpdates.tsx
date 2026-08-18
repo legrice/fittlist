@@ -15,9 +15,9 @@ export type GroupUpdate = {
   reactions:{ reaction:string; count:number; mine:boolean }[];
 };
 
-export function GroupHub({ slug, canPost, updates, schedule, initialTab="schedule" }: { slug:string; canPost:boolean; updates:GroupUpdate[]; schedule:ReactNode; initialTab?:"schedule"|"updates" }) {
+export function GroupHub({ slug, canPost, updates, schedule, members, initialTab="schedule" }: { slug:string; canPost:boolean; updates:GroupUpdate[]; schedule:ReactNode; members:ReactNode; initialTab?:"schedule"|"updates"|"members" }) {
   const [tab,setTab]=useState(initialTab);
-  return <><div className="group-tabs" role="tablist"><button className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button><button className={tab==="updates"?"on":""} onClick={()=>setTab("updates")}>Updates{updates.length > 0 && <span>{updates.length}</span>}</button></div>{tab==="schedule" ? schedule : <GroupUpdates slug={slug} canPost={canPost} updates={updates} />}</>;
+  return <><div className="group-tabs" role="tablist"><button className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button><button className={tab==="updates"?"on":""} onClick={()=>setTab("updates")}>Updates{updates.length > 0 && <span>{updates.length}</span>}</button><button className={tab==="members"?"on":""} onClick={()=>setTab("members")}>Members</button></div>{tab==="schedule" ? schedule : tab==="updates" ? <GroupUpdates slug={slug} canPost={canPost} updates={updates} /> : members}</>;
 }
 
 function GroupUpdates({ slug, canPost, updates }: { slug:string; canPost:boolean; updates:GroupUpdate[] }) {
