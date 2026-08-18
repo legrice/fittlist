@@ -957,6 +957,53 @@ export const groupClasses = pgTable(
   ],
 );
 
+// A group's conversation stays attached to its plans. Class activity is a
+// post too, so comments and reactions use one feed instead of a parallel chat.
+export const groupPosts = pgTable(
+  "group_posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    authorUserId: uuid("author_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull().default("update"),
+    body: text("body"),
+    classId: uuid("class_id").references(() => classes.id, { onDelete: "cascade" }),
+    occurrenceDate: date("occurrence_date", { mode: "string" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("group_posts_group_created").on(t.groupId, t.createdAt),
+    uniqueIndex("group_posts_class_activity").on(t.groupId, t.classId, t.occurrenceDate, t.kind),
+  ],
+);
+
+export const groupPostComments = pgTable(
+  "group_post_comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    postId: uuid("post_id").notNull().references(() => groupPosts.id, { onDelete: "cascade" }),
+    authorUserId: uuid("author_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("group_post_comments_post_created").on(t.postId, t.createdAt)],
+);
+
+export const groupPostReactions = pgTable(
+  "group_post_reactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    postId: uuid("post_id").notNull().references(() => groupPosts.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    reaction: text("reaction").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("group_post_reactions_post_user_reaction").on(t.postId, t.userId, t.reaction),
+    index("group_post_reactions_post").on(t.postId),
+  ],
+);
+
 // A short, personal recommendation. Unlike badges these are freeform, and
 // unlike reviews they are never scored or published by default: the person
 // or place receiving one decides whether it belongs on their public profile.

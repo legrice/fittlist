@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, dowOfDate, runsOn, todayIso, weekDates } from "@/lib/format";
+import { addNotification } from "@/lib/notify";
 
 export type GroupClassChoice = { classId: string; iso: string; name: string; detail: string };
 export type GroupPurpose = "plan" | "community" | "event";
@@ -124,6 +125,60 @@ async function groupManager(slug: string) {
   return row && (row.role === "owner" || row.role === "admin") ? { db, userId, ...row } : null;
 }
 
+async function groupParticipant(slug: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  const db = await getDb();
+  const [group] = await db.select({ id:schema.groups.id, name:schema.groups.name, ownerUserId:schema.groups.ownerUserId }).from(schema.groups).where(eq(schema.groups.slug, slug));
+  if (!group) return null;
+  const [member] = await db.select({ role:schema.groupMembers.role }).from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, userId)));
+  return member || group.ownerUserId === userId ? { db, userId, groupId:group.id, groupName:group.name } : null;
+}
+
+async function notifyGroup(groupId: string, actorId: string, title: string, body: string, href: string) {
+  const db = await getDb();
+  const recipients = await db.select({ userId:schema.groupMembers.userId }).from(schema.groupMembers).where(eq(schema.groupMembers.groupId, groupId));
+  await Promise.all(recipients.filter((row) => row.userId !== actorId).map((row) => addNotification(row.userId, { type:"group_update", title, body, href, actorUserId:actorId })));
+}
+
+export async function addGroupPost(slug: string, value: string) {
+  const member = await groupParticipant(slug);
+  if (!member) return { ok:false, error:"Join the group to post updates." } as const;
+  const body = value.trim().replace(/\s+/g, " ");
+  if (!body) return { ok:false, error:"Write an update first." } as const;
+  if (body.length > 500) return { ok:false, error:"Keep updates under 500 characters." } as const;
+  const [post] = await member.db.insert(schema.groupPosts).values({ groupId:member.groupId, authorUserId:member.userId, body, kind:"update" }).returning({ id:schema.groupPosts.id });
+  await notifyGroup(member.groupId, member.userId, `New update in ${member.groupName}`, body, `/g/${slug}?tab=updates#post-${post.id}`);
+  revalidatePath(`/g/${slug}`);
+  return { ok:true } as const;
+}
+
+export async function addGroupComment(slug: string, postId: string, value: string) {
+  const member = await groupParticipant(slug);
+  if (!member) return { ok:false, error:"Join the group to comment." } as const;
+  const body = value.trim().replace(/\s+/g, " ");
+  if (!body || body.length > 300) return { ok:false, error:"Keep comments between 1 and 300 characters." } as const;
+  const [post] = await member.db.select({ id:schema.groupPosts.id, authorUserId:schema.groupPosts.authorUserId }).from(schema.groupPosts).where(and(eq(schema.groupPosts.id, postId), eq(schema.groupPosts.groupId, member.groupId)));
+  if (!post) return { ok:false, error:"That update is no longer available." } as const;
+  await member.db.insert(schema.groupPostComments).values({ postId, authorUserId:member.userId, body });
+  if (post.authorUserId !== member.userId) await addNotification(post.authorUserId, { type:"group_update", title:`New reply in ${member.groupName}`, body, href:`/g/${slug}?tab=updates#post-${postId}`, actorUserId:member.userId });
+  revalidatePath(`/g/${slug}`);
+  return { ok:true } as const;
+}
+
+export async function toggleGroupReaction(slug: string, postId: string, reaction: "heart" | "strong" | "in") {
+  const member = await groupParticipant(slug);
+  if (!member || !["heart","strong","in"].includes(reaction)) return { ok:false } as const;
+  const [post] = await member.db.select({ id:schema.groupPosts.id }).from(schema.groupPosts).where(and(eq(schema.groupPosts.id, postId), eq(schema.groupPosts.groupId, member.groupId)));
+  if (!post) return { ok:false } as const;
+  const where = and(eq(schema.groupPostReactions.postId, postId), eq(schema.groupPostReactions.userId, member.userId), eq(schema.groupPostReactions.reaction, reaction));
+  const [existing] = await member.db.select({ id:schema.groupPostReactions.id }).from(schema.groupPostReactions).where(where);
+  if (existing) await member.db.delete(schema.groupPostReactions).where(eq(schema.groupPostReactions.id, existing.id));
+  else await member.db.insert(schema.groupPostReactions).values({ postId, userId:member.userId, reaction });
+  revalidatePath(`/g/${slug}`);
+  return { ok:true, selected:!existing } as const;
+}
+
 export async function updateGroupDescription(slug: string, value: string) {
   const manager = await groupManager(slug);
   if (!manager) return { ok: false, error: "Only group admins can edit this." } as const;
@@ -152,7 +207,12 @@ export async function addGroupClasses(slug: string, choices: { classId: string; 
   const allowed = new Set(saved.map((item) => `${item.classId}|${item.iso}`));
   const rows = requested.filter((item) => allowed.has(`${item.classId}|${item.iso}`));
   if (!rows.length) return { ok: false, error: "Save the class to your calendar first." } as const;
-  await manager.db.insert(schema.groupClasses).values(rows.map((item) => ({ groupId: manager.groupId, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing();
+  const added = await manager.db.insert(schema.groupClasses).values(rows.map((item) => ({ groupId: manager.groupId, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing().returning({ classId:schema.groupClasses.classId, iso:schema.groupClasses.occurrenceDate });
+  if (added.length) {
+    await manager.db.insert(schema.groupPosts).values(added.map((item) => ({ groupId:manager.groupId, authorUserId:manager.userId, kind:"class_added", classId:item.classId, occurrenceDate:item.iso }))).onConflictDoNothing();
+    const [group] = await manager.db.select({ name:schema.groups.name }).from(schema.groups).where(eq(schema.groups.id, manager.groupId));
+    await notifyGroup(manager.groupId, manager.userId, `New class in ${group?.name ?? "your group"}`, "A class was added to the group calendar.", `/g/${slug}?tab=updates`);
+  }
   revalidatePath(`/g/${slug}`);
   return { ok: true } as const;
 }

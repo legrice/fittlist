@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -14,11 +14,13 @@ import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
 import { groupClassOptions, type GroupPurpose } from "@/app/actions/groups";
 import { youDashboardData } from "@/app/actions/you";
+import { GroupHub, type GroupUpdate } from "@/components/GroupUpdates";
 
 export const dynamic = "force-dynamic";
 
-export default async function GroupPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function GroupPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams:Promise<{tab?:string}> }) {
   const { slug } = await params;
+  const { tab } = await searchParams;
   const db = await getDb();
   const [group] = await db.select().from(schema.groups).where(eq(schema.groups.slug, slug));
   if (!group) notFound();
@@ -56,6 +58,25 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
   const days: WeekDayRows[] = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([iso, rows]) => ({ iso, label: fmtDayHeaderRel(iso, today), today: iso === today, rows }));
   const emptyCopy: Record<GroupPurpose, string> = { plan: "Add a class you’re going to and invite people to join you.", community: "Add the first class or session to start the community calendar.", event: "Add the first class, session, or meetup to build the event schedule." };
   const purpose = (["plan", "community", "event"].includes(group.purpose) ? group.purpose : "plan") as GroupPurpose;
+  const postRows = await db.select().from(schema.groupPosts).where(eq(schema.groupPosts.groupId, group.id)).orderBy(desc(schema.groupPosts.createdAt)).limit(50);
+  const postIds = postRows.map((post) => post.id);
+  const [commentRows,reactionRows,savedRows] = await Promise.all([
+    postIds.length ? db.select().from(schema.groupPostComments).where(inArray(schema.groupPostComments.postId,postIds)) : [],
+    postIds.length ? db.select().from(schema.groupPostReactions).where(inArray(schema.groupPostReactions.postId,postIds)) : [],
+    viewerId ? db.select({classId:schema.attendances.classId,iso:schema.attendances.occurrenceDate}).from(schema.attendances).where(eq(schema.attendances.userId,viewerId)) : [],
+  ]);
+  const updateAuthorIds=[...new Set([...postRows.map((row)=>row.authorUserId),...commentRows.map((row)=>row.authorUserId)])];
+  const updateAuthors=updateAuthorIds.length ? await db.select().from(schema.users).where(inArray(schema.users.id,updateAuthorIds)) : [];
+  const updateAuthorById=new Map(updateAuthors.map((person)=>[person.id,person]));
+  const savedSet=new Set(savedRows.map((row)=>`${row.classId}|${row.iso}`));
+  const updates:GroupUpdate[]=postRows.flatMap((post)=>{
+    const author=updateAuthorById.get(post.authorUserId); if(!author) return [];
+    const cls=post.classId ? classById.get(post.classId) : null; const studio=cls?.studioId ? studioById.get(cls.studioId) : null;
+    const time=cls ? clockParts(cls.startTime) : null;
+    const reactionKinds=["heart","strong","in"].map((reaction)=>({reaction,count:reactionRows.filter((row)=>row.postId===post.id&&row.reaction===reaction).length,mine:reactionRows.some((row)=>row.postId===post.id&&row.reaction===reaction&&row.userId===viewerId)}));
+    return [{ id:post.id,kind:post.kind,body:post.body,createdAt:post.createdAt.toISOString(),author:{name:author.name,photo:author.photoThumb??author.photo,color:avatarColor(author)},cls:cls&&post.occurrenceDate&&time?{id:cls.id,iso:post.occurrenceDate,name:cls.name,detail:`${new Date(`${post.occurrenceDate}T00:00:00Z`).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"})} · ${time.hm} ${time.ap}`,where:studio?.name??cls.location??"Location to come",saved:savedSet.has(`${cls.id}|${post.occurrenceDate}`)}:null,comments:commentRows.filter((row)=>row.postId===post.id).map((row)=>{const person=updateAuthorById.get(row.authorUserId)!;return{id:row.id,body:row.body,author:{name:person.name,photo:person.photoThumb??person.photo,color:avatarColor(person)}}}),reactions:reactionKinds }];
+  });
   const settingsMembers = memberRows.map((member) => ({ id:member.id, name:member.name, photo:member.photo, color:avatarColor(member), role:member.role }));
-  return <div className="pub group-page hasnav"><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><div className="group-page-controls"><Link className="group-header-control" href="/saved" aria-label="Back to groups"><Icon name="arrow_back" size={23} /></Link><div className="group-page-actions"><GroupShareButton slug={slug} name={group.name} />{manager && <GroupSettings slug={slug} name={group.name} description={group.description ?? ""} visibility={group.visibility as "public" | "unlisted" | "private"} people={dashboard?.people ?? []} members={settingsMembers} classes={setupClasses} />}</div></div><h1>{group.name}</h1>{group.description && <p>{group.description}</p>}<GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} manager={manager} invitationRole={invitation?.role} /></header><section className="group-section group-schedule-section"><div className="group-section-head"><h2>Schedule</h2>{manager && days.length > 0 && <GroupAddClass slug={slug} classes={setupClasses} />}</div>{days.length ? <ClassOpener handle=""><CalendarList days={days} /></ClassOpener> : <div className="empty-block group-schedule-empty"><h2>Nothing planned yet</h2><p>{emptyCopy[purpose]}</p>{manager && <GroupAddClass slug={slug} classes={setupClasses} />}</div>}</section>{!manager && <section className="group-section"><h2>People</h2><div className="group-people">{memberRows.map((member) => <div className="group-person" key={member.id}>{member.photo ? <img src={member.photo} alt="" /> : <span style={{ background: avatarColor(member) }}>{member.name.charAt(0).toUpperCase()}</span>}<strong>{member.name}</strong>{member.role === "owner" ? <small>Owner</small> : member.role === "admin" ? <small>Admin</small> : <small>Member</small>}</div>)}</div></section>}</main></div></div>;
+  const schedule = <section className="group-section group-schedule-section"><div className="group-section-head"><h2>Schedule</h2>{manager && days.length > 0 && <GroupAddClass slug={slug} classes={setupClasses} />}</div>{days.length ? <ClassOpener handle=""><CalendarList days={days} /></ClassOpener> : <div className="empty-block group-schedule-empty"><h2>Nothing planned yet</h2><p>{emptyCopy[purpose]}</p>{manager && <GroupAddClass slug={slug} classes={setupClasses} />}</div>}</section>;
+  return <div className="pub group-page hasnav"><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><div className="group-page-controls"><Link className="group-header-control" href="/saved" aria-label="Back to groups"><Icon name="arrow_back" size={23} /></Link><div className="group-page-actions"><GroupShareButton slug={slug} name={group.name} />{manager && <GroupSettings slug={slug} name={group.name} description={group.description ?? ""} visibility={group.visibility as "public" | "unlisted" | "private"} people={dashboard?.people ?? []} members={settingsMembers} classes={setupClasses} />}</div></div><h1>{group.name}</h1>{group.description && <p>{group.description}</p>}<GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} manager={manager} invitationRole={invitation?.role} /></header><GroupHub slug={slug} canPost={!!membership || group.ownerUserId===viewerId} updates={updates} schedule={schedule} initialTab={tab==="updates"?"updates":"schedule"}/>{!manager && <section className="group-section"><h2>People</h2><div className="group-people">{memberRows.map((member) => <div className="group-person" key={member.id}>{member.photo ? <img src={member.photo} alt="" /> : <span style={{ background: avatarColor(member) }}>{member.name.charAt(0).toUpperCase()}</span>}<strong>{member.name}</strong>{member.role === "owner" ? <small>Owner</small> : member.role === "admin" ? <small>Admin</small> : <small>Member</small>}</div>)}</div></section>}</main></div></div>;
 }

@@ -638,6 +638,13 @@
       "when": 1787010545252,
       "tag": "0090_nifty_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1787023179051,
+      "tag": "0091_charming_toad_men",
+      "breakpoints": true
     }
   ]
 }
