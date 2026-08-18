@@ -4426,6 +4426,13 @@ select.editinput.placekind-select {
    header everywhere, so the bare icons go white with the wordmark, over
    a photo and over the no-photo colour hero alike. */
 .pub-hero .brandbar-actions .iconbtn { color: #fff; }
+/* On somebody else's hero, the viewer's own header face can disappear into
+   the photograph. Ring only that private account door, not profile imagery
+   elsewhere and not the owner's own profile header. */
+.pub-hero:not(.ownbar) .brandbar-avatar img,
+.pub-hero:not(.ownbar) .brandbar-avatar > span {
+  box-shadow: 0 0 0 2px var(--color-white);
+}
 /* A stranger's bar rides the photo the same way the app header does: pinned
    at the top with the scrim inside it, the lockup in white (the --wm-ink
    and --wm-mark the shell already set), and its margin dropped so the head's
