@@ -1,12 +1,9 @@
-import { eq } from "drizzle-orm";
 import type { Viewport } from "next";
 import { redirect } from "next/navigation";
-import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { unreadHeaderCounts } from "@/lib/notify";
-import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
@@ -14,6 +11,7 @@ import { lookMode } from "@/lib/darkmode";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
 import { NavBar } from "@/components/NavBar";
+import { currentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +27,9 @@ export const viewport: Viewport = { themeColor: "#ffffff" };
 // renders once and persists across the loading boundary underneath it, so
 // tapping a tab swaps only the content area. The bar you tapped stays put.
 export default async function TabsLayout({ children }: { children: React.ReactNode }) {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/");
-  const db = await getDb();
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  const me = await currentUser();
   if (!me) redirect("/");
+  const userId = me.id;
 
   // A member has a handle too, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;

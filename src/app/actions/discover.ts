@@ -6,8 +6,8 @@ import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
 import { publicSchedules } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
-import { getSessionUserId } from "@/lib/session";
-import type { DirPerson } from "@/components/DirectoryRows";
+import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
+import { currentUser } from "@/lib/current-user";
 
 export type DiscoverData = {
   people: DirPerson[];
@@ -26,11 +26,10 @@ export type DiscoverData = {
  * for months.
  */
 export async function discoverPeople(): Promise<DiscoverData> {
-  const userId = await getSessionUserId();
-  if (!userId) return { people: [], cities: [], myCity: null };
-  const db = await getDb();
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  const me = await currentUser();
   if (!me) return { people: [], cities: [], myCity: null };
+  const userId = me.id;
+  const db = await getDb();
 
   // Blocked in either direction: not on the list. Discover is where someone
   // who was removed would go looking, so it has to be the same nothing the
@@ -149,6 +148,8 @@ export type BrowseDay = {
     lng: number | null;
     where: string | null;
     coachName: string;
+    coachPhoto: string | null;
+    coachColor: string;
     attribution: "coached" | "added";
     attributionName: string;
     /** Yours to teach, so there is nothing to save. */
@@ -163,6 +164,29 @@ export type AddBrowseData = {
   myLng: number | null;
 };
 
+export async function discoverStudios(): Promise<DirStudio[]> {
+  const me = await currentUser();
+  if (!me) return [];
+  const db = await getDb();
+  const [studios, favoriteRows] = await Promise.all([
+    db.select().from(schema.studios).orderBy(schema.studios.name),
+    db.select({ studioId:schema.studioEndorsements.targetStudioId }).from(schema.studioEndorsements).where(and(eq(schema.studioEndorsements.endorserUserId, me.id), eq(schema.studioEndorsements.trait, "been_here"))),
+  ]);
+  const favorites = new Set(favoriteRows.map((row) => row.studioId));
+  return studios.map((studio) => ({
+    id:studio.id, slug:studio.slug ?? studio.id, name:studio.name, address:studio.address,
+    photo:studio.photo, types:studio.types, hasSchedule:!!studio.accountUserId,
+    color:avatarColor({ id:studio.id }), favorited:favorites.has(studio.id),
+  }));
+}
+
+export async function discoverGroups() {
+  const me = await currentUser();
+  if (!me) return [];
+  const db = await getDb();
+  return db.select({ id:schema.groups.id, name:schema.groups.name, slug:schema.groups.slug, description:schema.groups.description, purpose:schema.groups.purpose }).from(schema.groups).where(eq(schema.groups.visibility, "public"));
+}
+
 /**
  * The Add screen's browse list: the same feed Discover draws, the next
  * seven days of it, with the viewer's saved state on every row so the
@@ -170,11 +194,10 @@ export type AddBrowseData = {
  * Add can never offer a class Discover would not.
  */
 export async function addBrowse(): Promise<AddBrowseData | null> {
-  const userId = await getSessionUserId();
-  if (!userId) return null;
-  const db = await getDb();
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  const me = await currentUser();
   if (!me) return null;
+  const userId = me.id;
+  const db = await getDb();
   const { buildDiscoverFeed } = await import("@/lib/discoverfeed");
   const { fmtDayHeaderRel } = await import("@/lib/format");
   const feed = await buildDiscoverFeed(userId, me);
@@ -187,6 +210,8 @@ export async function addBrowse(): Promise<AddBrowseData | null> {
     .where(eq(schema.attendances.userId, userId));
   const saved = new Set(marks.map((m) => `${m.classId}|${m.iso}`));
   const coachName = new Map(feed.rail.map((c) => [c.id, c.name]));
+  const coachPhoto = new Map(feed.rail.map((c) => [c.id, c.photo]));
+  const coachColor = new Map(feed.rail.map((c) => [c.id, c.color]));
   const byIso = new Map<string, BrowseDay["items"]>();
   for (const i of feed.items) {
     if (i.iso > last) continue;
@@ -205,6 +230,8 @@ export async function addBrowse(): Promise<AddBrowseData | null> {
         lng: i.lng,
         where: i.where,
         coachName: coachName.get(i.coachId) ?? "",
+        coachPhoto: coachPhoto.get(i.coachId) ?? null,
+        coachColor: coachColor.get(i.coachId) ?? avatarColor({ id:i.coachId }),
         attribution: "coached",
         attributionName: coachName.get(i.coachId) ?? "",
         own: i.coachId === userId,

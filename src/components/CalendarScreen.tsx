@@ -23,10 +23,11 @@ import { ShareHubScreen, type HubItem } from "@/components/ShareHubScreen";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
-import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import type { ClassDto, StudioDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
+import { loadCalendarComposerData, loadCalendarShareData, type CalendarComposerData } from "@/app/actions/calendar-data";
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -57,16 +58,9 @@ export function CalendarScreen({
   classes,
   todayIso,
   studios,
-  templates,
-  customTypes,
-  lastUsed,
-  subsCount,
   savedDays = [],
   openAdder = false,
   member = false,
-  shareItems,
-  shareDefaultFrom,
-  savedHeadline,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -77,10 +71,6 @@ export function CalendarScreen({
   classes: ClassDto[];
   todayIso: string;
   studios: StudioDto[];
-  templates: TemplateDto[];
-  customTypes: string[];
-  lastUsed: LastUsed;
-  subsCount: number;
   savedDays?: WeekDayData[];
   /** Members use this exact calendar too, but every row is attending. They
    *  have no relationship filter and Add opens the catalog directly. */
@@ -88,9 +78,6 @@ export function CalendarScreen({
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
-  shareItems: HubItem[];
-  shareDefaultFrom: string;
-  savedHeadline: string;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
@@ -125,6 +112,25 @@ export function CalendarScreen({
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
+  const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
+  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string } | null>(null);
+  const [loadingTools, startTools] = useTransition();
+
+  const ensureComposer = useCallback(() => {
+    if (composerData) return;
+    startTools(async () => {
+      const data = await loadCalendarComposerData();
+      if (data) setComposerData(data);
+    });
+  }, [composerData]);
+  const openShare = () => {
+    setShareOpen(true);
+    ensureComposer();
+    if (!shareData) startTools(async () => {
+      const data = await loadCalendarShareData();
+      if (data) setShareData(data);
+    });
+  };
 
   useEffect(() => {
     if (!shareOpen && !menuOpen) return;
@@ -289,6 +295,7 @@ export function CalendarScreen({
   // nothing on their coaching calendar.
   const bare = classes.length === 0 && savedDays.every((day) => day.items.length === 0);
   const openAdd = () => {
+    ensureComposer();
     setAddChoice(true);
   };
 
@@ -379,20 +386,20 @@ export function CalendarScreen({
             >
               <Icon name="close" size={24} />
             </button>
-            <ShareHubScreen
+            {shareData ? <ShareHubScreen
               embedded
               coach={!member}
               handle={handle ?? ""}
               name={viewer.name}
-              items={shareItems}
-              defaultFrom={shareDefaultFrom}
+              items={shareData.items}
+              defaultFrom={shareData.defaultFrom}
               today={todayIso}
-              savedHeadline={savedHeadline}
+              savedHeadline={shareData.savedHeadline}
               studios={studios}
-              templates={templates}
-              customTypes={customTypes}
-              lastUsed={lastUsed}
-            />
+              templates={composerData?.templates ?? []}
+              customTypes={composerData?.customTypes ?? []}
+              lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
+            /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
           </section>
         </div>
       )}
@@ -416,7 +423,7 @@ export function CalendarScreen({
       )}
 
       <div className="calendar-bottom-actions" aria-label="Schedule actions">
-        <button className="calendar-bottom-share" aria-label="Share your week" onClick={() => setShareOpen(true)}>
+        <button className="calendar-bottom-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}>
           <Icon name="reply" className="share-arrow-forward" size={22} />
         </button>
         <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
@@ -474,13 +481,13 @@ export function CalendarScreen({
           }}
         />
       )}
-      {addOpen && (
+      {addOpen && composerData && (
         <Adder
           studios={studios}
-          templates={templates}
-          customTypes={customTypes}
-          lastUsed={lastUsed}
-          subsCount={subsCount}
+          templates={composerData.templates}
+          customTypes={composerData.customTypes}
+          lastUsed={composerData.lastUsed}
+          subsCount={composerData.subsCount}
           firstPublish={bare}
           personal={
             personalAdd
@@ -511,6 +518,9 @@ export function CalendarScreen({
             setMatch(found);
           }}
         />
+      )}
+      {addOpen && !composerData && (
+        <div className="sheet-scrim"><div className="sheet calendar-tool-loading" aria-busy="true">Loading your class tools…</div></div>
       )}
       {match && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMatch(null); }}>
@@ -549,7 +559,7 @@ export function CalendarScreen({
           onEdit={() => {
             const c = classes.find((x) => x.id === peek.id);
             setPeek(null);
-            if (c) setEdit({ id: c.id, prefill: prefillOf(c) });
+            if (c) { ensureComposer(); setEdit({ id: c.id, prefill: prefillOf(c) }); }
           }}
         />
       )}
@@ -566,18 +576,19 @@ export function CalendarScreen({
           }}
           onEdit={(personal) => {
             setPlan(null);
+            ensureComposer();
             setPlanEdit({ id: personal.id, prefill: personalPrefill(personal) });
           }}
         />
       )}
 
-      {planEdit && (
+      {planEdit && composerData && (
         <Adder
           studios={studios}
-          templates={templates}
-          customTypes={customTypes}
-          lastUsed={lastUsed}
-          subsCount={subsCount}
+          templates={composerData.templates}
+          customTypes={composerData.customTypes}
+          lastUsed={composerData.lastUsed}
+          subsCount={composerData.subsCount}
           firstPublish={false}
           personal={{ canCoach: !member, editId: planEdit.id }}
           prefill={planEdit.prefill}
@@ -596,13 +607,13 @@ export function CalendarScreen({
         />
       )}
 
-      {edit && (
+      {edit && composerData && (
         <Adder
           studios={studios}
-          templates={templates}
-          customTypes={customTypes}
-          lastUsed={lastUsed}
-          subsCount={subsCount}
+          templates={composerData.templates}
+          customTypes={composerData.customTypes}
+          lastUsed={composerData.lastUsed}
+          subsCount={composerData.subsCount}
           firstPublish={false}
           prefill={edit.prefill}
           onClose={() => setEdit(null)}

@@ -1,15 +1,12 @@
-import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { mySchedule } from "@/lib/coachweek";
 import { todayIso } from "@/lib/format";
-import { getSessionUserId } from "@/lib/session";
-import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import type { ClassDto, StudioDto } from "@/lib/types";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { myWeek } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
-import { shareWeek } from "@/lib/shareweek";
-import type { HubItem } from "@/components/ShareHubScreen";
+import { currentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -34,32 +31,20 @@ export default async function CalendarPage({
   // through its redirect, and it is what "Add a class" links out in the world
   // still say.
   const { add, hl } = await searchParams;
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/");
-  const db = await getDb();
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  const me = await currentUser();
   if (!me) redirect("/");
+  const userId = me.id;
+  const db = await getDb();
   const member = me.kind === "fan";
   const today = todayIso();
 
-  const [classRows, studioRows, templateRows, customTypeRows, subRows, savedDays, shareDays] = await Promise.all([
+  const [classRows, studioRows, savedDays] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym
     // shifts folded in, because a coach who is on Thursday at seven has to be
     // able to see that they are on Thursday at seven.
     mySchedule(userId),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
-    db
-      .select()
-      .from(schema.classTemplates)
-      .where(eq(schema.classTemplates.userId, userId))
-      .orderBy(desc(schema.classTemplates.updatedAt)),
-    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
-    db
-      .select({ id: schema.subscribers.id })
-      .from(schema.subscribers)
-      .where(eq(schema.subscribers.trainerUserId, userId)),
     myWeek(userId),
-    shareWeek(userId, today, 14),
   ]);
 
   const studioById = new Map(studioRows.map((st) => [st.id, st]));
@@ -92,38 +77,6 @@ export default async function CalendarPage({
     name: s.name,
     address: s.address,
   }));
-  const templates: TemplateDto[] = templateRows.map((t) => ({
-    name: t.name,
-    classType: t.classType,
-    description: t.description,
-    image: t.image,
-    startTime: t.startTime,
-    durationMin: t.durationMin,
-    studioId: t.studioId,
-    location: t.location,
-    withWho: t.withWho,
-    isPublic: t.isPublic,
-    links: t.links,
-  }));
-  const lastUsed: LastUsed = templates.length
-    ? {
-        startTime: templates[0].startTime,
-        durationMin: templates[0].durationMin,
-        studioId: templates[0].studioId,
-      }
-    : { startTime: "06:00", durationMin: 50, studioId: studios[0]?.id ?? null };
-  const shareItems: HubItem[] = shareDays.flatMap((day) =>
-    day.items.map((item) => ({
-      key: item.key,
-      iso: item.iso,
-      time: item.time,
-      name: item.name,
-      where: item.where,
-      own: item.own,
-      coaching: item.coaching,
-    })),
-  );
-
   return (
     <CalendarScreen
       savedDays={savedDays}
@@ -137,15 +90,8 @@ export default async function CalendarPage({
       classes={classes}
       todayIso={today}
       studios={studios}
-      templates={templates}
-      customTypes={customTypeRows.map((r) => r.name)}
-      lastUsed={lastUsed}
-      subsCount={subRows.length}
       openAdder={add === "1"}
       member={member}
-      shareItems={shareItems}
-      shareDefaultFrom={shareDays[0]?.iso ?? today}
-      savedHeadline={me.storyPrefs?.headline ?? ""}
     />
   );
 }

@@ -4,6 +4,7 @@ import { ServiceWorker } from "@/components/InstallApp";
 import { NavTrack } from "@/components/NavTrack";
 import { ScrollLock } from "@/components/ScrollLock";
 import { NativeAppBridge } from "@/components/NativeAppBridge";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -69,6 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NavTrack />
         <ServiceWorker />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );

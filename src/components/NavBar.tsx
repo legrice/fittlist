@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
@@ -31,11 +32,17 @@ export function NavBar({
   profileHref?: string;
 }) {
   const here = activeTab(usePathname(), active);
+  const router = useRouter();
+  const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
+
+  useEffect(() => {
+    for (const tab of tabs) if (tab.id !== here) router.prefetch(tab.href);
+  }, [here, router, tabs]);
 
   return (
     <div className="navwrap">
       <nav className="navbar" aria-label="Main">
-        {navTabs(coach, scheduleHref, profileHref).map((t) => {
+        {tabs.map((t) => {
           const on = here === t.id;
           const cls = `navtab${on ? " on" : ""}`;
           const inner = (

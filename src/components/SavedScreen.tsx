@@ -13,10 +13,10 @@ export function SavedScreen({ people, places, yourGroups, favoriteGroups, invita
   return <main className="savedpage">
     <header className="savedhead"><h1>Favorites</h1></header>
     <SavedRail kind="people" title="People" empty="Favorite people to keep their individual calendars close by." addHref="/discover">
-      {people.map((person) => <Link className="youfav" href={`/${person.handle}`} key={person.id}>{person.photo ? <img src={person.photo} alt="" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<strong>{person.name}</strong>{person.title && <small>{person.title}</small>}</Link>)}
+      {people.map((person) => <Link className="youfav" href={`/${person.handle}`} key={person.id}>{person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<strong>{person.name}</strong>{person.title && <small>{person.title}</small>}</Link>)}
     </SavedRail>
     <SavedRail kind="places" title="Studios" empty="Favorite studios to find their schedules again quickly." addHref="/discover?half=places">
-      {places.map((place) => <Link className="youfav" href={`/s/${place.slug}`} key={place.id}>{place.photo ? <img src={place.photo} alt="" /> : <span>{place.name.charAt(0).toUpperCase()}</span>}<strong>{place.name}</strong>{place.types.length > 0 && <small>{place.types.slice(0, 2).join(" · ")}</small>}</Link>)}
+      {places.map((place) => <Link className="youfav" href={`/s/${place.slug}`} key={place.id}>{place.photo ? <img src={place.photo} alt="" loading="lazy" decoding="async" /> : <span>{place.name.charAt(0).toUpperCase()}</span>}<strong>{place.name}</strong>{place.types.length > 0 && <small>{place.types.slice(0, 2).join(" · ")}</small>}</Link>)}
     </SavedRail>
     {invitations.length > 0 && <section className="saved-block saved-rail-invitations"><h2>Invitations</h2><div className="saved-invitations">{invitations.map((invite) => <GroupInvitationCard invite={invite} key={invite.id} />)}</div></section>}
     <SavedRail kind="groups" title="Groups" empty="Make a group for the people you plan and train with." onAdd={() => setGroupOpen(true)}>
@@ -28,7 +28,7 @@ export function SavedScreen({ people, places, yourGroups, favoriteGroups, invita
 
 function GroupRailCard({ group }: { group: YouFavoriteGroup }) {
   const nextDate = group.nextDate ? new Date(`${group.nextDate}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) : null;
-  return <Link className="youfav saved-group-card" href={`/g/${group.slug}`}>{group.photo ? <img src={group.photo} alt="" /> : <span><Icon name="groups" size={30} /></span>}<strong>{group.name}</strong><small>{group.nextClass ? `${nextDate} · ${group.nextClass}` : `${group.memberCount} ${group.memberCount === 1 ? "member" : "members"}`}</small></Link>;
+  return <Link className="youfav saved-group-card" href={`/g/${group.slug}`}>{group.photo ? <img src={group.photo} alt="" loading="lazy" decoding="async" /> : <span><Icon name="groups" size={30} /></span>}<strong>{group.name}</strong><small>{group.nextClass ? `${nextDate} · ${group.nextClass}` : `${group.memberCount} ${group.memberCount === 1 ? "member" : "members"}`}</small></Link>;
 }
 
 function GroupInvitationCard({ invite }: { invite: YouGroupInvitation }) {
