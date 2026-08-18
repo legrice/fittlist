@@ -29,6 +29,7 @@ import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { myWeekText } from "@/app/actions/weektext";
 import { Toast, useToast } from "@/components/Toast";
+import { forgetLocalPasskey, rememberLocalPasskey } from "@/lib/passkey-device";
 
 // The four the spec's settings list opens, plus the leaves each of those
 // holds. A leaf is still reachable on its own, because the sub-screen is a
@@ -232,6 +233,7 @@ export function ProfileSheet({
       const fin = await finishPasskeyRegistration(reg, "Passkey");
       if (fin.ok) {
         setPkCount(1);
+        rememberLocalPasskey();
         toast("Passkey added");
       } else toast(fin.error ?? "Couldn't add that passkey");
     } catch (err) {
@@ -249,6 +251,7 @@ export function ProfileSheet({
       const res = await removePasskeys();
       if (res.ok) {
         setPkCount(0);
+        forgetLocalPasskey();
         toast("Passkey removed");
       } else toast(res.error ?? "Couldn't remove");
     } finally {

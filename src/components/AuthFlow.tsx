@@ -18,6 +18,7 @@ import { slug } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import Link from "next/link";
+import { hasLocalPasskeyHistory, rememberLocalPasskey } from "@/lib/passkey-device";
 
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
@@ -125,6 +126,7 @@ export function AuthFlow({
   );
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
+  const [knownPasskey, setKnownPasskey] = useState(false);
   // "Request an invite" modal (invite-only beta).
   const [requestOpen, setRequestOpen] = useState(false);
   const [reqName, setReqName] = useState("");
@@ -137,6 +139,7 @@ export function AuthFlow({
 
   useEffect(() => {
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
+    setKnownPasskey(hasLocalPasskeyHistory());
   }, []);
   // Arriving from a coach's page with a door already chosen: "?join=login"
   // opens the sign-in sheet, "?join=signup" the sign-up one. Tapping Sign in on
@@ -215,7 +218,11 @@ export function AuthFlow({
         const res = await beginPasskeyRegistration();
         if (res.ok) {
           const reg = await startRegistration({ optionsJSON: res.options });
-          await finishPasskeyRegistration(reg, "Passkey");
+          const finish = await finishPasskeyRegistration(reg, "Passkey");
+          if (finish.ok) {
+            rememberLocalPasskey();
+            setKnownPasskey(true);
+          }
         }
       } catch {
         /* user cancelled or it failed — either way, continue */
@@ -232,7 +239,11 @@ export function AuthFlow({
         const { options } = await beginPasskeyLogin();
         const response = await startAuthentication({ optionsJSON: options });
         const res = await finishPasskeyLogin(response);
-        if (res.ok) proceed(!!res.needsProfile, !!res.fan);
+        if (res.ok) {
+          rememberLocalPasskey();
+          setKnownPasskey(true);
+          proceed(!!res.needsProfile, !!res.fan);
+        }
         else setError(res.error ?? "That didn't work.");
       } catch (err) {
         const nm = (err as Error)?.name;
@@ -483,9 +494,9 @@ export function AuthFlow({
               <button className="obalt" onClick={() => sendLink(false)} disabled={pending}>
                 <Icon name="auto_awesome" size={21} /> Email me a magic link
               </button>
-              {sheet === "login" && passkeyable && (
+              {sheet === "login" && passkeyable && knownPasskey && (
                 <button className="obalt" onClick={usePasskeyLogin} disabled={pending}>
-                  <Icon name="fingerprint" size={21} /> Use a passkey
+                  <Icon name="fingerprint" size={21} /> Use Face ID or passkey
                 </button>
               )}
             </div>
