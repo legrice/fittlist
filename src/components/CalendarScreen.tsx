@@ -121,6 +121,7 @@ export function CalendarScreen({
   const [favoriteLoading, startFavoriteLoading] = useTransition();
   const [selectedFavorites, setSelectedFavorites] = useState<string[]>([]);
   const [overlaySaved, setOverlaySaved] = useState<Record<string,boolean>>({});
+  const activeFilterCount = Number(visible.coaching) + Number(visible.saved) + Number(visible.personal);
 
   const ensureComposer = useCallback(() => {
     if (composerData) return;
@@ -360,7 +361,7 @@ export function CalendarScreen({
       <header className="calendar-page-header">
         <h1>Calendar</h1>
         <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
-        <button type="button" className="calendar-menu-button" aria-label="Filter calendar" onClick={openFilters}><Icon name="tune" size={22} /></button>
+        <button type="button" className="calendar-menu-button" aria-label={`Filter calendar, ${activeFilterCount} selected`} onClick={openFilters}><Icon name="tune" size={22} /><span className="calendar-filter-count">{activeFilterCount}</span></button>
       </header>
 
       {menuOpen && <div className="calendar-drawer-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>

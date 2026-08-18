@@ -12,7 +12,7 @@ export function SavedScreen({ people, places, yourGroups, favoriteGroups, invita
   const groups = [...yourGroups, ...favoriteGroups];
   const calendarPeople = people
     .map((person, index) => ({ person, index }))
-    .sort((a, b) => Number(b.person.handle.toLowerCase()===highlight) - Number(a.person.handle.toLowerCase()===highlight) || Number(b.person.hasCalendar) - Number(a.person.hasCalendar) || a.index - b.index)
+    .sort((a, b) => Number(b.person.handle.toLowerCase()===highlight) - Number(a.person.handle.toLowerCase()===highlight) || Number(b.person.hasCalendar) - Number(a.person.hasCalendar) || Number(!!b.person.photo) - Number(!!a.person.photo) || a.index - b.index)
     .map(({ person }) => person);
   useEffect(() => {
     if (!highlight) return;

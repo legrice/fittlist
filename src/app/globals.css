@@ -9587,6 +9587,8 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-menu-button,
 .calendar-header-share { width:44px; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); }
+.calendar-menu-button { position:relative; }
+.calendar-menu-button > .calendar-filter-count { position:absolute; top:-7px; right:-5px; min-width:20px; height:20px; padding:0 5px; display:grid; place-items:center; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font-size:11px; font-weight:700; }
 .calendar-header-share { width:auto; padding:0 14px; gap:7px; border:1px solid var(--color-border); border-radius:var(--radius-pill); box-shadow:none; font:inherit; font-weight:700; }
 .calendar-menu-button:active,
 .calendar-header-share:active { transform:scale(.94); }
