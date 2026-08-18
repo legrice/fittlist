@@ -9801,13 +9801,16 @@ a.clspeek-by:active { opacity: .6; }
 }
 .navtab.on {
   background: transparent;
-  color: var(--color-olive);
+  color: var(--color-black);
 }
-.navtab.on .navglyph { background: transparent; }
+.navtab.on .navglyph {
+  background: var(--si);
+  color: var(--color-black);
+}
 .navglyph {
-  width: 32px;
-  height: 27px;
-  border-radius: 0;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-pill);
 }
 .navtab:active { background: var(--color-surface-hover); }
 .navav,
