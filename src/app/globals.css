@@ -428,10 +428,9 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .ob .oblanding-actions .oblogin {
   background:#fff; color:var(--ink); border:1px solid var(--line);
 }
-.ob p.oblanding-legal {
-  margin:10px auto 0; max-width:360px; color:var(--muted); font-size:11px; line-height:1.35;
+.ob p.authsignup-legal {
+  margin:10px auto 0; max-width:360px; color:var(--muted); font-size:11px; line-height:1.35; text-align:center;
 }
-.oblanding-legal a, .oblanding-legal span { color:var(--si); }
 /* "or" divider + secondary sign-in options (magic link, passkey) */
 .obdiv { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: var(--ol); font-size: 12px; }
 .obdiv::before, .obdiv::after { content: ""; height: 1px; flex: 1; background: var(--line); }
@@ -10094,7 +10093,7 @@ a.clspeek-by:active { opacity: .6; }
   color:var(--color-text-primary);
   font-weight:700;
 }
-.oblanding-legal :is(a, span) {
+.authsignup-legal :is(a, span) {
   color:var(--color-text-primary);
   font-weight:700;
   text-decoration:underline;

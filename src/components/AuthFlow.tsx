@@ -342,9 +342,6 @@ export function AuthFlow({
                 </div>
               )}
               {error && <div className="errorcopy">{error}</div>}
-              <p className="oblanding-legal">
-                By signing up, you agree to FittList&rsquo;s <span>Terms of Use</span> and <Link href="/privacy">Privacy Policy</Link>.
-              </p>
             </div>
           </>
         )}
@@ -505,6 +502,11 @@ export function AuthFlow({
                 {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Sign in"}
               </button>
             </div>
+            {sheet === "signup" && (
+              <p className="authsignup-legal">
+                By creating an account, you agree to FittList&rsquo;s <span>Terms of Use</span> and acknowledge our <Link href="/privacy">Privacy Policy</Link>.
+              </p>
+            )}
             {/* The other door, under the button. Someone who opened Sign in from
                 a coach's page and has never been here before had nothing to tap
                 but the close button: the way to sign up was back where they
