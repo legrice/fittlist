@@ -82,10 +82,10 @@ export function CalendarScreen({
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
-  const [pendingView, setPendingView] = useState<View>("list");
   const [menuOpen, setMenuOpen] = useState(false);
   const [visible, setVisible] = useState({ coaching: !member, saved: true, personal: true });
   const [addChoice, setAddChoice] = useState(openAdder);
+  const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
   const [personalAdd, setPersonalAdd] = useState(false);
@@ -138,7 +138,6 @@ export function CalendarScreen({
     });
   };
   const openFilters = () => {
-    setPendingView(view);
     setMenuOpen(true);
     if (!favoriteData) startFavoriteLoading(async () => setFavoriteData(await loadFavoriteCalendars() ?? { people:[], events:[] }));
   };
@@ -336,7 +335,22 @@ export function CalendarScreen({
   const bare = classes.length === 0 && savedDays.every((day) => day.items.length === 0);
   const openAdd = () => {
     ensureComposer();
+    setAddChoiceKind(null);
     setAddChoice(true);
+  };
+  const continueAdd = () => {
+    if (!addChoiceKind) return;
+    setAddChoice(false);
+    if (addChoiceKind === "coaching") {
+      setPersonalAdd(false);
+      setPersonalWorkout(false);
+      setAddOpen(true);
+    } else if (addChoiceKind === "saved") setBrowseOpen(true);
+    else {
+      setPersonalAdd(true);
+      setPersonalWorkout(true);
+      setAddOpen(true);
+    }
   };
 
   return (
@@ -355,17 +369,16 @@ export function CalendarScreen({
           <section className="calendar-drawer-section">
             <h3>View</h3>
             {([['list','calendar_view_day','List'],['month','calendar_month','Month']] as const).map(([value,icon,label]) => {
-              const on=pendingView===value;
-              return <button type="button" className="calendar-drawer-row calendar-view-choice" aria-pressed={on} onClick={()=>setPendingView(value)} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span><span className={`calendar-check${on?' on':''}`}>{on&&<Icon name="check" size={16}/>}</span></button>;
+              const on=view===value;
+              return <button type="button" className="calendar-drawer-row calendar-view-choice" aria-pressed={on} onClick={()=>{setView(value);setMenuOpen(false);}} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span><span className={`calendar-check${on?' on':''}`}>{on&&<Icon name="check" size={16}/>}</span></button>;
             })}
-            <button type="button" className="calendar-drawer-continue" onClick={()=>{setView(pendingView);setMenuOpen(false);}}>Continue</button>
           </section>
           <section className="calendar-drawer-section">
             <h3>My calendar</h3>
             {([...(member ? [] : [["coaching", "Coaching"]] as const), ["saved", "Saved"], ["personal", "Personal"]] as const).map(([value, label]) => {
               const on = visible[value];
               const icon = value === "coaching" ? "event_available" : value === "saved" ? "bookmark" : "activity";
-              return <button type="button" className={`calendar-drawer-row calendar-category-row calendar-category-row-${value}${on ? " on" : ""}`} aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-category-icon calendar-category-icon-${value}`}><Icon name={icon} size={20} /></span><span>{label}</span><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`} /></button>;
+              return <button type="button" className="calendar-drawer-row calendar-category-row" aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-category-icon calendar-category-icon-${value}`}><Icon name={icon} size={20} /></span><span>{label}</span><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`}>{on && <Icon name="check" size={16} />}</span></button>;
             })}
           </section>
           <section className="calendar-drawer-section calendar-favorite-section">
@@ -493,23 +506,10 @@ export function CalendarScreen({
             <p className="lead">What are you doing?</p>
             <AddWeekChoices
               canCoach={!member}
-              onCoach={() => {
-                setAddChoice(false);
-                setPersonalAdd(false);
-                setPersonalWorkout(false);
-                setAddOpen(true);
-              }}
-              onAttend={() => {
-                setAddChoice(false);
-                setBrowseOpen(true);
-              }}
-              onPersonal={() => {
-                setAddChoice(false);
-                setPersonalAdd(true);
-                setPersonalWorkout(true);
-                setAddOpen(true);
-              }}
+              selected={addChoiceKind}
+              onSelect={setAddChoiceKind}
             />
+            <button type="button" className="addrole-continue" disabled={!addChoiceKind} onClick={continueAdd}>Continue</button>
           </div>
         </div>
       )}

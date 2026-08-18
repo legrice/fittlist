@@ -2524,6 +2524,17 @@ button.ps-card { cursor: pointer; }
 .addweek-options > .addweek-option-coaching:active { background: var(--color-coaching-soft); }
 .addweek-options > .addweek-option-saved:active { background: color-mix(in srgb, var(--color-attending) 82%, white); }
 .addweek-options > .addweek-option-personal:active { background: color-mix(in srgb, var(--color-personal) 82%, white); }
+.addweek-options.selectable > button { min-height:78px; border:1.5px solid var(--color-border); background:var(--color-white); color:var(--color-black); }
+.addweek-options.selectable > button small { color:var(--muted); }
+.addweek-options.selectable > .addweek-option-coaching.selected { border-color:var(--color-coaching); }
+.addweek-options.selectable > .addweek-option-saved.selected { border-color:var(--color-attending); }
+.addweek-options.selectable > .addweek-option-personal.selected { border-color:var(--color-personal); }
+.addweek-radio { width:23px; height:23px; justify-self:end; border:2px solid var(--color-border-strong); border-radius:50%; background:var(--color-white); }
+.addweek-option-coaching.selected .addweek-radio { border-color:var(--color-coaching); background:var(--color-coaching); }
+.addweek-option-saved.selected .addweek-radio { border-color:var(--color-attending); background:var(--color-attending); }
+.addweek-option-personal.selected .addweek-radio { border-color:var(--color-personal); background:var(--color-personal); }
+.addrole-continue { width:100%; min-height:52px; margin-top:18px; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font:inherit; font-weight:700; }
+.addrole-continue:disabled { opacity:.42; }
 .profile-empty-message {
   width: 100%; margin-top: 16px;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -9606,19 +9617,14 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-view-choice { grid-template-columns:40px minmax(0,1fr) 28px; }
 .calendar-view-choice-icon { width:36px; height:36px; display:grid; place-items:center; border-radius:50%; background:var(--color-surface-muted); }
 .calendar-view-choice .calendar-check.on { border-color:transparent; background:var(--color-black); color:var(--color-white); }
-.calendar-drawer-continue { width:100%; min-height:48px; margin-top:12px; padding:0 18px; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font:inherit; font-weight:700; }
-.calendar-drawer-continue:active { transform:scale(.98); background:var(--color-lime-pressed); }
 .calendar-check-row { grid-template-columns:34px minmax(0,1fr); }
-.calendar-category-row { min-height:54px; margin:4px 0; padding:7px 8px; grid-template-columns:40px minmax(0,1fr) 28px; border:1.5px solid transparent; border-radius:var(--radius-control); }
-.calendar-category-row-coaching.on { border-color:var(--color-coaching); }
-.calendar-category-row-saved.on { border-color:var(--color-attending); }
-.calendar-category-row-personal.on { border-color:var(--color-personal); }
+.calendar-category-row { grid-template-columns:40px minmax(0,1fr) 28px; }
 .calendar-category-icon {
-  width:36px; height:36px; display:grid; place-items:center; border-radius:50%; background:var(--color-surface-muted); color:var(--color-text-secondary);
+  width:36px; height:36px; display:grid; place-items:center; border-radius:50%;
 }
-.calendar-category-row-coaching.on .calendar-category-icon { background:var(--color-coaching); color:var(--color-coaching-text); }
-.calendar-category-row-saved.on .calendar-category-icon { background:var(--color-attending); color:var(--color-attending-text); }
-.calendar-category-row-personal.on .calendar-category-icon { background:var(--color-personal); color:var(--color-personal-text); }
+.calendar-category-icon-coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
+.calendar-category-icon-saved { background:var(--color-attending); color:var(--color-attending-text); }
+.calendar-category-icon-personal { background:var(--color-personal); color:var(--color-personal-text); }
 .calendar-category-row .calendar-check { margin-left:auto; }
 .calendar-check {
   width:23px; height:23px; border:2px solid var(--color-border-strong); border-radius:6px;
@@ -9628,8 +9634,9 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-check-coaching.on { background:var(--color-coaching); }
 .calendar-check-saved.on { background:var(--color-attending); }
 .calendar-check-personal.on { background:var(--color-personal); }
-.calendar-category-row .calendar-check:not(.on) { border-radius:50%; background:var(--color-white); }
-.calendar-category-row .calendar-check.on { border-radius:50%; }
+.calendar-check-coaching:not(.on) { border-color:var(--color-coaching); background:var(--color-coaching-soft); }
+.calendar-check-saved:not(.on) { border-color:var(--color-attending); background:color-mix(in srgb,var(--color-attending) 35%,white); }
+.calendar-check-personal:not(.on) { border-color:var(--color-personal); background:color-mix(in srgb,var(--color-personal) 35%,white); }
 .screen:has(.calendar-page-header) .btn:not(.ghost) { background:var(--color-lime); color:var(--color-black); }
 .calendar-cardwrap {
   margin-top: 0;

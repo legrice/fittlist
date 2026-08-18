@@ -8,12 +8,16 @@ export function AddWeekChoices({
   onCoach,
   onAttend,
   onPersonal,
+  selected,
+  onSelect,
 }: {
   canCoach: boolean;
   disabled?: boolean;
-  onCoach: () => void;
-  onAttend: () => void;
-  onPersonal: () => void;
+  onCoach?: () => void;
+  onAttend?: () => void;
+  onPersonal?: () => void;
+  selected?: "coaching" | "saved" | "personal" | null;
+  onSelect?: (kind: "coaching" | "saved" | "personal") => void;
 }) {
   const choices = [
     ...(canCoach
@@ -39,14 +43,14 @@ export function AddWeekChoices({
   ];
 
   return (
-    <div className="addweek-options" role="group" aria-label="What are you doing?">
+    <div className={`addweek-options${onSelect ? " selectable" : ""}`} role="group" aria-label="What are you doing?">
       {choices.map((choice) => (
-        <button className={`addweek-option-${choice.kind}`} key={choice.title} type="button" disabled={disabled} onClick={choice.onClick}>
+        <button className={`addweek-option-${choice.kind}${selected === choice.kind ? " selected" : ""}`} key={choice.title} type="button" disabled={disabled} aria-pressed={onSelect ? selected === choice.kind : undefined} onClick={() => onSelect ? onSelect(choice.kind as "coaching" | "saved" | "personal") : choice.onClick?.()}>
           <span className="addweek-option-copy">
             <b>{choice.title}</b>
             <small>{choice.detail}</small>
           </span>
-          <Icon name="chevron_right" size={20} />
+          {onSelect ? <span className="addweek-radio" /> : <Icon name="chevron_right" size={20} />}
         </button>
       ))}
     </div>
