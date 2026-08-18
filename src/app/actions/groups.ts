@@ -5,7 +5,7 @@ import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, todayIso } from "@/lib/format";
+import { clockParts, dowOfDate, runsOn, todayIso, weekDates } from "@/lib/format";
 
 export type GroupClassChoice = { classId: string; iso: string; name: string; detail: string };
 export type GroupPurpose = "plan" | "community" | "event";
@@ -44,14 +44,16 @@ export async function groupClassOptions(): Promise<GroupClassChoice[]> {
   const userId = await getSessionUserId();
   if (!userId) return [];
   const db = await getDb();
-  const marks = await db
+  const [marks, coached] = await Promise.all([db
     .select({ classId: schema.attendances.classId, iso: schema.attendances.occurrenceDate })
     .from(schema.attendances)
-    .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso())));
-  if (!marks.length) return [];
-  const classes = await db.select().from(schema.classes).where(inArray(schema.classes.id, [...new Set(marks.map((mark) => mark.classId))]));
+    .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()))), db.select().from(schema.classes).where(eq(schema.classes.userId, userId))]);
+  const coachedMarks = coached.flatMap((item) => weekDates(0).concat(weekDates(1)).filter((iso) => runsOn(item, iso, dowOfDate(iso))).slice(0, 1).map((iso) => ({ classId:item.id, iso })));
+  const allMarks = [...new Map([...marks, ...coachedMarks].map((mark) => [`${mark.classId}|${mark.iso}`, mark])).values()];
+  if (!allMarks.length) return [];
+  const classes = await db.select().from(schema.classes).where(inArray(schema.classes.id, [...new Set(allMarks.map((mark) => mark.classId))]));
   const byId = new Map(classes.map((item) => [item.id, item]));
-  return marks.flatMap((mark) => {
+  return allMarks.flatMap((mark) => {
     const item = byId.get(mark.classId);
     if (!item) return [];
     const date = new Date(`${mark.iso}T00:00:00Z`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
@@ -128,6 +130,15 @@ export async function updateGroupDescription(slug: string, value: string) {
   const description = value.trim().replace(/\s+/g, " ");
   if (description.length > 280) return { ok: false, error: "Keep the description under 280 characters." } as const;
   await manager.db.update(schema.groups).set({ description: description || null }).where(eq(schema.groups.id, manager.groupId));
+  revalidatePath(`/g/${slug}`);
+  return { ok: true } as const;
+}
+
+export async function updateGroupVisibility(slug: string, visibility: "public" | "unlisted" | "private") {
+  const manager = await groupManager(slug);
+  if (!manager) return { ok: false, error: "Only group admins can change privacy." } as const;
+  if (!["public", "unlisted", "private"].includes(visibility)) return { ok: false, error: "Choose a privacy option." } as const;
+  await manager.db.update(schema.groups).set({ visibility }).where(eq(schema.groups.id, manager.groupId));
   revalidatePath(`/g/${slug}`);
   return { ok: true } as const;
 }
