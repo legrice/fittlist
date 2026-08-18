@@ -824,6 +824,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .sheetclose:active { background: var(--cl-d); }
 .sheet h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
+.sheet:has(> .sheetclose) > h2 {
+  min-height:var(--tap-size); padding-right:calc(var(--tap-size) + 20px);
+  display:flex; align-items:center;
+}
 .sheet p.lead { font-size: 13px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 /* The informational sheets (the badges' explainers, the community note) are
    read, not filled in, so their words run four up from the form leads. */
@@ -9988,3 +9992,38 @@ a.clspeek-by:active { opacity: .6; }
 .btn:not(.ghost) { background: var(--color-action); color: var(--color-black); }
 .btn:not(.ghost):active { background: var(--color-action-pressed); }
 [data-mode="dark"] .btn:not(.ghost) { color: var(--color-black); }
+
+/* Lime is an action surface, not a readable text color. Text links stay ink
+   and earn their emphasis from weight (and an underline when they sit inside
+   prose), so the same rule remains legible on white and muted surfaces. */
+:is(
+  .obloginlink b,
+  .authmagic,
+  .wizaddnew,
+  .booklink,
+  .madewith a,
+  .sheet .backbtn,
+  .linktoggle,
+  .addnew,
+  .kindempty-a,
+  .descmore,
+  .linksfield-add,
+  .feedfilter-link,
+  .knowcoach,
+  .rotaadd,
+  .comprow-a,
+  .traylbl-all,
+  .clspeek-del,
+  .desktop-week-card a,
+  .focusbar-a,
+  .citybrand
+) {
+  color:var(--color-text-primary);
+  font-weight:700;
+}
+.oblanding-legal :is(a, span) {
+  color:var(--color-text-primary);
+  font-weight:700;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
