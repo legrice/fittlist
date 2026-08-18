@@ -63,7 +63,11 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
  * a member's all ask this one function, which is why they answer alike.
  */
 export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
-  if (from === "discover") return { href: "/discover", label: "Back to Explore" };
+  if (from === "discover" || from === "discover-classes") return { href: "/discover?half=classes", label: "Back to classes" };
+  if (from === "discover-people") return { href: "/discover?half=people", label: "Back to people" };
+  if (from === "discover-studios") return { href: "/discover?half=studios", label: "Back to studios" };
+  if (from === "discover-groups") return { href: "/discover?half=groups", label: "Back to groups" };
+  if (from === "saved") return { href: "/saved", label: "Back to Favorites" };
   if (from === "search") return { href: "/search", label: "Back to search" };
   // The Home tab is parked, so its token answers like anything unknown:
   // the front door. Old links carrying ?from=home still land somewhere real.

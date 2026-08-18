@@ -14,7 +14,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 type Props = {
   params: Promise<{ slug: string; classId: string }>;
-  searchParams: Promise<{ d?: string }>;
+  searchParams: Promise<{ d?: string; from?: string }>;
 };
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -40,7 +40,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 // Same loader, same overlay, so the two doors can't drift apart.
 export default async function StudioClassPage({ params, searchParams }: Props) {
   const { slug, classId } = await params;
-  const { d } = await searchParams;
+  const { d, from } = await searchParams;
   if (!UUID_RE.test(classId)) notFound();
 
   const studio = await findStudio(slug);
@@ -54,8 +54,8 @@ export default async function StudioClassPage({ params, searchParams }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(classJsonLd(detail, siteOrigin())) }} />
       <ClassPage
         detail={detail}
-        backHref={`/s/${studio.slug}`}
-        backLabel={`Back to ${studio.name}`}
+        backHref={from === "discover-classes" ? "/discover?half=classes" : `/s/${studio.slug}`}
+        backLabel={from === "discover-classes" ? "Back to classes" : `Back to ${studio.name}`}
         claimVia={viewerId ? null : null}
       />
     </div>
