@@ -5901,6 +5901,7 @@ select.editinput.placekind-select {
 .group-member-invite h3 { margin:0 0 4px; font-size:20px; }
 .group-member-invite > p { margin:0; color:var(--muted); font-size:14px; }
 .group-member-invite > .btn { width:100%; margin-top:16px; background:var(--color-lime); color:var(--color-black); }
+.group-member-invite>.group-invite-link { background:var(--color-lime); color:var(--color-black); }
 .group-updates { padding-top:24px; }
 .group-composer { padding:14px; display:flex; flex-direction:column; align-items:flex-end; gap:10px; border:1px solid var(--line); border-radius:var(--radius-card); background:var(--card); }
 .group-composer textarea { width:100%; min-height:82px; border:0; outline:0; resize:vertical; background:transparent; color:var(--ink); font:inherit; font-size:16px; line-height:1.45; }

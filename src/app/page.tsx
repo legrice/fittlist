@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { googleConfigured } from "@/lib/gcal";
@@ -46,6 +47,8 @@ export default async function Home({
     // land on /app, which since the one-shell change is the bare editable
     // schedule: every login and every visit to the root surfaced a page with
     // no identity, in what read as random places.
+    const pendingGroupToken=(await cookies()).get("fl_group_join")?.value;
+    if(user?.handle&&pendingGroupToken&&/^[a-f0-9]{32,64}$/.test(pendingGroupToken))redirect(`/g/join/${pendingGroupToken}`);
     if (user?.handle) redirect("/calendar");
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
