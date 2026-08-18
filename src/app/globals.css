@@ -9374,16 +9374,16 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-bottom-actions button:active { transform: scale(.96); }
 .calendar-page-header {
-  min-height:64px; display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:10px;
+  min-height:64px; display:grid; grid-template-columns:minmax(0,1fr) auto 44px; align-items:center; gap:8px;
   margin:0 0 4px; background:var(--ground);
 }
-.calendar-page-header h1 { margin:0; font-size:27px; line-height:1; letter-spacing:-.025em; }
+.calendar-page-header h1 { margin:0; font-size:34px; line-height:1.05; letter-spacing:-.025em; }
 .calendar-menu-button,
 .calendar-header-share {
   height:44px; padding:0; border:0; border-radius:var(--radius-pill);
   display:inline-flex; align-items:center; justify-content:center; background:transparent; color:var(--ink);
 }
-.calendar-menu-button { width:34px; justify-content:flex-start; }
+.calendar-menu-button { width:44px; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); }
 .calendar-header-share {
   gap:8px; padding:2px 14px 2px 2px; border:1px solid var(--color-border);
   background:var(--color-white); font:inherit; font-size:14px; font-weight:700; color:var(--color-black);
