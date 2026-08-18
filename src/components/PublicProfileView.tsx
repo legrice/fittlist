@@ -20,6 +20,7 @@ import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
+import { ClassCardActions } from "@/components/ClassCardActions";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
@@ -163,6 +164,12 @@ export async function PublicProfileView({
     fansVisible(),
   ]);
   const classRows = allClassRows.filter((c) => c.isPublic);
+  const savedRows = viewerId && !isOwner && classRows.length
+    ? await db.select({ classId:schema.attendances.classId, iso:schema.attendances.occurrenceDate })
+      .from(schema.attendances)
+      .where(and(eq(schema.attendances.userId, viewerId), inArray(schema.attendances.classId, classRows.map((c) => c.id))))
+    : [];
+  const savedSet = new Set(savedRows.map((row) => `${row.classId}|${row.iso}`));
   const studioIds = [
     ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
   ].filter((id): id is string => !!id);
@@ -193,11 +200,9 @@ export async function PublicProfileView({
   // group into chunks of seven POPULATED days, not seven calendar days, so a
   // Mon/Wed/Fri coach still shows a full week's worth of schedule before the
   // View more button, and each tap reveals seven more real days.
-  // The viewer's own going marks used to be loaded here, so each row's ribbon
-  // could say whether the class was already in their plans. Plans are gone: a
-  // member reads the week of the people they follow and has no calendar to add
-  // anything to, so the ribbon came off the row and the query went with it. A
-  // query nobody reads is one that gets slower without anybody noticing.
+  // A visitor's saved marks drive the same outline/filled ribbon used by every
+  // other calendar. The coach's own profile omits the ribbon because these are
+  // already their classes, just as it omits repeating their name on every row.
 
   // Who they follow, only when that tab is the one being read: the other
   // tabs have no use for it, and a query nobody reads gets slower without
@@ -340,9 +345,9 @@ export async function PublicProfileView({
             list: a coach flipping between their calendar and their page was
             reading two apps. It is one row now, everywhere a class is listed.
 
-            The ribbon went with them. It put a class in your plans, and plans
-            are gone: a member reads the week of the people they follow, and
-            there is nothing to add it to. */}
+            The profile uses the same save ribbon as every other calendar; the
+            only profile-specific omission is the coach name the page already
+            says at the top. */}
         <>
           {(() => {
             const listDays = (source: typeof days): WeekDayRows[] => source.map((d) => ({
@@ -369,12 +374,7 @@ export async function PublicProfileView({
                       classId: c.id,
                       iso: d.iso,
                       base: at?.key,
-                      menu: isOwner ? undefined : {
-                        classId: c.id,
-                        base,
-                        iso: d.iso,
-                        studio: s ? { name: s.name, href: `/s/${s.slug}` } : null,
-                      },
+                      corner: isOwner ? undefined : <ClassCardActions classId={c.id} iso={d.iso} name={c.name} canAdd={!!viewerId} initialOn={savedSet.has(`${c.id}|${d.iso}`)} />,
                     };
                   }),
             }));
