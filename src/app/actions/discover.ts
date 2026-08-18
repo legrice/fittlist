@@ -113,6 +113,8 @@ export async function discoverPeople(): Promise<DiscoverData> {
       photo: r.photo,
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
+      lat: r.locationLat,
+      lng: r.locationLng,
       classesThisWeek: weekCount.get(r.id) ?? 0,
       following: following.has(r.id),
       requested: requested.has(r.id),
@@ -175,6 +177,7 @@ export async function discoverStudios(): Promise<DirStudio[]> {
   const favorites = new Set(favoriteRows.map((row) => row.studioId));
   return studios.map((studio) => ({
     id:studio.id, slug:studio.slug ?? studio.id, name:studio.name, address:studio.address,
+    lat:studio.lat, lng:studio.lng,
     photo:studio.photo, types:studio.types, hasSchedule:!!studio.accountUserId,
     color:avatarColor({ id:studio.id }), favorited:favorites.has(studio.id),
   }));

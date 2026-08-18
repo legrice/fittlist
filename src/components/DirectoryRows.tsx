@@ -33,6 +33,8 @@ export type DirPerson = {
   photo: string | null;
   title: string;
   location: string;
+  lat?: number | null;
+  lng?: number | null;
   classesThisWeek: number;
   following: boolean;
   /** A pending ask at a coach who approves their followers. */
@@ -54,6 +56,8 @@ export type DirStudio = {
   slug: string;
   name: string;
   address: string;
+  lat?: number | null;
+  lng?: number | null;
   photo: string | null;
   types: string[];
   /** It runs its schedule here, so there's a week to see. */
