@@ -2518,6 +2518,18 @@ button.ps-card { cursor: pointer; }
 .group-details-photo > div { display:grid; gap:6px; }
 .group-details-photo > div > button { padding:0; border:0; background:none; color:var(--color-text-secondary); text-align:left; text-decoration:underline; cursor:pointer; }
 .group-hero-photo { width:112px; height:112px; margin:8px 0 16px; border-radius:var(--radius-control); object-fit:cover; display:block; }
+.discover-groups-empty {
+  margin-top:var(--space-2); padding:var(--space-4) var(--space-3);
+  border:1px dashed var(--color-border-strong); border-radius:var(--radius-card);
+  background:var(--color-white); text-align:center;
+}
+.discover-groups-empty > span {
+  width:64px; height:64px; margin:0 auto var(--space-2); border-radius:var(--radius-control);
+  display:grid; place-items:center; background:var(--color-attending); color:var(--color-attending-text);
+}
+.discover-groups-empty h2 { margin:0 0 var(--space-1); font-size:24px; }
+.discover-groups-empty p { max-width:390px; margin:0 auto var(--space-3); color:var(--color-text-secondary); font-size:15px; line-height:1.45; }
+.discover-groups-empty .btn { width:100%; margin:0; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
 .globaladd-chooser-options { display: grid; gap: 8px; margin-top: 18px; }
 .globaladd-chooser-options button {
   display: grid; grid-template-columns: 42px 1fr 20px; align-items: center; gap: 12px;

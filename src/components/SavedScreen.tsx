@@ -46,7 +46,7 @@ function SavedRail({ title, empty, addHref, onAdd, kind, children }: { title:str
   return <section className={`yousection savedsection savedsection-${kind}`}><div className="yousection-head"><h2>{title}</h2></div><div className="youfavrail">{children}{onAdd?<button type="button" className="youfav youfav-add" onClick={onAdd}>{addContents}</button>:<Link className="youfav youfav-add" href={addHref!}>{addContents}</Link>}</div>{!hasItems&&<p className="youemptycopy">{empty}</p>}</section>;
 }
 
-function CreateGroupSheet({ onClose }: { onClose: () => void }) {
+export function CreateGroupSheet({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");

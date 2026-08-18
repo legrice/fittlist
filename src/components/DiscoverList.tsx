@@ -11,6 +11,7 @@ import type { BrowseDay } from "@/app/actions/discover";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { ClassPeek, peekFromDetail } from "@/components/ClassPeek";
 import { Toast, useToast } from "@/components/Toast";
+import { CreateGroupSheet } from "@/components/SavedScreen";
 
 export type DiscoverHalf = "people" | "places" | "classes" | "groups";
 type Group = { id:string; name:string; slug:string; description:string|null; purpose:string };
@@ -18,6 +19,7 @@ type Group = { id:string; name:string; slug:string; description:string|null; pur
 export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,startHalf,upcoming=[],groups=[],backHref,hideBack=false }: { people:DirPerson[];studios?:DirStudio[];cities:string[];myCity?:string|null;myLat?:number|null;myLng?:number|null;startHalf?:DiscoverHalf;upcoming?:BrowseDay[];groups?:Group[];backHref:string;hideBack?:boolean }) {
   const router=useRouter();
   const [openClass,setOpenClass]=useState<ClassDetail|null>(null);
+  const [groupCreateOpen,setGroupCreateOpen]=useState(false);
   const [toastMsg,toastOn,toast]=useToast();
   const [tab,setTab]=useState<DiscoverHalf>(startHalf??"classes");
   const [searchOpen,setSearchOpen]=useState(false); const [query,setQuery]=useState("");
@@ -44,9 +46,10 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
     {tab==="classes"&&<><FilterRow><Filter label="Type" value={classType} onChange={setClassType} all="All types" options={classTypes}/><Filter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={[["1","Within 1 mile"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]]} disabled={myLat==null||myLng==null}/></FilterRow>{filteredUpcoming.length?<div className="discover-event-list">{filteredUpcoming.map((item)=><DiscoverEvent item={item} teacher={teacherFor(item.attributionName)} onOpen={()=>void openEvent(item)} key={`${item.classId}.${item.iso}`}/>)}</div>:<Empty>There are no classes matching these filters.</Empty>}</>}
     {tab==="people"&&<><FilterRow><Filter label="Specialty" value={discipline} onChange={setDiscipline} all="All specialties" options={disciplines}/><Filter label="Location" value={peopleCity} onChange={setPeopleCity} all="All locations" options={cities}/></FilterRow>{shownPeople.length?<div className="discover-person-grid">{shownPeople.map((person,index)=><DiscoverPerson person={person} index={index} activity={activityByName.get(person.name.trim().toLowerCase())??person.classesThisWeek} key={person.id}/>)}</div>:<Empty>There are no people matching these filters.</Empty>}</>}
     {tab==="places"&&<><FilterRow><Filter label="Type" value={studioType} onChange={setStudioType} all="All types" options={studioTypes}/><Filter label="Location" value={studioCity} onChange={setStudioCity} all="All locations" options={cities}/></FilterRow>{shownStudios.length?<StudioGrid studios={shownStudios}/>:<Empty>There are no studios matching these filters.</Empty>}</>}
-    {tab==="groups"&&<><FilterRow><Filter label="Purpose" value={purpose} onChange={setPurpose} all="All purposes" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></FilterRow>{shownGroups.length?<GroupGrid groups={shownGroups}/>:<Empty>There are no groups matching these filters.</Empty>}</>}
+    {tab==="groups"&&<><FilterRow><Filter label="Purpose" value={purpose} onChange={setPurpose} all="All purposes" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></FilterRow>{shownGroups.length?<GroupGrid groups={shownGroups}/>:groups.length?<Empty>There are no groups matching these filters.</Empty>:<div className="discover-groups-empty"><span><Icon name="groups" size={32}/></span><h2>Plan fitness together</h2><p>Groups are shared calendars and updates for the people you train with. Add classes, invite members, and keep everyone&rsquo;s plans in one place.</p><button type="button" className="btn si" onClick={()=>setGroupCreateOpen(true)}><Icon name="add" size={21}/>Create a group</button></div>}</>}
     {!hideBack&&<Link className="logoutbtn" href={backHref}>Back to your week</Link>}
     {openClass&&<ClassPeek cls={peekFromDetail(openClass)} initialDetail={openClass} onClose={()=>setOpenClass(null)} onChanged={()=>router.refresh()} onToast={toast}/>}<Toast msg={toastMsg} on={toastOn}/>
+    {groupCreateOpen&&<CreateGroupSheet onClose={()=>setGroupCreateOpen(false)}/>} 
   </>;
 }
 
