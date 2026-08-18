@@ -9606,6 +9606,8 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-view-choice { grid-template-columns:40px minmax(0,1fr) 28px; }
 .calendar-view-choice-icon { width:36px; height:36px; display:grid; place-items:center; border-radius:50%; background:var(--color-surface-muted); }
 .calendar-view-choice .calendar-check.on { border-color:transparent; background:var(--color-black); color:var(--color-white); }
+.calendar-drawer-continue { width:100%; min-height:48px; margin-top:12px; padding:0 18px; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font:inherit; font-weight:700; }
+.calendar-drawer-continue:active { transform:scale(.98); background:var(--color-lime-pressed); }
 .calendar-check-row { grid-template-columns:34px minmax(0,1fr); }
 .calendar-category-row { min-height:54px; margin:4px 0; padding:7px 8px; grid-template-columns:40px minmax(0,1fr) 28px; border:1.5px solid transparent; border-radius:var(--radius-control); }
 .calendar-category-row-coaching.on { border-color:var(--color-coaching); }

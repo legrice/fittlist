@@ -82,6 +82,7 @@ export function CalendarScreen({
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
+  const [pendingView, setPendingView] = useState<View>("list");
   const [menuOpen, setMenuOpen] = useState(false);
   const [visible, setVisible] = useState({ coaching: !member, saved: true, personal: true });
   const [addChoice, setAddChoice] = useState(openAdder);
@@ -137,6 +138,7 @@ export function CalendarScreen({
     });
   };
   const openFilters = () => {
+    setPendingView(view);
     setMenuOpen(true);
     if (!favoriteData) startFavoriteLoading(async () => setFavoriteData(await loadFavoriteCalendars() ?? { people:[], events:[] }));
   };
@@ -353,9 +355,10 @@ export function CalendarScreen({
           <section className="calendar-drawer-section">
             <h3>View</h3>
             {([['list','calendar_view_day','List'],['month','calendar_month','Month']] as const).map(([value,icon,label]) => {
-              const on=view===value;
-              return <button type="button" className="calendar-drawer-row calendar-view-choice" aria-pressed={on} onClick={()=>{setView(value);setMenuOpen(false);}} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span><span className={`calendar-check${on?' on':''}`}>{on&&<Icon name="check" size={16}/>}</span></button>;
+              const on=pendingView===value;
+              return <button type="button" className="calendar-drawer-row calendar-view-choice" aria-pressed={on} onClick={()=>setPendingView(value)} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span><span className={`calendar-check${on?' on':''}`}>{on&&<Icon name="check" size={16}/>}</span></button>;
             })}
+            <button type="button" className="calendar-drawer-continue" onClick={()=>{setView(pendingView);setMenuOpen(false);}}>Continue</button>
           </section>
           <section className="calendar-drawer-section">
             <h3>My calendar</h3>
