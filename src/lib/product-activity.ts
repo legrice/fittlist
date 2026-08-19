@@ -10,6 +10,8 @@ export const PRODUCT_ACTIVITY_KINDS = [
   "class_saved",
   "class_removed",
   "group_joined",
+  "group_created",
+  "group_people_invited",
   "share_image_exported",
 ] as const;
 

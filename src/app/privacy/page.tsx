@@ -57,7 +57,7 @@ const HOLDS: { t: string; s: string }[] = [
   },
   {
     t: "Product activity",
-    s: "A short first-party record of broad actions, such as saving a class, adding a favorite, joining a group, or exporting a share image. It includes the account and time, but never message contents, searches, private notes, or the person, class, studio, or group involved.",
+    s: "A short first-party record of broad actions, such as saving a class, adding a favorite, creating or joining a group, inviting people, or exporting a share image. It includes the account and time, but never message contents, searches, private notes, invitees, or the person, class, studio, or group involved.",
   },
   {
     t: "Connections you make",

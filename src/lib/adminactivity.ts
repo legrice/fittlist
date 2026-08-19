@@ -92,6 +92,8 @@ export async function adminActivity(limit = 100): Promise<ActivityEntry[]> {
     class_saved: { icon: "bookmark", words: "saved a class" },
     class_removed: { icon: "bookmark", words: "removed a saved class" },
     group_joined: { icon: "groups", words: "joined a group" },
+    group_created: { icon: "groups", words: "created a group" },
+    group_people_invited: { icon: "person_add", words: "invited people to a group" },
     share_image_exported: { icon: "image", words: "exported a share image" },
   };
   for (const e of productEvents) {

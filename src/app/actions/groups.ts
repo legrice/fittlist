@@ -124,6 +124,8 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
       console.error("createGroup could not save organizer membership", error);
     }
     try { revalidatePath("/saved"); } catch (error) { console.error("createGroup could not refresh favorites", error); }
+    const { recordProductActivity } = await import("@/lib/product-activity");
+    await recordProductActivity(ownerUserId, "group_created");
     return { ok: true, id: group.id, slug } as const;
   } catch (error) {
     console.error("createGroup failed", error);
@@ -251,6 +253,8 @@ export async function inviteGroupPeople(slug: string, userIds: string[], role: "
   const users = await manager.db.select({ id: schema.users.id }).from(schema.users).where(inArray(schema.users.id, ids));
   if (!users.length) return { ok: false, error: "Those people are no longer available." } as const;
   await manager.db.insert(schema.groupInvitations).values(users.map((user) => ({ groupId: manager.groupId, inviteeUserId: user.id, invitedByUserId: manager.userId, role }))).onConflictDoUpdate({ target: [schema.groupInvitations.groupId, schema.groupInvitations.inviteeUserId], set: { role, invitedByUserId: manager.userId } });
+  const { recordProductActivity } = await import("@/lib/product-activity");
+  await recordProductActivity(manager.userId, "group_people_invited");
   revalidatePath(`/g/${slug}`);
   return { ok: true, count: users.length } as const;
 }
