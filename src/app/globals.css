@@ -392,7 +392,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   width:100%; height:6px; display:grid; grid-template-columns:repeat(5,1fr); gap:5px;
 }
 .oblanding-progress-track > span {
-  display:block; height:100%; border-radius:var(--radius-pill); background:var(--color-surface-muted);
+  display:block; height:100%; border-radius:var(--radius-pill); background:var(--color-border);
   transition:background-color .24s ease;
 }
 .oblanding-progress-track > span.is-on { background:var(--color-black); }
