@@ -98,27 +98,20 @@ const OnboardingGroupsArt = () => (
 );
 
 const OnboardingMessagesArt = () => (
-  <div className="obfeature-art obmessages-art" role="img" aria-label="A Messages app with 1,023 unread group fitness messages scattered around it">
-    <div className="obmessages-app obart-float float-a">
-      <Icon name="forum" size={42} />
-      <span>1,023</span>
-    </div>
-    {([
-      ["RC", "Saturday Run Crew", "Are we still meeting at nine?", "12"],
-      ["SF", "Strength Friends", "Who booked Thursday’s class?", "46"],
-      ["J", "Jordan", "Wait, which workout is this?", "381"],
-      ["YC", "Yoga crew", "Was that today or tomorrow?", "87"],
-      ["5K", "Waterfront 5K", "Meet at the usual spot?", "19"],
-    ] as const).map(([initials, group, message, count], index) => (
-      <div className={`obmessage-card obmessage-card-${index + 1} obart-float float-${index % 3 === 1 ? "b" : "c"}`} key={group}>
-        <span className={`obmessage-avatar avatar-${(index % 3) + 1}`}>{initials}</span>
-        <span className="obmessage-copy"><strong>{group}</strong><small>{message}</small></span>
-        <b>{count}</b>
+  <div className="obfeature-art obmessages-art" role="img" aria-label="A yoga group chat where Jordan asks what time yoga starts after the details were already shared">
+    <div className="obchat-panel obart-float float-a">
+      <div className="obchat-head">
+        <span className="obchat-avatars"><i>YC</i><i>J</i><i>+2</i></span>
+        <span><strong>Yoga tomorrow</strong><small>4 people</small></span>
       </div>
-    ))}
-    <div className="obmessages-more obart-float float-b">
-      <span>•••</span>
-      <small>and 478 more</small>
+      <div className="obchat-class obart-float float-b">
+        <span><b>Morning flow</b><small>Tomorrow · 10:00 AM</small><small>Open Form Studio</small></span>
+        <Icon name="event" size={22} />
+      </div>
+      <div className="obchat-message from-them obart-float float-b"><small>Yoga crew</small><span>Just booked it. See you at 10!</span></div>
+      <div className="obchat-message from-you obart-float float-c"><span>I’m in.</span></div>
+      <div className="obchat-message from-jordan obart-float float-c"><small>Jordan</small><span>Wait, what time is yoga again?</span></div>
+      <div className="obchat-message bro obart-float float-c"><span>bro…</span></div>
     </div>
   </div>
 );
