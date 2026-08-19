@@ -467,19 +467,21 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obshare-day>span { display:flex; flex-direction:column; gap:2px; }
 .obshare-day strong { font-size:14px; }
 .obshare-day small { color:var(--color-text-secondary); font-size:11px; }
-.obfavorites-art { display:flex; flex-direction:column; align-items:center; gap:18px; }
+.obfavorites-art { display:flex; flex-direction:column; align-items:center; gap:12px; }
 .obfavorites-rail { width:100%; display:flex; align-items:flex-start; justify-content:space-around; gap:10px; }
 .obfavorite-person { width:92px; display:flex; flex-direction:column; align-items:center; gap:6px; }
-.obfavorite-face { width:76px; height:76px; display:grid; place-items:center; border-radius:50%; border:3px solid var(--color-white); outline:1px solid var(--color-border); background:#77567b; color:#fff; font-size:16px; font-weight:700; }
+.obfavorite-face { width:68px; height:68px; display:grid; place-items:center; border-radius:50%; border:3px solid var(--color-white); outline:1px solid var(--color-border); background:#77567b; color:#fff; font-size:15px; font-weight:700; }
 .obfavorite-face.face-2 { background:#35657a; }
 .obfavorite-face.face-3 { background:#8b6443; }
+.obfavorite-face.is-coach { outline:3px solid var(--color-lime); outline-offset:2px; }
 .obfavorite-person strong { max-width:82px; overflow:hidden; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
-.obfavorite-person small { margin-top:-2px; padding:2px 7px; border-radius:var(--radius-pill); background:var(--color-coaching); color:var(--color-coaching-text); font-size:9px; font-weight:700; }
-.obfavorite-class { width:96%; padding:19px; display:flex; align-items:flex-start; justify-content:space-between; border:1px solid var(--color-border); border-radius:22px; background:var(--color-white); box-shadow:0 10px 24px rgba(0,0,0,.05); text-align:left; }
+.obfavorite-classes { width:96%; display:flex; flex-direction:column; gap:6px; }
+.obfavorite-class { width:100%; padding:10px 13px; display:flex; align-items:flex-start; justify-content:space-between; border:1px solid var(--color-border); border-radius:16px; background:var(--color-white); box-shadow:0 7px 18px rgba(0,0,0,.04); text-align:left; }
 .obfavorite-class>span { display:flex; flex-direction:column; gap:3px; }
-.obfavorite-class b { font-size:12px; }
-.obfavorite-class strong { font-size:20px; }
-.obfavorite-class small { color:var(--color-text-secondary); font-size:12px; }
+.obfavorite-class b { font-size:9px; }
+.obfavorite-class strong { font-size:14px; }
+.obfavorite-class small { color:var(--color-text-secondary); font-size:10px; }
+.obfavorite-class .obfavorite-coach { padding:4px 8px; border-radius:var(--radius-pill); background:var(--color-coaching); color:var(--color-coaching-text); font-size:9px; font-weight:700; }
 .obgroups-art { position:relative; min-height:310px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .obgroup-profile { width:96%; overflow:hidden; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.055); text-align:left; }
 .obgroup-cover { height:86px; padding:14px; display:flex; align-items:flex-end; background:linear-gradient(135deg,#1c4e44,#89d9a4); }

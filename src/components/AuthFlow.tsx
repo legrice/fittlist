@@ -77,11 +77,22 @@ const OnboardingShareArt = () => (
 );
 
 const OnboardingFavoritesArt = () => (
-  <div className="obfeature-art obfavorites-art" role="img" aria-label="Favorite people and their active calendars">
+  <div className="obfeature-art obfavorites-art" role="img" aria-label="A favorite yoga coach and her classes at three studios">
     <div className="obfavorites-rail">
-      {([['Y','You',''],['C','Coach','Coach'],['F','Friend','']] as const).map(([initials,name,tag],index)=><div className={`obfavorite-person obart-float float-${index===1?'c':'a'}`} key={name}><span className={`obfavorite-face face-${index+1}`}>{initials}</span><strong>{name}</strong>{tag&&<small>{tag}</small>}</div>)}
+      {([['Y','You'],['M','Maya'],['F','Friend']] as const).map(([initials,name],index)=><div className={`obfavorite-person obart-float float-${index===1?'c':'a'}`} key={name}><span className={`obfavorite-face face-${index+1}${index===1?' is-coach':''}`}>{initials}</span><strong>{name}</strong></div>)}
     </div>
-    <div className="obfavorite-class obart-float float-b"><span><b>6:00 PM</b><strong>HYROX</strong><small>Your favorite studio</small></span><Icon name="bookmark" size={20}/></div>
+    <div className="obfavorite-classes">
+      {([
+        ["6:30 AM", "Morning Flow", "Open Form Studio"],
+        ["5:00 PM", "Power Yoga", "Harbor Yoga"],
+        ["7:00 PM", "Candlelight Yin", "Studio Arc"],
+      ] as const).map(([time, name, studio], index) => (
+        <div className={`obfavorite-class obart-float float-${index === 0 ? "a" : index === 1 ? "b" : "c"}`} key={name}>
+          <span><b>{time}</b><strong>{name}</strong><small>{studio}</small></span>
+          <span className="obfavorite-coach">Coach</span>
+        </div>
+      ))}
+    </div>
   </div>
 );
 
