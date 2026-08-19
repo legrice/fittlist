@@ -426,11 +426,11 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   background:var(--color-white); box-shadow:0 9px 24px rgba(0,0,0,.055); text-align:left;
   opacity:0; will-change:transform;
   animation:obcalendar-enter .58s cubic-bezier(.2,.78,.25,1) forwards,
-    obcalendar-float 5.8s ease-in-out infinite;
+    obcalendar-float var(--float-duration,5.8s) ease-in-out infinite;
 }
-.obcalendar-card-1 { width:91%; --tilt:-.45deg; animation-delay:.08s,.76s; }
-.obcalendar-card-2 { width:96%; --tilt:.35deg; animation-delay:.2s,.88s; }
-.obcalendar-card-3 { width:92%; --tilt:-.2deg; animation-delay:.32s,1s; }
+.obcalendar-card-1 { width:91%; --tilt:-.45deg; --float-duration:5.2s; animation-delay:.08s,.76s; }
+.obcalendar-card-2 { width:96%; --tilt:.35deg; --float-duration:6.4s; animation-delay:.2s,1.18s; }
+.obcalendar-card-3 { width:92%; --tilt:-.2deg; --float-duration:5.7s; animation-delay:.32s,.94s; }
 .obcalendar-card-top { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:15px; font-weight:700; }
 .obcalendar-card > strong { margin-top:1px; font-size:clamp(18px,5vw,22px); line-height:1.08; text-transform:none; }
 .obcalendar-card > small { color:var(--color-text-secondary); font-size:14px; font-weight:500; }
