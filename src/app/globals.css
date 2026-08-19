@@ -499,28 +499,21 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obgroup-members i:nth-child(2) { background:#8a5d70; }
 .obgroup-members i:nth-child(3) { background:var(--color-lime); color:var(--color-black); }
 .obmessages-art { min-height:345px; display:flex; align-items:center; justify-content:center; }
-.obchat-panel { width:90%; padding:14px; display:flex; flex-direction:column; gap:8px; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.06); }
-.obchat-head { padding:0 2px 10px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--color-border); text-align:left; }
-.obchat-head>span:last-child { display:flex; flex-direction:column; gap:1px; }
+.obchat-panel { width:90%; min-height:315px; padding:12px 14px; display:flex; flex-direction:column; gap:10px; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.06); }
+.obchat-head { padding:0 0 10px; display:grid; grid-template-columns:22px 34px minmax(0,1fr) 20px; align-items:center; gap:8px; border-bottom:1px solid var(--color-border); text-align:left; }
+.obchat-head>span:nth-child(3) { display:flex; flex-direction:column; gap:1px; }
 .obchat-head strong { font-size:13px; }
 .obchat-head small { color:var(--color-text-secondary); font-size:9px; }
-.obchat-avatars { min-width:59px; display:flex; }
-.obchat-avatars i { width:27px; height:27px; margin-right:-7px; display:grid; place-items:center; border:2px solid var(--color-white); border-radius:50%; background:#3c6c68; color:#fff; font-size:7px; font-style:normal; font-weight:700; }
-.obchat-avatars i:nth-child(2) { background:#42617c; }
-.obchat-avatars i:nth-child(3) { background:var(--color-lime); color:var(--color-black); }
-.obchat-class { margin-bottom:3px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; border:1px solid var(--color-border); border-radius:15px; background:var(--color-surface-muted); text-align:left; }
-.obchat-class>span { display:flex; flex-direction:column; gap:2px; }
-.obchat-class b { font-size:12px; }
-.obchat-class small { color:var(--color-text-secondary); font-size:9px; }
+.obchat-avatar { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; background:#42617c; color:#fff; font-size:10px; font-weight:700; }
+.obchat-time { align-self:center; margin:1px 0 5px; color:var(--color-text-secondary); font-size:8px; }
 .obchat-message { max-width:79%; display:flex; flex-direction:column; align-items:flex-start; gap:3px; text-align:left; }
-.obchat-message small { padding-left:9px; color:var(--color-text-secondary); font-size:8px; }
-.obchat-message>span { padding:8px 11px; border-radius:14px 14px 14px 4px; background:var(--color-surface-muted); font-size:10px; line-height:1.2; }
+.obchat-message>span { padding:10px 12px; border-radius:16px 16px 16px 4px; background:var(--color-surface-muted); font-size:11px; line-height:1.22; }
 .obchat-message.from-you { align-self:flex-end; }
 .obchat-message.from-you>span { border-radius:14px 14px 4px 14px; background:var(--color-lime); color:var(--color-black); }
-.obchat-message.from-jordan { margin-top:2px; }
-.obchat-message.from-jordan>span { border:1px solid var(--color-border); background:var(--color-white); font-weight:700; }
-.obchat-message.bro { margin-top:-4px; margin-left:14px; }
-.obchat-message.bro>span { padding:6px 10px; font-weight:700; }
+.obchat-message.from-jordan>span { background:var(--color-surface-muted); }
+.obchat-message.punchline { max-width:86%; }
+.obchat-message.punchline>span { font-weight:700; }
+.obchat-compose { margin-top:auto; padding:7px 8px 7px 12px; display:flex; align-items:center; justify-content:space-between; border:1px solid var(--color-border); border-radius:var(--radius-pill); color:var(--color-text-secondary); font-size:9px; text-align:left; }
 @media (prefers-reduced-motion:reduce) { .oblanding-slide.has-entered .obart-float { opacity:1; animation:none; } }
 .ob .oblanding-slide h1 {
   align-self:center; width:100%; max-width:480px; margin:28px auto 30px;
