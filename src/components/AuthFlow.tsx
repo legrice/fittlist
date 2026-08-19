@@ -66,13 +66,13 @@ const OnboardingCalendarArt = () => (
 const OnboardingShareArt = () => (
   <div className="obfeature-art obshare-art" role="img" aria-label="A FittList week ready to share by link or image">
     <div className="obshare-card obart-float float-a">
-      <div className="obshare-headline"><span>Come</span><span>with me.</span></div>
+      <div className="obshare-accent" />
+      <div className="obshare-headline"><span>Train</span><span>with me.</span></div>
       <div className="obshare-head">This week</div>
       <div className="obshare-day"><b>MON</b><span><strong>Morning yoga</strong><small>6:30 AM</small></span></div>
       <div className="obshare-day"><b>WED</b><span><strong>Kettlebell strength</strong><small>5:00 PM</small></span></div>
       <div className="obshare-day"><b>SAT</b><span><strong>Run club</strong><small>9:00 AM</small></span></div>
     </div>
-    <div className="obshare-actions obart-float float-c"><span><Icon name="link" size={17} />Copy link</span><span><Icon name="image" size={17} />Share image</span></div>
   </div>
 );
 

@@ -456,17 +456,16 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obart-float.float-c { animation-delay:.32s; }
 @keyframes obart-enter { from { opacity:0; transform:translateY(18px) scale(.97); } to { opacity:1; transform:none; } }
 .obshare-art { display:flex; flex-direction:column; align-items:center; gap:12px; }
-.obshare-card { width:88%; padding:19px; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.06); }
+.obshare-card { position:relative; width:88%; padding:27px 19px 19px; overflow:hidden; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.06); }
+.obshare-accent { position:absolute; top:0; left:0; right:0; height:8px; background:var(--color-lime); }
 .obshare-headline { margin-bottom:18px; display:flex; flex-direction:column; align-items:flex-start; font-size:clamp(28px,8vw,36px); font-weight:700; line-height:.88; letter-spacing:-.035em; }
-.obshare-headline span:last-child { color:var(--color-lime); }
+.obshare-headline span:last-child { color:var(--color-black); }
 .obshare-head { margin-bottom:8px; text-align:left; color:var(--color-text-secondary); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
 .obshare-day { padding:10px 0; display:grid; grid-template-columns:42px 1fr; gap:10px; text-align:left; border-top:1px solid var(--color-border); }
 .obshare-day>b { padding-top:2px; color:var(--color-text-secondary); font-size:10px; }
 .obshare-day>span { display:flex; flex-direction:column; gap:2px; }
 .obshare-day strong { font-size:14px; }
 .obshare-day small { color:var(--color-text-secondary); font-size:11px; }
-.obshare-actions { display:flex; gap:8px; }
-.obshare-actions span { min-height:38px; padding:0 13px; display:flex; align-items:center; gap:6px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); font-size:12px; font-weight:700; }
 .obdiscover-art { display:flex; flex-direction:column; align-items:center; gap:12px; }
 .obdiscover-search { width:92%; min-height:46px; padding:0 14px; display:flex; align-items:center; gap:9px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); color:var(--color-text-secondary); font-size:13px; }
 .obdiscover-grid { width:92%; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
