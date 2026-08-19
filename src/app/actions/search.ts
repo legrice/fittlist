@@ -53,6 +53,79 @@ export async function searchAll(
   return runSearch(userId, needle, locNeedle, false, false);
 }
 
+export type SearchGroup = {
+  id: string;
+  slug: string;
+  name: string;
+  photo: string | null;
+  description: string | null;
+};
+
+/** Header search is direct lookup, not another Discover surface. Every result
+ * must match the name it displays; proximity and related listings stay in
+ * Discover where they can be understood as recommendations. */
+export async function searchDirectory(query: string): Promise<{
+  people: DirPerson[];
+  studios: DirStudio[];
+  classes: DirClass[];
+  groups: SearchGroup[];
+}> {
+  const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[], groups: [] as SearchGroup[] };
+  const userId = await getSessionUserId();
+  const needle = query.trim().toLowerCase();
+  if (!userId || needle.length < MIN) return empty;
+
+  const broad = await runSearch(userId, needle, "", false, false);
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return empty;
+  const [hidden, memberRows, followRows, askRows, groupRows, groupMemberRows, groupInviteRows] = await Promise.all([
+    hiddenFrom(userId),
+    db.select().from(schema.users).where(and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true), eq(schema.users.kind, "fan"))),
+    db.select({ trainerUserId: schema.subscribers.trainerUserId }).from(schema.subscribers).where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+    db.select({ trainerUserId: schema.followRequests.trainerUserId }).from(schema.followRequests).where(eq(schema.followRequests.requesterUserId, userId)),
+    db.select().from(schema.groups),
+    db.select({ groupId: schema.groupMembers.groupId }).from(schema.groupMembers).where(eq(schema.groupMembers.userId, userId)),
+    db.select({ groupId: schema.groupInvitations.groupId }).from(schema.groupInvitations).where(eq(schema.groupInvitations.inviteeUserId, userId)),
+  ]);
+  const following = new Set(followRows.map((row) => row.trainerUserId));
+  const requested = new Set(askRows.map((row) => row.trainerUserId));
+  const rank = (name: string) => (name.toLowerCase().startsWith(needle) ? 0 : 1);
+  const members: DirPerson[] = memberRows
+    .filter((row) => row.id !== userId && !hidden.has(row.id) && (row.name.toLowerCase().includes(needle) || (row.handle ?? "").toLowerCase().includes(needle)))
+    .map((row) => ({
+      id: row.id,
+      handle: row.handle!,
+      name: row.name,
+      kind: "member" as const,
+      photo: row.photoThumb ?? row.photo,
+      title: row.title ?? "",
+      location: row.location?.trim() ?? "",
+      classesThisWeek: 0,
+      following: following.has(row.id),
+      requested: requested.has(row.id),
+      availability: null,
+      disciplines: [],
+      color: avatarColor(row),
+    }));
+  const people = [...broad.people.filter((row) => row.name.toLowerCase().includes(needle) || row.handle.toLowerCase().includes(needle)), ...members]
+    .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
+
+  const accessibleGroupIds = new Set([...groupMemberRows, ...groupInviteRows].map((row) => row.groupId));
+  const groups = groupRows
+    .filter((row) => row.name.toLowerCase().includes(needle))
+    .filter((row) => row.visibility === "public" || row.ownerUserId === userId || accessibleGroupIds.has(row.id))
+    .map((row) => ({ id: row.id, slug: row.slug, name: row.name, photo: row.photo, description: row.description }))
+    .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
+
+  return {
+    people,
+    studios: broad.studios.filter((row) => row.name.toLowerCase().includes(needle)),
+    classes: broad.classes.filter((row) => row.name.toLowerCase().includes(needle)),
+    groups,
+  };
+}
+
 /**
  * The dedicated Search screen is intentionally coaches-only. Keep these
  * focused actions separate from searchAll, which still powers the broader

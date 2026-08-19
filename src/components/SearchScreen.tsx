@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { searchAll } from "@/app/actions/search";
+import { searchDirectory, type SearchGroup } from "@/app/actions/search";
 import { ClassResults } from "@/components/ClassResults";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
@@ -16,7 +16,7 @@ const RECENT_MAX = 8;
 const RECENT_PREVIEW = 3;
 
 type RecentHit = {
-  t: "p" | "s" | "c";
+  t: "p" | "s" | "c" | "g";
   name: string;
   href: string;
 };
@@ -39,7 +39,7 @@ function readRecents(): RecentHit[] {
           ? `/${legacyBase}?from=search`
           : null;
       if (
-        !["p", "s", "c"].includes(String(stored.t)) ||
+        !["p", "s", "c", "g"].includes(String(stored.t)) ||
         typeof stored.name !== "string" ||
         !href
       ) {
@@ -72,6 +72,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
   const [classes, setClasses] = useState<DirClass[]>([]);
+  const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [asked, setAsked] = useState("");
@@ -102,6 +103,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       setPeople([]);
       setStudios([]);
       setClasses([]);
+      setGroups([]);
       setBusy(false);
       setFailed(false);
       setAsked("");
@@ -113,17 +115,19 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
     setFailed(false);
     const timer = setTimeout(async () => {
       try {
-        const result = await searchAll(needle);
+        const result = await searchDirectory(needle);
         if (run.current !== mine) return;
         setPeople(result.people);
         setStudios(result.studios);
         setClasses(result.classes);
+        setGroups(result.groups);
         setAsked(needle);
       } catch {
         if (run.current !== mine) return;
         setPeople([]);
         setStudios([]);
         setClasses([]);
+        setGroups([]);
         setAsked(needle);
         setFailed(true);
       } finally {
@@ -134,7 +138,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   }, [q]);
 
   const short = q.trim().length < MIN;
-  const nothing = !short && !busy && asked === q.trim() && people.length + studios.length + classes.length === 0;
+  const nothing = !short && !busy && asked === q.trim() && people.length + studios.length + classes.length + groups.length === 0;
 
   const rememberPerson =
     (rows: DirPerson[]) => (event: MouseEvent<HTMLDivElement>) => {
@@ -158,6 +162,13 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
     const href = anchor?.getAttribute("href") ?? "";
     const cls = classes.find((row) => href.includes(`/${row.classId}?`));
     if (cls) setRecent(writeRecent({ t: "c", name: cls.name, href }));
+  };
+
+  const rememberGroup = (event: MouseEvent<HTMLDivElement>) => {
+    const anchor = (event.target as HTMLElement).closest("a");
+    const href = anchor?.getAttribute("href") ?? "";
+    const group = groups.find((row) => href.startsWith(`/g/${row.slug}`));
+    if (group) setRecent(writeRecent({ t: "g", name: group.name, href: `/g/${group.slug}?from=search` }));
   };
 
   return (
@@ -185,7 +196,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
               </h2>
               {recent.slice(0, recentExpanded ? RECENT_MAX : RECENT_PREVIEW).map((item) => (
                 <Link key={item.href} className="recentrow" href={item.href}>
-                  <Icon name={item.t === "p" ? "account_circle" : item.t === "s" ? "place" : "activity"} size={19} />
+                  <Icon name={item.t === "p" ? "account_circle" : item.t === "s" ? "place" : item.t === "g" ? "groups" : "activity"} size={19} />
                   {item.name}
                 </Link>
               ))}
@@ -214,7 +225,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       ) : nothing ? (
         <div className="empty-block">
           <h2>No results for that</h2>
-          <p>Try another coach, class, studio, or specialty.</p>
+          <p>Try another person, class, studio, or group name.</p>
         </div>
       ) : (
         <div>
@@ -228,10 +239,10 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
           )}
           {people.length > 0 && (
             <div className="srchsec" onClickCapture={rememberPerson(people)}>
-              <h2 className="srchhead">Coaches <span>{people.length}</span></h2>
+              <h2 className="srchhead">People <span>{people.length}</span></h2>
               <div className="dislist dislist-bare">
                 {people.map((person) => (
-                  <PersonRow key={person.id} person={person} from="search" kindTag={false} />
+                  <PersonRow key={person.id} person={person} from="search" />
                 ))}
               </div>
             </div>
@@ -240,6 +251,25 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             <div className="srchsec" onClickCapture={rememberClass}>
               <h2 className="srchhead">Classes <span>{classes.length}</span></h2>
               <ClassResults classes={classes} todayIso={todayIso} from="search" />
+            </div>
+          )}
+          {groups.length > 0 && (
+            <div className="srchsec" onClickCapture={rememberGroup}>
+              <h2 className="srchhead">Groups <span>{groups.length}</span></h2>
+              <div className="search-group-list">
+                {groups.map((group) => (
+                  <Link className="search-group-row" href={`/g/${group.slug}?from=search`} key={group.id}>
+                    {group.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={group.photo} alt="" />
+                    ) : (
+                      <span><Icon name="groups" size={22} /></span>
+                    )}
+                    <span><strong>{group.name}</strong>{group.description && <small>{group.description}</small>}</span>
+                    <Icon name="chevron_right" size={19} />
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>

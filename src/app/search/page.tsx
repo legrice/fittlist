@@ -10,9 +10,9 @@ import { todayIso } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 // The screen behind the header's magnifier: its own route, the app header and
-// the tab bar, no tab lit. It searches coaches only: the people whose
-// schedules make the Following experience useful. Old ?seg links still land
-// here, but the query no longer changes what Search means.
+// the tab bar, no tab lit. Unlike Discover, this is direct lookup: results are
+// organized by what they are and match their own names rather than nearby or
+// related metadata.
 export default async function SearchPage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/");

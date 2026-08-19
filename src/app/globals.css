@@ -6337,6 +6337,22 @@ select.editinput.placekind-select {
   color: var(--ol);
 }
 .srchhead span { font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ol); opacity: .7; }
+.search-group-list { display: grid; }
+.search-group-row {
+  min-height: 70px; padding: 10px 2px; display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none;
+}
+.search-group-row > img,
+.search-group-row > span:first-child {
+  width: 48px; height: 48px; border-radius: 14px; object-fit: cover;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--color-lime-soft); color: var(--color-black);
+}
+.search-group-row > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
+.search-group-row strong { overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.search-group-row small { overflow: hidden; color: var(--muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.search-group-row > .icon { color: var(--muted); }
 /* Flipped, by Matt's call: the quiet one is the offer and the loud one is
    the state. Follow sits on the step-down cream (an invitation, not a
    demand), and Following inks in, so a list of people you already follow
