@@ -83,13 +83,13 @@ const OnboardingFavoritesArt = () => (
     </div>
     <div className="obfavorite-classes">
       {([
-        ["6:30 AM", "Morning Flow", "Open Form Studio"],
-        ["5:00 PM", "Power Yoga", "Harbor Yoga"],
-        ["7:00 PM", "Candlelight Yin", "Studio Arc"],
+        ["Mon • 6:30AM", "Morning Flow", "Open Form Studio"],
+        ["Wed • 5:00PM", "Power Yoga", "Harbor Yoga"],
+        ["Sat • 7:00PM", "Candlelight Yin", "Studio Arc"],
       ] as const).map(([time, name, studio], index) => (
         <div className={`obfavorite-class obart-float float-${index === 0 ? "a" : index === 1 ? "b" : "c"}`} key={name}>
           <span><b>{time}</b><strong>{name}</strong><small>{studio}</small></span>
-          <span className="obfavorite-coach">Coach</span>
+          <span className="obfavorite-coach">Maya</span>
         </div>
       ))}
     </div>
