@@ -21,6 +21,7 @@ export function AppHeader({
   settings = false,
   admin = false,
   adminAttention = 0,
+  adminActivity = 0,
   face,
   profileHref = "/you",
 }: {
@@ -38,6 +39,8 @@ export function AppHeader({
   admin?: boolean;
   /** Number of unresolved reported listings. */
   adminAttention?: number;
+  /** New privacy-safe product activity since the admin last looked. */
+  adminActivity?: number;
   face?: HeaderFace;
   profileHref?: string;
 }) {
@@ -89,6 +92,16 @@ export function AppHeader({
         <Wordmark variant="ink" />
       </Link>
       <div className="brandbar-actions">
+        {admin && (
+          <Link
+            className="header-admin-activity"
+            href="/admin?activity=1"
+            aria-label={`${adminActivity} new product activity ${adminActivity === 1 ? "event" : "events"}`}
+          >
+            <Icon name="bolt_filled" size={20} />
+            {adminActivity > 0 && <b>{adminActivity > 99 ? "99+" : adminActivity}</b>}
+          </Link>
+        )}
         <HeaderAccountButton
           face={face}
           unread={notificationUnread > 0 || messageUnread > 0}

@@ -88,6 +88,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           home="/calendar"
           admin={isAdmin}
           adminAttention={adminAttention}
+          adminActivity={adminActivity}
           face={face}
           profileHref={profileHref}
         />

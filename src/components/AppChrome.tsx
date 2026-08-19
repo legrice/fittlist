@@ -102,6 +102,7 @@ export async function AppChrome({
         home="/calendar"
         admin={isAdmin}
         adminAttention={adminAttention}
+        adminActivity={adminActivity}
         face={face}
         profileHref={profileHref}
       />
