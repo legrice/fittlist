@@ -25,23 +25,19 @@ type SheetMode = "signup" | "login";
 
 const landingSlides = [
   {
-    title: "Build your week in fitness.",
+    title: "Your whole week, in one place.",
     art: "calendar",
   },
   {
-    title: "Share your calendar anywhere.",
+    title: "Share it. Post it. Send it to your mom.",
     art: "share",
   },
   {
-    title: "Find the best in fitness near you.",
-    art: "discover",
-  },
-  {
-    title: "Keep up with your favorites.",
+    title: "Follow your favorites. Respectfully.",
     art: "favorites",
   },
   {
-    title: "Make fitness plans together.",
+    title: "Keep everyone on the same schedule.",
     art: "groups",
   },
 ] as const;
@@ -76,15 +72,6 @@ const OnboardingShareArt = () => (
   </div>
 );
 
-const OnboardingDiscoverArt = () => (
-  <div className="obfeature-art obdiscover-art" role="img" aria-label="Classes, people, studios, and groups near you in Discover">
-    <div className="obdiscover-search obart-float float-b"><Icon name="search" size={19} /><span>Find fitness near you</span></div>
-    <div className="obdiscover-grid">
-      {([['calendar_month','Classes','Today'],['account_circle','People','Nearby'],['place','Studios','12 close by'],['groups','Groups','Join in']] as const).map(([icon,label,detail],index)=><div className={`obdiscover-tile tile-${index+1} obart-float float-${index%2?'b':'a'}`} key={label}><span><Icon name={icon} size={20}/></span><strong>{label}</strong><small>{detail}</small></div>)}
-    </div>
-  </div>
-);
-
 const OnboardingFavoritesArt = () => (
   <div className="obfeature-art obfavorites-art" role="img" aria-label="Favorite people and their active calendars">
     <div className="obfavorites-rail">
@@ -109,7 +96,6 @@ const OnboardingGroupsArt = () => (
 const OnboardingArt = ({ art }: { art: typeof landingSlides[number]["art"] }) => {
   if (art === "calendar") return <OnboardingCalendarArt />;
   if (art === "share") return <OnboardingShareArt />;
-  if (art === "discover") return <OnboardingDiscoverArt />;
   if (art === "favorites") return <OnboardingFavoritesArt />;
   if (art === "groups") return <OnboardingGroupsArt />;
   return null;
