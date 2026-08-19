@@ -25,7 +25,7 @@ type SheetMode = "signup" | "login";
 
 const landingSlides = [
   {
-    title: "So many fitnesses. One calendar.",
+    title: "All the fitness you do in one calendar.",
     art: "calendar",
   },
   {
