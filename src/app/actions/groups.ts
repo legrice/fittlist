@@ -7,6 +7,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, dowOfDate, runsOn, todayIso, weekDates } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
+import { storeImage } from "@/lib/storage";
 
 export type GroupClassChoice = { classId: string; iso: string; name: string; detail: string };
 export type GroupDestination = { id: string; name: string; slug: string };
@@ -207,10 +208,17 @@ export async function updateGroupDetails(slug: string, input: { name: string; de
   if (name.length > 60) return { ok: false, error: "Keep the name under 60 characters." } as const;
   const description = input.description.trim().replace(/\s+/g, " ");
   if (description.length > 280) return { ok: false, error: "Keep the about under 280 characters." } as const;
-  const photo = input.photo?.trim() || null;
-  if (photo && (!photo.startsWith("data:image/") || photo.length > 2_000_000)) {
+  const photoInput = input.photo?.trim() || null;
+  if (photoInput && !photoInput.startsWith("data:image/") && !/^https:\/\//i.test(photoInput)) {
+    return { ok: false, error: "That image isn’t supported." } as const;
+  }
+  // readPhoto deliberately caps its output here. The old group-only 2 MB
+  // check sat below that shared 2.2 MB ceiling, so valid compressed photos
+  // were accepted by the picker and then rejected on Save.
+  if (photoInput?.startsWith("data:image/") && photoInput.length > 2_200_000) {
     return { ok: false, error: "Choose a smaller image." } as const;
   }
+  const photo = await storeImage(photoInput, "group");
   await manager.db.update(schema.groups).set({ name, description: description || null, photo }).where(eq(schema.groups.id, manager.groupId));
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
