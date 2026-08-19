@@ -503,7 +503,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obchat-message>span { padding:15px 17px; border-radius:22px 22px 22px 6px; background:var(--color-surface-muted); box-shadow:0 8px 18px rgba(0,0,0,.045); font-size:15px; line-height:1.22; }
 .obchat-message.from-you { align-self:flex-end; }
 .obchat-message.from-you>span { border-radius:22px 22px 6px 22px; background:var(--color-lime); color:var(--color-black); }
-.obchat-message.from-jordan>span { background:var(--color-surface-muted); }
+.obchat-message.from-jordan>span { border:1px solid var(--color-border); background:var(--color-white); }
+.obchat-message.from-jordan>small { margin:5px 0 0 9px; color:var(--color-text-secondary); font-size:10px; font-weight:700; }
 .obchat-message.punchline { max-width:92%; }
 .obchat-message.punchline>span { font-weight:700; }
 @media (prefers-reduced-motion:reduce) { .oblanding-slide.has-entered .obart-float { opacity:1; animation:none; } }

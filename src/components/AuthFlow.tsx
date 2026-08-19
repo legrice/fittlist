@@ -103,8 +103,8 @@ const OnboardingGroupsArt = () => (
 const OnboardingMessagesArt = () => (
   <div className="obfeature-art obmessages-art" role="img" aria-label="A text conversation where Jordan is reminded that the yoga studio is listed in FittList">
     <div className="obchat-message from-you obart-float float-a"><span>Yo, see you at yoga?</span></div>
-    <div className="obchat-message from-jordan obart-float float-b"><span>Wait, which studio you teaching at again?</span></div>
-    <div className="obchat-message from-you punchline obart-float float-c"><span>bro… it’s in my FittList 😉🥴.</span></div>
+    <div className="obchat-message from-jordan obart-float float-b"><span>Wait, which studio you teaching at again?</span><small>Jordan</small></div>
+    <div className="obchat-message from-you punchline obart-float float-c"><span>bro… it’s on my FittList 😉🥴.</span></div>
   </div>
 );
 
