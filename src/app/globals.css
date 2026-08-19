@@ -414,6 +414,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px;
   font-size:14px; font-weight:700;
 }
+.oblanding-shot.has-image { border:0; background:#fff; overflow:hidden; }
+.oblanding-shot.has-image img { width:100%; height:100%; display:block; object-fit:contain; }
 .ob .oblanding-slide h1 {
   align-self:center; width:100%; max-width:480px; margin:28px auto 30px;
   font-size:clamp(32px, 8.3vw, 42px); line-height:.98; letter-spacing:-.025em;

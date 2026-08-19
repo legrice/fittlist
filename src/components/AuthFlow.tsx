@@ -27,22 +27,27 @@ const landingSlides = [
   {
     title: "Build your week in fitness.",
     placeholder: "Calendar illustration",
+    image: "/onboarding-calendar.webp",
   },
   {
     title: "Share your calendar anywhere.",
     placeholder: "Schedule sharing illustration",
+    image: null,
   },
   {
     title: "Find the best in fitness near you.",
     placeholder: "Discover illustration",
+    image: null,
   },
   {
     title: "Keep up with your favorites.",
     placeholder: "Favorites illustration",
+    image: null,
   },
   {
     title: "Make fitness plans together.",
     placeholder: "Group illustration",
+    image: null,
   },
 ] as const;
 
@@ -314,9 +319,12 @@ export function AuthFlow({
             >
               {landingSlides.map((slide) => (
                 <article className="oblanding-slide" key={slide.title}>
-                  <div className="oblanding-shot" role="img" aria-label={`${slide.placeholder} placeholder`}>
-                    <Icon name="image" size={28} />
-                    <span>{slide.placeholder}</span>
+                  <div className={`oblanding-shot${slide.image ? " has-image" : ""}`}>
+                    {slide.image ? (
+                      <img src={slide.image} alt="A stack of fitness classes being added to a calendar" />
+                    ) : (
+                      <><Icon name="image" size={28} /><span>{slide.placeholder}</span></>
+                    )}
                   </div>
                   <h1>{slide.title}</h1>
                 </article>
