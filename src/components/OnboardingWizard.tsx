@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/Icon";
 import { LocationPicker } from "@/components/LocationPicker";
 import { updateProfile } from "@/app/actions/profile";
 import { cityFromCoordinates, completeOnboarding } from "@/app/actions/onboarding";
@@ -132,7 +133,7 @@ export function OnboardingWizard({
       <div className="pad">
         {step === 2 && (
           <button className="wizback" type="button" onClick={() => setStep(1)} aria-label="Back">
-            ←
+            <Icon name="arrow_back" size={22} />
           </button>
         )}
 

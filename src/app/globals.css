@@ -603,9 +603,9 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wiz .btn.si { background: var(--si); color: var(--color-black); }
 .wiz .btn.si:disabled { background: color-mix(in srgb, var(--si) 32%, var(--card)); color: var(--color-black); opacity: 1; }
 .wizback {
-  width: 44px; height: 44px; margin: 0 0 22px; border: 1px solid var(--line);
+  width: 44px; height: 44px; margin: 0 0 22px; border: 1px solid var(--line); display:grid; place-items:center;
   border-radius: 14px; background: var(--card); color: var(--ink); cursor: pointer;
-  font: inherit; font-size: 24px; line-height: 1;
+  font: inherit; line-height: 1;
 }
 .wizteach { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
 .wizteach h2 { margin: 0 0 12px; font-size: 18px; }
