@@ -50,7 +50,12 @@ function scaleTo(img: HTMLImageElement, maxEdge: number, quality: number): strin
     if (result.length <= DATA_URL_LIMIT) return result;
     result = canvas.toDataURL("image/jpeg", nextQuality);
   }
-  while (result.length > DATA_URL_LIMIT && canvas.width > 1200 && canvas.height > 1200) {
+  // One short edge used to stop this loop even while a panoramic or highly
+  // detailed photo was still too large. That let an oversized Server Action
+  // request escape the picker and Next replaced the page with a digest error
+  // before the action could answer. Keep shrinking the long edge until the
+  // payload actually satisfies the advertised ceiling.
+  while (result.length > DATA_URL_LIMIT && Math.max(canvas.width, canvas.height) > 640) {
     const copy = document.createElement("canvas");
     copy.width = Math.round(canvas.width * 0.85);
     copy.height = Math.round(canvas.height * 0.85);

@@ -19,7 +19,10 @@ export async function adminActivity(limit = 100): Promise<ActivityEntry[]> {
     db.select().from(schema.studios),
     db.select().from(schema.studioEdits).orderBy(desc(schema.studioEdits.createdAt)).limit(200),
     db.select().from(schema.events),
-    db.select().from(schema.productActivity).orderBy(desc(schema.productActivity.createdAt)).limit(300),
+    // Activity must never take the product down. During a rolling deploy an
+    // old database can briefly serve new code before its migration finishes;
+    // the feed simply omits those coarse events until the table is ready.
+    db.select().from(schema.productActivity).orderBy(desc(schema.productActivity.createdAt)).limit(300).catch(() => []),
   ]);
   const userById = new Map(users.map((u) => [u.id, u]));
   const admins = new Set(
@@ -151,7 +154,7 @@ export async function adminActivityFreshSince(seenAt: Date | null): Promise<bool
       .limit(1),
     db.select({ id: schema.studios.id }).from(schema.studios).where(gt(schema.studios.createdAt, since)).limit(1),
     db.select({ id: schema.events.id }).from(schema.events).where(gt(schema.events.createdAt, since)).limit(1),
-    db.select({ id: schema.productActivity.id }).from(schema.productActivity).where(gt(schema.productActivity.createdAt, since)).limit(1),
+    db.select({ id: schema.productActivity.id }).from(schema.productActivity).where(gt(schema.productActivity.createdAt, since)).limit(1).catch(() => []),
   ]);
   const adminList = adminEmails();
   const freshUser = u.some((x) => !adminList.includes(x.email.toLowerCase()));
