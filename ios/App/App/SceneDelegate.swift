@@ -4,10 +4,13 @@ import WebKit
 
 /// One native navigation shell around the existing Capacitor bridge. FittList
 /// keeps one web product while the highest-value app surfaces become native.
-final class FittListShellViewController: UIViewController, WKScriptMessageHandler {
+final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler {
     private let bridge = CAPBridgeViewController()
     private let headerView = UIView()
+    private let tabBar = UITabBar()
     private var settingsButton: UIButton?
+    private let tabIDs = ["calendar", "discover", "saved"]
+    private let fallbackRoutes = ["/calendar", "/discover", "/saved"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
@@ -22,6 +25,8 @@ final class FittListShellViewController: UIViewController, WKScriptMessageHandle
 
         configureHeader()
 
+        configureTabBar()
+
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -31,9 +36,35 @@ final class FittListShellViewController: UIViewController, WKScriptMessageHandle
             bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bridge.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            tabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
         installWebHooks()
+    }
+
+    private func configureTabBar() {
+        tabBar.translatesAutoresizingMaskIntoConstraints = false
+        tabBar.delegate = self
+        tabBar.isTranslucent = true
+        tabBar.tintColor = UIColor(red: 159 / 255, green: 232 / 255, blue: 112 / 255, alpha: 1)
+        tabBar.unselectedItemTintColor = UIColor.label.withAlphaComponent(0.76)
+
+        let appearance = UITabBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterial)
+        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.42)
+        appearance.shadowColor = .clear
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
+        tabBar.items = [
+            item("Calendar", "calendar", 0),
+            item("Discover", "safari", 1),
+            item("Favorites", "heart", 2),
+        ]
+        tabBar.selectedItem = tabBar.items?.first
+        view.addSubview(tabBar)
     }
 
     private func configureHeader() {
@@ -115,11 +146,15 @@ final class FittListShellViewController: UIViewController, WKScriptMessageHandle
         }.withRenderingMode(.alwaysTemplate)
     }
 
-    @objc private func openHome() { navigate(fallback: "/calendar") }
+    @objc private func openHome() { navigate(tabID: "calendar", fallback: "/calendar") }
     @objc private func openSearch() { navigate(fallback: "/search") }
     @objc private func openMessages() { navigate(fallback: "/inbox") }
     @objc private func openUpdates() { navigate(fallback: "/notifications") }
     @objc private func openSettings() { navigate(fallback: "/settings") }
+
+    private func item(_ title: String, _ symbol: String, _ tag: Int) -> UITabBarItem {
+        UITabBarItem(title: title, image: UIImage(systemName: symbol), tag: tag)
+    }
 
     private func installWebHooks() {
         bridge.loadViewIfNeeded()
@@ -147,7 +182,7 @@ final class FittListShellViewController: UIViewController, WKScriptMessageHandle
               const send = () => window.webkit.messageHandlers.fittlistRoute.postMessage({
                 path: location.pathname,
                 settings: !!document.querySelector('.brandbar [aria-label="Settings"]'),
-                active: null
+                active: document.querySelector('.navwrap a[aria-current="page"]')?.dataset.tab || null
               });
               const sendAfterRender = () => setTimeout(send, 80);
               const push = history.pushState.bind(history);
@@ -179,9 +214,18 @@ final class FittListShellViewController: UIViewController, WKScriptMessageHandle
         ))
     }
 
-    private func navigate(fallback: String) {
+    func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+        guard tabIDs.indices.contains(item.tag) else { return }
+        navigate(tabID: tabIDs[item.tag], fallback: fallbackRoutes[item.tag])
+    }
+
+    private func navigate(tabID: String? = nil, fallback: String) {
         bridge.webView?.evaluateJavaScript("""
-          window.location.assign('\(fallback)');
+          (() => {
+            const tabID = \(tabID.map { "'\($0)'" } ?? "null");
+            const link = tabID && document.querySelector(`.navwrap a[data-tab="${tabID}"]`);
+            if (link) link.click(); else window.location.assign('\(fallback)');
+          })();
         """)
     }
 
@@ -194,8 +238,20 @@ final class FittListShellViewController: UIViewController, WKScriptMessageHandle
             return
         }
         guard message.name == "fittlistRoute",
-              let route = message.body as? [String: Any] else { return }
+              let route = message.body as? [String: Any],
+              let path = route["path"] as? String else { return }
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
+        let active = route["active"] as? String
+        let activeTags = ["calendar": 0, "discover": 1, "saved": 2]
+        let tag: Int?
+        if let active, let activeTag = activeTags[active] { tag = activeTag }
+        else if path == "/calendar" || path == "/app" || path == "/week" { tag = 0 }
+        else if path == "/discover" || path == "/search" { tag = 1 }
+        else if path == "/saved" { tag = 2 }
+        else { tag = nil }
+        if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
+            tabBar.selectedItem = next
+        }
     }
 }
 
