@@ -128,6 +128,16 @@ export function CalendarScreen({
   const favoriteSelectionKey = `fl-calendar-favorites:${viewer.id}`;
   const calendarStateKey = `fl-calendar-state:${viewer.id}`;
 
+  useEffect(() => {
+    if (openAdder) setAddChoice(true);
+  }, [openAdder]);
+
+  useEffect(() => {
+    const openFromDesktop = () => setAddChoice(true);
+    window.addEventListener("fittlist:add-class", openFromDesktop);
+    return () => window.removeEventListener("fittlist:add-class", openFromDesktop);
+  }, []);
+
   const ensureComposer = useCallback(() => {
     if (composerData) return;
     startTools(async () => {

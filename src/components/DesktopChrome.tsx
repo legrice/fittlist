@@ -85,9 +85,21 @@ export function DesktopChrome({
             </Link>
           )}
         </nav>
-        <Link className="desktop-create" href="/calendar?add=1">
+        <Link
+          className="desktop-create"
+          href="/calendar?add=1"
+          onClick={(event) => {
+            if (!pathname.startsWith("/calendar")) return;
+            event.preventDefault();
+            window.dispatchEvent(new Event("fittlist:add-class"));
+          }}
+        >
           <Icon name="add" size={21} />
           Add a class
+        </Link>
+        <Link className="desktop-share-week" href={coach ? "/coachshare" : "/membershare"}>
+          <Icon name="ios_share" size={19} />
+          Share your week
         </Link>
         <Link
           className={`desktop-profile-link${pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
