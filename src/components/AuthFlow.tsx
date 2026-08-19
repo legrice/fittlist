@@ -49,9 +49,9 @@ const landingSlides = [
 const OnboardingCalendarArt = () => (
   <div className="obcalendar-art" role="img" aria-label="Three classes arranged on a FittList calendar">
     {([
-      ["6:30 AM", "Morning yoga", "Open Form Studio", "Maya Chen", "MC", "Saved", "saved"],
-      ["5:00 PM", "Kettlebell strength", "Harbor Strength", "Jordan Lee", "JL", "Coaching", "coaching"],
-      ["6:00 PM", "Run club", "Community Run Club", "Alex Rivera", "AR", "Going", "going"],
+      ["6:30 AM", "Morning yoga", "Yoga studio", "Your coach", "C", "Saved", "saved"],
+      ["5:00 PM", "Kettlebell strength", "Strength studio", "You", "Y", "Coaching", "coaching"],
+      ["6:00 PM", "Run club", "Outdoor space", "A friend", "F", "Going", "going"],
     ] as const).map(([time, name, studio, person, initials, tag, tone], index) => (
       <div className={`obcalendar-card obcalendar-card-${index + 1}`} key={name}>
         <div className="obcalendar-card-top"><span>{time}</span><span className={`obcalendar-tag ${tone}`}>{tag}</span></div>
@@ -87,9 +87,9 @@ const OnboardingDiscoverArt = () => (
 const OnboardingFavoritesArt = () => (
   <div className="obfeature-art obfavorites-art" role="img" aria-label="Favorite people and their active calendars">
     <div className="obfavorites-rail">
-      {([['EC','Erin',''],['JT','Joshua','Coach'],['JW','Julia','']] as const).map(([initials,name,tag],index)=><div className={`obfavorite-person obart-float float-${index===1?'c':'a'}`} key={name}><span className={`obfavorite-face face-${index+1}`}>{initials}</span><strong>{name}</strong>{tag&&<small>{tag}</small>}</div>)}
+      {([['Y','You',''],['C','Coach','Coach'],['F','Friend','']] as const).map(([initials,name,tag],index)=><div className={`obfavorite-person obart-float float-${index===1?'c':'a'}`} key={name}><span className={`obfavorite-face face-${index+1}`}>{initials}</span><strong>{name}</strong>{tag&&<small>{tag}</small>}</div>)}
     </div>
-    <div className="obfavorite-class obart-float float-b"><span><b>6:00 PM</b><strong>HYROX</strong><small>Ironbound Performance</small></span><Icon name="bookmark" size={20}/></div>
+    <div className="obfavorite-class obart-float float-b"><span><b>6:00 PM</b><strong>HYROX</strong><small>Your favorite studio</small></span><Icon name="bookmark" size={20}/></div>
   </div>
 );
 
@@ -97,7 +97,7 @@ const OnboardingGroupsArt = () => (
   <div className="obfeature-art obgroups-art" role="img" aria-label="A FittList group planning classes together">
     <div className="obgroup-profile obart-float float-a">
       <div className="obgroup-cover"><span>RC</span></div>
-      <strong>Riverside Run Club</strong>
+      <strong>Neighborhood Run Club</strong>
       <small>Weekly miles, together.</small>
       <div className="obgroup-tabs"><b>Schedule</b><span>Updates</span><span>Members</span></div>
     </div>

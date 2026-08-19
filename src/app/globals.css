@@ -425,12 +425,11 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   display:flex; flex-direction:column; align-items:stretch; gap:3px;
   background:var(--color-white); box-shadow:0 9px 24px rgba(0,0,0,.055); text-align:left;
   opacity:0; will-change:transform;
-  animation:obcalendar-enter .58s cubic-bezier(.2,.78,.25,1) forwards,
-    obcalendar-float var(--float-duration,5.8s) ease-in-out infinite;
+  animation:obcalendar-enter .58s cubic-bezier(.2,.78,.25,1) forwards;
 }
-.obcalendar-card-1 { width:91%; --tilt:-.45deg; --float-duration:5.2s; animation-delay:.08s,.76s; }
-.obcalendar-card-2 { width:96%; --tilt:.35deg; --float-duration:6.4s; animation-delay:.2s,1.18s; }
-.obcalendar-card-3 { width:92%; --tilt:-.2deg; --float-duration:5.7s; animation-delay:.32s,.94s; }
+.obcalendar-card-1 { width:91%; --tilt:-.45deg; animation-delay:.08s; }
+.obcalendar-card-2 { width:96%; --tilt:.35deg; animation-delay:.2s; }
+.obcalendar-card-3 { width:92%; --tilt:-.2deg; animation-delay:.32s; }
 .obcalendar-card-top { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:15px; font-weight:700; }
 .obcalendar-card > strong { margin-top:1px; font-size:clamp(18px,5vw,22px); line-height:1.08; text-transform:none; }
 .obcalendar-card > small { color:var(--color-text-secondary); font-size:14px; font-weight:500; }
@@ -447,20 +446,15 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   from { opacity:0; transform:translateY(24px) rotate(var(--tilt)) scale(.96); }
   to { opacity:1; transform:translateY(0) rotate(var(--tilt)) scale(1); }
 }
-@keyframes obcalendar-float {
-  0%,100% { opacity:1; transform:translateY(0) rotate(var(--tilt)); }
-  50% { opacity:1; transform:translateY(-4px) rotate(var(--tilt)); }
-}
 @media (prefers-reduced-motion:reduce) {
   .obcalendar-card { opacity:1; animation:none; transform:rotate(var(--tilt)); }
 }
 .obfeature-art { width:min(100%,420px); padding:14px 8px; color:var(--color-black); }
-.obart-float { animation:obart-enter .55s cubic-bezier(.2,.78,.25,1) both, obart-float var(--float-speed,6s) ease-in-out var(--float-start,.7s) infinite; }
-.obart-float.float-a { --float-speed:5.3s; --float-start:.72s; }
-.obart-float.float-b { --float-speed:6.2s; --float-start:1.02s; }
-.obart-float.float-c { --float-speed:5.8s; --float-start:1.24s; }
+.obart-float { animation:obart-enter .55s cubic-bezier(.2,.78,.25,1) both; }
+.obart-float.float-a { animation-delay:.08s; }
+.obart-float.float-b { animation-delay:.2s; }
+.obart-float.float-c { animation-delay:.32s; }
 @keyframes obart-enter { from { opacity:0; transform:translateY(18px) scale(.97); } to { opacity:1; transform:none; } }
-@keyframes obart-float { 0%,100% { opacity:1; transform:translateY(0); } 50% { opacity:1; transform:translateY(-4px); } }
 .obshare-art { display:flex; flex-direction:column; align-items:center; gap:12px; }
 .obshare-card { width:88%; padding:17px; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.06); }
 .obshare-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:19px; font-weight:700; }
