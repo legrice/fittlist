@@ -79,7 +79,7 @@ const OnboardingDiscoverArt = () => (
   <div className="obfeature-art obdiscover-art" role="img" aria-label="Classes, people, studios, and groups near you in Discover">
     <div className="obdiscover-search obart-float float-b"><Icon name="search" size={19} /><span>Find fitness near you</span></div>
     <div className="obdiscover-grid">
-      {([['calendar_month','Classes','Today'],['person','People','Nearby'],['fitness_center','Studios','12 close by'],['groups','Groups','Join in']] as const).map(([icon,label,detail],index)=><div className={`obdiscover-tile tile-${index+1} obart-float float-${index%2?'b':'a'}`} key={label}><span><Icon name={icon} size={20}/></span><strong>{label}</strong><small>{detail}</small></div>)}
+      {([['calendar_month','Classes','Today'],['account_circle','People','Nearby'],['place','Studios','12 close by'],['groups','Groups','Join in']] as const).map(([icon,label,detail],index)=><div className={`obdiscover-tile tile-${index+1} obart-float float-${index%2?'b':'a'}`} key={label}><span><Icon name={icon} size={20}/></span><strong>{label}</strong><small>{detail}</small></div>)}
     </div>
   </div>
 );
