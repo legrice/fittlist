@@ -2,7 +2,7 @@
 
 import { and, count, desc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { myStaffStudios } from "@/app/actions/gym";
-import type { YouDashboardData, YouFavoriteGroup, YouFavoritePerson, YouFavoritePlace } from "@/components/YouDashboard";
+import type { YouAccountData, YouDashboardData, YouFavoriteGroup, YouFavoritePerson, YouFavoritePlace } from "@/components/YouDashboard";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
@@ -11,6 +11,103 @@ import { todayIso } from "@/lib/format";
 import { unreadHeaderCounts } from "@/lib/notify";
 import { publicSchedules } from "@/lib/coachweek";
 import { occurrenceEnded, runsOn } from "@/lib/format";
+
+/** The private profile/account surface intentionally has its own small query.
+ * Favorites and group calendars belong to /saved; loading all of them before
+ * the avatar sheet could open made a familiar, frequent tap one of the most
+ * expensive interactions in the app. */
+export async function youAccountData(): Promise<YouAccountData | null> {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  const db = await getDb();
+  const [me] = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      name: schema.users.name,
+      handle: schema.users.handle,
+      title: schema.users.title,
+      location: schema.users.location,
+      kind: schema.users.kind,
+      photo: schema.users.photo,
+      photoThumb: schema.users.photoThumb,
+      avatarColor: schema.users.avatarColor,
+      onboardedAt: schema.users.onboardedAt,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me?.handle || !me.onboardedAt) return null;
+
+  const [managed, unread] = await Promise.all([
+    myStaffStudios(),
+    unreadHeaderCounts(userId, me.email),
+  ]);
+  return {
+    me: {
+      name: me.name.trim() || me.email.split("@")[0],
+      handle: me.handle,
+      title: me.title?.trim() ?? "",
+      location: me.location?.trim() ?? "",
+      photo: me.photoThumb ?? me.photo,
+      color: avatarColor(me),
+      coaching: me.kind !== "fan",
+    },
+    managed: managed.filter((place) => place.admin),
+    shareHref: me.kind === "fan" ? "/membershare" : "/coachshare",
+    isAdmin: adminEmails().includes(me.email.toLowerCase()),
+    unread,
+  };
+}
+
+/** Small candidate set for a group's search-first invite picker. Group pages
+ * used to load the entire Favorites dashboard, including studios, groups and
+ * two months of schedule activity, to obtain these few identity rows. */
+export async function groupInvitePeople(): Promise<YouFavoritePerson[]> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  const db = await getDb();
+  const [me] = await db
+    .select({ email: schema.users.email })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me) return [];
+  const favorites = await db
+    .select({ trainerUserId: schema.subscribers.trainerUserId })
+    .from(schema.subscribers)
+    .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)))
+    .orderBy(desc(schema.subscribers.createdAt));
+  const ids = [...new Set(favorites.map((row) => row.trainerUserId))].filter((id) => id !== userId);
+  if (!ids.length) return [];
+  const rows = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      name: schema.users.name,
+      handle: schema.users.handle,
+      kind: schema.users.kind,
+      photo: schema.users.photo,
+      photoThumb: schema.users.photoThumb,
+      avatarColor: schema.users.avatarColor,
+      title: schema.users.title,
+    })
+    .from(schema.users)
+    .where(inArray(schema.users.id, ids));
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.flatMap((id) => {
+    const person = byId.get(id);
+    if (!person?.handle || person.kind === "gym") return [];
+    return [{
+      id: person.id,
+      name: person.name.trim() || person.email.split("@")[0],
+      handle: person.handle,
+      photo: person.photoThumb ?? person.photo,
+      color: avatarColor(person),
+      title: person.title?.trim() ?? "",
+      coaching: person.kind !== "fan",
+      hasCalendar: false,
+    }];
+  });
+}
 
 /** The one data source for the standalone You page and its header sheet. */
 export async function youDashboardData(): Promise<YouDashboardData | null> {

@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, gte, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, gte, ilike, inArray, isNotNull, isNull, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
@@ -75,40 +75,98 @@ export async function searchDirectory(query: string): Promise<{
   const needle = query.trim().toLowerCase();
   if (!userId || needle.length < MIN) return empty;
 
-  const broad = await runSearch(userId, needle, "", false, false);
   const db = await getDb();
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  const [me] = await db
+    .select({ email: schema.users.email })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
   if (!me) return empty;
-  const [hidden, memberRows, followRows, askRows, groupRows, groupMemberRows, groupInviteRows] = await Promise.all([
+  const pattern = `%${needle.replace(/[\\%_]/g, "\\$&")}%`;
+  const [hidden, personRows, directStudioRows, classRows, followRows, askRows, groupRows, groupMemberRows, groupInviteRows] = await Promise.all([
     hiddenFrom(userId),
-    db.select().from(schema.users).where(and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true), eq(schema.users.kind, "fan"))),
+    db
+      .select()
+      .from(schema.users)
+      .where(and(
+        isNotNull(schema.users.handle),
+        eq(schema.users.discoverable, true),
+        or(ilike(schema.users.name, pattern), ilike(schema.users.handle, pattern)),
+      ))
+      .limit(40),
+    db.select().from(schema.studios).where(ilike(schema.studios.name, pattern)).limit(30),
+    db
+      .select()
+      .from(schema.classes)
+      .where(and(eq(schema.classes.isPublic, true), ilike(schema.classes.name, pattern)))
+      .limit(50),
     db.select({ trainerUserId: schema.subscribers.trainerUserId }).from(schema.subscribers).where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
     db.select({ trainerUserId: schema.followRequests.trainerUserId }).from(schema.followRequests).where(eq(schema.followRequests.requesterUserId, userId)),
-    db.select().from(schema.groups),
+    db.select().from(schema.groups).where(ilike(schema.groups.name, pattern)).limit(30),
     db.select({ groupId: schema.groupMembers.groupId }).from(schema.groupMembers).where(eq(schema.groupMembers.userId, userId)),
     db.select({ groupId: schema.groupInvitations.groupId }).from(schema.groupInvitations).where(eq(schema.groupInvitations.inviteeUserId, userId)),
   ]);
   const following = new Set(followRows.map((row) => row.trainerUserId));
   const requested = new Set(askRows.map((row) => row.trainerUserId));
   const rank = (name: string) => (name.toLowerCase().startsWith(needle) ? 0 : 1);
-  const members: DirPerson[] = memberRows
-    .filter((row) => row.id !== userId && !hidden.has(row.id) && (row.name.toLowerCase().includes(needle) || (row.handle ?? "").toLowerCase().includes(needle)))
+  const people: DirPerson[] = personRows
+    .filter((row) => row.id !== userId && !hidden.has(row.id) && row.kind !== "gym")
     .map((row) => ({
       id: row.id,
       handle: row.handle!,
       name: row.name,
-      kind: "member" as const,
+      kind: row.kind === "fan" ? "member" as const : "coach" as const,
       photo: row.photoThumb ?? row.photo,
       title: row.title ?? "",
       location: row.location?.trim() ?? "",
       classesThisWeek: 0,
       following: following.has(row.id),
       requested: requested.has(row.id),
-      availability: null,
-      disciplines: [],
+      availability: row.kind === "fan" ? null : row.availability,
+      disciplines: row.kind === "fan" ? [] : row.disciplines,
       color: avatarColor(row),
-    }));
-  const people = [...broad.people.filter((row) => row.name.toLowerCase().includes(needle) || row.handle.toLowerCase().includes(needle)), ...members]
+    }))
+    .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
+
+  // Class search expands only the rows whose displayed class name matched.
+  // The old path expanded two weeks of every schedule in the directory on
+  // every keystroke, then threw almost all of it away.
+  const classOwnerIds = [...new Set(classRows.map((row) => row.userId))];
+  const classStudioIds = [...new Set(classRows.map((row) => row.studioId).filter((id): id is string => !!id))];
+  const [classOwners, classStudios, marks] = await Promise.all([
+    classOwnerIds.length ? db.select().from(schema.users).where(inArray(schema.users.id, classOwnerIds)) : [],
+    classStudioIds.length ? db.select().from(schema.studios).where(inArray(schema.studios.id, classStudioIds)) : [],
+    classRows.length ? db
+      .select({ classId: schema.attendances.classId, occurrenceDate: schema.attendances.occurrenceDate })
+      .from(schema.attendances)
+      .where(and(
+        eq(schema.attendances.userId, userId),
+        inArray(schema.attendances.classId, classRows.map((row) => row.id)),
+        gte(schema.attendances.occurrenceDate, todayIso()),
+      )) : [],
+  ]);
+  const classes = buildDiscoverClasses({
+    viewerId: userId,
+    owners: classOwners,
+    hidden,
+    personRows: classRows.map((row) => ({ ...row, ownerUserId: row.userId, shift: false as const, duplicateOf: null })),
+    gymRows: [],
+    studios: classStudios,
+    marks,
+  }).slice(0, CLASS_LIMIT);
+  const studios: DirStudio[] = directStudioRows
+    .map((row) => ({
+      id: row.id,
+      slug: row.slug ?? row.id,
+      name: row.name,
+      address: row.address,
+      placeKind: row.placeKind,
+      lat: row.lat,
+      lng: row.lng,
+      photo: row.photo,
+      types: row.types,
+      hasSchedule: !!row.accountUserId,
+      color: avatarColor({ id: row.id }),
+    }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
 
   const accessibleGroupIds = new Set([...groupMemberRows, ...groupInviteRows].map((row) => row.groupId));
@@ -120,8 +178,8 @@ export async function searchDirectory(query: string): Promise<{
 
   return {
     people,
-    studios: broad.studios.filter((row) => row.name.toLowerCase().includes(needle)),
-    classes: broad.classes.filter((row) => row.name.toLowerCase().includes(needle)),
+    studios,
+    classes,
     groups,
   };
 }

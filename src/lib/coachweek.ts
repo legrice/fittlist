@@ -110,7 +110,10 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
   // somebody else took has to come off this coach's week, and a date they were
   // handed has to come onto it, even on a slot they don't normally teach.
   const covers = standing.length
-    ? await db.select().from(schema.shiftCovers)
+    ? await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(inArray(schema.shiftCovers.classId, standing.map((row) => row.id)))
     : [];
   const sharingSet = new Set(sharing);
   const takenAway = new Map<string, string[]>();

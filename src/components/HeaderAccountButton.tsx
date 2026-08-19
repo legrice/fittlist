@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { youDashboardData } from "@/app/actions/you";
+import { youAccountData } from "@/app/actions/you";
 import { settingsSheetData, type SettingsSheetData } from "@/app/actions/settings";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
-import { MemberAccount } from "@/components/MemberAccount";
-import { ProfileSheet } from "@/components/ProfileSheet";
-import { YouDashboard, type ProfileSettingsView, type YouDashboardData } from "@/components/YouDashboard";
+import { YouDashboard, type ProfileSettingsView, type YouAccountData } from "@/components/YouDashboard";
+
+const ProfileSheet = dynamic(() => import("@/components/ProfileSheet").then((module) => module.ProfileSheet));
+const MemberAccount = dynamic(() => import("@/components/MemberAccount").then((module) => module.MemberAccount));
 
 type HeaderFace = { photo: string | null; color: string; initial: string };
 
@@ -16,15 +18,19 @@ export function HeaderAccountButton({
   face,
   unread = false,
   fallbackHref = "/you",
+  initialData,
 }: {
   face?: HeaderFace;
   unread?: boolean;
   fallbackHref?: string;
+  initialData?: YouAccountData;
 }) {
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState<YouDashboardData | null>(null);
+  const [data, setData] = useState<YouAccountData | null>(initialData ?? null);
   const [settingsData, setSettingsData] = useState<SettingsSheetData | null>(null);
   const [settingsView, setSettingsView] = useState<ProfileSettingsView | null>(null);
+  const dashboardRequest = useRef<Promise<YouAccountData | null> | null>(null);
+  const dashboardLoaded = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,25 +48,46 @@ export function HeaderAccountButton({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  const loadDashboard = useCallback(async () => {
+    if (dashboardLoaded.current) return data;
+    if (!dashboardRequest.current) {
+      dashboardRequest.current = youAccountData()
+        .then((next) => {
+          if (next) setData(next);
+          dashboardLoaded.current = true;
+          return next;
+        })
+        .catch(() => null)
+        .finally(() => { dashboardRequest.current = null; });
+    }
+    return dashboardRequest.current;
+  }, [data]);
+
   const show = async () => {
     setOpen(true);
-    try {
-      const [next, nextSettings] = await Promise.all([youDashboardData(), settingsSheetData()]);
-      if (next && nextSettings) {
-        setData(next);
-        setSettingsData(nextSettings);
-        return;
-      }
-    } catch {
-      // The standalone profile remains the resilient fallback.
+    if (data) {
+      void loadDashboard();
+      return;
     }
+    const next = await loadDashboard();
+    if (next) return;
     setOpen(false);
     router.push(fallbackHref);
   };
+  const openSettings = async (view: ProfileSettingsView) => {
+    setSettingsView(view);
+    if (settingsData) return;
+    try {
+      const next = await settingsSheetData();
+      if (next) setSettingsData(next);
+      else setSettingsView(null);
+    } catch {
+      setSettingsView(null);
+      router.push("/settings");
+    }
+  };
   const close = () => {
     setOpen(false);
-    setData(null);
-    setSettingsData(null);
     setSettingsView(null);
   };
 
@@ -72,6 +99,8 @@ export function HeaderAccountButton({
         aria-label={`Open your profile${unread ? ", new activity" : ""}`}
         aria-expanded={open}
         onClick={show}
+        onPointerEnter={() => { void loadDashboard(); }}
+        onFocus={() => { void loadDashboard(); }}
       >
         {face?.photo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -99,9 +128,8 @@ export function HeaderAccountButton({
               <button type="button" className="iconbtn header-profile-close" aria-label="Close" onClick={close}>
                 <Icon name="close" size={20} />
               </button>
-              {data && settingsData ? (
-                settingsView ? (
-                  settingsData.kind === "coach" ? (
+              {settingsView ? (
+                  settingsData ? settingsData.kind === "coach" ? (
                     <ProfileSheet
                       {...settingsData.coach}
                       anim="none"
@@ -116,10 +144,9 @@ export function HeaderAccountButton({
                       initialView={settingsView === "page" ? "profile" : settingsView}
                       onClose={() => setSettingsView(null)}
                     />
-                  )
-                ) : (
-                  <YouDashboard {...data} onOpenSettings={setSettingsView} />
-                )
+                  ) : <div className="header-account-loading"><p>Opening settings&hellip;</p></div>
+                ) : data ? (
+                  <YouDashboard {...data} onOpenSettings={openSettings} />
               ) : (
                 <div className="header-account-loading"><p>Opening your profile&hellip;</p></div>
               )}

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { countDistinct, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 
@@ -37,12 +37,9 @@ export async function currentAdmin(): Promise<{ id: string; email: string; look:
 export async function adminAttentionCount(): Promise<number> {
   const db = await getDb();
   const [classReports, studioReports] = await Promise.all([
-    db.select({ seriesId: schema.classReports.seriesId }).from(schema.classReports),
-    db.select({ studioId: schema.studioReports.studioId }).from(schema.studioReports),
+    db.select({ n: countDistinct(schema.classReports.seriesId) }).from(schema.classReports),
+    db.select({ n: countDistinct(schema.studioReports.studioId) }).from(schema.studioReports),
   ]);
 
-  return (
-    new Set(classReports.map((report) => report.seriesId)).size +
-    new Set(studioReports.map((report) => report.studioId)).size
-  );
+  return Number(classReports[0]?.n ?? 0) + Number(studioReports[0]?.n ?? 0);
 }

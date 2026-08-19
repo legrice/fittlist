@@ -1,4 +1,5 @@
 import { eq, inArray, or } from "drizzle-orm";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -37,7 +38,7 @@ export type StudioTab = "schedule" | "about" | "coaches" | "contact";
 
 // Slug is the address; the id still resolves, so links made before slugs (and
 // anything holding a raw id) keep working.
-export async function findStudio(slug: string) {
+export const findStudio = cache(async (slug: string) => {
   const db = await getDb();
   const [s] = await db
     .select()
@@ -48,7 +49,7 @@ export async function findStudio(slug: string) {
         : eq(schema.studios.slug, slug),
     );
   return s;
-}
+});
 
 // A studio's own page, built on the coach profile layout: photo, name, what
 // kind of gym it is, where it is, about, and how to reach it.

@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Adder, type AdderPrefill } from "@/components/Adder";
-import { AddBrowse } from "@/components/AddBrowse";
+import type { AdderPrefill } from "@/components/Adder";
 import {
   CalSticky,
   MonthHeadRow,
@@ -15,12 +15,11 @@ import {
   useTopDayLabel,
   type MonthCellItem,
 } from "@/components/CalendarBits";
-import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { PlanSheet } from "@/components/PlanSheet";
+import type { PeekClass } from "@/components/ClassPeek";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
-import { ShareHubScreen, type HubItem } from "@/components/ShareHubScreen";
+import type { HubItem } from "@/components/ShareHubScreen";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
@@ -30,6 +29,12 @@ import { setGoing } from "@/app/actions/going";
 import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
 import { loadCalendarComposerData, loadCalendarShareData, loadFavoriteCalendars, type CalendarComposerData, type FavoriteCalendarData } from "@/app/actions/calendar-data";
+
+const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
+const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
+const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
+const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) => module.PlanSheet));
+const ShareHubScreen = dynamic(() => import("@/components/ShareHubScreen").then((module) => module.ShareHubScreen));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.

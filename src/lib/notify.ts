@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, notInArray, or } from "drizzle-orm";
+import { and, count, desc, eq, isNull, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb, schema } from "@/db";
 
@@ -29,10 +29,10 @@ export async function addNotification(userId: string, n: NewNotification): Promi
 export async function unreadNotifications(userId: string): Promise<number> {
   const db = await getDb();
   const rows = await db
-    .select({ id: schema.notifications.id })
+    .select({ n: count() })
     .from(schema.notifications)
     .where(and(eq(schema.notifications.userId, userId), isNull(schema.notifications.readAt)));
-  return rows.length;
+  return Number(rows[0]?.n ?? 0);
 }
 
 /** Independent header counts for the two attention doors. Message
@@ -46,14 +46,16 @@ export async function unreadHeaderCounts(
   const normalizedEmail = email.trim().toLowerCase();
   const [notifications, threads] = await Promise.all([
     db
-      .select({ type: schema.notifications.type })
+      .select({ n: count() })
       .from(schema.notifications)
-      .where(and(eq(schema.notifications.userId, userId), isNull(schema.notifications.readAt))),
+      .where(and(
+        eq(schema.notifications.userId, userId),
+        isNull(schema.notifications.readAt),
+        notInArray(schema.notifications.type, ["message", "feedback"]),
+      )),
     db
       .select({
-        coachUserId: schema.inquiryThreads.coachUserId,
-        coachUnread: schema.inquiryThreads.coachUnread,
-        requesterUnread: schema.inquiryThreads.requesterUnread,
+        n: sql<number>`coalesce(sum(case when ${schema.inquiryThreads.coachUserId} = ${userId} then ${schema.inquiryThreads.coachUnread} else ${schema.inquiryThreads.requesterUnread} end), 0)`,
       })
       .from(schema.inquiryThreads)
       .where(
@@ -68,14 +70,8 @@ export async function unreadHeaderCounts(
   ]);
 
   return {
-    notifications: notifications.filter(
-      (notification) => notification.type !== "message" && notification.type !== "feedback",
-    ).length,
-    messages: threads.reduce(
-      (total, thread) =>
-        total + (thread.coachUserId === userId ? thread.coachUnread : thread.requesterUnread),
-      0,
-    ),
+    notifications: Number(notifications[0]?.n ?? 0),
+    messages: Number(threads[0]?.n ?? 0),
   };
 }
 

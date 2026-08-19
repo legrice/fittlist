@@ -3,9 +3,9 @@ import type { MetadataRoute } from "next";
 // What a home-screen install looks like.
 //
 // `start_url` is the app rather than the marketing page: someone who installs
-// this has already signed up, and landing them back on "Follow coaches. Not
-// studios." every launch would be absurd. Signed out, /app sends them to the
-// door anyway.
+// this has already signed up, and landing them back on onboarding every launch
+// would be absurd. Calendar already owns the signed-out redirect, so there is
+// no reason to pay for the legacy /app authentication pass first.
 //
 // The two icon sets are not the same picture. A maskable icon gets cropped to
 // whatever shape the launcher uses, so its mark sits well inside the square
@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "fittlist",
     description:
       "Coaches share one schedule. Members follow once and never miss a class.",
-    start_url: "/app",
+    start_url: "/calendar",
     scope: "/",
     display: "standalone",
     orientation: "portrait",

@@ -61,6 +61,21 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
     color: avatarColor(me),
     initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
   };
+  const accountData = {
+    me: {
+      name: me.name.trim() || me.email.split("@")[0],
+      handle: me.handle!,
+      title: me.title?.trim() ?? "",
+      location: me.location?.trim() ?? "",
+      photo: face.photo,
+      color: face.color,
+      coaching: isCoach,
+    },
+    managed: [],
+    shareHref: isCoach ? "/coachshare" : "/membershare",
+    isAdmin,
+    unread,
+  };
 
   return (
     <section className="screen hasnav" data-mode={lookMode(me.look)}>
@@ -91,6 +106,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           adminActivity={adminActivity}
           face={face}
           profileHref={profileHref}
+          accountData={accountData}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}

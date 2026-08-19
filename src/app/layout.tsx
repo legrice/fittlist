@@ -61,8 +61,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             reads the prefixed one, and without it an install opens in Safari
             with the address bar rather than standalone. */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
         <NativeAppBridge />

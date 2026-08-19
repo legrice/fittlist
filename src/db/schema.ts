@@ -207,7 +207,10 @@ export const inquiryThreads = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("inquiry_thread_coach_email").on(t.coachUserId, t.requesterEmail, t.kind)],
+  (t) => [
+    uniqueIndex("inquiry_thread_coach_email").on(t.coachUserId, t.requesterEmail, t.kind),
+    index("inquiry_thread_requester_kind").on(t.requesterEmail, t.kind),
+  ],
 );
 
 export const inquiryMessages = pgTable("inquiry_messages", {
@@ -228,7 +231,10 @@ export const coachStudios = pgTable(
     studioId: uuid("studio_id").notNull().references(() => studios.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("coach_studios_user_studio").on(t.userId, t.studioId)],
+  (t) => [
+    uniqueIndex("coach_studios_user_studio").on(t.userId, t.studioId),
+    index("coach_studios_studio").on(t.studioId),
+  ],
 );
 
 // Global/shared directory. `seq` gives the deterministic directory index that
@@ -423,7 +429,10 @@ export const studioManagers = pgTable(
     addedByUserId: uuid("added_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("studio_managers_once").on(t.studioId, t.userId)],
+  (t) => [
+    uniqueIndex("studio_managers_once").on(t.studioId, t.userId),
+    index("studio_managers_user").on(t.userId),
+  ],
 );
 
 // The directory runs on trust: any coach can correct any studio. This is the
@@ -622,7 +631,11 @@ export const classes = pgTable(
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("classes_user").on(t.userId)],
+  (t) => [
+    index("classes_user").on(t.userId),
+    index("classes_coach").on(t.coachUserId),
+    index("classes_studio").on(t.studioId),
+  ],
 );
 
 // Someone a coach doesn't want on their page. Quiet on purpose: nothing tells
@@ -664,7 +677,7 @@ export const personalClasses = pgTable("personal_classes", {
   specificDate: text("specific_date"),
   endsOn: text("ends_on"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("personal_classes_user").on(t.userId)]);
 
 // "This class isn't right": not a real class, wrong time, wrong place. Keyed
 // on the seriesId rather than a class row, because an edit deletes and
@@ -735,7 +748,10 @@ export const followRequests = pgTable(
     requesterUserId: uuid("requester_user_id").notNull().references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("follow_requests_once").on(t.trainerUserId, t.requesterUserId)],
+  (t) => [
+    uniqueIndex("follow_requests_once").on(t.trainerUserId, t.requesterUserId),
+    index("follow_requests_requester").on(t.requesterUserId, t.trainerUserId),
+  ],
 );
 
 export const blocks = pgTable(
@@ -748,7 +764,10 @@ export const blocks = pgTable(
     blockedUserId: uuid("blocked_user_id").notNull().references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("blocks_pair").on(t.blockerUserId, t.blockedUserId)],
+  (t) => [
+    uniqueIndex("blocks_pair").on(t.blockerUserId, t.blockedUserId),
+    index("blocks_blocked").on(t.blockedUserId),
+  ],
 );
 
 export const subscribers = pgTable(
@@ -809,7 +828,10 @@ export const attendances = pgTable(
     isPublic: boolean("is_public").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("attendances_user_class_date").on(t.userId, t.classId, t.occurrenceDate)],
+  (t) => [
+    uniqueIndex("attendances_user_class_date").on(t.userId, t.classId, t.occurrenceDate),
+    index("attendances_class_date").on(t.classId, t.occurrenceDate),
+  ],
 );
 
 // A coach's activity feed. Today it's just "someone followed you"; the type +
@@ -830,7 +852,10 @@ export const notifications = pgTable(
     readAt: timestamp("read_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("notifications_user_created").on(t.userId, t.createdAt)],
+  (t) => [
+    index("notifications_user_created").on(t.userId, t.createdAt),
+    index("notifications_user_read").on(t.userId, t.readAt),
+  ],
 );
 
 // First-party, privacy-limited product telemetry for the admin pulse. Rows say
@@ -890,6 +915,7 @@ export const studioEndorsements = pgTable(
   (t) => [
     uniqueIndex("studio_endorsements_place_trait").on(t.targetStudioId, t.endorserUserId, t.trait),
     index("studio_endorsements_target").on(t.targetStudioId),
+    index("studio_endorsements_endorser_trait").on(t.endorserUserId, t.trait),
   ],
 );
 

@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gt, inArray, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 
@@ -120,9 +120,24 @@ export async function adminNewActivityCount(adminUserId: string): Promise<number
     .select({ at: schema.users.adminActivityAt })
     .from(schema.users)
     .where(eq(schema.users.id, adminUserId));
-  const since = me?.at?.getTime() ?? 0;
-  const entries = await adminActivity(200);
-  return entries.filter((e) => e.when.getTime() > since).length;
+  const since = me?.at ?? new Date(0);
+  const adminList = adminEmails();
+  const [newUsers, classes, studios, edits, events, product] = await Promise.all([
+    db
+      .select({ n: count() })
+      .from(schema.users)
+      .where(and(gt(schema.users.createdAt, since), notInArray(schema.users.email, adminList))),
+    db
+      .select({ n: countDistinct(schema.classes.seriesId) })
+      .from(schema.classes)
+      .where(and(gt(schema.classes.createdAt, since), eq(schema.classes.isPublic, true))),
+    db.select({ n: count() }).from(schema.studios).where(gt(schema.studios.createdAt, since)),
+    db.select({ n: count() }).from(schema.studioEdits).where(gt(schema.studioEdits.createdAt, since)),
+    db.select({ n: count() }).from(schema.events).where(gt(schema.events.createdAt, since)),
+    db.select({ n: count() }).from(schema.productActivity).where(gt(schema.productActivity.createdAt, since)).catch(() => [{ n: 0 }]),
+  ]);
+  return [newUsers, classes, studios, edits, events, product]
+    .reduce((total, rows) => total + Number(rows[0]?.n ?? 0), 0);
 }
 
 /** Guard helper for the header: is this signed-in user an admin at all? */
@@ -142,21 +157,22 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 export async function adminActivityFreshSince(seenAt: Date | null): Promise<boolean> {
   const db = await getDb();
   const since = seenAt ?? new Date(0);
-  const [u, c, st, ev, product] = await Promise.all([
+  const adminList = adminEmails();
+  const [u, c, st, edit, ev, product] = await Promise.all([
     db
-      .select({ id: schema.users.id, email: schema.users.email })
+      .select({ id: schema.users.id })
       .from(schema.users)
-      .where(gt(schema.users.createdAt, since)),
+      .where(and(gt(schema.users.createdAt, since), notInArray(schema.users.email, adminList)))
+      .limit(1),
     db
       .select({ id: schema.classes.id })
       .from(schema.classes)
       .where(and(gt(schema.classes.createdAt, since), eq(schema.classes.isPublic, true)))
       .limit(1),
     db.select({ id: schema.studios.id }).from(schema.studios).where(gt(schema.studios.createdAt, since)).limit(1),
+    db.select({ id: schema.studioEdits.id }).from(schema.studioEdits).where(gt(schema.studioEdits.createdAt, since)).limit(1),
     db.select({ id: schema.events.id }).from(schema.events).where(gt(schema.events.createdAt, since)).limit(1),
     db.select({ id: schema.productActivity.id }).from(schema.productActivity).where(gt(schema.productActivity.createdAt, since)).limit(1).catch(() => []),
   ]);
-  const adminList = adminEmails();
-  const freshUser = u.some((x) => !adminList.includes(x.email.toLowerCase()));
-  return freshUser || c.length > 0 || st.length > 0 || ev.length > 0 || product.length > 0;
+  return u.length > 0 || c.length > 0 || st.length > 0 || edit.length > 0 || ev.length > 0 || product.length > 0;
 }

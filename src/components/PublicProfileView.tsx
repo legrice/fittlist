@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getDb, schema } from "@/db";
 import { fansEnabled, fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
-import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
@@ -64,11 +63,13 @@ type UserRow = typeof schema.users.$inferSelect;
 export async function PublicProfileView({
   user,
   isOwner,
+  viewerId,
   tab,
   from,
 }: {
   user: UserRow;
   isOwner: boolean;
+  viewerId: string | null;
   tab: ProfileTab;
   /** Which tab sent them here: it names the back control's destination, and
    *  rides along on the class links below. */
@@ -87,7 +88,6 @@ export async function PublicProfileView({
   let signedIn = false;
   // Who's looking, for the app header. The owner gets it too: previewing your
   // own page shouldn't drop you out of the app.
-  const viewerId = await getSessionUserId();
   if (!isOwner && (await fansVisible())) {
     if (viewerId) {
       const [viewer] = await db
@@ -96,21 +96,17 @@ export async function PublicProfileView({
         .where(eq(schema.users.id, viewerId));
       if (viewer) {
         signedIn = true;
-        const [row] = await db
-          .select({ optedOutAt: schema.subscribers.optedOutAt })
-          .from(schema.subscribers)
-          .where(
-            and(
-              eq(schema.subscribers.trainerUserId, user.id),
-              eq(schema.subscribers.email, viewer.email),
+        const [[row], [req]] = await Promise.all([
+          db
+            .select({ optedOutAt: schema.subscribers.optedOutAt })
+            .from(schema.subscribers)
+            .where(
+              and(
+                eq(schema.subscribers.trainerUserId, user.id),
+                eq(schema.subscribers.email, viewer.email),
+              ),
             ),
-          );
-        const following = !!row && !row.optedOutAt;
-        // Coaches can gate their followers too: a pending ask reads as
-        // "Requested", and tapping it again withdraws the ask.
-        let requested = false;
-        if (!following) {
-          const [req] = await db
+          db
             .select({ id: schema.followRequests.id })
             .from(schema.followRequests)
             .where(
@@ -118,9 +114,12 @@ export async function PublicProfileView({
                 eq(schema.followRequests.trainerUserId, user.id),
                 eq(schema.followRequests.requesterUserId, viewerId),
               ),
-            );
-          requested = !!req;
-        }
+            ),
+        ]);
+        const following = !!row && !row.optedOutAt;
+        // Coaches can gate their followers too: a pending ask reads as
+        // "Requested", and tapping it again withdraws the ask.
+        const requested = !following && !!req;
         account = { following, requested };
       }
     }
@@ -144,7 +143,7 @@ export async function PublicProfileView({
   // local load check, and can't be: dev runs PGlite, a single-connection
   // embedded Postgres that serializes what a pooled one overlaps. The win
   // is three round trips becoming one on production's pool.
-  const [allClassRows, pickedRows, visitedStudioRows, fansOn] = await Promise.all([
+  const [allClassRows, pickedRows, visitedStudioRows, endorsementRows, shoutoutRows] = await Promise.all([
     publicSchedule(user),
     db
       .select({ studioId: schema.coachStudios.studioId })
@@ -161,7 +160,15 @@ export async function PublicProfileView({
           eq(schema.studios.placeKind, "studio"),
         ),
       ),
-    fansVisible(),
+    db
+      .select({ trait: schema.profileEndorsements.trait, endorserUserId: schema.profileEndorsements.endorserUserId })
+      .from(schema.profileEndorsements)
+      .where(eq(schema.profileEndorsements.targetUserId, user.id)),
+    db
+      .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+      .from(schema.shoutouts)
+      .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
+      .where(eq(schema.shoutouts.targetUserId, user.id)),
   ]);
   const classRows = allClassRows.filter((c) => c.isPublic);
   const savedRows = viewerId && !isOwner && classRows.length
@@ -182,20 +189,10 @@ export async function PublicProfileView({
   const visitedStudios = visitedStudioRows
     .map((row) => row.studio)
     .sort((a, b) => a.name.localeCompare(b.name));
-  const endorsementRows = await db
-    .select({ trait: schema.profileEndorsements.trait, endorserUserId: schema.profileEndorsements.endorserUserId })
-    .from(schema.profileEndorsements)
-    .where(eq(schema.profileEndorsements.targetUserId, user.id));
   const endorsementCounts = endorsementRows.reduce<Record<string, number>>((all, row) => {
     all[row.trait] = (all[row.trait] ?? 0) + 1;
     return all;
   }, {});
-  const shoutoutRows = await db
-    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
-    .from(schema.shoutouts)
-    .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
-    .where(eq(schema.shoutouts.targetUserId, user.id));
-
   // Continuous forward calendar: each date from today with classes. Days
   // group into chunks of seven POPULATED days, not seven calendar days, so a
   // Mon/Wed/Fri coach still shows a full week's worth of schedule before the

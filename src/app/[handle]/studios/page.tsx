@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
 import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { PublicProfileView } from "@/components/PublicProfileView";
 import { MemberProfileView } from "@/components/MemberProfileView";
+import { profileUser } from "@/lib/profile-user";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +16,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  const user = await profileUser(handle);
   if (!user) return { title: "fittlist" };
   const title = `${user.name}'s places · fittlist`;
   const description = `The fitness places connected to ${user.name}.`;
@@ -47,8 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function StudiosPage({ params, searchParams }: Props) {
   const { handle } = await params;
   const { from } = await searchParams;
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  const user = await profileUser(handle);
   if (!user) notFound();
   const viewerId = await getSessionUserId();
   // Blocked: the page simply isn't there. Same shape as a deleted account, so
@@ -65,5 +62,5 @@ export default async function StudiosPage({ params, searchParams }: Props) {
       />
     );
   }
-  return <PublicProfileView user={user} isOwner={viewerId === user.id} tab="studios" from={from} />;
+  return <PublicProfileView user={user} isOwner={viewerId === user.id} viewerId={viewerId} tab="studios" from={from} />;
 }

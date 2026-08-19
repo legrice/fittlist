@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
@@ -62,11 +63,13 @@ export default async function StudioPage({ params, searchParams }: Props) {
       isManager = !!row;
     }
     if (!isManager && !looksLikeBot(hdrs.get("user-agent"))) {
-      try {
-        await recordVisit(s.accountUserId);
-      } catch (err) {
-        console.error("studio visit rollup failed", err);
-      }
+      after(async () => {
+        try {
+          await recordVisit(s.accountUserId!);
+        } catch (err) {
+          console.error("studio visit rollup failed", err);
+        }
+      });
     }
   }
   return <>

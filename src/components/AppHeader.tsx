@@ -7,6 +7,7 @@ import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
+import type { YouAccountData } from "@/components/YouDashboard";
 
 type HeaderFace = { photo: string | null; color: string; initial: string };
 
@@ -24,6 +25,7 @@ export function AppHeader({
   adminActivity = 0,
   face,
   profileHref = "/you",
+  accountData,
 }: {
   notificationUnread?: number;
   messageUnread?: number;
@@ -43,6 +45,7 @@ export function AppHeader({
   adminActivity?: number;
   face?: HeaderFace;
   profileHref?: string;
+  accountData?: YouAccountData;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -109,6 +112,7 @@ export function AppHeader({
           face={face}
           unread={notificationUnread > 0 || messageUnread > 0}
           fallbackHref={profileHref}
+          initialData={accountData}
         />
       </div>
     </div>

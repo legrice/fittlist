@@ -41,6 +41,7 @@ export async function AppChrome({
       kind: schema.users.kind,
       handle: schema.users.handle,
       name: schema.users.name,
+      title: schema.users.title,
       email: schema.users.email,
       photo: schema.users.photo,
       photoThumb: schema.users.photoThumb,
@@ -72,6 +73,21 @@ export async function AppChrome({
     photo: me.photoThumb ?? me.photo,
     color: avatarColor(me),
     initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
+  };
+  const accountData = {
+    me: {
+      name: me.name.trim() || me.email.split("@")[0],
+      handle: me.handle!,
+      title: me.title?.trim() ?? "",
+      location: me.location?.trim() ?? "",
+      photo: face.photo,
+      color: face.color,
+      coaching: isCoach,
+    },
+    managed: [],
+    shareHref: isCoach ? "/coachshare" : "/membershare",
+    isAdmin,
+    unread,
   };
 
   const header = (
@@ -105,6 +121,7 @@ export async function AppChrome({
         adminActivity={adminActivity}
         face={face}
         profileHref={profileHref}
+        accountData={accountData}
       />
     </>
   );

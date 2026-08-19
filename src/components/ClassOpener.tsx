@@ -1,10 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
-import { ClassPeek, peekFromDetail } from "@/components/ClassPeek";
 import { Toast, useToast } from "@/components/Toast";
+
+type DeferredClassPeekProps = {
+  detail: ClassDetail;
+  onClose: () => void;
+  onChanged: () => void;
+  onToast: (message: string) => void;
+};
+
+// Profile, studio, group, and Discover lists all use this opener, but most
+// visits never open a class. Keep the full detail/edit/share sheet out of
+// those pages' initial JavaScript and fetch it only for the tap that needs it.
+const DeferredClassPeek = dynamic<DeferredClassPeekProps>(() =>
+  import("@/components/ClassPeek").then((module) => {
+    function OpenedClassPeek({ detail, ...props }: DeferredClassPeekProps) {
+      return (
+        <module.ClassPeek
+          cls={module.peekFromDetail(detail)}
+          initialDetail={detail}
+          {...props}
+        />
+      );
+    }
+    return OpenedClassPeek;
+  }),
+);
 
 // Turns a server-rendered list of class rows into rows that open a sheet.
 //
@@ -49,9 +74,8 @@ export function ClassOpener({
         {children}
       </div>
       {open && (
-        <ClassPeek
-          cls={peekFromDetail(open)}
-          initialDetail={open}
+        <DeferredClassPeek
+          detail={open}
           onClose={() => setOpen(null)}
           onChanged={() => router.refresh()}
           onToast={toast}

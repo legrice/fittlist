@@ -42,7 +42,7 @@ export type YouGroupInvitation = {
   inviterName: string;
 };
 
-export type YouDashboardData = {
+export type YouAccountData = {
   me: {
     name: string;
     handle: string;
@@ -52,15 +52,18 @@ export type YouDashboardData = {
     color: string;
     coaching: boolean;
   };
+  managed: { id: string; name: string; slug: string; admin: boolean; photo: string | null }[];
+  shareHref: string;
+  isAdmin: boolean;
+  unread: { messages: number; notifications: number };
+};
+
+export type YouDashboardData = YouAccountData & {
   people: YouFavoritePerson[];
   places: YouFavoritePlace[];
   yourGroups: YouFavoriteGroup[];
   favoriteGroups: YouFavoriteGroup[];
   groupInvitations: YouGroupInvitation[];
-  managed: { id: string; name: string; slug: string; admin: boolean; photo: string | null }[];
-  shareHref: string;
-  isAdmin: boolean;
-  unread: { messages: number; notifications: number };
 };
 
 export type ProfileSettingsView = "page" | "calendar" | "reach" | "account";
@@ -72,7 +75,7 @@ export function YouDashboard({
   isAdmin,
   unread,
   onOpenSettings,
-}: YouDashboardData & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
+}: YouAccountData & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   return (
     <main className="youpage">

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { getDb, schema } from "@/db";
+import { after } from "next/server";
 import { siteOrigin } from "@/lib/format";
 import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
@@ -10,6 +9,7 @@ import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { PublicProfileView } from "@/components/PublicProfileView";
 import { MemberProfileView } from "@/components/MemberProfileView";
 import { jsonLd, profileJsonLd } from "@/lib/seo";
+import { profileUser } from "@/lib/profile-user";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +20,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  const user = await profileUser(handle);
   if (!user) return { title: "fittlist" };
   const title = `${user.name} · fittlist`;
   const description =
@@ -53,8 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProfilePage({ params, searchParams }: Props) {
   const { handle } = await params;
   const { from } = await searchParams;
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  const user = await profileUser(handle);
   if (!user) notFound();
 
   // The profile is the shared landing - count the visit (not the owner, not bots).
@@ -63,11 +61,14 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   // it says nothing about why, and there's nothing to argue with.
   if (await isBlocked(user.id, viewerId)) notFound();
   if (viewerId !== user.id && !looksLikeBot(hdrs.get("user-agent"))) {
-    try {
-      await recordVisit(user.id);
-    } catch (err) {
-      console.error("visit rollup failed", err);
-    }
+    // Analytics must not sit between a tap and the profile it opened.
+    after(async () => {
+      try {
+        await recordVisit(user.id);
+      } catch (err) {
+        console.error("visit rollup failed", err);
+      }
+    });
   }
   const isOwner = viewerId === user.id;
   const structuredData = profileJsonLd(user, siteOrigin());
@@ -82,6 +83,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   }
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
-    <PublicProfileView user={user} isOwner={isOwner} tab="schedule" from={from} />
+    <PublicProfileView user={user} isOwner={isOwner} viewerId={viewerId} tab="schedule" from={from} />
   </>;
 }

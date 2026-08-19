@@ -2026,7 +2026,15 @@ export async function myStaffStudios(): Promise<
     ),
   ];
   if (!ids.length) return [];
-  const rows = await db.select().from(schema.studios).where(inArray(schema.studios.id, ids));
+  const rows = await db
+    .select({
+      id: schema.studios.id,
+      name: schema.studios.name,
+      slug: schema.studios.slug,
+      photo: schema.studios.photo,
+    })
+    .from(schema.studios)
+    .where(inArray(schema.studios.id, ids));
   return rows
     .map((s) => ({ id: s.id, name: s.name, slug: s.slug ?? s.id, admin: runs.has(s.id), photo: s.photo }))
     // The places you run first: they carry the work that only you can do.

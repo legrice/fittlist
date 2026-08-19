@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
 import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { MemberProfileView } from "@/components/MemberProfileView";
 import { PublicProfileView } from "@/components/PublicProfileView";
+import { profileUser } from "@/lib/profile-user";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +16,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  const user = await profileUser(handle);
   if (!user) return { title: "fittlist" };
   const title = `${user.name}'s schedule · fittlist`;
   const description = `${user.name}'s coaching schedule, every studio in one link.`;
@@ -50,8 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SchedulePage({ params, searchParams }: Props) {
   const { handle } = await params;
   const { from } = await searchParams;
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  const user = await profileUser(handle);
   if (!user) notFound();
 
   const viewerId = await getSessionUserId();
@@ -69,5 +66,5 @@ export default async function SchedulePage({ params, searchParams }: Props) {
       />
     );
   }
-  return <PublicProfileView user={user} isOwner={viewerId === user.id} tab="schedule" from={from} />;
+  return <PublicProfileView user={user} isOwner={viewerId === user.id} viewerId={viewerId} tab="schedule" from={from} />;
 }

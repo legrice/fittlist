@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { adminClassEditor } from "@/app/actions/admin";
 import { deleteClass } from "@/app/actions/classes";
@@ -8,11 +9,12 @@ import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
 import { giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
-import { Adder } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { announceSaved } from "@/components/SaveEducation";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { FittlistShareSheet } from "@/components/InAppShare";
+
+const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 
 /**
  * A class, tapped.
