@@ -7801,9 +7801,10 @@ select.editinput.placekind-select {
     border-radius: 14px; color: var(--muted); text-decoration: none;
     font-size: 15px; font-weight: 600;
   }
-  .desktop-nav-link:hover { background: var(--cl); color: var(--ink); }
-  .desktop-nav-link.on { background: var(--cl); color: var(--ink); }
-  .desktop-nav-link.on .icon { color: var(--si); }
+  .desktop-nav-link .icon { color: var(--color-black); }
+  .desktop-nav-link:hover { background: var(--color-lime-soft); color: var(--ink); }
+  .desktop-nav-link.on { background: var(--color-lime-soft); color: var(--ink); }
+  .desktop-nav-link.on .icon { color: var(--color-black); }
   .desktop-count {
     min-width: 19px; height: 19px; margin-left: auto; padding: 0 5px;
     display: inline-flex; align-items: center; justify-content: center;
