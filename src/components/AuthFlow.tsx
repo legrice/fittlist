@@ -391,7 +391,7 @@ export function AuthFlow({
           <>
             <div className="oblanding-mark" aria-hidden="true">
               <span className="oblanding-progress-track">
-                <span style={{ width: `${((landingSlide + 1) / landingSlides.length) * 100}%` }} />
+                {landingSlides.map((slide, index) => <span className={index <= landingSlide ? "is-on" : ""} key={slide.art} />)}
               </span>
             </div>
             <div

@@ -389,12 +389,13 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .ob:has(.oblanding-mark) > .pad > .mark { display:none; }
 .oblanding-mark { display:flex; flex:0 0 auto; margin:0 30px 18px; }
 .oblanding-progress-track {
-  width:100%; height:6px; overflow:hidden; border-radius:var(--radius-pill); background:var(--color-surface-muted);
+  width:100%; height:6px; display:grid; grid-template-columns:repeat(5,1fr); gap:5px;
 }
 .oblanding-progress-track > span {
-  display:block; height:100%; border-radius:inherit; background:var(--color-black);
-  transition:width .24s ease;
+  display:block; height:100%; border-radius:var(--radius-pill); background:var(--color-surface-muted);
+  transition:background-color .24s ease;
 }
+.oblanding-progress-track > span.is-on { background:var(--color-black); }
 /* The front door uses the complete brand rather than the mark alone. */
 .oblanding-logo { font-size:29px; --wm-ink:var(--ink); --wm-mark:var(--si); }
 .oblanding-track {
