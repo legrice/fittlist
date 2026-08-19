@@ -414,8 +414,46 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px;
   font-size:14px; font-weight:700;
 }
-.oblanding-shot.has-image { border:0; background:#fff; overflow:hidden; }
-.oblanding-shot.has-image img { width:100%; height:100%; display:block; object-fit:contain; }
+.oblanding-shot.has-art { border:0; background:transparent; }
+.obcalendar-art {
+  width:min(100%,420px); padding:12px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  color:var(--color-black); perspective:800px;
+}
+.obcalendar-card {
+  width:94%; padding:15px 17px; border:1px solid var(--color-border); border-radius:22px;
+  display:flex; flex-direction:column; align-items:stretch; gap:3px;
+  background:var(--color-white); box-shadow:0 9px 24px rgba(0,0,0,.055); text-align:left;
+  opacity:0; will-change:transform;
+  animation:obcalendar-enter .58s cubic-bezier(.2,.78,.25,1) forwards,
+    obcalendar-float 5.8s ease-in-out infinite;
+}
+.obcalendar-card-1 { width:91%; --tilt:-.45deg; animation-delay:.08s,.76s; }
+.obcalendar-card-2 { width:96%; --tilt:.35deg; animation-delay:.2s,.88s; }
+.obcalendar-card-3 { width:92%; --tilt:-.2deg; animation-delay:.32s,1s; }
+.obcalendar-card-top { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:15px; font-weight:700; }
+.obcalendar-card > strong { margin-top:1px; font-size:clamp(18px,5vw,22px); line-height:1.08; text-transform:none; }
+.obcalendar-card > small { color:var(--color-text-secondary); font-size:14px; font-weight:500; }
+.obcalendar-tag { padding:4px 10px; border-radius:var(--radius-pill); font-size:11px; line-height:1.2; }
+.obcalendar-tag.saved { background:var(--color-attending); color:var(--color-attending-text); }
+.obcalendar-tag.coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
+.obcalendar-tag.going { background:var(--color-lime-soft); color:var(--color-black); }
+.obcalendar-person { margin-top:5px; display:flex; align-items:center; gap:8px; color:var(--color-text-secondary); font-size:13px; font-weight:600; }
+.obcalendar-avatar { width:25px; height:25px; border-radius:50%; display:grid; place-items:center; color:#fff; font-size:8px; letter-spacing:.02em; }
+.obcalendar-avatar.avatar-1 { background:#7c5a46; }
+.obcalendar-avatar.avatar-2 { background:#24587a; }
+.obcalendar-avatar.avatar-3 { background:#3e7641; }
+@keyframes obcalendar-enter {
+  from { opacity:0; transform:translateY(24px) rotate(var(--tilt)) scale(.96); }
+  to { opacity:1; transform:translateY(0) rotate(var(--tilt)) scale(1); }
+}
+@keyframes obcalendar-float {
+  0%,100% { opacity:1; transform:translateY(0) rotate(var(--tilt)); }
+  50% { opacity:1; transform:translateY(-4px) rotate(var(--tilt)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .obcalendar-card { opacity:1; animation:none; transform:rotate(var(--tilt)); }
+}
 .ob .oblanding-slide h1 {
   align-self:center; width:100%; max-width:480px; margin:28px auto 30px;
   font-size:clamp(32px, 8.3vw, 42px); line-height:.98; letter-spacing:-.025em;

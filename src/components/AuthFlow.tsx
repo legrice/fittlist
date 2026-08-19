@@ -27,29 +27,46 @@ const landingSlides = [
   {
     title: "Build your week in fitness.",
     placeholder: "Calendar illustration",
-    image: "/onboarding-calendar.webp",
+    art: "calendar",
   },
   {
     title: "Share your calendar anywhere.",
     placeholder: "Schedule sharing illustration",
-    image: null,
+    art: null,
   },
   {
     title: "Find the best in fitness near you.",
     placeholder: "Discover illustration",
-    image: null,
+    art: null,
   },
   {
     title: "Keep up with your favorites.",
     placeholder: "Favorites illustration",
-    image: null,
+    art: null,
   },
   {
     title: "Make fitness plans together.",
     placeholder: "Group illustration",
-    image: null,
+    art: null,
   },
 ] as const;
+
+const OnboardingCalendarArt = () => (
+  <div className="obcalendar-art" role="img" aria-label="Three classes arranged on a FittList calendar">
+    {([
+      ["6:30 AM", "Morning yoga", "Open Form Studio", "Maya Chen", "MC", "Saved", "saved"],
+      ["5:00 PM", "Kettlebell strength", "Harbor Strength", "Jordan Lee", "JL", "Coaching", "coaching"],
+      ["6:00 PM", "Run club", "Community Run Club", "Alex Rivera", "AR", "Going", "going"],
+    ] as const).map(([time, name, studio, person, initials, tag, tone], index) => (
+      <div className={`obcalendar-card obcalendar-card-${index + 1}`} key={name}>
+        <div className="obcalendar-card-top"><span>{time}</span><span className={`obcalendar-tag ${tone}`}>{tag}</span></div>
+        <strong>{name}</strong>
+        <small>{studio}</small>
+        <div className="obcalendar-person"><span className={`obcalendar-avatar avatar-${index + 1}`}>{initials}</span><span>{person}</span></div>
+      </div>
+    ))}
+  </div>
+);
 
 const GoogleG = () => (
   <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
@@ -319,9 +336,9 @@ export function AuthFlow({
             >
               {landingSlides.map((slide) => (
                 <article className="oblanding-slide" key={slide.title}>
-                  <div className={`oblanding-shot${slide.image ? " has-image" : ""}`}>
-                    {slide.image ? (
-                      <img src={slide.image} alt="A stack of fitness classes being added to a calendar" />
+                  <div className={`oblanding-shot${slide.art ? " has-art" : ""}`}>
+                    {slide.art === "calendar" ? (
+                      <OnboardingCalendarArt />
                     ) : (
                       <><Icon name="image" size={28} /><span>{slide.placeholder}</span></>
                     )}
