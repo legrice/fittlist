@@ -187,7 +187,19 @@ export async function discoverGroups() {
   const me = await currentUser();
   if (!me) return [];
   const db = await getDb();
-  return db.select({ id:schema.groups.id, name:schema.groups.name, slug:schema.groups.slug, description:schema.groups.description, purpose:schema.groups.purpose }).from(schema.groups).where(eq(schema.groups.visibility, "public"));
+  return db
+    .select({
+      id:schema.groups.id,
+      name:schema.groups.name,
+      slug:schema.groups.slug,
+      description:schema.groups.description,
+      purpose:schema.groups.purpose,
+      lat:schema.users.locationLat,
+      lng:schema.users.locationLng,
+    })
+    .from(schema.groups)
+    .innerJoin(schema.users, eq(schema.groups.ownerUserId, schema.users.id))
+    .where(eq(schema.groups.visibility, "public"));
 }
 
 /**
