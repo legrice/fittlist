@@ -26,28 +26,23 @@ type SheetMode = "signup" | "login";
 const landingSlides = [
   {
     title: "Build your week in fitness.",
-    placeholder: "Calendar illustration",
     art: "calendar",
   },
   {
     title: "Share your calendar anywhere.",
-    placeholder: "Schedule sharing illustration",
-    art: null,
+    art: "share",
   },
   {
     title: "Find the best in fitness near you.",
-    placeholder: "Discover illustration",
-    art: null,
+    art: "discover",
   },
   {
     title: "Keep up with your favorites.",
-    placeholder: "Favorites illustration",
-    art: null,
+    art: "favorites",
   },
   {
     title: "Make fitness plans together.",
-    placeholder: "Group illustration",
-    art: null,
+    art: "groups",
   },
 ] as const;
 
@@ -67,6 +62,57 @@ const OnboardingCalendarArt = () => (
     ))}
   </div>
 );
+
+const OnboardingShareArt = () => (
+  <div className="obfeature-art obshare-art" role="img" aria-label="A FittList week ready to share by link or image">
+    <div className="obshare-card obart-float float-a">
+      <div className="obshare-head"><span>This week</span><Icon name="reply" size={19} /></div>
+      <div className="obshare-day"><b>MON</b><span><strong>Morning yoga</strong><small>6:30 AM</small></span></div>
+      <div className="obshare-day"><b>WED</b><span><strong>Kettlebell strength</strong><small>5:00 PM</small></span></div>
+      <div className="obshare-day"><b>SAT</b><span><strong>Run club</strong><small>9:00 AM</small></span></div>
+    </div>
+    <div className="obshare-actions obart-float float-c"><span><Icon name="link" size={17} />Copy link</span><span><Icon name="image" size={17} />Share image</span></div>
+  </div>
+);
+
+const OnboardingDiscoverArt = () => (
+  <div className="obfeature-art obdiscover-art" role="img" aria-label="Classes, people, studios, and groups near you in Discover">
+    <div className="obdiscover-search obart-float float-b"><Icon name="search" size={19} /><span>Find fitness near you</span></div>
+    <div className="obdiscover-grid">
+      {([['calendar_month','Classes','Today'],['person','People','Nearby'],['fitness_center','Studios','12 close by'],['groups','Groups','Join in']] as const).map(([icon,label,detail],index)=><div className={`obdiscover-tile tile-${index+1} obart-float float-${index%2?'b':'a'}`} key={label}><span><Icon name={icon} size={20}/></span><strong>{label}</strong><small>{detail}</small></div>)}
+    </div>
+  </div>
+);
+
+const OnboardingFavoritesArt = () => (
+  <div className="obfeature-art obfavorites-art" role="img" aria-label="Favorite people and their active calendars">
+    <div className="obfavorites-rail">
+      {([['EC','Erin',''],['JT','Joshua','Coach'],['JW','Julia','']] as const).map(([initials,name,tag],index)=><div className={`obfavorite-person obart-float float-${index===1?'c':'a'}`} key={name}><span className={`obfavorite-face face-${index+1}`}>{initials}</span><strong>{name}</strong>{tag&&<small>{tag}</small>}</div>)}
+    </div>
+    <div className="obfavorite-class obart-float float-b"><span><b>6:00 PM</b><strong>HYROX</strong><small>Ironbound Performance</small></span><Icon name="bookmark" size={20}/></div>
+  </div>
+);
+
+const OnboardingGroupsArt = () => (
+  <div className="obfeature-art obgroups-art" role="img" aria-label="A FittList group planning classes together">
+    <div className="obgroup-profile obart-float float-a">
+      <div className="obgroup-cover"><span>RC</span></div>
+      <strong>Riverside Run Club</strong>
+      <small>Weekly miles, together.</small>
+      <div className="obgroup-tabs"><b>Schedule</b><span>Updates</span><span>Members</span></div>
+    </div>
+    <div className="obgroup-class obart-float float-c"><span><b>Saturday · 9:00 AM</b><strong>Waterfront 5K</strong></span><span className="obgroup-members"><i>AL</i><i>MK</i><i>+8</i></span></div>
+  </div>
+);
+
+const OnboardingArt = ({ art }: { art: typeof landingSlides[number]["art"] }) => {
+  if (art === "calendar") return <OnboardingCalendarArt />;
+  if (art === "share") return <OnboardingShareArt />;
+  if (art === "discover") return <OnboardingDiscoverArt />;
+  if (art === "favorites") return <OnboardingFavoritesArt />;
+  if (art === "groups") return <OnboardingGroupsArt />;
+  return null;
+};
 
 const GoogleG = () => (
   <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
@@ -336,12 +382,8 @@ export function AuthFlow({
             >
               {landingSlides.map((slide) => (
                 <article className="oblanding-slide" key={slide.title}>
-                  <div className={`oblanding-shot${slide.art ? " has-art" : ""}`}>
-                    {slide.art === "calendar" ? (
-                      <OnboardingCalendarArt />
-                    ) : (
-                      <><Icon name="image" size={28} /><span>{slide.placeholder}</span></>
-                    )}
+                  <div className="oblanding-shot has-art">
+                    <OnboardingArt art={slide.art} />
                   </div>
                   <h1>{slide.title}</h1>
                 </article>
