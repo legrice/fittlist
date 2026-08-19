@@ -497,21 +497,27 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obgroup-members i { width:27px; height:27px; margin-left:-7px; display:grid; place-items:center; border:2px solid #fff; border-radius:50%; background:#42646b; color:#fff; font-size:7px; font-style:normal; font-weight:700; }
 .obgroup-members i:nth-child(2) { background:#8a5d70; }
 .obgroup-members i:nth-child(3) { background:var(--color-lime); color:var(--color-black); }
-.obmessages-art { display:flex; align-items:center; justify-content:center; }
-.obmessages-panel { width:92%; padding:17px; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.06); }
-.obmessages-head { padding:0 2px 12px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--color-border); }
-.obmessages-head strong { font-size:20px; }
-.obmessages-head span { padding:4px 8px; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font-size:9px; font-weight:700; }
-.obmessage-row { padding:12px 2px; display:grid; grid-template-columns:38px minmax(0,1fr) 24px; align-items:center; gap:10px; text-align:left; border-bottom:1px solid var(--color-border); }
-.obmessage-row:last-child { border-bottom:0; padding-bottom:2px; }
+.obmessages-art { position:relative; min-height:345px; }
+.obmessages-app { position:absolute; z-index:4; top:108px; left:calc(50% - 42px); width:84px; height:84px; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 14px 30px rgba(0,0,0,.09); }
+.obmessages-app>span { position:absolute; top:-10px; right:-18px; min-width:47px; height:25px; padding:0 7px; display:grid; place-items:center; border:3px solid var(--color-white); border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font-size:9px; font-weight:700; }
+.obmessage-card { position:absolute; z-index:2; width:70%; padding:10px 11px; display:grid; grid-template-columns:31px minmax(0,1fr) 22px; align-items:center; gap:8px; border:1px solid var(--color-border); border-radius:17px; background:var(--color-white); box-shadow:0 8px 20px rgba(0,0,0,.055); text-align:left; }
+.obmessage-card-1 { top:12px; left:3%; }
+.obmessage-card-2 { top:62px; right:1%; }
+.obmessage-card-3 { z-index:3; top:198px; left:4%; }
+.obmessage-card-4 { top:247px; right:2%; }
+.obmessage-card-5 { top:296px; left:12%; }
 .obmessage-avatar { width:38px; height:38px; display:grid; place-items:center; border-radius:50%; background:#3c6c68; color:#fff; font-size:9px; font-weight:700; }
+.obmessage-card .obmessage-avatar { width:31px; height:31px; font-size:8px; }
 .obmessage-avatar.avatar-2 { background:#76556f; }
 .obmessage-avatar.avatar-3 { background:#42617c; }
 .obmessage-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
 .obmessage-copy strong,.obmessage-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.obmessage-copy strong { font-size:13px; }
-.obmessage-copy small { color:var(--color-text-secondary); font-size:11px; }
-.obmessage-row>b { width:22px; height:22px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime); color:var(--color-black); font-size:8px; }
+.obmessage-copy strong { font-size:11px; }
+.obmessage-copy small { color:var(--color-text-secondary); font-size:9px; }
+.obmessage-card>b { width:22px; height:22px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime); color:var(--color-black); font-size:7px; }
+.obmessages-more { position:absolute; z-index:5; right:3%; bottom:-7px; padding:8px 11px; display:flex; align-items:center; gap:6px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); box-shadow:0 7px 16px rgba(0,0,0,.05); }
+.obmessages-more span { font-size:13px; font-weight:700; letter-spacing:1px; }
+.obmessages-more small { color:var(--color-text-secondary); font-size:9px; font-weight:700; }
 @media (prefers-reduced-motion:reduce) { .oblanding-slide.has-entered .obart-float { opacity:1; animation:none; } }
 .ob .oblanding-slide h1 {
   align-self:center; width:100%; max-width:480px; margin:28px auto 30px;

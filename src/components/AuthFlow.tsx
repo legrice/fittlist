@@ -41,7 +41,7 @@ const landingSlides = [
     art: "groups",
   },
   {
-      title: "Even Jordan",
+    title: "…even Jordan",
     art: "messages",
   },
 ] as const;
@@ -98,20 +98,27 @@ const OnboardingGroupsArt = () => (
 );
 
 const OnboardingMessagesArt = () => (
-  <div className="obfeature-art obmessages-art" role="img" aria-label="Several unread messages about group fitness plans">
-    <div className="obmessages-panel obart-float float-a">
-      <div className="obmessages-head"><strong>Messages</strong><span>42 unread</span></div>
-      {([
-        ["RC", "Saturday Run Crew", "Are we still meeting at nine?", "12"],
-        ["SF", "Strength Friends", "Who booked Thursday’s class?", "6"],
-        ["J", "Jordan", "Wait, which workout is this?", "24"],
-      ] as const).map(([initials, group, message, count], index) => (
-        <div className={`obmessage-row obart-float float-${index === 1 ? "b" : "c"}`} key={group}>
-          <span className={`obmessage-avatar avatar-${index + 1}`}>{initials}</span>
-          <span className="obmessage-copy"><strong>{group}</strong><small>{message}</small></span>
-          <b>{count}</b>
-        </div>
-      ))}
+  <div className="obfeature-art obmessages-art" role="img" aria-label="A Messages app with 1,023 unread group fitness messages scattered around it">
+    <div className="obmessages-app obart-float float-a">
+      <Icon name="forum" size={42} />
+      <span>1,023</span>
+    </div>
+    {([
+      ["RC", "Saturday Run Crew", "Are we still meeting at nine?", "12"],
+      ["SF", "Strength Friends", "Who booked Thursday’s class?", "46"],
+      ["J", "Jordan", "Wait, which workout is this?", "381"],
+      ["YC", "Yoga crew", "Was that today or tomorrow?", "87"],
+      ["5K", "Waterfront 5K", "Meet at the usual spot?", "19"],
+    ] as const).map(([initials, group, message, count], index) => (
+      <div className={`obmessage-card obmessage-card-${index + 1} obart-float float-${index % 3 === 1 ? "b" : "c"}`} key={group}>
+        <span className={`obmessage-avatar avatar-${(index % 3) + 1}`}>{initials}</span>
+        <span className="obmessage-copy"><strong>{group}</strong><small>{message}</small></span>
+        <b>{count}</b>
+      </div>
+    ))}
+    <div className="obmessages-more obart-float float-b">
+      <span>•••</span>
+      <small>and 478 more</small>
     </div>
   </div>
 );
