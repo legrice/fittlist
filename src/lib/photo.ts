@@ -27,7 +27,7 @@ const DATA_URL_LIMIT = 2_200_000;
 const THUMB_EDGE = 480;
 const THUMB_QUALITY = 0.82;
 
-function scaleTo(img: HTMLImageElement, maxEdge: number, quality: number): string {
+function scaleTo(img: HTMLImageElement, maxEdge: number, quality: number, dataUrlLimit = DATA_URL_LIMIT): string {
   let { width, height } = img;
   if (width > height && width > maxEdge) {
     height = (height * maxEdge) / width;
@@ -47,7 +47,7 @@ function scaleTo(img: HTMLImageElement, maxEdge: number, quality: number): strin
   // down first; only reduce pixels if an unusually noisy image still needs it.
   let result = canvas.toDataURL("image/jpeg", quality);
   for (const nextQuality of [0.8, 0.74, 0.68, 0.62]) {
-    if (result.length <= DATA_URL_LIMIT) return result;
+    if (result.length <= dataUrlLimit) return result;
     result = canvas.toDataURL("image/jpeg", nextQuality);
   }
   // One short edge used to stop this loop even while a panoramic or highly
@@ -55,7 +55,7 @@ function scaleTo(img: HTMLImageElement, maxEdge: number, quality: number): strin
   // request escape the picker and Next replaced the page with a digest error
   // before the action could answer. Keep shrinking the long edge until the
   // payload actually satisfies the advertised ceiling.
-  while (result.length > DATA_URL_LIMIT && Math.max(canvas.width, canvas.height) > 640) {
+  while (result.length > dataUrlLimit && Math.max(canvas.width, canvas.height) > 640) {
     const copy = document.createElement("canvas");
     copy.width = Math.round(canvas.width * 0.85);
     copy.height = Math.round(canvas.height * 0.85);
@@ -101,6 +101,22 @@ export function readPhoto(file: File, onDone: (dataUrl: string) => void, onError
   reader.onload = () => {
     const img = new Image();
     img.onload = () => onDone(scaleTo(img, MAX_EDGE, QUALITY));
+    img.onerror = () => onError?.();
+    img.src = reader.result as string;
+  };
+  reader.onerror = () => onError?.();
+  reader.readAsDataURL(file);
+}
+
+/** Group covers do not need the much larger source used by full profile
+ * heroes. Keeping this request below 700KB leaves ample room in the Server
+ * Action envelope on every deployment path, while 1600px is still crisp on
+ * a high-density phone. */
+export function readGroupPhoto(file: File, onDone: (dataUrl: string) => void, onError?: () => void): void {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => onDone(scaleTo(img, 1600, 0.82, 700_000));
     img.onerror = () => onError?.();
     img.src = reader.result as string;
   };
