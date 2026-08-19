@@ -4104,7 +4104,7 @@ select.editinput.placekind-select {
    rather than a segmented control, because "Hidden" needs a sentence and a
    three-up seg has room for a word. Saves on the tap; there's nothing to
    compose, so a Save button would only be a second chance to forget. */
-.availpick { background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: var(--soft-shadow); }
+.availpick { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: var(--soft-shadow); }
 .availopt {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
   padding: 15px 16px; background: var(--card); color: var(--ink);
@@ -7301,7 +7301,7 @@ select.editinput.placekind-select {
 .savedsection-places .youfav small { font-size: 14px; }
 .saved-tabs { margin-top:22px; padding:4px; display:grid; grid-template-columns:1fr 1fr; gap:4px; border-radius:var(--radius-pill); background:var(--color-surface-muted); }
 .saved-tabs button { min-height:44px; padding:0 16px; border:0; border-radius:var(--radius-pill); background:transparent; color:var(--muted); font:inherit; font-size:15px; font-weight:700; }
-.saved-tabs button.on { background:var(--card); color:var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.08); }
+.saved-tabs button.on { background:var(--card); border:1px solid var(--line); color:var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.08); }
 .saved-block + .saved-block, .saved-list + .saved-list { margin-top:34px; }
 .saved-block > h2, .saved-block-head h2 { margin:0; font-size:25px; letter-spacing:-.025em; }
 .saved-block-head { margin-bottom:14px; display:flex; align-items:flex-end; justify-content:space-between; gap:18px; }
@@ -8134,13 +8134,13 @@ select.editinput.placekind-select {
 .catpills::-webkit-scrollbar { display: none; }
 .catpill {
   flex-shrink: 0; height: 36px; padding: 0 15px; border-radius: 999px;
-  border: none; background: var(--card); color: var(--ink); cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13.5px;
 }
-.catpill.on { background: var(--ink); color: var(--paper); }
+.catpill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .calpills { padding: 2px 18px 10px; }
-/* Unselected is white with no outline, by Matt's call. */
-.calpills .catpill { background: var(--card); border: none; }
+/* White controls keep a quiet edge against the light-gray app ground. */
+.calpills .catpill { background: var(--card); border: 1px solid var(--line); }
 /* The hairline between the two filter axes on Discover's rail: what the
    class is, then when in the day it runs. */
 .catpill-div { flex-shrink: 0; width: 1px; height: 22px; margin: 7px 3px; background: var(--div); }
@@ -8178,12 +8178,12 @@ select.editinput.placekind-select {
 .upcoming-listregion { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 .daytab {
   flex: 0 0 auto; min-height: 34px; padding: 0 14px;
-  border: 1px solid transparent; border-radius: 999px;
+  border: 1px solid var(--line); border-radius: 999px;
   background: var(--card); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 13.5px; font-weight: 600; color: var(--ol); white-space: nowrap;
 }
-.daytab.on { background: var(--si); color: var(--color-black); }
+.daytab.on { background: var(--si); border-color: var(--si); color: var(--color-black); }
 /* Why Today isn't selected, said once, in the quiet gray a notice wears. */
 .daynote {
   text-align: center; font-size: 13.5px; color: var(--ol);
@@ -8248,7 +8248,7 @@ select.editinput.placekind-select {
 .upstack .uprail-card { width: 100%; }
 .uprail-go {
   display: flex; align-items: center; gap: 12px; width: 100%;
-  background: var(--card); border: 0; border-radius: 16px; padding: 12px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px;
   text-align: left; cursor: pointer; font-family: inherit;
 }
 .uprail-date {
@@ -8928,14 +8928,12 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shseg-pill { flex: 0 0 auto; white-space: nowrap; }
 .shseg-pill {
-  /* White with no stroke, by Matt's call: on the hub's gray the fill is
-     the edge, the same treatment the class boxes wear. */
   padding: 11px 18px; border-radius: 999px;
-  border: none; background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 15.5px; font-weight: 600; cursor: pointer;
 }
-.shseg-pill.on { background: var(--si); color: var(--color-black); }
+.shseg-pill.on { background: var(--si); border-color: var(--si); color: var(--color-black); }
 /* The rail under the colours: Dates, Classes, Message, each a small
    labelled door to its sheet. What the picture covers, what's on it,
    what it says. It scrolls rather than splitting the width three ways:
@@ -8950,7 +8948,7 @@ a.clspeek-by:active { opacity: .6; }
 .shctrl {
   flex: 0 0 auto; min-width: 128px; max-width: 240px;
   display: flex; flex-direction: column; gap: 2px;
-  padding: 12px 14px; border-radius: 16px; border: none;
+  padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line);
   background: var(--card); color: var(--ink); text-align: left; cursor: pointer;
 }
 .shctrl:active { background: var(--cl); }
@@ -8960,7 +8958,7 @@ a.clspeek-by:active { opacity: .6; }
    wins the cascade and the chip goes white. */
 .shctrl.shctrl-add {
   flex-direction: row; align-items: center; min-width: 0;
-  background: var(--si); color: var(--color-black);
+  background: var(--si); border-color: var(--si); color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 15px;
 }
@@ -9028,7 +9026,7 @@ a.clspeek-by:active { opacity: .6; }
 /* The QR as the card the concept drew: whose it is, the ask, the code on
    white, the address. It reuses the frame the QR sheet already had. */
 .qrcard {
-  margin-top: 20px; padding: 26px 22px 18px; border-radius: 24px;
+  margin-top: 20px; padding: 26px 22px 18px; border: 1px solid var(--line); border-radius: 24px;
   background: var(--card); text-align: center;
 }
 .qrcard-nm {
@@ -9111,14 +9109,12 @@ a.clspeek-by:active { opacity: .6; }
 .shclass-tag.saved { background: var(--ink); color: var(--card); }
 .shdays { display: flex; gap: 8px; margin: 6px 0 4px; }
 .shday {
-  /* Unselected is white with no outline, by Matt's call: the orange fill
-     is what marks the answer. */
-  flex: 1; height: 42px; border-radius: 12px; border: none;
+  flex: 1; height: 42px; border-radius: 12px; border: 1px solid var(--line);
   background: var(--card); color: var(--ink); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 15.5px; font-weight: 600;
 }
-.shday.on { background: var(--si); color: var(--color-black); }
+.shday.on { background: var(--si); border-color: var(--si); color: var(--color-black); }
 /* The Today preset in the Dates sheet: the shday's own drawing at its
    natural width, above the dropdown it saves a trip through. */
 .shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }
@@ -9471,7 +9467,7 @@ a.clspeek-by:active { opacity: .6; }
 .calfilter {
   position: relative; display: inline-flex; align-items: center;
   flex: 1; width: auto; min-width: 0;
-  min-height: 40px; border-radius: 999px; background: var(--card); color: var(--ink);
+  min-height: 40px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--ink);
   box-shadow: none;
 }
 [data-mode="dark"] .calfilter { box-shadow: none; }
