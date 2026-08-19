@@ -100,9 +100,9 @@ const OnboardingGroupsArt = () => (
       <div className="obgroup-cover"><span>RC</span></div>
       <strong>Neighborhood Run Club</strong>
       <small>Weekly miles, together.</small>
-      <div className="obgroup-tabs"><b>Schedule</b><span>Updates</span><span>Members</span></div>
+      <div className="obgroup-tabs"><b>Upcoming</b><span>Updates</span><span>Members</span></div>
+      <div className="obgroup-class"><span><b>Saturday · 9:00 AM</b><strong>Waterfront 5K</strong></span><span className="obgroup-members"><i>AL</i><i>MK</i><i>+8</i></span></div>
     </div>
-    <div className="obgroup-class obart-float float-c"><span><b>Saturday · 9:00 AM</b><strong>Waterfront 5K</strong></span><span className="obgroup-members"><i>AL</i><i>MK</i><i>+8</i></span></div>
   </div>
 );
 
