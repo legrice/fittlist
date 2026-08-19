@@ -5,7 +5,6 @@ import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { brandIcon } from "@/lib/brand";
-import { STORY_THEMES } from "@/lib/format";
 
 // The link preview card: 1200x630, the shape iMessage, Slack, WhatsApp and
 // every other unfurler expects.
@@ -43,8 +42,7 @@ export async function GET(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  const t = STORY_THEMES.paper;
-  const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon(t.accent)).toString("base64")}`;
+  const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon("#000000")).toString("base64")}`;
   const colour = avatarColor({ id: user.id, avatarColor: user.avatarColor });
   const initial = (user.name.trim().charAt(0) || "?").toUpperCase();
 
@@ -66,8 +64,8 @@ export async function GET(
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#faf8f2",
-          color: t.fg,
+          background: "#9FE870",
+          color: "#000000",
           padding: "76px 84px",
           fontFamily: "Delight",
         }}
@@ -120,7 +118,7 @@ export async function GET(
             >
               {user.name}
             </span>
-            <span style={{ fontSize: 40, fontWeight: 600, color: t.muted, marginTop: 18 }}>
+            <span style={{ fontSize: 40, fontWeight: 600, color: "#000000", marginTop: 18 }}>
               {line || fallback}
             </span>
           </div>
@@ -135,7 +133,7 @@ export async function GET(
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
             {isCoach && (
-              <span style={{ fontSize: 34, fontWeight: 600, color: t.faint, marginBottom: 10 }}>
+              <span style={{ fontSize: 34, fontWeight: 600, color: "#000000", marginBottom: 10 }}>
                 Every studio, one schedule
               </span>
             )}
