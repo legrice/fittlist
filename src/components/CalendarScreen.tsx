@@ -458,8 +458,10 @@ export function CalendarScreen({
       {bare && selectedFavorites.length===0 ? (
         <WeekEmpty
           first
-          title="Your week starts here"
-          body="Add what you’re doing this week."
+          title="This is your calendar"
+          body="You can add classes you’re taking or teaching, or even your own workout."
+          cta="Add your first class"
+          onCta={openAdd}
         />
       ) : view === "month" ? (
         <MonthScroll
@@ -542,11 +544,11 @@ export function CalendarScreen({
         />
       )}
 
-      <div className="calendar-bottom-actions" aria-label="Schedule actions">
-        <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
-          <Icon name="add" size={28} />
-        </button>
-      </div>
+      {!bare && <div className="calendar-bottom-actions" aria-label="Schedule actions">
+          <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
+            <Icon name="add" size={28} />
+          </button>
+        </div>}
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
