@@ -497,6 +497,21 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obgroup-members i { width:27px; height:27px; margin-left:-7px; display:grid; place-items:center; border:2px solid #fff; border-radius:50%; background:#42646b; color:#fff; font-size:7px; font-style:normal; font-weight:700; }
 .obgroup-members i:nth-child(2) { background:#8a5d70; }
 .obgroup-members i:nth-child(3) { background:var(--color-lime); color:var(--color-black); }
+.obmessages-art { display:flex; align-items:center; justify-content:center; }
+.obmessages-panel { width:92%; padding:17px; border:1px solid var(--color-border); border-radius:24px; background:var(--color-white); box-shadow:0 12px 28px rgba(0,0,0,.06); }
+.obmessages-head { padding:0 2px 12px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--color-border); }
+.obmessages-head strong { font-size:20px; }
+.obmessages-head span { padding:4px 8px; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font-size:9px; font-weight:700; }
+.obmessage-row { padding:12px 2px; display:grid; grid-template-columns:38px minmax(0,1fr) 24px; align-items:center; gap:10px; text-align:left; border-bottom:1px solid var(--color-border); }
+.obmessage-row:last-child { border-bottom:0; padding-bottom:2px; }
+.obmessage-avatar { width:38px; height:38px; display:grid; place-items:center; border-radius:50%; background:#3c6c68; color:#fff; font-size:9px; font-weight:700; }
+.obmessage-avatar.avatar-2 { background:#76556f; }
+.obmessage-avatar.avatar-3 { background:#42617c; }
+.obmessage-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.obmessage-copy strong,.obmessage-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.obmessage-copy strong { font-size:13px; }
+.obmessage-copy small { color:var(--color-text-secondary); font-size:11px; }
+.obmessage-row>b { width:22px; height:22px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime); color:var(--color-black); font-size:8px; }
 @media (prefers-reduced-motion:reduce) { .oblanding-slide.has-entered .obart-float { opacity:1; animation:none; } }
 .ob .oblanding-slide h1 {
   align-self:center; width:100%; max-width:480px; margin:28px auto 30px;

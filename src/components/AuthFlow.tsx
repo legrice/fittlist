@@ -37,8 +37,12 @@ const landingSlides = [
     art: "favorites",
   },
   {
-    title: "Keep everyone on the same schedule.",
+    title: "Keep everyone on the same schedule…",
     art: "groups",
+  },
+  {
+      title: "Even Jordan",
+    art: "messages",
   },
 ] as const;
 
@@ -93,11 +97,31 @@ const OnboardingGroupsArt = () => (
   </div>
 );
 
+const OnboardingMessagesArt = () => (
+  <div className="obfeature-art obmessages-art" role="img" aria-label="Several unread messages about group fitness plans">
+    <div className="obmessages-panel obart-float float-a">
+      <div className="obmessages-head"><strong>Messages</strong><span>42 unread</span></div>
+      {([
+        ["RC", "Saturday Run Crew", "Are we still meeting at nine?", "12"],
+        ["SF", "Strength Friends", "Who booked Thursday’s class?", "6"],
+        ["J", "Jordan", "Wait, which workout is this?", "24"],
+      ] as const).map(([initials, group, message, count], index) => (
+        <div className={`obmessage-row obart-float float-${index === 1 ? "b" : "c"}`} key={group}>
+          <span className={`obmessage-avatar avatar-${index + 1}`}>{initials}</span>
+          <span className="obmessage-copy"><strong>{group}</strong><small>{message}</small></span>
+          <b>{count}</b>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const OnboardingArt = ({ art }: { art: typeof landingSlides[number]["art"] }) => {
   if (art === "calendar") return <OnboardingCalendarArt />;
   if (art === "share") return <OnboardingShareArt />;
   if (art === "favorites") return <OnboardingFavoritesArt />;
   if (art === "groups") return <OnboardingGroupsArt />;
+  if (art === "messages") return <OnboardingMessagesArt />;
   return null;
 };
 
