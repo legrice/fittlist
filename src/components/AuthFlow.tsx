@@ -86,13 +86,16 @@ const OnboardingFavoritesArt = () => (
 );
 
 const OnboardingGroupsArt = () => (
-  <div className="obfeature-art obgroups-art" role="img" aria-label="A FittList group planning classes together">
+  <div className="obfeature-art obgroups-art" role="img" aria-label="The Foldy Friends group planning upcoming yoga classes together">
     <div className="obgroup-profile obart-float float-a">
-      <div className="obgroup-cover"><span>RC</span></div>
-      <strong>Neighborhood Run Club</strong>
-      <small>Weekly miles, together.</small>
+      <div className="obgroup-cover"><span>FF</span></div>
+      <strong>Foldy Friends</strong>
+      <small>Yoga?? I barely knew ‘er!</small>
       <div className="obgroup-tabs"><b>Upcoming</b><span>Updates</span><span>Members</span></div>
-      <div className="obgroup-class"><span><b>Saturday · 9:00 AM</b><strong>Waterfront 5K</strong></span><span className="obgroup-members"><i>AL</i><i>MK</i><i>+8</i></span></div>
+      <div className="obgroup-classes">
+        <div className="obgroup-class"><span><b>Tomorrow · 10:00 AM</b><strong>Morning Flow</strong></span><span className="obgroup-members"><i>YC</i><i>J</i><i>+2</i></span></div>
+        <div className="obgroup-class"><span><b>Sunday · 4:00 PM</b><strong>Hot Yoga</strong></span><span className="obgroup-members"><i>FF</i><i>+3</i></span></div>
+      </div>
     </div>
   </div>
 );
