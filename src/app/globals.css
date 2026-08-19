@@ -420,6 +420,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .oblanding-footer { flex:0 0 auto; padding:0 30px; background:var(--ground); }
 .oblanding-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.oblanding-passkey { margin-top:12px; min-height:58px; background:var(--color-surface-muted); }
 .ob .oblanding-actions .btn {
   width:100%; min-height:58px; border-radius:var(--radius-pill); box-shadow:none;
   font-size:18px; font-weight:700;

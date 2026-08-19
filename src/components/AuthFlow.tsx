@@ -18,7 +18,7 @@ import { slug } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import Link from "next/link";
-import { hasLocalPasskeyHistory, rememberLocalPasskey } from "@/lib/passkey-device";
+import { rememberLocalPasskey } from "@/lib/passkey-device";
 
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
@@ -122,7 +122,7 @@ export function AuthFlow({
   );
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
-  const [knownPasskey, setKnownPasskey] = useState(false);
+  const [passkeyLabel, setPasskeyLabel] = useState("Log in with a passkey");
   // "Request an invite" modal (invite-only beta).
   const [requestOpen, setRequestOpen] = useState(false);
   const [reqName, setReqName] = useState("");
@@ -135,7 +135,9 @@ export function AuthFlow({
 
   useEffect(() => {
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
-    setKnownPasskey(hasLocalPasskeyHistory());
+    const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (appleMobile) setPasskeyLabel("Log in with Face ID");
   }, []);
   // Arriving from a coach's page with a door already chosen: "?join=login"
   // opens the sign-in sheet, "?join=signup" the sign-up one. Tapping Sign in on
@@ -217,7 +219,6 @@ export function AuthFlow({
           const finish = await finishPasskeyRegistration(reg, "Passkey");
           if (finish.ok) {
             rememberLocalPasskey();
-            setKnownPasskey(true);
           }
         }
       } catch {
@@ -237,7 +238,6 @@ export function AuthFlow({
         const res = await finishPasskeyLogin(response);
         if (res.ok) {
           rememberLocalPasskey();
-          setKnownPasskey(true);
           proceed(!!res.needsProfile, !!res.fan);
         }
         else setError(res.error ?? "That didn't work.");
@@ -327,6 +327,11 @@ export function AuthFlow({
                   Log in
                 </button>
               </div>
+              {passkeyable && (
+                <button className="obalt oblanding-passkey" onClick={usePasskeyLogin} disabled={pending}>
+                  <Icon name="fingerprint" size={21} /> {pending ? "One sec…" : passkeyLabel}
+                </button>
+              )}
               {(providers.google || providers.apple) && (
                 <div className="obalts" style={{ marginTop: 16 }}>
                   {providers.google && (
@@ -485,9 +490,9 @@ export function AuthFlow({
               <button className="obalt" onClick={() => sendLink(false)} disabled={pending}>
                 <Icon name="auto_awesome" size={21} /> Email me a magic link
               </button>
-              {sheet === "login" && passkeyable && knownPasskey && (
+              {sheet === "login" && passkeyable && (
                 <button className="obalt" onClick={usePasskeyLogin} disabled={pending}>
-                  <Icon name="fingerprint" size={21} /> Use Face ID or passkey
+                  <Icon name="fingerprint" size={21} /> {passkeyLabel}
                 </button>
               )}
             </div>
