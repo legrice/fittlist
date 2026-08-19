@@ -5,6 +5,7 @@ import { Icon } from "@/components/Icon";
 export function AddWeekChoices({
   canCoach,
   disabled = false,
+  coachDetail = "I’m the coach",
   onCoach,
   onAttend,
   onPersonal,
@@ -13,6 +14,7 @@ export function AddWeekChoices({
 }: {
   canCoach: boolean;
   disabled?: boolean;
+  coachDetail?: string;
   onCoach?: () => void;
   onAttend?: () => void;
   onPersonal?: () => void;
@@ -24,7 +26,7 @@ export function AddWeekChoices({
       ? [{
           kind: "coaching",
           title: "Teaching a class",
-          detail: "I’m the coach",
+          detail: coachDetail,
           onClick: onCoach,
         }]
       : []),

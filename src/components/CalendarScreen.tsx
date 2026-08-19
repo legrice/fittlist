@@ -27,6 +27,7 @@ import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from
 import type { ClassDto, StudioDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
+import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
 import { loadCalendarComposerData, loadCalendarShareData, loadFavoriteCalendars, type CalendarComposerData, type FavoriteCalendarData } from "@/app/actions/calendar-data";
 
@@ -100,6 +101,7 @@ export function CalendarScreen({
     personalId?: string;
   } | null>(null);
   const [, startRemove] = useTransition();
+  const [enablingCoach, startEnablingCoach] = useTransition();
   // The overlay header's words: the day under it on the list, the month in
   // view on the grid. The grid's label is set from the first render (this
   // month is in view at rest), so the grid gates the bar on scroll depth
@@ -391,6 +393,20 @@ export function CalendarScreen({
   };
   const continueAdd = () => {
     if (!addChoiceKind) return;
+    if (addChoiceKind === "coaching" && member && bare) {
+      startEnablingCoach(async () => {
+        const result = await setTeaching(true);
+        if (!result.ok) {
+          toast(result.error ?? "Couldn’t turn on coaching");
+          return;
+        }
+        setAddChoice(false);
+        setPersonalAdd(false);
+        setPersonalWorkout(false);
+        setAddOpen(true);
+      });
+      return;
+    }
     setAddChoice(false);
     if (addChoiceKind === "coaching") {
       setPersonalAdd(false);
@@ -558,11 +574,13 @@ export function CalendarScreen({
             <h2 id="addrole-title">Add to your week</h2>
             <p className="lead">What are you doing?</p>
             <AddWeekChoices
-              canCoach={!member}
+              canCoach={!member || bare}
+              coachDetail={member && bare ? "I also coach" : undefined}
+              disabled={enablingCoach}
               selected={addChoiceKind}
               onSelect={setAddChoiceKind}
             />
-            <button type="button" className="addrole-continue" disabled={!addChoiceKind} onClick={continueAdd}>Continue</button>
+            <button type="button" className="addrole-continue" disabled={!addChoiceKind || enablingCoach} onClick={continueAdd}>{enablingCoach ? "Turning on coaching…" : "Continue"}</button>
           </div>
         </div>
       )}
