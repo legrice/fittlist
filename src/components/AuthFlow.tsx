@@ -102,19 +102,9 @@ const OnboardingGroupsArt = () => (
 
 const OnboardingMessagesArt = () => (
   <div className="obfeature-art obmessages-art" role="img" aria-label="A text conversation where Jordan is reminded that the yoga studio is listed in FittList">
-    <div className="obchat-panel obart-float float-a">
-      <div className="obchat-head">
-        <Icon name="chevron_left" size={22} />
-        <span className="obchat-avatar">J</span>
-        <span><strong>Jordan</strong><small>Active now</small></span>
-        <Icon name="info" size={20} />
-      </div>
-      <small className="obchat-time">Today 9:41 AM</small>
-      <div className="obchat-message from-you obart-float float-b"><span>Yo, see you at yoga?</span></div>
-      <div className="obchat-message from-jordan obart-float float-c"><span>Wait, which studio you teaching at again?</span></div>
-      <div className="obchat-message from-you punchline obart-float float-c"><span>bro… it’s in my FittList 😉🥴.</span></div>
-      <div className="obchat-compose"><span>Message</span><Icon name="send" size={18} /></div>
-    </div>
+    <div className="obchat-message from-you obart-float float-a"><span>Yo, see you at yoga?</span></div>
+    <div className="obchat-message from-jordan obart-float float-b"><span>Wait, which studio you teaching at again?</span></div>
+    <div className="obchat-message from-you punchline obart-float float-c"><span>bro… it’s in my FittList 😉🥴.</span></div>
   </div>
 );
 
