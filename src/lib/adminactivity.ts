@@ -2,11 +2,9 @@ import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 
-// The admin's pulse: what happened across the app, derived from the tables
-// that already record it, so nothing new is written and nothing private can
-// leak by construction. Deliberately absent: follows, Going marks, messages,
-// feedback. Those are between people; this list is the public shape of the
-// app changing (accounts, classes, studios, events).
+// The admin's pulse: public app changes plus deliberately coarse product-use
+// events. Product events never carry a target, query, message, note, or other
+// user-entered content.
 
 export type ActivityEntry = { when: Date; icon: string; text: string };
 
@@ -15,12 +13,13 @@ const nameOf = (u: { name: string; email: string } | undefined | null) =>
 
 export async function adminActivity(limit = 100): Promise<ActivityEntry[]> {
   const db = await getDb();
-  const [users, classRows, studios, edits, events] = await Promise.all([
+  const [users, classRows, studios, edits, events, productEvents] = await Promise.all([
     db.select().from(schema.users),
     db.select().from(schema.classes),
     db.select().from(schema.studios),
     db.select().from(schema.studioEdits).orderBy(desc(schema.studioEdits.createdAt)).limit(200),
     db.select().from(schema.events),
+    db.select().from(schema.productActivity).orderBy(desc(schema.productActivity.createdAt)).limit(300),
   ]);
   const userById = new Map(users.map((u) => [u.id, u]));
   const admins = new Set(
@@ -83,6 +82,28 @@ export async function adminActivity(limit = 100): Promise<ActivityEntry[]> {
     });
   }
 
+  const productWords: Record<string, { icon: string; words: string }> = {
+    favorite_person_added: { icon: "favorite", words: "added someone to Favorites" },
+    favorite_person_removed: { icon: "favorite", words: "removed someone from Favorites" },
+    favorite_studio_added: { icon: "place", words: "favorited a studio" },
+    favorite_studio_removed: { icon: "place", words: "removed a studio from Favorites" },
+    favorite_group_added: { icon: "groups", words: "favorited a group" },
+    favorite_group_removed: { icon: "groups", words: "removed a group from Favorites" },
+    class_saved: { icon: "bookmark", words: "saved a class" },
+    class_removed: { icon: "bookmark", words: "removed a saved class" },
+    group_joined: { icon: "groups", words: "joined a group" },
+    share_image_exported: { icon: "image", words: "exported a share image" },
+  };
+  for (const e of productEvents) {
+    const label = productWords[e.kind];
+    if (!label) continue;
+    out.push({
+      when: e.createdAt,
+      icon: label.icon,
+      text: `${nameOf(e.actorUserId ? userById.get(e.actorUserId) : null)} ${label.words}`,
+    });
+  }
+
   return out.sort((a, b) => b.when.getTime() - a.when.getTime()).slice(0, limit);
 }
 
@@ -116,7 +137,7 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 export async function adminActivityFreshSince(seenAt: Date | null): Promise<boolean> {
   const db = await getDb();
   const since = seenAt ?? new Date(0);
-  const [u, c, st, ev] = await Promise.all([
+  const [u, c, st, ev, product] = await Promise.all([
     db
       .select({ id: schema.users.id, email: schema.users.email })
       .from(schema.users)
@@ -128,8 +149,9 @@ export async function adminActivityFreshSince(seenAt: Date | null): Promise<bool
       .limit(1),
     db.select({ id: schema.studios.id }).from(schema.studios).where(gt(schema.studios.createdAt, since)).limit(1),
     db.select({ id: schema.events.id }).from(schema.events).where(gt(schema.events.createdAt, since)).limit(1),
+    db.select({ id: schema.productActivity.id }).from(schema.productActivity).where(gt(schema.productActivity.createdAt, since)).limit(1),
   ]);
   const adminList = adminEmails();
   const freshUser = u.some((x) => !adminList.includes(x.email.toLowerCase()));
-  return freshUser || c.length > 0 || st.length > 0 || ev.length > 0;
+  return freshUser || c.length > 0 || st.length > 0 || ev.length > 0 || product.length > 0;
 }

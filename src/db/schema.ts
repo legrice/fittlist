@@ -833,6 +833,21 @@ export const notifications = pgTable(
   (t) => [index("notifications_user_created").on(t.userId, t.createdAt)],
 );
 
+// First-party, privacy-limited product telemetry for the admin pulse. Rows say
+// which broad feature was used, never what somebody searched, wrote, shared,
+// or who they favorited. Keeping this structured (rather than a freeform JSON
+// bucket) makes accidental collection of private content much harder.
+export const productActivity = pgTable(
+  "product_activity",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorUserId: uuid("actor_user_id").references(() => users.id, { onDelete: "set null" }),
+    kind: text("kind").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("product_activity_created").on(t.createdAt)],
+);
+
 export const pageVisits = pgTable(
   "page_visits",
   {

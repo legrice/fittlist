@@ -7829,10 +7829,25 @@ select.editinput.placekind-select {
   }
   .desktop-share-week:hover { background: var(--color-lime-soft); }
   .desktop-profile-link {
-    min-height: 52px; margin-top: auto; padding: 6px 13px;
+    min-height: 52px; padding: 6px 13px;
     display: flex; align-items: center; gap: 12px;
     border-radius: 14px; color: var(--ink); text-decoration: none;
     font-size: 15px; font-weight: 600;
+  }
+  .desktop-profile-row { margin-top: auto; display: flex; align-items: center; gap: 8px; }
+  .desktop-profile-row .desktop-profile-link { flex: 1; }
+  .desktop-profile-activity {
+    width: 42px; height: 42px; flex: 0 0 42px; position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line); border-radius: 50%; background: var(--paper);
+    color: var(--ink); text-decoration: none;
+  }
+  .desktop-profile-activity:hover { background: var(--color-lime-soft); }
+  .desktop-profile-activity b {
+    min-width: 18px; height: 18px; padding: 0 4px; position: absolute; top: -5px; right: -4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px; background: var(--color-lime); color: var(--ink);
+    font-size: 10px; line-height: 1; font-weight: 700;
   }
   .desktop-profile-link:hover,
   .desktop-profile-link.on { background: var(--cl); }

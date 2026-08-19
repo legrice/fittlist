@@ -6,6 +6,7 @@ import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { putImage } from "@/lib/shareimage";
 import { StoryPreview } from "@/components/StoryPreview";
+import { recordShareImageExport } from "@/app/actions/product-activity";
 
 // The "Share your week" bottom sheet: a story image of the coach's schedule
 // (week or today) in a pickable on-brand theme, saved or shared via the native
@@ -57,6 +58,7 @@ export function ShareWeekSheet({
     if (busy) return;
     setBusy(true);
     if (!(await putImage(storyUrl, storyFileName))) onToast("Couldn't share the image");
+    else void recordShareImageExport();
     setBusy(false);
   };
 

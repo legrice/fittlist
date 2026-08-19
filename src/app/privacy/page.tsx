@@ -56,6 +56,10 @@ const HOLDS: { t: string; s: string }[] = [
     s: "How many times a coach's or a studio's page was opened, as a daily number. Not who opened it.",
   },
   {
+    t: "Product activity",
+    s: "A short first-party record of broad actions, such as saving a class, adding a favorite, joining a group, or exporting a share image. It includes the account and time, but never message contents, searches, private notes, or the person, class, studio, or group involved.",
+  },
+  {
     t: "Connections you make",
     s: "If you connect Google Calendar, the token that lets us write your classes to it, and which events we created. Nothing else in your calendar is read.",
   },
@@ -75,7 +79,7 @@ const SEEN: { t: string; s: string }[] = [
   },
   {
     t: "A follow is private",
-    s: "Nothing public says who you follow. You see your own list, a coach sees their own followers, and that is the whole audience.",
+    s: "Nothing public says who you follow. You see your own list and a coach sees their own followers. An app administrator may see that a favorite was added or removed, but never who was favorited.",
   },
   {
     t: "Your week is open unless you close it",

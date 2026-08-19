@@ -268,6 +268,10 @@ export async function respondToGroupInvitation(slug: string, accept: boolean) {
   });
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
+  if (accept) {
+    const { recordProductActivity } = await import("@/lib/product-activity");
+    await recordProductActivity(userId, "group_joined");
+  }
   return { ok: true } as const;
 }
 
@@ -308,5 +312,7 @@ export async function toggleGroupFavorite(slug: string) {
   else await db.insert(schema.groupFavorites).values({ groupId: group.id, userId });
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
+  const { recordProductActivity } = await import("@/lib/product-activity");
+  await recordProductActivity(userId, existing ? "favorite_group_removed" : "favorite_group_added");
   return { ok: true, selected: !existing } as const;
 }

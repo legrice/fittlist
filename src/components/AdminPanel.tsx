@@ -750,8 +750,8 @@ export function AdminPanel({
               </button>
             </div>
             <p className="lead">
-              What&rsquo;s happened across the app, newest first. Accounts, classes, studios and
-              events only; nothing between people shows here.
+              What&rsquo;s happened across the app, newest first. This includes coarse feature use,
+              but never messages, searches, private notes, or who somebody favorited.
             </p>
             <div className="actlist">
               {activity.map((a, i) => (

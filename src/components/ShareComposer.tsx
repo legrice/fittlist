@@ -9,6 +9,7 @@ import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StoryPreview } from "@/components/StoryPreview";
 import { putImage } from "@/lib/shareimage";
+import { recordShareImageExport } from "@/app/actions/product-activity";
 import { Toast, useToast } from "@/components/Toast";
 
 // The composer: a picture of your week, and the three decisions that make it.
@@ -122,6 +123,7 @@ export function ShareComposer({
     if (busy) return;
     setBusy(true);
     if (!(await putImage(src, fileName))) toast("Couldn't share the image");
+    else void recordShareImageExport();
     setBusy(false);
   };
 

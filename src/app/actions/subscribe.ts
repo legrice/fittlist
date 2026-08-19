@@ -187,6 +187,10 @@ export async function followTrainer(
     }
   }
   followChanged();
+  if (isNew) {
+    const { recordProductActivity } = await import("@/lib/product-activity");
+    await recordProductActivity(userId, "favorite_person_added");
+  }
   return { ok: true };
 }
 
@@ -214,6 +218,8 @@ export async function unfollowTrainer(handle: string): Promise<{ ok: boolean; er
       ),
     );
   followChanged();
+  const { recordProductActivity } = await import("@/lib/product-activity");
+  await recordProductActivity(userId, "favorite_person_removed");
   return { ok: true };
 }
 

@@ -12,6 +12,7 @@ import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
 import { NavBar } from "@/components/NavBar";
 import { currentUser } from "@/lib/current-user";
+import { adminNewActivityCount } from "@/lib/adminactivity";
 
 export const dynamic = "force-dynamic";
 
@@ -37,11 +38,12 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // switch, so awaiting them one by one would stack extra round trips onto every
   // tap of the bar.
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, promptDue, invitesLeft, adminAttention] = await Promise.all([
+  const [unread, promptDue, invitesLeft, adminAttention, adminActivity] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
     feedbackPromptDue(userId),
     invitesBannerCount(),
     isAdmin ? adminAttentionCount() : Promise.resolve(0),
+    isAdmin ? adminNewActivityCount(me.id) : Promise.resolve(0),
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
@@ -70,6 +72,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         messageUnread={unread.messages}
         admin={isAdmin}
         adminAttention={adminAttention}
+        adminActivity={adminActivity}
         person={{
           name: me.name.trim() || me.email.split("@")[0],
           location: me.location,

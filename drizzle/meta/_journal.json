@@ -652,6 +652,13 @@
       "when": 1787053780418,
       "tag": "0092_happy_tarot",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1787144712079,
+      "tag": "0093_medical_alex_power",
+      "breakpoints": true
     }
   ]
 }

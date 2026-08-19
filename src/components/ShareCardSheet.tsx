@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
+import { recordShareImageExport } from "@/app/actions/product-activity";
 import { InAppShare } from "@/components/InAppShare";
 
 // The card sheet: a square Instagram image, pick a style, save or share.
@@ -68,6 +69,7 @@ export function ShareCardSheet({
           const file = new File([await res.blob()], cardFileName, { type: "image/png" });
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({ files: [file] });
+            void recordShareImageExport();
             return;
           }
         }
@@ -76,6 +78,7 @@ export function ShareCardSheet({
       a.href = cardUrl;
       a.download = cardFileName;
       a.click();
+      void recordShareImageExport();
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the image");
     } finally {

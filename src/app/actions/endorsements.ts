@@ -136,5 +136,7 @@ export async function toggleStudioVisit(slug: string) {
     });
   }
   revalidatePath(`/s/${target.slug ?? slug}`);
+  const { recordProductActivity } = await import("@/lib/product-activity");
+  await recordProductActivity(viewerId, existing ? "favorite_studio_removed" : "favorite_studio_added");
   return { ok: true, selected: !existing };
 }

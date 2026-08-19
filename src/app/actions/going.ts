@@ -6,6 +6,7 @@ import { getDb, schema } from "@/db";
 import { isBlocked } from "@/lib/blocks";
 import { occurrenceEnded } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { recordProductActivity } from "@/lib/product-activity";
 
 // Adding a class is a personal note, not a reservation. Nothing here talks to
 // a studio's booking system, and the copy around it must never imply it does.
@@ -60,6 +61,7 @@ export async function setGoing(
         ),
       );
   }
+  await recordProductActivity(userId, on ? "class_saved" : "class_removed");
   revalidatePath("/feed");
   revalidatePath("/app");
   revalidatePath("/calendar");

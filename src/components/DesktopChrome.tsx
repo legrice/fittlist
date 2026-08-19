@@ -29,6 +29,7 @@ export function DesktopChrome({
   messageUnread = 0,
   admin = false,
   adminAttention = 0,
+  adminActivity = 0,
   active,
 }: {
   coach: boolean;
@@ -39,6 +40,7 @@ export function DesktopChrome({
   messageUnread?: number;
   admin?: boolean;
   adminAttention?: number;
+  adminActivity?: number;
   active?: NavTab;
 }) {
   const pathname = usePathname();
@@ -101,19 +103,27 @@ export function DesktopChrome({
           <Icon name="ios_share" size={19} />
           Share your week
         </Link>
-        <Link
-          className={`desktop-profile-link${pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
-          href={profileHref}
-          aria-current={pathname.startsWith(profileHref) ? "page" : undefined}
-        >
-          {person.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={person.photo} alt="" />
-          ) : (
-            <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>
+        <div className="desktop-profile-row">
+          <Link
+            className={`desktop-profile-link${pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
+            href={profileHref}
+            aria-current={pathname.startsWith(profileHref) ? "page" : undefined}
+          >
+            {person.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={person.photo} alt="" />
+            ) : (
+              <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>
+            )}
+            <span>Profile</span>
+          </Link>
+          {admin && (
+            <Link className="desktop-profile-activity" href="/admin?activity=1" aria-label={`${adminActivity} new product activity ${adminActivity === 1 ? "event" : "events"}`}>
+              <Icon name="activity" size={19} />
+              {adminActivity > 0 && <b>{adminActivity > 99 ? "99+" : adminActivity}</b>}
+            </Link>
           )}
-          <span>Profile</span>
-        </Link>
+        </div>
       </aside>
 
       <aside className="desktop-right" aria-label="Your profile">
