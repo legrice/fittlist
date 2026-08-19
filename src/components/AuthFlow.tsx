@@ -158,6 +158,7 @@ export function AuthFlow({
   );
   const [sheet, setSheet] = useState<SheetMode | null>(null);
   const [landingSlide, setLandingSlide] = useState(0);
+  const [enteredSlides, setEnteredSlides] = useState<Set<number>>(() => new Set([0]));
   const landingTrackRef = useRef<HTMLDivElement>(null);
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
   const [role, setRole] = useState<"coach" | "fan">(claimAs);
@@ -212,6 +213,14 @@ export function AuthFlow({
   useEffect(() => {
     if (stage === "claim") nameRef.current?.focus();
   }, [stage]);
+  useEffect(() => {
+    setEnteredSlides((current) => {
+      if (current.has(landingSlide)) return current;
+      const next = new Set(current);
+      next.add(landingSlide);
+      return next;
+    });
+  }, [landingSlide]);
 
   const pendingFan = useRef(claimAs === "fan");
   // Everyone claims a name and a link, then lands on the same calendar.
@@ -367,8 +376,8 @@ export function AuthFlow({
                 setLandingSlide(Math.max(0, Math.min(landingSlides.length - 1, Math.round(track.scrollLeft / track.clientWidth))));
               }}
             >
-              {landingSlides.map((slide) => (
-                <article className="oblanding-slide" key={slide.title}>
+              {landingSlides.map((slide, index) => (
+                <article className={`oblanding-slide${enteredSlides.has(index) ? " has-entered" : ""}`} key={slide.title}>
                   <div className="oblanding-shot has-art">
                     <OnboardingArt art={slide.art} />
                   </div>
