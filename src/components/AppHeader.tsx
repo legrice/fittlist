@@ -102,6 +102,9 @@ export function AppHeader({
             {adminActivity > 0 && <b>{adminActivity > 99 ? "99+" : adminActivity}</b>}
           </Link>
         )}
+        <Link className="header-search-trigger" href="/search" aria-label="Search FittList">
+          <Icon name="search" size={21} />
+        </Link>
         <HeaderAccountButton
           face={face}
           unread={notificationUnread > 0 || messageUnread > 0}
