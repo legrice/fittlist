@@ -87,9 +87,6 @@ export function NotifyCta({
             toast(`Favorite request sent to ${firstName}`);
           } else {
             setFollowing(true);
-            // The hint says where their classes went; the toast only says the
-            // tap landed, so they don't both fire.
-            toast(`${firstName} added to favorites`);
             if (!followHintOff()) setHint(true);
           }
         } else toast(res.error ?? "Something went wrong");

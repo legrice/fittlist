@@ -31,7 +31,6 @@ export function FavoritePersonButton({ person }: { person: DirPerson }) {
         toast(`Favorite request sent to ${person.name}`);
       } else {
         setFavorited(true);
-        toast(`${person.name} added to favorites`);
         if (!followHintOff()) setHint(true);
       }
     }
