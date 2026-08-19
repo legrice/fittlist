@@ -33,7 +33,7 @@ const landingSlides = [
     art: "share",
   },
   {
-    title: "Follow your favorites. From a distance.",
+    title: "Know where your favorites will be. Respectfully.",
     art: "favorites",
   },
   {
