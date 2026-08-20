@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { and, eq, gte, inArray, isNull, ne } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
@@ -66,12 +66,25 @@ export type GymClassDto = {
   isPublic: boolean;
 };
 
-export type GymDayDto = { iso: string; label: string; items: GymClassDto[] };
+export type GymDayDto = {
+  iso: string;
+  label: string;
+  /** Monday = 0, shared by the week list and desktop month grid. */
+  dayOfWeek: number;
+  items: GymClassDto[];
+};
 export type GymWeekDto = {
   /** Monday of the week being shown, and how far it is from this one. */
   monday: string;
   offset: number;
   label: string;
+  days: GymDayDto[];
+};
+export type GymMonthDto = {
+  /** YYYY-MM for month navigation. */
+  month: string;
+  label: string;
+  /** Six Monday-through-Sunday rows, including the month's edge days. */
   days: GymDayDto[];
 };
 
@@ -286,31 +299,39 @@ export async function setRotaCoach(
  * standing slots are expanded with runsOn (the same predicate every surface
  * uses) and then any cover for that date is laid over the top.
  */
-export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeekDto | null> {
-  const ctx = await actingFor(studioId);
-  if ("error" in ctx) return null;
-  const { db, gymId } = ctx;
-
-  const week = Math.max(0, Math.min(8, Math.trunc(offset) || 0));
-  const start = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
-  start.setUTCDate(start.getUTCDate() + week * 7);
-  const monday = start.toISOString().slice(0, 10);
+async function gymDays(
+  db: Awaited<ReturnType<typeof getDb>>,
+  gymId: string,
+  studioId: string,
+  start: Date,
+  count: number,
+): Promise<GymDayDto[]> {
   const isoOf = (i: number) => {
     const d = new Date(start);
     d.setUTCDate(start.getUTCDate() + i);
     return d.toISOString().slice(0, 10);
   };
-
+  const firstIso = isoOf(0);
+  const lastIso = isoOf(count - 1);
   const rows = await db
     .select()
     .from(schema.classes)
     .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)));
 
+  // A manager only needs exceptions inside the range on screen. Loading the
+  // studio's entire cover history made the old spreadsheet slower every month
+  // it stayed in use.
   const covers = rows.length
     ? await db
         .select()
         .from(schema.shiftCovers)
-        .where(inArray(schema.shiftCovers.classId, rows.map((r) => r.id)))
+        .where(
+          and(
+            inArray(schema.shiftCovers.classId, rows.map((r) => r.id)),
+            gte(schema.shiftCovers.occurrenceDate, firstIso),
+            lte(schema.shiftCovers.occurrenceDate, lastIso),
+          ),
+        )
     : [];
   const coverBy = new Map(covers.map((c) => [`${c.classId}|${c.occurrenceDate}`, c]));
 
@@ -318,18 +339,21 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
   for (const r of rows) if (r.coachUserId) ids.add(r.coachUserId);
   for (const c of covers) if (c.coachUserId) ids.add(c.coachUserId);
   const people = ids.size
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, [...ids]))
+    ? await db
+        .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email })
+        .from(schema.users)
+        .where(inArray(schema.users.id, [...ids]))
     : [];
   const nameOf = new Map(
     people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]] as const),
   );
 
   const days: GymDayDto[] = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < count; i++) {
     const iso = isoOf(i);
-    const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    const dayOfWeek = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
     const items = rows
-      .filter((r) => runsOn(r, iso, dow))
+      .filter((r) => runsOn(r, iso, dayOfWeek))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
       .map((r) => {
         const cover = coverBy.get(`${r.id}|${iso}`);
@@ -354,13 +378,60 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
           isPublic: r.isPublic,
         };
       });
-    days.push({ iso, label: fmtDayHeader(iso), items });
+    days.push({ iso, label: fmtDayHeader(iso), dayOfWeek, items });
   }
+  return days;
+}
+
+export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeekDto | null> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return null;
+  const { db, gymId } = ctx;
+
+  const week = Math.max(0, Math.min(8, Math.trunc(offset) || 0));
+  const start = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+  start.setUTCDate(start.getUTCDate() + week * 7);
+  const monday = start.toISOString().slice(0, 10);
+  const days = await gymDays(db, gymId, studioId, start, 7);
 
   return {
     monday,
     offset: week,
     label: week === 0 ? "This week" : week === 1 ? "Next week" : `Week of ${fmtDayHeader(monday)}`,
+    days,
+  };
+}
+
+/** Six-week desktop planning grid. It is requested lazily by the client only
+ * at the desktop breakpoint, so mobile never pays for a month it cannot use. */
+export async function gymMonth(
+  studioId: string,
+  monthInput?: string,
+): Promise<GymMonthDto | null> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return null;
+  const requestedMonth = /^\d{4}-\d{2}$/.test(monthInput ?? "")
+    ? monthInput!
+    : todayIso().slice(0, 7);
+  // This is a planning surface. Recurring rows do not yet carry a historical
+  // start date, so showing months before today would invent classes that may
+  // not have existed then.
+  const currentMonth = todayIso().slice(0, 7);
+  const month = requestedMonth < currentMonth ? currentMonth : requestedMonth;
+  const [year, monthNumber] = month.split("-").map(Number);
+  if (year < 2020 || year > 2100 || monthNumber < 1 || monthNumber > 12) return null;
+  const first = new Date(Date.UTC(year, monthNumber - 1, 1));
+  const mondayIndex = (first.getUTCDay() + 6) % 7;
+  const start = new Date(first);
+  start.setUTCDate(first.getUTCDate() - mondayIndex);
+  const days = await gymDays(ctx.db, ctx.gymId, studioId, start, 42);
+  return {
+    month,
+    label: first.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }),
     days,
   };
 }

@@ -6811,7 +6811,7 @@ select.editinput.placekind-select {
   border-radius: var(--radius-pill); background: var(--color-white); cursor: pointer;
   color: var(--color-black); font: inherit; font-weight: 700; font-size: 12px;
 }
-.rotaadd:first-child { border-color: transparent; background: var(--color-lime-soft); }
+.rotaadd:first-child { border-color: transparent; background: var(--color-lime); }
 .rotaadd:active { background: var(--color-surface-hover); }
 .rotaempty {
   margin: 0; padding: 18px 20px; border: 1px dashed var(--color-border);
@@ -6854,6 +6854,111 @@ select.editinput.placekind-select {
   }
   .rota-calendar .rotaday-actions::-webkit-scrollbar { display: none; }
   .rota-calendar .rotaadd { min-height: 42px; flex: 0 0 auto; padding-inline: 13px; }
+}
+
+/* Desktop studio planning: a dense month replaces the tall phone agenda.
+   Every occurrence remains visible because this is an operating surface, not
+   a member preview. The grid scrolls only when the desktop window is narrow. */
+.rota-month-view { margin-top: 22px; }
+.rota-month-toolbar { display: flex; align-items: stretch; gap: 12px; margin-bottom: 16px; }
+.rota-month-nav {
+  min-height: 52px; flex: 1; display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px; align-items: center;
+  border-radius: var(--radius-control); background: var(--color-surface-muted);
+}
+.rota-month-nav button {
+  width: 52px; height: 52px; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 16px; background: transparent; color: var(--color-black); cursor: pointer;
+}
+.rota-month-nav button:disabled { opacity: .3; cursor: default; }
+.rota-month-nav strong { text-align: center; font-size: 18px; font-weight: 700; }
+.rota-month-add {
+  min-height: 52px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 0; border-radius: var(--radius-pill); background: var(--color-lime); color: var(--color-black);
+  font: inherit; font-size: 14px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.rota-month-loading {
+  min-height: 220px; display: grid; place-items: center; border: 1px solid var(--color-border);
+  border-radius: var(--radius-card); background: var(--color-surface-muted);
+  color: var(--color-text-secondary); font-size: 14px; font-weight: 700;
+}
+.rota-month-board {
+  overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-card);
+  background: var(--color-surface); scrollbar-width: thin; transition: opacity .12s ease;
+}
+.rota-month-board.loading { opacity: .55; pointer-events: none; }
+.rota-month-weekdays,
+.rota-month-grid { min-width: 980px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.rota-month-weekdays {
+  position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--color-border-strong);
+  background: var(--color-black); color: var(--color-white);
+}
+.rota-month-weekdays span {
+  min-height: 40px; display: grid; place-items: center; border-right: 1px solid rgba(255,255,255,.2);
+  font-size: 13px; font-weight: 700;
+}
+.rota-month-weekdays span:last-child { border-right: 0; }
+.rota-month-day {
+  position: relative; min-height: 190px; min-width: 0; padding: 9px;
+  border-right: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.rota-month-day:nth-child(7n) { border-right: 0; }
+.rota-month-day:nth-last-child(-n + 7) { border-bottom: 0; }
+.rota-month-day.outside { background: var(--color-surface-muted); }
+.rota-month-day.outside > * { opacity: .42; }
+.rota-month-dayhead { min-height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.rota-month-dayhead > span { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rota-month-daytools { position: relative; display: inline-flex; align-items: center; gap: 3px; }
+.rota-month-dayadd,
+.rota-month-more {
+  width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; color: var(--color-black); cursor: pointer;
+}
+.rota-month-dayadd { background: var(--color-lime); }
+.rota-month-more { background: var(--color-surface-muted); }
+.rota-month-menu {
+  position: absolute; top: 32px; right: 0; z-index: 12; min-width: 126px; padding: 5px;
+  border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-white);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.rota-month-menu button {
+  width: 100%; min-height: 38px; padding: 0 10px; display: flex; align-items: center; gap: 7px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--color-black);
+  font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.rota-month-menu button:hover { background: var(--color-surface-hover); }
+.rota-month-events { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
+.rota-month-event {
+  position: relative; width: 100%; min-width: 0; padding: 7px 8px 7px 10px;
+  display: flex; flex-direction: column; gap: 2px; overflow: hidden;
+  border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-white);
+  color: var(--color-black); text-align: left; cursor: pointer;
+}
+.rota-month-event::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-border-strong);
+}
+.rota-month-event.needs { background: var(--color-lime-soft); }
+.rota-month-event.needs::before { background: var(--color-lime); }
+.rota-month-event.cover::before { background: var(--color-coaching); }
+.rota-month-event.draft::before { background: var(--color-personal); }
+.rota-month-eventtop { min-width: 0; display: flex; align-items: baseline; gap: 6px; }
+.rota-month-eventtop b { flex: 0 0 auto; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rota-month-eventtop b small { margin-left: 2px; font-size: 8px; text-transform: uppercase; }
+.rota-month-eventtop strong {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; font-weight: 700;
+}
+.rota-month-coach {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--color-text-secondary); font-size: 10px; font-weight: 600;
+}
+.rota-month-empty { padding: 8px 1px; color: var(--color-text-secondary); font-size: 10px; }
+
+@media (min-width: 1100px) {
+  .screen.hasnav > .gym-manage-pad.desktop { max-width: none; }
+  body:has(.gym-manage-pad.desktop) .desktop-right { display: none; }
+  .screen.hasnav:has(.gym-manage-pad.desktop) { padding-right: 0; }
 }
 .rotasec-h {
   margin: 22px 0 0; font-size: 13px; font-weight: 600; letter-spacing: .06em;
