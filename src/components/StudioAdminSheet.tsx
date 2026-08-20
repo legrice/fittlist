@@ -119,7 +119,7 @@ export function StudioAdminSheet({
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="sheet">
+          <div className="sheet studio-admin-sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
               <Icon name="close" size={18} />
             </button>

@@ -4638,6 +4638,9 @@ select.editinput.placekind-select {
   font-weight: 600; font-size: 13.5px; white-space: nowrap;
 }
 .ownermenu { margin-top: 14px; }
+.studio-admin-sheet .setrow-txt .s {
+  white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35;
+}
 /* Gym types: a wrapped set of chips, several of which are usually true. */
 /* The gym types under a studio's name. */
 .studiotypes { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 2px; }
