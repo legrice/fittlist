@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -41,7 +41,42 @@ type Open = {
   oneOff?: boolean;
 };
 
+type CoachPick = {
+  iso: string;
+  label: string;
+  cls: GymClassDto;
+};
+
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const occurrenceKey = (classId: string, iso: string) => `${classId}:${iso}`;
+
+function CoachPickerButton({
+  className = "",
+  name,
+  disabled,
+  label,
+  onClick,
+}: {
+  className?: string;
+  name?: string | null;
+  disabled?: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`rota-coach-picker${className ? ` ${className}` : ""}`}
+      disabled={disabled}
+      aria-label={label}
+      onClick={onClick}
+    >
+      <span>{name || "Nobody yet"}</span>
+      <Icon name="expand_more" size={16} />
+    </button>
+  );
+}
 
 // The rota: the thing the spreadsheet was for. A week of slots, each one a
 // class and the person on it, and both are two taps to change. That is the one
@@ -85,6 +120,7 @@ export function GymRota({
   const [open, setOpen] = useState<Open | null>(null);
   const [closingDay, setClosingDay] = useState<{ iso: string; label: string } | null>(null);
   const [copyingDay, setCopyingDay] = useState<{ day: number; label: string } | null>(null);
+  const [coachPick, setCoachPick] = useState<CoachPick | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [desktop, setDesktop] = useState(false);
   const [desktopView, setDesktopView] = useState<"week" | "month">("month");
@@ -92,18 +128,32 @@ export function GymRota({
   const [monthLoading, setMonthLoading] = useState(false);
   const monthRequest = useRef(0);
   const monthCache = useRef(new Map<string, GymMonthDto>());
+  // A roster edit should read back immediately while the server updates the
+  // occurrence and refreshes the rest of the calendar around it.
+  const [coachOverrides, setCoachOverrides] = useState<Record<string, string>>({});
+  const [coachSaving, setCoachSaving] = useState<Record<string, true>>({});
   // The one-date swap saves as you pick, so the rota keeps it rather than the
   // form: these echo the row while the sheet is up.
   const [onUserId, setOnUserId] = useState("");
   const [covered, setCovered] = useState(false);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
+  const coachNameById = useMemo(
+    () => new Map(coaches.map((coach) => [coach.id, coach.name] as const)),
+    [coaches],
+  );
   const days = week?.days ?? [];
   const visibleDays = desktop && desktopView === "month" && month
     ? month.days.filter((day) => day.iso.startsWith(month.month))
     : days;
   const all = visibleDays.flatMap((d) => d.items);
-  const openSlots = all.filter((c) => !c.onUserId).length;
+  const openSlots = visibleDays.reduce(
+    (count, day) => count + day.items.filter((c) => {
+      const who = coachOverrides[occurrenceKey(c.id, day.iso)] ?? c.onUserId ?? "";
+      return !who;
+    }).length,
+    0,
+  );
   const visibleDrafts = new Set(all.filter((c) => !c.isPublic).map((c) => c.id)).size;
 
   const loadMonth = useCallback(async (key?: string, force = false) => {
@@ -169,8 +219,11 @@ export function GymRota({
     cls: GymClassDto | null,
     oneOff = false,
   ) => {
-    setOnUserId(cls?.onUserId ?? "");
-    setCovered(cls?.covered ?? false);
+    const who = cls
+      ? coachOverrides[occurrenceKey(cls.id, iso)] ?? cls.onUserId ?? ""
+      : "";
+    setOnUserId(who);
+    setCovered(!!cls && who !== (cls.coachUserId ?? ""));
     setOpen({ iso, dayOfWeek, cls, oneOff });
   };
 
@@ -196,6 +249,36 @@ export function GymRota({
       toast(who ? "Swapped" : "Opened up");
       refreshView();
     });
+  };
+
+  // The coach is the field a manager changes over and over. Keep it on the
+  // occurrence itself: the rest of the card still opens the full class form,
+  // while this picker writes the one-date assignment directly.
+  const assignCoach = (cls: GymClassDto, iso: string, who: string) => {
+    const key = occurrenceKey(cls.id, iso);
+    if (coachSaving[key]) return;
+    const previous = coachOverrides[key] ?? cls.onUserId ?? "";
+    setCoachOverrides((current) => ({ ...current, [key]: who }));
+    setCoachSaving((current) => ({ ...current, [key]: true }));
+    void (async () => {
+      const res = await setShiftCover(studioId, cls.id, iso, who || null);
+      if (!res.ok) {
+        setCoachOverrides((current) => ({ ...current, [key]: previous }));
+        toast(res.error ?? "Couldn't change that");
+      } else {
+        const name = coachNameById.get(who);
+        toast(name ? `${name} is on ${fmtDay(iso)}` : `${fmtDay(iso)} is open`);
+        // The row already holds the confirmed assignment locally. Refresh the
+        // server-owned week in the background without reloading all 42 month
+        // days after every roster pick.
+        router.refresh();
+      }
+      setCoachSaving((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    })();
   };
 
   const closeDay = () => {
@@ -338,6 +421,9 @@ export function GymRota({
   };
   const monthAddDay = month?.days.find((day) => day.iso === new Date().toISOString().slice(0, 10))
     ?? month?.days.find((day) => day.iso.startsWith(month.month));
+  const coachPickId = coachPick
+    ? coachOverrides[occurrenceKey(coachPick.cls.id, coachPick.iso)] ?? coachPick.cls.onUserId ?? ""
+    : "";
 
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
@@ -454,29 +540,42 @@ export function GymRota({
                       </div>
                       <div className="rota-month-events">
                         {day.items.map((c) => {
+                          const key = occurrenceKey(c.id, day.iso);
+                          const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
+                          const selectedCoachName = coachNameById.get(selectedCoachId)
+                            ?? (selectedCoachId === c.onUserId ? c.onName : "");
+                          const isCover = selectedCoachId !== (c.coachUserId ?? "");
                           const state = !c.isPublic
                             ? "draft"
-                            : !c.onUserId
+                            : !selectedCoachId
                               ? "needs"
-                              : c.covered
+                              : isCover
                                 ? "cover"
                                 : "assigned";
                           return (
-                            <button
-                              key={`${c.id}:${day.iso}`}
+                            <div
+                              key={key}
                               className={`rota-month-event ${state}`}
-                              onClick={() => show(day.iso, day.dayOfWeek, c)}
-                              title={`${clockParts(c.startTime).hm} ${clockParts(c.startTime).ap} ${c.name}`}
                             >
-                              <span className="rota-month-eventtop">
-                                <b>{clockParts(c.startTime).hm}<small>{clockParts(c.startTime).ap}</small></b>
-                                <strong>{c.name}</strong>
-                              </span>
-                              <span className="rota-month-coach">
-                                {!c.isPublic ? "Draft · " : c.covered ? "Cover · " : ""}
-                                {c.onName || "Needs coach"}
-                              </span>
-                            </button>
+                              <button
+                                className="rota-month-eventmain"
+                                onClick={() => show(day.iso, day.dayOfWeek, c)}
+                                title={`Edit ${clockParts(c.startTime).hm} ${clockParts(c.startTime).ap} ${c.name}`}
+                              >
+                                <span className="rota-month-eventtop">
+                                  <b>{clockParts(c.startTime).hm}<small>{clockParts(c.startTime).ap}</small></b>
+                                  <strong>{c.name}</strong>
+                                </span>
+                                {!c.isPublic && <span className="rota-month-state">Draft</span>}
+                              </button>
+                              <CoachPickerButton
+                                className="rota-month-coachpick"
+                                name={selectedCoachName}
+                                disabled={!!coachSaving[key]}
+                                label={`Coach for ${c.name} on ${day.label}`}
+                                onClick={() => setCoachPick({ cls: c, iso: day.iso, label: day.label })}
+                              />
+                            </div>
                           );
                         })}
                         {!day.items.length && !outside && <span className="rota-month-empty">No classes</span>}
@@ -529,40 +628,118 @@ export function GymRota({
                   <p className="rotaempty">Nothing on</p>
                 ) : (
                   <div className="dayrows">
-                    {day.items.map((c) => (
-                      <ClassLine
-                        key={`${c.id}:${day.iso}`}
-                        row={{
-                          key: `${c.id}:${day.iso}`,
-                          name: c.name,
-                          where: c.onName || "Nobody on it yet",
-                          hm: clockParts(c.startTime).hm,
-                          ap: clockParts(c.startTime).ap,
-                          dur: `${c.durationMin} min`,
-                          tag: !c.isPublic
-                            ? "Draft"
-                            : !c.onUserId
-                              ? "Needs coach"
-                              : c.covered
-                                ? "Cover"
-                                : undefined,
-                          tagTone: !c.isPublic
-                            ? "personal"
-                            : !c.onUserId
-                              ? "attention"
-                              : c.covered
-                                ? "coaching"
-                                : undefined,
-                          onTap: () => show(day.iso, day.dayOfWeek, c),
-                        }}
-                      />
-                    ))}
+                    {day.items.map((c) => {
+                      const key = occurrenceKey(c.id, day.iso);
+                      const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
+                      const selectedCoachName = coachNameById.get(selectedCoachId)
+                        ?? (selectedCoachId === c.onUserId ? c.onName : "");
+                      const isCover = selectedCoachId !== (c.coachUserId ?? "");
+                      return (
+                        <div className="clrow rota-inline-row" key={key}>
+                          <ClassLine
+                            row={{
+                              key,
+                              name: c.name,
+                              where: null,
+                              hm: clockParts(c.startTime).hm,
+                              ap: clockParts(c.startTime).ap,
+                              dur: `${c.durationMin} min`,
+                              tag: !c.isPublic
+                                ? "Draft"
+                                : !selectedCoachId
+                                  ? "Needs coach"
+                                  : isCover
+                                    ? "Cover"
+                                    : undefined,
+                              tagTone: !c.isPublic
+                                ? "personal"
+                                : !selectedCoachId
+                                  ? "attention"
+                                  : isCover
+                                    ? "coaching"
+                                    : undefined,
+                              onTap: () => show(day.iso, day.dayOfWeek, c),
+                            }}
+                          />
+                          <CoachPickerButton
+                            className="rota-inline-coachpick"
+                            name={selectedCoachName}
+                            disabled={!!coachSaving[key]}
+                            label={`Coach for ${c.name} on ${day.label}`}
+                            onClick={() => setCoachPick({ cls: c, iso: day.iso, label: day.label })}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </section>
             ))}
           </div>
         </>
+      )}
+
+      {coachPick && (
+        <div
+          className="sheet-scrim"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setCoachPick(null);
+          }}
+        >
+          <div className="sheet rota-coach-sheet" role="dialog" aria-modal="true" aria-labelledby="rota-coach-title">
+            <div className="sheettitle">
+              <div>
+                <h2 id="rota-coach-title">Choose a coach</h2>
+                <p>{coachPick.cls.name} · {coachPick.label}</p>
+              </div>
+              <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setCoachPick(null)}>
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            <div className="rota-coach-options" role="radiogroup" aria-label="Coach">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!coachPickId}
+                className={coachPickId ? "" : "on"}
+                onClick={() => {
+                  assignCoach(coachPick.cls, coachPick.iso, "");
+                  setCoachPick(null);
+                }}
+              >
+                <span>
+                  <strong>Nobody yet</strong>
+                  <small>Leave this date open</small>
+                </span>
+                <span className="rota-coach-radio">
+                  {!coachPickId && <Icon name="check" size={15} />}
+                </span>
+              </button>
+              {coaches.map((coach) => (
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={coachPickId === coach.id}
+                  key={coach.id}
+                  className={coachPickId === coach.id ? "on" : ""}
+                  onClick={() => {
+                    assignCoach(coachPick.cls, coachPick.iso, coach.id);
+                    setCoachPick(null);
+                  }}
+                >
+                  <span>
+                    <strong>{coach.name}</strong>
+                    {coach.id === coachPick.cls.coachUserId && <small>Usually coaches this class</small>}
+                  </span>
+                  <span className="rota-coach-radio">
+                    {coachPickId === coach.id && <Icon name="check" size={15} />}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p className="rota-coach-note">This changes only {coachPick.label}. Open the class to change every week.</p>
+          </div>
+        </div>
       )}
 
       {closingDay && (

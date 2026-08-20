@@ -1232,50 +1232,85 @@ export async function setShiftCover(
   if (!runsOn(cls, occurrenceDate, dow))
     return { ok: false, error: "That class doesn't run that day." };
 
-  const [existing] = await db
-    .select()
-    .from(schema.shiftCovers)
-    .where(
-      and(
-        eq(schema.shiftCovers.classId, classId),
-        eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
-      ),
-    );
-  const before = existing ? existing.coachUserId : cls.coachUserId;
-  if (before === coachUserId) return { ok: true };
+  const changed = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(schema.shiftCovers)
+      .where(
+        and(
+          eq(schema.shiftCovers.classId, classId),
+          eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+        ),
+      );
+    const before = existing ? existing.coachUserId : cls.coachUserId;
 
-  if (coachUserId === cls.coachUserId) {
-    // Back to normal: the exception stops existing.
-    if (existing) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, existing.id));
-  } else if (existing) {
-    await db
-      .update(schema.shiftCovers)
-      .set({ coachUserId, createdByUserId: userId })
-      .where(eq(schema.shiftCovers.id, existing.id));
-  } else {
-    await db
-      .insert(schema.shiftCovers)
-      .values({ classId, occurrenceDate, coachUserId, createdByUserId: userId });
+    if (before !== coachUserId) {
+      if (coachUserId === cls.coachUserId) {
+        // Back to normal: the exception stops existing.
+        if (existing) await tx.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, existing.id));
+      } else if (existing) {
+        await tx
+          .update(schema.shiftCovers)
+          .set({ coachUserId, createdByUserId: userId })
+          .where(eq(schema.shiftCovers.id, existing.id));
+      } else {
+        await tx
+          .insert(schema.shiftCovers)
+          .values({ classId, occurrenceDate, coachUserId, createdByUserId: userId })
+          .onConflictDoUpdate({
+            target: [schema.shiftCovers.classId, schema.shiftCovers.occurrenceDate],
+            set: { coachUserId, createdByUserId: userId },
+          });
+      }
+    }
+
+    // A manager's direct choice is authoritative for this occurrence. Close
+    // every live pickup or transfer at the same time as the rota write so an
+    // old request cannot later overwrite the person the manager just chose.
+    await tx
+      .update(schema.shiftRequests)
+      .set({ state: "declined", decidedByUserId: userId, decidedAt: new Date() })
+      .where(
+        and(
+          eq(schema.shiftRequests.classId, classId),
+          eq(schema.shiftRequests.occurrenceDate, occurrenceDate),
+          eq(schema.shiftRequests.state, "pending"),
+        ),
+      );
+
+    return { before, assignmentChanged: before !== coachUserId };
+  });
+
+  // Re-selecting the current coach can still be an explicit decision that
+  // closes stale requests, but it should not send a duplicate shift notice.
+  if (changed.assignmentChanged) {
+    // Both sides of a swap hear about it, and only about their own half. The
+    // date is the whole point, so it leads.
+    const when = `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+    if (changed.before)
+      await addNotification(changed.before, {
+        type: "shift_dropped",
+        title: `You're off ${cls.name}`,
+        body: coachUserId
+          ? `${when} at ${studio.name}. Somebody else is on it.`
+          : `${when} at ${studio.name}. The slot is open.`,
+        href: "/week",
+      });
+    if (coachUserId)
+      await addNotification(coachUserId, {
+        type: "shift_assigned",
+        title: `You're covering ${cls.name}`,
+        body: `${when} at ${studio.name}.`,
+        href: "/week",
+      });
   }
-
-  // Both sides of a swap hear about it, and only about their own half. The
-  // date is the whole point, so it leads.
-  const when = `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)}`;
-  if (before)
-    await addNotification(before, {
-      type: "shift_dropped",
-      title: `You're off ${cls.name}`,
-      body: `${when} at ${studio.name}. Somebody else is on it.`,
-      href: "/week",
-    });
-  if (coachUserId)
-    await addNotification(coachUserId, {
-      type: "shift_assigned",
-      title: `You're covering ${cls.name}`,
-      body: `${when} at ${studio.name}.`,
-      href: "/week",
-    });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
+  revalidatePath("/app");
+  revalidatePath("/calendar");
+  revalidatePath("/week");
   return { ok: true };
 }
 

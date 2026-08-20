@@ -6940,10 +6940,10 @@ select.editinput.placekind-select {
 .rota-month-menu button:hover { background: var(--color-surface-hover); }
 .rota-month-events { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
 .rota-month-event {
-  position: relative; width: 100%; min-width: 0; padding: 7px 8px 7px 10px;
+  position: relative; width: 100%; min-width: 0; padding: 0;
   display: flex; flex-direction: column; gap: 2px; overflow: hidden;
   border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-white);
-  color: var(--color-black); text-align: left; cursor: pointer;
+  color: var(--color-black); text-align: left;
 }
 .rota-month-event::before {
   content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-border-strong);
@@ -6952,6 +6952,12 @@ select.editinput.placekind-select {
 .rota-month-event.needs::before { background: var(--color-lime); }
 .rota-month-event.cover::before { background: var(--color-coaching); }
 .rota-month-event.draft::before { background: var(--color-personal); }
+.rota-month-eventmain {
+  width: 100%; min-width: 0; padding: 7px 8px 3px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
+}
+.rota-month-eventmain:active { opacity: .6; }
 .rota-month-eventtop { min-width: 0; display: flex; align-items: baseline; gap: 6px; }
 .rota-month-eventtop b { flex: 0 0 auto; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .rota-month-eventtop b small { margin-left: 2px; font-size: 8px; text-transform: uppercase; }
@@ -6959,11 +6965,60 @@ select.editinput.placekind-select {
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: 12px; font-weight: 700;
 }
-.rota-month-coach {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  color: var(--color-text-secondary); font-size: 10px; font-weight: 600;
-}
+.rota-month-state { color: var(--color-text-secondary); font-size: 10px; font-weight: 600; }
 .rota-month-empty { padding: 8px 1px; color: var(--color-text-secondary); font-size: 10px; }
+
+/* Coach assignment lives on the occurrence. It is a separate control from
+   the class button so a manager can staff the calendar without opening the
+   full composer, while the rest of the card still edits the class itself. */
+.rota-coach-picker {
+  min-width: 0; min-height: 40px; padding: 0 12px;
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  background: var(--color-white); color: var(--color-black);
+  font: inherit; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer;
+}
+.rota-coach-picker > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rota-coach-picker .icon { flex: 0 0 auto; }
+.rota-coach-picker:disabled { opacity: .55; cursor: wait; }
+.rota-inline-row .clline { padding-bottom: 72px; }
+.rota-inline-coachpick {
+  position: absolute; z-index: 2; left: 20px; bottom: 20px;
+  width: min(280px, calc(100% - 40px));
+}
+.rota-month-coachpick {
+  width: calc(100% - 14px); min-height: 30px; margin: 0 6px 6px 8px; padding: 0 8px;
+  border-radius: 7px; font-size: 10px;
+}
+
+.rota-coach-sheet { max-height: min(82dvh, 680px); display: flex; flex-direction: column; overflow: hidden; }
+.rota-coach-sheet .sheettitle { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; }
+.rota-coach-sheet .sheettitle > div { min-width: 0; padding-right: 42px; }
+.rota-coach-sheet .sheettitle h2 { padding-right: 0; }
+.rota-coach-sheet .sheettitle p {
+  margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--color-text-secondary); font-size: 13px; font-weight: 500;
+}
+.rota-coach-options { min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding: 14px 0 4px; }
+.rota-coach-options > button {
+  width: 100%; min-height: 54px; padding: 9px 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-control);
+  background: var(--color-white); color: var(--color-black); text-align: left; cursor: pointer;
+}
+.rota-coach-options > button.on { border-color: var(--color-black); }
+.rota-coach-options > button > span:first-child { min-width: 0; }
+.rota-coach-options strong,
+.rota-coach-options small { display: block; }
+.rota-coach-options strong { font-size: 14px; font-weight: 700; }
+.rota-coach-options small { margin-top: 2px; color: var(--color-text-secondary); font-size: 11px; font-weight: 500; }
+.rota-coach-radio {
+  width: 24px; height: 24px; flex: 0 0 24px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 2px solid var(--color-black); border-radius: 50%; background: var(--color-white);
+}
+.rota-coach-options > button.on .rota-coach-radio { background: var(--color-black); color: var(--color-white); }
+.rota-coach-note { margin-top: 12px; color: var(--color-text-secondary); font-size: 12px; line-height: 1.4; }
 
 @media (min-width: 1100px) {
   /* The studio planner is an operating surface, not a reading column. The
