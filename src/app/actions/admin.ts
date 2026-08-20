@@ -452,6 +452,12 @@ async function handKeys(
   await db
     .insert(schema.studioManagers)
     .values({ studioId, userId: user.id, addedByUserId: adminId });
+  if (!studio.ownerUserId) {
+    await db
+      .update(schema.studios)
+      .set({ ownerUserId: user.id })
+      .where(eq(schema.studios.id, studioId));
+  }
   // Being handed the keys is not something to discover by accident.
   await addNotification(user.id, {
     type: "studio_manager",
@@ -552,6 +558,18 @@ export async function adminRemoveStudioManager(
     .where(
       and(eq(schema.studioManagers.studioId, studioId), eq(schema.studioManagers.userId, userId)),
     );
+  if (studio?.ownerUserId === userId) {
+    const [next] = await db
+      .select({ userId: schema.studioManagers.userId })
+      .from(schema.studioManagers)
+      .where(eq(schema.studioManagers.studioId, studioId))
+      .orderBy(schema.studioManagers.createdAt)
+      .limit(1);
+    await db
+      .update(schema.studios)
+      .set({ ownerUserId: next?.userId ?? null })
+      .where(eq(schema.studios.id, studioId));
+  }
   if (studio) revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath("/admin");
   return { ok: true };

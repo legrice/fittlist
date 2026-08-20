@@ -4648,6 +4648,14 @@ select.editinput.placekind-select {
 .studio-admin-access .lead { margin-bottom: 6px; }
 .studio-admin-list { margin-top: 10px; }
 .studio-admin-add { margin-bottom: 0; }
+.studio-admin-actions {
+  margin-left: auto; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+}
+.studio-admin-actions .tertiary { white-space: nowrap; }
+@media (max-width: 520px) {
+  .studio-admin-list .staffrow { align-items: flex-start; }
+  .studio-admin-actions { width: 100%; margin: 8px 0 0; justify-content: flex-start; }
+}
 /* Gym types: a wrapped set of chips, several of which are usually true. */
 /* The gym types under a studio's name. */
 .studiotypes { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 2px; }

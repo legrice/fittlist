@@ -708,6 +708,13 @@
       "when": 1787263001257,
       "tag": "0100_first_shen",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1787265184830,
+      "tag": "0101_plain_ultragirl",
+      "breakpoints": true
     }
   ]
 }

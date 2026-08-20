@@ -9,6 +9,7 @@ import {
   setStudioShiftApproval,
   studioManagersForSettings,
   studioPageViews,
+  transferStudioOwnership,
   type StaffPerson,
 } from "@/app/actions/gym";
 import { setStudioShowCoaches } from "@/app/actions/studios";
@@ -52,9 +53,13 @@ export function StudioAdminSheet({
   const [views, setViews] = useState<number | null | undefined>(pageViews);
   const [adminsOpen, setAdminsOpen] = useState(false);
   const [admins, setAdmins] = useState<StaffPerson[] | null>(null);
+  const [canManageAdmins, setCanManageAdmins] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
-  const [adminConfirm, setAdminConfirm] = useState<StaffPerson | null>(null);
+  const [adminConfirm, setAdminConfirm] = useState<{
+    person: StaffPerson;
+    action: "remove" | "transfer";
+  } | null>(null);
   const [viewsPending, startViews] = useTransition();
   const [adminsPending, startAdmins] = useTransition();
   const [, startNames] = useTransition();
@@ -109,25 +114,14 @@ export function StudioAdminSheet({
     setAdminConfirm(null);
   };
 
-  const share = async () => {
-    closeAdminSheet();
-    const url = `${window.location.origin}/s/${slug}`;
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ title: `${studio.name} on fittlist`, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      toast("Link copied");
-    } catch {
-      // a dismissed share sheet is not an error
-    }
-  };
-
   const openAdmins = () => {
     setAdminsOpen(true);
     if (admins !== null || adminsPending) return;
-    startAdmins(async () => setAdmins(await studioManagersForSettings(studio.id)));
+    startAdmins(async () => {
+      const result = await studioManagersForSettings(studio.id);
+      setAdmins(result.people);
+      setCanManageAdmins(result.canManage);
+    });
   };
 
   const addAdmin = async () => {
@@ -140,8 +134,10 @@ export function StudioAdminSheet({
       return;
     }
     setAdminEmail("");
-    setAdmins(await studioManagersForSettings(studio.id));
-    toast("Admin added");
+    const refreshed = await studioManagersForSettings(studio.id);
+    setAdmins(refreshed.people);
+    setCanManageAdmins(refreshed.canManage);
+    toast("Manager added");
   };
 
   const removeAdmin = async (person: StaffPerson) => {
@@ -157,7 +153,20 @@ export function StudioAdminSheet({
       return;
     }
     setAdmins((current) => current?.filter((admin) => admin.id !== person.id) ?? null);
-    toast("Admin removed");
+    toast("Manager removed");
+  };
+
+  const transferOwnership = async (person: StaffPerson) => {
+    const result = await transferStudioOwnership(studio.id, person.id);
+    setAdminConfirm(null);
+    if (!result.ok) {
+      toast(result.error ?? "Couldn't transfer ownership");
+      return;
+    }
+    const refreshed = await studioManagersForSettings(studio.id);
+    setAdmins(refreshed.people);
+    setCanManageAdmins(refreshed.canManage);
+    toast(`${person.name} is now the owner`);
   };
 
   return (
@@ -183,15 +192,26 @@ export function StudioAdminSheet({
             </button>
             {adminConfirm ? (
               <div className="studio-admin-confirm">
-                <h2>{adminConfirm.isYou ? "Leave this studio?" : `Remove ${adminConfirm.name}?`}</h2>
+                <h2>
+                  {adminConfirm.action === "transfer"
+                    ? `Make ${adminConfirm.person.name} the owner?`
+                    : `Remove ${adminConfirm.person.name}?`}
+                </h2>
                 <p className="lead">
-                  {adminConfirm.isYou
-                    ? "You will no longer be able to manage this studio. Another admin would need to add you back."
+                  {adminConfirm.action === "transfer"
+                    ? "They will hold the master role and choose who can manage the studio. You will remain a manager."
                     : "They will no longer be able to edit the studio, manage its calendar, or invite people."}
                 </p>
                 <div className="publishwrap nostick">
-                  <button className="btn si" onClick={() => removeAdmin(adminConfirm)}>
-                    {adminConfirm.isYou ? "Leave studio" : `Remove ${adminConfirm.name}`}
+                  <button
+                    className="btn si"
+                    onClick={() => adminConfirm.action === "transfer"
+                      ? transferOwnership(adminConfirm.person)
+                      : removeAdmin(adminConfirm.person)}
+                  >
+                    {adminConfirm.action === "transfer"
+                      ? "Transfer ownership"
+                      : `Remove ${adminConfirm.person.name}`}
                   </button>
                   <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setAdminConfirm(null)}>
                     Cancel
@@ -204,8 +224,10 @@ export function StudioAdminSheet({
                   <Icon name="arrow_back" size={20} />
                   Studio settings
                 </button>
-                <h2>Admin access</h2>
-                <p className="lead">Admins can edit studio details, manage the calendar, and invite people.</p>
+                <h2>Owner and managers</h2>
+                <p className="lead">
+                  One owner holds the master role. Managers can run the studio without changing ownership.
+                </p>
                 {admins === null ? (
                   <p className="adminempty">Loading admins…</p>
                 ) : (
@@ -217,18 +239,32 @@ export function StudioAdminSheet({
                             {admin.name}
                             {admin.isYou && <span className="staffyou">You</span>}
                           </span>
-                          <span className="s">{admin.email}</span>
+                          <span className="s">{admin.isOwner ? "Owner" : "Manager"} · {admin.email}</span>
                         </span>
-                        <button className="tertiary staffx" onClick={() => setAdminConfirm(admin)}>
-                          {admin.isYou ? "Leave" : "Remove"}
-                        </button>
+                        {canManageAdmins && !admin.isOwner && (
+                          <span className="studio-admin-actions">
+                            <button
+                              className="tertiary"
+                              onClick={() => setAdminConfirm({ person: admin, action: "transfer" })}
+                            >
+                              Make owner
+                            </button>
+                            <button
+                              className="tertiary"
+                              onClick={() => setAdminConfirm({ person: admin, action: "remove" })}
+                            >
+                              Remove
+                            </button>
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="staffadd studio-admin-add">
+                {canManageAdmins && <div className="staffadd studio-admin-add">
                   <input
                     type="email"
+                    aria-label="Manager email"
                     value={adminEmail}
                     placeholder="their@email.com"
                     onChange={(event) => setAdminEmail(event.target.value)}
@@ -237,13 +273,13 @@ export function StudioAdminSheet({
                     }}
                   />
                   <button className="btn si staffaddbtn" disabled={addingAdmin || !adminEmail.trim()} onClick={addAdmin}>
-                    {addingAdmin ? "Adding…" : "Add admin"}
+                    {addingAdmin ? "Adding…" : "Add manager"}
                   </button>
-                </div>
+                </div>}
               </div>
             ) : (
               <>
-            <h2>Studio admin</h2>
+            <h2>Studio settings</h2>
             {/* The number a studio actually asks about first: is anyone
                 looking. A stat is a row you read, not a door, so no chevron. */}
             {canSchedule && views === undefined && (
@@ -287,19 +323,11 @@ export function StudioAdminSheet({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
-              <button className="setrow" onClick={share}>
-                <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Share this studio</span>
-                  <span className="s">Hand its page to someone</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-              </button>
               <button className="setrow" onClick={openAdmins}>
                 <span className="setrow-ic"><Icon name="admin_panel_settings" size={24} /></span>
                 <span className="setrow-txt">
-                  <span className="t">Admin access</span>
-                  <span className="s">Choose who can manage this studio</span>
+                  <span className="t">Owner and managers</span>
+                  <span className="s">Manage roles and studio ownership</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>

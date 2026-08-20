@@ -252,10 +252,10 @@ await matt.getByRole("button", { name: "Shift notifications" }).click();
 
 // Calendar owns the studio admin overflow too. It holds the less-frequent
 // tools, not duplicate doors for either workspace tab.
-await matt.getByRole("button", { name: "More studio settings" }).click();
+await matt.getByRole("button", { name: "Studio settings" }).click();
 {
   const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["Shift counter", "Edit studio info", "Share this studio", "Show who’s coaching"])
+  for (const want of ["Shift counter", "Edit studio info", "Owner and managers", "Show who’s coaching"])
     if (!rows.includes(want)) fail("the overflow is missing " + want + ": " + rows.join("|"));
   for (const gone of ["Calendar", "Staff", "All shifts", "Coaches"])
     if (rows.includes(gone)) fail(gone + " should not be duplicated in the overflow: " + rows.join("|"));
@@ -921,19 +921,21 @@ console.log("the coach is told ok");
   // The keys are the managers' own to hand out: this was an admin-only action,
   // so a gym wanting its own second manager had to write in and ask.
   {
+    await matt.getByRole("button", { name: "Studio settings" }).click();
+    await matt.getByRole("button", { name: "Owner and managers" }).click();
     const mgrs = () => matt
-      .getByRole("heading", { name: "Admin access" })
+      .getByRole("heading", { name: "Owner and managers" })
       .locator("xpath=following-sibling::div[contains(@class, 'settingslist')][1]")
       .locator(".staffrow");
     if ((await mgrs().count()) !== 2)
       fail("Matt and Julia were both handed the page: " + (await mgrs().count()));
     // Somebody with no account can't be handed anything.
-    await matt.locator("#staffEmail").fill("nobody@example.com");
-    await matt.getByRole("button", { name: "Add admin", exact: true }).click();
+    await matt.getByRole("textbox", { name: "Manager email" }).fill("nobody@example.com");
+    await matt.getByRole("button", { name: "Add manager", exact: true }).click();
     await matt.getByText("Nobody with that email has an account yet").waitFor();
     // Tom coaches here and now runs the page too.
-    await matt.locator("#staffEmail").fill("tom@example.com");
-    await matt.getByRole("button", { name: "Add admin", exact: true }).click();
+    await matt.getByRole("textbox", { name: "Manager email" }).fill("tom@example.com");
+    await matt.getByRole("button", { name: "Add manager", exact: true }).click();
     await matt.waitForTimeout(1200);
     if ((await mgrs().count()) !== 3) fail("Tom should run the page now");
     // And he was told, because being handed the keys is not a thing to find
@@ -942,8 +944,10 @@ console.log("the coach is told ok");
     await tom.locator(".notifrow", { hasText: "You run Ironbound" }).waitFor();
     // Taken back off, with the confirm in the way.
     await matt.goto(BASE + studioHref + "/manage/staff");
+    await matt.getByRole("button", { name: "Studio settings" }).click();
+    await matt.getByRole("button", { name: "Owner and managers" }).click();
     await mgrs().filter({ hasText: "Tom" }).getByRole("button", { name: "Remove" }).click();
-    await matt.locator(".confirmsheet").waitFor();
+    await matt.locator(".studio-admin-confirm").waitFor();
     await matt.getByRole("button", { name: "Remove Tom" }).click();
     await matt.waitForTimeout(900);
     if ((await mgrs().count()) !== 2) fail("Tom should be off the page again");

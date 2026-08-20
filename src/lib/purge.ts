@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 
 /**
@@ -122,6 +122,27 @@ export async function purgeUser(
     .update(schema.shiftRequests)
     .set({ decidedByUserId: null })
     .where(eq(schema.shiftRequests.decidedByUserId, id));
+  const ownedStudios = await db
+    .select({ id: schema.studios.id })
+    .from(schema.studios)
+    .where(eq(schema.studios.ownerUserId, id));
+  for (const studio of ownedStudios) {
+    const [nextOwner] = await db
+      .select({ userId: schema.studioManagers.userId })
+      .from(schema.studioManagers)
+      .where(
+        and(
+          eq(schema.studioManagers.studioId, studio.id),
+          ne(schema.studioManagers.userId, id),
+        ),
+      )
+      .orderBy(schema.studioManagers.createdAt)
+      .limit(1);
+    await db
+      .update(schema.studios)
+      .set({ ownerUserId: nextOwner?.userId ?? null })
+      .where(eq(schema.studios.id, studio.id));
+  }
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));
   await db
     .update(schema.studioManagers)

@@ -266,6 +266,10 @@ export const studios = pgTable("studios", {
   website: text("website"),
   instagram: text("instagram"),
   createdByUserId: uuid("created_by_user_id").references(() => users.id),
+  // One accountable owner holds the master key. They may add/remove managers
+  // or hand ownership to another manager; managers run the studio without
+  // being able to quietly replace the owner.
+  ownerUserId: uuid("owner_user_id").references(() => users.id),
   // The gym's own account, once it runs its schedule here. A users row with
   // kind "gym": no handle, no password, nobody signs into it. It exists so the
   // gym's classes have an owner that isn't a person, which is the whole reason

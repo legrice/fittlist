@@ -2299,16 +2299,18 @@ export type StaffPerson = {
   id: string;
   name: string;
   email: string;
-  /** They added themselves nothing: this is the viewer, so the row says so
-   *  and removing it warns rather than just doing it. */
   isYou: boolean;
+  isOwner: boolean;
 };
 
 /** Focused loader for the Admin access view in Studio settings. It avoids
  * loading the coach roster just to show the small list of page managers. */
-export async function studioManagersForSettings(studioId: string): Promise<StaffPerson[]> {
+export async function studioManagersForSettings(studioId: string): Promise<{
+  people: StaffPerson[];
+  canManage: boolean;
+}> {
   const ctx = await managing(studioId);
-  if ("error" in ctx) return [];
+  if ("error" in ctx) return { people: [], canManage: false };
   const rows = await ctx.db
     .select({
       id: schema.users.id,
@@ -2318,14 +2320,19 @@ export async function studioManagersForSettings(studioId: string): Promise<Staff
     .from(schema.studioManagers)
     .innerJoin(schema.users, eq(schema.users.id, schema.studioManagers.userId))
     .where(eq(schema.studioManagers.studioId, studioId));
-  return rows
+  const people = rows
     .map((person) => ({
       id: person.id,
       name: person.name.trim() || person.email.split("@")[0],
       email: person.email,
       isYou: person.id === ctx.userId,
+      isOwner: person.id === ctx.studio.ownerUserId,
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => Number(b.isOwner) - Number(a.isOwner) || a.name.localeCompare(b.name));
+  return {
+    people,
+    canManage: ctx.studio.ownerUserId === ctx.userId,
+  };
 }
 export type StudioStaffDto = {
   /** Everyone the studio has placed on its roster, including people invited
@@ -2534,6 +2541,11 @@ export async function addStudioManager(
   const ctx = await managing(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { db, userId, studio } = ctx;
+  if (studio.ownerUserId && studio.ownerUserId !== userId)
+    return { ok: false, error: "Only the studio owner can add managers." };
+  if (!studio.ownerUserId) {
+    await db.update(schema.studios).set({ ownerUserId: userId }).where(eq(schema.studios.id, studioId));
+  }
   const email = emailRaw.trim().toLowerCase();
   if (!email) return { ok: false, error: "Enter their email." };
   const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
@@ -2580,7 +2592,11 @@ export async function removeStudioManager(
 ): Promise<{ ok: boolean; error?: string }> {
   const ctx = await managing(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
-  const { db, studio } = ctx;
+  const { db, userId, studio } = ctx;
+  if (studio.ownerUserId && studio.ownerUserId !== userId)
+    return { ok: false, error: "Only the studio owner can remove managers." };
+  if (targetId === (studio.ownerUserId ?? userId))
+    return { ok: false, error: "Transfer ownership before removing the owner." };
   const rows = await db
     .select({ userId: schema.studioManagers.userId })
     .from(schema.studioManagers)
@@ -2596,6 +2612,40 @@ export async function removeStudioManager(
       and(eq(schema.studioManagers.studioId, studioId), eq(schema.studioManagers.userId, targetId)),
     );
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  return { ok: true };
+}
+
+/** Hand the one master role to an existing manager. The previous owner stays
+ * on as a manager, so a transfer never locks them out by surprise. */
+export async function transferStudioOwnership(
+  studioId: string,
+  targetId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, userId, studio } = ctx;
+  if ((studio.ownerUserId ?? userId) !== userId)
+    return { ok: false, error: "Only the studio owner can transfer ownership." };
+  const [target] = await db
+    .select({ id: schema.studioManagers.id })
+    .from(schema.studioManagers)
+    .where(
+      and(
+        eq(schema.studioManagers.studioId, studioId),
+        eq(schema.studioManagers.userId, targetId),
+      ),
+    );
+  if (!target) return { ok: false, error: "Make them a manager before transferring ownership." };
+  await db.update(schema.studios).set({ ownerUserId: targetId }).where(eq(schema.studios.id, studioId));
+  await addNotification(targetId, {
+    type: "studio_manager",
+    title: `You own ${studio.name} on fittlist`,
+    body: "You can manage the studio and choose its managers.",
+    href: `/s/${studio.slug ?? studio.id}/manage`,
+    actorUserId: userId,
+  });
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
   return { ok: true };
