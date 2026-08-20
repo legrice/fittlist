@@ -1,24 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
   addStudioManager,
   inviteStudioCoach,
-  removeStudioCoach,
   removeStudioManager,
-  setStudioCoachScheduled,
 } from "@/app/actions/gym";
 import type { StudioStaffDto } from "@/app/actions/gym";
+import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
 
-// The studio's people, in two views of the same explicit relationship.
-//
-// People contains only coaches the studio invited, plus the people who run the
-// page. Schedule decides which invited coaches may be assigned to shifts. A
-// public "I coach here" profile connection never grants staffing permission.
+// The studio's invited people. Scheduling access is part of each coach rather
+// than a second copy of the same roster; tapping a person opens their settings.
 //
 // Adding a manager used to be ours to do. A gym wanting its own second manager
 // had to write in and ask, which is a strange thing to need a support ticket
@@ -38,8 +35,7 @@ export function StudioStaffView({
   staff: StudioStaffDto;
 }) {
   const [managers, setManagers] = useState(staff.managers);
-  const [coaches, setCoaches] = useState(staff.roster);
-  const [view, setView] = useState<"people" | "schedule">("people");
+  const coaches = staff.roster;
   const [email, setEmail] = useState("");
   const [adding, setAdding] = useState(false);
   const [coachName, setCoachName] = useState("");
@@ -85,22 +81,6 @@ export function StudioStaffView({
     });
   };
 
-  const toggleScheduled = (id: string) => {
-    const coach = coaches.find((item) => item.id === id);
-    if (!coach) return;
-    const next = !coach.onSchedule;
-    setCoaches((prev) => prev.map((item) => (item.id === id ? { ...item, onSchedule: next } : item)));
-    start(async () => {
-      const res = await setStudioCoachScheduled(studioId, id, next);
-      if (!res.ok) {
-        setCoaches((prev) => prev.map((item) => (item.id === id ? { ...item, onSchedule: !next } : item)));
-        toast(res.error ?? "Couldn't do that");
-        return;
-      }
-      toast(next ? "They can be scheduled" : "Removed from the schedule");
-    });
-  };
-
   const addCoach = async () => {
     if (invitingCoach || !coachName.trim() || !coachEmail.trim()) return;
     setInvitingCoach(true);
@@ -114,18 +94,6 @@ export function StudioStaffView({
     setCoachEmail("");
     toast(res.invited ? "Invite sent" : "Added to your people");
     start(() => window.location.reload());
-  };
-
-  const removeCoach = (id: string) => {
-    start(async () => {
-      const res = await removeStudioCoach(studioId, id);
-      if (!res.ok) {
-        toast(res.error ?? "Couldn't remove them");
-        return;
-      }
-      setCoaches((prev) => prev.filter((coach) => coach.id !== id));
-      toast("Removed from your people");
-    });
   };
 
   return (
@@ -148,55 +116,43 @@ export function StudioStaffView({
 
       <StudioManageNav slug={studioSlug} active="staff" />
 
-      <div className="staff-view-switch" role="group" aria-label="Staff view">
-        <button
-          type="button"
-          className={view === "people" ? "on" : ""}
-          aria-pressed={view === "people"}
-          onClick={() => setView("people")}
-        >
-          People
-        </button>
-        <button
-          type="button"
-          className={view === "schedule" ? "on" : ""}
-          aria-pressed={view === "schedule"}
-          onClick={() => setView("schedule")}
-        >
-          On schedule
-        </button>
-      </div>
-
-      {view === "people" ? (
-        <>
-          <h3 className="setgroup-h">Coaches</h3>
-          <p className="staffnote">
-            Invite the people who work with this studio. Public profile connections do not
-            add anyone to your staff.
-          </p>
-          {coaches.length > 0 ? (
-            <div className="settingslist">
-              {coaches.map((coach) => (
-                <div key={coach.id} className="setrow staffrow">
-                  <span className="setrow-txt">
-                    <span className="t">{coach.name}</span>
-                    <span className="s">
-                      {coach.state === "placeholder" || coach.state === "invited"
-                        ? coach.email
-                          ? `Invite pending · ${coach.email}`
-                          : "Invite pending"
-                        : coach.email ?? "Coach account"}
-                    </span>
-                  </span>
-                  <button className="tertiary staffx" onClick={() => removeCoach(coach.id)}>
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="adminempty">No coaches have been invited yet.</p>
-          )}
+      <h3 className="setgroup-h">Coaches</h3>
+      <p className="staffnote">
+        Invite the people who work with this studio. Tap a coach to manage their schedule access
+        and see their shifts.
+      </p>
+      {coaches.length > 0 ? (
+        <div className="settingslist">
+          {coaches.map((coach) => (
+            <Link
+              key={coach.id}
+              className="setrow staffrow staff-person-link"
+              href={`/s/${studioSlug}/manage/staff/${coach.id}`}
+              prefetch={false}
+            >
+              <AgendaAvatar
+                photo={coach.photo}
+                name={coach.name}
+                color={coach.color ?? "var(--color-text-secondary)"}
+                cls="staff-person-avatar"
+              />
+              <span className="setrow-txt">
+                <span className="t">{coach.name}</span>
+                <span className="s">
+                  {coach.state === "placeholder" || coach.state === "invited"
+                    ? "Invite pending"
+                    : coach.onSchedule
+                      ? "On the schedule"
+                      : "Not on the schedule"}
+                </span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p className="adminempty">No coaches have been invited yet.</p>
+      )}
           <div className="staffadd staff-invite">
             <input
               id="coachName"
@@ -262,43 +218,6 @@ export function StudioStaffView({
               Add admin
             </button>
           </div>
-        </>
-      ) : (
-        <>
-          <h3 className="setgroup-h">Who can be scheduled</h3>
-          <p className="staffnote">
-            Only invited coaches can be put on classes or pick up open shifts. Turn someone
-            off after their future classes are reassigned in Calendar.
-          </p>
-          {!staff.hasSchedule ? (
-            <p className="adminempty">Turn on the studio calendar before assigning coaches.</p>
-          ) : coaches.length === 0 ? (
-            <p className="adminempty">Invite a coach under People first.</p>
-          ) : (
-            <div className="settingslist">
-              {coaches.map((coach) => (
-                <button
-                  key={coach.id}
-                  className="setrow"
-                  role="switch"
-                  aria-checked={coach.onSchedule}
-                  onClick={() => toggleScheduled(coach.id)}
-                >
-                  <span className="setrow-txt">
-                    <span className="t">{coach.name}</span>
-                    <span className="s">
-                      {coach.onSchedule ? "On the schedule" : "Not on the schedule"}
-                    </span>
-                  </span>
-                  <span className={`switch${coach.onSchedule ? " on" : ""}`} aria-hidden="true">
-                    <span className="switch-knob" />
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
 
       {/* Handing the keys back is not a thing to do by mistyping a tap, so it
           asks first, the same shape removing a plan asks with. */}

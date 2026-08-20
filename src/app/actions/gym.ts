@@ -2155,6 +2155,7 @@ export async function setStudioCoachScheduled(
   const slug = studio.slug ?? studio.id;
   revalidatePath(`/s/${slug}/manage`);
   revalidatePath(`/s/${slug}/manage/staff`);
+  revalidatePath(`/s/${slug}/manage/staff/${userId}`);
   revalidatePath(`/s/${slug}/shifts`);
   revalidatePath("/app");
   revalidatePath("/calendar");
@@ -2187,6 +2188,7 @@ export async function removeStudioCoach(
   const slug = studio.slug ?? studio.id;
   revalidatePath(`/s/${slug}/manage`);
   revalidatePath(`/s/${slug}/manage/staff`);
+  revalidatePath(`/s/${slug}/manage/staff/${userId}`);
   revalidatePath(`/s/${slug}/shifts`);
   revalidatePath("/app");
   revalidatePath("/calendar");
@@ -2210,28 +2212,58 @@ export type StudioStaffDto = {
     id: string;
     name: string;
     email: string | null;
+    photo: string | null;
+    color: string | null;
     state: string;
     onSchedule: boolean;
   }[];
   hasSchedule: boolean;
 };
 
-/** Both lists at once: the screen shows them together. */
+/** The invited roster and separate admin access list for the Staff page. */
 export async function studioStaff(studioId: string): Promise<StudioStaffDto | null> {
   const ctx = await managing(studioId);
   if ("error" in ctx) return null;
   const { db, userId, studio } = ctx;
-  const rows = await db
-    .select({ userId: schema.studioManagers.userId })
-    .from(schema.studioManagers)
-    .where(eq(schema.studioManagers.studioId, studioId));
-  const ids = rows.map((r) => r.userId);
-  const people = ids.length
-    ? await db
-        .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email })
-        .from(schema.users)
-        .where(inArray(schema.users.id, ids))
-    : [];
+  const [rows, rosterRows] = await Promise.all([
+    db
+      .select({ userId: schema.studioManagers.userId })
+      .from(schema.studioManagers)
+      .where(eq(schema.studioManagers.studioId, studioId)),
+    db
+      .select({
+        userId: schema.studioRotaCoaches.userId,
+        state: schema.studioRotaCoaches.state,
+        invitedEmail: schema.studioRotaCoaches.invitedEmail,
+        onSchedule: schema.studioRotaCoaches.onSchedule,
+      })
+      .from(schema.studioRotaCoaches)
+      .where(eq(schema.studioRotaCoaches.studioId, studioId)),
+  ]);
+  const ids = rows.map((row) => row.userId);
+  const rosterIds = rosterRows.map((row) => row.userId);
+  const [people, rosterPeople] = await Promise.all([
+    ids.length
+      ? db
+          .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email })
+          .from(schema.users)
+          .where(inArray(schema.users.id, ids))
+      : [],
+    rosterIds.length
+      ? db
+          .select({
+            id: schema.users.id,
+            name: schema.users.name,
+            email: schema.users.email,
+            kind: schema.users.kind,
+            photoThumb: schema.users.photoThumb,
+            photo: schema.users.photo,
+            color: schema.users.avatarColor,
+          })
+          .from(schema.users)
+          .where(inArray(schema.users.id, rosterIds))
+      : [],
+  ]);
   const managers = people
     .map((p) => ({
       id: p.id,
@@ -2240,22 +2272,6 @@ export async function studioStaff(studioId: string): Promise<StudioStaffDto | nu
       isYou: p.id === userId,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
-  const rosterRows = await db
-    .select({
-      userId: schema.studioRotaCoaches.userId,
-      state: schema.studioRotaCoaches.state,
-      invitedEmail: schema.studioRotaCoaches.invitedEmail,
-      onSchedule: schema.studioRotaCoaches.onSchedule,
-    })
-    .from(schema.studioRotaCoaches)
-    .where(eq(schema.studioRotaCoaches.studioId, studioId));
-  const rosterIds = rosterRows.map((row) => row.userId);
-  const rosterPeople = rosterIds.length
-    ? await db
-        .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, kind: schema.users.kind })
-        .from(schema.users)
-        .where(inArray(schema.users.id, rosterIds))
-    : [];
   const personById = new Map(rosterPeople.map((person) => [person.id, person]));
   const roster = rosterRows
     .map((row) => {
@@ -2264,12 +2280,143 @@ export async function studioStaff(studioId: string): Promise<StudioStaffDto | nu
         id: row.userId,
         name: person?.name.trim() || "Coach",
         email: row.invitedEmail ?? (person?.kind === "placeholder" ? null : person?.email ?? null),
+        photo: person?.photoThumb ?? person?.photo ?? null,
+        color: person?.color ?? null,
         state: row.state,
         onSchedule: row.onSchedule,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
   return { managers, roster, hasSchedule: !!studio.accountUserId };
+}
+
+export type StudioCoachDetailDto = {
+  id: string;
+  name: string;
+  email: string | null;
+  photo: string | null;
+  color: string | null;
+  state: string;
+  onSchedule: boolean;
+  month: string;
+  monthLabel: string;
+  firstLabel: string;
+  secondLabel: string;
+  first: number;
+  second: number;
+  total: number;
+};
+
+/** One invited coach, with the calendar-derived count a manager needs when
+ * deciding whether to change or remove their access. */
+export async function studioCoachDetail(
+  studioId: string,
+  coachId: string,
+  monthIso?: string,
+): Promise<StudioCoachDetailDto | null> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return null;
+  const { db, studio } = ctx;
+  const [rosterRows, people, slots] = await Promise.all([
+    db
+      .select({
+        state: schema.studioRotaCoaches.state,
+        invitedEmail: schema.studioRotaCoaches.invitedEmail,
+        onSchedule: schema.studioRotaCoaches.onSchedule,
+      })
+      .from(schema.studioRotaCoaches)
+      .where(
+        and(
+          eq(schema.studioRotaCoaches.studioId, studioId),
+          eq(schema.studioRotaCoaches.userId, coachId),
+        ),
+      ),
+    db
+      .select({
+        name: schema.users.name,
+        email: schema.users.email,
+        kind: schema.users.kind,
+        photoThumb: schema.users.photoThumb,
+        photo: schema.users.photo,
+        color: schema.users.avatarColor,
+      })
+      .from(schema.users)
+      .where(eq(schema.users.id, coachId)),
+    studio.accountUserId
+      ? db
+          .select()
+          .from(schema.classes)
+          .where(
+            and(
+              eq(schema.classes.userId, studio.accountUserId),
+              eq(schema.classes.studioId, studioId),
+            ),
+          )
+      : [],
+  ]);
+  const [roster] = rosterRows;
+  if (!roster) return null;
+  const [person] = people;
+  if (!person) return null;
+
+  const month = /^\d{4}-\d{2}$/.test(monthIso ?? "") ? monthIso! : todayIso().slice(0, 7);
+  const [year, monthNumber] = month.split("-").map(Number);
+  const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+  const firstIso = `${month}-01`;
+  const lastIso = `${month}-${String(daysInMonth).padStart(2, "0")}`;
+  const covers = slots.length
+    ? await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(
+          and(
+            inArray(schema.shiftCovers.classId, slots.map((slot) => slot.id)),
+            gte(schema.shiftCovers.occurrenceDate, firstIso),
+            lte(schema.shiftCovers.occurrenceDate, lastIso),
+          ),
+        )
+    : [];
+  const coverBy = new Map(covers.map((cover) => [`${cover.classId}|${cover.occurrenceDate}`, cover]));
+  const startedOn = new Map(
+    slots.map((slot) => [
+      slot.id,
+      slot.createdAt ? new Date(slot.createdAt).toISOString().slice(0, 10) : "0000-00-00",
+    ]),
+  );
+  let first = 0;
+  let second = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const iso = `${month}-${String(day).padStart(2, "0")}`;
+    const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    for (const slot of slots) {
+      if (iso < (startedOn.get(slot.id) ?? "") || !runsOn(slot, iso, dow)) continue;
+      const cover = coverBy.get(`${slot.id}|${iso}`);
+      if ((cover ? cover.coachUserId : slot.coachUserId) !== coachId) continue;
+      if (day <= 15) first++;
+      else second++;
+    }
+  }
+  const monthLabel = new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return {
+    id: coachId,
+    name: person.name.trim() || "Coach",
+    email: roster.invitedEmail ?? (person.kind === "placeholder" ? null : person.email),
+    photo: person.photoThumb ?? person.photo,
+    color: person.color,
+    state: roster.state,
+    onSchedule: roster.onSchedule,
+    month,
+    monthLabel,
+    firstLabel: "1st to 15th",
+    secondLabel: `16th to ${daysInMonth}`,
+    first,
+    second,
+    total: first + second,
+  };
 }
 
 /**
