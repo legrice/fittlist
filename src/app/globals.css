@@ -7172,7 +7172,7 @@ select.editinput.placekind-select {
     width: 100%; max-width: none; margin: 0;
     padding-inline: clamp(20px, 2vw, 40px);
   }
-  .studio-staff-pad > :is(.setgroup-h, .staffnote, .settingslist, .staffadd, .adminempty, .rotaweek, .statgrid, .studio-coach-remove) {
+  .studio-staff-pad > :is(.setgroup-h, .staffnote, .settingslist, .staffadd, .staff-add-coach-button, .adminempty, .rotaweek, .statgrid, .studio-coach-remove) {
     max-width: 760px;
   }
   .screen.hasnav > .pad:has(> .studio-staff-pad) {
@@ -7820,6 +7820,40 @@ select.editinput.placekind-select {
 }
 .staffadd input:focus { outline: none; border-color: var(--si); }
 .staffadd .staffaddbtn { width: auto; margin: 0; flex-shrink: 0; padding-left: 22px; padding-right: 22px; }
+.staff-add-coach-button {
+  width: 100%; margin: 18px 0 32px; display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.staff-coach-add-sheet { max-height: min(90dvh, 720px); overflow-y: auto; }
+.staff-add-modes {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px;
+  margin: 20px 0; padding: 4px; border-radius: var(--radius-pill); background: var(--color-surface-muted);
+}
+.staff-add-modes button {
+  min-height: 44px; padding: 0 12px; border: 0; border-radius: var(--radius-pill);
+  background: transparent; color: var(--color-black); font: inherit; font-size: 14px; font-weight: 700;
+}
+.staff-add-modes button.on { background: var(--color-black); color: var(--color-white); }
+.staff-coach-search {
+  min-height: 54px; padding: 0 16px; display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-white);
+}
+.staff-coach-search input {
+  width: 100%; min-width: 0; border: 0; outline: 0; background: transparent;
+  color: var(--color-black); font: inherit; font-size: 16px;
+}
+.staff-coach-results { margin-top: 12px; }
+.staff-coach-results > p { margin: 20px 2px; color: var(--color-text-secondary); }
+.staff-coach-result {
+  width: 100%; min-height: 66px; padding: 10px 2px; display: flex; align-items: center; gap: 12px;
+  border: 0; border-top: 1px solid var(--color-border); background: transparent; color: var(--color-black); text-align: left;
+}
+.staff-coach-result:first-child { border-top: 0; }
+.staff-coach-result > span:not(.staff-person-avatar) { min-width: 0; display: grid; gap: 2px; }
+.staff-coach-result strong { font-size: 15px; }
+.staff-coach-result small { color: var(--color-text-secondary); font-size: 13px; }
+.staff-coach-result-action { margin-left: auto; color: var(--color-black); font-size: 14px; font-weight: 700; }
+.staff-invite-sheet { margin: 0; flex-direction: column; }
+.staff-invite-sheet .staffaddbtn { width: 100%; }
 @media (max-width: 650px) {
   .staff-invite { flex-direction: column; }
   .staff-invite .staffaddbtn { width: 100%; }

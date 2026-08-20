@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { and, eq, gte, inArray, isNull, lte, ne, sql } from "drizzle-orm";
+import { and, eq, gte, ilike, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
@@ -1979,6 +1979,105 @@ export async function enableStudioSchedule(
 }
 
 const ROSTER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export type StudioCoachSearchResult = {
+  id: string;
+  name: string;
+  handle: string | null;
+  photo: string | null;
+  color: string | null;
+};
+
+/** Search-first roster adding: only return people who can actually coach and
+ * are not already associated with this studio. Email stays server-side. */
+export async function searchStudioCoachCandidates(
+  studioId: string,
+  queryRaw: string,
+): Promise<StudioCoachSearchResult[]> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return [];
+  const query = queryRaw.trim();
+  if (query.length < 2) return [];
+  const pattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
+  const [people, roster] = await Promise.all([
+    ctx.db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        handle: schema.users.handle,
+        photoThumb: schema.users.photoThumb,
+        photo: schema.users.photo,
+        color: schema.users.avatarColor,
+      })
+      .from(schema.users)
+      .where(
+        and(
+          eq(schema.users.discoverable, true),
+          inArray(schema.users.kind, ["coach", "admin"]),
+          or(ilike(schema.users.name, pattern), ilike(schema.users.handle, pattern)),
+        ),
+      )
+      .limit(16),
+    ctx.db
+      .select({ userId: schema.studioRotaCoaches.userId })
+      .from(schema.studioRotaCoaches)
+      .where(eq(schema.studioRotaCoaches.studioId, studioId)),
+  ]);
+  const already = new Set(roster.map((row) => row.userId));
+  return people
+    .filter((person) => !already.has(person.id))
+    .map((person) => ({
+      id: person.id,
+      name: person.name.trim() || person.handle || "Coach",
+      handle: person.handle,
+      photo: person.photoThumb ?? person.photo ?? null,
+      color: person.color,
+    }));
+}
+
+/** Associate an existing FittList coach without exposing their email to the
+ * manager's browser. */
+export async function addExistingStudioCoach(
+  studioId: string,
+  coachUserId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, userId, studio } = ctx;
+  const [person] = await db
+    .select({ id: schema.users.id, kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, coachUserId));
+  if (!person || (person.kind !== "coach" && person.kind !== "admin"))
+    return { ok: false, error: "That coach could not be added." };
+  const [already] = await db
+    .select({ id: schema.studioRotaCoaches.id })
+    .from(schema.studioRotaCoaches)
+    .where(
+      and(
+        eq(schema.studioRotaCoaches.studioId, studioId),
+        eq(schema.studioRotaCoaches.userId, coachUserId),
+      ),
+    );
+  if (already) return { ok: false, error: "They're already associated with this studio." };
+  await db.insert(schema.studioRotaCoaches).values({
+    studioId,
+    userId: coachUserId,
+    state: "active",
+    onSchedule: true,
+    acceptedAt: new Date(),
+  });
+  await addNotification(coachUserId, {
+    type: "shift_assigned",
+    title: `You're on ${studio.name}'s team`,
+    body: "The studio can put you on its calendar and send you coverage requests.",
+    href: `/s/${studio.slug ?? studio.id}/shifts`,
+    actorUserId: userId,
+  });
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  return { ok: true };
+}
 
 /** Invite a person to this studio's roster, whether or not they have joined yet. */
 export async function inviteStudioCoach(

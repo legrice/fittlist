@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
+  addExistingStudioCoach,
   addStudioManager,
   inviteStudioCoach,
   removeStudioManager,
+  searchStudioCoachCandidates,
 } from "@/app/actions/gym";
-import type { StudioStaffDto } from "@/app/actions/gym";
+import type { StudioCoachSearchResult, StudioStaffDto } from "@/app/actions/gym";
 import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
@@ -41,6 +43,13 @@ export function StudioStaffView({
   const [coachName, setCoachName] = useState("");
   const [coachEmail, setCoachEmail] = useState("");
   const [invitingCoach, setInvitingCoach] = useState(false);
+  const [coachSheetOpen, setCoachSheetOpen] = useState(false);
+  const [coachAddMode, setCoachAddMode] = useState<"search" | "email">("search");
+  const [coachSearch, setCoachSearch] = useState("");
+  const [coachResults, setCoachResults] = useState<StudioCoachSearchResult[]>([]);
+  const [coachSearching, setCoachSearching] = useState(false);
+  const [addingCoachId, setAddingCoachId] = useState<string | null>(null);
+  const searchRequest = useRef(0);
   const [confirm, setConfirm] = useState<{ id: string; name: string; isYou: boolean } | null>(null);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
@@ -92,7 +101,40 @@ export function StudioStaffView({
     }
     setCoachName("");
     setCoachEmail("");
+    setCoachSheetOpen(false);
     toast(res.invited ? "Invite sent" : "Added to your people");
+    start(() => window.location.reload());
+  };
+
+  useEffect(() => {
+    const query = coachSearch.trim();
+    if (!coachSheetOpen || coachAddMode !== "search" || query.length < 2) {
+      setCoachResults([]);
+      setCoachSearching(false);
+      return;
+    }
+    const request = ++searchRequest.current;
+    setCoachSearching(true);
+    const timer = window.setTimeout(async () => {
+      const results = await searchStudioCoachCandidates(studioId, query);
+      if (request !== searchRequest.current) return;
+      setCoachResults(results);
+      setCoachSearching(false);
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [coachAddMode, coachSearch, coachSheetOpen, studioId]);
+
+  const addExistingCoach = async (coach: StudioCoachSearchResult) => {
+    if (addingCoachId) return;
+    setAddingCoachId(coach.id);
+    const res = await addExistingStudioCoach(studioId, coach.id);
+    setAddingCoachId(null);
+    if (!res.ok) {
+      toast(res.error ?? "Couldn't add them");
+      return;
+    }
+    setCoachSheetOpen(false);
+    toast(`${coach.name} added`);
     start(() => window.location.reload());
   };
 
@@ -153,32 +195,10 @@ export function StudioStaffView({
       ) : (
         <p className="adminempty">No coaches have been invited yet.</p>
       )}
-          <div className="staffadd staff-invite">
-            <input
-              id="coachName"
-              value={coachName}
-              placeholder="Coach name"
-              onChange={(e) => setCoachName(e.target.value)}
-            />
-            <input
-              id="coachEmail"
-              type="email"
-              value={coachEmail}
-              placeholder="Email"
-              required
-              onChange={(e) => setCoachEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") addCoach();
-              }}
-            />
-            <button
-              className="btn si staffaddbtn"
-              disabled={invitingCoach || !coachName.trim() || !coachEmail.trim()}
-              onClick={addCoach}
-            >
-              Invite coach
-            </button>
-          </div>
+      <button className="btn si staff-add-coach-button" onClick={() => setCoachSheetOpen(true)}>
+        <Icon name="add" size={21} />
+        Add a coach
+      </button>
 
           <h3 className="setgroup-h">Admin access</h3>
           <p className="staffnote">
@@ -218,6 +238,114 @@ export function StudioStaffView({
               Add admin
             </button>
           </div>
+
+      {coachSheetOpen && (
+        <div className="sheet-scrim" onClick={(event) => {
+          if (event.target === event.currentTarget) setCoachSheetOpen(false);
+        }}>
+          <div className="sheet staff-coach-add-sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setCoachSheetOpen(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Add a coach</h2>
+            <div className="staff-add-modes" role="tablist" aria-label="How to add a coach">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={coachAddMode === "search"}
+                className={coachAddMode === "search" ? "on" : ""}
+                onClick={() => setCoachAddMode("search")}
+              >
+                Search FittList
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={coachAddMode === "email"}
+                className={coachAddMode === "email" ? "on" : ""}
+                onClick={() => setCoachAddMode("email")}
+              >
+                Invite by email
+              </button>
+            </div>
+
+            {coachAddMode === "search" ? (
+              <div className="staff-coach-search-panel">
+                <label className="staff-coach-search">
+                  <Icon name="search" size={20} />
+                  <input
+                    autoFocus
+                    type="search"
+                    value={coachSearch}
+                    placeholder="Search coaches"
+                    onChange={(event) => setCoachSearch(event.target.value)}
+                  />
+                </label>
+                <div className="staff-coach-results">
+                  {coachSearching ? (
+                    <p>Searching…</p>
+                  ) : coachSearch.trim().length < 2 ? (
+                    <p>Search by name or username.</p>
+                  ) : coachResults.length ? (
+                    coachResults.map((coach) => (
+                      <button
+                        type="button"
+                        className="staff-coach-result"
+                        key={coach.id}
+                        disabled={!!addingCoachId}
+                        onClick={() => addExistingCoach(coach)}
+                      >
+                        <AgendaAvatar
+                          photo={coach.photo}
+                          name={coach.name}
+                          color={coach.color ?? "var(--color-text-secondary)"}
+                          cls="staff-person-avatar"
+                        />
+                        <span>
+                          <strong>{coach.name}</strong>
+                          {coach.handle && <small>@{coach.handle}</small>}
+                        </span>
+                        <span className="staff-coach-result-action">
+                          {addingCoachId === coach.id ? "Adding…" : "Add"}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p>No matching coaches. You can invite them by email instead.</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="staffadd staff-invite-sheet">
+                <input
+                  id="coachName"
+                  value={coachName}
+                  placeholder="Coach name"
+                  onChange={(event) => setCoachName(event.target.value)}
+                />
+                <input
+                  id="coachEmail"
+                  type="email"
+                  value={coachEmail}
+                  placeholder="Email"
+                  required
+                  onChange={(event) => setCoachEmail(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") addCoach();
+                  }}
+                />
+                <button
+                  className="btn si staffaddbtn"
+                  disabled={invitingCoach || !coachName.trim() || !coachEmail.trim()}
+                  onClick={addCoach}
+                >
+                  {invitingCoach ? "Sending…" : "Invite coach"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Handing the keys back is not a thing to do by mistyping a tap, so it
           asks first, the same shape removing a plan asks with. */}
