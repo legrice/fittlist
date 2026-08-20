@@ -6796,57 +6796,65 @@ select.editinput.placekind-select {
 .adminmgr-nm { font-weight: 600; }
 .adminmgr-em { color: var(--ol); font-size: 12px; }
 
-/* The rota: a week of slots, each one a class and the person on it. */
-.rota { display: flex; flex-direction: column; gap: 18px; margin-top: 18px; }
+/* The manager rota uses the same calendar cards as every member-facing
+   schedule. Management changes what the card does, not what a class looks
+   like. */
+.rota-calendar { margin-top: 24px; }
 .rotaday-h {
   display: flex; align-items: center; justify-content: space-between;
-  font-weight: 600; font-size: 15px; margin-bottom: 8px;
+  gap: 12px; font-weight: 600; font-size: 15px;
 }
-.rotaday-actions { display: inline-flex; align-items: center; gap: 14px; }
+.rotaday-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 7px; }
 .rotaadd {
   display: inline-flex; align-items: center; gap: 4px;
-  background: none; border: none; cursor: pointer; padding: 4px 0;
-  color: var(--si); font-weight: 600; font-size: 13px;
+  min-height: 32px; padding: 0 10px; border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill); background: var(--color-white); cursor: pointer;
+  color: var(--color-black); font: inherit; font-weight: 700; font-size: 12px;
 }
-.rotaempty { margin: 0; font-size: 13px; color: var(--ol); }
+.rotaadd:first-child { border-color: transparent; background: var(--color-lime-soft); }
+.rotaadd:active { background: var(--color-surface-hover); }
+.rotaempty {
+  margin: 0; padding: 18px 20px; border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card); background: var(--color-surface-muted);
+  font-size: 13px; color: var(--color-text-secondary);
+}
 /* The rota's slots are the same class card the coach page and the studio page
    use; a week should read the same wherever it appears, and one card means one
    place to change how it looks. Nobody on it is the one thing a manager is
    scanning for, so it's the only thing the card adds. */
-.ps-event-open { box-shadow: inset 0 0 0 1.5px #c7bf9f; background: var(--cl); }
-.ps-event-open .ps-accent { background: transparent; }
-.ps-event-open .ps-estudio { color: #8a7a4a; font-weight: 600; }
-.rotatimes { display: flex; gap: 12px; }
-.rotatimes > div { flex: 1; min-width: 0; }
-
 /* The rota's week stepper, and the mark on a swapped date. */
 .rotaweek {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; margin-top: 16px;
+  min-height: 52px; display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center; margin-top: 18px; border-radius: var(--radius-control);
+  background: var(--color-surface-muted); color: var(--color-text-primary);
 }
-.rotaweek-lbl { font-weight: 600; font-size: 15px; }
+.rotaweek-lbl {
+  min-width: 0; overflow: hidden; text-align: center; text-overflow: ellipsis;
+  white-space: nowrap; font-weight: 700; font-size: 16px;
+}
 .rotanav {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
-  background: var(--card); color: var(--ink); border: 1px solid var(--line);
+  width: 48px; height: 48px; border-radius: 16px; flex-shrink: 0;
+  background: transparent; color: inherit; border: 0;
 }
 .rotanav.off { opacity: .35; pointer-events: none; }
-.rotaswap {
-  margin-left: 7px; font-size: 11px; font-weight: 600; letter-spacing: .04em;
-  text-transform: uppercase; color: var(--si);
-}
-.rotadraft {
-  margin-left: 7px; font-size: 11px; font-weight: 700; letter-spacing: .04em;
-  text-transform: uppercase; color: #7864a6;
-}
 .rota-publish {
-  margin-top: 8px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px;
-  background: var(--card); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700;
+  min-height: 42px; margin-top: 10px; padding: 0 16px; border: 0; border-radius: var(--radius-pill);
+  background: var(--color-lime); color: var(--color-black); font: inherit; font-size: 13px; font-weight: 700;
   cursor: pointer;
 }
 .copyday-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
 .copyday-grid .btn { min-height: 42px; }
 .copyday-cancel { width: 100%; margin-top: 10px; }
+@media (max-width: 520px) {
+  .rota-calendar .rotaday-h { align-items: flex-start; flex-direction: column; }
+  .rota-calendar .rotaday-actions {
+    width: 100%; justify-content: flex-start; overflow-x: auto;
+    padding-bottom: 2px; scrollbar-width: none;
+  }
+  .rota-calendar .rotaday-actions::-webkit-scrollbar { display: none; }
+  .rota-calendar .rotaadd { min-height: 42px; flex: 0 0 auto; padding-inline: 13px; }
+}
 .rotasec-h {
   margin: 22px 0 0; font-size: 13px; font-weight: 600; letter-spacing: .06em;
   text-transform: uppercase; color: var(--ol);
@@ -10113,6 +10121,10 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clline-tag-personal {
   background: var(--color-personal);
   color: var(--color-personal-text);
+}
+.calendar-cardlist .clline-tag-attention {
+  background: var(--color-lime-soft);
+  color: var(--color-black);
 }
 .calendar-cardlist .clline-extra {
   grid-column: 1 / 3;

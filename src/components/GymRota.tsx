@@ -19,6 +19,7 @@ import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { ClassLine } from "@/components/WeekView";
 
 /** "Thu, Aug 6" — the date a swap is about, said the way a person would. */
 const fmtDay = (iso: string) =>
@@ -269,11 +270,11 @@ export function GymRota({
         </Link>
       </div>
 
-      <div className="rota ps-week ps-agenda">
+      <div className="calendar-cardlist rota-calendar">
         {days.map((day, d) => (
-          <div key={day.iso} className="rotaday">
-            <div className="rotaday-h">
-              <span>{day.label}</span>
+          <section key={day.iso} className="rotaday dayblock">
+            <div className="rotaday-h dayband">
+              <span className="dayband-d">{day.label}</span>
               <span className="rotaday-actions">
                 <button className="rotaadd" onClick={() => show(day.iso, d, null)}>
                   <Icon name="add" size={18} /> Add
@@ -289,37 +290,38 @@ export function GymRota({
             {day.items.length === 0 ? (
               <p className="rotaempty">Nothing on</p>
             ) : (
-              day.items.map((c) => (
-                <button
-                  key={c.id}
-                  className={`ps-event${c.onUserId ? "" : " ps-event-open"}`}
-                  onClick={() => show(day.iso, d, c)}
-                >
-                  <span className="ps-accent" aria-hidden="true" />
-                  <span className="ps-ebody">
-                    <span className="ps-enm">
-                      {c.name}
-                      {c.covered && <span className="rotaswap">covering</span>}
-                      {!c.isPublic && <span className="rotadraft">draft</span>}
-                    </span>
-                    {/* Where a class card says the place, the rota says the
-                        person: on a gym's own page the place is a given. */}
-                    <span className="ps-estudio">
-                      <Icon name="person_add" size={15} className="ps-estudio-ic" />
-                      {c.onName || "Nobody on it yet"}
-                    </span>
-                  </span>
-                  <span className="ps-etimecol">
-                    <span className="ps-etime">
-                      {clockParts(c.startTime).hm}
-                      <span className="ps-ap">{clockParts(c.startTime).ap}</span>
-                    </span>
-                    <span className="ps-edur">{c.durationMin} min</span>
-                  </span>
-                </button>
-              ))
+              <div className="dayrows">
+                {day.items.map((c) => (
+                  <ClassLine
+                    key={c.id}
+                    row={{
+                      key: `${c.id}:${day.iso}`,
+                      name: c.name,
+                      where: c.onName || "Nobody on it yet",
+                      hm: clockParts(c.startTime).hm,
+                      ap: clockParts(c.startTime).ap,
+                      dur: `${c.durationMin} min`,
+                      tag: !c.isPublic
+                        ? "Draft"
+                        : c.covered
+                          ? "Cover"
+                          : !c.onUserId
+                            ? "Needs coach"
+                            : undefined,
+                      tagTone: !c.isPublic
+                        ? "personal"
+                        : c.covered
+                          ? "coaching"
+                          : !c.onUserId
+                            ? "attention"
+                            : undefined,
+                      onTap: () => show(day.iso, d, c),
+                    }}
+                  />
+                ))}
+              </div>
             )}
-          </div>
+          </section>
         ))}
       </div>
 

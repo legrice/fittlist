@@ -46,7 +46,7 @@ export type WeekRow = {
    *  date a gym has you on. Which hat comes before what the class is. */
   tag?: string;
   /** Optional relationship color for compact ownership badges. */
-  tagTone?: "coaching" | "attending" | "personal";
+  tagTone?: "coaching" | "attending" | "personal" | "attention";
   /** A temporary favorite-calendar overlay, distinct from your own statuses. */
   overlayColor?: string;
   /** What tapping does. Every row opens a sheet over the list rather than
