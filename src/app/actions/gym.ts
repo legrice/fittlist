@@ -162,7 +162,13 @@ async function assignmentError(
 export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return [];
-  const { db } = ctx;
+  return gymCoachesFromDb(ctx.db, studioId);
+}
+
+async function gymCoachesFromDb(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+): Promise<GymCoachDto[]> {
   const roster = await db
     .select({ userId: schema.studioRotaCoaches.userId })
     .from(schema.studioRotaCoaches)
@@ -2411,6 +2417,19 @@ export type StudioCoachDetailDto = {
   first: number;
   second: number;
   total: number;
+  coaches: GymCoachDto[];
+  shifts: {
+    classId: string;
+    name: string;
+    date: string;
+    dateLabel: string;
+    startTime: string;
+    coachUserId: string | null;
+    onUserId: string;
+    covered: boolean;
+    isPublic: boolean;
+    plannerColor: StudioPlannerColor | null;
+  }[];
 };
 
 /** One invited coach, with the calendar-derived count a manager needs when
@@ -2423,7 +2442,7 @@ export async function studioCoachDetail(
   const ctx = await managing(studioId);
   if ("error" in ctx) return null;
   const { db, studio } = ctx;
-  const [rosterRows, people, slots] = await Promise.all([
+  const [rosterRows, people] = await Promise.all([
     db
       .select({
         state: schema.studioRotaCoaches.state,
@@ -2448,17 +2467,6 @@ export async function studioCoachDetail(
       })
       .from(schema.users)
       .where(eq(schema.users.id, coachId)),
-    studio.accountUserId
-      ? db
-          .select()
-          .from(schema.classes)
-          .where(
-            and(
-              eq(schema.classes.userId, studio.accountUserId),
-              eq(schema.classes.studioId, studioId),
-            ),
-          )
-      : [],
   ]);
   const [roster] = rosterRows;
   if (!roster) return null;
@@ -2469,39 +2477,36 @@ export async function studioCoachDetail(
   const [year, monthNumber] = month.split("-").map(Number);
   const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
   const firstIso = `${month}-01`;
-  const lastIso = `${month}-${String(daysInMonth).padStart(2, "0")}`;
-  const covers = slots.length
-    ? await db
-        .select()
-        .from(schema.shiftCovers)
-        .where(
-          and(
-            inArray(schema.shiftCovers.classId, slots.map((slot) => slot.id)),
-            gte(schema.shiftCovers.occurrenceDate, firstIso),
-            lte(schema.shiftCovers.occurrenceDate, lastIso),
-          ),
-        )
-    : [];
-  const coverBy = new Map(covers.map((cover) => [`${cover.classId}|${cover.occurrenceDate}`, cover]));
-  const startedOn = new Map(
-    slots.map((slot) => [
-      slot.id,
-      slot.createdAt ? new Date(slot.createdAt).toISOString().slice(0, 10) : "0000-00-00",
-    ]),
-  );
-  let first = 0;
-  let second = 0;
-  for (let day = 1; day <= daysInMonth; day++) {
-    const iso = `${month}-${String(day).padStart(2, "0")}`;
-    const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
-    for (const slot of slots) {
-      if (iso < (startedOn.get(slot.id) ?? "") || !runsOn(slot, iso, dow)) continue;
-      const cover = coverBy.get(`${slot.id}|${iso}`);
-      if ((cover ? cover.coachUserId : slot.coachUserId) !== coachId) continue;
-      if (day <= 15) first++;
-      else second++;
-    }
-  }
+  const monthStart = new Date(`${firstIso}T00:00:00Z`);
+  const [calendarDays, coaches] = await Promise.all([
+    studio.accountUserId
+      ? gymDays(db, studio.accountUserId, studioId, monthStart, daysInMonth)
+      : Promise.resolve([]),
+    gymCoachesFromDb(db, studioId),
+  ]);
+  const shifts = calendarDays
+    .filter((day) => !day.closed)
+    .flatMap((day) => day.items
+      .filter((slot) => slot.onUserId === coachId)
+      .map((slot) => ({
+        classId: slot.id,
+        name: slot.name,
+        date: day.iso,
+        dateLabel: new Date(`${day.iso}T00:00:00Z`).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        }),
+        startTime: slot.startTime,
+        coachUserId: slot.coachUserId,
+        onUserId: coachId,
+        covered: slot.covered,
+        isPublic: slot.isPublic,
+        plannerColor: slot.plannerColor,
+      })));
+  const first = shifts.filter((shift) => Number(shift.date.slice(8, 10)) <= 15).length;
+  const second = shifts.length - first;
   const monthLabel = new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
@@ -2522,6 +2527,8 @@ export async function studioCoachDetail(
     first,
     second,
     total: first + second,
+    coaches,
+    shifts,
   };
 }
 

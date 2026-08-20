@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   removeStudioCoach,
+  setShiftCover,
   setStudioCoachScheduled,
   type StudioCoachDetailDto,
 } from "@/app/actions/gym";
@@ -33,10 +34,38 @@ export function StudioCoachSettings({
 }) {
   const router = useRouter();
   const [onSchedule, setOnSchedule] = useState(coach.onSchedule);
+  const [shifts, setShifts] = useState(coach.shifts);
+  const [savingShift, setSavingShift] = useState<Record<string, true>>({});
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const staffHref = `/s/${studioSlug}/manage/staff`;
+
+  useEffect(() => {
+    setShifts(coach.shifts);
+  }, [coach.shifts]);
+
+  const assignShift = (classId: string, date: string, who: string) => {
+    const key = `${classId}:${date}`;
+    if (savingShift[key]) return;
+    setSavingShift((current) => ({ ...current, [key]: true }));
+    void (async () => {
+      const result = await setShiftCover(studioId, classId, date, who || null);
+      if (!result.ok) {
+        toast(result.error ?? "Couldn't change that shift");
+      } else {
+        const nextCoach = coach.coaches.find((person) => person.id === who);
+        setShifts((current) => current.filter((shift) => `${shift.classId}:${shift.date}` !== key));
+        toast(nextCoach ? `Reassigned to ${nextCoach.name}` : "Shift is open");
+        router.refresh();
+      }
+      setSavingShift((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    })();
+  };
 
   const toggleSchedule = () => {
     const next = !onSchedule;
@@ -67,6 +96,9 @@ export function StudioCoachSettings({
   };
 
   const pendingInvite = coach.state === "placeholder" || coach.state === "invited";
+  const coachOptions = coach.coaches.some((person) => person.id === coach.id)
+    ? coach.coaches
+    : [{ id: coach.id, name: coach.name, email: coach.email ?? "" }, ...coach.coaches];
 
   return (
     <div className="pad studio-staff-pad studio-coach-settings">
@@ -102,18 +134,66 @@ export function StudioCoachSettings({
 
       <div className="statgrid studio-coach-stats">
         <div className="stat">
-          <div className="n">{coach.total}</div>
+          <div className="n">{shifts.length}</div>
           <div className="l">Total shifts</div>
         </div>
         <div className="stat">
-          <div className="n">{coach.first}</div>
+          <div className="n">{shifts.filter((shift) => Number(shift.date.slice(8, 10)) <= 15).length}</div>
           <div className="l">{coach.firstLabel}</div>
         </div>
         <div className="stat">
-          <div className="n">{coach.second}</div>
+          <div className="n">{shifts.filter((shift) => Number(shift.date.slice(8, 10)) > 15).length}</div>
           <div className="l">{coach.secondLabel}</div>
         </div>
       </div>
+
+      <h3 className="setgroup-h studio-coach-shifts-title">Shifts in {coach.monthLabel}</h3>
+      {shifts.length ? (
+        <div className="studio-coach-shifts">
+          {shifts.map((shift) => {
+            const key = `${shift.classId}:${shift.date}`;
+            const [hourRaw, minute] = shift.startTime.split(":").map(Number);
+            const suffix = hourRaw >= 12 ? "PM" : "AM";
+            const hour = hourRaw % 12 || 12;
+            return (
+              <article
+                className="studio-coach-shift"
+                data-planner-color={shift.plannerColor ?? undefined}
+                key={key}
+              >
+                <div className="studio-coach-shift-copy">
+                  <span className="studio-coach-shift-when">
+                    {shift.dateLabel} · {hour}:{String(minute).padStart(2, "0")} {suffix}
+                  </span>
+                  <strong>{shift.name}</strong>
+                  <span className="studio-coach-shift-status">
+                    {shift.covered ? "Cover" : "Regular shift"}
+                    {!shift.isPublic && " · Draft"}
+                  </span>
+                </div>
+                <label className="studio-coach-shift-picker">
+                  <span className="sr-only">Assign {shift.name} on {shift.dateLabel}</span>
+                  <select
+                    aria-label={`Assign ${shift.name} on ${shift.dateLabel}`}
+                    defaultValue={coach.id}
+                    disabled={!!savingShift[key]}
+                    onChange={(event) => assignShift(shift.classId, shift.date, event.target.value)}
+                  >
+                    <option value="">Open</option>
+                    {coachOptions.map((person) => (
+                      <option value={person.id} key={person.id}>{person.name}</option>
+                    ))}
+                  </select>
+                </label>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="adminempty studio-coach-shifts-empty">
+          {coach.name} has no shifts at {studioName} in {coach.monthLabel}.
+        </p>
+      )}
 
       <h3 className="setgroup-h">Coach settings</h3>
       <div className="settingslist">
