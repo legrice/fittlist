@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   closeGymDay,
+  copyGymDay,
   enableStudioSchedule,
+  publishGymDrafts,
   setShiftCover,
   type GymCatalogItem,
   type GymClassDto,
@@ -71,6 +73,7 @@ export function GymRota({
   const router = useRouter();
   const [open, setOpen] = useState<Open | null>(null);
   const [closingDay, setClosingDay] = useState<{ iso: string; label: string } | null>(null);
+  const [copyingDay, setCopyingDay] = useState<{ day: number; label: string } | null>(null);
   // The one-date swap saves as you pick, so the rota keeps it rather than the
   // form: these echo the row while the sheet is up.
   const [onUserId, setOnUserId] = useState("");
@@ -80,6 +83,7 @@ export function GymRota({
   const days = week?.days ?? [];
   const all = days.flatMap((d) => d.items);
   const openSlots = all.filter((c) => !c.onUserId).length;
+  const visibleDrafts = all.filter((c) => !c.isPublic).length;
 
   const show = (iso: string, dayOfWeek: number, cls: GymClassDto | null) => {
     setOnUserId(cls?.onUserId ?? "");
@@ -122,6 +126,34 @@ export function GymRota({
       }
       setClosingDay(null);
       toast(res.count ? `${res.count} ${res.count === 1 ? "class" : "classes"} cancelled` : "Nothing was scheduled");
+      router.refresh();
+    });
+  };
+
+  const publishDrafts = () => {
+    if (pending) return;
+    start(async () => {
+      const res = await publishGymDrafts(studioId);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't publish drafts");
+        return;
+      }
+      toast(res.count ? `${res.count} ${res.count === 1 ? "draft" : "drafts"} published` : "No drafts to publish");
+      router.refresh();
+    });
+  };
+
+  const copyDay = (targetDay: number) => {
+    if (!copyingDay || pending) return;
+    const source = copyingDay;
+    start(async () => {
+      const res = await copyGymDay(studioId, source.day, targetDay);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't copy that day");
+        return;
+      }
+      setCopyingDay(null);
+      toast(`${res.count} ${res.count === 1 ? "class" : "classes"} copied`);
       router.refresh();
     });
   };
@@ -180,7 +212,7 @@ export function GymRota({
           startTime: cls.startTime,
           durationMin: cls.durationMin,
           studioId,
-          isPublic: true,
+          isPublic: cls.isPublic,
           links: cls.links.map((l) => ({ ...l })),
           days: cls.specificDate ? [] : [cls.dayOfWeek],
           dayOfWeek: cls.dayOfWeek,
@@ -210,6 +242,11 @@ export function GymRota({
               : `${all.length} ${all.length === 1 ? "class" : "classes"}` +
                 (openSlots ? ` · ${openSlots} with nobody on` : "")}
           </p>
+          {visibleDrafts > 0 && (
+            <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
+              Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
+            </button>
+          )}
         </div>
         <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
           <Icon name="close" size={20} />
@@ -241,6 +278,9 @@ export function GymRota({
                 <button className="rotaadd" onClick={() => show(day.iso, d, null)}>
                   <Icon name="add" size={18} /> Add
                 </button>
+                <button className="rotaadd" onClick={() => setCopyingDay({ day: d, label: day.label })}>
+                  Copy day
+                </button>
                 <button className="rotaadd" onClick={() => setClosingDay({ iso: day.iso, label: day.label })}>
                   Close day
                 </button>
@@ -260,6 +300,7 @@ export function GymRota({
                     <span className="ps-enm">
                       {c.name}
                       {c.covered && <span className="rotaswap">covering</span>}
+                      {!c.isPublic && <span className="rotadraft">draft</span>}
                     </span>
                     {/* Where a class card says the place, the rota says the
                         person: on a gym's own page the place is a given. */}
@@ -302,6 +343,37 @@ export function GymRota({
                 Keep the day open
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {copyingDay && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCopyingDay(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Copy {copyingDay.label}</h2>
+            <p className="lead">
+              Add its regular classes to another day. Classes already there stay as they are.
+            </p>
+            <div className="copyday-grid">
+              {days.map((day, target) => (
+                <button
+                  key={day.iso}
+                  className="btn ghost"
+                  disabled={pending || target === copyingDay.day}
+                  onClick={() => copyDay(target)}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
+            <button className="btn ghost copyday-cancel" onClick={() => setCopyingDay(null)}>
+              Cancel
+            </button>
           </div>
         </div>
       )}

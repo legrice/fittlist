@@ -240,12 +240,10 @@ export function Adder({
   // mistake. Editing/duplicating still carries the class's studio.
   // A gym's schedule is the gym's, at the gym: the picker never comes up.
   const [studioId, setStudioId] = useState<string | null>(gym?.studioId ?? prefill?.studioId ?? null);
-  // Public by default; private items are the coach's own work (PT clients etc.).
-  // A gym has none: its schedule is the thing it publishes.
-  // The Public/Private control is off the form for now (see the note where it
-  // rendered), so this is state without a setter: new classes are public, and
-  // an edit keeps whatever the class already was.
-  const [isPublic] = useState<boolean>(gym ? true : prefill?.isPublic ?? true);
+  // Public by default; a studio manager can deliberately keep a slot as a
+  // draft until the whole week is ready. Coach-owned private items remain
+  // intentionally out of this simple form.
+  const [isPublic, setIsPublic] = useState<boolean>(prefill?.isPublic ?? true);
   // Ask people to RSVP: a save the organizer can see. Coaching only, and
   // deliberately nothing more (no capacity, no waitlist): capacity is the
   // line that turns RSVP into a booking system.
@@ -456,7 +454,9 @@ export function Adder({
         : isEdit || isPersonalEdit
           ? "Save changes"
           : gym
-            ? "Add to the schedule"
+            ? isPublic
+              ? "Add to the schedule"
+              : "Save draft"
             : mineOnly
               ? isEvent
                 ? "Add to your calendar"
@@ -916,6 +916,28 @@ export function Adder({
                 <p className="durnote" style={{ marginTop: 8 }}>
                   They&rsquo;ll be told, and it lands in their calendar. Your schedule goes out
                   under the gym&rsquo;s name, so this stays between you and them.
+                </p>
+                <label className="flabel" style={{ marginTop: 18 }}>Visibility</label>
+                <div className="modetoggle" role="group" aria-label="Class visibility">
+                  <button
+                    type="button"
+                    className={isPublic ? "sel" : ""}
+                    onClick={() => setIsPublic(true)}
+                  >
+                    Publish now
+                  </button>
+                  <button
+                    type="button"
+                    className={!isPublic ? "sel" : ""}
+                    onClick={() => setIsPublic(false)}
+                  >
+                    Save draft
+                  </button>
+                </div>
+                <p className="durnote" style={{ marginTop: 8 }}>
+                  {isPublic
+                    ? "Members can see this as soon as you save it."
+                    : "Only managers can see this until you publish your drafts."}
                 </p>
               </div>
             )}

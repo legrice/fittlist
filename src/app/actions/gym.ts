@@ -62,6 +62,8 @@ export type GymClassDto = {
   onName: string;
   /** This date is an exception to the standing rota. */
   covered: boolean;
+  /** A manager can prepare a slot before it appears on the public calendar. */
+  isPublic: boolean;
 };
 
 export type GymDayDto = { iso: string; label: string; items: GymClassDto[] };
@@ -349,6 +351,7 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
           onUserId,
           onName: (onUserId && nameOf.get(onUserId)) || "",
           covered: !!cover,
+          isPublic: r.isPublic,
         };
       });
     days.push({ iso, label: fmtDayHeader(iso), items });
@@ -390,6 +393,8 @@ export type GymClassInput = {
   /** Where a member books it. A gym usually has one, on every class. */
   links?: { label: string; url: string }[];
   coachUserId?: string | null;
+  /** False keeps a new or edited slot in the manager's draft schedule. */
+  isPublic?: boolean;
 };
 
 /** A class already described at this studio, ready to be pulled in. */
@@ -647,7 +652,7 @@ export async function addGymClass(
         description: input.description?.trim() || null,
         image: input.image?.trim() || null,
         links: cleanLinks(input.links),
-        isPublic: true,
+        isPublic: input.isPublic !== false,
       });
     }
   }
@@ -772,6 +777,7 @@ export async function updateGymClass(
       description: input.description?.trim() || null,
       image: input.image?.trim() || null,
       links: cleanLinks(input.links),
+      isPublic: input.isPublic !== false,
     })
     .where(eq(schema.classes.id, classId))
     .returning();
@@ -811,6 +817,107 @@ export async function updateGymClass(
     await tellAboutDuplicate(db, coachUserId, studio, { name, dayOfWeek, startTime: input.startTime });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
+}
+
+/** Put every prepared studio slot live together. Drafts still show in the
+ * manager rota, but never leak into Discover or the studio's public calendar
+ * until this deliberate publish step. */
+export async function publishGymDrafts(
+  studioId: string,
+): Promise<{ ok: boolean; error?: string; count?: number }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, studio, gymId } = ctx;
+  const drafts = await db
+    .select({ id: schema.classes.id })
+    .from(schema.classes)
+    .where(
+      and(
+        eq(schema.classes.userId, gymId),
+        eq(schema.classes.studioId, studioId),
+        eq(schema.classes.isPublic, false),
+      ),
+    );
+  if (!drafts.length) return { ok: true, count: 0 };
+  await db
+    .update(schema.classes)
+    .set({ isPublic: true })
+    .where(inArray(schema.classes.id, drafts.map((d) => d.id)));
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  return { ok: true, count: drafts.length };
+}
+
+/**
+ * Build a regular week without typing the same slots seven times. This copies
+ * standing slots from one weekday to another, never a dated exception, and
+ * leaves any target slot with the same name and time alone. That makes the
+ * action safe to repeat while a manager is filling out a new calendar.
+ */
+export async function copyGymDay(
+  studioId: string,
+  sourceDayOfWeek: number,
+  targetDayOfWeek: number,
+): Promise<{ ok: boolean; error?: string; count?: number }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  if (
+    !Number.isInteger(sourceDayOfWeek) ||
+    !Number.isInteger(targetDayOfWeek) ||
+    sourceDayOfWeek < 0 || sourceDayOfWeek > 6 ||
+    targetDayOfWeek < 0 || targetDayOfWeek > 6
+  )
+    return { ok: false, error: "Choose two days of the week." };
+  if (sourceDayOfWeek === targetDayOfWeek)
+    return { ok: false, error: "Choose a different day." };
+
+  const { db, studio, gymId } = ctx;
+  const rows = await db
+    .select()
+    .from(schema.classes)
+    .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)));
+  const source = rows.filter((r) => !r.specificDate && r.dayOfWeek === sourceDayOfWeek);
+  if (!source.length) return { ok: false, error: `Nothing is scheduled on ${DAYS[sourceDayOfWeek]}.` };
+
+  const targetTaken = new Set(
+    rows
+      .filter((r) => !r.specificDate && r.dayOfWeek === targetDayOfWeek)
+      .map((r) => `${r.name.trim().toLowerCase()}|${r.startTime.slice(0, 5)}`),
+  );
+  const copies = source
+    .filter((r) => !targetTaken.has(`${r.name.trim().toLowerCase()}|${r.startTime.slice(0, 5)}`))
+    .map((r) => ({
+      userId: gymId,
+      coachUserId: r.coachUserId,
+      studioId,
+      seriesId: randomUUID(),
+      dayOfWeek: targetDayOfWeek,
+      specificDate: null,
+      endsOn: r.endsOn,
+      startTime: r.startTime,
+      durationMin: r.durationMin,
+      name: r.name,
+      classType: r.classType,
+      description: r.description,
+      image: r.image,
+      links: r.links,
+      isPublic: r.isPublic,
+    }));
+  if (!copies.length)
+    return { ok: false, error: `${DAYS[targetDayOfWeek]} already has those classes.` };
+  await db.insert(schema.classes).values(copies);
+  for (const row of copies)
+    if (row.coachUserId)
+      await tellCoach(
+        row.coachUserId,
+        studio.name,
+        row.name,
+        `${DAYS[targetDayOfWeek]} ${fmtTime(row.startTime)}`,
+        true,
+      );
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  return { ok: true, count: copies.length };
 }
 
 /**
