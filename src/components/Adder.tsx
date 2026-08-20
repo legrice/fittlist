@@ -938,57 +938,6 @@ export function Adder({
             </div>
             {stepped && <p className="stepline">Step 3 of 3 &middot; The details</p>}
 
-            {/* The rota. Who's on this one date is what a manager opens the
-                week to change, so it leads; who normally has it is underneath,
-                because changing that changes every week. */}
-            {gym && (
-              <div className="adder-card">
-                {gym.dateSwap}
-                <label className="flabel" htmlFor="fCoach">
-                  {isEdit ? "Who normally coaches it" : "Who’s coaching"}
-                </label>
-                <select
-                  id="fCoach"
-                  className="typeselect"
-                  value={coachUserId}
-                  onChange={(e) => setCoachUserId(e.target.value)}
-                >
-                  <option value="">Open</option>
-                  {gym.coaches.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="durnote" style={{ marginTop: 8 }}>
-                  They&rsquo;ll be told, and it lands in their calendar. Your schedule goes out
-                  under the gym&rsquo;s name, so this stays between you and them.
-                </p>
-                <label className="flabel" style={{ marginTop: 18 }}>Visibility</label>
-                <div className="modetoggle" role="group" aria-label="Class visibility">
-                  <button
-                    type="button"
-                    className={isPublic ? "sel" : ""}
-                    onClick={() => setIsPublic(true)}
-                  >
-                    Publish now
-                  </button>
-                  <button
-                    type="button"
-                    className={!isPublic ? "sel" : ""}
-                    onClick={() => setIsPublic(false)}
-                  >
-                    Save draft
-                  </button>
-                </div>
-                <p className="durnote" style={{ marginTop: 8 }}>
-                  {isPublic
-                    ? "Members can see this as soon as you save it."
-                    : "Only managers can see this until you publish your drafts."}
-                </p>
-              </div>
-            )}
-
             {/* Coaching it, or going to it. Only a coach is asked: a member
                 has one answer and a question with one answer is furniture.
                 Saying "I'm coaching it" hands the rest of the form back to the
@@ -1303,6 +1252,60 @@ export function Adder({
 
 
             {!stepped && whenCard}
+
+            {/* The class and its time come first. Staffing is the operating
+                layer underneath them: the standard coach repeats forever,
+                while the dated picker is an exception for the occurrence the
+                manager opened. */}
+            {gym && (
+              <div className="adder-card">
+                <label className="flabel" htmlFor="fCoach">Standard coach</label>
+                <select
+                  id="fCoach"
+                  className="typeselect"
+                  value={coachUserId}
+                  onChange={(e) => setCoachUserId(e.target.value)}
+                >
+                  <option value="">Open</option>
+                  {gym.coaches.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="durnote" style={{ marginTop: 8 }}>
+                  This is the default every week and in every future month. Use the calendar
+                  coach picker when someone is covering only one date.
+                </p>
+                {gym.dateSwap && (
+                  <div className="studio-date-exception">
+                    {gym.dateSwap}
+                  </div>
+                )}
+                <label className="flabel" style={{ marginTop: 18 }}>Visibility</label>
+                <div className="modetoggle" role="group" aria-label="Class visibility">
+                  <button
+                    type="button"
+                    className={isPublic ? "sel" : ""}
+                    onClick={() => setIsPublic(true)}
+                  >
+                    Publish now
+                  </button>
+                  <button
+                    type="button"
+                    className={!isPublic ? "sel" : ""}
+                    onClick={() => setIsPublic(false)}
+                  >
+                    Save draft
+                  </button>
+                </div>
+                <p className="durnote" style={{ marginTop: 8 }}>
+                  {isPublic
+                    ? "Members can see this as soon as you save it."
+                    : "Only managers can see this until you publish your drafts."}
+                </p>
+              </div>
+            )}
 
             {/* Ask people to RSVP, per the Discover brief: a save the
                 organizer can see. Coaching mode only, and nothing more on

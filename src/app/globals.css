@@ -7146,6 +7146,9 @@ select.editinput.placekind-select {
   box-shadow: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-black);
 }
 .studio-planner-color .icon { position: absolute; z-index: 1; }
+.studio-date-exception {
+  margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--color-border);
+}
 
 @media (max-width: 1099px) {
   .rota-calendar-tools {
