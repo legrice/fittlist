@@ -10723,7 +10723,17 @@ a.clspeek-by:active { opacity: .6; }
    with staffing as a second, independent control. On phones that control
    stays tucked beneath the class details; on desktop it gets its own column
    so it can never cover the time or class name. */
-@media (min-width: 940px) {
+@media (max-width: 1099px) {
+  .rota-calendar .rota-inline-row .clline {
+    padding: 20px 20px 82px;
+  }
+
+  .rota-calendar .rota-inline-row .rota-inline-coachpick {
+    width: calc(100% - 40px);
+  }
+}
+
+@media (min-width: 1100px) {
   .rota-calendar .rota-inline-row .clline {
     min-height: 132px;
     padding: 24px min(380px, 42vw) 24px 28px;
