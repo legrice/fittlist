@@ -6966,7 +6966,16 @@ select.editinput.placekind-select {
 .rota-month-empty { padding: 8px 1px; color: var(--color-text-secondary); font-size: 10px; }
 
 @media (min-width: 1100px) {
-  .screen.hasnav > .gym-manage-pad.desktop { max-width: none; }
+  /* The studio planner is an operating surface, not a reading column. The
+     tabs shell wraps every route in its own .pad, so both that wrapper and
+     the planner inside it have to be released for all seven days to share
+     the available desktop canvas. */
+  .screen.hasnav > .pad:has(> .gym-manage-pad.desktop) {
+    width: 100%; max-width: none; margin: 0;
+  }
+  .screen.hasnav > .pad > .gym-manage-pad.desktop {
+    width: 100%; max-width: none; margin: 0; padding: 0;
+  }
   body:has(.gym-manage-pad.desktop) .desktop-right { display: none; }
   .screen.hasnav:has(.gym-manage-pad.desktop) { padding-right: 0; }
 }
