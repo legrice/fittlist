@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   answerShiftRequest,
   closeGymDay,
-  copyGymDay,
   enableStudioSchedule,
   gymMonth,
   openGymDay,
@@ -15,6 +14,7 @@ import {
   type GymCatalogItem,
   type GymClassDto,
   type GymCoachDto,
+  type GymDayDto,
   type GymMonthDto,
   type GymWeekDto,
   type ShiftRequestDto,
@@ -184,9 +184,9 @@ export function GymRota({
   const router = useRouter();
   const [open, setOpen] = useState<Open | null>(null);
   const [closingDay, setClosingDay] = useState<{ iso: string; label: string } | null>(null);
-  const [copyingDay, setCopyingDay] = useState<{ day: number; label: string } | null>(null);
   const [coachPick, setCoachPick] = useState<CoachPick | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
+  const [dayMenu, setDayMenu] = useState<string | null>(null);
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
   const [requestSheet, setRequestSheet] = useState(false);
   const [requestRows, setRequestRows] = useState(requests);
@@ -377,6 +377,8 @@ export function GymRota({
     cls: GymClassDto | null,
     oneOff = false,
   ) => {
+    setDayMenu(null);
+    setMonthMenu(null);
     const who = cls
       ? coachOverrides[occurrenceKey(cls.id, iso)] ?? cls.onUserId ?? ""
       : "";
@@ -468,6 +470,38 @@ export function GymRota({
     });
   };
 
+  const shareDay = async (day: GymDayDto) => {
+    setDayMenu(null);
+    setMonthMenu(null);
+    const lines = day.items.map((item) => {
+      const clock = clockParts(item.startTime);
+      const coachId = effectiveCoach(item, day.iso);
+      const coachName = coachNameById.get(coachId)
+        ?? (coachId === item.onUserId ? item.onName : "")
+        ?? "";
+      return `${clock.hm} ${clock.ap.toUpperCase()} · ${item.name} · ${coachName || "Open"}`;
+    });
+    const text = [
+      studioName,
+      fmtDay(day.iso),
+      day.closed ? "Closed" : null,
+      ...(lines.length ? lines : ["No classes"]),
+    ].filter(Boolean).join("\n");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${studioName} · ${fmtDay(day.iso)}`, text });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        toast("Day copied. Paste it into your group chat");
+      } else {
+        toast("Sharing isn't available here");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast("Couldn't share that day");
+    }
+  };
+
   const publishDrafts = () => {
     if (pending) return;
     start(async () => {
@@ -477,21 +511,6 @@ export function GymRota({
         return;
       }
       toast(res.count ? `${res.count} ${res.count === 1 ? "draft" : "drafts"} published` : "No drafts to publish");
-      refreshView();
-    });
-  };
-
-  const copyDay = (targetDay: number) => {
-    if (!copyingDay || pending) return;
-    const source = copyingDay;
-    start(async () => {
-      const res = await copyGymDay(studioId, source.day, targetDay);
-      if (!res.ok) {
-        toast(res.error ?? "Couldn't copy that day");
-        return;
-      }
-      setCopyingDay(null);
-      toast(`${res.count} ${res.count === 1 ? "class" : "classes"} copied`);
       refreshView();
     });
   };
@@ -610,12 +629,6 @@ export function GymRota({
     window.history.replaceState({}, "", url);
     if (next === "month" && !month) void loadMonth();
   };
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const monthAddDay = month?.days.find((day) => day.iso === todayIso && !day.closed)
-    ?? month?.days.find((day) => day.iso.startsWith(month.month) && !day.closed);
-  const weekAddDay = days.find((day) => day.iso === todayIso && !day.closed)
-    ?? days.find((day) => day.iso > todayIso && !day.closed)
-    ?? days.find((day) => !day.closed);
   const coachPickId = coachPick
     ? coachOverrides[occurrenceKey(coachPick.cls.id, coachPick.iso)] ?? coachPick.cls.onUserId ?? ""
     : "";
@@ -779,6 +792,7 @@ export function GymRota({
                             </button>
                             {monthMenu === day.iso && (
                               <div className="rota-month-menu">
+                                <button onClick={() => void shareDay(day)}>Share day</button>
                                 {day.closed ? (
                                   <button onClick={() => openDay(day)}>Open day</button>
                                 ) : (
@@ -878,29 +892,44 @@ export function GymRota({
               <section key={day.iso} className={`rotaday dayblock${day.closed ? " closed" : ""}`}>
                 <div className="rotaday-h dayband">
                   <span className="dayband-d">
-                    {day.label}
+                    {fmtDay(day.iso)}
                     {day.closed && <b className="rota-day-closed-label">Closed</b>}
                   </span>
                   <span className="rotaday-actions">
                     {!day.closed && (
-                      <>
-                        <button className="rotaadd" onClick={() => show(day.iso, day.dayOfWeek, null)}>
-                          <Icon name="add" size={18} /> Add
-                        </button>
-                        <button className="rotaadd" onClick={() => setCopyingDay({ day: day.dayOfWeek, label: day.label })}>
-                          Copy day
-                        </button>
-                      </>
+                      <button
+                        className="rota-day-add"
+                        aria-label={`Add a class on ${fmtDay(day.iso)}`}
+                        onClick={() => show(day.iso, day.dayOfWeek, null)}
+                      >
+                        <Icon name="add" size={20} />
+                      </button>
                     )}
-                    <button
-                      className="rotaadd"
-                      disabled={pending}
-                      onClick={() => day.closed
-                        ? openDay(day)
-                        : setClosingDay({ iso: day.iso, label: day.label })}
-                    >
-                      {day.closed ? "Open day" : "Close day"}
-                    </button>
+                    <span className="rota-day-menuwrap">
+                      <button
+                        className="rota-day-more"
+                        aria-label={`More options for ${fmtDay(day.iso)}`}
+                        aria-expanded={dayMenu === day.iso}
+                        onClick={() => setDayMenu(dayMenu === day.iso ? null : day.iso)}
+                      >
+                        <Icon name="more_horiz" size={20} />
+                      </button>
+                      {dayMenu === day.iso && (
+                        <span className="rota-day-menu">
+                          <button onClick={() => void shareDay(day)}>Share day</button>
+                          <button
+                            disabled={pending}
+                            onClick={() => {
+                              setDayMenu(null);
+                              if (day.closed) openDay(day);
+                              else setClosingDay({ iso: day.iso, label: fmtDay(day.iso) });
+                            }}
+                          >
+                            {day.closed ? "Open day" : "Close day"}
+                          </button>
+                        </span>
+                      )}
+                    </span>
                   </span>
                 </div>
                 {day.items.length === 0 ? (
@@ -975,22 +1004,6 @@ export function GymRota({
           </div>
         </>
       )}
-
-      {!open && !coachPick && !closingDay && !copyingDay && !requestSheet &&
-        (desktop && desktopView === "month" ? monthAddDay : weekAddDay) && (
-          <button
-            type="button"
-            className="rota-floating-add"
-            aria-label="Add a class"
-            onClick={() => {
-              const day = desktop && desktopView === "month" ? monthAddDay : weekAddDay;
-              if (day) show(day.iso, day.dayOfWeek, null, desktop && desktopView === "month");
-            }}
-          >
-            <Icon name="add" size={26} />
-            <span>Add a class</span>
-          </button>
-        )}
 
       {requestSheet && (
         <div
@@ -1139,37 +1152,6 @@ export function GymRota({
                 Keep the day open
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {copyingDay && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setCopyingDay(null);
-          }}
-        >
-          <div className="sheet confirmsheet">
-            <h2>Copy {copyingDay.label}</h2>
-            <p className="lead">
-              Add its regular classes to another day. Classes already there stay as they are.
-            </p>
-            <div className="copyday-grid">
-              {days.map((day, target) => (
-                <button
-                  key={day.iso}
-                  className="btn ghost"
-                  disabled={pending || target === copyingDay.day}
-                  onClick={() => copyDay(target)}
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-            <button className="btn ghost copyday-cancel" onClick={() => setCopyingDay(null)}>
-              Cancel
-            </button>
           </div>
         </div>
       )}
