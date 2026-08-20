@@ -42,6 +42,7 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
     <StudioStaffView
       studioId={studio.id}
       studioName={studio.name}
+      studioSlug={studio.slug ?? studio.id}
       backHref={`/s/${studio.slug ?? studio.id}/shifts`}
       staff={staff}
     />

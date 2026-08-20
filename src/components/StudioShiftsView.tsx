@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   answerShiftRequest,
   claimShift,
@@ -15,6 +14,7 @@ import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { AgendaAvatar } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
+import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
 
 type Tab = "mine" | "open" | "all" | "requests";
@@ -98,7 +98,16 @@ export function StudioShiftsView({
 
   return (
     <div className="pad">
-      <div className="admintop pagetop">
+      <div className="studio-manage-top pagetop">
+        <BackLink
+          className="evback studio-manage-back"
+          href="/settings"
+          anywhere
+          notUnder={`/s/${view.slug}`}
+          label="Back to your account"
+        >
+          <Icon name="arrow_back" size={23} />
+        </BackLink>
         <div>
           <h1>{view.studioName}</h1>
           <p className="adminsub">
@@ -106,28 +115,13 @@ export function StudioShiftsView({
             {view.coachCount} {view.coachCount === 1 ? "coach" : "coaches"}
           </p>
         </div>
-        {/* Your studios on the You tab is the only way in here, so it is the
-            only way out: closing onto the studio's public page dropped a
-            manager somewhere they never came from, with no route back to the
-            screen they were working on. BackLink pops when You is genuinely
-            beneath and pushes for a shifts URL opened cold. */}
-        <BackLink className="iconbtn acctclose" href="/settings" label="Back to settings">
-          <Icon name="close" size={20} />
-        </BackLink>
       </div>
 
-      {/* The admin's extra doors, named rather than hidden behind a gear: the
-          roster is a weekly-use tool for a manager, not a configure-once
-          screen, and a gear reads as app settings. A staff coach sees none of
-          this bar. */}
+      {/* The manager's working sections stay visible instead of hiding behind
+          a gear. A staff coach sees only the shifts they are allowed to use. */}
       {view.isManager && (
-        <div className="staffbar">
-          <Link className="btn ghost staffbar-b" href={`/s/${view.slug}/manage`}>
-            <Icon name="calendar_month" size={18} /> All shifts
-          </Link>
-          <Link className="btn ghost staffbar-b" href={`/s/${view.slug}/manage/staff`}>
-            <Icon name="groups" size={18} /> Staff
-          </Link>
+        <div className="studio-manage-bar">
+          <StudioManageNav slug={view.slug} active="shifts" />
           {/* Everything running a studio needs that isn't one of those two.
               It used to float on the studio's public page; this is the only
               way in now, which is the point: a manager's tools do not belong

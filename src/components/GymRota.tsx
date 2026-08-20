@@ -20,6 +20,7 @@ import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
 
@@ -95,7 +96,7 @@ export function GymRota({
   studioId,
   studioName,
   studioAddress,
-  backHref,
+  studioSlug,
   manageBase,
   hasAccount,
   week,
@@ -106,7 +107,7 @@ export function GymRota({
   studioId: string;
   studioName: string;
   studioAddress: string;
-  backHref: string;
+  studioSlug: string;
   /** /s/{slug}/manage, for the week links. */
   manageBase: string;
   hasAccount: boolean;
@@ -327,15 +328,22 @@ export function GymRota({
   if (!hasAccount) {
     return (
       <div className="pad">
-        <div className="admintop pagetop">
+        <div className="studio-manage-top pagetop">
+          <BackLink
+            className="evback studio-manage-back"
+            href="/settings"
+            anywhere
+            notUnder={`/s/${studioSlug}`}
+            label="Back to your account"
+          >
+            <Icon name="arrow_back" size={23} />
+          </BackLink>
           <div>
             <h1>{studioName}</h1>
             <p className="adminsub">The schedule</p>
           </div>
-          <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
-            <Icon name="close" size={20} />
-          </BackLink>
         </div>
+        <StudioManageNav slug={studioSlug} active="calendar" />
         <div className="empty-block" style={{ marginTop: 24 }}>
           <h2>Run this studio&rsquo;s calendar here</h2>
           <p>
@@ -427,7 +435,16 @@ export function GymRota({
 
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
-      <div className="admintop pagetop">
+      <div className="studio-manage-top pagetop">
+        <BackLink
+          className="evback studio-manage-back"
+          href="/settings"
+          anywhere
+          notUnder={`/s/${studioSlug}`}
+          label="Back to your account"
+        >
+          <Icon name="arrow_back" size={23} />
+        </BackLink>
         <div>
           <h1>{studioName}</h1>
           <p className="adminsub">
@@ -442,10 +459,9 @@ export function GymRota({
             </button>
           )}
         </div>
-        <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
-          <Icon name="close" size={20} />
-        </BackLink>
       </div>
+
+      <StudioManageNav slug={studioSlug} active="calendar" />
 
       {desktop && (
         <div className="rota-view-switch" role="group" aria-label="Calendar view">

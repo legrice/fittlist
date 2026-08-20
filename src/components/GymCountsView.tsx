@@ -50,14 +50,14 @@ export function GymCountsView({
 
   return (
     <div className="pad">
-      <div className="admintop pagetop">
+      <div className="studio-manage-top pagetop">
+        <BackLink className="evback studio-manage-back" href={backHref} label="Back to the schedule">
+          <Icon name="arrow_back" size={23} />
+        </BackLink>
         <div>
           <h1>Shift counter</h1>
           <p className="adminsub">{studioName}</p>
         </div>
-        <BackLink className="iconbtn acctclose" href={backHref} label="Back to the schedule">
-          <Icon name="close" size={20} />
-        </BackLink>
       </div>
 
       <div className="rotaweek">

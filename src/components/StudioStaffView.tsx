@@ -5,6 +5,7 @@ import { addStudioManager, inviteStudioCoach, removeStudioManager, setRotaCoach 
 import type { StudioStaffDto } from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
 
 // The studio's people, in two lists, because they are two different claims.
@@ -22,11 +23,13 @@ import { Toast, useToast } from "@/components/Toast";
 export function StudioStaffView({
   studioId,
   studioName,
+  studioSlug,
   backHref,
   staff,
 }: {
   studioId: string;
   studioName: string;
+  studioSlug: string;
   backHref: string;
   staff: StudioStaffDto;
 }) {
@@ -120,15 +123,23 @@ export function StudioStaffView({
 
   return (
     <div className="pad">
-      <div className="admintop pagetop">
-        <div>
-          <h1>Staff</h1>
-          <p className="adminsub">{studioName}</p>
-        </div>
-        <BackLink className="iconbtn acctclose" href={backHref} label="Back to the schedule">
-          <Icon name="close" size={20} />
+      <div className="studio-manage-top pagetop">
+        <BackLink
+          className="evback studio-manage-back"
+          href="/settings"
+          anywhere
+          notUnder={`/s/${studioSlug}`}
+          label="Back to your account"
+        >
+          <Icon name="arrow_back" size={23} />
         </BackLink>
+        <div>
+          <h1>{studioName}</h1>
+          <p className="adminsub">Manage your team</p>
+        </div>
       </div>
+
+      <StudioManageNav slug={studioSlug} active="staff" />
 
       <h3 className="setgroup-h">Who runs this page</h3>
       <p className="staffnote">
