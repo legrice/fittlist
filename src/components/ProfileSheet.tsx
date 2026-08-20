@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { startRegistration } from "@simplewebauthn/browser";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import {
@@ -506,7 +507,12 @@ export function ProfileSheet({
             <h3 className="setgroup-h">Your studios</h3>
             <div className="settingslist">
               {runs.map((st) => (
-                <a key={st.slug} className="setrow" href={`/s/${st.slug}/shifts`}>
+                <Link
+                  key={st.slug}
+                  className="setrow"
+                  href={`/s/${st.slug}/${st.admin ? "manage" : "shifts"}`}
+                  prefetch={false}
+                >
                   <span className="setrow-ic"><Icon name="storefront" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">
@@ -514,11 +520,11 @@ export function ProfileSheet({
                       <span className="staffrole">{st.admin ? "Admin" : "Coach"}</span>
                     </span>
                     <span className="s">
-                      {st.admin ? "Shifts, the schedule, and who works here" : "Your shifts and what's open"}
+                      {st.admin ? "Calendar and staff" : "Your shifts and what's open"}
                     </span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-                </a>
+                </Link>
               ))}
             </div>
           </>

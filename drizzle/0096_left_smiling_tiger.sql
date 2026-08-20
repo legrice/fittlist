@@ -1,0 +1,1 @@
+ALTER TABLE "studio_rota_coaches" ADD COLUMN "on_schedule" boolean DEFAULT true NOT NULL;

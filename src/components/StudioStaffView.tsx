@@ -1,20 +1,24 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addStudioManager, inviteStudioCoach, removeStudioManager, setRotaCoach } from "@/app/actions/gym";
+import {
+  addStudioManager,
+  inviteStudioCoach,
+  removeStudioCoach,
+  removeStudioManager,
+  setStudioCoachScheduled,
+} from "@/app/actions/gym";
 import type { StudioStaffDto } from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
 
-// The studio's people, in two lists, because they are two different claims.
+// The studio's people, in two views of the same explicit relationship.
 //
-// Who runs the page holds the keys: they edit the details, they run the rota,
-// and they can hand a set of keys to somebody else. Who is on the shift list
-// takes the classes. The same person is usually both, and neither implies the
-// other: an owner who never teaches still runs the page, and the coach who is
-// there every morning has no business editing the address.
+// People contains only coaches the studio invited, plus the people who run the
+// page. Schedule decides which invited coaches may be assigned to shifts. A
+// public "I coach here" profile connection never grants staffing permission.
 //
 // Adding a manager used to be ours to do. A gym wanting its own second manager
 // had to write in and ask, which is a strange thing to need a support ticket
@@ -34,9 +38,8 @@ export function StudioStaffView({
   staff: StudioStaffDto;
 }) {
   const [managers, setManagers] = useState(staff.managers);
-  const [inPool, setInPool] = useState<Record<string, boolean>>(
-    Object.fromEntries(staff.pool.map((p) => [p.id, p.inPool])),
-  );
+  const [coaches, setCoaches] = useState(staff.roster);
+  const [view, setView] = useState<"people" | "schedule">("people");
   const [email, setEmail] = useState("");
   const [adding, setAdding] = useState(false);
   const [coachName, setCoachName] = useState("");
@@ -82,20 +85,24 @@ export function StudioStaffView({
     });
   };
 
-  const togglePool = (id: string) => {
-    const next = !inPool[id];
-    setInPool((p) => ({ ...p, [id]: next }));
+  const toggleScheduled = (id: string) => {
+    const coach = coaches.find((item) => item.id === id);
+    if (!coach) return;
+    const next = !coach.onSchedule;
+    setCoaches((prev) => prev.map((item) => (item.id === id ? { ...item, onSchedule: next } : item)));
     start(async () => {
-      const res = await setRotaCoach(studioId, id, next);
+      const res = await setStudioCoachScheduled(studioId, id, next);
       if (!res.ok) {
-        setInPool((p) => ({ ...p, [id]: !next }));
+        setCoaches((prev) => prev.map((item) => (item.id === id ? { ...item, onSchedule: !next } : item)));
         toast(res.error ?? "Couldn't do that");
+        return;
       }
+      toast(next ? "They can be scheduled" : "Removed from the schedule");
     });
   };
 
   const addCoach = async () => {
-    if (invitingCoach || !coachName.trim()) return;
+    if (invitingCoach || !coachName.trim() || !coachEmail.trim()) return;
     setInvitingCoach(true);
     const res = await inviteStudioCoach(studioId, coachName, coachEmail);
     setInvitingCoach(false);
@@ -105,24 +112,24 @@ export function StudioStaffView({
     }
     setCoachName("");
     setCoachEmail("");
-    toast(res.invited ? "Invite sent" : "Added to the roster");
+    toast(res.invited ? "Invite sent" : "Added to your people");
     start(() => window.location.reload());
   };
 
   const removeCoach = (id: string) => {
     start(async () => {
-      const res = await setRotaCoach(studioId, id, false);
+      const res = await removeStudioCoach(studioId, id);
       if (!res.ok) {
         toast(res.error ?? "Couldn't remove them");
         return;
       }
-      toast("Removed from the roster");
-      window.location.reload();
+      setCoaches((prev) => prev.filter((coach) => coach.id !== id));
+      toast("Removed from your people");
     });
   };
 
   return (
-    <div className="pad">
+    <div className="pad studio-staff-pad">
       <div className="studio-manage-top pagetop">
         <BackLink
           className="evback studio-manage-back"
@@ -141,125 +148,149 @@ export function StudioStaffView({
 
       <StudioManageNav slug={studioSlug} active="staff" />
 
-      <h3 className="setgroup-h">Who runs this page</h3>
-      <p className="staffnote">
-        They can edit the studio&rsquo;s details, set who is on which shift, and add
-        somebody else. Being handed the keys is not something to find out by accident, so
-        they are told.
-      </p>
-      <div className="settingslist">
-        {managers.map((m) => (
-          <div key={m.id} className="setrow staffrow">
-            <span className="setrow-txt">
-              <span className="t">
-                {m.name}
-                {m.isYou && <span className="staffyou">You</span>}
-              </span>
-              <span className="s">{m.email}</span>
-            </span>
+      <div className="staff-view-switch" role="group" aria-label="Staff view">
+        <button
+          type="button"
+          className={view === "people" ? "on" : ""}
+          aria-pressed={view === "people"}
+          onClick={() => setView("people")}
+        >
+          People
+        </button>
+        <button
+          type="button"
+          className={view === "schedule" ? "on" : ""}
+          aria-pressed={view === "schedule"}
+          onClick={() => setView("schedule")}
+        >
+          On schedule
+        </button>
+      </div>
+
+      {view === "people" ? (
+        <>
+          <h3 className="setgroup-h">Coaches</h3>
+          <p className="staffnote">
+            Invite the people who work with this studio. Public profile connections do not
+            add anyone to your staff.
+          </p>
+          {coaches.length > 0 ? (
+            <div className="settingslist">
+              {coaches.map((coach) => (
+                <div key={coach.id} className="setrow staffrow">
+                  <span className="setrow-txt">
+                    <span className="t">{coach.name}</span>
+                    <span className="s">
+                      {coach.state === "placeholder" || coach.state === "invited"
+                        ? coach.email
+                          ? `Invite pending · ${coach.email}`
+                          : "Invite pending"
+                        : coach.email ?? "Coach account"}
+                    </span>
+                  </span>
+                  <button className="tertiary staffx" onClick={() => removeCoach(coach.id)}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="adminempty">No coaches have been invited yet.</p>
+          )}
+          <div className="staffadd staff-invite">
+            <input
+              id="coachName"
+              value={coachName}
+              placeholder="Coach name"
+              onChange={(e) => setCoachName(e.target.value)}
+            />
+            <input
+              id="coachEmail"
+              type="email"
+              value={coachEmail}
+              placeholder="Email"
+              required
+              onChange={(e) => setCoachEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addCoach();
+              }}
+            />
             <button
-              className="tertiary staffx"
-              onClick={() => setConfirm({ id: m.id, name: m.name, isYou: m.isYou })}
+              className="btn si staffaddbtn"
+              disabled={invitingCoach || !coachName.trim() || !coachEmail.trim()}
+              onClick={addCoach}
             >
-              {m.isYou ? "Leave" : "Remove"}
+              Invite coach
             </button>
           </div>
-        ))}
-      </div>
-      <div className="staffadd">
-        <input
-          id="staffEmail"
-          type="email"
-          value={email}
-          placeholder="their@email.com"
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") add();
-          }}
-        />
-        <button className="btn si staffaddbtn" disabled={adding || !email.trim()} onClick={add}>
-          Add
-        </button>
-      </div>
 
-      <h3 className="setgroup-h">Coach roster</h3>
-      <p className="staffnote">
-        Add the people who teach here, even before they join FittList. They can be assigned to
-        classes right away; an email invite connects their shifts when they join.
-      </p>
-      {staff.roster.length > 0 && (
-        <div className="settingslist">
-          {staff.roster.map((coach) => (
-            <div key={coach.id} className="setrow staffrow">
-              <span className="setrow-txt">
-                <span className="t">{coach.name}</span>
-                <span className="s">
-                  {coach.state === "placeholder"
-                    ? coach.email
-                      ? `Invited · ${coach.email}`
-                      : "Not invited yet"
-                    : coach.state === "invited"
-                      ? "Invitation waiting"
-                      : coach.email}
-                </span>
-              </span>
-              <button className="tertiary staffx" onClick={() => removeCoach(coach.id)}>
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="staffadd">
-        <input
-          id="coachName"
-          value={coachName}
-          placeholder="Coach name"
-          onChange={(e) => setCoachName(e.target.value)}
-        />
-        <input
-          id="coachEmail"
-          type="email"
-          value={coachEmail}
-          placeholder="Email (optional)"
-          onChange={(e) => setCoachEmail(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") addCoach();
-          }}
-        />
-        <button className="btn si staffaddbtn" disabled={invitingCoach || !coachName.trim()} onClick={addCoach}>
-          Add coach
-        </button>
-      </div>
-
-      {/* Coaches who already identify with the studio can be added to the
-          trusted roster in one tap. Keep this separate from invites: a name
-          on the directory is a candidate, not a staffing permission. */}
-      {staff.hasSchedule && (
-        <>
-          <h3 className="setgroup-h">Coaches already here</h3>
+          <h3 className="setgroup-h">Admin access</h3>
           <p className="staffnote">
-            Anyone can say they coach here. Turn them on only when they should be able to take
-            your shifts.
+            Admins can edit studio details, manage the calendar, and invite other people.
           </p>
-          {staff.pool.length === 0 ? (
-            <p className="adminempty">
-              Nobody lists this studio yet. Coaches add it under Places I coach.
-            </p>
+          <div className="settingslist">
+            {managers.map((m) => (
+              <div key={m.id} className="setrow staffrow">
+                <span className="setrow-txt">
+                  <span className="t">
+                    {m.name}
+                    {m.isYou && <span className="staffyou">You</span>}
+                  </span>
+                  <span className="s">{m.email}</span>
+                </span>
+                <button
+                  className="tertiary staffx"
+                  onClick={() => setConfirm({ id: m.id, name: m.name, isYou: m.isYou })}
+                >
+                  {m.isYou ? "Leave" : "Remove"}
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="staffadd">
+            <input
+              id="staffEmail"
+              type="email"
+              value={email}
+              placeholder="their@email.com"
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") add();
+              }}
+            />
+            <button className="btn si staffaddbtn" disabled={adding || !email.trim()} onClick={add}>
+              Add admin
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <h3 className="setgroup-h">Who can be scheduled</h3>
+          <p className="staffnote">
+            Only invited coaches can be put on classes or pick up open shifts. Turn someone
+            off after their future classes are reassigned in Calendar.
+          </p>
+          {!staff.hasSchedule ? (
+            <p className="adminempty">Turn on the studio calendar before assigning coaches.</p>
+          ) : coaches.length === 0 ? (
+            <p className="adminempty">Invite a coach under People first.</p>
           ) : (
             <div className="settingslist">
-              {staff.pool.map((p) => (
+              {coaches.map((coach) => (
                 <button
-                  key={p.id}
+                  key={coach.id}
                   className="setrow"
                   role="switch"
-                  aria-checked={!!inPool[p.id]}
-                  onClick={() => togglePool(p.id)}
+                  aria-checked={coach.onSchedule}
+                  onClick={() => toggleScheduled(coach.id)}
                 >
                   <span className="setrow-txt">
-                    <span className="t">{p.name}</span>
+                    <span className="t">{coach.name}</span>
+                    <span className="s">
+                      {coach.onSchedule ? "On the schedule" : "Not on the schedule"}
+                    </span>
                   </span>
-                  <span className={`switch${inPool[p.id] ? " on" : ""}`} aria-hidden="true">
+                  <span className={`switch${coach.onSchedule ? " on" : ""}`} aria-hidden="true">
                     <span className="switch-knob" />
                   </span>
                 </button>

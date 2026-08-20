@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
-import { gymCatalog, gymCoaches, gymSchedule } from "@/app/actions/gym";
+import { gymCatalog, gymCoaches, gymSchedule, shiftRequests } from "@/app/actions/gym";
 import { GymRota } from "@/components/GymRota";
+import type { PlaceKind } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
 
@@ -43,11 +44,12 @@ export default async function ManageStudioPage({
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
-  const [week, coaches, catalog, typeRows] = await Promise.all([
+  const [week, coaches, catalog, typeRows, requests] = await Promise.all([
     gymSchedule(studio.id, Number(w) || 0),
     gymCoaches(studio.id),
     gymCatalog(studio.id),
     db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
+    shiftRequests(studio.id),
   ]);
 
   return (
@@ -62,6 +64,24 @@ export default async function ManageStudioPage({
       coaches={coaches}
       catalog={catalog}
       customTypes={typeRows.map((t) => t.name)}
+      viewerId={viewerId}
+      requests={requests}
+      admin={{
+        showCoaches: studio.showCoaches,
+        studio: {
+          id: studio.id,
+          name: studio.name,
+          address: studio.address,
+          placeKind: studio.placeKind as PlaceKind,
+          types: studio.types,
+          about: studio.about ?? "",
+          photo: studio.photo,
+          contactEmail: studio.contactEmail ?? "",
+          phone: studio.phone ?? "",
+          website: studio.website ?? "",
+          instagram: studio.instagram ?? "",
+        },
+      }}
     />
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  answerShiftRequest,
   closeGymDay,
   copyGymDay,
   enableStudioSchedule,
@@ -15,12 +16,15 @@ import {
   type GymCoachDto,
   type GymMonthDto,
   type GymWeekDto,
+  type ShiftRequestDto,
 } from "@/app/actions/gym";
 import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import { StudioManageNav } from "@/components/StudioManageNav";
+import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
 import { studioPlannerColorLabel } from "@/lib/studio-planner";
@@ -47,6 +51,18 @@ type CoachPick = {
   iso: string;
   label: string;
   cls: GymClassDto;
+};
+
+type ShiftFilter = "all" | "mine" | "open";
+
+const isShiftFilter = (value: string | null): value is ShiftFilter =>
+  value === "all" || value === "mine" || value === "open";
+
+export type GymRotaAdmin = {
+  studio: StudioEditProps;
+  /** Kept nullable so calendar rendering never has to wait for analytics. */
+  pageViews?: number | null;
+  showCoaches?: boolean;
 };
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -104,6 +120,9 @@ export function GymRota({
   coaches,
   catalog,
   customTypes,
+  viewerId,
+  requests,
+  admin,
 }: {
   studioId: string;
   studioName: string;
@@ -117,6 +136,12 @@ export function GymRota({
   /** Classes already described at this studio, to pull in rather than retype. */
   catalog: GymCatalogItem[];
   customTypes: string[];
+  /** The manager viewing the planner, used only by the local My shifts filter. */
+  viewerId: string;
+  /** Pending, studio-scoped shift requests; never the full personal notification feed. */
+  requests: ShiftRequestDto[];
+  /** The existing studio overflow, now kept in the calendar workspace. */
+  admin: GymRotaAdmin;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<Open | null>(null);
@@ -124,6 +149,9 @@ export function GymRota({
   const [copyingDay, setCopyingDay] = useState<{ day: number; label: string } | null>(null);
   const [coachPick, setCoachPick] = useState<CoachPick | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
+  const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
+  const [requestSheet, setRequestSheet] = useState(false);
+  const [requestRows, setRequestRows] = useState(requests);
   const [desktop, setDesktop] = useState(false);
   const [desktopView, setDesktopView] = useState<"week" | "month">("month");
   const [month, setMonth] = useState<GymMonthDto | null>(null);
@@ -145,18 +173,37 @@ export function GymRota({
     [coaches],
   );
   const days = week?.days ?? [];
-  const visibleDays = desktop && desktopView === "month" && month
+  const sourceVisibleDays = desktop && desktopView === "month" && month
     ? month.days.filter((day) => day.iso.startsWith(month.month))
     : days;
+  const effectiveCoach = useCallback(
+    (cls: GymClassDto, iso: string) =>
+      coachOverrides[occurrenceKey(cls.id, iso)] ?? cls.onUserId ?? "",
+    [coachOverrides],
+  );
+  const matchesShiftFilter = useCallback(
+    (cls: GymClassDto, iso: string) => {
+      const coachId = effectiveCoach(cls, iso);
+      if (shiftFilter === "mine") return coachId === viewerId;
+      if (shiftFilter === "open") return !coachId;
+      return true;
+    },
+    [effectiveCoach, shiftFilter, viewerId],
+  );
+  const visibleDays = sourceVisibleDays.map((day) => ({
+    ...day,
+    items: day.items.filter((cls) => matchesShiftFilter(cls, day.iso)),
+  }));
   const all = visibleDays.flatMap((d) => d.items);
+  const sourceAll = sourceVisibleDays.flatMap((d) => d.items);
   const openSlots = visibleDays.reduce(
     (count, day) => count + day.items.filter((c) => {
-      const who = coachOverrides[occurrenceKey(c.id, day.iso)] ?? c.onUserId ?? "";
+      const who = effectiveCoach(c, day.iso);
       return !who;
     }).length,
     0,
   );
-  const visibleDrafts = new Set(all.filter((c) => !c.isPublic).map((c) => c.id)).size;
+  const visibleDrafts = new Set(sourceAll.filter((c) => !c.isPublic).map((c) => c.id)).size;
 
   const loadMonth = useCallback(async (key?: string, force = false) => {
     const request = ++monthRequest.current;
@@ -175,6 +222,39 @@ export function GymRota({
     setMonth(data);
     setMonthLoading(false);
   }, [studioId]);
+
+  useEffect(() => {
+    setRequestRows(requests);
+  }, [requests]);
+
+  useEffect(() => {
+    const storageKey = `fittlist:studio-calendar-filter:${studioId}`;
+    const restore = () => {
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get("show");
+      const remembered = window.localStorage.getItem(storageKey);
+      setShiftFilter(
+        isShiftFilter(fromUrl)
+          ? fromUrl
+          : isShiftFilter(remembered)
+            ? remembered
+            : "all",
+      );
+    };
+    restore();
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [studioId]);
+
+  useEffect(() => {
+    const restore = () => {
+      const params = new URLSearchParams(window.location.search);
+      setRequestSheet(params.get("panel") === "notifications");
+    };
+    restore();
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, []);
 
   useEffect(() => {
     if (!hasAccount) return;
@@ -217,6 +297,40 @@ export function GymRota({
     // never resurrect its older color or class rows.
     monthCache.current.clear();
     if (desktop && desktopView === "month") void loadMonth(month?.month, true);
+  };
+
+  const chooseShiftFilter = (next: ShiftFilter) => {
+    setShiftFilter(next);
+    window.localStorage.setItem(`fittlist:studio-calendar-filter:${studioId}`, next);
+    const url = new URL(window.location.href);
+    if (next === "all") url.searchParams.delete("show");
+    else url.searchParams.set("show", next);
+    window.history.replaceState({}, "", url);
+  };
+
+  const showRequestSheet = (showing: boolean) => {
+    setRequestSheet(showing);
+    const url = new URL(window.location.href);
+    if (showing) url.searchParams.set("panel", "notifications");
+    else url.searchParams.delete("panel");
+    window.history.replaceState({}, "", url);
+  };
+
+  const answerRequest = (requestId: string, approve: boolean) => {
+    if (pending) return;
+    start(async () => {
+      const res = await answerShiftRequest(requestId, approve);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't answer that request");
+        return;
+      }
+      setRequestRows((current) => current.filter((request) => request.id !== requestId));
+      toast(approve ? "Approved" : "Declined");
+      // Approval changes who is on the occurrence; decline only changes the
+      // notification. Reload the planner only when its visible data changed.
+      if (approve) refreshView();
+      else router.refresh();
+    });
   };
 
   const show = (
@@ -348,7 +462,18 @@ export function GymRota({
             <p className="adminsub">The schedule</p>
           </div>
         </div>
-        <StudioManageNav slug={studioSlug} active="calendar" />
+        <div className="studio-calendar-controls">
+          <StudioManageNav slug={studioSlug} active="calendar" />
+          <div className="rota-calendar-tools">
+            <StudioAdminSheet
+              slug={studioSlug}
+              canSchedule={false}
+              pageViews={admin.pageViews ?? null}
+              studio={admin.studio}
+              showCoaches={admin.showCoaches}
+            />
+          </div>
+        </div>
         <div className="empty-block" style={{ marginTop: 24 }}>
           <h2>Run this studio&rsquo;s calendar here</h2>
           <p>
@@ -442,6 +567,29 @@ export function GymRota({
   const coachPickId = coachPick
     ? coachOverrides[occurrenceKey(coachPick.cls.id, coachPick.iso)] ?? coachPick.cls.onUserId ?? ""
     : "";
+  const filteredWeekDays = days.map((day) => ({
+    ...day,
+    items: day.items.filter((item) => matchesShiftFilter(item, day.iso)),
+  }));
+  const weekHref = (offset: number) => {
+    const params = new URLSearchParams({ w: String(offset) });
+    if (shiftFilter !== "all") params.set("show", shiftFilter);
+    return `${manageBase}?${params.toString()}`;
+  };
+  const summary = all.length === 0
+    ? shiftFilter === "mine"
+      ? "None of your shifts here"
+      : shiftFilter === "open"
+        ? "No open shifts here"
+        : desktop
+          ? "The month is empty"
+          : "The week is empty"
+    : shiftFilter === "mine"
+      ? `${all.length} of your ${all.length === 1 ? "shift" : "shifts"}`
+      : shiftFilter === "open"
+        ? `${all.length} open ${all.length === 1 ? "shift" : "shifts"}`
+        : `${all.length} ${all.length === 1 ? "class" : "classes"}` +
+          (openSlots ? ` · ${openSlots} open` : "");
 
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
@@ -457,12 +605,7 @@ export function GymRota({
         </BackLink>
         <div>
           <h1>{studioName}</h1>
-          <p className="adminsub">
-            {all.length === 0
-              ? desktop ? "The month is empty" : "The week is empty"
-              : `${all.length} ${all.length === 1 ? "class" : "classes"}` +
-                (openSlots ? ` · ${openSlots} open` : "")}
-          </p>
+          <p className="adminsub">{summary}</p>
           {visibleDrafts > 0 && (
             <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
               Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
@@ -473,24 +616,56 @@ export function GymRota({
 
       <div className="studio-calendar-controls">
         <StudioManageNav slug={studioSlug} active="calendar" />
-        {desktop && (
-          <div className="rota-view-switch" role="group" aria-label="Calendar view">
-            <button
-              className={desktopView === "week" ? "on" : ""}
-              aria-pressed={desktopView === "week"}
-              onClick={() => chooseDesktopView("week")}
+        <div className="rota-calendar-tools">
+          <label className="rota-shift-filter">
+            <span>Show:</span>
+            <select
+              aria-label="Show shifts"
+              value={shiftFilter}
+              onChange={(event) => chooseShiftFilter(event.target.value as ShiftFilter)}
             >
-              Week
-            </button>
-            <button
-              className={desktopView === "month" ? "on" : ""}
-              aria-pressed={desktopView === "month"}
-              onClick={() => chooseDesktopView("month")}
-            >
-              Month
-            </button>
-          </div>
-        )}
+              <option value="all">All shifts</option>
+              <option value="mine">My shifts</option>
+              <option value="open">Open shifts</option>
+            </select>
+          </label>
+          {desktop && (
+            <div className="rota-view-switch" role="group" aria-label="Calendar view">
+              <button
+                className={desktopView === "week" ? "on" : ""}
+                aria-pressed={desktopView === "week"}
+                onClick={() => chooseDesktopView("week")}
+              >
+                Week
+              </button>
+              <button
+                className={desktopView === "month" ? "on" : ""}
+                aria-pressed={desktopView === "month"}
+                onClick={() => chooseDesktopView("month")}
+              >
+                Month
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            className="rota-notification-button"
+            aria-label={`Shift notifications${requestRows.length ? `, ${requestRows.length} waiting` : ""}`}
+            onClick={() => showRequestSheet(true)}
+          >
+            <Icon name="notifications" size={21} />
+            {requestRows.length > 0 && (
+              <span className="rota-notification-badge" aria-hidden="true">{requestRows.length}</span>
+            )}
+          </button>
+          <StudioAdminSheet
+            slug={studioSlug}
+            canSchedule={hasAccount}
+            pageViews={admin.pageViews ?? null}
+            studio={admin.studio}
+            showCoaches={admin.showCoaches}
+          />
+        </div>
       </div>
 
       {desktop && desktopView === "month" ? (
@@ -521,6 +696,7 @@ export function GymRota({
               <div className="rota-month-grid">
                 {month.days.map((day) => {
                   const outside = !day.iso.startsWith(month.month);
+                  const filteredItems = day.items.filter((item) => matchesShiftFilter(item, day.iso));
                   return (
                     <section
                       key={day.iso}
@@ -558,7 +734,7 @@ export function GymRota({
                         )}
                       </div>
                       <div className="rota-month-events">
-                        {day.items.map((c) => {
+                        {filteredItems.map((c) => {
                           const key = occurrenceKey(c.id, day.iso);
                           const plannerColorLabel = studioPlannerColorLabel(c.plannerColor);
                           const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
@@ -603,7 +779,11 @@ export function GymRota({
                             </div>
                           );
                         })}
-                        {!day.items.length && !outside && <span className="rota-month-empty">No classes</span>}
+                        {!filteredItems.length && !outside && (
+                          <span className="rota-month-empty">
+                            {shiftFilter === "all" ? "No classes" : "No matching shifts"}
+                          </span>
+                        )}
                       </div>
                     </section>
                   );
@@ -621,19 +801,19 @@ export function GymRota({
           <div className="rotaweek">
             <Link
               className={`rotanav${week && week.offset > 0 ? "" : " off"}`}
-              href={`${manageBase}?w=${Math.max(0, (week?.offset ?? 0) - 1)}`}
+              href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))}
               aria-disabled={!week || week.offset === 0}
             >
               <Icon name="chevron_left" size={20} />
             </Link>
             <span className="rotaweek-lbl">{week?.label ?? ""}</span>
-            <Link className="rotanav" href={`${manageBase}?w=${(week?.offset ?? 0) + 1}`}>
+            <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
               <Icon name="chevron_right" size={20} />
             </Link>
           </div>
 
           <div className="calendar-cardlist rota-calendar">
-            {days.map((day) => (
+            {filteredWeekDays.map((day) => (
               <section key={day.iso} className="rotaday dayblock">
                 <div className="rotaday-h dayband">
                   <span className="dayband-d">{day.label}</span>
@@ -650,7 +830,9 @@ export function GymRota({
                   </span>
                 </div>
                 {day.items.length === 0 ? (
-                  <p className="rotaempty">Nothing on</p>
+                  <p className="rotaempty">
+                    {shiftFilter === "all" ? "Nothing on" : "No matching shifts"}
+                  </p>
                 ) : (
                   <div className="dayrows">
                     {day.items.map((c) => {
@@ -709,7 +891,7 @@ export function GymRota({
         </>
       )}
 
-      {!open && !coachPick && !closingDay && !copyingDay &&
+      {!open && !coachPick && !closingDay && !copyingDay && !requestSheet &&
         (desktop && desktopView === "month" ? monthAddDay : weekAddDay) && (
           <button
             type="button"
@@ -724,6 +906,70 @@ export function GymRota({
             <span>Add a class</span>
           </button>
         )}
+
+      {requestSheet && (
+        <div
+          className="sheet-scrim"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) showRequestSheet(false);
+          }}
+        >
+          <div
+            className="sheet rota-request-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rota-request-title"
+          >
+            <div className="sheettitle rota-request-titlebar">
+              <div>
+                <h2 id="rota-request-title">Shift notifications</h2>
+                <p>Pickups and hand-overs waiting for an answer.</p>
+              </div>
+              <button
+                className="iconbtn sheetclose"
+                aria-label="Close"
+                onClick={() => showRequestSheet(false)}
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            {requestRows.length === 0 ? (
+              <p className="rota-request-empty">Nothing waiting.</p>
+            ) : (
+              <div className="rota-request-list">
+                {requestRows.map((request) => (
+                  <div className="rota-request-row" key={request.id}>
+                    <span className="rota-request-copy">
+                      <strong>
+                        {request.kind === "pickup"
+                          ? `${request.toName} wants ${request.className}`
+                          : `${request.fromName ?? "A coach"} is handing ${request.className} to ${request.toName}`}
+                      </strong>
+                      <small>{request.whenLong}</small>
+                    </span>
+                    <span className="rota-request-actions">
+                      <button
+                        className="btn si"
+                        disabled={pending}
+                        onClick={() => answerRequest(request.id, true)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="tertiary"
+                        disabled={pending}
+                        onClick={() => answerRequest(request.id, false)}
+                      >
+                        Decline
+                      </button>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {coachPick && (
         <div

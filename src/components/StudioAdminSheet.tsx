@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { studioPageViews } from "@/app/actions/gym";
 import { setStudioShowCoaches } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
@@ -25,7 +26,7 @@ export function StudioAdminSheet({
   canSchedule: boolean;
   /** All-time page views, tracked against the gym's account. Null when there
    *  is no account to track against yet. */
-  pageViews: number | null;
+  pageViews?: number | null;
   studio: StudioEditProps;
   /** Whether the public schedule names who is coaching. On by default for a
    *  verified studio; the switch below is the way off. */
@@ -34,6 +35,8 @@ export function StudioAdminSheet({
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [names, setNames] = useState(showCoaches);
+  const [views, setViews] = useState<number | null | undefined>(pageViews);
+  const [viewsPending, startViews] = useTransition();
   const [, startNames] = useTransition();
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
@@ -49,6 +52,19 @@ export function StudioAdminSheet({
         return;
       }
       router.refresh();
+    });
+  };
+
+  const openAdmin = () => {
+    setOpen(true);
+    if (!canSchedule || views !== undefined || viewsPending) return;
+    startViews(async () => {
+      const result = await studioPageViews(studio.id);
+      if (!result.ok) {
+        setViews(null);
+        return;
+      }
+      setViews(result.pageViews);
     });
   };
 
@@ -72,7 +88,7 @@ export function StudioAdminSheet({
       <button
         className="btn ghost staffbar-b staffmore"
         aria-label="More studio settings"
-        onClick={() => setOpen(true)}
+        onClick={openAdmin}
       >
         <Icon name="more_horiz" size={20} />
       </button>
@@ -91,10 +107,18 @@ export function StudioAdminSheet({
             <h2>Studio admin</h2>
             {/* The number a studio actually asks about first: is anyone
                 looking. A stat is a row you read, not a door, so no chevron. */}
-            {pageViews !== null && (
+            {canSchedule && views === undefined && (
+              <div className="statgrid" aria-label="Loading page views">
+                <div className="stat">
+                  <div className="n">&ndash;</div>
+                  <div className="l">Page views</div>
+                </div>
+              </div>
+            )}
+            {views !== null && views !== undefined && (
               <div className="statgrid">
                 <div className="stat">
-                  <div className="n">{pageViews}</div>
+                  <div className="n">{views}</div>
                   <div className="l">Page views</div>
                 </div>
               </div>

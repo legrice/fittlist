@@ -1,28 +1,32 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 
-type StudioManageSection = "calendar" | "shifts" | "staff";
+type StudioManageSection = "calendar" | "staff";
 
-const sections: { key: StudioManageSection; label: string; suffix: string; icon: "calendar_month" | "schedule" | "groups" }[] = [
+const sections: { key: StudioManageSection; label: string; suffix: string; icon: "calendar_month" | "groups" }[] = [
   { key: "calendar", label: "Calendar", suffix: "/manage", icon: "calendar_month" },
-  { key: "shifts", label: "Shifts", suffix: "/shifts", icon: "schedule" },
   { key: "staff", label: "Staff", suffix: "/manage/staff", icon: "groups" },
 ];
 
 /**
- * The three day-to-day parts of running a studio. They remain separate routes
- * so opening the calendar never downloads the roster or every shift request,
- * but the same navigation makes them feel like one operating workspace.
+ * The two day-to-day parts of running a studio. They remain separate routes
+ * so opening the calendar never downloads the roster, but the same navigation
+ * makes them feel like one operating workspace.
  */
 export function StudioManageNav({
   slug,
   active,
 }: {
   slug: string;
-  active: StudioManageSection;
+  /** `shifts` is accepted only by the legacy coach screen; managers are
+   * redirected before it renders, so the visible workspace remains two tabs. */
+  active: StudioManageSection | "shifts";
 }) {
   return (
-    <nav className="studio-manage-nav" aria-label="Studio management">
+    <nav
+      className="studio-manage-nav"
+      aria-label="Studio management"
+    >
       {sections.map((section) => (
         <Link
           key={section.key}

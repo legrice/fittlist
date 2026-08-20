@@ -1,10 +1,9 @@
-import { eq, or } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { and, eq, or } from "drizzle-orm";
+import { notFound, redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { coachAnalytics } from "@/lib/visits";
+import { getSessionUserId } from "@/lib/session";
 import { staffView } from "@/app/actions/gym";
 import { StudioShiftsView } from "@/components/StudioShiftsView";
-import type { PlaceKind } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
 
@@ -28,36 +27,30 @@ export default async function ShiftsPage({ params }: { params: Promise<{ slug: s
         : eq(schema.studios.slug, slug),
     );
   if (!studio) notFound();
+  // Managers now work from Calendar. Detect that before building the heavier
+  // coach-facing two-week shift feed so the redirect is nearly free.
+  const viewerId = await getSessionUserId();
+  if (!viewerId) notFound();
+  const [manager] = await db
+    .select({ id: schema.studioManagers.userId })
+    .from(schema.studioManagers)
+    .where(
+      and(
+        eq(schema.studioManagers.studioId, studio.id),
+        eq(schema.studioManagers.userId, viewerId),
+      ),
+    )
+    .limit(1);
+  if (manager) redirect(`/s/${studio.slug ?? studio.id}/manage`);
   const view = await staffView(studio.id);
   if (!view) notFound();
-  // The overflow's contents, and only for whoever runs the place.
-  const pageViews =
-    view.isManager && studio.accountUserId
-      ? (await coachAnalytics(studio.accountUserId)).profileViews
-      : null;
   return (
     <StudioShiftsView
       view={view}
       canSchedule={!!studio.accountUserId}
-      pageViews={pageViews}
+      pageViews={null}
       showCoaches={studio.showCoaches}
-      studio={
-        view.isManager
-          ? {
-              id: studio.id,
-              name: studio.name,
-              address: studio.address,
-              placeKind: studio.placeKind as PlaceKind,
-              types: studio.types,
-              about: studio.about ?? "",
-              photo: studio.photo,
-              contactEmail: studio.contactEmail ?? "",
-              phone: studio.phone ?? "",
-              website: studio.website ?? "",
-              instagram: studio.instagram ?? "",
-            }
-          : null
-      }
+      studio={null}
     />
   );
 }

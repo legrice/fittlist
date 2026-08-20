@@ -1,8 +1,6 @@
 import { eq, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { getSessionUserId } from "@/lib/session";
-import { studioAccess } from "@/lib/studioaccess";
 import { studioStaff } from "@/app/actions/gym";
 import { StudioStaffView } from "@/components/StudioStaffView";
 
@@ -24,18 +22,10 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
       UUID_RE.test(slug)
         ? or(eq(schema.studios.slug, slug), eq(schema.studios.id, slug))
         : eq(schema.studios.slug, slug),
-    );
+  );
   if (!studio) notFound();
-  const viewerId = await getSessionUserId();
-  if (!viewerId) notFound();
-  const [me] = await db
-    .select({ kind: schema.users.kind })
-    .from(schema.users)
-    .where(eq(schema.users.id, viewerId));
-  if (!me) notFound();
-  const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
-  if (!access.isManager) notFound();
-
+  // The focused loader performs the manager check itself. Avoid repeating a
+  // session lookup, user lookup, and manager lookup before asking it again.
   const staff = await studioStaff(studio.id);
   if (!staff) notFound();
   return (
@@ -43,7 +33,7 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
       studioId={studio.id}
       studioName={studio.name}
       studioSlug={studio.slug ?? studio.id}
-      backHref={`/s/${studio.slug ?? studio.id}/shifts`}
+      backHref={`/s/${studio.slug ?? studio.id}/manage`}
       staff={staff}
     />
   );

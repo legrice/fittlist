@@ -12,6 +12,7 @@ import {
   uuid,
   doublePrecision,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export type BookingLink = { label: string; url: string };
 
@@ -378,13 +379,14 @@ export const shiftRequests = pgTable(
 // a shift might be held by something that isn't a user.
 //
 // `state` is what the roster screen groups by:
-//   active       on fittlist, accepted, linked            holds shifts
-//   invited      on fittlist, asked, hasn't answered      holds shifts
-//   placeholder  not on fittlist; a name and an invite    holds shifts
-//   unconfirmed  turned up by claiming or asked to join   holds none
+//   active       on fittlist, accepted, linked
+//   invited      on fittlist, asked, hasn't answered
+//   placeholder  not on fittlist; a name and an invite
+//   unconfirmed  turned up by claiming or asked to join
 //
-// Only `unconfirmed` cannot hold a shift, and that is the whole difference:
-// it names somebody the studio has not agreed to yet.
+// `onSchedule` is the second, independent question: the association remains
+// visible to the studio when it is off, but only assignable states with it on
+// can hold or trade shifts. `unconfirmed` can never be made assignable.
 export const studioRotaCoaches = pgTable(
   "studio_rota_coaches",
   {
@@ -393,6 +395,10 @@ export const studioRotaCoaches = pgTable(
     userId: uuid("user_id").notNull().references(() => users.id),
     /** active | invited | placeholder | unconfirmed. */
     state: text("state").notNull().default("active"),
+    /** The studio keeps the association even when this is off, but the coach
+     *  cannot be assigned, receive coverage requests, or use the staff-side
+     *  rota until a manager puts them back on the schedule. */
+    onSchedule: boolean("on_schedule").notNull().default(true),
     /** Where the invite went, for a resend. Null once they are on. */
     invitedEmail: text("invited_email"),
     invitedPhone: text("invited_phone"),
@@ -406,7 +412,15 @@ export const studioRotaCoaches = pgTable(
     source: text("source"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("studio_rota_coaches_once").on(t.studioId, t.userId)],
+  (t) => [
+    uniqueIndex("studio_rota_coaches_once").on(t.studioId, t.userId),
+    // An invite email represents one position at this studio. This closes the
+    // last concurrency gap where two managers could create two placeholders
+    // for the same person before either request observed the other.
+    uniqueIndex("studio_rota_invited_email_once")
+      .on(t.studioId, t.invitedEmail)
+      .where(sql`${t.invitedEmail} is not null`),
+  ],
 );
 
 // Who runs a studio's page. A studio with no rows here is unclaimed, which is

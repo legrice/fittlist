@@ -65,6 +65,26 @@ const openSetting = async (pg, group) => {
   await pg.waitForTimeout(450);
 };
 
+// Managers answer coverage from the calendar now. Keep the bell and its
+// sheet in the path every time rather than reaching the same action through
+// the coach-only shifts screen.
+const openStudioRequests = async (pg, studioHref) => {
+  await pg.goto(BASE + studioHref + "/manage");
+  const bell = pg.getByRole("button", { name: /Shift notifications/ });
+  await bell.waitFor();
+  await bell.click();
+  const sheet = pg.getByRole("dialog", { name: "Shift notifications" });
+  await sheet.waitFor();
+  return sheet;
+};
+
+// Calendar rows share the app's compact class-line shell now. The class line
+// edits the class; the picker beside it changes who's on, so a test that taps
+// the whole wrapper can accidentally choose whichever control happens to be
+// under its centre.
+const rotaRow = (pg, name) => pg.locator(".rota-calendar .clrow", { hasText: name });
+const editRotaRow = async (row) => row.locator(".clline").click();
+
 const mkCoach = async (email, name, withClass) => {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
@@ -122,99 +142,130 @@ await card().getByRole("button", { name: "Turn on its schedule" }).click();
 await matt.getByText("Its schedule is on").waitFor();
 console.log("gym account on ok");
 
-// Running a place shows up on your own account. It used to be reachable only
-// by navigating to the studio's page and finding the floating pill, which is
-// no way to find something you own, and Where I coach is no help either: that
-// is built from coach_studios and a manager need not have a row in it.
-{
-  await matt.goto(BASE + "/you");
-  await matt.locator(".acctwrap").waitFor();
-  const row = matt.locator(".setrow", { hasText: "Ironbound" });
-  await row.waitFor();
-  const href = await row.getAttribute("href");
-  // It opens the shifts screen, not the public page: what you came to your
-  // own account for is the work, and the role tag says which kind you are.
-  if (!href?.endsWith("/shifts")) fail("the row should open the shifts screen: " + href);
-  if (!/Admin/.test(await row.innerText())) fail("a manager's row should say Admin");
-  await row.click();
-  await matt.waitForURL(/\/shifts/);
-  await matt.locator(".staffbar").waitFor();
-  // And closing goes back where you came from, which is the only place you
-  // can have come from. It used to land on the studio's public page, which
-  // is a page a manager never asked for and has no way back off.
-  await matt.locator(".acctclose").click();
-  await matt.waitForURL(/\/you$/);
-  await matt.locator(".acctwrap").waitFor();
-  console.log("the studio you run is on your own account ok (and closes back to it)");
-}
-// A coach who works here but runs nothing gets the row too, tagged Coach:
-// the spec's Your studios is anybody affiliated as staff, and the shifts
-// screen is exactly what a staff coach never had a door to.
-{
-  await tom.goto(BASE + "/you");
-  await tom.locator(".acctwrap").waitFor();
-  const row = tom.locator(".setrow", { hasText: "Ironbound" });
-  await row.waitFor();
-  const txt = await row.innerText();
-  if (!/Coach/.test(txt)) fail("a staff coach's row should say Coach: " + txt);
-  if (/Admin/.test(txt)) fail("a staff coach is not an admin");
-}
-
 // The studio picker autocompletes names, so read the slug rather than guess it.
 await matt.goto(BASE + "/matt/studios");
 const studioHref = await matt.locator('a[href^="/s/"]').first().getAttribute("href");
 if (!studioHref) fail("no studio on the coach's page");
 console.log("studio at " + studioHref);
 
-// The rota, from the shifts screen. The studio's public page carries no
-// manager's control at all now: the tools are not drawn in the shop window.
+// Publicly listing a studio is not permission to work its schedule. All three
+// coaches chose Ironbound while signing up, but Staff must begin empty: there
+// is no candidate pool assembled from public profiles or old classes.
+await matt.goto(BASE + studioHref + "/manage/staff");
+await matt.locator(".studio-staff-pad").waitFor();
+{
+  const nav = matt.getByRole("navigation", { name: "Studio management" });
+  const tabs = (await nav.getByRole("link").allInnerTexts()).map((t) => t.trim());
+  if (tabs.join("|") !== "Calendar|Staff")
+    fail("the manager workspace should have two tabs: " + tabs.join("|"));
+  const views = matt.getByRole("group", { name: "Staff view" });
+  const labels = (await views.getByRole("button").allInnerTexts()).map((t) => t.trim());
+  if (labels.join("|") !== "People|On schedule")
+    fail("Staff should split people from schedule eligibility: " + labels.join("|"));
+  await matt.getByText("No coaches have been invited yet.").waitFor();
+  await views.getByRole("button", { name: "On schedule" }).click();
+  await matt.getByText("Invite a coach under People first.").waitFor();
+  if (await matt.getByRole("switch").count())
+    fail("public studio connections leaked into Staff's schedule list");
+  await views.getByRole("button", { name: "People" }).click();
+}
+
+// The fixtures become staff the same way a real coach does: an explicit
+// studio invitation. Existing accounts are active and schedulable at once.
+const coachRows = () => matt
+  .getByRole("heading", { name: "Coaches", exact: true })
+  .locator("xpath=following-sibling::div[contains(@class, 'settingslist')][1]")
+  .locator(".staffrow");
+for (const [name, email] of [
+  ["Tom", "tom@example.com"],
+  ["Julia", "julia@example.com"],
+  ["Matt", "matt@example.com"],
+]) {
+  await matt.locator("#coachName").fill(name);
+  await matt.locator("#coachEmail").fill(email);
+  await matt.getByRole("button", { name: "Invite coach" }).click();
+  await coachRows().filter({ hasText: email }).waitFor();
+}
+await matt.getByRole("group", { name: "Staff view" }).getByRole("button", { name: "On schedule" }).click();
+{
+  const switches = matt.getByRole("switch");
+  const names = (await switches.locator(".t").allInnerTexts()).map((t) => t.trim()).sort();
+  if (names.join("|") !== "Julia|Matt|Tom")
+    fail("Schedule should contain only the invited coaches: " + names.join("|"));
+  if ((await matt.getByRole("switch", { checked: true }).count()) !== 3)
+    fail("newly added coaches should start on the schedule");
+}
+console.log("Staff has explicit People and On schedule lists ok");
+
+// Running a place shows up on the account as a direct door to its two-tab
+// workspace. Managers do not pass through the coach-only shifts screen.
+{
+  await matt.goto(BASE + "/you");
+  await matt.locator(".youpage").waitFor();
+  const row = matt.locator(".youaccount-row", { hasText: "Ironbound" });
+  await row.waitFor();
+  const href = await row.getAttribute("href");
+  if (!href?.endsWith("/manage")) fail("the managed place should open Calendar: " + href);
+  if (!/Calendar and staff/.test(await row.innerText()))
+    fail("the managed place should describe its workspace");
+  await row.click();
+  await matt.waitForURL("**/manage");
+  await matt.locator(".gym-manage-pad").waitFor();
+  await matt.getByRole("button", { name: "Back to your account" }).click();
+  await matt.waitForURL(/\/you$/);
+  await matt.locator(".youpage").waitFor();
+  console.log("the studio you run opens Calendar from your account and returns ok");
+}
+
+// The studio's public page carries no manager controls: the tools live in the
+// private workspace. A manager's old /shifts URL canonicalizes to Calendar.
 await matt.goto(BASE + studioHref);
-if (await matt.locator(".studioadmin").count())
-  fail("the public studio page should carry no manager's door");
+if (await matt.getByRole("navigation", { name: "Studio management" }).count())
+  fail("the public studio page should carry no manager workspace");
 await matt.goto(BASE + studioHref + "/shifts");
-// The two weekly acts are named buttons; the overflow holds the rest, and
-// with the account on that includes the counts and the page views.
-await matt.locator(".staffbar .staffmore").click();
+await matt.waitForURL("**/manage");
+await matt.locator(".gym-manage-pad").waitFor();
+{
+  const nav = matt.getByRole("navigation", { name: "Studio management" });
+  const tabs = (await nav.getByRole("link").allInnerTexts()).map((t) => t.trim());
+  if (tabs.join("|") !== "Calendar|Staff")
+    fail("Calendar and Staff should be the whole manager workspace: " + tabs.join("|"));
+  if ((await nav.getByRole("link", { name: "Calendar" }).getAttribute("aria-current")) !== "page")
+    fail("a manager redirected from shifts should land on Calendar");
+}
+{
+  const show = matt.getByRole("combobox", { name: "Show shifts" });
+  const options = (await show.locator("option").allInnerTexts()).map((t) => t.trim());
+  if (options.join("|") !== "All shifts|My shifts|Open shifts")
+    fail("Calendar's Show filter is incomplete: " + options.join("|"));
+}
+
+// The request queue is a bell-owned sheet on Calendar, including its useful
+// empty state before any coach asks for a shift.
+await matt.getByRole("button", { name: "Shift notifications" }).click();
+{
+  const sheet = matt.getByRole("dialog", { name: "Shift notifications" });
+  await sheet.waitFor();
+  await sheet.getByText("Nothing waiting.").waitFor();
+  await sheet.getByRole("button", { name: "Close" }).click();
+}
+
+// Calendar owns the studio admin overflow too. It holds the less-frequent
+// tools, not duplicate doors for either workspace tab.
+await matt.getByRole("button", { name: "More studio settings" }).click();
 {
   const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["Shift counter", "Edit studio info", "Share this studio"])
+  for (const want of ["Shift counter", "Edit studio info", "Share this studio", "Show who’s coaching"])
     if (!rows.includes(want)) fail("the overflow is missing " + want + ": " + rows.join("|"));
-  // The two that became buttons must not also be rows: one door each. The
-  // second reads Staff now, not Coaches: it is everybody who works here.
-  for (const gone of ["All shifts", "Staff", "Coaches"])
-    if (rows.includes(gone)) fail(gone + " is a button now, not an overflow row: " + rows.join("|"));
+  for (const gone of ["Calendar", "Staff", "All shifts", "Coaches"])
+    if (rows.includes(gone)) fail(gone + " should not be duplicated in the overflow: " + rows.join("|"));
 }
-await matt.locator(".sheet .stat .n").waitFor();
+await matt.locator('.sheet .statgrid:not([aria-label="Loading page views"]) .stat .n').waitFor();
 await matt.locator(".sheetclose").first().click();
 await matt.waitForFunction(() => !document.querySelector(".sheet"));
-// Staff, not Coaches: the list is everybody who works here.
-{
-  const words = (await matt.locator(".staffbar a").allInnerTexts()).map((t) => t.trim());
-  if (!words.some((w) => /Staff/.test(w)))
-    fail("the studio's second button should read Staff: " + words.join("|"));
-  if (words.some((w) => /Coaches/.test(w)))
-    fail("Coaches was the narrower word: " + words.join("|"));
-}
-await matt.locator(".staffbar a", { hasText: "All shifts" }).click();
-await matt.waitForURL("**/manage");
-await matt.locator(".admintop h1").waitFor();
+console.log("manager redirect and Calendar-owned controls ok");
 
-// The rota is a full-screen sheet over the screen that opened it: it carries
-// no doors of its own (they were the two you arrived past), and closing goes
-// back to the shifts screen rather than to the studio's public page.
-{
-  for (const gone of ["Shifts worked", "Shift counter", "Staff"])
-    if (await matt.locator(".pad .btn", { hasText: gone }).count())
-      fail(gone + " should not be a door on the rota: you arrived through it");
-  await matt.locator(".acctclose").click();
-  await matt.waitForURL(/\/shifts$/);
-  await matt.locator(".staffbar").waitFor();
-  await matt.locator(".staffbar a", { hasText: "All shifts" }).click();
-  await matt.waitForURL("**/manage");
-  await matt.locator(".admintop h1").waitFor();
-}
-
-// add a class with nobody on it. The form is the coach's own adder, handed the
+// add a class as an open shift. The form is the coach's own adder, handed the
 // gym's studio and one extra field, so the ids are the adder's.
 await matt.locator(".rotaday", { hasText: "Thursday" }).getByRole("button", { name: "Add" }).click();
 await matt.locator("#fName").waitFor();
@@ -226,22 +277,23 @@ await lateSlot(matt);
 await matt.getByRole("button", { name: "Add to the schedule" }).click();
 await matt.getByText("Added to the week").waitFor();
 await matt.waitForTimeout(600);
-const openRow = matt.locator(".ps-event.ps-event-open", { hasText: "HYROX" });
+const openRow = rotaRow(matt, "HYROX");
 await openRow.waitFor();
-if (!(await openRow.innerText()).includes("Nobody on it yet"))
-  fail("an unassigned slot should say so");
-console.log("open slot ok (added, nobody on it)");
+if ((await openRow.locator(".rota-coach-picker").innerText()).trim() !== "Open")
+  fail("an unassigned slot should say Open");
+console.log("open slot ok (added as open)");
 
 // now put Tom on it
-await openRow.click();
+await editRotaRow(openRow);
 await matt.locator("#fCoach").waitFor();
 await matt.locator("#fCoach").selectOption({ label: "Tom" });
 await matt.getByRole("button", { name: "Save changes" }).click();
 await matt.getByText("Saved").waitFor();
 await matt.waitForTimeout(600);
-const filled = matt.locator(".ps-event", { hasText: "HYROX" });
-if (!(await filled.innerText()).includes("Tom")) fail("the row should name the coach");
-if (await matt.locator(".ps-event.ps-event-open", { hasText: "HYROX" }).count())
+const filled = rotaRow(matt, "HYROX");
+if (!(await filled.locator(".rota-coach-picker").innerText()).includes("Tom"))
+  fail("the row should name the coach");
+if ((await filled.locator(".rota-coach-picker").innerText()).trim() === "Open")
   fail("an assigned slot should stop reading as open");
 console.log("assignment ok (Tom is on it)");
 
@@ -300,7 +352,7 @@ console.log("the coach is told ok");
   console.log("pulled a class in and filled the rest ok");
 
   // Reopening it shows what was saved rather than an empty form.
-  await matt.locator(".ps-event", { hasText: "Warm Up" }).first().click();
+  await editRotaRow(rotaRow(matt, "Warm Up").first());
   await matt.locator("#fDesc").waitFor();
   if (!(await matt.locator("#fDesc").inputValue()).includes("shoes you can lift"))
     fail("the description didn't survive a save");
@@ -363,7 +415,7 @@ console.log("the coach is told ok");
     await matt.waitForTimeout(900);
 
     for (const [day, count] of [["Sunday", 3], ["Wednesday", 3], ["Friday", 3]]) {
-      const got = await matt.locator(".rotaday", { hasText: day }).locator(".ps-event", { hasText: "Grid Class" }).count();
+      const got = await matt.locator(".rotaday", { hasText: day }).locator(".clrow", { hasText: "Grid Class" }).count();
       if (got !== count) fail(`${day} should hold ${count} Grid Class slots, got ${got}`);
     }
     console.log("days times times ok (one add, nine slots)");
@@ -378,13 +430,15 @@ console.log("the coach is told ok");
     await matt.getByRole("button", { name: "Add to the schedule" }).click();
     await matt.getByText("Added to the week").waitFor();
     await matt.waitForTimeout(900);
-    const after = await matt.locator(".rotaday", { hasText: "Sunday" }).locator(".ps-event", { hasText: "Grid Class" }).count();
+    const after = await matt.locator(".rotaday", { hasText: "Sunday" }).locator(".clrow", { hasText: "Grid Class" }).count();
     if (after !== 4) fail("re-adding should add only the new time, got " + after + " slots");
     console.log("a second pass adds only what is new ok");
 
     // And editing one of them never fans out: one row is one slot, which is
     // what keeps a swap on it safe.
-    await matt.locator(".rotaday", { hasText: "Sunday" }).locator(".ps-event", { hasText: "Grid Class" }).first().click();
+    await editRotaRow(
+      matt.locator(".rotaday", { hasText: "Sunday" }).locator(".clrow", { hasText: "Grid Class" }).first(),
+    );
     await matt.locator("#fName").waitFor();
     if (await matt.getByRole("button", { name: "+ Also at another time" }).count())
       fail("an edit must not offer the grid: it moves one slot rather than fanning out");
@@ -418,9 +472,9 @@ console.log("the coach is told ok");
 // has to reach two calendars or somebody doesn't turn up.
 {
   await matt.goto(BASE + studioHref + "/manage");
-  const row = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+  const row = rotaRow(matt, "HYROX").first();
   await row.waitFor();
-  await row.click();
+  await editRotaRow(row);
   await matt.locator("#rotaOn").waitFor();
   // Tom is on it normally; Julia takes this one date.
   const label = await matt.locator("#rotaOn option:checked").innerText();
@@ -429,19 +483,19 @@ console.log("the coach is told ok");
   await matt.getByText("Swapped").waitFor();
   await matt.waitForTimeout(700);
   await matt.locator(".sheetclose").click();
-  const swapped = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+  const swapped = rotaRow(matt, "HYROX").first();
   const txt = await swapped.innerText();
   if (!txt.includes("Julia")) fail("the row should show who's actually on: " + txt);
-  if (!/covering/i.test(txt)) fail("a swapped date should be marked as an exception");
+  if (!/\bCover\b/i.test(txt)) fail("a swapped date should be marked as an exception");
   console.log("swap ok (Julia has this one, Tom keeps the rest)");
 
   // Next week is untouched: a swap is one date, not a change to the class.
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  const next = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+  const next = rotaRow(matt, "HYROX").first();
   await next.waitFor();
   const nextTxt = await next.innerText();
   if (!nextTxt.includes("Tom")) fail("next week should still be the regular coach: " + nextTxt);
-  if (/covering/i.test(nextTxt)) fail("next week should carry no exception");
+  if (/\bCover\b/i.test(nextTxt)) fail("next week should carry no exception");
   console.log("the standing rota is untouched ok");
 }
 
@@ -449,18 +503,17 @@ console.log("the coach is told ok");
 //
 // This is the hole the staff spec is mostly about: /manage is the managers'
 // and a coach who merely works here had no studio screen at all. My shifts is
-// the default tab for everyone, admin or not, because a manager is almost
-// always also a coach and a manager-only mode that hides their own shifts is
-// the thing to avoid.
+// the coach's default tab; manager work now stays in Calendar and Staff.
 {
   await tom.goto(BASE + studioHref + "/shifts");
-  await tom.locator(".admintop h1").waitFor();
+  await tom.locator(".studio-manage-top h1").waitFor();
   {
     const sub = await tom.locator(".adminsub").innerText();
     if (!/You coach here/.test(sub)) fail("a staff coach should be told they coach here: " + sub);
   }
   // No admin doors for somebody who does not run the place.
-  if (await tom.locator(".staffbar").count()) fail("a staff coach shouldn't get the admin bar");
+  if (await tom.getByRole("navigation", { name: "Studio management" }).count())
+    fail("a staff coach shouldn't get the manager workspace");
   {
     const tabs = (await tom.locator(".pubtabs .pubtab").allInnerTexts()).map((t) =>
       t.split("\n")[0].trim(),
@@ -472,16 +525,19 @@ console.log("the coach is told ok");
     fail("Tom's own shift should be on My shifts");
   console.log("a staff coach has a shifts screen ok");
 
-  // The manager gets the same screen plus the extra doors and the queue.
+  // The same URL sends a manager to Calendar instead. Its Show control owns
+  // the three useful slices without rebuilding the coach's shifts screen.
   await matt.goto(BASE + studioHref + "/shifts");
-  await matt.locator(".staffbar").waitFor();
-  {
-    const tabs = (await matt.locator(".pubtabs .pubtab").allInnerTexts()).map((t) =>
-      t.split("\n")[0].trim(),
-    );
-    if (!tabs.includes("Requests")) fail("a manager gets the queue: " + tabs.join("|"));
-  }
-  console.log("a manager gets the same screen plus the queue ok");
+  await matt.waitForURL("**/manage");
+  const show = matt.getByRole("combobox", { name: "Show shifts" });
+  await show.selectOption("mine");
+  await matt.waitForFunction(() => new URL(location.href).searchParams.get("show") === "mine");
+  if (await rotaRow(matt, "HYROX").count()) fail("My shifts showed somebody else's HYROX");
+  await show.selectOption("open");
+  await rotaRow(matt, "Grid Class").first().waitFor();
+  await show.selectOption("all");
+  await rotaRow(matt, "HYROX").first().waitFor();
+  console.log("a manager redirects to Calendar and its Show filter works ok");
 }
 
 // Both calendars move: the date leaves Tom's and lands in Julia's. Getting
@@ -507,29 +563,29 @@ console.log("the coach is told ok");
   console.log("the date moves between both calendars ok");
 }
 
-// Opening a slot up: nobody on it, said out loud rather than left blank.
+// Opening a slot up: said out loud rather than left blank.
 {
   await matt.goto(BASE + studioHref + "/manage");
-  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
+  await editRotaRow(rotaRow(matt, "HYROX").first());
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption("");
   await matt.getByText("Opened up").waitFor();
   await matt.waitForTimeout(700);
   await matt.locator(".sheetclose").click();
-  const opened = matt.locator(".ps-event.ps-event-open", { hasText: "HYROX" }).first();
+  const opened = rotaRow(matt, "HYROX").first();
   await opened.waitFor();
-  if (!(await opened.innerText()).includes("Nobody on it yet"))
-    fail("an opened date should say nobody is on it");
+  if ((await opened.locator(".rota-coach-picker").innerText()).trim() !== "Open")
+    fail("an opened date should say Open");
   console.log("opening a date up ok");
 
   // And back to the regular coach clears the exception entirely.
-  await opened.click();
+  await editRotaRow(opened);
   await matt.locator("#rotaOn").selectOption({ label: "Tom (usually)" });
   await matt.getByText("Swapped").waitFor();
   await matt.waitForTimeout(700);
   await matt.locator(".sheetclose").click();
-  const back = matt.locator(".ps-event", { hasText: "HYROX" }).first();
-  if (/covering/i.test(await back.innerText()))
+  const back = rotaRow(matt, "HYROX").first();
+  if (/\bCover\b/i.test(await back.innerText()))
     fail("putting the regular coach back should clear the exception, not store one");
   console.log("back to normal clears the exception ok");
 }
@@ -540,10 +596,10 @@ console.log("the coach is told ok");
 // class existed, including the weeks Julia covered and the weeks before he was
 // on it at all. That's somebody's paycheck, so the past gets frozen.
 {
-  // The counter is reached from the shifts screen's overflow now: the rota
-  // carries no doors of its own, because it is a screen you opened from one.
-  await matt.goto(BASE + studioHref + "/shifts");
-  await matt.locator(".staffbar .staffmore").click();
+  // The counter stays in Calendar's admin overflow, beside the planner it is
+  // counted from.
+  await matt.goto(BASE + studioHref + "/manage");
+  await matt.getByRole("button", { name: "More studio settings" }).click();
   await matt.locator(".sheet .setrow", { hasText: "Shift counter" }).click();
   await matt.waitForURL("**/counts");
   await matt.getByRole("heading", { name: "Shift counter" }).waitFor();
@@ -585,8 +641,8 @@ console.log("the coach is told ok");
 // property from the side the suite can see.)
 {
   await matt.goto(BASE + studioHref + "/manage");
-  const row = matt.locator(".ps-event", { hasText: "HYROX" }).first();
-  await row.click();
+  const row = rotaRow(matt, "HYROX").first();
+  await editRotaRow(row);
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption({ label: "Julia" });
   await matt.getByText("Swapped").waitFor();
@@ -594,7 +650,7 @@ console.log("the coach is told ok");
   await matt.locator(".sheetclose").click();
 
   // Now hand the standing slot to Matt entirely.
-  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
+  await editRotaRow(rotaRow(matt, "HYROX").first());
   await matt.locator("#fCoach").waitFor();
   await matt.locator("#fCoach").selectOption({ label: "Matt" });
   await matt.getByRole("button", { name: "Save changes" }).click();
@@ -602,21 +658,21 @@ console.log("the coach is told ok");
   await matt.waitForTimeout(800);
   await matt.locator(".sheetclose").click().catch(() => {});
 
-  const covered = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+  const covered = rotaRow(matt, "HYROX").first();
   const txt = await covered.innerText();
   if (!txt.includes("Julia"))
     fail("handing the slot over took a covered date with it: " + txt);
   console.log("a covered date survives a handover ok");
 
   // Put it back so the rest of the run sees the rota it expects.
-  await covered.click();
+  await editRotaRow(covered);
   await matt.locator("#fCoach").waitFor();
   await matt.locator("#fCoach").selectOption({ label: "Tom" });
   await matt.getByRole("button", { name: "Save changes" }).click();
   await matt.getByText("Saved").waitFor();
   await matt.waitForTimeout(600);
   await matt.locator(".sheetclose").click().catch(() => {});
-  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
+  await editRotaRow(rotaRow(matt, "HYROX").first());
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption({ label: "Tom (usually)" });
   await matt.getByText("Swapped").waitFor();
@@ -635,7 +691,7 @@ console.log("the coach is told ok");
     return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
   })();
   await matt.goto(BASE + studioHref + `/manage/counts?m=${lastMonth}`);
-  await matt.locator(".admintop h1").waitFor();
+  await matt.locator(".studio-manage-top h1").waitFor();
   await matt.waitForTimeout(400);
   const body = await matt.locator("body").innerText();
   if (/\bTom\b/.test(body) && !/Nobody was on a class/.test(body))
@@ -710,7 +766,7 @@ console.log("the coach is told ok");
   // A date somebody else is covering is not a date he teaches, so it comes off
   // his page. Getting this wrong tells people to turn up to the wrong class.
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
+  await editRotaRow(rotaRow(matt, "HYROX").first());
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption({ label: "Julia" });
   await matt.getByText("Swapped").waitFor();
@@ -761,12 +817,12 @@ console.log("the coach is told ok");
   if (await tom.getByRole("button", { name: /give up this shift/i }).count())
     fail("the Your shift box should have made way for the Manage shift pill");
   await tom.locator(".classoverlay-cta").getByRole("button", { name: "Manage shift" }).click();
-  // No shift list yet, so the sheet holds only the give-up: Transfer has
-  // nobody to offer, and a door to an empty room is not a door.
+  // The studio explicitly invited its people, so transfer is available from
+  // the start; public self-listing alone would not have put anybody here.
   {
     const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-    if (rows.length !== 1 || !/Give up this shift/.test(rows[0]))
-      fail("before a shift list exists the sheet should only give up: " + rows.join("|"));
+    if (rows.length !== 2 || !rows.includes("Give up this shift") || !rows.includes("Transfer shift"))
+      fail("an invited coach should be able to give up or transfer: " + rows.join("|"));
   }
   await tom.locator(".sheet .setrow", { hasText: "Give up this shift" }).click();
   // It asks first: the notice goes out the moment it happens, so no single
@@ -805,26 +861,25 @@ console.log("the coach is told ok");
   // pending change never writes a cover.
   await matt.goto(BASE + studioHref + "/manage?w=1");
   {
-    const still = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+    const still = rotaRow(matt, "HYROX").first();
     await still.waitFor();
     if (/Julia/.test(await still.innerText()))
       fail("a pending ask reached the rota before anybody approved it");
   }
   // The manager answers it, and that is the moment it becomes true.
-  await matt.goto(BASE + studioHref + "/shifts");
-  await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
-  await matt.waitForTimeout(400);
-  await matt.locator(".setrow", { hasText: "Julia" }).first().getByRole("button", { name: "Approve" }).click();
+  const requests = await openStudioRequests(matt, studioHref);
+  await requests.locator(".rota-request-row", { hasText: "Julia" }).first()
+    .getByRole("button", { name: "Approve" }).click();
   await matt.getByText("Approved").waitFor();
   await matt.waitForTimeout(1000);
   console.log("the studio approves it ok");
 
   // It moved, on the rota and on both their schedules.
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  const onRota = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+  const onRota = rotaRow(matt, "HYROX").first();
   await onRota.waitFor();
   const txt = await onRota.innerText();
-  if (!txt.includes("Julia") || !/covering/i.test(txt))
+  if (!txt.includes("Julia") || !/\bCover\b/i.test(txt))
     fail("the rota should show who actually took it: " + txt);
   await tom.goto(BASE + "/app");
   await tom.waitForTimeout(400);
@@ -840,41 +895,45 @@ console.log("the coach is told ok");
   console.log("the manager hears about the change ok");
 }
 
-// ---- the shift list, and handing a date straight to somebody
+// ---- scheduled staff, and handing a date straight to somebody
 //
-// Anyone may say they coach at a gym, and not everyone who does takes the
-// group classes, so the managers name who a shift can be handed to. Once the
-// list exists, "can you take my Thursday" stops being a text message plus a
-// manager: the coach hands the date over and everybody who should know hears.
+// Staff is studio-owned now: People is who the studio invited, and On schedule
+// is who may hold or receive a shift. Public profile connections never enter
+// either list. Once scheduled, "can you take my Thursday" stops being a text
+// message plus a manager.
 {
-  // The manager names Julia, and only Julia. The list lives on the staff
-  // screen now, beside who runs the page: two lists of the studio's people.
+  // The three explicit invitations from setup, and no candidate pool built
+  // from their public classes. The eligibility view is behind its own tab.
   await matt.goto(BASE + studioHref + "/manage/staff");
-  await matt.locator(".admintop h1", { hasText: "Staff" }).waitFor();
+  await matt.locator(".studio-manage-top h1").waitFor();
+  await matt.getByRole("group", { name: "Staff view" }).getByRole("button", { name: "On schedule" }).click();
   {
-    const names = (await matt.locator('[role="switch"] .t').allInnerTexts()).map((t) => t.trim());
-    if (!names.includes("Julia") || !names.includes("Tom"))
-      fail("the list should offer everyone who lists the studio: " + names.join("|"));
+    const switches = matt.getByRole("switch");
+    const names = (await switches.locator(".t").allInnerTexts()).map((t) => t.trim()).sort();
+    if (names.join("|") !== "Julia|Matt|Tom")
+      fail("Schedule should show the invited people only: " + names.join("|"));
+    if ((await matt.getByRole("switch", { checked: true }).count()) !== 3)
+      fail("all three invited coaches should be schedulable");
   }
-  await matt.locator('[role="switch"]', { hasText: "Julia" }).click();
-  await matt.waitForTimeout(600);
-  if ((await matt.locator('[role="switch"][aria-checked="true"]').count()) !== 1)
-    fail("only Julia should be on the shift list");
-  console.log("the manager names the shift list ok");
+  await matt.getByRole("group", { name: "Staff view" }).getByRole("button", { name: "People" }).click();
+  console.log("the manager's schedule list contains only invited people ok");
 
   // The keys are the managers' own to hand out: this was an admin-only action,
   // so a gym wanting its own second manager had to write in and ask.
   {
-    const mgrs = () => matt.locator(".staffrow");
+    const mgrs = () => matt
+      .getByRole("heading", { name: "Admin access" })
+      .locator("xpath=following-sibling::div[contains(@class, 'settingslist')][1]")
+      .locator(".staffrow");
     if ((await mgrs().count()) !== 2)
       fail("Matt and Julia were both handed the page: " + (await mgrs().count()));
     // Somebody with no account can't be handed anything.
     await matt.locator("#staffEmail").fill("nobody@example.com");
-    await matt.getByRole("button", { name: "Add", exact: true }).click();
+    await matt.getByRole("button", { name: "Add admin", exact: true }).click();
     await matt.getByText("Nobody with that email has an account yet").waitFor();
     // Tom coaches here and now runs the page too.
     await matt.locator("#staffEmail").fill("tom@example.com");
-    await matt.getByRole("button", { name: "Add", exact: true }).click();
+    await matt.getByRole("button", { name: "Add admin", exact: true }).click();
     await matt.waitForTimeout(1200);
     if ((await mgrs().count()) !== 3) fail("Tom should run the page now");
     // And he was told, because being handed the keys is not a thing to find
@@ -883,7 +942,7 @@ console.log("the coach is told ok");
     await tom.locator(".notifrow", { hasText: "You run Ironbound" }).waitFor();
     // Taken back off, with the confirm in the way.
     await matt.goto(BASE + studioHref + "/manage/staff");
-    await matt.locator(".staffrow", { hasText: "Tom" }).getByRole("button", { name: "Remove" }).click();
+    await mgrs().filter({ hasText: "Tom" }).getByRole("button", { name: "Remove" }).click();
     await matt.locator(".confirmsheet").waitFor();
     await matt.getByRole("button", { name: "Remove Tom" }).click();
     await matt.waitForTimeout(900);
@@ -917,12 +976,12 @@ console.log("the coach is told ok");
     }
     await tom.locator(".sheet .setrow", { hasText: "Transfer shift" }).click();
     await tom.getByRole("heading", { name: "Transfer shift" }).waitFor();
-    // The gym's shift list and nobody else: Julia is on it, Matt coaches here
-    // and is not, and Tom is never offered himself.
+    // The studio's scheduled people and nobody else. Matt and Julia were
+    // invited explicitly; Tom is never offered himself.
     {
-      const names = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-      if (names.length !== 1 || names[0] !== "Julia")
-        fail("Transfer should offer the shift list, nobody else: " + names.join("|"));
+      const names = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim()).sort();
+      if (names.join("|") !== "Julia|Matt")
+        fail("Transfer should offer scheduled staff, nobody else: " + names.join("|"));
       // A face per person, not a column of identical glyphs: this is the
       // moment somebody picks who to hand a class to.
       if (!(await tom.locator(".sheet .setrow .sendav").count()))
@@ -937,11 +996,9 @@ console.log("the coach is told ok");
 
     // And it really is only an ask: the manager answers it, and that is when
     // it moves. Cleared here so the queue is empty for the tests below.
-    await matt.goto(BASE + studioHref + "/shifts");
-    await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
-    await matt.waitForTimeout(500);
-    await matt
-      .locator(".setrow", { hasText: "HYROX" })
+    const requests = await openStudioRequests(matt, studioHref);
+    await requests
+      .locator(".rota-request-row", { hasText: "HYROX" })
       .first()
       .getByRole("button", { name: "Approve" })
       .click();
@@ -950,8 +1007,8 @@ console.log("the coach is told ok");
     console.log("a shift handed on from the staff screen ok");
   }
 
-  // Tom hands a Thursday he is on straight to her. Matt coaches here too and
-  // is not on the list, so he is not offered.
+  // Tom hands a Thursday he is on straight to her. The chooser also offers
+  // Matt because he is explicit scheduled staff, and never offers Tom himself.
   const nextThu = weekDay(17);
   await tom.goto(BASE + "/app");
   const mine = tom.locator(`#day-${nextThu} .ps-event`, { hasText: "HYROX" });
@@ -968,11 +1025,11 @@ console.log("the coach is told ok");
   }
   await tom.locator(".sheet .setrow", { hasText: "Transfer shift" }).click();
   await tom.getByRole("heading", { name: "Transfer shift" }).waitFor();
-  // Behind it, the gym's list and nobody else: Julia is on it, Matt is not.
+  // Behind it, the studio's scheduled people and nobody else.
   {
-    const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-    if (rows.length !== 1 || !/Julia/.test(rows[0]) || /Matt/.test(rows.join("|")))
-      fail("Transfer should offer the shift list, nobody else: " + rows.join("|"));
+    const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim()).sort();
+    if (rows.join("|") !== "Julia|Matt")
+      fail("Transfer should offer scheduled staff, nobody else: " + rows.join("|"));
     // Same list from the other door, so it wears the same faces.
     if (!(await tom.locator(".sheet .setrow .sendav").count()))
       fail("the class sheet's transfer list should wear the coaches' avatars");
@@ -994,17 +1051,15 @@ console.log("the coach is told ok");
   // The rota still says Tom until somebody answers.
   await matt.goto(BASE + studioHref + "/manage?w=2");
   {
-    const still = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+    const still = rotaRow(matt, "HYROX").first();
     await still.waitFor();
     if (/Julia/.test(await still.innerText()))
       fail("a pending hand-over reached the rota before it was approved");
   }
   // The manager says yes, and then it is hers.
-  await matt.goto(BASE + studioHref + "/shifts");
-  await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
-  await matt.waitForTimeout(400);
-  await matt
-    .locator(".setrow", { hasText: "handing HYROX to Julia" })
+  const requests = await openStudioRequests(matt, studioHref);
+  await requests
+    .locator(".rota-request-row", { hasText: "handing HYROX to Julia" })
     .first()
     .getByRole("button", { name: "Approve" })
     .click();
@@ -1013,10 +1068,10 @@ console.log("the coach is told ok");
   await julia.goto(BASE + "/updates");
   await julia.locator(".notifrow", { hasText: /You're on HYROX/ }).first().waitFor();
   await matt.goto(BASE + studioHref + "/manage?w=2");
-  const onRota = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+  const onRota = rotaRow(matt, "HYROX").first();
   await onRota.waitFor();
   const txt = await onRota.innerText();
-  if (!txt.includes("Julia") || !/covering/i.test(txt))
+  if (!txt.includes("Julia") || !/\bCover\b/i.test(txt))
     fail("the rota should show the hand-off: " + txt);
   console.log("both sides and the rota hear about the hand-off ok");
 }
@@ -1222,7 +1277,7 @@ console.log("the coach is told ok");
 // its own, which is the argument for it not having one.
 {
   const rowOn = (day, name) =>
-    matt.locator(".rotaday", { hasText: day }).locator(".ps-event", { hasText: name });
+    matt.locator(".rotaday", { hasText: day }).locator(".clrow", { hasText: name });
 
   await matt.goto(BASE + studioHref + "/manage");
   await matt.locator(".rotaday", { hasText: "Sunday" }).getByRole("button", { name: "Add" }).click();
@@ -1253,29 +1308,29 @@ console.log("the coach is told ok");
   if (!(await rowOn("Wednesday", "Barbell Clinic").count()))
     fail("a one-off should land on the week it falls in");
   await matt.goto(BASE + studioHref + "/manage?w=2");
-  await matt.locator(".rota").waitFor();
+  await matt.locator(".rota-calendar").waitFor();
   await matt.waitForTimeout(400);
-  if (await matt.locator(".ps-event", { hasText: "Barbell Clinic" }).count())
+  if (await rotaRow(matt, "Barbell Clinic").count())
     fail("a one-off should not repeat");
   console.log("a one-off runs once ok");
 
   // One Sunday off: the slot keeps running, that date is stamped out of it.
   await matt.goto(BASE + studioHref + "/manage");
-  await rowOn("Sunday", "Open Gym").click();
+  await editRotaRow(rowOn("Sunday", "Open Gym"));
   await matt.getByRole("button", { name: "Take it off the week" }).click();
   await matt.getByRole("button", { name: /^Just / }).click();
   await matt.waitForTimeout(900);
   if (await rowOn("Sunday", "Open Gym").count())
     fail("a cancelled date should come off the week");
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  await matt.locator(".rota").waitFor();
+  await matt.locator(".rota-calendar").waitFor();
   if (!(await rowOn("Sunday", "Open Gym").count()))
     fail("cancelling one date should leave the standing slot alone");
   console.log("one date off ok (the slot keeps running)");
 
   // And the slot itself, gone. Its Sunday twin is a separate slot and stays.
   await matt.goto(BASE + studioHref + "/manage");
-  await rowOn("Saturday", "Open Gym").click();
+  await editRotaRow(rowOn("Saturday", "Open Gym"));
   await matt.getByRole("button", { name: "Take it off the week" }).click();
   await matt.getByRole("button", { name: /^Every / }).click();
   await matt.getByText("Taken off the week").waitFor();
@@ -1283,7 +1338,7 @@ console.log("the coach is told ok");
   if (await rowOn("Saturday", "Open Gym").count())
     fail("the Saturday slot should be gone");
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  await matt.locator(".rota").waitFor();
+  await matt.locator(".rota-calendar").waitFor();
   if (!(await rowOn("Sunday", "Open Gym").count()))
     fail("deleting one slot took its Sunday twin with it");
   console.log("taking a slot off the week ok");
@@ -1393,13 +1448,13 @@ console.log("the coach is told ok");
 
 // Julia, the other manager, sees the same rota
 await julia.goto(BASE + studioHref + "/manage");
-await julia.locator(".ps-event", { hasText: "HYROX" }).waitFor();
+await rotaRow(julia, "HYROX").waitFor();
 console.log("the second manager sees the same week ok");
 
 // a coach who doesn't run the place can't reach it at all
 await tom.goto(BASE + studioHref + "/manage");
 await tom.waitForTimeout(500);
-if (await tom.locator(".rota").count())
+if (await tom.locator(".gym-manage-pad").count())
   fail("the rota should not exist for a coach who doesn't run the studio");
 if ((await tom.locator("body").innerText()).includes("HYROX"))
   fail("the rota leaked its classes to a coach who doesn't run the studio");
@@ -1422,42 +1477,41 @@ console.log("the rota is closed to everyone else ok");
   await matt.getByText("Added to the week").waitFor();
   await matt.waitForTimeout(900);
 
-  // Julia asks for it. She still lists a class here, so she is a coach at the
-  // studio; Tom's own class was merged into the gym earlier, which takes him
-  // out of that union.
-  await julia.goto(BASE + studioHref + "/shifts");
-  await julia.locator(".pubtabs .pubtab", { hasText: "Open" }).click();
-  await julia.waitForTimeout(500);
-  const open = julia.locator(".setrow", { hasText: "Cover Test" }).first();
+  // Tom asks for it from the coach-only shifts screen. His explicit Staff
+  // invitation survives the earlier class merge; public authorship is no
+  // longer what grants this access. Julia is a manager, so /shifts would
+  // correctly redirect her to Calendar instead.
+  await tom.goto(BASE + studioHref + "/shifts");
+  await tom.locator(".pubtabs .pubtab", { hasText: "Open" }).click();
+  await tom.waitForTimeout(500);
+  const open = tom.locator(".setrow", { hasText: "Cover Test" }).first();
   await open.waitFor();
   await open.getByRole("button", { name: "Pick up" }).click();
-  await julia.getByText("Asked the studio").waitFor();
-  await julia.waitForTimeout(900);
+  await tom.getByText("Asked the studio").waitFor();
+  await tom.waitForTimeout(900);
 
-  // Nothing has moved: the gym's public page does not carry her name.
-  await julia.goto(BASE + studioHref);
-  await julia.waitForTimeout(500);
+  // Nothing has moved: the gym's public page does not carry his name.
+  await tom.goto(BASE + studioHref);
+  await tom.waitForTimeout(500);
   // Same shape, same reason: ask the chip whether anybody is named rather
   // than searching a week of prose for a first name.
   {
-    const named = await julia.locator(".ps-week .ps-ewho").allInnerTexts();
-    if (named.some((t) => /Julia/.test(t)))
+    const named = await tom.locator(".ps-week .ps-ewho").allInnerTexts();
+    if (named.some((t) => /Tom/.test(t)))
       fail("a pending ask reached the studio's public page: " + named.join("|"));
   }
 
   // The manager answers, and that is the moment it becomes true.
-  await matt.goto(BASE + studioHref + "/shifts");
-  await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
-  await matt.waitForTimeout(500);
-  await matt
-    .locator(".setrow", { hasText: "Cover Test" })
+  const requests = await openStudioRequests(matt, studioHref);
+  await requests
+    .locator(".rota-request-row", { hasText: "Cover Test" })
     .first()
     .getByRole("button", { name: "Approve" })
     .click();
   await matt.getByText("Approved").waitFor();
   await matt.waitForTimeout(1200);
-  await julia.goto(BASE + "/updates");
-  await julia.locator(".notifrow", { hasText: /You're on Cover Test/ }).first().waitFor();
+  await tom.goto(BASE + "/updates");
+  await tom.locator(".notifrow", { hasText: /You're on Cover Test/ }).first().waitFor();
   console.log("approval holds a change off the calendars until it is answered ok");
 }
 

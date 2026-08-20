@@ -673,6 +673,20 @@
       "when": 1787251143391,
       "tag": "0095_secret_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1787252082330,
+      "tag": "0096_left_smiling_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1787253701175,
+      "tag": "0097_ordinary_klaw",
+      "breakpoints": true
     }
   ]
 }

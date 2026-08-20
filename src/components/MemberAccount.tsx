@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { MyCalendar } from "@/components/MyCalendar";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -186,14 +187,21 @@ export function MemberAccount({
           <h3 className="setgroup-h">Your studios</h3>
           <div className="settingslist">
             {runs.map((st) => (
-              <a key={st.slug} className="setrow" href={`/s/${st.slug}/shifts`}>
+              <Link
+                key={st.slug}
+                className="setrow"
+                href={`/s/${st.slug}/${st.admin ? "manage" : "shifts"}`}
+                prefetch={false}
+              >
                 <span className="setrow-ic"><Icon name="storefront" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">{st.name}</span>
-                  <span className="s">Its shifts, its schedule, and who works there</span>
+                  <span className="s">
+                    {st.admin ? "Calendar and staff" : "Your shifts and what's open"}
+                  </span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-              </a>
+              </Link>
             ))}
           </div>
         </>

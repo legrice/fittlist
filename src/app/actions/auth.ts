@@ -83,9 +83,9 @@ export async function passwordAuth(
       .returning();
     pushSignupPing(email); // fire and forget; signup never waits on a ping
     await acceptInvite(email, created.id);
-    await claimRosterPlaceholders(email, created.id);
+    const claimedRoster = await claimRosterPlaceholders(email, created.id);
     await createSession(created.id);
-    return { ok: true, needsProfile: true, hasPasskey: false, fan };
+    return { ok: true, needsProfile: true, hasPasskey: false, fan: claimedRoster ? false : fan };
   }
   if (!user.passwordHash) {
     return {

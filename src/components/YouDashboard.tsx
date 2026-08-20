@@ -115,8 +115,8 @@ export function YouDashboard({
             <AccountRow
               icon="storefront"
               title={place.name}
-              detail="Schedule and shifts"
-              href={`/s/${place.slug}/shifts`}
+              detail="Calendar and staff"
+              href={`/s/${place.slug}/manage`}
               avatar={{ photo: place.photo, name: place.name }}
               key={place.id}
             />

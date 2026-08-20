@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "studio_rota_invited_email_once" ON "studio_rota_coaches" USING btree ("studio_id","invited_email") WHERE "studio_rota_coaches"."invited_email" is not null;
