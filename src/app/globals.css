@@ -10704,3 +10704,28 @@ a.clspeek-by:active { opacity: .6; }
   text-decoration:underline;
   text-underline-offset:2px;
 }
+
+/* The studio week planner uses the same class card as the member calendar,
+   with staffing as a second, independent control. On phones that control
+   stays tucked beneath the class details; on desktop it gets its own column
+   so it can never cover the time or class name. */
+@media (min-width: 940px) {
+  .rota-calendar .rota-inline-row .clline {
+    min-height: 132px;
+    padding: 24px min(380px, 42vw) 24px 28px;
+  }
+
+  .rota-calendar .rota-inline-row .clline-nm {
+    display: block;
+    padding-right: 0;
+  }
+
+  .rota-calendar .rota-inline-row .rota-inline-coachpick {
+    top: 50%;
+    right: 28px;
+    bottom: auto;
+    left: auto;
+    width: min(320px, 34vw);
+    transform: translateY(-50%);
+  }
+}
