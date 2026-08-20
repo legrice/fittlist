@@ -355,6 +355,9 @@ export const shiftRequests = pgTable(
      *  hand-over). The two read differently to a manager and are the same
      *  write once approved. */
     kind: text("kind").notNull(),
+    /** "occurrence" moves only occurrenceDate; "standing" changes the
+     *  regular weekly coach from that date forward. */
+    scope: text("scope").notNull().default("occurrence"),
     /** Who the shift is coming from. Null on a pickup of a slot nobody held. */
     fromUserId: uuid("from_user_id").references(() => users.id),
     /** Who it would land on. Never null: a request with nobody on the end of

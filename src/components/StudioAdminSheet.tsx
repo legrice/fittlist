@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { studioPageViews } from "@/app/actions/gym";
+import { setStudioShiftApproval, studioPageViews } from "@/app/actions/gym";
 import { setStudioShowCoaches } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
@@ -20,6 +20,7 @@ export function StudioAdminSheet({
   pageViews,
   studio,
   showCoaches = true,
+  approvalOn = true,
 }: {
   slug: string;
   /** The gym account is on, so the rota and the counts exist to link to. */
@@ -31,13 +32,17 @@ export function StudioAdminSheet({
   /** Whether the public schedule names who is coaching. On by default for a
    *  verified studio; the switch below is the way off. */
   showCoaches?: boolean;
+  /** Whether coach-initiated covers and permanent transfers wait for a manager. */
+  approvalOn?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [names, setNames] = useState(showCoaches);
+  const [approvals, setApprovals] = useState(approvalOn);
   const [views, setViews] = useState<number | null | undefined>(pageViews);
   const [viewsPending, startViews] = useTransition();
   const [, startNames] = useTransition();
+  const [, startApprovals] = useTransition();
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
 
@@ -48,6 +53,20 @@ export function StudioAdminSheet({
       const res = await setStudioShowCoaches(studio.id, next);
       if (!res.ok) {
         setNames(!next);
+        toast(res.error ?? "Couldn't save that");
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  const toggleApprovals = () => {
+    const next = !approvals;
+    setApprovals(next);
+    startApprovals(async () => {
+      const res = await setStudioShiftApproval(studio.id, next);
+      if (!res.ok) {
+        setApprovals(!next);
         toast(res.error ?? "Couldn't save that");
         return;
       }
@@ -159,6 +178,22 @@ export function StudioAdminSheet({
               {/* Whether the public week is a roster: some gyms publish a
                   schedule without naming anybody, and that is theirs to
                   decide. Only meaningful once the gym runs its schedule. */}
+              {canSchedule && (
+                <button className="setrow" onClick={toggleApprovals} aria-pressed={approvals}>
+                  <span className="setrow-ic"><Icon name="verified" size={24} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Approve shift changes</span>
+                    <span className="s">
+                      {approvals
+                        ? "Covers and permanent transfers wait for a manager"
+                        : "Coaches can make covers and permanent transfers directly"}
+                    </span>
+                  </span>
+                  <span className={`switch${approvals ? " on" : ""}`} aria-hidden="true">
+                    <span className="switch-knob" />
+                  </span>
+                </button>
+              )}
               {canSchedule && (
                 <button className="setrow" onClick={toggleNames} aria-pressed={names}>
                   <span className="setrow-ic"><Icon name="groups" size={24} /></span>

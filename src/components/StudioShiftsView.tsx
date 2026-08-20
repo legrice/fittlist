@@ -55,16 +55,26 @@ export function StudioShiftsView({
   const [toastMsg, toastOn, toast] = useToast();
   const [confirm, setConfirm] = useState<{ classId: string; iso: string; name: string } | null>(null);
   // The row's own dot: what you can do with a shift of yours, said in full.
-  const [manage, setManage] = useState<{ classId: string; iso: string; name: string } | null>(null);
+  const [manage, setManage] = useState<
+    { classId: string; iso: string; name: string; regularMine: boolean } | null
+  >(null);
   // Handing a date to a named coach. Two steps, like the class sheet's: the
   // list of names first, because eight names under one verb read as eight
   // options, then the confirm, because the notice goes out the moment it runs
   // and a single tap was texting somebody a shift.
-  const [transfer, setTransfer] = useState<{ classId: string; iso: string; name: string } | null>(
-    null,
-  );
+  const [transfer, setTransfer] = useState<
+    { classId: string; iso: string; name: string; regularMine: boolean } | null
+  >(null);
   const [sendTo, setSendTo] = useState<
-    { classId: string; iso: string; name: string; toId: string; toName: string } | null
+    {
+      classId: string;
+      iso: string;
+      name: string;
+      toId: string;
+      toName: string;
+      regularMine: boolean;
+      scope: "occurrence" | "standing";
+    } | null
   >(null);
 
   const act = (
@@ -133,6 +143,7 @@ export function StudioShiftsView({
               pageViews={pageViews}
               studio={studio}
               showCoaches={showCoaches}
+              approvalOn={view.approvalOn}
             />
           )}
         </div>
@@ -167,7 +178,9 @@ export function StudioShiftsView({
                   <span className="t">
                     {r.kind === "pickup"
                       ? `${r.toName} wants ${r.className}`
-                      : `${r.fromName ?? "A coach"} is handing ${r.className} to ${r.toName}`}
+                      : r.scope === "standing"
+                        ? `${r.fromName ?? "A coach"} wants to make ${r.toName} the regular coach for ${r.className}`
+                        : `${r.fromName ?? "A coach"} is handing ${r.className} to ${r.toName}`}
                   </span>
                   <span className="s">{r.whenLong}</span>
                 </span>
@@ -225,7 +238,14 @@ export function StudioShiftsView({
                   className="iconbtn staffmenu"
                   aria-label={`Manage ${s.name}, ${s.timeLabel}`}
                   disabled={pending}
-                  onClick={() => setManage({ classId: s.classId, iso: s.iso, name: s.name })}
+                  onClick={() =>
+                    setManage({
+                      classId: s.classId,
+                      iso: s.iso,
+                      name: s.name,
+                      regularMine: s.regularMine,
+                    })
+                  }
                 >
                   <Icon name="more_horiz" size={20} />
                 </button>
@@ -330,7 +350,12 @@ export function StudioShiftsView({
                   className="setrow"
                   disabled={pending}
                   onClick={() => {
-                    setSendTo({ ...transfer, toId: p.id, toName: p.name });
+                    setSendTo({
+                      ...transfer,
+                      toId: p.id,
+                      toName: p.name,
+                      scope: "occurrence",
+                    });
                     setTransfer(null);
                   }}
                 >
@@ -364,12 +389,50 @@ export function StudioShiftsView({
           }}
         >
           <div className="sheet confirmsheet">
-            <h2>Give {sendTo.name} to {sendTo.toName}?</h2>
+            <h2>
+              {sendTo.scope === "standing"
+                ? `Make ${sendTo.toName} the regular coach for ${sendTo.name}?`
+                : `Give ${sendTo.name} to ${sendTo.toName}?`}
+            </h2>
             <p className="lead">
               {view.approvalOn
                 ? "The studio is asked first. Nothing moves on anybody's calendar until they answer."
                 : "They are put on it and told, and so is the studio."}
             </p>
+            {sendTo.regularMine && (
+              <div className="rota-coach-options transfer-scope" role="radiogroup" aria-label="Transfer length">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={sendTo.scope === "occurrence"}
+                  className={sendTo.scope === "occurrence" ? "on" : ""}
+                  onClick={() => setSendTo((current) => current && { ...current, scope: "occurrence" })}
+                >
+                  <span>
+                    <strong>This class only</strong>
+                    <small>Changes this date; the regular schedule stays the same</small>
+                  </span>
+                  <span className="rota-coach-radio">
+                    {sendTo.scope === "occurrence" && <Icon name="check" size={16} />}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={sendTo.scope === "standing"}
+                  className={sendTo.scope === "standing" ? "on" : ""}
+                  onClick={() => setSendTo((current) => current && { ...current, scope: "standing" })}
+                >
+                  <span>
+                    <strong>Every week going forward</strong>
+                    <small>Makes {sendTo.toName} the regular coach starting with this date</small>
+                  </span>
+                  <span className="rota-coach-radio">
+                    {sendTo.scope === "standing" && <Icon name="check" size={16} />}
+                  </span>
+                </button>
+              </div>
+            )}
             <div className="publishwrap nostick">
               <button
                 className="btn si"
@@ -377,9 +440,13 @@ export function StudioShiftsView({
                   const t = sendTo;
                   setSendTo(null);
                   act(
-                    () => sendShiftTo(t.classId, t.iso, t.toId),
-                    `Transferred to ${t.toName}`,
-                    `Asked the studio to send it to ${t.toName}`,
+                    () => sendShiftTo(t.classId, t.iso, t.toId, t.scope),
+                    t.scope === "standing"
+                      ? `${t.toName} is now the regular coach`
+                      : `Transferred to ${t.toName}`,
+                    t.scope === "standing"
+                      ? `Asked the studio to make ${t.toName} the regular coach`
+                      : `Asked the studio to send it to ${t.toName}`,
                   );
                 }}
               >

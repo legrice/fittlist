@@ -746,13 +746,15 @@ export async function addGymClass(
  *
  * The old coach may be null, and that is worth writing too: without it,
  * putting somebody on a slot today would credit them with every week the slot
- * ran open.
+ * ran open. Permanent transfers may also pass a future `untilIso`; dates
+ * before the selected hand-over stay with the old coach as explicit covers.
  */
 async function freezePast(
   db: Awaited<ReturnType<typeof getDb>>,
   cls: typeof schema.classes.$inferSelect,
   wasCoachUserId: string | null,
   byUserId: string,
+  untilIso = todayIso(),
 ) {
   const today = todayIso();
   // Since the class existed, and no further back than a year: nobody
@@ -775,7 +777,7 @@ async function freezePast(
 
   const rows: { classId: string; occurrenceDate: string; coachUserId: string | null; createdByUserId: string }[] = [];
   const d = new Date(`${cursor}T00:00:00Z`);
-  while (cursor < today) {
+  while (cursor < untilIso) {
     const dow = (d.getUTCDay() + 6) % 7;
     if (runsOn(cls, cursor, dow) && !already.has(cursor))
       rows.push({ classId: cls.id, occurrenceDate: cursor, coachUserId: wasCoachUserId, createdByUserId: byUserId });
@@ -1494,21 +1496,26 @@ export async function claimShift(
 }
 
 /**
- * Hand a date straight to a named coach.
+ * Hand a date, or the standing weekly slot from that date forward, to a
+ * named coach.
  *
  * Giving up opens the slot and hopes; this is the other thing that actually
  * happens at a gym, where the swap was agreed over the counter and just needs
- * writing down. Only the coach on the date can hand it on, and only to
+ * writing down. Only the coach on the date can hand it on, and only the
+ * regular coach may change every week going forward. The recipient must be
  * somebody on the gym's shift list: anyone may say they coach here, and the
- * list is the gym saying who really takes these classes. Like the rest of the
- * rota it is a notice, not a request: the swap was already agreed, and the
- * managers hear about it rather than sitting in the middle of it.
+ * list is the gym saying who really takes these classes. The studio's shift
+ * approval setting decides whether it lands immediately or waits for a
+ * manager.
  */
 export async function sendShiftTo(
   classId: string,
   occurrenceDate: string,
   toUserId: string,
+  scope: "occurrence" | "standing" = "occurrence",
 ): Promise<{ ok: boolean; error?: string; pending?: boolean }> {
+  if (scope !== "occurrence" && scope !== "standing")
+    return { ok: false, error: "Choose one class or every week." };
   const ctx = await shiftFor(classId, occurrenceDate);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { db, userId, me, cls, studio, cover, on } = ctx;
@@ -1519,15 +1526,18 @@ export async function sendShiftTo(
     return { ok: false, error: "That's not a coach here." };
   if (!(await rosterHas(db, studio.id, toUserId, INTERACTIVE_ROSTER_STATES)))
     return { ok: false, error: "They aren't on this gym's shift list." };
+  if (scope === "standing" && cls.coachUserId !== userId)
+    return { ok: false, error: "Only the regular coach can transfer every week." };
 
   // Handing a date back to whoever normally teaches it is putting the rota
   // back the way it was, so there is nothing for a manager to weigh.
-  if (toUserId !== cls.coachUserId) {
+  if (scope === "standing" || toUserId !== cls.coachUserId) {
     const filed = await fileRequest(db, {
       studio,
       cls,
       occurrenceDate,
       kind: "transfer",
+      scope,
       fromUserId: userId,
       toUserId,
       askedBy: userId,
@@ -1540,13 +1550,62 @@ export async function sendShiftTo(
       // theirs: it is not, until the studio says so.
       await addNotification(toUserId, {
         type: "shift_request",
-        title: `You've been asked to cover ${cls.name}`,
-        body: `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)} at ${studio.name}. Waiting on the studio.`,
+        title:
+          scope === "standing"
+            ? `You've been asked to take over ${cls.name}`
+            : `You've been asked to cover ${cls.name}`,
+        body:
+          scope === "standing"
+            ? `Starting ${fmtDateLong(occurrenceDate)}, every ${DAYS[cls.dayOfWeek]} at ${fmtTime(cls.startTime)} at ${studio.name}. Waiting on the studio.`
+            : `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)} at ${studio.name}. Waiting on the studio.`,
         href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
         actorUserId: userId,
       });
       return { ok: true, pending: true };
     }
+  }
+
+  if (scope === "standing") {
+    await freezePast(db, cls, cls.coachUserId, userId, occurrenceDate);
+    await db
+      .update(schema.classes)
+      .set({ coachUserId: toUserId })
+      .where(eq(schema.classes.id, cls.id));
+    await db
+      .update(schema.shiftRequests)
+      .set({ state: "declined", decidedByUserId: userId, decidedAt: new Date() })
+      .where(
+        and(
+          eq(schema.shiftRequests.classId, cls.id),
+          eq(schema.shiftRequests.state, "pending"),
+        ),
+      );
+    const who = me?.name?.trim() || "A coach";
+    const toName = target.name.trim() || target.email.split("@")[0];
+    await addNotification(toUserId, {
+      type: "shift_assigned",
+      title: `You're the regular coach for ${cls.name}`,
+      body: `Starting ${fmtDateLong(occurrenceDate)}, every ${DAYS[cls.dayOfWeek]} at ${fmtTime(cls.startTime)} at ${studio.name}. ${who} transferred it to you.`,
+      href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
+      actorUserId: userId,
+    });
+    await tellTheGym(
+      db,
+      studio,
+      [userId, toUserId],
+      {
+        type: "shift_assigned",
+        title: `${who} transferred ${cls.name} to ${toName}`,
+        body: `Starting ${fmtDateLong(occurrenceDate)}, every ${DAYS[cls.dayOfWeek]} at ${fmtTime(cls.startTime)}.`,
+        href: `/s/${studio.slug ?? studio.id}/manage`,
+        actorUserId: userId,
+      },
+      false,
+    );
+    revalidatePath("/app");
+    revalidatePath(`/s/${studio.slug ?? studio.id}`);
+    revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+    return { ok: true };
   }
 
   if (toUserId === cls.coachUserId) {
@@ -2313,6 +2372,7 @@ export async function removeStudioManager(
 export type ShiftRequestDto = {
   id: string;
   kind: "pickup" | "transfer";
+  scope: "occurrence" | "standing";
   className: string;
   whenLong: string;
   iso: string;
@@ -2331,6 +2391,23 @@ async function needsApproval(db: Awaited<ReturnType<typeof getDb>>, studioId: st
   return !!s?.on;
 }
 
+/** One studio policy for both one-date covers and permanent hand-overs. */
+export async function setStudioShiftApproval(
+  studioId: string,
+  approve: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, studio } = ctx;
+  await db
+    .update(schema.studios)
+    .set({ approveShiftChanges: approve })
+    .where(eq(schema.studios.id, studioId));
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
+  return { ok: true };
+}
+
 /** File the ask, and tell the managers there is one. Returns false when the
  *  studio takes changes immediately, so the caller does the real write. */
 async function fileRequest(
@@ -2340,6 +2417,7 @@ async function fileRequest(
     cls: typeof schema.classes.$inferSelect;
     occurrenceDate: string;
     kind: "pickup" | "transfer";
+    scope?: "occurrence" | "standing";
     fromUserId: string | null;
     toUserId: string;
     askedBy: string;
@@ -2365,6 +2443,7 @@ async function fileRequest(
     classId: args.cls.id,
     occurrenceDate: args.occurrenceDate,
     kind: args.kind,
+    scope: args.scope ?? "occurrence",
     fromUserId: args.fromUserId,
     toUserId: args.toUserId,
   });
@@ -2378,8 +2457,13 @@ async function fileRequest(
       title:
         args.kind === "pickup"
           ? `${args.askerName} wants ${args.cls.name}`
-          : `${args.askerName} is handing ${args.cls.name} to ${args.toName}`,
-      body: `${when}. Waiting on you.`,
+          : args.scope === "standing"
+            ? `${args.askerName} wants to transfer ${args.cls.name} to ${args.toName}`
+            : `${args.askerName} is handing ${args.cls.name} to ${args.toName}`,
+      body:
+        args.scope === "standing"
+          ? `Starting ${fmtDateLong(args.occurrenceDate)}, every ${DAYS[args.cls.dayOfWeek]} at ${fmtTime(args.cls.startTime)}. Waiting on you.`
+          : `${when}. Waiting on you.`,
       href: `/s/${args.studio.slug ?? args.studio.id}/manage?panel=notifications`,
       actorUserId: args.askedBy,
     },
@@ -2398,6 +2482,7 @@ export async function shiftRequests(studioId: string): Promise<ShiftRequestDto[]
     .select({
       id: schema.shiftRequests.id,
       kind: schema.shiftRequests.kind,
+      scope: schema.shiftRequests.scope,
       classId: schema.shiftRequests.classId,
       occurrenceDate: schema.shiftRequests.occurrenceDate,
       fromUserId: schema.shiftRequests.fromUserId,
@@ -2417,7 +2502,12 @@ export async function shiftRequests(studioId: string): Promise<ShiftRequestDto[]
   const nameOf = new Map(people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]]));
   const clsIds = [...new Set(rows.map((r) => r.classId))];
   const clsRows = await db
-    .select({ id: schema.classes.id, name: schema.classes.name, startTime: schema.classes.startTime })
+    .select({
+      id: schema.classes.id,
+      name: schema.classes.name,
+      startTime: schema.classes.startTime,
+      dayOfWeek: schema.classes.dayOfWeek,
+    })
     .from(schema.classes)
     .where(inArray(schema.classes.id, clsIds));
   const clsById = new Map(clsRows.map((c) => [c.id, c]));
@@ -2428,8 +2518,13 @@ export async function shiftRequests(studioId: string): Promise<ShiftRequestDto[]
       return {
         id: r.id,
         kind: r.kind as "pickup" | "transfer",
+        scope: r.scope === "standing" ? "standing" : "occurrence",
         className: c?.name ?? "A class",
-        whenLong: c ? `${fmtDateLong(r.occurrenceDate)}, ${fmtTime(c.startTime)}` : fmtDateLong(r.occurrenceDate),
+        whenLong: c
+          ? r.scope === "standing"
+            ? `Starting ${fmtDateLong(r.occurrenceDate)}, every ${DAYS[c.dayOfWeek]} at ${fmtTime(c.startTime)}`
+            : `${fmtDateLong(r.occurrenceDate)}, ${fmtTime(c.startTime)}`
+          : fmtDateLong(r.occurrenceDate),
         iso: r.occurrenceDate,
         fromName: r.fromUserId ? (nameOf.get(r.fromUserId) ?? null) : null,
         toName: nameOf.get(r.toUserId) ?? "A coach",
@@ -2457,6 +2552,18 @@ export async function answerShiftRequest(
   const ctx = await managing(req.studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { studio } = ctx;
+  // Changing the standing coach would otherwise rewrite history. Preserve
+  // every completed occurrence before the transactional ownership change.
+  if (approve && req.scope === "standing") {
+    const [standing] = await db
+      .select()
+      .from(schema.classes)
+      .where(eq(schema.classes.id, req.classId));
+    if (!standing) return { ok: false, error: "That class is gone." };
+    if (standing.coachUserId !== req.fromUserId)
+      return { ok: false, error: "The regular coach has changed since this was offered." };
+    await freezePast(db, standing, standing.coachUserId, userId, req.occurrenceDate);
+  }
   const settled = await db.transaction(async (tx) => {
     // Conditional state changes make two managers answering the same request
     // safe. A second answer sees no pending row and leaves the rota alone.
@@ -2507,8 +2614,12 @@ export async function answerShiftRequest(
     const currentOn = cover ? cover.coachUserId : cls.coachUserId;
     if (approve && live.kind === "pickup" && currentOn)
       return { error: "Somebody is already on that one." } as const;
-    if (approve && live.kind === "transfer" && currentOn !== live.fromUserId)
-      return { error: "That shift has changed since it was offered." } as const;
+    if (approve && live.kind === "transfer") {
+      if (live.scope === "standing" && cls.coachUserId !== live.fromUserId)
+        return { error: "The regular coach has changed since this was offered." } as const;
+      if (live.scope !== "standing" && currentOn !== live.fromUserId)
+        return { error: "That shift has changed since it was offered." } as const;
+    }
 
     const [changed] = await tx
       .update(schema.shiftRequests)
@@ -2520,7 +2631,12 @@ export async function answerShiftRequest(
     if (approve) {
       // The request and the date's cover are one transaction. Settling one
       // request also closes every competing ask for the same occurrence.
-      if (live.toUserId === cls.coachUserId) {
+      if (live.scope === "standing") {
+        await tx
+          .update(schema.classes)
+          .set({ coachUserId: live.toUserId })
+          .where(eq(schema.classes.id, live.classId));
+      } else if (live.toUserId === cls.coachUserId) {
         if (cover) await tx.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
       } else if (cover) {
         await tx
@@ -2541,7 +2657,9 @@ export async function answerShiftRequest(
         .where(
           and(
             eq(schema.shiftRequests.classId, live.classId),
-            eq(schema.shiftRequests.occurrenceDate, live.occurrenceDate),
+            ...(live.scope === "standing"
+              ? []
+              : [eq(schema.shiftRequests.occurrenceDate, live.occurrenceDate)]),
             eq(schema.shiftRequests.state, "pending"),
             ne(schema.shiftRequests.id, live.id),
           ),
@@ -2552,12 +2670,19 @@ export async function answerShiftRequest(
   if ("error" in settled) return { ok: false, error: settled.error };
   const { req: liveReq, cls } = settled;
 
-  const when = `${fmtDateLong(liveReq.occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+  const when =
+    liveReq.scope === "standing"
+      ? `Starting ${fmtDateLong(liveReq.occurrenceDate)}, every ${DAYS[cls.dayOfWeek]} at ${fmtTime(cls.startTime)}`
+      : `${fmtDateLong(liveReq.occurrenceDate)}, ${fmtTime(cls.startTime)}`;
   // The asker hears either way. A declined ask that says nothing is how
   // somebody turns up to a class that was never theirs.
   await addNotification(liveReq.toUserId, {
     type: approve ? "shift_assigned" : "shift_declined",
-    title: approve ? `You're on ${cls.name}` : `${cls.name} stayed where it was`,
+    title: approve
+      ? liveReq.scope === "standing"
+        ? `You're the regular coach for ${cls.name}`
+        : `You're on ${cls.name}`
+      : `${cls.name} stayed where it was`,
     body: approve
       ? `${when} at ${studio.name}. The studio said yes.`
       : `${when} at ${studio.name}. The studio didn't approve the change.`,
@@ -2568,7 +2693,11 @@ export async function answerShiftRequest(
   if (liveReq.fromUserId && liveReq.fromUserId !== liveReq.toUserId) {
     await addNotification(liveReq.fromUserId, {
       type: approve ? "shift_assigned" : "shift_declined",
-      title: approve ? `${cls.name} is covered` : `${cls.name} is still yours`,
+      title: approve
+        ? liveReq.scope === "standing"
+          ? `${cls.name} has a new regular coach`
+          : `${cls.name} is covered`
+        : `${cls.name} is still yours`,
       body: approve
         ? `${when} at ${studio.name}. The studio approved the hand-over.`
         : `${when} at ${studio.name}. The studio didn't approve it.`,
@@ -2605,6 +2734,8 @@ export type StaffShift = {
   open: boolean;
   /** The viewer is on it. */
   mine: boolean;
+  /** The viewer owns the standing weekly slot, rather than covering a date. */
+  regularMine: boolean;
   /** Who is on it, for the admin's full view. Null when nobody is. */
   onName: string | null;
   /** A pending ask against this date, said on the row. */
@@ -2738,11 +2869,14 @@ export async function staffView(studioId: string): Promise<StaffView | null> {
         where: r.location,
         open: !onUserId,
         mine: onUserId === userId,
+        regularMine: r.coachUserId === userId,
         onName: onUserId ? (nameOf.get(onUserId) ?? null) : null,
         pending: ask
           ? ask.kind === "pickup"
             ? `${nameOf.get(ask.toUserId) ?? "A coach"} asked for this one`
-            : `Offered to ${nameOf.get(ask.toUserId) ?? "a coach"}`
+            : ask.scope === "standing"
+              ? `Regular shift offered to ${nameOf.get(ask.toUserId) ?? "a coach"}`
+              : `Offered to ${nameOf.get(ask.toUserId) ?? "a coach"}`
           : null,
       };
       if (item.mine) mine.push(item);

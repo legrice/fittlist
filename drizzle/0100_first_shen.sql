@@ -1,0 +1,1 @@
+ALTER TABLE "shift_requests" ADD COLUMN "scope" text DEFAULT 'occurrence' NOT NULL;

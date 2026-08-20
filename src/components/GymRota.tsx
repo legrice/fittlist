@@ -64,6 +64,7 @@ export type GymRotaAdmin = {
   /** Kept nullable so calendar rendering never has to wait for analytics. */
   pageViews?: number | null;
   showCoaches?: boolean;
+  approvalOn?: boolean;
 };
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -542,6 +543,7 @@ export function GymRota({
               pageViews={admin.pageViews ?? null}
               studio={admin.studio}
               showCoaches={admin.showCoaches}
+              approvalOn={admin.approvalOn}
             />
           </div>
         </div>
@@ -729,6 +731,7 @@ export function GymRota({
             pageViews={admin.pageViews ?? null}
             studio={admin.studio}
             showCoaches={admin.showCoaches}
+            approvalOn={admin.approvalOn}
           />
         </div>
       </div>
@@ -1041,7 +1044,9 @@ export function GymRota({
                       <strong>
                         {request.kind === "pickup"
                           ? `${request.toName} wants ${request.className}`
-                          : `${request.fromName ?? "A coach"} is handing ${request.className} to ${request.toName}`}
+                          : request.scope === "standing"
+                            ? `${request.fromName ?? "A coach"} wants to make ${request.toName} the regular coach for ${request.className}`
+                            : `${request.fromName ?? "A coach"} is handing ${request.className} to ${request.toName}`}
                       </strong>
                       <small>{request.whenLong}</small>
                     </span>

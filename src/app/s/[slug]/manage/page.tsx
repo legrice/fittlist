@@ -68,6 +68,7 @@ export default async function ManageStudioPage({
       requests={requests}
       admin={{
         showCoaches: studio.showCoaches,
+        approvalOn: studio.approveShiftChanges,
         studio: {
           id: studio.id,
           name: studio.name,
