@@ -151,3 +151,24 @@ export async function mergePlaceholderInto(
   await db.delete(schema.users).where(eq(schema.users.id, placeholderUserId));
   return { ok: true };
 }
+
+/**
+ * A coach may receive their studio invitation before they create a FittList
+ * account. When they do join, claim every placeholder that was invited to the
+ * same address so their already-assigned shifts follow them automatically.
+ */
+export async function claimRosterPlaceholders(emailRaw: string, realUserId: string): Promise<void> {
+  const email = emailRaw.trim().toLowerCase();
+  if (!email) return;
+  const db = await getDb();
+  const rows = await db
+    .select({ userId: schema.studioRotaCoaches.userId })
+    .from(schema.studioRotaCoaches)
+    .where(
+      and(
+        eq(schema.studioRotaCoaches.invitedEmail, email),
+        eq(schema.studioRotaCoaches.state, "placeholder"),
+      ),
+    );
+  for (const row of rows) await mergePlaceholderInto(row.userId, realUserId);
+}

@@ -6802,6 +6802,7 @@ select.editinput.placekind-select {
   display: flex; align-items: center; justify-content: space-between;
   font-weight: 600; font-size: 15px; margin-bottom: 8px;
 }
+.rotaday-actions { display: inline-flex; align-items: center; gap: 14px; }
 .rotaadd {
   display: inline-flex; align-items: center; gap: 4px;
   background: none; border: none; cursor: pointer; padding: 4px 0;

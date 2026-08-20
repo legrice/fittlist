@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addStudioManager, removeStudioManager, setRotaCoach } from "@/app/actions/gym";
+import { addStudioManager, inviteStudioCoach, removeStudioManager, setRotaCoach } from "@/app/actions/gym";
 import type { StudioStaffDto } from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
@@ -36,6 +36,9 @@ export function StudioStaffView({
   );
   const [email, setEmail] = useState("");
   const [adding, setAdding] = useState(false);
+  const [coachName, setCoachName] = useState("");
+  const [coachEmail, setCoachEmail] = useState("");
+  const [invitingCoach, setInvitingCoach] = useState(false);
   const [confirm, setConfirm] = useState<{ id: string; name: string; isYou: boolean } | null>(null);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
@@ -85,6 +88,33 @@ export function StudioStaffView({
         setInPool((p) => ({ ...p, [id]: !next }));
         toast(res.error ?? "Couldn't do that");
       }
+    });
+  };
+
+  const addCoach = async () => {
+    if (invitingCoach || !coachName.trim()) return;
+    setInvitingCoach(true);
+    const res = await inviteStudioCoach(studioId, coachName, coachEmail);
+    setInvitingCoach(false);
+    if (!res.ok) {
+      toast(res.error ?? "Couldn't add them");
+      return;
+    }
+    setCoachName("");
+    setCoachEmail("");
+    toast(res.invited ? "Invite sent" : "Added to the roster");
+    start(() => window.location.reload());
+  };
+
+  const removeCoach = (id: string) => {
+    start(async () => {
+      const res = await setRotaCoach(studioId, id, false);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't remove them");
+        return;
+      }
+      toast("Removed from the roster");
+      window.location.reload();
     });
   };
 
@@ -141,14 +171,65 @@ export function StudioStaffView({
         </button>
       </div>
 
-      {/* The rota's own list. It waits for the schedule, because a shift list
-          with no shifts on it is a question nobody asked. */}
+      <h3 className="setgroup-h">Coach roster</h3>
+      <p className="staffnote">
+        Add the people who teach here, even before they join FittList. They can be assigned to
+        classes right away; an email invite connects their shifts when they join.
+      </p>
+      {staff.roster.length > 0 && (
+        <div className="settingslist">
+          {staff.roster.map((coach) => (
+            <div key={coach.id} className="setrow staffrow">
+              <span className="setrow-txt">
+                <span className="t">{coach.name}</span>
+                <span className="s">
+                  {coach.state === "placeholder"
+                    ? coach.email
+                      ? `Invited · ${coach.email}`
+                      : "Not invited yet"
+                    : coach.state === "invited"
+                      ? "Invitation waiting"
+                      : coach.email}
+                </span>
+              </span>
+              <button className="tertiary staffx" onClick={() => removeCoach(coach.id)}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="staffadd">
+        <input
+          id="coachName"
+          value={coachName}
+          placeholder="Coach name"
+          onChange={(e) => setCoachName(e.target.value)}
+        />
+        <input
+          id="coachEmail"
+          type="email"
+          value={coachEmail}
+          placeholder="Email (optional)"
+          onChange={(e) => setCoachEmail(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") addCoach();
+          }}
+        />
+        <button className="btn si staffaddbtn" disabled={invitingCoach || !coachName.trim()} onClick={addCoach}>
+          Add coach
+        </button>
+      </div>
+
+      {/* Coaches who already identify with the studio can be added to the
+          trusted roster in one tap. Keep this separate from invites: a name
+          on the directory is a candidate, not a staffing permission. */}
       {staff.hasSchedule && (
         <>
-          <h3 className="setgroup-h">Shift list</h3>
+          <h3 className="setgroup-h">Coaches already here</h3>
           <p className="staffnote">
-            The coaches a shift can be handed to. Anyone can say they coach here; this list is
-            you saying who takes these classes.
+            Anyone can say they coach here. Turn them on only when they should be able to take
+            your shifts.
           </p>
           {staff.pool.length === 0 ? (
             <p className="adminempty">

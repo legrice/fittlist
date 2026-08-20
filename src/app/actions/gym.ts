@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { and, eq, gte, inArray, ne } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
@@ -19,6 +19,8 @@ import {
 } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { sendableAt, type Sendable } from "@/lib/rota";
+import { createPlaceholderCoach } from "@/lib/roster";
+import { sendInviteLink } from "@/lib/invite-link";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
 
@@ -213,7 +215,10 @@ export async function setRotaCoach(
   userId: string,
   on: boolean,
 ): Promise<{ ok: boolean; error?: string }> {
-  const ctx = await actingFor(studioId);
+  // A manager can prepare and clean up the roster before the first calendar
+  // slot exists. Adding someone to the active rota still needs the gym
+  // account; removing a placeholder does not.
+  const ctx = on ? await actingFor(studioId) : await managing(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { db, studio } = ctx;
   if (on) {
@@ -231,15 +236,17 @@ export async function setRotaCoach(
     // future rota. The manager can open or reassign those dates first, then
     // remove them knowing the calendar has no hidden assignments left.
     const today = todayIso();
-    const slots = await db
-      .select({ id: schema.classes.id, coachUserId: schema.classes.coachUserId, specificDate: schema.classes.specificDate, endsOn: schema.classes.endsOn })
-      .from(schema.classes)
-      .where(
-        and(
-          eq(schema.classes.userId, studio.accountUserId!),
-          eq(schema.classes.studioId, studioId),
-        ),
-      );
+    const slots = studio.accountUserId
+      ? await db
+          .select({ id: schema.classes.id, coachUserId: schema.classes.coachUserId, specificDate: schema.classes.specificDate, endsOn: schema.classes.endsOn })
+          .from(schema.classes)
+          .where(
+            and(
+              eq(schema.classes.userId, studio.accountUserId),
+              eq(schema.classes.studioId, studioId),
+            ),
+          )
+      : [];
     const hasStandingFuture = slots.some(
       (slot) =>
         slot.coachUserId === userId &&
@@ -910,6 +917,104 @@ export async function deleteGymClass(
   return { ok: true, count: 1 };
 }
 
+/** Close every class at a studio for one date (a holiday, weather day, etc.). */
+export async function closeGymDay(
+  studioId: string,
+  occurrenceDate: string,
+): Promise<{ ok: boolean; error?: string; count?: number }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
+  if (occurrenceDate < todayIso()) return { ok: false, error: "That date has already passed." };
+  const { db, studio, gymId } = ctx;
+  const dow = dowOfDate(occurrenceDate);
+  const all = await db
+    .select()
+    .from(schema.classes)
+    .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)));
+  const rows = all.filter((row) => runsOn(row, occurrenceDate, dow));
+  if (!rows.length) return { ok: true, count: 0 };
+  const classIds = rows.map((row) => row.id);
+  const [marks, covers] = await Promise.all([
+    db
+      .select({ classId: schema.attendances.classId, userId: schema.attendances.userId })
+      .from(schema.attendances)
+      .where(
+        and(
+          inArray(schema.attendances.classId, classIds),
+          eq(schema.attendances.occurrenceDate, occurrenceDate),
+        ),
+      ),
+    db
+      .select()
+      .from(schema.shiftCovers)
+      .where(
+        and(
+          inArray(schema.shiftCovers.classId, classIds),
+          eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+        ),
+      ),
+  ]);
+  const classById = new Map(rows.map((row) => [row.id, row]));
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(schema.shiftRequests)
+      .where(
+        and(
+          inArray(schema.shiftRequests.classId, classIds),
+          eq(schema.shiftRequests.occurrenceDate, occurrenceDate),
+        ),
+      );
+    await tx
+      .delete(schema.attendances)
+      .where(
+        and(
+          inArray(schema.attendances.classId, classIds),
+          eq(schema.attendances.occurrenceDate, occurrenceDate),
+        ),
+      );
+    await tx
+      .delete(schema.shiftCovers)
+      .where(
+        and(
+          inArray(schema.shiftCovers.classId, classIds),
+          eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+        ),
+      );
+    const oneOffIds = rows.filter((row) => !!row.specificDate).map((row) => row.id);
+    if (oneOffIds.length) await tx.delete(schema.classes).where(inArray(schema.classes.id, oneOffIds));
+    for (const row of rows) {
+      if (row.specificDate) continue;
+      await tx
+        .update(schema.classes)
+        .set({ skipDates: [...new Set([...row.skipDates, occurrenceDate])].sort() })
+        .where(eq(schema.classes.id, row.id));
+    }
+  });
+
+  const when = fmtDateLong(occurrenceDate);
+  for (const mark of marks) {
+    const cls = classById.get(mark.classId);
+    if (!cls) continue;
+    await addNotification(mark.userId, {
+      type: "class_cancelled",
+      title: `${cls.name} is off`,
+      body: `${when} at ${studio.name} is no longer on the schedule.`,
+      href: "/week",
+    });
+  }
+  for (const row of rows) {
+    const cover = covers.find((item) => item.classId === row.id);
+    const coachId = cover ? cover.coachUserId : row.coachUserId;
+    if (coachId) await tellCoach(coachId, studio.name, row.name, `${when}, ${fmtTime(row.startTime)}`, false);
+  }
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
+  revalidatePath("/calendar");
+  return { ok: true, count: rows.length };
+}
+
 /**
  * Who is on this class on this one date. The swap, and the way a slot is
  * opened up: pass null and nobody is on it, which is a thing a manager says
@@ -1568,6 +1673,99 @@ async function managing(studioId: string) {
   return { db, userId, studio };
 }
 
+/** Let the people who run a claimed studio turn on its independent schedule. */
+export async function enableStudioSchedule(
+  studioId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, studio } = ctx;
+  if (studio.accountUserId) return { ok: true };
+  const [account] = await db
+    .insert(schema.users)
+    .values({
+      kind: "gym",
+      email: `studio.${studio.id}@gym.fittlist.invalid`,
+      name: studio.name,
+      handle: null,
+      discoverable: false,
+      onboardedAt: new Date(),
+    })
+    .returning();
+  await db
+    .update(schema.studios)
+    .set({ accountUserId: account.id })
+    .where(and(eq(schema.studios.id, studioId), isNull(schema.studios.accountUserId)));
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
+  return { ok: true };
+}
+
+const ROSTER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Add a person to a studio's rota now, whether or not they have joined yet. */
+export async function inviteStudioCoach(
+  studioId: string,
+  nameRaw: string,
+  emailRaw = "",
+): Promise<{ ok: boolean; error?: string; invited?: boolean }> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, userId, studio } = ctx;
+  const name = nameRaw.trim().slice(0, 80);
+  const email = emailRaw.trim().toLowerCase();
+  if (!name) return { ok: false, error: "Add their name first." };
+  if (email && !ROSTER_EMAIL_RE.test(email)) return { ok: false, error: "That email doesn't look right." };
+
+  if (email) {
+    const [existing] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    if (existing) {
+      if (existing.kind === "fan" || existing.kind === "gym")
+        return { ok: false, error: "That account isn't a coach." };
+      await db
+        .insert(schema.studioRotaCoaches)
+        .values({ studioId, userId: existing.id, state: "active", acceptedAt: new Date() })
+        .onConflictDoNothing();
+      await addNotification(existing.id, {
+        type: "shift_assigned",
+        title: `You're on ${studio.name}'s shift list`,
+        body: "The studio can assign you classes and send you coverage requests.",
+        href: `/s/${studio.slug ?? studio.id}/shifts`,
+        actorUserId: userId,
+      });
+      revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+      return { ok: true };
+    }
+    const [already] = await db
+      .select({ id: schema.studioRotaCoaches.id })
+      .from(schema.studioRotaCoaches)
+      .where(
+        and(
+          eq(schema.studioRotaCoaches.studioId, studioId),
+          eq(schema.studioRotaCoaches.invitedEmail, email),
+          eq(schema.studioRotaCoaches.state, "placeholder"),
+        ),
+      );
+    if (already) return { ok: false, error: "They're already invited." };
+  }
+
+  await createPlaceholderCoach({ studioId, name, email: email || null });
+  if (email) {
+    await sendInviteLink({
+      email,
+      subject: `${studio.name} invited you to their FittList roster`,
+      intro: `${studio.name} added you to their coach roster. Tap to join FittList and see the classes you're on`,
+      invite: true,
+    });
+  }
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
+  return { ok: true, invited: !!email };
+}
+
 export type StaffPerson = {
   id: string;
   name: string;
@@ -1581,6 +1779,9 @@ export type StudioStaffDto = {
   /** Empty until the studio runs a schedule: a shift list with no rota to be
    *  on is a question nobody asked. */
   pool: RotaPoolDto[];
+  /** Everyone the studio has placed on its roster, including people invited
+   * before they have an account. */
+  roster: { id: string; name: string; email: string | null; state: string }[];
   hasSchedule: boolean;
 };
 
@@ -1605,9 +1806,30 @@ export async function studioStaff(studioId: string): Promise<StudioStaffDto | nu
       isYou: p.id === userId,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
-  // The shift list needs the rota it feeds, so it waits for the account.
+  const rosterRows = await db
+    .select()
+    .from(schema.studioRotaCoaches)
+    .where(eq(schema.studioRotaCoaches.studioId, studioId));
+  const rosterIds = rosterRows.map((row) => row.userId);
+  const rosterPeople = rosterIds.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, rosterIds))
+    : [];
+  const personById = new Map(rosterPeople.map((person) => [person.id, person]));
+  const roster = rosterRows
+    .map((row) => {
+      const person = personById.get(row.userId);
+      return {
+        id: row.userId,
+        name: person?.name.trim() || "Coach",
+        email: row.invitedEmail ?? (person?.kind === "placeholder" ? null : person?.email ?? null),
+        state: row.state,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+  // The shift list needs the rota it feeds, so the self-declared candidate
+  // switches only appear once the studio has turned scheduling on.
   const pool = studio.accountUserId ? await rotaPool(studioId) : [];
-  return { managers, pool, hasSchedule: !!studio.accountUserId };
+  return { managers, pool, roster, hasSchedule: !!studio.accountUserId };
 }
 
 /**

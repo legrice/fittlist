@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  closeGymDay,
+  enableStudioSchedule,
   setShiftCover,
   type GymCatalogItem,
   type GymClassDto,
@@ -68,6 +70,7 @@ export function GymRota({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<Open | null>(null);
+  const [closingDay, setClosingDay] = useState<{ iso: string; label: string } | null>(null);
   // The one-date swap saves as you pick, so the rota keeps it rather than the
   // form: these echo the row while the sheet is up.
   const [onUserId, setOnUserId] = useState("");
@@ -108,6 +111,21 @@ export function GymRota({
     });
   };
 
+  const closeDay = () => {
+    if (!closingDay || pending) return;
+    const day = closingDay;
+    start(async () => {
+      const res = await closeGymDay(studioId, day.iso);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't close that day");
+        return;
+      }
+      setClosingDay(null);
+      toast(res.count ? `${res.count} ${res.count === 1 ? "class" : "classes"} cancelled` : "Nothing was scheduled");
+      router.refresh();
+    });
+  };
+
   if (!hasAccount) {
     return (
       <div className="pad">
@@ -120,10 +138,30 @@ export function GymRota({
             <Icon name="close" size={20} />
           </BackLink>
         </div>
-        <p className="adminempty" style={{ marginTop: 24 }}>
-          This studio isn&rsquo;t running its schedule here yet. Write to us and we&rsquo;ll turn
-          it on.
-        </p>
+        <div className="empty-block" style={{ marginTop: 24 }}>
+          <h2>Run this studio&rsquo;s calendar here</h2>
+          <p>
+            Add classes, put coaches on them, and keep last-minute coverage in one place.
+          </p>
+          <button
+            className="btn si"
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                const res = await enableStudioSchedule(studioId);
+                if (!res.ok) {
+                  toast(res.error ?? "Couldn't start the schedule");
+                  return;
+                }
+                toast("Your studio calendar is ready");
+                router.refresh();
+              })
+            }
+          >
+            {pending ? "Starting…" : "Start managing the calendar"}
+          </button>
+        </div>
+        <Toast msg={toastMsg} on={toastOn} />
       </div>
     );
   }
@@ -199,9 +237,14 @@ export function GymRota({
           <div key={day.iso} className="rotaday">
             <div className="rotaday-h">
               <span>{day.label}</span>
-              <button className="rotaadd" onClick={() => show(day.iso, d, null)}>
-                <Icon name="add" size={18} /> Add
-              </button>
+              <span className="rotaday-actions">
+                <button className="rotaadd" onClick={() => show(day.iso, d, null)}>
+                  <Icon name="add" size={18} /> Add
+                </button>
+                <button className="rotaadd" onClick={() => setClosingDay({ iso: day.iso, label: day.label })}>
+                  Close day
+                </button>
+              </span>
             </div>
             {day.items.length === 0 ? (
               <p className="rotaempty">Nothing on</p>
@@ -239,6 +282,29 @@ export function GymRota({
         ))}
       </div>
 
+      {closingDay && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setClosingDay(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Close {closingDay.label}?</h2>
+            <p className="lead">
+              Every class that day will be cancelled. People who saved one and coaches who are on one will be told.
+            </p>
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={pending} onClick={closeDay}>
+                {pending ? "Closing…" : "Close this day"}
+              </button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setClosingDay(null)}>
+                Keep the day open
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {open && (
         <Adder
