@@ -7162,6 +7162,8 @@ select.editinput.placekind-select {
   .rota-calendar-tools::-webkit-scrollbar { display: none; }
   .rota-shift-filter { flex: 1 0 190px; }
   .rota-floating-add {
+    z-index: 44;
+    bottom: calc(88px + env(safe-area-inset-bottom));
     width: 64px; min-width: 64px; height: 64px; min-height: 64px; padding: 0;
   }
   .rota-floating-add > span { display: none; }
