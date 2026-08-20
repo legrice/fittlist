@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { and, eq, gte, inArray, isNull, lte, ne } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
@@ -379,8 +379,12 @@ export type GymClassInput = {
   /** Where a member books it. A gym usually has one, on every class. */
   links?: { label: string; url: string }[];
   coachUserId?: string | null;
-  /** Private palette token for this recurring slot in the manager planner. */
+  /** Private palette token saved with the studio's reusable class identity. */
   plannerColor?: StudioPlannerColor | null;
+  /** The saved studio class this slot came from. Kept while its display name
+   *  is edited so the class can be renamed everywhere without touching its
+   *  schedule. */
+  catalogKey?: string | null;
   /** False keeps a new or edited slot in the manager's draft schedule. */
   isPublic?: boolean;
 };
@@ -401,6 +405,7 @@ export type GymCatalogItem = {
    *  one slot. Null where nothing has recorded one yet. */
   durationMin: number | null;
   links: { label: string; url: string }[];
+  plannerColor: StudioPlannerColor | null;
 };
 
 /**
@@ -434,6 +439,7 @@ export async function gymCatalog(studioId: string): Promise<GymCatalogItem[]> {
       image: c.image,
       durationMin: c.durationMin,
       links: [],
+      plannerColor: isStudioPlannerColor(c.studioPlannerColor) ? c.studioPlannerColor : null,
     });
   // Real classes fill the gaps the catalogue doesn't hold, links above all.
   for (const c of atStudio) {
@@ -446,12 +452,15 @@ export async function gymCatalog(studioId: string): Promise<GymCatalogItem[]> {
       image: c.image,
       durationMin: c.durationMin,
       links: [],
+      plannerColor: isStudioPlannerColor(c.studioPlannerColor) ? c.studioPlannerColor : null,
     };
     if (!cur.classType && c.classType) cur.classType = c.classType;
     if (!cur.description && c.description) cur.description = c.description;
     if (!cur.image && c.image) cur.image = c.image;
     if (!cur.durationMin && c.durationMin) cur.durationMin = c.durationMin;
     if (!cur.links.length && c.links.length) cur.links = c.links.map((l) => ({ ...l }));
+    if (!cur.plannerColor && isStudioPlannerColor(c.studioPlannerColor))
+      cur.plannerColor = c.studioPlannerColor;
     byKey.set(key, cur);
   }
   return [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name));
@@ -463,6 +472,7 @@ async function catalogue(
   studioId: string,
   userId: string,
   input: GymClassInput,
+  previousKey?: string | null,
 ) {
   const name = input.name.trim();
   const classType = input.classType?.trim() || null;
@@ -480,22 +490,66 @@ async function catalogue(
         description,
         image,
         durationMin,
+        studioPlannerColor: input.plannerColor ?? null,
         createdByUserId: userId,
       })
       .onConflictDoUpdate({
         target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
         set: {
           name,
-          ...(classType ? { classType } : {}),
-          ...(description ? { description } : {}),
-          ...(image ? { image } : {}),
-          ...(durationMin ? { durationMin } : {}),
+          classType,
+          description,
+          image,
+          durationMin,
+          ...(input.plannerColor !== undefined
+            ? { studioPlannerColor: input.plannerColor }
+            : {}),
           updatedAt: new Date(),
         },
       });
+    const nextKey = name.toLowerCase();
+    if (previousKey && previousKey !== nextKey)
+      await db
+        .delete(schema.studioClasses)
+        .where(
+          and(
+            eq(schema.studioClasses.studioId, studioId),
+            eq(schema.studioClasses.nameKey, previousKey),
+          ),
+        );
   } catch (err) {
     console.error("studio catalog upsert failed", err);
   }
+}
+
+/** A studio class is the reusable thing; a schedule row only says when it
+ * runs and who is on it. Keep the reusable fields identical on every slot so
+ * editing Barbell Club once changes Barbell Club throughout the planner. */
+async function syncStudioClassIdentity(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+  gymId: string,
+  previousKey: string,
+  input: GymClassInput,
+) {
+  await db
+    .update(schema.classes)
+    .set({
+      name: input.name.trim(),
+      classType: input.classType?.trim() || null,
+      description: input.description?.trim() || null,
+      image: input.image?.trim() || null,
+      durationMin: input.durationMin,
+      links: cleanLinks(input.links),
+      studioPlannerColor: input.plannerColor ?? null,
+    })
+    .where(
+      and(
+        eq(schema.classes.userId, gymId),
+        eq(schema.classes.studioId, studioId),
+        sql`lower(trim(${schema.classes.name})) = ${previousKey}`,
+      ),
+    );
 }
 
 /** Links people paste: keep the real ones, drop the rest, cap the list. */
@@ -603,6 +657,7 @@ export async function addGymClass(
   const coachError = await assignmentError(db, studioId, coachUserId);
   if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
+  const identityKey = input.catalogKey?.trim().toLowerCase() || name.toLowerCase();
   const { oneOff, days, endsOn } = shape(input);
   const times = timesOf(input);
 
@@ -614,7 +669,13 @@ export async function addGymClass(
   const existing = await db
     .select({ dayOfWeek: schema.classes.dayOfWeek, startTime: schema.classes.startTime })
     .from(schema.classes)
-    .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.name, name)));
+    .where(
+      and(
+        eq(schema.classes.userId, gymId),
+        eq(schema.classes.studioId, studioId),
+        sql`lower(trim(${schema.classes.name})) = ${identityKey}`,
+      ),
+    );
   const taken = new Set(existing.map((r) => `${r.dayOfWeek}|${r.startTime.slice(0, 5)}`));
 
   // One row per day per time. Each row is still its own slot: the rota assigns
@@ -653,7 +714,8 @@ export async function addGymClass(
   }
   if (!rows.length) return { ok: false, error: "Those already run at this studio." };
   await db.insert(schema.classes).values(rows);
-  await catalogue(db, studioId, ctx.userId, input);
+  await catalogue(db, studioId, ctx.userId, input, identityKey);
+  await syncStudioClassIdentity(db, studioId, gymId, identityKey, input);
   if (coachUserId) {
     await tellCoach(coachUserId, studio.name, name, whenOf(input), true);
     // Once per slot actually made, not once per day: the overlap notice is
@@ -757,7 +819,8 @@ export async function updateGymClass(
   if (existing.coachUserId !== coachUserId)
     await freezePast(db, existing, existing.coachUserId, ctx.userId);
   // Updated in place, never deleted and reinserted, so any Going mark on this
-  // class survives the manager moving it half an hour.
+  // class survives the manager moving it half an hour. These are schedule
+  // fields only; reusable class details are synchronized just below.
   const [updated] = await db
     .update(schema.classes)
     .set({
@@ -766,34 +829,13 @@ export async function updateGymClass(
       specificDate: oneOff,
       endsOn,
       startTime: input.startTime,
-      durationMin: input.durationMin,
-      name,
-      classType: input.classType?.trim() || null,
-      description: input.description?.trim() || null,
-      image: input.image?.trim() || null,
-      links: cleanLinks(input.links),
       isPublic: input.isPublic !== false,
     })
     .where(eq(schema.classes.id, classId))
     .returning();
-  // Everything else in this edit is about the one slot that was opened. The
-  // planner color is the one series-level label: Monday and Wednesday at the
-  // same time should remain recognizable as the same recurring class.
-  if (
-    input.plannerColor !== undefined &&
-    existing.studioPlannerColor !== input.plannerColor
-  )
-    await db
-      .update(schema.classes)
-      .set({ studioPlannerColor: input.plannerColor })
-      .where(
-        and(
-          eq(schema.classes.userId, gymId),
-          eq(schema.classes.studioId, studioId),
-          eq(schema.classes.seriesId, existing.seriesId),
-        ),
-      );
-  await catalogue(db, studioId, ctx.userId, input);
+  const identityKey = existing.name.trim().toLowerCase();
+  await catalogue(db, studioId, ctx.userId, input, identityKey);
+  await syncStudioClassIdentity(db, studioId, gymId, identityKey, input);
 
   // A cover is an exception to a date this class runs. Move the slot to another
   // day and some of them point at dates it no longer does, where they mean

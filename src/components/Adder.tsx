@@ -68,6 +68,7 @@ type CatalogItem = {
    *  otherwise, and the length belongs to the class rather than the slot. */
   durationMin?: number | null;
   links?: BookingLink[];
+  plannerColor?: StudioPlannerColor | null;
 };
 
 /**
@@ -259,6 +260,9 @@ export function Adder({
   const [plannerColor, setPlannerColor] = useState<StudioPlannerColor | null>(
     prefill?.plannerColor ?? null,
   );
+  const [catalogKey, setCatalogKey] = useState<string | null>(
+    isGym && prefill?.name ? prefill.name.trim().toLowerCase() : null,
+  );
   const plannerColorOptions: (StudioPlannerColor | null)[] = [
     null,
     ...STUDIO_PLANNER_COLORS.map((color) => color.value),
@@ -353,6 +357,10 @@ export function Adder({
   // description, leaving the coach to set their own time, days, and links.
   const fillFromCatalog = (c: CatalogItem) => {
     setName(c.name);
+    if (isGym) {
+      setCatalogKey(c.name.trim().toLowerCase());
+      setPlannerColor(c.plannerColor ?? null);
+    }
     setClassType(c.classType ?? null);
     setDescription(c.description ?? "");
     // The photograph comes with the description: it belongs to the class, not
@@ -580,11 +588,13 @@ export function Adder({
               ...input,
               coachUserId: coachUserId || null,
               plannerColor,
+              catalogKey,
             })
           : await addGymClass(gym.studioId, {
               ...input,
               coachUserId: coachUserId || null,
               plannerColor,
+              catalogKey,
             })
         : isEdit
           ? await updateClass(prefill!.classId!, input)
@@ -954,46 +964,6 @@ export function Adder({
                   They&rsquo;ll be told, and it lands in their calendar. Your schedule goes out
                   under the gym&rsquo;s name, so this stays between you and them.
                 </p>
-                <label className="flabel studio-planner-label">Calendar color</label>
-                <div
-                  className="studio-planner-colors"
-                  role="radiogroup"
-                  aria-label="Calendar color"
-                >
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={!plannerColor}
-                    aria-label="No calendar color"
-                    title="No color"
-                    tabIndex={!plannerColor ? 0 : -1}
-                    className={`studio-planner-color none${plannerColor ? "" : " on"}`}
-                    onClick={() => setPlannerColor(null)}
-                    onKeyDown={(event) => movePlannerColor(event, null)}
-                  >
-                    {!plannerColor && <Icon name="check" size={17} />}
-                  </button>
-                  {STUDIO_PLANNER_COLORS.map((color) => (
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={plannerColor === color.value}
-                      aria-label={`${color.label} calendar color`}
-                      title={color.label}
-                      tabIndex={plannerColor === color.value ? 0 : -1}
-                      className={`studio-planner-color${plannerColor === color.value ? " on" : ""}`}
-                      data-planner-color={color.value}
-                      key={color.value}
-                      onClick={() => setPlannerColor(color.value)}
-                      onKeyDown={(event) => movePlannerColor(event, color.value)}
-                    >
-                      {plannerColor === color.value && <Icon name="check" size={17} />}
-                    </button>
-                  ))}
-                </div>
-                <p className="durnote" style={{ marginTop: 8 }}>
-                  Only appears in this studio management calendar.
-                </p>
                 <label className="flabel" style={{ marginTop: 18 }}>Visibility</label>
                 <div className="modetoggle" role="group" aria-label="Class visibility">
                   <button
@@ -1123,6 +1093,12 @@ export function Adder({
             {stepped && whenCard}
 
             <div className="adder-card">
+            {gym && (
+              <p className="durnote" style={{ margin: "0 0 16px" }}>
+                These details are saved with the class. Change them once and every scheduled
+                instance uses them; its day, time, and coach stay separate.
+              </p>
+            )}
             <label className="flabel" htmlFor="fName">
                 {isEvent ? "Workout" : "Class name"}
               {(gym || selectedStudio) && catalog.length > 0 && !isEdit && (
@@ -1229,6 +1205,51 @@ export function Adder({
               }
               onChange={(e) => setDescription(e.target.value)}
             />
+
+            {gym && (
+              <>
+                <label className="flabel studio-planner-label">Calendar color</label>
+                <div
+                  className="studio-planner-colors"
+                  role="radiogroup"
+                  aria-label="Calendar color"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={!plannerColor}
+                    aria-label="No calendar color"
+                    title="No color"
+                    tabIndex={!plannerColor ? 0 : -1}
+                    className={`studio-planner-color none${plannerColor ? "" : " on"}`}
+                    onClick={() => setPlannerColor(null)}
+                    onKeyDown={(event) => movePlannerColor(event, null)}
+                  >
+                    {!plannerColor && <Icon name="check" size={17} />}
+                  </button>
+                  {STUDIO_PLANNER_COLORS.map((color) => (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={plannerColor === color.value}
+                      aria-label={`${color.label} calendar color`}
+                      title={color.label}
+                      tabIndex={plannerColor === color.value ? 0 : -1}
+                      className={`studio-planner-color${plannerColor === color.value ? " on" : ""}`}
+                      data-planner-color={color.value}
+                      key={color.value}
+                      onClick={() => setPlannerColor(color.value)}
+                      onKeyDown={(event) => movePlannerColor(event, color.value)}
+                    >
+                      {plannerColor === color.value && <Icon name="check" size={17} />}
+                    </button>
+                  ))}
+                </div>
+                <p className="durnote" style={{ marginTop: 8 }}>
+                  Saved with this class and used every time it appears here.
+                </p>
+              </>
+            )}
 
             {/* A picture of the room, or the class. Optional forever: a
                 schedule with no photos has to stay a good schedule, so this

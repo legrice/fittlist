@@ -584,6 +584,10 @@ export const studioClasses = pgTable(
     // Shared with the description: a picture belongs to the class rather than
     // to whichever coach wrote it down first.
     image: text("image"),
+    // A class keeps one visual identity everywhere the studio schedules it.
+    // The token is private to the management planner and never changes how
+    // the class appears on member or coach calendars.
+    studioPlannerColor: text("studio_planner_color"),
     /** How long it runs, so pulling a class in fills the length too. A gym
      *  filling a week types the same 60 over and over otherwise, and the
      *  number is a fact about the class rather than about one slot. Nullable
@@ -625,9 +629,9 @@ export const classes = pgTable(
     // deleting: a coach teaching Stretch+ at two studios has two series and one
     // template, and grouping by the template collapsed them into one class.
     seriesId: uuid("series_id").notNull().defaultRandom(),
-    // A private label for the studio's operating calendar. It is deliberately
-    // a palette token rather than a CSS value, and manager DTOs are the only
-    // outward shape that carries it. null keeps the usual white card.
+    // Denormalized from studio_classes so the planner can render a whole month
+    // without joining the catalog for every occurrence. The catalog is the
+    // source of truth; manager writes keep every slot of that class in sync.
     studioPlannerColor: text("studio_planner_color"),
     // Who is teaching it, when the owner is a gym rather than a person. The
     // class belongs to the gym (userId); this is the rota. It drives the
