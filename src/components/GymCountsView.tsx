@@ -98,8 +98,8 @@ export function GymCountsView({
           </p>
           {counts.openSlots > 0 && (
             <p className="rotahint">
-              {counts.openSlots} {counts.openSlots === 1 ? "class" : "classes"} this month had
-              nobody on. Those are on the schedule, not on anybody&rsquo;s count.
+              {counts.openSlots} {counts.openSlots === 1 ? "class was" : "classes were"} open this month.
+              Open classes stay on the schedule but do not count toward a coach&rsquo;s total.
             </p>
           )}
           <div className="publishwrap nostick">

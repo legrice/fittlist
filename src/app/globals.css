@@ -6860,7 +6860,7 @@ select.editinput.placekind-select {
    Every occurrence remains visible because this is an operating surface, not
    a member preview. The grid scrolls only when the desktop window is narrow. */
 .rota-view-switch {
-  width: max-content; margin: 22px 0 0 auto; padding: 4px; display: flex; gap: 3px;
+  width: max-content; margin: 0; padding: 4px; display: flex; gap: 3px;
   border-radius: var(--radius-pill); background: var(--color-surface-muted);
 }
 .rota-view-switch button {
@@ -6869,6 +6869,10 @@ select.editinput.placekind-select {
   cursor: pointer;
 }
 .rota-view-switch button.on { background: var(--color-black); color: var(--color-white); }
+.studio-calendar-controls {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.gym-manage-pad { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
 .rota-month-view { margin-top: 22px; }
 .rota-month-toolbar { display: flex; align-items: stretch; gap: 12px; margin-bottom: 16px; }
 .rota-month-nav {
@@ -6882,11 +6886,6 @@ select.editinput.placekind-select {
 }
 .rota-month-nav button:disabled { opacity: .3; cursor: default; }
 .rota-month-nav strong { text-align: center; font-size: 18px; font-weight: 700; }
-.rota-month-add {
-  min-height: 52px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  border: 0; border-radius: var(--radius-pill); background: var(--color-lime); color: var(--color-black);
-  font: inherit; font-size: 14px; font-weight: 700; white-space: nowrap; cursor: pointer;
-}
 .rota-month-loading {
   min-height: 220px; display: grid; place-items: center; border: 1px solid var(--color-border);
   border-radius: var(--radius-card); background: var(--color-surface-muted);
@@ -6948,8 +6947,8 @@ select.editinput.placekind-select {
 .rota-month-event::before {
   content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-border-strong);
 }
-.rota-month-event.needs { background: var(--color-lime-soft); }
-.rota-month-event.needs::before { background: var(--color-lime); }
+.rota-month-event.needs { background: var(--color-white); }
+.rota-month-event.needs::before { background: var(--color-border-strong); }
 .rota-month-event.cover::before { background: var(--color-coaching); }
 .rota-month-event.draft::before { background: var(--color-personal); }
 .rota-month-eventmain {
@@ -7020,7 +7019,28 @@ select.editinput.placekind-select {
 .rota-coach-options > button.on .rota-coach-radio { background: var(--color-black); color: var(--color-white); }
 .rota-coach-note { margin-top: 12px; color: var(--color-text-secondary); font-size: 12px; line-height: 1.4; }
 
+/* A single, persistent way to add from either calendar view. The desktop
+   label helps a manager scanning a large workspace; the mobile circle keeps
+   the control thumb-sized without covering the calendar. */
+.rota-floating-add {
+  position: fixed; z-index: 24; right: clamp(20px, 2vw, 40px);
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  min-height: 58px; padding: 0 22px; display: inline-flex; align-items: center;
+  justify-content: center; gap: 8px; border: 0; border-radius: var(--radius-pill);
+  background: var(--color-lime); color: var(--color-black); cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0,0,0,.14);
+}
+.rota-floating-add:active { background: var(--color-lime-pressed); transform: scale(.97); }
+@media (max-width: 1099px) {
+  .rota-floating-add {
+    width: 64px; min-width: 64px; height: 64px; min-height: 64px; padding: 0;
+  }
+  .rota-floating-add > span { display: none; }
+}
+
 @media (min-width: 1100px) {
+  .studio-calendar-controls { flex-wrap: nowrap; }
   /* This route can render without the signed-in .screen shell, so release
      the planner's own global .pad cap too. It should use the window like the
      operating calendar it is, with only a small desktop gutter. */
@@ -7036,7 +7056,7 @@ select.editinput.placekind-select {
     width: 100%; max-width: none; margin: 0;
   }
   .screen.hasnav > .pad > .gym-manage-pad.desktop {
-    width: 100%; max-width: none; margin: 0; padding: 0;
+    width: 100%; max-width: none; margin: 0; padding-inline: 0;
   }
   body:has(.gym-manage-pad.desktop) .desktop-right { display: none; }
   .screen.hasnav:has(.gym-manage-pad.desktop) { padding-right: 0; }
@@ -7673,8 +7693,8 @@ select.editinput.placekind-select {
 .staffbar { display: flex; gap: 8px; margin: 0 0 16px; }
 .staffbar-b { width: auto; margin: 0; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; }
 /* Calendar, coverage, and roster are one studio workspace, but remain separate
-   routes so each screen loads only the data it uses. The light-green active
-   section follows the app navigation treatment and keeps every icon black. */
+   routes so each screen loads only the data it uses. Equal columns prevent
+   the rail from jumping as the active section changes. */
 .studio-manage-bar {
   display: flex; align-items: center; gap: 10px; margin: 0 0 18px;
 }
@@ -7684,30 +7704,34 @@ select.editinput.placekind-select {
 .studio-manage-top > div { min-width: 0; }
 .studio-manage-back { flex: 0 0 var(--tap-size); }
 .studio-manage-nav {
-  width: max-content; max-width: 100%; min-height: 52px; padding: 4px;
-  display: flex; align-items: center; gap: 3px; overflow-x: auto;
+  width: min(456px, 100%); max-width: 100%; min-height: 52px; padding: 4px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 3px; overflow-x: auto;
   border-radius: var(--radius-pill); background: var(--color-surface-muted);
   scrollbar-width: none;
 }
 .studio-manage-nav::-webkit-scrollbar { display: none; }
 .studio-manage-tab {
   min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center;
-  justify-content: center; gap: 7px; flex: 0 0 auto;
+  justify-content: center; gap: 7px; min-width: 0;
   border: 1px solid transparent; border-radius: var(--radius-pill);
   color: var(--color-black); text-decoration: none; font-size: 14px; font-weight: 700;
 }
 .studio-manage-tab.on {
-  border-color: var(--color-lime);
-  background: var(--color-lime-soft); color: var(--color-black);
+  border-color: var(--color-black);
+  background: var(--color-black); color: var(--color-white);
 }
 .studio-manage-tab svg { color: var(--color-black); }
+.studio-manage-tab.on svg { color: var(--color-white); }
 .studio-manage-bar .studio-manage-nav { margin: 0; }
 .studio-manage-bar .staffmore { margin-left: auto; }
 @media (max-width: 520px) {
   .studio-manage-nav { width: 100%; }
   .studio-manage-tab { min-width: 0; padding-inline: 10px; flex: 1 1 0; }
-  .studio-manage-bar { align-items: stretch; }
-  .studio-manage-bar .studio-manage-nav { flex: 1 1 auto; }
+  .studio-manage-bar { display: grid; grid-template-columns: minmax(0, 1fr) var(--tap-size); align-items: stretch; }
+  .studio-manage-bar .studio-manage-nav { width: 100%; }
+}
+@media (max-width: 380px) {
+  .studio-manage-tab svg { display: none; }
 }
 /* The overflow is a glyph, so it takes the square of a button rather than the
    width of a word, and sits at the far end of the row: what is named comes

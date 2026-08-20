@@ -906,7 +906,7 @@ export function Adder({
                   value={coachUserId}
                   onChange={(e) => setCoachUserId(e.target.value)}
                 >
-                  <option value="">Nobody yet</option>
+                  <option value="">Open</option>
                   {gym.coaches.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}

@@ -73,7 +73,7 @@ function CoachPickerButton({
       aria-label={label}
       onClick={onClick}
     >
-      <span>{name || "Nobody yet"}</span>
+      <span>{name || "Open"}</span>
       <Icon name="expand_more" size={16} />
     </button>
   );
@@ -247,7 +247,7 @@ export function GymRota({
       }
       setOnUserId(who);
       setCovered(who !== (cls.coachUserId ?? ""));
-      toast(who ? "Swapped" : "Opened up");
+      toast(who ? "Swapped" : "Open");
       refreshView();
     });
   };
@@ -427,8 +427,12 @@ export function GymRota({
     window.history.replaceState({}, "", url);
     if (next === "month" && !month) void loadMonth();
   };
-  const monthAddDay = month?.days.find((day) => day.iso === new Date().toISOString().slice(0, 10))
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const monthAddDay = month?.days.find((day) => day.iso === todayIso)
     ?? month?.days.find((day) => day.iso.startsWith(month.month));
+  const weekAddDay = days.find((day) => day.iso === todayIso)
+    ?? days.find((day) => day.iso > todayIso)
+    ?? days[0];
   const coachPickId = coachPick
     ? coachOverrides[occurrenceKey(coachPick.cls.id, coachPick.iso)] ?? coachPick.cls.onUserId ?? ""
     : "";
@@ -451,7 +455,7 @@ export function GymRota({
             {all.length === 0
               ? desktop ? "The month is empty" : "The week is empty"
               : `${all.length} ${all.length === 1 ? "class" : "classes"}` +
-                (openSlots ? ` · ${openSlots} with nobody on` : "")}
+                (openSlots ? ` · ${openSlots} open` : "")}
           </p>
           {visibleDrafts > 0 && (
             <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
@@ -461,26 +465,27 @@ export function GymRota({
         </div>
       </div>
 
-      <StudioManageNav slug={studioSlug} active="calendar" />
-
-      {desktop && (
-        <div className="rota-view-switch" role="group" aria-label="Calendar view">
-          <button
-            className={desktopView === "week" ? "on" : ""}
-            aria-pressed={desktopView === "week"}
-            onClick={() => chooseDesktopView("week")}
-          >
-            Week
-          </button>
-          <button
-            className={desktopView === "month" ? "on" : ""}
-            aria-pressed={desktopView === "month"}
-            onClick={() => chooseDesktopView("month")}
-          >
-            Month
-          </button>
-        </div>
-      )}
+      <div className="studio-calendar-controls">
+        <StudioManageNav slug={studioSlug} active="calendar" />
+        {desktop && (
+          <div className="rota-view-switch" role="group" aria-label="Calendar view">
+            <button
+              className={desktopView === "week" ? "on" : ""}
+              aria-pressed={desktopView === "week"}
+              onClick={() => chooseDesktopView("week")}
+            >
+              Week
+            </button>
+            <button
+              className={desktopView === "month" ? "on" : ""}
+              aria-pressed={desktopView === "month"}
+              onClick={() => chooseDesktopView("month")}
+            >
+              Month
+            </button>
+          </div>
+        )}
+      </div>
 
       {desktop && desktopView === "month" ? (
         <div className="rota-month-view">
@@ -498,14 +503,6 @@ export function GymRota({
                 <Icon name="chevron_right" size={22} />
               </button>
             </div>
-            {monthAddDay && (
-              <button
-                className="rota-month-add"
-                onClick={() => show(monthAddDay.iso, monthAddDay.dayOfWeek, null, true)}
-              >
-                <Icon name="add" size={20} /> Add a class
-              </button>
-            )}
           </div>
 
           {monthLoading && !month ? (
@@ -662,18 +659,14 @@ export function GymRota({
                               dur: `${c.durationMin} min`,
                               tag: !c.isPublic
                                 ? "Draft"
-                                : !selectedCoachId
-                                  ? "Needs coach"
-                                  : isCover
-                                    ? "Cover"
-                                    : undefined,
+                                : selectedCoachId && isCover
+                                  ? "Cover"
+                                  : undefined,
                               tagTone: !c.isPublic
                                 ? "personal"
-                                : !selectedCoachId
-                                  ? "attention"
-                                  : isCover
-                                    ? "coaching"
-                                    : undefined,
+                                : selectedCoachId && isCover
+                                  ? "coaching"
+                                  : undefined,
                               onTap: () => show(day.iso, day.dayOfWeek, c),
                             }}
                           />
@@ -694,6 +687,22 @@ export function GymRota({
           </div>
         </>
       )}
+
+      {!open && !coachPick && !closingDay && !copyingDay &&
+        (desktop && desktopView === "month" ? monthAddDay : weekAddDay) && (
+          <button
+            type="button"
+            className="rota-floating-add"
+            aria-label="Add a class"
+            onClick={() => {
+              const day = desktop && desktopView === "month" ? monthAddDay : weekAddDay;
+              if (day) show(day.iso, day.dayOfWeek, null, desktop && desktopView === "month");
+            }}
+          >
+            <Icon name="add" size={26} />
+            <span>Add a class</span>
+          </button>
+        )}
 
       {coachPick && (
         <div
@@ -724,7 +733,7 @@ export function GymRota({
                 }}
               >
                 <span>
-                  <strong>Nobody yet</strong>
+                  <strong>Open</strong>
                   <small>Leave this date open</small>
                 </span>
                 <span className="rota-coach-radio">
@@ -839,7 +848,7 @@ export function GymRota({
                   disabled={pending}
                   onChange={(e) => cover(e.target.value)}
                 >
-                  <option value="">Nobody yet</option>
+                  <option value="">Open</option>
                   {coaches.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
