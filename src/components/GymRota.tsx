@@ -520,23 +520,16 @@ export function GymRota({
     return (
       <div className="pad">
         <div className="studio-manage-top pagetop">
-          <BackLink
-            className="evback studio-manage-back"
-            href="/settings"
-            anywhere
-            notUnder={`/s/${studioSlug}`}
-            label="Back to your account"
-          >
-            <Icon name="arrow_back" size={23} />
-          </BackLink>
-          <div>
-            <h1>{studioName}</h1>
-            <p className="adminsub">The schedule</p>
-          </div>
-        </div>
-        <div className="studio-calendar-controls">
-          <StudioManageNav slug={studioSlug} active="calendar" />
-          <div className="rota-calendar-tools">
+          <div className="studio-manage-topbar">
+            <BackLink
+              className="evback studio-manage-back"
+              href="/settings"
+              anywhere
+              notUnder={`/s/${studioSlug}`}
+              label="Back to your account"
+            >
+              <Icon name="arrow_back" size={23} />
+            </BackLink>
             <StudioAdminSheet
               slug={studioSlug}
               canSchedule={false}
@@ -544,8 +537,16 @@ export function GymRota({
               studio={admin.studio}
               showCoaches={admin.showCoaches}
               approvalOn={admin.approvalOn}
+              settingsTrigger
             />
           </div>
+          <div>
+            <h1>{studioName}</h1>
+            <p className="adminsub">The schedule</p>
+          </div>
+        </div>
+        <div className="studio-calendar-controls">
+          <StudioManageNav slug={studioSlug} active="calendar" />
         </div>
         <div className="empty-block" style={{ marginTop: 24 }}>
           <h2>Run this studio&rsquo;s calendar here</h2>
@@ -661,15 +662,26 @@ export function GymRota({
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
       <div className="studio-manage-top pagetop">
-        <BackLink
-          className="evback studio-manage-back"
-          href="/settings"
-          anywhere
-          notUnder={`/s/${studioSlug}`}
-          label="Back to your account"
-        >
-          <Icon name="arrow_back" size={23} />
-        </BackLink>
+        <div className="studio-manage-topbar">
+          <BackLink
+            className="evback studio-manage-back"
+            href="/settings"
+            anywhere
+            notUnder={`/s/${studioSlug}`}
+            label="Back to your account"
+          >
+            <Icon name="arrow_back" size={23} />
+          </BackLink>
+          <StudioAdminSheet
+            slug={studioSlug}
+            canSchedule={hasAccount}
+            pageViews={admin.pageViews ?? null}
+            studio={admin.studio}
+            showCoaches={admin.showCoaches}
+            approvalOn={admin.approvalOn}
+            settingsTrigger
+          />
+        </div>
         <div>
           <h1>{studioName}</h1>
           <p className="adminsub">{summary}</p>
@@ -725,14 +737,6 @@ export function GymRota({
               <span className="rota-notification-badge" aria-hidden="true">{requestRows.length}</span>
             )}
           </button>
-          <StudioAdminSheet
-            slug={studioSlug}
-            canSchedule={hasAccount}
-            pageViews={admin.pageViews ?? null}
-            studio={admin.studio}
-            showCoaches={admin.showCoaches}
-            approvalOn={admin.approvalOn}
-          />
         </div>
       </div>
 
