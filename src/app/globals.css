@@ -6859,6 +6859,16 @@ select.editinput.placekind-select {
 /* Desktop studio planning: a dense month replaces the tall phone agenda.
    Every occurrence remains visible because this is an operating surface, not
    a member preview. The grid scrolls only when the desktop window is narrow. */
+.rota-view-switch {
+  width: max-content; margin: 22px 0 0 auto; padding: 4px; display: flex; gap: 3px;
+  border-radius: var(--radius-pill); background: var(--color-surface-muted);
+}
+.rota-view-switch button {
+  min-width: 82px; min-height: 42px; padding: 0 16px; border: 0; border-radius: var(--radius-pill);
+  background: transparent; color: var(--color-black); font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+}
+.rota-view-switch button.on { background: var(--color-black); color: var(--color-white); }
 .rota-month-view { margin-top: 22px; }
 .rota-month-toolbar { display: flex; align-items: stretch; gap: 12px; margin-bottom: 16px; }
 .rota-month-nav {

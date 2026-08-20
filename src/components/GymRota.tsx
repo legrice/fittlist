@@ -87,6 +87,7 @@ export function GymRota({
   const [copyingDay, setCopyingDay] = useState<{ day: number; label: string } | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [desktop, setDesktop] = useState(false);
+  const [desktopView, setDesktopView] = useState<"week" | "month">("month");
   const [month, setMonth] = useState<GymMonthDto | null>(null);
   const [monthLoading, setMonthLoading] = useState(false);
   const monthRequest = useRef(0);
@@ -98,7 +99,7 @@ export function GymRota({
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const days = week?.days ?? [];
-  const visibleDays = desktop && month
+  const visibleDays = desktop && desktopView === "month" && month
     ? month.days.filter((day) => day.iso.startsWith(month.month))
     : days;
   const all = visibleDays.flatMap((d) => d.items);
@@ -128,15 +129,25 @@ export function GymRota({
     const media = window.matchMedia("(min-width: 1100px)");
     const sync = () => {
       setDesktop(media.matches);
-      if (media.matches && !month) {
-        const key = new URLSearchParams(window.location.search).get("m") ?? undefined;
-        void loadMonth(key);
+      if (media.matches) {
+        const params = new URLSearchParams(window.location.search);
+        const urlView = params.get("view");
+        const remembered = window.localStorage.getItem("fittlist:studio-calendar-view");
+        const chosen = urlView === "week" || urlView === "month"
+          ? urlView
+          : remembered === "week" ? "week" : "month";
+        setDesktopView(chosen);
+        if (chosen === "month" && !month) {
+          void loadMonth(params.get("m") ?? undefined);
+        }
       }
     };
     const restoreMonth = () => {
       if (!media.matches) return;
-      const key = new URLSearchParams(window.location.search).get("m") ?? undefined;
-      void loadMonth(key);
+      const params = new URLSearchParams(window.location.search);
+      const restoredView = params.get("view") === "week" ? "week" : "month";
+      setDesktopView(restoredView);
+      if (restoredView === "month") void loadMonth(params.get("m") ?? undefined);
     };
     sync();
     media.addEventListener("change", sync);
@@ -149,7 +160,7 @@ export function GymRota({
 
   const refreshView = () => {
     router.refresh();
-    if (desktop) void loadMonth(month?.month, true);
+    if (desktop && desktopView === "month") void loadMonth(month?.month, true);
   };
 
   const show = (
@@ -315,6 +326,16 @@ export function GymRota({
     window.history.pushState({}, "", url);
     void loadMonth(nextKey);
   };
+  const chooseDesktopView = (next: "week" | "month") => {
+    setDesktopView(next);
+    window.localStorage.setItem("fittlist:studio-calendar-view", next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", next);
+    if (next === "week") url.searchParams.delete("m");
+    else if (month?.month) url.searchParams.set("m", month.month);
+    window.history.replaceState({}, "", url);
+    if (next === "month" && !month) void loadMonth();
+  };
   const monthAddDay = month?.days.find((day) => day.iso === new Date().toISOString().slice(0, 10))
     ?? month?.days.find((day) => day.iso.startsWith(month.month));
 
@@ -340,7 +361,26 @@ export function GymRota({
         </BackLink>
       </div>
 
-      {desktop ? (
+      {desktop && (
+        <div className="rota-view-switch" role="group" aria-label="Calendar view">
+          <button
+            className={desktopView === "week" ? "on" : ""}
+            aria-pressed={desktopView === "week"}
+            onClick={() => chooseDesktopView("week")}
+          >
+            Week
+          </button>
+          <button
+            className={desktopView === "month" ? "on" : ""}
+            aria-pressed={desktopView === "month"}
+            onClick={() => chooseDesktopView("month")}
+          >
+            Month
+          </button>
+        </div>
+      )}
+
+      {desktop && desktopView === "month" ? (
         <div className="rota-month-view">
           <div className="rota-month-toolbar">
             <div className="rota-month-nav">

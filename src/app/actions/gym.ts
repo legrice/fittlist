@@ -393,11 +393,19 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
   start.setUTCDate(start.getUTCDate() + week * 7);
   const monday = start.toISOString().slice(0, 10);
   const days = await gymDays(db, gymId, studioId, start, 7);
+  const sunday = new Date(start);
+  sunday.setUTCDate(start.getUTCDate() + 6);
+  const rangePart = (date: Date) => date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
   return {
     monday,
     offset: week,
-    label: week === 0 ? "This week" : week === 1 ? "Next week" : `Week of ${fmtDayHeader(monday)}`,
+    label: `${rangePart(start)} – ${rangePart(sunday)}`,
     days,
   };
 }
