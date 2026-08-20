@@ -13,7 +13,9 @@ import type { StudioCoachSearchResult, StudioStaffDto } from "@/app/actions/gym"
 import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import { StudioManageNav } from "@/components/StudioManageNav";
+import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 
 // The studio's invited people. Scheduling access is part of each coach rather
@@ -29,12 +31,18 @@ export function StudioStaffView({
   studioSlug,
   backHref,
   staff,
+  admin,
 }: {
   studioId: string;
   studioName: string;
   studioSlug: string;
   backHref: string;
   staff: StudioStaffDto;
+  admin: {
+    studio: StudioEditProps;
+    showCoaches?: boolean;
+    approvalOn?: boolean;
+  };
 }) {
   const [managers, setManagers] = useState(staff.managers);
   const coaches = staff.roster;
@@ -141,15 +149,25 @@ export function StudioStaffView({
   return (
     <div className="pad studio-staff-pad">
       <div className="studio-manage-top pagetop">
-        <BackLink
-          className="evback studio-manage-back"
-          href="/settings"
-          anywhere
-          notUnder={`/s/${studioSlug}`}
-          label="Back to your account"
-        >
-          <Icon name="arrow_back" size={23} />
-        </BackLink>
+        <div className="studio-manage-topbar">
+          <BackLink
+            className="evback studio-manage-back"
+            href="/settings"
+            anywhere
+            notUnder={`/s/${studioSlug}`}
+            label="Back to your account"
+          >
+            <Icon name="arrow_back" size={23} />
+          </BackLink>
+          <StudioAdminSheet
+            slug={studioSlug}
+            canSchedule={staff.hasSchedule}
+            studio={admin.studio}
+            showCoaches={admin.showCoaches}
+            approvalOn={admin.approvalOn}
+            settingsTrigger
+          />
+        </div>
         <div>
           <h1>{studioName}</h1>
           <p className="adminsub">Manage your team</p>
