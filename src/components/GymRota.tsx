@@ -23,6 +23,7 @@ import { Icon } from "@/components/Icon";
 import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
+import { studioPlannerColorLabel } from "@/lib/studio-planner";
 
 /** "Thu, Aug 6" — the date a swap is about, said the way a person would. */
 const fmtDay = (iso: string) =>
@@ -211,6 +212,10 @@ export function GymRota({
 
   const refreshView = () => {
     router.refresh();
+    // A recurring edit can change every future month, not only the one on
+    // screen. Drop the small client cache so returning to a visited month can
+    // never resurrect its older color or class rows.
+    monthCache.current.clear();
     if (desktop && desktopView === "month") void loadMonth(month?.month, true);
   };
 
@@ -387,6 +392,7 @@ export function GymRota({
           durationMin: cls.durationMin,
           studioId,
           isPublic: cls.isPublic,
+          plannerColor: cls.plannerColor,
           links: cls.links.map((l) => ({ ...l })),
           days: cls.specificDate ? [] : [cls.dayOfWeek],
           dayOfWeek: cls.dayOfWeek,
@@ -554,6 +560,7 @@ export function GymRota({
                       <div className="rota-month-events">
                         {day.items.map((c) => {
                           const key = occurrenceKey(c.id, day.iso);
+                          const plannerColorLabel = studioPlannerColorLabel(c.plannerColor);
                           const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
                           const selectedCoachName = coachNameById.get(selectedCoachId)
                             ?? (selectedCoachId === c.onUserId ? c.onName : "");
@@ -569,6 +576,11 @@ export function GymRota({
                             <div
                               key={key}
                               className={`rota-month-event ${state}`}
+                              data-planner-color={c.plannerColor ?? undefined}
+                              role={plannerColorLabel ? "group" : undefined}
+                              aria-label={plannerColorLabel
+                                ? `${c.name}, ${plannerColorLabel} calendar color`
+                                : undefined}
                             >
                               <button
                                 className="rota-month-eventmain"
@@ -643,12 +655,21 @@ export function GymRota({
                   <div className="dayrows">
                     {day.items.map((c) => {
                       const key = occurrenceKey(c.id, day.iso);
+                      const plannerColorLabel = studioPlannerColorLabel(c.plannerColor);
                       const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
                       const selectedCoachName = coachNameById.get(selectedCoachId)
                         ?? (selectedCoachId === c.onUserId ? c.onName : "");
                       const isCover = selectedCoachId !== (c.coachUserId ?? "");
                       return (
-                        <div className="clrow rota-inline-row" key={key}>
+                        <div
+                          className="clrow rota-inline-row"
+                          data-planner-color={c.plannerColor ?? undefined}
+                          role={plannerColorLabel ? "group" : undefined}
+                          aria-label={plannerColorLabel
+                            ? `${c.name}, ${plannerColorLabel} calendar color`
+                            : undefined}
+                          key={key}
+                        >
                           <ClassLine
                             row={{
                               key,

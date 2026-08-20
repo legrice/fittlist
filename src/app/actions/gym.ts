@@ -23,6 +23,10 @@ import { createPlaceholderCoach } from "@/lib/roster";
 import { sendInviteLink } from "@/lib/invite-link";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
+import {
+  isStudioPlannerColor,
+  type StudioPlannerColor,
+} from "@/lib/studio-planner";
 
 // A gym's own schedule: the rota, replacing the spreadsheet.
 //
@@ -54,6 +58,8 @@ export type GymClassDto = {
   description: string | null;
   image: string | null;
   links: { label: string; url: string }[];
+  /** Private color label used only on the studio manager's planner. */
+  plannerColor: StudioPlannerColor | null;
   /** Who normally teaches it, week in week out. */
   coachUserId: string | null;
   coachName: string;
@@ -370,6 +376,7 @@ async function gymDays(
           description: r.description,
           image: r.image,
           links: r.links,
+          plannerColor: isStudioPlannerColor(r.studioPlannerColor) ? r.studioPlannerColor : null,
           coachUserId: r.coachUserId,
           coachName: (r.coachUserId && nameOf.get(r.coachUserId)) || "",
           onUserId,
@@ -447,8 +454,9 @@ export async function gymMonth(
 /**
  * The same shape the coach's adder sends, because it is the same adder. A gym
  * fills in a class the way a coach does: name, type, description, the days it
- * runs, when it starts and how long, where a member books it. The one field
- * that is only a gym's is `coachUserId`, which is the rota.
+ * runs, when it starts and how long, where a member books it. The two fields
+ * that are only a gym's are `coachUserId`, which is the rota, and the private
+ * planner color used to scan this management calendar.
  */
 export type GymClassInput = {
   name: string;
@@ -472,6 +480,8 @@ export type GymClassInput = {
   /** Where a member books it. A gym usually has one, on every class. */
   links?: { label: string; url: string }[];
   coachUserId?: string | null;
+  /** Private palette token for this recurring slot in the manager planner. */
+  plannerColor?: StudioPlannerColor | null;
   /** False keeps a new or edited slot in the manager's draft schedule. */
   isPublic?: boolean;
 };
@@ -639,6 +649,12 @@ function validate(input: GymClassInput): string | null {
     return "That length doesn't look right.";
   if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn)) return "That end date doesn't look right.";
   if (endsOn && endsOn < todayIso()) return "That end date has already passed.";
+  if (
+    input.plannerColor !== undefined &&
+    input.plannerColor !== null &&
+    !isStudioPlannerColor(input.plannerColor)
+  )
+    return "Choose one of the calendar colors.";
   return null;
 }
 
@@ -731,6 +747,7 @@ export async function addGymClass(
         description: input.description?.trim() || null,
         image: input.image?.trim() || null,
         links: cleanLinks(input.links),
+        studioPlannerColor: input.plannerColor ?? null,
         isPublic: input.isPublic !== false,
       });
     }
@@ -860,6 +877,23 @@ export async function updateGymClass(
     })
     .where(eq(schema.classes.id, classId))
     .returning();
+  // Everything else in this edit is about the one slot that was opened. The
+  // planner color is the one series-level label: Monday and Wednesday at the
+  // same time should remain recognizable as the same recurring class.
+  if (
+    input.plannerColor !== undefined &&
+    existing.studioPlannerColor !== input.plannerColor
+  )
+    await db
+      .update(schema.classes)
+      .set({ studioPlannerColor: input.plannerColor })
+      .where(
+        and(
+          eq(schema.classes.userId, gymId),
+          eq(schema.classes.studioId, studioId),
+          eq(schema.classes.seriesId, existing.seriesId),
+        ),
+      );
   await catalogue(db, studioId, ctx.userId, input);
 
   // A cover is an exception to a date this class runs. Move the slot to another
@@ -969,6 +1003,8 @@ export async function copyGymDay(
       userId: gymId,
       coachUserId: r.coachUserId,
       studioId,
+      // A copied day is an independent recurring slot, but it starts with the
+      // source's planner label so the new day is organized immediately.
       seriesId: randomUUID(),
       dayOfWeek: targetDayOfWeek,
       specificDate: null,
@@ -980,6 +1016,7 @@ export async function copyGymDay(
       description: r.description,
       image: r.image,
       links: r.links,
+      studioPlannerColor: r.studioPlannerColor,
       isPublic: r.isPublic,
     }));
   if (!copies.length)

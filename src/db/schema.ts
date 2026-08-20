@@ -590,6 +590,10 @@ export const classes = pgTable(
     // deleting: a coach teaching Stretch+ at two studios has two series and one
     // template, and grouping by the template collapsed them into one class.
     seriesId: uuid("series_id").notNull().defaultRandom(),
+    // A private label for the studio's operating calendar. It is deliberately
+    // a palette token rather than a CSS value, and manager DTOs are the only
+    // outward shape that carries it. null keeps the usual white card.
+    studioPlannerColor: text("studio_planner_color"),
     // Who is teaching it, when the owner is a gym rather than a person. The
     // class belongs to the gym (userId); this is the rota. It drives the
     // shift, the notification and the calendar, and whether the name is ever

@@ -88,6 +88,13 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-attending-text: #211731;
   --color-personal: #FFD8C2;
   --color-personal-text: #582713;
+  /* Optional private accents for the studio management planner. Cards remain
+     white; these colors only mark their top edge and the editor swatches. */
+  --color-planner-sky: #A9D8FF;
+  --color-planner-lavender: #DCC8FF;
+  --color-planner-peach: #FFD8C2;
+  --color-planner-rose: #FFC4D8;
+  --color-planner-amber: #FFD978;
   --radius-control: 18px;
   --radius-card: 20px;
   --radius-pill: 999px;
@@ -6873,6 +6880,18 @@ select.editinput.placekind-select {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
 .gym-manage-pad { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+.gym-manage-pad [data-planner-color="lime"],
+.studio-planner-color[data-planner-color="lime"] { --studio-planner-color: var(--color-lime); }
+.gym-manage-pad [data-planner-color="sky"],
+.studio-planner-color[data-planner-color="sky"] { --studio-planner-color: var(--color-planner-sky); }
+.gym-manage-pad [data-planner-color="lavender"],
+.studio-planner-color[data-planner-color="lavender"] { --studio-planner-color: var(--color-planner-lavender); }
+.gym-manage-pad [data-planner-color="peach"],
+.studio-planner-color[data-planner-color="peach"] { --studio-planner-color: var(--color-planner-peach); }
+.gym-manage-pad [data-planner-color="rose"],
+.studio-planner-color[data-planner-color="rose"] { --studio-planner-color: var(--color-planner-rose); }
+.gym-manage-pad [data-planner-color="amber"],
+.studio-planner-color[data-planner-color="amber"] { --studio-planner-color: var(--color-planner-amber); }
 .rota-month-view { margin-top: 22px; }
 .rota-month-toolbar { display: flex; align-items: stretch; gap: 12px; margin-bottom: 16px; }
 .rota-month-nav {
@@ -6951,6 +6970,7 @@ select.editinput.placekind-select {
 .rota-month-event.needs::before { background: var(--color-border-strong); }
 .rota-month-event.cover::before { background: var(--color-coaching); }
 .rota-month-event.draft::before { background: var(--color-personal); }
+.rota-month-event[data-planner-color] { border-top: 4px solid var(--studio-planner-color); }
 .rota-month-eventmain {
   width: 100%; min-width: 0; padding: 7px 8px 3px 10px;
   display: flex; flex-direction: column; gap: 2px;
@@ -6981,6 +7001,9 @@ select.editinput.placekind-select {
 .rota-coach-picker .icon { flex: 0 0 auto; }
 .rota-coach-picker:disabled { opacity: .55; cursor: wait; }
 .rota-inline-row .clline { padding-bottom: 72px; }
+.rota-inline-row[data-planner-color] .clline {
+  border-top: 4px solid var(--studio-planner-color);
+}
 .rota-inline-coachpick {
   position: absolute; z-index: 2; left: 20px; bottom: 20px;
   width: min(280px, calc(100% - 40px));
@@ -7018,6 +7041,30 @@ select.editinput.placekind-select {
 }
 .rota-coach-options > button.on .rota-coach-radio { background: var(--color-black); color: var(--color-white); }
 .rota-coach-note { margin-top: 12px; color: var(--color-text-secondary); font-size: 12px; line-height: 1.4; }
+
+/* A closed palette, not a free-form color input: it stays readable, survives
+   a redesign, and cannot smuggle arbitrary CSS into the planner. */
+.studio-planner-label { margin-top: 18px; }
+.studio-planner-colors {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+  padding: 4px 3px;
+}
+.studio-planner-color {
+  position: relative; width: 44px; height: 44px; min-width: 44px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--color-border-strong); border-radius: 50%;
+  background: var(--studio-planner-color, var(--color-white)); color: var(--color-black);
+  cursor: pointer;
+}
+.studio-planner-color.none::before {
+  content: ""; width: 24px; height: 2px; border-radius: 2px;
+  background: var(--color-text-muted); transform: rotate(-45deg);
+}
+.studio-planner-color.none.on::before { display: none; }
+.studio-planner-color.on {
+  box-shadow: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-black);
+}
+.studio-planner-color .icon { position: absolute; z-index: 1; }
 
 /* A single, persistent way to add from either calendar view. The desktop
    label helps a manager scanning a large workspace; the mobile circle keeps

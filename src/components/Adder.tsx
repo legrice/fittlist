@@ -29,6 +29,10 @@ import {
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
 import { readPhoto } from "@/lib/photo";
+import {
+  STUDIO_PLANNER_COLORS,
+  type StudioPlannerColor,
+} from "@/lib/studio-planner";
 
 export type AdderPrefill = {
   name: string;
@@ -49,6 +53,8 @@ export type AdderPrefill = {
   occurrenceDate?: string | null; // the dated row actually tapped, for "just this one"
   specificDate?: string | null; // set = editing a one-off pinned to this date
   classId?: string; // set = edit this class in place
+  /** Studio-manager planner only; never shown on public/member calendars. */
+  plannerColor?: StudioPlannerColor | null;
 };
 
 const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -250,6 +256,32 @@ export function Adder({
   const [rsvp, setRsvp] = useState<boolean>(prefill?.rsvp ?? false);
   // The rota, on a gym's class. Null on a coach's own.
   const [coachUserId, setCoachUserId] = useState(gym?.coachUserId ?? "");
+  const [plannerColor, setPlannerColor] = useState<StudioPlannerColor | null>(
+    prefill?.plannerColor ?? null,
+  );
+  const plannerColorOptions: (StudioPlannerColor | null)[] = [
+    null,
+    ...STUDIO_PLANNER_COLORS.map((color) => color.value),
+  ];
+  const movePlannerColor = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    current: StudioPlannerColor | null,
+  ) => {
+    const currentIndex = plannerColorOptions.indexOf(current);
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown")
+      nextIndex = (currentIndex + 1) % plannerColorOptions.length;
+    if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+      nextIndex = (currentIndex - 1 + plannerColorOptions.length) % plannerColorOptions.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = plannerColorOptions.length - 1;
+    if (nextIndex === null) return;
+    event.preventDefault();
+    setPlannerColor(plannerColorOptions[nextIndex]);
+    const buttons = event.currentTarget.parentElement
+      ?.querySelectorAll<HTMLButtonElement>('button[role="radio"]');
+    requestAnimationFrame(() => buttons?.[nextIndex!]?.focus());
+  };
   const [location, setLocation] = useState(prefill?.location ?? "");
   // Who teaches it, as free text. Not a users reference: naming your coach is
   // not putting them on the platform, and every name here is an invite lead.
@@ -547,8 +579,13 @@ export function Adder({
           ? await updateGymClass(gym.studioId, prefill!.classId!, {
               ...input,
               coachUserId: coachUserId || null,
+              plannerColor,
             })
-          : await addGymClass(gym.studioId, { ...input, coachUserId: coachUserId || null })
+          : await addGymClass(gym.studioId, {
+              ...input,
+              coachUserId: coachUserId || null,
+              plannerColor,
+            })
         : isEdit
           ? await updateClass(prefill!.classId!, input)
           : await publishClasses(input);
@@ -916,6 +953,46 @@ export function Adder({
                 <p className="durnote" style={{ marginTop: 8 }}>
                   They&rsquo;ll be told, and it lands in their calendar. Your schedule goes out
                   under the gym&rsquo;s name, so this stays between you and them.
+                </p>
+                <label className="flabel studio-planner-label">Calendar color</label>
+                <div
+                  className="studio-planner-colors"
+                  role="radiogroup"
+                  aria-label="Calendar color"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={!plannerColor}
+                    aria-label="No calendar color"
+                    title="No color"
+                    tabIndex={!plannerColor ? 0 : -1}
+                    className={`studio-planner-color none${plannerColor ? "" : " on"}`}
+                    onClick={() => setPlannerColor(null)}
+                    onKeyDown={(event) => movePlannerColor(event, null)}
+                  >
+                    {!plannerColor && <Icon name="check" size={17} />}
+                  </button>
+                  {STUDIO_PLANNER_COLORS.map((color) => (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={plannerColor === color.value}
+                      aria-label={`${color.label} calendar color`}
+                      title={color.label}
+                      tabIndex={plannerColor === color.value ? 0 : -1}
+                      className={`studio-planner-color${plannerColor === color.value ? " on" : ""}`}
+                      data-planner-color={color.value}
+                      key={color.value}
+                      onClick={() => setPlannerColor(color.value)}
+                      onKeyDown={(event) => movePlannerColor(event, color.value)}
+                    >
+                      {plannerColor === color.value && <Icon name="check" size={17} />}
+                    </button>
+                  ))}
+                </div>
+                <p className="durnote" style={{ marginTop: 8 }}>
+                  Only appears in this studio management calendar.
                 </p>
                 <label className="flabel" style={{ marginTop: 18 }}>Visibility</label>
                 <div className="modetoggle" role="group" aria-label="Class visibility">

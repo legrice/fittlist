@@ -1,0 +1,1 @@
+ALTER TABLE "classes" ADD COLUMN "studio_planner_color" text;
