@@ -2303,8 +2303,31 @@ export type StaffPerson = {
    *  and removing it warns rather than just doing it. */
   isYou: boolean;
 };
+
+/** Focused loader for the Admin access view in Studio settings. It avoids
+ * loading the coach roster just to show the small list of page managers. */
+export async function studioManagersForSettings(studioId: string): Promise<StaffPerson[]> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return [];
+  const rows = await ctx.db
+    .select({
+      id: schema.users.id,
+      name: schema.users.name,
+      email: schema.users.email,
+    })
+    .from(schema.studioManagers)
+    .innerJoin(schema.users, eq(schema.users.id, schema.studioManagers.userId))
+    .where(eq(schema.studioManagers.studioId, studioId));
+  return rows
+    .map((person) => ({
+      id: person.id,
+      name: person.name.trim() || person.email.split("@")[0],
+      email: person.email,
+      isYou: person.id === ctx.userId,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
 export type StudioStaffDto = {
-  managers: StaffPerson[];
   /** Everyone the studio has placed on its roster, including people invited
    * before they have an account. */
   roster: {
@@ -2319,58 +2342,35 @@ export type StudioStaffDto = {
   hasSchedule: boolean;
 };
 
-/** The invited roster and separate admin access list for the Staff page. */
+/** The invited coach roster for the Staff page. Admins live in Studio settings. */
 export async function studioStaff(studioId: string): Promise<StudioStaffDto | null> {
   const ctx = await managing(studioId);
   if ("error" in ctx) return null;
-  const { db, userId, studio } = ctx;
-  const [rows, rosterRows] = await Promise.all([
-    db
-      .select({ userId: schema.studioManagers.userId })
-      .from(schema.studioManagers)
-      .where(eq(schema.studioManagers.studioId, studioId)),
-    db
-      .select({
-        userId: schema.studioRotaCoaches.userId,
-        state: schema.studioRotaCoaches.state,
-        invitedEmail: schema.studioRotaCoaches.invitedEmail,
-        onSchedule: schema.studioRotaCoaches.onSchedule,
-      })
-      .from(schema.studioRotaCoaches)
-      .where(eq(schema.studioRotaCoaches.studioId, studioId)),
-  ]);
-  const ids = rows.map((row) => row.userId);
+  const { db, studio } = ctx;
+  const rosterRows = await db
+    .select({
+      userId: schema.studioRotaCoaches.userId,
+      state: schema.studioRotaCoaches.state,
+      invitedEmail: schema.studioRotaCoaches.invitedEmail,
+      onSchedule: schema.studioRotaCoaches.onSchedule,
+    })
+    .from(schema.studioRotaCoaches)
+    .where(eq(schema.studioRotaCoaches.studioId, studioId));
   const rosterIds = rosterRows.map((row) => row.userId);
-  const [people, rosterPeople] = await Promise.all([
-    ids.length
-      ? db
-          .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email })
-          .from(schema.users)
-          .where(inArray(schema.users.id, ids))
-      : [],
-    rosterIds.length
-      ? db
-          .select({
-            id: schema.users.id,
-            name: schema.users.name,
-            email: schema.users.email,
-            kind: schema.users.kind,
-            photoThumb: schema.users.photoThumb,
-            photo: schema.users.photo,
-            color: schema.users.avatarColor,
-          })
-          .from(schema.users)
-          .where(inArray(schema.users.id, rosterIds))
-      : [],
-  ]);
-  const managers = people
-    .map((p) => ({
-      id: p.id,
-      name: p.name.trim() || p.email.split("@")[0],
-      email: p.email,
-      isYou: p.id === userId,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const rosterPeople = rosterIds.length
+    ? await db
+        .select({
+          id: schema.users.id,
+          name: schema.users.name,
+          email: schema.users.email,
+          kind: schema.users.kind,
+          photoThumb: schema.users.photoThumb,
+          photo: schema.users.photo,
+          color: schema.users.avatarColor,
+        })
+        .from(schema.users)
+        .where(inArray(schema.users.id, rosterIds))
+    : [];
   const personById = new Map(rosterPeople.map((person) => [person.id, person]));
   const roster = rosterRows
     .map((row) => {
@@ -2386,7 +2386,7 @@ export async function studioStaff(studioId: string): Promise<StudioStaffDto | nu
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
-  return { managers, roster, hasSchedule: !!studio.accountUserId };
+  return { roster, hasSchedule: !!studio.accountUserId };
 }
 
 export type StudioCoachDetailDto = {
@@ -2559,6 +2559,7 @@ export async function addStudioManager(
     href: `/s/${studio.slug ?? studio.id}`,
   });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
   return { ok: true };
 }
@@ -2595,6 +2596,7 @@ export async function removeStudioManager(
       and(eq(schema.studioManagers.studioId, studioId), eq(schema.studioManagers.userId, targetId)),
     );
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
   return { ok: true };
 }

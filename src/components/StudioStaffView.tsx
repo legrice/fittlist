@@ -4,9 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   addExistingStudioCoach,
-  addStudioManager,
   inviteStudioCoach,
-  removeStudioManager,
   searchStudioCoachCandidates,
 } from "@/app/actions/gym";
 import type { StudioCoachSearchResult, StudioStaffDto } from "@/app/actions/gym";
@@ -29,14 +27,12 @@ export function StudioStaffView({
   studioId,
   studioName,
   studioSlug,
-  backHref,
   staff,
   admin,
 }: {
   studioId: string;
   studioName: string;
   studioSlug: string;
-  backHref: string;
   staff: StudioStaffDto;
   admin: {
     studio: StudioEditProps;
@@ -44,10 +40,7 @@ export function StudioStaffView({
     approvalOn?: boolean;
   };
 }) {
-  const [managers, setManagers] = useState(staff.managers);
   const coaches = staff.roster;
-  const [email, setEmail] = useState("");
-  const [adding, setAdding] = useState(false);
   const [coachName, setCoachName] = useState("");
   const [coachEmail, setCoachEmail] = useState("");
   const [invitingCoach, setInvitingCoach] = useState(false);
@@ -58,45 +51,8 @@ export function StudioStaffView({
   const [coachSearching, setCoachSearching] = useState(false);
   const [addingCoachId, setAddingCoachId] = useState<string | null>(null);
   const searchRequest = useRef(0);
-  const [confirm, setConfirm] = useState<{ id: string; name: string; isYou: boolean } | null>(null);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-
-  const add = async () => {
-    if (adding || !email.trim()) return;
-    setAdding(true);
-    const res = await addStudioManager(studioId, email);
-    setAdding(false);
-    if (!res.ok) {
-      toast(res.error ?? "Couldn't add them");
-      return;
-    }
-    setEmail("");
-    // The row needs a name and the action knows it; rather than return one and
-    // have two sources for the same list, ask the server for the page again.
-    toast("They run this page now");
-    start(() => {
-      window.location.reload();
-    });
-  };
-
-  const remove = (id: string) => {
-    start(async () => {
-      const res = await removeStudioManager(studioId, id);
-      if (!res.ok) {
-        toast(res.error ?? "Couldn't do that");
-        return;
-      }
-      // Removing yourself takes the page away with it, so leave rather than
-      // sit on a screen that is no longer yours.
-      if (managers.find((m) => m.id === id)?.isYou) {
-        window.location.href = backHref;
-        return;
-      }
-      setManagers((prev) => prev.filter((m) => m.id !== id));
-      toast("They no longer run this page");
-    });
-  };
 
   const addCoach = async () => {
     if (invitingCoach || !coachName.trim() || !coachEmail.trim()) return;
@@ -218,45 +174,6 @@ export function StudioStaffView({
         Add a coach
       </button>
 
-          <h3 className="setgroup-h">Admin access</h3>
-          <p className="staffnote">
-            Admins can edit studio details, manage the calendar, and invite other people.
-          </p>
-          <div className="settingslist">
-            {managers.map((m) => (
-              <div key={m.id} className="setrow staffrow">
-                <span className="setrow-txt">
-                  <span className="t">
-                    {m.name}
-                    {m.isYou && <span className="staffyou">You</span>}
-                  </span>
-                  <span className="s">{m.email}</span>
-                </span>
-                <button
-                  className="tertiary staffx"
-                  onClick={() => setConfirm({ id: m.id, name: m.name, isYou: m.isYou })}
-                >
-                  {m.isYou ? "Leave" : "Remove"}
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="staffadd">
-            <input
-              id="staffEmail"
-              type="email"
-              value={email}
-              placeholder="their@email.com"
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") add();
-              }}
-            />
-            <button className="btn si staffaddbtn" disabled={adding || !email.trim()} onClick={add}>
-              Add admin
-            </button>
-          </div>
-
       {coachSheetOpen && (
         <div className="sheet-scrim" onClick={(event) => {
           if (event.target === event.currentTarget) setCoachSheetOpen(false);
@@ -365,41 +282,6 @@ export function StudioStaffView({
         </div>
       )}
 
-      {/* Handing the keys back is not a thing to do by mistyping a tap, so it
-          asks first, the same shape removing a plan asks with. */}
-      {confirm && (
-        <div className="sheet-scrim" onClick={(e) => {
-          if (e.target === e.currentTarget) setConfirm(null);
-        }}>
-          <div className="sheet confirmsheet">
-            <h2>{confirm.isYou ? "Leave this page?" : `Remove ${confirm.name}?`}</h2>
-            <p className="lead">
-              {confirm.isYou
-                ? "You will not be able to edit the studio or its shifts, and you would need one of the others to add you back."
-                : "They will not be able to edit the studio or its shifts. Nothing tells them."}
-            </p>
-            <div className="publishwrap nostick">
-              <button
-                className="btn si"
-                onClick={() => {
-                  const id = confirm.id;
-                  setConfirm(null);
-                  remove(id);
-                }}
-              >
-                {confirm.isYou ? "Leave" : `Remove ${confirm.name}`}
-              </button>
-              <button
-                className="btn ghost"
-                style={{ marginTop: 8 }}
-                onClick={() => setConfirm(null)}
-              >
-                {confirm.isYou ? "Stay" : "Keep them"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <Toast msg={toastMsg} on={toastOn} />
     </div>
   );

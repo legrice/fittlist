@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setStudioShiftApproval, studioPageViews } from "@/app/actions/gym";
+import {
+  addStudioManager,
+  removeStudioManager,
+  setStudioShiftApproval,
+  studioManagersForSettings,
+  studioPageViews,
+  type StaffPerson,
+} from "@/app/actions/gym";
 import { setStudioShowCoaches } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
@@ -43,7 +50,13 @@ export function StudioAdminSheet({
   const [names, setNames] = useState(showCoaches);
   const [approvals, setApprovals] = useState(approvalOn);
   const [views, setViews] = useState<number | null | undefined>(pageViews);
+  const [adminsOpen, setAdminsOpen] = useState(false);
+  const [admins, setAdmins] = useState<StaffPerson[] | null>(null);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [adminConfirm, setAdminConfirm] = useState<StaffPerson | null>(null);
   const [viewsPending, startViews] = useTransition();
+  const [adminsPending, startAdmins] = useTransition();
   const [, startNames] = useTransition();
   const [, startApprovals] = useTransition();
   const router = useRouter();
@@ -90,8 +103,14 @@ export function StudioAdminSheet({
     });
   };
 
-  const share = async () => {
+  const closeAdminSheet = () => {
     setOpen(false);
+    setAdminsOpen(false);
+    setAdminConfirm(null);
+  };
+
+  const share = async () => {
+    closeAdminSheet();
     const url = `${window.location.origin}/s/${slug}`;
     try {
       if (typeof navigator.share === "function") {
@@ -103,6 +122,42 @@ export function StudioAdminSheet({
     } catch {
       // a dismissed share sheet is not an error
     }
+  };
+
+  const openAdmins = () => {
+    setAdminsOpen(true);
+    if (admins !== null || adminsPending) return;
+    startAdmins(async () => setAdmins(await studioManagersForSettings(studio.id)));
+  };
+
+  const addAdmin = async () => {
+    if (addingAdmin || !adminEmail.trim()) return;
+    setAddingAdmin(true);
+    const result = await addStudioManager(studio.id, adminEmail);
+    setAddingAdmin(false);
+    if (!result.ok) {
+      toast(result.error ?? "Couldn't add them");
+      return;
+    }
+    setAdminEmail("");
+    setAdmins(await studioManagersForSettings(studio.id));
+    toast("Admin added");
+  };
+
+  const removeAdmin = async (person: StaffPerson) => {
+    const result = await removeStudioManager(studio.id, person.id);
+    setAdminConfirm(null);
+    if (!result.ok) {
+      toast(result.error ?? "Couldn't remove them");
+      return;
+    }
+    if (person.isYou) {
+      closeAdminSheet();
+      window.location.href = "/you";
+      return;
+    }
+    setAdmins((current) => current?.filter((admin) => admin.id !== person.id) ?? null);
+    toast("Admin removed");
   };
 
   return (
@@ -119,13 +174,75 @@ export function StudioAdminSheet({
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
+            if (e.target === e.currentTarget) closeAdminSheet();
           }}
         >
           <div className="sheet studio-admin-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={closeAdminSheet}>
               <Icon name="close" size={18} />
             </button>
+            {adminConfirm ? (
+              <div className="studio-admin-confirm">
+                <h2>{adminConfirm.isYou ? "Leave this studio?" : `Remove ${adminConfirm.name}?`}</h2>
+                <p className="lead">
+                  {adminConfirm.isYou
+                    ? "You will no longer be able to manage this studio. Another admin would need to add you back."
+                    : "They will no longer be able to edit the studio, manage its calendar, or invite people."}
+                </p>
+                <div className="publishwrap nostick">
+                  <button className="btn si" onClick={() => removeAdmin(adminConfirm)}>
+                    {adminConfirm.isYou ? "Leave studio" : `Remove ${adminConfirm.name}`}
+                  </button>
+                  <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setAdminConfirm(null)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : adminsOpen ? (
+              <div className="studio-admin-access">
+                <button className="studio-admin-view-back" onClick={() => setAdminsOpen(false)}>
+                  <Icon name="arrow_back" size={20} />
+                  Studio settings
+                </button>
+                <h2>Admin access</h2>
+                <p className="lead">Admins can edit studio details, manage the calendar, and invite people.</p>
+                {admins === null ? (
+                  <p className="adminempty">Loading admins…</p>
+                ) : (
+                  <div className="settingslist studio-admin-list">
+                    {admins.map((admin) => (
+                      <div className="setrow staffrow" key={admin.id}>
+                        <span className="setrow-txt">
+                          <span className="t">
+                            {admin.name}
+                            {admin.isYou && <span className="staffyou">You</span>}
+                          </span>
+                          <span className="s">{admin.email}</span>
+                        </span>
+                        <button className="tertiary staffx" onClick={() => setAdminConfirm(admin)}>
+                          {admin.isYou ? "Leave" : "Remove"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="staffadd studio-admin-add">
+                  <input
+                    type="email"
+                    value={adminEmail}
+                    placeholder="their@email.com"
+                    onChange={(event) => setAdminEmail(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") addAdmin();
+                    }}
+                  />
+                  <button className="btn si staffaddbtn" disabled={addingAdmin || !adminEmail.trim()} onClick={addAdmin}>
+                    {addingAdmin ? "Adding…" : "Add admin"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
             <h2>Studio admin</h2>
             {/* The number a studio actually asks about first: is anyone
                 looking. A stat is a row you read, not a door, so no chevron. */}
@@ -178,6 +295,14 @@ export function StudioAdminSheet({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
+              <button className="setrow" onClick={openAdmins}>
+                <span className="setrow-ic"><Icon name="admin_panel_settings" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Admin access</span>
+                  <span className="s">Choose who can manage this studio</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </button>
               {/* Whether the public week is a roster: some gyms publish a
                   schedule without naming anybody, and that is theirs to
                   decide. Only meaningful once the gym runs its schedule. */}
@@ -214,6 +339,8 @@ export function StudioAdminSheet({
                 </button>
               )}
             </div>
+              </>
+            )}
           </div>
         </div>
       )}

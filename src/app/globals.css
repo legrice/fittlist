@@ -4641,6 +4641,13 @@ select.editinput.placekind-select {
 .studio-admin-sheet .setrow-txt .s {
   white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35;
 }
+.studio-admin-view-back {
+  min-height: 40px; margin: -4px 0 10px; padding: 0; display: inline-flex; align-items: center; gap: 7px;
+  border: 0; background: transparent; color: var(--color-black); font: inherit; font-size: 14px; font-weight: 700;
+}
+.studio-admin-access .lead { margin-bottom: 6px; }
+.studio-admin-list { margin-top: 10px; }
+.studio-admin-add { margin-bottom: 0; }
 /* Gym types: a wrapped set of chips, several of which are usually true. */
 /* The gym types under a studio's name. */
 .studiotypes { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 2px; }
