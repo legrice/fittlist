@@ -311,6 +311,27 @@ export const shiftCovers = pgTable(
   (t) => [uniqueIndex("shift_covers_once").on(t.classId, t.occurrenceDate)],
 );
 
+// A studio-wide closure is a reversible date on the operating calendar, not
+// the deletion of every class that happened to land there. `classIds` is the
+// exact set of occurrences that were running when the manager closed the day;
+// reopening removes only the skip written for those rows, so a class that had
+// already been cancelled on its own stays cancelled.
+export const studioClosedDays = pgTable(
+  "studio_closed_days",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    occurrenceDate: date("occurrence_date").notNull(),
+    classIds: jsonb("class_ids").$type<string[]>().notNull().default([]),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("studio_closed_days_once").on(t.studioId, t.occurrenceDate),
+    index("studio_closed_days_date").on(t.occurrenceDate),
+  ],
+);
+
 // A shift change waiting on a manager.
 //
 // The rota's own tables say what is true: `classes.coachUserId` is who

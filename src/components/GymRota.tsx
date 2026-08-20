@@ -9,6 +9,7 @@ import {
   copyGymDay,
   enableStudioSchedule,
   gymMonth,
+  openGymDay,
   publishGymDrafts,
   setShiftCover,
   type GymCatalogItem,
@@ -448,7 +449,21 @@ export function GymRota({
         return;
       }
       setClosingDay(null);
-      toast(res.count ? `${res.count} ${res.count === 1 ? "class" : "classes"} cancelled` : "Nothing was scheduled");
+      toast(`${day.label} is closed`);
+      refreshView();
+    });
+  };
+
+  const openDay = (day: { iso: string; label: string }) => {
+    if (pending) return;
+    start(async () => {
+      const res = await openGymDay(studioId, day.iso);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't open that day");
+        return;
+      }
+      setMonthMenu(null);
+      toast(`${day.label} is open`);
       refreshView();
     });
   };
@@ -596,11 +611,11 @@ export function GymRota({
     if (next === "month" && !month) void loadMonth();
   };
   const todayIso = new Date().toISOString().slice(0, 10);
-  const monthAddDay = month?.days.find((day) => day.iso === todayIso)
-    ?? month?.days.find((day) => day.iso.startsWith(month.month));
-  const weekAddDay = days.find((day) => day.iso === todayIso)
-    ?? days.find((day) => day.iso > todayIso)
-    ?? days[0];
+  const monthAddDay = month?.days.find((day) => day.iso === todayIso && !day.closed)
+    ?? month?.days.find((day) => day.iso.startsWith(month.month) && !day.closed);
+  const weekAddDay = days.find((day) => day.iso === todayIso && !day.closed)
+    ?? days.find((day) => day.iso > todayIso && !day.closed)
+    ?? days.find((day) => !day.closed);
   const coachPickId = coachPick
     ? coachOverrides[occurrenceKey(coachPick.cls.id, coachPick.iso)] ?? coachPick.cls.onUserId ?? ""
     : "";
@@ -737,19 +752,24 @@ export function GymRota({
                   return (
                     <section
                       key={day.iso}
-                      className={`rota-month-day${outside ? " outside" : ""}`}
+                      className={`rota-month-day${outside ? " outside" : ""}${day.closed ? " closed" : ""}`}
                     >
                       <div className="rota-month-dayhead">
-                        <span>{Number(day.iso.slice(8, 10))}</span>
+                        <span>
+                          {Number(day.iso.slice(8, 10))}
+                          {day.closed && <b className="rota-day-closed-label">Closed</b>}
+                        </span>
                         {!outside && (
                           <div className="rota-month-daytools">
-                            <button
-                              className="rota-month-dayadd"
-                              aria-label={`Add a class on ${day.label}`}
-                              onClick={() => show(day.iso, day.dayOfWeek, null, true)}
-                            >
-                              <Icon name="add" size={16} />
-                            </button>
+                            {!day.closed && (
+                              <button
+                                className="rota-month-dayadd"
+                                aria-label={`Add a class on ${day.label}`}
+                                onClick={() => show(day.iso, day.dayOfWeek, null, true)}
+                              >
+                                <Icon name="add" size={16} />
+                              </button>
+                            )}
                             <button
                               className="rota-month-more"
                               aria-label={`More options for ${day.label}`}
@@ -759,12 +779,16 @@ export function GymRota({
                             </button>
                             {monthMenu === day.iso && (
                               <div className="rota-month-menu">
-                                <button onClick={() => {
-                                  setClosingDay({ iso: day.iso, label: day.label });
-                                  setMonthMenu(null);
-                                }}>
-                                  Close day
-                                </button>
+                                {day.closed ? (
+                                  <button onClick={() => openDay(day)}>Open day</button>
+                                ) : (
+                                  <button onClick={() => {
+                                    setClosingDay({ iso: day.iso, label: day.label });
+                                    setMonthMenu(null);
+                                  }}>
+                                    Close day
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -795,6 +819,7 @@ export function GymRota({
                             >
                               <button
                                 className="rota-month-eventmain"
+                                disabled={day.closed}
                                 onClick={() => show(day.iso, day.dayOfWeek, c)}
                                 title={`Edit ${clockParts(c.startTime).hm} ${clockParts(c.startTime).ap} ${c.name}`}
                               >
@@ -807,7 +832,7 @@ export function GymRota({
                               <InlineCoachSelect
                                 className="rota-month-coachpick"
                                 value={selectedCoachId}
-                                disabled={!!coachSaving[key]}
+                                disabled={day.closed || !!coachSaving[key]}
                                 label={`Coach for ${c.name} on ${day.label}`}
                                 coaches={coaches}
                                 onChange={(who) => assignCoach(c, day.iso, who)}
@@ -850,18 +875,31 @@ export function GymRota({
 
           <div className="calendar-cardlist rota-calendar">
             {filteredWeekDays.map((day) => (
-              <section key={day.iso} className="rotaday dayblock">
+              <section key={day.iso} className={`rotaday dayblock${day.closed ? " closed" : ""}`}>
                 <div className="rotaday-h dayband">
-                  <span className="dayband-d">{day.label}</span>
+                  <span className="dayband-d">
+                    {day.label}
+                    {day.closed && <b className="rota-day-closed-label">Closed</b>}
+                  </span>
                   <span className="rotaday-actions">
-                    <button className="rotaadd" onClick={() => show(day.iso, day.dayOfWeek, null)}>
-                      <Icon name="add" size={18} /> Add
-                    </button>
-                    <button className="rotaadd" onClick={() => setCopyingDay({ day: day.dayOfWeek, label: day.label })}>
-                      Copy day
-                    </button>
-                    <button className="rotaadd" onClick={() => setClosingDay({ iso: day.iso, label: day.label })}>
-                      Close day
+                    {!day.closed && (
+                      <>
+                        <button className="rotaadd" onClick={() => show(day.iso, day.dayOfWeek, null)}>
+                          <Icon name="add" size={18} /> Add
+                        </button>
+                        <button className="rotaadd" onClick={() => setCopyingDay({ day: day.dayOfWeek, label: day.label })}>
+                          Copy day
+                        </button>
+                      </>
+                    )}
+                    <button
+                      className="rotaadd"
+                      disabled={pending}
+                      onClick={() => day.closed
+                        ? openDay(day)
+                        : setClosingDay({ iso: day.iso, label: day.label })}
+                    >
+                      {day.closed ? "Open day" : "Close day"}
                     </button>
                   </span>
                 </div>
@@ -906,14 +944,14 @@ export function GymRota({
                                 : selectedCoachId && isCover
                                   ? "coaching"
                                   : undefined,
-                              onTap: () => show(day.iso, day.dayOfWeek, c),
+                              onTap: day.closed ? undefined : () => show(day.iso, day.dayOfWeek, c),
                             }}
                           />
                           {desktop ? (
                             <InlineCoachSelect
                               className="rota-inline-coachpick"
                               value={selectedCoachId}
-                              disabled={!!coachSaving[key]}
+                              disabled={day.closed || !!coachSaving[key]}
                               label={`Coach for ${c.name} on ${day.label}`}
                               coaches={coaches}
                               onChange={(who) => assignCoach(c, day.iso, who)}
@@ -922,7 +960,7 @@ export function GymRota({
                             <CoachPickerButton
                               className="rota-inline-coachpick"
                               name={selectedCoachName}
-                              disabled={!!coachSaving[key]}
+                              disabled={day.closed || !!coachSaving[key]}
                               label={`Coach for ${c.name} on ${day.label}`}
                               onClick={() => setCoachPick({ cls: c, iso: day.iso, label: day.label })}
                             />
@@ -1091,7 +1129,7 @@ export function GymRota({
           <div className="sheet confirmsheet">
             <h2>Close {closingDay.label}?</h2>
             <p className="lead">
-              Every class that day will be cancelled. People who saved one and coaches who are on one will be told.
+              The classes will stay on your calendar but will be unavailable that day. People who saved one and coaches who are on one will be told.
             </p>
             <div className="publishwrap nostick">
               <button className="btn si" disabled={pending} onClick={closeDay}>

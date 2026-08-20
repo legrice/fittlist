@@ -436,10 +436,14 @@ export function runsOn(
   iso: string,
   dow: number,
 ): boolean {
+  // A one-off can be part of a studio-wide closure too. Checking exceptions
+  // first lets the rota hide that date without deleting the one-off row, so
+  // reopening the studio can restore it along with the standing classes.
+  if (c.skipDates?.includes(iso)) return false;
   if (c.specificDate) return c.specificDate === iso;
   if (c.endsOn && iso > c.endsOn) return false;
   if (c.dayOfWeek !== dow) return false;
-  return !c.skipDates?.includes(iso);
+  return true;
 }
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];

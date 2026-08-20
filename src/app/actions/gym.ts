@@ -78,6 +78,8 @@ export type GymDayDto = {
   label: string;
   /** Monday = 0, shared by the week list and desktop month grid. */
   dayOfWeek: number;
+  /** The studio is closed on this date; its classes remain intact underneath. */
+  closed: boolean;
   items: GymClassDto[];
 };
 export type GymWeekDto = {
@@ -207,6 +209,18 @@ async function gymDays(
     .from(schema.classes)
     .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)));
 
+  const closures = await db
+    .select()
+    .from(schema.studioClosedDays)
+    .where(
+      and(
+        eq(schema.studioClosedDays.studioId, studioId),
+        gte(schema.studioClosedDays.occurrenceDate, firstIso),
+        lte(schema.studioClosedDays.occurrenceDate, lastIso),
+      ),
+    );
+  const closureByDate = new Map(closures.map((item) => [item.occurrenceDate, item]));
+
   // A manager only needs exceptions inside the range on screen. Loading the
   // studio's entire cover history made the old spreadsheet slower every month
   // it stayed in use.
@@ -241,8 +255,10 @@ async function gymDays(
   for (let i = 0; i < count; i++) {
     const iso = isoOf(i);
     const dayOfWeek = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    const closure = closureByDate.get(iso);
+    const closedClassIds = new Set(closure?.classIds ?? []);
     const items = rows
-      .filter((r) => runsOn(r, iso, dayOfWeek))
+      .filter((r) => closure ? closedClassIds.has(r.id) : runsOn(r, iso, dayOfWeek))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
       .map((r) => {
         const cover = coverBy.get(`${r.id}|${iso}`);
@@ -268,7 +284,7 @@ async function gymDays(
           isPublic: r.isPublic,
         };
       });
-    days.push({ iso, label: fmtDayHeader(iso), dayOfWeek, items });
+    days.push({ iso, label: fmtDayHeader(iso), dayOfWeek, closed: !!closure, items });
   }
   return days;
 }
@@ -1032,65 +1048,55 @@ export async function closeGymDay(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
   if (occurrenceDate < todayIso()) return { ok: false, error: "That date has already passed." };
-  const { db, studio, gymId } = ctx;
+  const { db, studio, gymId, userId } = ctx;
+  const [alreadyClosed] = await db
+    .select()
+    .from(schema.studioClosedDays)
+    .where(
+      and(
+        eq(schema.studioClosedDays.studioId, studioId),
+        eq(schema.studioClosedDays.occurrenceDate, occurrenceDate),
+      ),
+    );
+  if (alreadyClosed) return { ok: true, count: alreadyClosed.classIds.length };
   const dow = dowOfDate(occurrenceDate);
   const all = await db
     .select()
     .from(schema.classes)
     .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)));
   const rows = all.filter((row) => runsOn(row, occurrenceDate, dow));
-  if (!rows.length) return { ok: true, count: 0 };
   const classIds = rows.map((row) => row.id);
-  const [marks, covers] = await Promise.all([
-    db
-      .select({ classId: schema.attendances.classId, userId: schema.attendances.userId })
-      .from(schema.attendances)
-      .where(
-        and(
-          inArray(schema.attendances.classId, classIds),
-          eq(schema.attendances.occurrenceDate, occurrenceDate),
-        ),
-      ),
-    db
-      .select()
-      .from(schema.shiftCovers)
-      .where(
-        and(
-          inArray(schema.shiftCovers.classId, classIds),
-          eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
-        ),
-      ),
-  ]);
+  const [marks, covers] = classIds.length
+    ? await Promise.all([
+        db
+          .select({ classId: schema.attendances.classId, userId: schema.attendances.userId })
+          .from(schema.attendances)
+          .where(
+            and(
+              inArray(schema.attendances.classId, classIds),
+              eq(schema.attendances.occurrenceDate, occurrenceDate),
+            ),
+          ),
+        db
+          .select()
+          .from(schema.shiftCovers)
+          .where(
+            and(
+              inArray(schema.shiftCovers.classId, classIds),
+              eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+            ),
+          ),
+      ])
+    : [[], []];
   const classById = new Map(rows.map((row) => [row.id, row]));
   await db.transaction(async (tx) => {
-    await tx
-      .delete(schema.shiftRequests)
-      .where(
-        and(
-          inArray(schema.shiftRequests.classId, classIds),
-          eq(schema.shiftRequests.occurrenceDate, occurrenceDate),
-        ),
-      );
-    await tx
-      .delete(schema.attendances)
-      .where(
-        and(
-          inArray(schema.attendances.classId, classIds),
-          eq(schema.attendances.occurrenceDate, occurrenceDate),
-        ),
-      );
-    await tx
-      .delete(schema.shiftCovers)
-      .where(
-        and(
-          inArray(schema.shiftCovers.classId, classIds),
-          eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
-        ),
-      );
-    const oneOffIds = rows.filter((row) => !!row.specificDate).map((row) => row.id);
-    if (oneOffIds.length) await tx.delete(schema.classes).where(inArray(schema.classes.id, oneOffIds));
+    await tx.insert(schema.studioClosedDays).values({
+      studioId,
+      occurrenceDate,
+      classIds,
+      createdByUserId: userId,
+    });
     for (const row of rows) {
-      if (row.specificDate) continue;
       await tx
         .update(schema.classes)
         .set({ skipDates: [...new Set([...row.skipDates, occurrenceDate])].sort() })
@@ -1113,6 +1119,94 @@ export async function closeGymDay(
     const cover = covers.find((item) => item.classId === row.id);
     const coachId = cover ? cover.coachUserId : row.coachUserId;
     if (coachId) await tellCoach(coachId, studio.name, row.name, `${when}, ${fmtTime(row.startTime)}`, false);
+  }
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
+  revalidatePath("/calendar");
+  return { ok: true, count: rows.length };
+}
+
+/** Reopen a studio date and restore the exact classes preserved by closing it. */
+export async function openGymDay(
+  studioId: string,
+  occurrenceDate: string,
+): Promise<{ ok: boolean; error?: string; count?: number }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
+  if (occurrenceDate < todayIso()) return { ok: false, error: "That date has already passed." };
+  const { db, studio, gymId } = ctx;
+  const [closure] = await db
+    .select()
+    .from(schema.studioClosedDays)
+    .where(
+      and(
+        eq(schema.studioClosedDays.studioId, studioId),
+        eq(schema.studioClosedDays.occurrenceDate, occurrenceDate),
+      ),
+    );
+  if (!closure) return { ok: true, count: 0 };
+  const rows = closure.classIds.length
+    ? await db
+        .select()
+        .from(schema.classes)
+        .where(
+          and(
+            inArray(schema.classes.id, closure.classIds),
+            eq(schema.classes.userId, gymId),
+            eq(schema.classes.studioId, studioId),
+          ),
+        )
+    : [];
+  const classIds = rows.map((row) => row.id);
+  const [marks, covers] = classIds.length
+    ? await Promise.all([
+        db
+          .select({ classId: schema.attendances.classId, userId: schema.attendances.userId })
+          .from(schema.attendances)
+          .where(
+            and(
+              inArray(schema.attendances.classId, classIds),
+              eq(schema.attendances.occurrenceDate, occurrenceDate),
+            ),
+          ),
+        db
+          .select()
+          .from(schema.shiftCovers)
+          .where(
+            and(
+              inArray(schema.shiftCovers.classId, classIds),
+              eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+            ),
+          ),
+      ])
+    : [[], []];
+  await db.transaction(async (tx) => {
+    for (const row of rows)
+      await tx
+        .update(schema.classes)
+        .set({ skipDates: row.skipDates.filter((date) => date !== occurrenceDate) })
+        .where(eq(schema.classes.id, row.id));
+    await tx.delete(schema.studioClosedDays).where(eq(schema.studioClosedDays.id, closure.id));
+  });
+
+  const when = fmtDateLong(occurrenceDate);
+  const classById = new Map(rows.map((row) => [row.id, row]));
+  for (const mark of marks) {
+    const cls = classById.get(mark.classId);
+    if (!cls) continue;
+    await addNotification(mark.userId, {
+      type: "class_updated",
+      title: `${cls.name} is back on`,
+      body: `${when} at ${studio.name} has reopened.`,
+      href: "/week",
+    });
+  }
+  for (const row of rows) {
+    const cover = covers.find((item) => item.classId === row.id);
+    const coachId = cover ? cover.coachUserId : row.coachUserId;
+    if (coachId) await tellCoach(coachId, studio.name, row.name, `${when}, ${fmtTime(row.startTime)}`, true);
   }
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
