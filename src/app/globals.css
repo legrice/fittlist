@@ -7856,10 +7856,13 @@ select.editinput.placekind-select {
   display: flex; align-items: center; gap: 10px; margin: 0 0 18px;
 }
 .studio-manage-top {
-  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 18px;
 }
 .studio-manage-top > div { min-width: 0; }
-.studio-manage-back { flex: 0 0 var(--tap-size); }
+.studio-manage-back {
+  flex: 0 0 var(--tap-size); background: var(--color-white);
+  border: 1px solid var(--color-border);
+}
 .studio-manage-nav {
   width: min(456px, 100%); max-width: 100%; min-height: 52px; padding: 4px;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 3px; overflow-x: auto;
