@@ -96,6 +96,43 @@ function CoachPickerButton({
   );
 }
 
+/** Desktop staffing stays in the spreadsheet itself. A native selector lets
+ * a manager move through a full month without opening and closing a sheet for
+ * every class; mobile keeps the larger picker below for a dependable tap
+ * target and a readable roster. */
+function InlineCoachSelect({
+  className = "",
+  value,
+  disabled,
+  label,
+  coaches,
+  onChange,
+}: {
+  className?: string;
+  value: string;
+  disabled?: boolean;
+  label: string;
+  coaches: GymCoachDto[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <select
+      className={`rota-coach-select${className ? ` ${className}` : ""}`}
+      value={value}
+      disabled={disabled}
+      aria-label={label}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      <option value="">Open</option>
+      {coaches.map((coach) => (
+        <option key={coach.id} value={coach.id}>
+          {coach.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 // The rota: the thing the spreadsheet was for. A week of slots, each one a
 // class and the person on it, and both are two taps to change. That is the one
 // thing the spreadsheet was genuinely good at, so it is the thing to keep.
@@ -738,8 +775,6 @@ export function GymRota({
                           const key = occurrenceKey(c.id, day.iso);
                           const plannerColorLabel = studioPlannerColorLabel(c.plannerColor);
                           const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
-                          const selectedCoachName = coachNameById.get(selectedCoachId)
-                            ?? (selectedCoachId === c.onUserId ? c.onName : "");
                           const isCover = selectedCoachId !== (c.coachUserId ?? "");
                           const state = !c.isPublic
                             ? "draft"
@@ -769,12 +804,13 @@ export function GymRota({
                                 </span>
                                 {!c.isPublic && <span className="rota-month-state">Draft</span>}
                               </button>
-                              <CoachPickerButton
+                              <InlineCoachSelect
                                 className="rota-month-coachpick"
-                                name={selectedCoachName}
+                                value={selectedCoachId}
                                 disabled={!!coachSaving[key]}
                                 label={`Coach for ${c.name} on ${day.label}`}
-                                onClick={() => setCoachPick({ cls: c, iso: day.iso, label: day.label })}
+                                coaches={coaches}
+                                onChange={(who) => assignCoach(c, day.iso, who)}
                               />
                             </div>
                           );
@@ -873,13 +909,24 @@ export function GymRota({
                               onTap: () => show(day.iso, day.dayOfWeek, c),
                             }}
                           />
-                          <CoachPickerButton
-                            className="rota-inline-coachpick"
-                            name={selectedCoachName}
-                            disabled={!!coachSaving[key]}
-                            label={`Coach for ${c.name} on ${day.label}`}
-                            onClick={() => setCoachPick({ cls: c, iso: day.iso, label: day.label })}
-                          />
+                          {desktop ? (
+                            <InlineCoachSelect
+                              className="rota-inline-coachpick"
+                              value={selectedCoachId}
+                              disabled={!!coachSaving[key]}
+                              label={`Coach for ${c.name} on ${day.label}`}
+                              coaches={coaches}
+                              onChange={(who) => assignCoach(c, day.iso, who)}
+                            />
+                          ) : (
+                            <CoachPickerButton
+                              className="rota-inline-coachpick"
+                              name={selectedCoachName}
+                              disabled={!!coachSaving[key]}
+                              label={`Coach for ${c.name} on ${day.label}`}
+                              onClick={() => setCoachPick({ cls: c, iso: day.iso, label: day.label })}
+                            />
+                          )}
                         </div>
                       );
                     })}

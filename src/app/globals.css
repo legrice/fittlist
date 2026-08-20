@@ -7054,6 +7054,13 @@ select.editinput.placekind-select {
 .rota-coach-picker > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rota-coach-picker .icon { flex: 0 0 auto; }
 .rota-coach-picker:disabled { opacity: .55; cursor: wait; }
+.rota-coach-select {
+  min-width: 0; min-height: 40px; padding: 0 32px 0 12px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  background-color: var(--color-white); color: var(--color-black);
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.rota-coach-select:disabled { opacity: .55; cursor: wait; }
 .rota-inline-row .clline { padding-bottom: 72px; }
 .rota-inline-row[data-planner-color] .clline {
   border-top: 4px solid var(--studio-planner-color);
