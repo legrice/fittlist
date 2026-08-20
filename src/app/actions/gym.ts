@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
@@ -93,14 +93,14 @@ async function actingFor(studioId: string) {
   return { db, userId, studio, gymId: studio.accountUserId };
 }
 
-/** Everyone who could take a shift: the coaches who teach here. */
-export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
-  const ctx = await actingFor(studioId);
-  if ("error" in ctx) return [];
-  const { db } = ctx;
-  // The same union the studio page uses for "Coaches here": picked the studio
-  // in setup, or has a class at it. A gym adds people by having them list the
-  // place they work, which they have already done.
+/** Coaches who say they work here, before the studio confirms their roster. */
+async function candidateCoaches(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+): Promise<GymCoachDto[]> {
+  // The same union the public studio page uses for "Coaches here": picked
+  // the studio in setup, or has a class at it. This is only a manager's pool
+  // of candidates; it is not permission to take a shift.
   const [picked, classRows] = await Promise.all([
     db
       .select({ userId: schema.coachStudios.userId })
@@ -112,6 +112,67 @@ export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
       .where(eq(schema.classes.studioId, studioId)),
   ]);
   const ids = [...new Set([...picked, ...classRows].map((r) => r.userId))];
+  if (!ids.length) return [];
+  const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
+  return people
+    .filter((p) => p.kind !== "fan" && p.kind !== "gym")
+    .map((p) => ({ id: p.id, name: p.name.trim() || p.email.split("@")[0], email: p.email }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+const ASSIGNABLE_ROSTER_STATES = ["active", "invited", "placeholder"];
+const INTERACTIVE_ROSTER_STATES = ["active", "invited"];
+
+async function rosterHas(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+  userId: string,
+  states = ASSIGNABLE_ROSTER_STATES,
+) {
+  const [row] = await db
+    .select({ id: schema.studioRotaCoaches.id })
+    .from(schema.studioRotaCoaches)
+    .where(
+      and(
+        eq(schema.studioRotaCoaches.studioId, studioId),
+        eq(schema.studioRotaCoaches.userId, userId),
+        inArray(schema.studioRotaCoaches.state, states),
+      ),
+    );
+  return !!row;
+}
+
+async function assignmentError(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+  coachUserId: string | null,
+) {
+  if (!coachUserId) return null;
+  const [coach] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, coachUserId));
+  if (!coach || coach.kind === "fan" || coach.kind === "gym") return "That's not a coach.";
+  if (!(await rosterHas(db, studioId, coachUserId)))
+    return "Add this coach to the studio's shift list before assigning them.";
+  return null;
+}
+
+/** Everyone the studio has approved to be assigned to its calendar. */
+export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return [];
+  const { db } = ctx;
+  const roster = await db
+    .select({ userId: schema.studioRotaCoaches.userId })
+    .from(schema.studioRotaCoaches)
+    .where(
+      and(
+        eq(schema.studioRotaCoaches.studioId, studioId),
+        inArray(schema.studioRotaCoaches.state, ASSIGNABLE_ROSTER_STATES),
+      ),
+    );
+  const ids = roster.map((row) => row.userId);
   if (!ids.length) return [];
   const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
   return people
@@ -136,7 +197,7 @@ export async function rotaPool(studioId: string): Promise<RotaPoolDto[]> {
   if ("error" in ctx) return [];
   const { db } = ctx;
   const [candidates, pool] = await Promise.all([
-    gymCoaches(studioId),
+    candidateCoaches(db, studioId),
     db
       .select()
       .from(schema.studioRotaCoaches)
@@ -159,13 +220,45 @@ export async function setRotaCoach(
     const [person] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
     if (!person || person.kind === "fan" || person.kind === "gym")
       return { ok: false, error: "That's not a coach." };
-    if (!(await coachesHere(db, studioId)).has(userId))
+    if (!(await candidateCoaches(db, studioId)).some((coach) => coach.id === userId))
       return { ok: false, error: "They don't list this studio." };
     await db
       .insert(schema.studioRotaCoaches)
       .values({ studioId, userId })
       .onConflictDoNothing();
   } else {
+    // Removing somebody from the approved pool must not quietly strand their
+    // future rota. The manager can open or reassign those dates first, then
+    // remove them knowing the calendar has no hidden assignments left.
+    const today = todayIso();
+    const slots = await db
+      .select({ id: schema.classes.id, coachUserId: schema.classes.coachUserId, specificDate: schema.classes.specificDate, endsOn: schema.classes.endsOn })
+      .from(schema.classes)
+      .where(
+        and(
+          eq(schema.classes.userId, studio.accountUserId!),
+          eq(schema.classes.studioId, studioId),
+        ),
+      );
+    const hasStandingFuture = slots.some(
+      (slot) =>
+        slot.coachUserId === userId &&
+        (slot.specificDate ? slot.specificDate >= today : !slot.endsOn || slot.endsOn >= today),
+    );
+    const covers = slots.length
+      ? await db
+          .select({ id: schema.shiftCovers.id })
+          .from(schema.shiftCovers)
+          .where(
+            and(
+              inArray(schema.shiftCovers.classId, slots.map((slot) => slot.id)),
+              eq(schema.shiftCovers.coachUserId, userId),
+              gte(schema.shiftCovers.occurrenceDate, today),
+            ),
+          )
+      : [];
+    if (hasStandingFuture || covers.length)
+      return { ok: false, error: "Reassign or open their future shifts before removing them." };
     await db
       .delete(schema.studioRotaCoaches)
       .where(
@@ -501,6 +594,8 @@ export async function addGymClass(
   const { db, studio, gymId } = ctx;
 
   const coachUserId = input.coachUserId || null;
+  const coachError = await assignmentError(db, studioId, coachUserId);
+  if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   const { oneOff, days, endsOn } = shape(input);
   const times = timesOf(input);
@@ -641,6 +736,8 @@ export async function updateGymClass(
   if (!existing) return { ok: false, error: "Class not found." };
 
   const coachUserId = input.coachUserId || null;
+  const coachError = await assignmentError(db, studioId, coachUserId);
+  if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   // One row is one slot, so an edit is about the slot that was opened: the day
   // pills move it rather than fanning it out. Adding a second day is adding a
@@ -779,6 +876,18 @@ export async function deleteGymClass(
         );
       const wasOn = cover ? cover.coachUserId : existing.coachUserId;
       if (cover) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
+      // A request for a date that is no longer happening cannot be approved
+      // later. Keep the slot's history when it exists, but remove live asks
+      // before the occurrence disappears from the rota.
+      await db
+        .delete(schema.shiftRequests)
+        .where(
+          and(
+            eq(schema.shiftRequests.classId, classId),
+            eq(schema.shiftRequests.occurrenceDate, iso),
+            eq(schema.shiftRequests.state, "pending"),
+          ),
+        );
       const when = `${fmtDateLong(iso)}, ${fmtTime(existing.startTime)}`;
       await tellComers(when, iso);
       if (wasOn && iso >= today)
@@ -789,7 +898,10 @@ export async function deleteGymClass(
   }
 
   await tellComers(whenOfRow(existing));
-  // Its exceptions go with it, or the foreign key refuses the delete.
+  // Its dependent rota records go with it, or their foreign keys refuse the
+  // delete. Answered requests are no longer useful once the slot itself is
+  // gone, and this keeps an old request from making a schedule uneditable.
+  await db.delete(schema.shiftRequests).where(eq(schema.shiftRequests.classId, classId));
   await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.classId, classId));
   await db.delete(schema.classes).where(eq(schema.classes.id, classId));
   if (existing.coachUserId)
@@ -816,6 +928,9 @@ export async function setShiftCover(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
   const { db, userId, studio, gymId } = ctx;
+
+  const coachError = await assignmentError(db, studioId, coachUserId);
+  if (coachError) return { ok: false, error: coachError };
 
   const [cls] = await db
     .select()
@@ -876,24 +991,24 @@ export async function setShiftCover(
 /**
  * Who can take a slot here: the coaches who teach at this studio.
  *
- * The same union `gymCoaches` uses, without the manager check, because this
- * answers a question about the caller rather than listing anybody.
+ * This is the studio's approved, interactive shift roster—not everybody who
+ * has self-listed the studio. It is the one permission boundary coaches and
+ * managers both rely on.
  */
 async function coachesHere(
   db: Awaited<ReturnType<typeof getDb>>,
   studioId: string,
 ): Promise<Set<string>> {
-  const [picked, classRows] = await Promise.all([
-    db
-      .select({ userId: schema.coachStudios.userId })
-      .from(schema.coachStudios)
-      .where(eq(schema.coachStudios.studioId, studioId)),
-    db
-      .select({ userId: schema.classes.userId })
-      .from(schema.classes)
-      .where(eq(schema.classes.studioId, studioId)),
-  ]);
-  return new Set([...picked, ...classRows].map((r) => r.userId));
+  const rows = await db
+    .select({ userId: schema.studioRotaCoaches.userId })
+    .from(schema.studioRotaCoaches)
+    .where(
+      and(
+        eq(schema.studioRotaCoaches.studioId, studioId),
+        inArray(schema.studioRotaCoaches.state, INTERACTIVE_ROSTER_STATES),
+      ),
+    );
+  return new Set(rows.map((row) => row.userId));
 }
 
 /** Everyone who should hear that a slot changed hands without a manager doing
@@ -1094,16 +1209,8 @@ export async function sendShiftTo(
   const [target] = await db.select().from(schema.users).where(eq(schema.users.id, toUserId));
   if (!target || target.kind === "fan" || target.kind === "gym")
     return { ok: false, error: "That's not a coach here." };
-  const [listed] = await db
-    .select({ id: schema.studioRotaCoaches.id })
-    .from(schema.studioRotaCoaches)
-    .where(
-      and(
-        eq(schema.studioRotaCoaches.studioId, studio.id),
-        eq(schema.studioRotaCoaches.userId, toUserId),
-      ),
-    );
-  if (!listed) return { ok: false, error: "They aren't on this gym's shift list." };
+  if (!(await rosterHas(db, studio.id, toUserId, INTERACTIVE_ROSTER_STATES)))
+    return { ok: false, error: "They aren't on this gym's shift list." };
 
   // Handing a date back to whoever normally teaches it is putting the rota
   // back the way it was, so there is nothing for a manager to weigh.
@@ -1732,64 +1839,114 @@ export async function answerShiftRequest(
   const ctx = await managing(req.studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { studio } = ctx;
-  if (req.state !== "pending") return { ok: false, error: "That one is already answered." };
-  const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, req.classId));
-  if (!cls) return { ok: false, error: "That class is gone." };
+  const settled = await db.transaction(async (tx) => {
+    // Conditional state changes make two managers answering the same request
+    // safe. A second answer sees no pending row and leaves the rota alone.
+    const [live] = await tx
+      .select()
+      .from(schema.shiftRequests)
+      .where(and(eq(schema.shiftRequests.id, requestId), eq(schema.shiftRequests.state, "pending")));
+    if (!live) return { error: "That one is already answered." } as const;
+    const [cls] = await tx.select().from(schema.classes).where(eq(schema.classes.id, live.classId));
+    if (!cls) return { error: "That class is gone." } as const;
+    if (
+      live.occurrenceDate < todayIso() ||
+      !runsOn(cls, live.occurrenceDate, dowOfDate(live.occurrenceDate))
+    )
+      return { error: "That class no longer runs then." } as const;
 
-  await db
-    .update(schema.shiftRequests)
-    .set({ state: approve ? "approved" : "declined", decidedByUserId: userId, decidedAt: new Date() })
-    .where(eq(schema.shiftRequests.id, requestId));
+    if (approve) {
+      const [eligible] = await tx
+        .select({ id: schema.studioRotaCoaches.id })
+        .from(schema.studioRotaCoaches)
+        .where(
+          and(
+            eq(schema.studioRotaCoaches.studioId, live.studioId),
+            eq(schema.studioRotaCoaches.userId, live.toUserId),
+            inArray(schema.studioRotaCoaches.state, INTERACTIVE_ROSTER_STATES),
+          ),
+        );
+      if (!eligible) return { error: "That coach is no longer on the shift list." } as const;
+    }
 
-  if (approve) {
-    // Now, and only now, the calendars learn about it.
-    const [cover] = await db
+    const [cover] = await tx
       .select()
       .from(schema.shiftCovers)
       .where(
         and(
-          eq(schema.shiftCovers.classId, req.classId),
-          eq(schema.shiftCovers.occurrenceDate, req.occurrenceDate),
+          eq(schema.shiftCovers.classId, live.classId),
+          eq(schema.shiftCovers.occurrenceDate, live.occurrenceDate),
         ),
       );
-    if (req.toUserId === cls.coachUserId) {
-      if (cover) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
-    } else if (cover) {
-      await db
-        .update(schema.shiftCovers)
-        .set({ coachUserId: req.toUserId, createdByUserId: userId })
-        .where(eq(schema.shiftCovers.id, cover.id));
-    } else {
-      await db.insert(schema.shiftCovers).values({
-        classId: req.classId,
-        occurrenceDate: req.occurrenceDate,
-        coachUserId: req.toUserId,
-        createdByUserId: userId,
-      });
-    }
-  }
+    const currentOn = cover ? cover.coachUserId : cls.coachUserId;
+    if (approve && live.kind === "pickup" && currentOn)
+      return { error: "Somebody is already on that one." } as const;
+    if (approve && live.kind === "transfer" && currentOn !== live.fromUserId)
+      return { error: "That shift has changed since it was offered." } as const;
 
-  const when = `${fmtDateLong(req.occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+    const [changed] = await tx
+      .update(schema.shiftRequests)
+      .set({ state: approve ? "approved" : "declined", decidedByUserId: userId, decidedAt: new Date() })
+      .where(and(eq(schema.shiftRequests.id, requestId), eq(schema.shiftRequests.state, "pending")))
+      .returning({ id: schema.shiftRequests.id });
+    if (!changed) return { error: "That one is already answered." } as const;
+
+    if (approve) {
+      // The request and the date's cover are one transaction. Settling one
+      // request also closes every competing ask for the same occurrence.
+      if (live.toUserId === cls.coachUserId) {
+        if (cover) await tx.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
+      } else if (cover) {
+        await tx
+          .update(schema.shiftCovers)
+          .set({ coachUserId: live.toUserId, createdByUserId: userId })
+          .where(eq(schema.shiftCovers.id, cover.id));
+      } else {
+        await tx.insert(schema.shiftCovers).values({
+          classId: live.classId,
+          occurrenceDate: live.occurrenceDate,
+          coachUserId: live.toUserId,
+          createdByUserId: userId,
+        });
+      }
+      await tx
+        .update(schema.shiftRequests)
+        .set({ state: "declined", decidedByUserId: userId, decidedAt: new Date() })
+        .where(
+          and(
+            eq(schema.shiftRequests.classId, live.classId),
+            eq(schema.shiftRequests.occurrenceDate, live.occurrenceDate),
+            eq(schema.shiftRequests.state, "pending"),
+            ne(schema.shiftRequests.id, live.id),
+          ),
+        );
+    }
+    return { req: live, cls } as const;
+  });
+  if ("error" in settled) return { ok: false, error: settled.error };
+  const { req: liveReq, cls } = settled;
+
+  const when = `${fmtDateLong(liveReq.occurrenceDate)}, ${fmtTime(cls.startTime)}`;
   // The asker hears either way. A declined ask that says nothing is how
   // somebody turns up to a class that was never theirs.
-  await addNotification(req.toUserId, {
+  await addNotification(liveReq.toUserId, {
     type: approve ? "shift_assigned" : "shift_declined",
     title: approve ? `You're on ${cls.name}` : `${cls.name} stayed where it was`,
     body: approve
       ? `${when} at ${studio.name}. The studio said yes.`
       : `${when} at ${studio.name}. The studio didn't approve the change.`,
-    href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${req.occurrenceDate}`,
+    href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${liveReq.occurrenceDate}`,
     actorUserId: userId,
   });
   // A transfer has somebody on the other end of it who also arranged this.
-  if (req.fromUserId && req.fromUserId !== req.toUserId) {
-    await addNotification(req.fromUserId, {
+  if (liveReq.fromUserId && liveReq.fromUserId !== liveReq.toUserId) {
+    await addNotification(liveReq.fromUserId, {
       type: approve ? "shift_assigned" : "shift_declined",
       title: approve ? `${cls.name} is covered` : `${cls.name} is still yours`,
       body: approve
         ? `${when} at ${studio.name}. The studio approved the hand-over.`
         : `${when} at ${studio.name}. The studio didn't approve it.`,
-      href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${req.occurrenceDate}`,
+      href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${liveReq.occurrenceDate}`,
       actorUserId: userId,
     });
   }

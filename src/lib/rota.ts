@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 
@@ -40,7 +40,15 @@ export async function sendableAt(studioId: string, exceptUserId: string): Promis
   const pool = await db
     .select({ userId: schema.studioRotaCoaches.userId })
     .from(schema.studioRotaCoaches)
-    .where(eq(schema.studioRotaCoaches.studioId, studioId));
+    .where(
+      and(
+        eq(schema.studioRotaCoaches.studioId, studioId),
+        // A coach the studio has not confirmed cannot receive a shift yet.
+        // Invited coaches may: the roster model deliberately lets a studio
+        // prepare their week before they accept the invitation.
+        inArray(schema.studioRotaCoaches.state, ["active", "invited"]),
+      ),
+    );
   const ids = pool.map((p) => p.userId).filter((id) => id !== exceptUserId);
   if (!ids.length) return [];
   const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));

@@ -1,4 +1,4 @@
-import { eq, inArray, or } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, or } from "drizzle-orm";
 import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -115,17 +115,90 @@ export async function StudioView({
     .where(eq(schema.shoutouts.targetStudioId, s.id));
 
   let days: StudioDay[] = [];
-  // The studio calendar is temporarily the commons: public classes coaches
-  // have associated with this place. This deliberately ignores whether the
-  // studio account also owns schedule records until the full scheduling
-  // product has one authoritative ownership model.
-  // Members' own entries used to join it as plain rows and no longer do, by
-  // Matt's call: a member building their share week types classes here by
-  // the dozen now, and what they add stays off every public page but their
-  // own. The details still land in the studio's catalog, so the next person
-  // typing the class gets them back; the catalog is memory, not a listing.
   let community = false;
-  {
+  if (s.accountUserId) {
+    // Once a studio runs its own calendar, its classes are the public source
+    // of truth. Coach-contributed rows remain useful while a place is still
+    // unclaimed, but showing both after a studio takes over produces stale
+    // duplicates and lets the business maintain a schedule nobody sees.
+    const official = await db
+      .select()
+      .from(schema.classes)
+      .where(
+        and(
+          eq(schema.classes.userId, s.accountUserId),
+          eq(schema.classes.studioId, s.id),
+          eq(schema.classes.isPublic, true),
+        ),
+      );
+    const start = new Date(`${todayIso()}T00:00:00Z`);
+    const startIso = start.toISOString().slice(0, 10);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 6);
+    const endIso = end.toISOString().slice(0, 10);
+    const covers = official.length
+      ? await db
+          .select()
+          .from(schema.shiftCovers)
+          .where(
+            and(
+              inArray(schema.shiftCovers.classId, official.map((row) => row.id)),
+              gte(schema.shiftCovers.occurrenceDate, startIso),
+              lte(schema.shiftCovers.occurrenceDate, endIso),
+            ),
+          )
+      : [];
+    const coachIds = [
+      ...new Set(
+        [...official.map((row) => row.coachUserId), ...covers.map((row) => row.coachUserId)].filter(
+          (id): id is string => !!id,
+        ),
+      ),
+    ];
+    const coachRows = coachIds.length
+      ? await db
+          .select({
+            id: schema.users.id,
+            name: schema.users.name,
+            photo: schema.users.photo,
+            avatarColor: schema.users.avatarColor,
+            shiftsPublic: schema.users.shiftsPublic,
+          })
+          .from(schema.users)
+          .where(inArray(schema.users.id, coachIds))
+      : [];
+    const coachById = new Map(coachRows.map((coach) => [coach.id, coach]));
+    const coverBySlot = new Map(covers.map((cover) => [`${cover.classId}|${cover.occurrenceDate}`, cover]));
+
+    for (let i = 0; i < 7; i++) {
+      const dt = new Date(start);
+      dt.setUTCDate(start.getUTCDate() + i);
+      const iso = dt.toISOString().slice(0, 10);
+      const dow = (dt.getUTCDay() + 6) % 7;
+      const items: StudioDay["items"] = [];
+      for (const c of official) {
+        if (!runsOn(c, iso, dow) || occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+        const cover = coverBySlot.get(`${c.id}|${iso}`);
+        const coach = coachById.get(cover ? cover.coachUserId ?? "" : c.coachUserId ?? "");
+        const nameCoach = s.showCoaches && coach?.shiftsPublic ? coach : null;
+        items.push({
+          id: c.id,
+          name: c.name,
+          startTime: c.startTime,
+          durationMin: c.durationMin,
+          coachName: nameCoach?.name ?? null,
+          coachPhoto: nameCoach?.photo ?? null,
+          coachColor: nameCoach ? avatarColor(nameCoach) : null,
+          where: c.location,
+        });
+      }
+      items.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+      if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
+    }
+  } else {
+    // Until a business runs its own schedule, the public calendar is the
+    // community of coaches who have associated classes with this place.
+    // Personal member entries stay off public studio pages.
     const pubAll = await db
       .select()
       .from(schema.classes)
@@ -188,7 +261,7 @@ export async function StudioView({
     community = days.length > 0;
   }
 
-  const hasSchedule = community;
+  const hasSchedule = days.length > 0;
   // The viewer's going marks used to load here so each row's ribbon could
   // say Added. The ribbon left every list when plans did, and the new rows
   // carry no add at all, so the query went with it: a query nobody reads is

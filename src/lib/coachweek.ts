@@ -109,26 +109,37 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
   // The exceptions. A cover wins over the class for its one date, so a date
   // somebody else took has to come off this coach's week, and a date they were
   // handed has to come onto it, even on a slot they don't normally teach.
-  const covers = standing.length
-    ? await db
-        .select()
-        .from(schema.shiftCovers)
-        .where(inArray(schema.shiftCovers.classId, standing.map((row) => row.id)))
-    : [];
+  // We need both sides of a cover: exceptions to a coach's standing slots,
+  // plus dates handed *to* them from somebody else's slot. The latter must be
+  // queried by coach id; only loading covers for standing rows made a cover
+  // disappear from the receiving coach's calendar.
+  const [standingCovers, receivedCovers] = await Promise.all([
+    standing.length
+      ? db
+          .select()
+          .from(schema.shiftCovers)
+          .where(inArray(schema.shiftCovers.classId, standing.map((row) => row.id)))
+      : Promise.resolve([]),
+    db
+      .select()
+      .from(schema.shiftCovers)
+      .where(inArray(schema.shiftCovers.coachUserId, sharing)),
+  ]);
+  const covers = [...new Map([...standingCovers, ...receivedCovers].map((cover) => [cover.id, cover])).values()];
   const sharingSet = new Set(sharing);
   const takenAway = new Map<string, string[]>();
   const handedOver: typeof covers = [];
   const standingById = new Map(standing.map((s) => [s.id, s]));
   for (const cv of covers) {
-    if (cv.coachUserId && sharingSet.has(cv.coachUserId)) {
-      handedOver.push(cv);
-      continue;
-    }
     const s = standingById.get(cv.classId);
-    if (!s) continue;
-    const list = takenAway.get(cv.classId) ?? [];
-    list.push(cv.occurrenceDate);
-    takenAway.set(cv.classId, list);
+    // A cover changes who is on a standing slot, even when both the usual and
+    // substitute coaches are being shown together.
+    if (s && cv.coachUserId !== s.coachUserId) {
+      const list = takenAway.get(cv.classId) ?? [];
+      list.push(cv.occurrenceDate);
+      takenAway.set(cv.classId, list);
+    }
+    if (cv.coachUserId && sharingSet.has(cv.coachUserId)) handedOver.push(cv);
   }
 
   for (const s of standing) {
@@ -163,8 +174,11 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
     : [];
   const extraById = new Map(extras.map((e) => [e.id, e]));
   for (const cv of handedOver) {
-    const cls = extraById.get(cv.classId);
+    const cls = standingById.get(cv.classId) ?? extraById.get(cv.classId);
     if (!cls || !cv.coachUserId) continue;
+    // This coach already owns the standing slot. The cover adds no date to
+    // their calendar; it only matters when it took the date away.
+    if (cls.coachUserId === cv.coachUserId) continue;
     out.push({
       ...cls,
       dayOfWeek: dowOfDate(cv.occurrenceDate),
