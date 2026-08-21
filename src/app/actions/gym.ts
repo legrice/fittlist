@@ -163,6 +163,92 @@ async function assignmentError(
   return null;
 }
 
+/** The class already occupying a coach on one date, across every studio.
+ * Covers are applied before comparing, so a coach who has been taken off
+ * their regular class is genuinely free. Back-to-back classes do not overlap. */
+async function coachConflictError(
+  db: Awaited<ReturnType<typeof getDb>>,
+  coachUserId: string | null,
+  occurrenceDate: string,
+  startTime: string,
+  durationMin: number,
+  ignoreClassId?: string,
+): Promise<string | null> {
+  if (!coachUserId) return null;
+  const owned = await db
+    .select()
+    .from(schema.classes)
+    .where(or(eq(schema.classes.coachUserId, coachUserId), eq(schema.classes.userId, coachUserId)));
+  const covered = await db
+    .select()
+    .from(schema.shiftCovers)
+    .where(
+      and(
+        eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+        eq(schema.shiftCovers.coachUserId, coachUserId),
+      ),
+    );
+  const extraIds = covered
+    .map((row) => row.classId)
+    .filter((id) => !owned.some((row) => row.id === id));
+  const extra = extraIds.length
+    ? await db.select().from(schema.classes).where(inArray(schema.classes.id, extraIds))
+    : [];
+  const rows = [...owned, ...extra];
+  if (!rows.length) return null;
+  const sameDayCovers = await db
+    .select()
+    .from(schema.shiftCovers)
+    .where(
+      and(
+        eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+        inArray(schema.shiftCovers.classId, rows.map((row) => row.id)),
+      ),
+    );
+  const coverByClass = new Map(sameDayCovers.map((row) => [row.classId, row.coachUserId]));
+  const studioIds = [...new Set(rows.map((row) => row.studioId).filter((id): id is string => !!id))];
+  const [studios, closures] = await Promise.all([
+    studioIds.length
+      ? db.select({ id: schema.studios.id, name: schema.studios.name }).from(schema.studios).where(inArray(schema.studios.id, studioIds))
+      : Promise.resolve([]),
+    studioIds.length
+      ? db.select({ studioId: schema.studioClosedDays.studioId }).from(schema.studioClosedDays).where(
+          and(
+            eq(schema.studioClosedDays.occurrenceDate, occurrenceDate),
+            inArray(schema.studioClosedDays.studioId, studioIds),
+          ),
+        )
+      : Promise.resolve([]),
+  ]);
+  const studioName = new Map(studios.map((studio) => [studio.id, studio.name]));
+  const closed = new Set(closures.map((row) => row.studioId));
+  const wantedStart = timeToMinutes(startTime);
+  const wantedEnd = wantedStart + durationMin;
+  for (const row of rows) {
+    if (row.id === ignoreClassId || (row.studioId && closed.has(row.studioId))) continue;
+    if (!runsOn(row, occurrenceDate, dowOfDate(occurrenceDate))) continue;
+    const onUserId: string | null | undefined = coverByClass.has(row.id)
+      ? coverByClass.get(row.id)
+      : row.coachUserId ?? (row.userId === coachUserId ? coachUserId : null);
+    if (onUserId !== coachUserId) continue;
+    const rowStart = timeToMinutes(row.startTime);
+    const rowEnd = rowStart + row.durationMin;
+    if (wantedStart < rowEnd && rowStart < wantedEnd) {
+      const where = row.studioId ? studioName.get(row.studioId) : null;
+      const endTime = `${String(Math.floor(rowEnd / 60) % 24).padStart(2, "0")}:${String(rowEnd % 60).padStart(2, "0")}`;
+      return `Schedule conflict: already coaching ${row.name}${where ? ` at ${where}` : ""}, ${fmtTime(row.startTime)}–${fmtTime(endTime)}.`;
+    }
+  }
+  return null;
+}
+
+function nextOccurrence(dayOfWeek: number, fromIso = todayIso()) {
+  const from = new Date(`${fromIso}T00:00:00Z`);
+  const fromDow = (from.getUTCDay() + 6) % 7;
+  from.setUTCDate(from.getUTCDate() + ((dayOfWeek - fromDow + 7) % 7));
+  return from.toISOString().slice(0, 10);
+}
+
 /** Everyone the studio has approved to be assigned to its calendar. */
 export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
   const ctx = await actingFor(studioId);
@@ -673,6 +759,31 @@ export async function addGymClass(
   const { oneOff, days, endsOn } = shape(input);
   const times = timesOf(input);
 
+  for (let index = 1; index < times.length; index++) {
+    if (timeToMinutes(times[index]) < timeToMinutes(times[index - 1]) + input.durationMin)
+      return {
+        ok: false,
+        error: `Schedule conflict: ${fmtTime(times[index - 1])} and ${fmtTime(times[index])} overlap.`,
+      };
+  }
+
+  if (coachUserId) {
+    for (const dayOfWeek of days) {
+      const occurrenceDate = oneOff ?? nextOccurrence(dayOfWeek);
+      if (endsOn && occurrenceDate > endsOn) continue;
+      for (const startTime of times) {
+        const conflict = await coachConflictError(
+          db,
+          coachUserId,
+          occurrenceDate,
+          startTime,
+          input.durationMin,
+        );
+        if (conflict) return { ok: false, error: conflict };
+      }
+    }
+  }
+
   // What this studio already runs under this name, so a second pass over the
   // same class doesn't double the week. A manager will re-open a class to add
   // the times they forgot, and the honest answer to "Monday 6am again" is to
@@ -827,6 +938,21 @@ export async function updateGymClass(
   // second slot, which the rota does from the day it belongs to.
   const { oneOff, days, endsOn } = shape(input);
   const dayOfWeek = days[0];
+
+  if (coachUserId) {
+    const occurrenceDate = oneOff ?? nextOccurrence(dayOfWeek);
+    if (!endsOn || occurrenceDate <= endsOn) {
+      const conflict = await coachConflictError(
+        db,
+        coachUserId,
+        occurrenceDate,
+        input.startTime,
+        input.durationMin,
+        classId,
+      );
+      if (conflict) return { ok: false, error: conflict };
+    }
+  }
 
   // Before the standing rota moves, write down what it used to be, so the
   // weeks that have already happened keep saying who taught them.
@@ -1226,6 +1352,15 @@ export async function setShiftCover(
   const dow = (new Date(`${occurrenceDate}T00:00:00Z`).getUTCDay() + 6) % 7;
   if (!runsOn(cls, occurrenceDate, dow))
     return { ok: false, error: "That class doesn't run that day." };
+  const conflict = await coachConflictError(
+    db,
+    coachUserId,
+    occurrenceDate,
+    cls.startTime,
+    cls.durationMin,
+    cls.id,
+  );
+  if (conflict) return { ok: false, error: conflict };
 
   const changed = await db.transaction(async (tx) => {
     const [existing] = await tx
@@ -1451,6 +1586,15 @@ export async function claimShift(
   if (me?.kind === "fan") return { ok: false, error: "That's for coaches at this studio." };
   if (!(await coachesHere(db, studio.id)).has(userId))
     return { ok: false, error: "That's for coaches at this studio." };
+  const conflict = await coachConflictError(
+    db,
+    userId,
+    occurrenceDate,
+    cls.startTime,
+    cls.durationMin,
+    cls.id,
+  );
+  if (conflict) return { ok: false, error: conflict };
 
   // Taking back a date you gave up yourself is not a change to anybody, so it
   // never waits: the slot returns to the person the class already names.
@@ -1541,6 +1685,15 @@ export async function sendShiftTo(
     return { ok: false, error: "They aren't on this gym's shift list." };
   if (scope === "standing" && cls.coachUserId !== userId)
     return { ok: false, error: "Only the regular coach can transfer every week." };
+  const conflict = await coachConflictError(
+    db,
+    toUserId,
+    occurrenceDate,
+    cls.startTime,
+    cls.durationMin,
+    cls.id,
+  );
+  if (conflict) return { ok: false, error: conflict };
 
   // Handing a date back to whoever normally teaches it is putting the rota
   // back the way it was, so there is nothing for a manager to weigh.
@@ -3014,6 +3167,22 @@ export async function answerShiftRequest(
   const ctx = await managing(req.studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { studio } = ctx;
+  if (approve) {
+    const [requestedClass] = await db
+      .select()
+      .from(schema.classes)
+      .where(eq(schema.classes.id, req.classId));
+    if (!requestedClass) return { ok: false, error: "That class is gone." };
+    const conflict = await coachConflictError(
+      db,
+      req.toUserId,
+      req.occurrenceDate,
+      requestedClass.startTime,
+      requestedClass.durationMin,
+      requestedClass.id,
+    );
+    if (conflict) return { ok: false, error: conflict };
+  }
   // Changing the standing coach would otherwise rewrite history. Preserve
   // every completed occurrence before the transactional ownership change.
   if (approve && req.scope === "standing") {
