@@ -7086,7 +7086,13 @@ select.editinput.placekind-select {
   border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
 }
 .rota-month-eventmain:active { opacity: .6; }
-.rota-month-eventtop { min-width: 0; display: flex; align-items: baseline; gap: 6px; }
+.rota-month-eventtop {
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 3px;
+}
 .rota-month-eventtop b { flex: 0 0 auto; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .rota-month-eventtop b small { margin-left: 2px; font-size: 9px; text-transform: uppercase; }
 .rota-month-eventtop strong {
