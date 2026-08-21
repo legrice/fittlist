@@ -13,7 +13,6 @@ import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
-import { StudioManageNav } from "@/components/StudioManageNav";
 import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -110,10 +109,9 @@ export function StudioStaffView({
         <div className="studio-manage-topbar">
           <BackLink
             className="evback studio-manage-back"
-            href="/settings"
+            href={`/s/${studioSlug}/manage`}
             anywhere
-            notUnder={`/s/${studioSlug}`}
-            label="Back to your account"
+            label="Back to studio dashboard"
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
@@ -131,8 +129,6 @@ export function StudioStaffView({
           <p className="adminsub">Manage your team</p>
         </div>
       </div>
-
-      <StudioManageNav slug={studioSlug} active="staff" />
 
       <h3 className="setgroup-h">Staff</h3>
       <p className="staffnote">

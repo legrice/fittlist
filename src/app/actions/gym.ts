@@ -1858,7 +1858,7 @@ export async function sendShiftTo(
         type: "shift_assigned",
         title: `${who} transferred ${cls.name} to ${toName}`,
         body: `Starting ${fmtDateLong(occurrenceDate)}, every ${DAYS[cls.dayOfWeek]} at ${fmtTime(cls.startTime)}.`,
-        href: `/s/${studio.slug ?? studio.id}/manage`,
+        href: `/s/${studio.slug ?? studio.id}/manage/calendar`,
         actorUserId: userId,
       },
       false,
@@ -3174,7 +3174,7 @@ async function fileRequest(
         args.scope === "standing"
           ? `Starting ${fmtDateLong(args.occurrenceDate)}, every ${DAYS[args.cls.dayOfWeek]} at ${fmtTime(args.cls.startTime)}. Waiting on you.`
           : `${when}. Waiting on you.`,
-      href: `/s/${args.studio.slug ?? args.studio.id}/manage?panel=notifications`,
+      href: `/s/${args.studio.slug ?? args.studio.id}/manage/calendar?panel=notifications`,
       actorUserId: args.askedBy,
     },
     false,

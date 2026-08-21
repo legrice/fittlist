@@ -46,7 +46,7 @@ export default async function CountsPage({
   return (
     <GymCountsView
       studioName={studio.name}
-      backHref={base}
+      backHref={`${base}/calendar`}
       countsBase={`${base}/counts`}
       counts={counts}
     />

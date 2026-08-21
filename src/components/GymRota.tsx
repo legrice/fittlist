@@ -25,7 +25,6 @@ import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
-import { StudioManageNav } from "@/components/StudioManageNav";
 import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
@@ -177,6 +176,7 @@ export function GymRota({
   studioAddress,
   studioSlug,
   manageBase,
+  dashboardHref,
   hasAccount,
   week,
   coaches,
@@ -192,6 +192,7 @@ export function GymRota({
   studioSlug: string;
   /** /s/{slug}/manage, for the week links. */
   manageBase: string;
+  dashboardHref: string;
   hasAccount: boolean;
   week: GymWeekDto | null;
   coaches: GymCoachDto[];
@@ -578,10 +579,9 @@ export function GymRota({
           <div className="studio-manage-topbar">
             <BackLink
               className="evback studio-manage-back"
-              href="/settings"
+              href={dashboardHref}
               anywhere
-              notUnder={`/s/${studioSlug}`}
-              label="Back to your account"
+              label="Back to studio dashboard"
             >
               <Icon name="arrow_back" size={23} />
             </BackLink>
@@ -596,12 +596,9 @@ export function GymRota({
             />
           </div>
           <div>
-            <h1>{studioName}</h1>
-            <p className="adminsub">The schedule</p>
+            <h1>Calendar</h1>
+            <p className="adminsub">{studioName}</p>
           </div>
-        </div>
-        <div className="studio-calendar-controls">
-          <StudioManageNav slug={studioSlug} active="calendar" />
         </div>
         <div className="empty-block" style={{ marginTop: 24 }}>
           <h2>Run this studio&rsquo;s calendar here</h2>
@@ -724,10 +721,9 @@ export function GymRota({
         <div className="studio-manage-topbar">
           <BackLink
             className="evback studio-manage-back"
-            href="/settings"
+            href={dashboardHref}
             anywhere
-            notUnder={`/s/${studioSlug}`}
-            label="Back to your account"
+            label="Back to studio dashboard"
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
@@ -742,8 +738,8 @@ export function GymRota({
           />
         </div>
         <div>
-          <h1>{studioName}</h1>
-          <p className="adminsub">{summary}</p>
+          <h1>Calendar</h1>
+          <p className="adminsub">{studioName} · {summary}</p>
           {visibleDrafts > 0 && (
             <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
               Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
@@ -753,7 +749,6 @@ export function GymRota({
       </div>
 
       <div className="studio-calendar-controls">
-        <StudioManageNav slug={studioSlug} active="calendar" />
         <div className="rota-calendar-tools">
           <label className="rota-shift-filter">
             <span>Show:</span>
