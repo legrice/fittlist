@@ -83,7 +83,11 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             return configuration
         }()
         home.setTitleColor(.white, for: .normal)
-        home.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
+        // Match the web lockup, whose word uses Delight at 600. The fallback
+        // keeps the header usable if a development build ever drops the font
+        // resource without hiding the entire home control.
+        home.titleLabel?.font = UIFont(name: "Delight-SemiBold", size: 24)
+            ?? .systemFont(ofSize: 24, weight: .semibold)
         home.addTarget(self, action: #selector(openHome), for: .touchUpInside)
         headerView.addSubview(home)
 
