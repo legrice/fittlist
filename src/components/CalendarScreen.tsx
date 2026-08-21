@@ -23,7 +23,7 @@ import type { HubItem } from "@/components/ShareHubScreen";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
-import type { ClassDto, StudioDto } from "@/lib/types";
+import type { ClassDto, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
 import { setTeaching } from "@/app/actions/auth";
@@ -58,6 +58,11 @@ const ShareHubScreen = dynamic(() => import("@/components/ShareHubScreen").then(
  *  hundred identical rows; Month is the view for anything further out. */
 
 type View = "list" | "month";
+
+const prefillFromTemplate = (template: TemplateDto): AdderPrefill => ({
+  ...template,
+  days: [],
+});
 
 export function CalendarScreen({
   handle,
@@ -96,6 +101,8 @@ export function CalendarScreen({
   const [browseOpen, setBrowseOpen] = useState(false);
   const [personalAdd, setPersonalAdd] = useState(false);
   const [personalWorkout, setPersonalWorkout] = useState(false);
+  const [quickPrefill, setQuickPrefill] = useState<AdderPrefill | null>(null);
+  const [addDate, setAddDate] = useState<string | null>(null);
   const [match, setMatch] = useState<PersonalMatch | null>(null);
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [removeConfirm, setRemoveConfirm] = useState<{
@@ -391,11 +398,19 @@ export function CalendarScreen({
   // answers "what does the month look like"; a day is a list of classes, and
   // that is a thing the list already draws well.
   const openDay = useCallback((iso: string) => {
+    if (!monthItems.has(iso)) {
+      ensureComposer();
+      setQuickPrefill(null);
+      setAddDate(iso);
+      setAddChoiceKind(null);
+      setAddChoice(true);
+      return;
+    }
     setView("list");
     requestAnimationFrame(() => {
       document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start" });
     });
-  }, []);
+  }, [ensureComposer, monthItems]);
 
   // Whether this coach has published anything at all, not whether the next
   // eight weeks do: the empty state offers the thing to do only when there is
@@ -403,6 +418,8 @@ export function CalendarScreen({
   const bare = classes.length === 0 && savedDays.every((day) => day.items.length === 0);
   const openAdd = () => {
     ensureComposer();
+    setQuickPrefill(null);
+    setAddDate(null);
     setAddChoiceKind(null);
     setAddChoice(true);
   };
@@ -595,6 +612,34 @@ export function CalendarScreen({
               selected={addChoiceKind}
               onSelect={setAddChoiceKind}
             />
+            {addChoiceKind === "coaching" && composerData?.templates.some((template) => template.isPublic) && (
+              <section className="calendar-quick-add" aria-label="Your regular classes">
+                <h3>Add again</h3>
+                <p>Start with a class you already use.</p>
+                <div>
+                  {composerData.templates.filter((template) => template.isPublic).slice(0, 4).map((template) => {
+                    const studio = template.studioId ? studioById.get(template.studioId) : null;
+                    return (
+                      <button
+                        type="button"
+                        key={`${template.name}|${template.studioId ?? template.location ?? ""}`}
+                        onClick={() => {
+                          setQuickPrefill(prefillFromTemplate(template));
+                          setAddDate(null);
+                          setAddChoice(false);
+                          setPersonalAdd(false);
+                          setPersonalWorkout(false);
+                          setAddOpen(true);
+                        }}
+                      >
+                        <span><b>{template.name}</b><small>{studio?.name ?? template.location ?? "Your class"}</small></span>
+                        <Icon name="chevron_right" size={19} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
             <button type="button" className="addrole-continue" disabled={!addChoiceKind || enablingCoach} onClick={continueAdd}>{enablingCoach ? "Turning on coaching…" : "Continue"}</button>
           </div>
         </div>
@@ -628,6 +673,14 @@ export function CalendarScreen({
           lastUsed={composerData.lastUsed}
           subsCount={composerData.subsCount}
           firstPublish={bare}
+          prefill={quickPrefill ?? (addDate ? {
+            name: "",
+            startTime: composerData.lastUsed.startTime,
+            durationMin: composerData.lastUsed.durationMin,
+            studioId: composerData.lastUsed.studioId,
+            links: [],
+            specificDate: addDate,
+          } : undefined)}
           personal={
             personalAdd
               ? { canCoach: false, event: personalWorkout, oneOff: true }
@@ -635,12 +688,16 @@ export function CalendarScreen({
           }
           onClose={() => {
             setAddOpen(false);
+            setQuickPrefill(null);
+            setAddDate(null);
             setPersonalAdd(false);
             setPersonalWorkout(false);
           }}
           onToast={toast}
           onPublished={(msg) => {
             setAddOpen(false);
+            setQuickPrefill(null);
+            setAddDate(null);
             setPersonalAdd(false);
             setPersonalWorkout(false);
             toast(msg);
@@ -648,6 +705,8 @@ export function CalendarScreen({
           }}
           onDeleted={(msg) => {
             setAddOpen(false);
+            setQuickPrefill(null);
+            setAddDate(null);
             setPersonalAdd(false);
             toast(msg);
             router.refresh();
