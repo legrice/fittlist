@@ -2555,16 +2555,6 @@ button.ps-card { cursor: pointer; }
   background: var(--color-surface);
   padding: 10px 0 env(safe-area-inset-bottom);
 }
-.header-account-grabber {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  width: 56px;
-  height: 5px;
-  margin: 0 auto 4px;
-  border-radius: 999px;
-  background: var(--color-border-strong);
-}
 .header-account-loading {
   position: relative;
   min-height: 220px;

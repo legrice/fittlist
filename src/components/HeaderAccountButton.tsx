@@ -124,7 +124,6 @@ export function HeaderAccountButton({
                 if ((event.target as HTMLElement).closest("a")) close();
               }}
             >
-              <div className="header-account-grabber" aria-hidden="true" />
               <button type="button" className="iconbtn header-profile-close" aria-label="Close" onClick={close}>
                 <Icon name="close" size={20} />
               </button>
