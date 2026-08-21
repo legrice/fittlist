@@ -454,8 +454,9 @@ export async function gymMonth(
   };
 }
 
-/** Capture the actual seven dated days around an anchor as the reusable week.
- * Effective cover assignments are saved, while closures become an empty day. */
+/** Capture the seven class days around an anchor as the reusable week.
+ * Staffing is deliberately omitted: the standard week is the class source of
+ * truth, while coach assignments remain a separate dated rota. */
 export async function saveStandardWeek(
   studioId: string,
   anchorDate: string,
@@ -477,7 +478,6 @@ export async function saveStandardWeek(
       startTime: item.startTime,
       durationMin: item.durationMin,
       links: item.links,
-      coachUserId: item.onUserId,
       plannerColor: item.plannerColor,
       isPublic: item.isPublic,
     }));
@@ -492,8 +492,9 @@ export async function saveStandardWeek(
   return { ok: true, count };
 }
 
-/** Add one weekday from the standard week to a real date. Existing rows win;
- * exact duplicates are skipped and coach conflicts are reported, never forced. */
+/** Add one weekday from the standard week to a real date. Existing rows win,
+ * including their coach assignments. New standard classes begin Open: class
+ * structure comes from the template, staffing never does. */
 export async function applyStandardDay(
   studioId: string,
   targetDate: string,
@@ -510,7 +511,6 @@ export async function applyStandardDay(
     (target?.items ?? []).map((item) => `${item.name.trim().toLowerCase()}|${item.startTime.slice(0, 5)}`),
   );
   let duplicates = 0;
-  const conflicts: string[] = [];
   const rows: (typeof schema.classes.$inferInsert)[] = [];
   for (const slot of slots) {
     const identity = `${slot.name.trim().toLowerCase()}|${slot.startTime.slice(0, 5)}`;
@@ -518,22 +518,9 @@ export async function applyStandardDay(
       duplicates++;
       continue;
     }
-    let coachUserId = slot.coachUserId;
-    if (coachUserId && await assignmentError(ctx.db, studioId, coachUserId)) coachUserId = null;
-    const conflict = await coachConflictError(
-      ctx.db,
-      coachUserId,
-      targetDate,
-      slot.startTime,
-      slot.durationMin,
-    );
-    if (conflict) {
-      conflicts.push(`${slot.name}: ${conflict}`);
-      continue;
-    }
     rows.push({
       userId: ctx.gymId,
-      coachUserId,
+      coachUserId: null,
       studioId,
       seriesId: randomUUID(),
       dayOfWeek,
@@ -553,7 +540,7 @@ export async function applyStandardDay(
   if (rows.length) await ctx.db.insert(schema.classes).values(rows);
   revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}/manage`);
   revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}`);
-  return { ok: true, added: rows.length, duplicates, conflicts };
+  return { ok: true, added: rows.length, duplicates, conflicts: [] };
 }
 
 /**

@@ -248,7 +248,6 @@ export type StandardWeekSlot = {
   startTime: string;
   durationMin: number;
   links: BookingLink[];
-  coachUserId: string | null;
   plannerColor: string | null;
   isPublic: boolean;
 };
@@ -301,9 +300,9 @@ export const studios = pgTable("studios", {
   // without making it a roster. The switch lives on the shifts screen's
   // overflow, with the studio's other settings.
   showCoaches: boolean("show_coaches").notNull().default(true),
-  // A reusable Monday-through-Sunday operating template. Managers capture a
-  // representative week, then apply one standard day to a specific date
-  // without changing the live recurring rota or overwriting that date.
+  // A reusable Monday-through-Sunday class template. Staffing deliberately
+  // does not live here: changing the standard week changes what runs, never
+  // who is coaching the dated rota.
   standardWeek: jsonb("standard_week").$type<StandardWeek>().notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
