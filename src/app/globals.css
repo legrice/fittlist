@@ -7213,6 +7213,15 @@ select.editinput.placekind-select {
 }
 
 @media (min-width: 1100px) {
+  /* Horizontal overflow made the board a scroll container on both axes, so
+     the weekday row was sticky only to a box that never scrolled vertically.
+     The desktop planner already owns the full viewport width; release that
+     overflow here and let the weekday row pin to the page as intended. */
+  .rota-month-board { overflow: visible; }
+  .rota-month-weekdays {
+    border-radius: calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px) 0 0;
+    overflow: hidden;
+  }
   .studio-staff-pad {
     width: 100%; max-width: none; margin: 0;
     padding-inline: clamp(20px, 2vw, 40px);
