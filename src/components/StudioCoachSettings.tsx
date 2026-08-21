@@ -10,7 +10,6 @@ import {
   type StudioCoachDetailDto,
 } from "@/app/actions/gym";
 import { AgendaAvatar } from "@/components/Agenda";
-import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
@@ -103,9 +102,14 @@ export function StudioCoachSettings({
   return (
     <div className="pad studio-staff-pad studio-coach-settings">
       <div className="studio-manage-top pagetop">
-        <BackLink className="evback studio-manage-back" href={staffHref} label="Back to staff">
+        <Link
+          className="evback studio-manage-back"
+          href={staffHref}
+          replace
+          aria-label="Back to staff"
+        >
           <Icon name="arrow_back" size={23} />
-        </BackLink>
+        </Link>
         <div className="studio-coach-heading">
           <AgendaAvatar
             photo={coach.photo}
