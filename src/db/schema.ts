@@ -240,6 +240,20 @@ export const coachStudios = pgTable(
 
 // Global/shared directory. `seq` gives the deterministic directory index that
 // drives the studio color cycle (Sky, Tacha, Sand, Olive).
+export type StandardWeekSlot = {
+  name: string;
+  classType: string | null;
+  description: string | null;
+  image: string | null;
+  startTime: string;
+  durationMin: number;
+  links: BookingLink[];
+  coachUserId: string | null;
+  plannerColor: string | null;
+  isPublic: boolean;
+};
+export type StandardWeek = Partial<Record<"0" | "1" | "2" | "3" | "4" | "5" | "6", StandardWeekSlot[]>>;
+
 export const studios = pgTable("studios", {
   id: uuid("id").primaryKey().defaultRandom(),
   seq: serial("seq").notNull().unique(),
@@ -287,6 +301,10 @@ export const studios = pgTable("studios", {
   // without making it a roster. The switch lives on the shifts screen's
   // overflow, with the studio's other settings.
   showCoaches: boolean("show_coaches").notNull().default(true),
+  // A reusable Monday-through-Sunday operating template. Managers capture a
+  // representative week, then apply one standard day to a specific date
+  // without changing the live recurring rota or overwriting that date.
+  standardWeek: jsonb("standard_week").$type<StandardWeek>().notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

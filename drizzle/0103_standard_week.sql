@@ -1,0 +1,1 @@
+ALTER TABLE "studios" ADD COLUMN "standard_week" jsonb DEFAULT '{}'::jsonb NOT NULL;

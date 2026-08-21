@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  applyStandardDay,
   answerShiftRequest,
   closeGymDay,
   enableStudioSchedule,
   gymMonth,
   openGymDay,
   publishGymDrafts,
+  saveStandardWeek,
   setShiftCover,
   type GymCatalogItem,
   type GymClassDto,
@@ -503,6 +505,40 @@ export function GymRota({
     }
   };
 
+  const saveWeek = (day: GymDayDto) => {
+    if (pending) return;
+    if (!window.confirm(`Use the week containing ${day.label} as ${studioName}'s standard week?`)) return;
+    setMonthMenu(null);
+    start(async () => {
+      const res = await saveStandardWeek(studioId, day.iso);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't save the standard week");
+        return;
+      }
+      toast(`Standard week saved · ${res.count ?? 0} classes`);
+      refreshView();
+    });
+  };
+
+  const useStandardDay = (day: GymDayDto) => {
+    if (pending) return;
+    setMonthMenu(null);
+    start(async () => {
+      const res = await applyStandardDay(studioId, day.iso);
+      if (!res.ok) {
+        toast(res.error ?? `Couldn't use standard ${WEEKDAYS[day.dayOfWeek]}`);
+        return;
+      }
+      const parts = [
+        `${res.added ?? 0} added`,
+        res.duplicates ? `${res.duplicates} already there` : null,
+        res.conflicts?.length ? `${res.conflicts.length} coach ${res.conflicts.length === 1 ? "conflict" : "conflicts"}` : null,
+      ].filter(Boolean);
+      toast(parts.join(" · "));
+      refreshView();
+    });
+  };
+
   const publishDrafts = () => {
     if (pending) return;
     start(async () => {
@@ -799,6 +835,12 @@ export function GymRota({
                             </button>
                             {monthMenu === day.iso && (
                               <div className="rota-month-menu">
+                                {month.standardDays.includes(day.dayOfWeek) && !day.closed && (
+                                  <button onClick={() => useStandardDay(day)}>
+                                    Use standard {WEEKDAYS[day.dayOfWeek]}
+                                  </button>
+                                )}
+                                <button onClick={() => saveWeek(day)}>Save this week as standard</button>
                                 <button onClick={() => void shareDay(day)}>Share day</button>
                                 {day.closed ? (
                                   <button onClick={() => openDay(day)}>Open day</button>

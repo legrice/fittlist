@@ -95,6 +95,8 @@ export type GymMonthDto = {
   label: string;
   /** Six Monday-through-Sunday rows, including the month's edge days. */
   days: GymDayDto[];
+  /** Weekday indexes captured in the studio's reusable standard week. */
+  standardDays: number[];
 };
 
 export type GymCoachDto = { id: string; name: string; email: string };
@@ -445,7 +447,113 @@ export async function gymMonth(
       timeZone: "UTC",
     }),
     days,
+    standardDays: Object.entries(ctx.studio.standardWeek ?? {})
+      .filter(([, slots]) => Array.isArray(slots) && slots.length > 0)
+      .map(([day]) => Number(day))
+      .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6),
   };
+}
+
+/** Capture the actual seven dated days around an anchor as the reusable week.
+ * Effective cover assignments are saved, while closures become an empty day. */
+export async function saveStandardWeek(
+  studioId: string,
+  anchorDate: string,
+): Promise<{ ok: boolean; error?: string; count?: number }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate)) return { ok: false, error: "Pick a date." };
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const anchor = new Date(`${anchorDate}T00:00:00Z`);
+  anchor.setUTCDate(anchor.getUTCDate() - dowOfDate(anchorDate));
+  const week = await gymDays(ctx.db, ctx.gymId, studioId, anchor, 7);
+  const standardWeek: schema.StandardWeek = {};
+  let count = 0;
+  for (const day of week) {
+    const slots = day.closed ? [] : day.items.map((item) => ({
+      name: item.name,
+      classType: item.classType,
+      description: item.description,
+      image: item.image,
+      startTime: item.startTime,
+      durationMin: item.durationMin,
+      links: item.links,
+      coachUserId: item.onUserId,
+      plannerColor: item.plannerColor,
+      isPublic: item.isPublic,
+    }));
+    standardWeek[String(day.dayOfWeek) as keyof schema.StandardWeek] = slots;
+    count += slots.length;
+  }
+  await ctx.db
+    .update(schema.studios)
+    .set({ standardWeek })
+    .where(eq(schema.studios.id, studioId));
+  revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}/manage`);
+  return { ok: true, count };
+}
+
+/** Add one weekday from the standard week to a real date. Existing rows win;
+ * exact duplicates are skipped and coach conflicts are reported, never forced. */
+export async function applyStandardDay(
+  studioId: string,
+  targetDate: string,
+): Promise<{ ok: boolean; error?: string; added?: number; duplicates?: number; conflicts?: string[] }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) return { ok: false, error: "Pick a date." };
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const dayOfWeek = dowOfDate(targetDate);
+  const slots = ctx.studio.standardWeek?.[String(dayOfWeek) as keyof schema.StandardWeek] ?? [];
+  if (!slots.length) return { ok: false, error: `No standard ${DAYS[dayOfWeek]} has been saved yet.` };
+  const date = new Date(`${targetDate}T00:00:00Z`);
+  const [target] = await gymDays(ctx.db, ctx.gymId, studioId, date, 1);
+  const existing = new Set(
+    (target?.items ?? []).map((item) => `${item.name.trim().toLowerCase()}|${item.startTime.slice(0, 5)}`),
+  );
+  let duplicates = 0;
+  const conflicts: string[] = [];
+  const rows: (typeof schema.classes.$inferInsert)[] = [];
+  for (const slot of slots) {
+    const identity = `${slot.name.trim().toLowerCase()}|${slot.startTime.slice(0, 5)}`;
+    if (existing.has(identity)) {
+      duplicates++;
+      continue;
+    }
+    let coachUserId = slot.coachUserId;
+    if (coachUserId && await assignmentError(ctx.db, studioId, coachUserId)) coachUserId = null;
+    const conflict = await coachConflictError(
+      ctx.db,
+      coachUserId,
+      targetDate,
+      slot.startTime,
+      slot.durationMin,
+    );
+    if (conflict) {
+      conflicts.push(`${slot.name}: ${conflict}`);
+      continue;
+    }
+    rows.push({
+      userId: ctx.gymId,
+      coachUserId,
+      studioId,
+      seriesId: randomUUID(),
+      dayOfWeek,
+      specificDate: targetDate,
+      startTime: slot.startTime,
+      durationMin: slot.durationMin,
+      name: slot.name,
+      classType: slot.classType,
+      description: slot.description,
+      image: slot.image,
+      links: slot.links,
+      studioPlannerColor: isStudioPlannerColor(slot.plannerColor) ? slot.plannerColor : null,
+      isPublic: slot.isPublic,
+    });
+    existing.add(identity);
+  }
+  if (rows.length) await ctx.db.insert(schema.classes).values(rows);
+  revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}/manage`);
+  revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}`);
+  return { ok: true, added: rows.length, duplicates, conflicts };
 }
 
 /**
