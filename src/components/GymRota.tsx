@@ -266,19 +266,7 @@ export function GymRota({
     },
     [effectiveCoach, shiftFilter, viewerId],
   );
-  const visibleDays = sourceVisibleDays.map((day) => ({
-    ...day,
-    items: day.items.filter((cls) => matchesShiftFilter(cls, day.iso)),
-  }));
-  const all = visibleDays.flatMap((d) => d.items);
   const sourceAll = sourceVisibleDays.flatMap((d) => d.items);
-  const openSlots = visibleDays.reduce(
-    (count, day) => count + day.items.filter((c) => {
-      const who = effectiveCoach(c, day.iso);
-      return !who;
-    }).length,
-    0,
-  );
   const visibleDrafts = new Set(sourceAll.filter((c) => !c.isPublic).map((c) => c.id)).size;
 
   const loadMonth = useCallback(async (key?: string, force = false) => {
@@ -585,6 +573,7 @@ export function GymRota({
             >
               <Icon name="arrow_back" size={23} />
             </BackLink>
+            <h1 className="studio-calendar-title">Calendar</h1>
             <StudioAdminSheet
               slug={studioSlug}
               canSchedule={false}
@@ -594,10 +583,6 @@ export function GymRota({
               approvalOn={admin.approvalOn}
               settingsTrigger
             />
-          </div>
-          <div>
-            <h1>Calendar</h1>
-            <p className="adminsub">{studioName}</p>
           </div>
         </div>
         <div className="empty-block" style={{ marginTop: 24 }}>
@@ -700,21 +685,6 @@ export function GymRota({
     if (shiftFilter !== "all") params.set("show", shiftFilter);
     return `${manageBase}?${params.toString()}`;
   };
-  const summary = all.length === 0
-    ? shiftFilter === "mine"
-      ? "None of your shifts here"
-      : shiftFilter === "open"
-        ? "No open shifts here"
-        : desktop
-          ? "The month is empty"
-          : "The week is empty"
-    : shiftFilter === "mine"
-      ? `${all.length} of your ${all.length === 1 ? "shift" : "shifts"}`
-      : shiftFilter === "open"
-        ? `${all.length} open ${all.length === 1 ? "shift" : "shifts"}`
-        : `${all.length} ${all.length === 1 ? "class" : "classes"}` +
-          (openSlots ? ` · ${openSlots} open` : "");
-
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
       <div className="studio-manage-top pagetop">
@@ -727,6 +697,7 @@ export function GymRota({
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
+          <h1 className="studio-calendar-title">Calendar</h1>
           <StudioAdminSheet
             slug={studioSlug}
             canSchedule={hasAccount}
@@ -737,15 +708,11 @@ export function GymRota({
             settingsTrigger
           />
         </div>
-        <div>
-          <h1>Calendar</h1>
-          <p className="adminsub">{studioName} · {summary}</p>
-          {visibleDrafts > 0 && (
-            <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
-              Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
-            </button>
-          )}
-        </div>
+        {visibleDrafts > 0 && (
+          <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
+            Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
+          </button>
+        )}
       </div>
 
       <div className="studio-calendar-controls">

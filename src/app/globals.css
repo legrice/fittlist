@@ -8045,7 +8045,12 @@ select.editinput.placekind-select {
 }
 .studio-manage-top > div { min-width: 0; }
 .studio-manage-topbar {
-  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  width: 100%; display: grid; grid-template-columns: var(--tap-size) minmax(0, 1fr) var(--tap-size);
+  align-items: center; gap: 12px;
+}
+.studio-calendar-title {
+  min-width: 0; margin: 0; overflow: hidden; text-align: center;
+  text-overflow: ellipsis; white-space: nowrap; font-size: 22px; line-height: 1.1;
 }
 .studio-manage-back {
   flex: 0 0 var(--tap-size); background: var(--color-white);
