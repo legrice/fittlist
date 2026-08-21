@@ -882,12 +882,22 @@ function MonthBlock({
           const rows = c.inMonth ? (items.get(c.iso) ?? []) : [];
           const past = c.iso < todayIso;
           const today = c.iso === todayIso;
-          const tappable = c.inMonth && !past && rows.length > 0;
+          // A future date with no rows is still useful: it starts a new entry
+          // with the date filled. A populated date keeps its old behavior and
+          // opens the corresponding list day.
+          const tappable = c.inMonth && !past;
           return (
             <button
               key={c.iso}
               className={`monthday${c.inMonth ? "" : " out"}${past ? " past" : ""}${today ? " today" : ""}`}
               disabled={!tappable}
+              aria-label={
+                tappable
+                  ? rows.length
+                    ? `Open ${c.iso}`
+                    : `Add to ${c.iso}`
+                  : undefined
+              }
               onClick={() => onDay(c.iso)}
             >
               {c.inMonth && <span className="monthday-n">{c.day}</span>}

@@ -2665,6 +2665,19 @@ button.ps-card { cursor: pointer; }
 .addweek-options.selectable > button.selected .addweek-radio { background:var(--color-black); }
 .addrole-continue { width:100%; min-height:52px; margin-top:18px; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font:inherit; font-weight:700; }
 .addrole-continue:disabled { opacity:.42; }
+.calendar-quick-add { margin-top:20px; padding-top:18px; border-top:1px solid var(--color-border); }
+.calendar-quick-add h3 { font-size:15px; line-height:1.2; }
+.calendar-quick-add > p { margin:3px 0 10px; color:var(--muted); font-size:12px; }
+.calendar-quick-add > div { display:grid; gap:7px; }
+.calendar-quick-add button {
+  width:100%; min-height:58px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  border:1px solid var(--color-border); border-radius:14px; background:var(--color-white); color:var(--color-black); text-align:left;
+}
+.calendar-quick-add button > span { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.calendar-quick-add button b,.calendar-quick-add button small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-quick-add button b { font-size:14px; }
+.calendar-quick-add button small { color:var(--muted); font-size:12px; }
+.calendar-quick-add button > svg { flex:0 0 auto; color:var(--muted); }
 .profile-empty-message {
   width: 100%; margin-top: 16px;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
