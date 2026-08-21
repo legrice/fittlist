@@ -11,7 +11,6 @@ import {
   gymMonth,
   openGymDay,
   publishGymDrafts,
-  saveStandardWeek,
   setShiftCover,
   type GymCatalogItem,
   type GymClassDto,
@@ -505,21 +504,6 @@ export function GymRota({
     }
   };
 
-  const saveWeek = (day: GymDayDto) => {
-    if (pending) return;
-    if (!window.confirm(`Use the week containing ${day.label} as ${studioName}'s standard week?`)) return;
-    setMonthMenu(null);
-    start(async () => {
-      const res = await saveStandardWeek(studioId, day.iso);
-      if (!res.ok) {
-        toast(res.error ?? "Couldn't save the standard week");
-        return;
-      }
-      toast(`Standard week saved · ${res.count ?? 0} classes`);
-      refreshView();
-    });
-  };
-
   const useStandardDay = (day: GymDayDto) => {
     if (pending) return;
     setMonthMenu(null);
@@ -840,7 +824,6 @@ export function GymRota({
                                     Use standard {WEEKDAYS[day.dayOfWeek]}
                                   </button>
                                 )}
-                                <button onClick={() => saveWeek(day)}>Save this week as standard</button>
                                 <button onClick={() => void shareDay(day)}>Share day</button>
                                 {day.closed ? (
                                   <button onClick={() => openDay(day)}>Open day</button>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   addStudioManager,
   removeStudioManager,
+  saveStandardWeek,
   setStudioShiftApproval,
   studioManagersForSettings,
   studioPageViews,
@@ -52,6 +53,8 @@ export function StudioAdminSheet({
   const [approvals, setApprovals] = useState(approvalOn);
   const [views, setViews] = useState<number | null | undefined>(pageViews);
   const [adminsOpen, setAdminsOpen] = useState(false);
+  const [standardOpen, setStandardOpen] = useState(false);
+  const [standardDate, setStandardDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [admins, setAdmins] = useState<StaffPerson[] | null>(null);
   const [canManageAdmins, setCanManageAdmins] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
@@ -62,6 +65,7 @@ export function StudioAdminSheet({
   } | null>(null);
   const [viewsPending, startViews] = useTransition();
   const [adminsPending, startAdmins] = useTransition();
+  const [standardPending, startStandard] = useTransition();
   const [, startNames] = useTransition();
   const [, startApprovals] = useTransition();
   const router = useRouter();
@@ -111,6 +115,7 @@ export function StudioAdminSheet({
   const closeAdminSheet = () => {
     setOpen(false);
     setAdminsOpen(false);
+    setStandardOpen(false);
     setAdminConfirm(null);
   };
 
@@ -121,6 +126,20 @@ export function StudioAdminSheet({
       const result = await studioManagersForSettings(studio.id);
       setAdmins(result.people);
       setCanManageAdmins(result.canManage);
+    });
+  };
+
+  const saveStandard = () => {
+    if (standardPending || !standardDate) return;
+    startStandard(async () => {
+      const result = await saveStandardWeek(studio.id, standardDate);
+      if (!result.ok) {
+        toast(result.error ?? "Couldn't save the standard week");
+        return;
+      }
+      toast(`Standard week saved · ${result.count ?? 0} classes`);
+      setStandardOpen(false);
+      router.refresh();
     });
   };
 
@@ -218,6 +237,30 @@ export function StudioAdminSheet({
                   </button>
                 </div>
               </div>
+            ) : standardOpen ? (
+              <div className="studio-admin-access">
+                <button className="studio-admin-view-back" onClick={() => setStandardOpen(false)}>
+                  <Icon name="arrow_back" size={20} />
+                  Studio settings
+                </button>
+                <h2>Standard week</h2>
+                <p className="lead">
+                  Choose any date in a representative week. Its Monday through Sunday classes become the standard. Coach assignments stay separate.
+                </p>
+                <label className="flabel" htmlFor="standardWeekDate">A date in the standard week</label>
+                <input
+                  id="standardWeekDate"
+                  className="editinput"
+                  type="date"
+                  value={standardDate}
+                  onChange={(event) => setStandardDate(event.target.value)}
+                />
+                <div className="publishwrap nostick">
+                  <button className="btn si" disabled={standardPending || !standardDate} onClick={saveStandard}>
+                    {standardPending ? "Saving…" : "Save standard week"}
+                  </button>
+                </div>
+              </div>
             ) : adminsOpen ? (
               <div className="studio-admin-access">
                 <button className="studio-admin-view-back" onClick={() => setAdminsOpen(false)}>
@@ -308,6 +351,16 @@ export function StudioAdminSheet({
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </Link>
+              )}
+              {canSchedule && (
+                <button className="setrow" onClick={() => setStandardOpen(true)}>
+                  <span className="setrow-ic"><Icon name="calendar_month" size={24} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Standard week</span>
+                    <span className="s">Choose the class schedule used as your weekly source</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+                </button>
               )}
               <button
                 className="setrow"
