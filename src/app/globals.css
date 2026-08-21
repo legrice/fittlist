@@ -7035,7 +7035,7 @@ select.editinput.placekind-select {
 }
 .rota-month-weekdays span:last-child { border-right: 0; }
 .rota-month-day {
-  position: relative; min-height: 190px; min-width: 0; padding: 9px;
+  position: relative; min-height: 190px; min-width: 0; padding: 12px;
   border-right: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
 }
@@ -7047,7 +7047,7 @@ select.editinput.placekind-select {
 .rota-month-day.closed .rota-month-events { opacity: .5; }
 .rota-month-day.closed .rota-month-eventmain,
 .rota-month-day.closed .rota-coach-select { cursor: default; }
-.rota-month-dayhead { min-height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.rota-month-dayhead { min-height: 32px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .rota-month-dayhead > span { display:flex; align-items:center; gap:6px; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .rota-day-closed-label {
   padding: 3px 7px; border-radius: var(--radius-pill); background: var(--color-black);
@@ -7072,11 +7072,11 @@ select.editinput.placekind-select {
   font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
 }
 .rota-month-menu button:hover { background: var(--color-surface-hover); }
-.rota-month-events { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
+.rota-month-events { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .rota-month-event {
   position: relative; width: 100%; min-width: 0; padding: 0;
-  display: flex; flex-direction: column; gap: 2px; overflow: hidden;
-  border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-white);
+  display: flex; flex-direction: column; gap: 5px; overflow: hidden;
+  border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-white);
   color: var(--color-black); text-align: left;
 }
 .rota-month-event::before {
@@ -7088,17 +7088,17 @@ select.editinput.placekind-select {
 .rota-month-event.draft::before { background: var(--color-personal); }
 .rota-month-event[data-planner-color] { border-top: 4px solid var(--studio-planner-color); }
 .rota-month-eventmain {
-  width: 100%; min-width: 0; padding: 7px 8px 3px 10px;
-  display: flex; flex-direction: column; gap: 2px;
+  width: 100%; min-width: 0; padding: 11px 12px 5px 14px;
+  display: flex; flex-direction: column; gap: 4px;
   border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
 }
 .rota-month-eventmain:active { opacity: .6; }
 .rota-month-eventtop { min-width: 0; display: flex; align-items: baseline; gap: 6px; }
-.rota-month-eventtop b { flex: 0 0 auto; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.rota-month-eventtop b small { margin-left: 2px; font-size: 8px; text-transform: uppercase; }
+.rota-month-eventtop b { flex: 0 0 auto; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rota-month-eventtop b small { margin-left: 2px; font-size: 9px; text-transform: uppercase; }
 .rota-month-eventtop strong {
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-size: 12px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
 }
 .rota-month-state { color: var(--color-text-secondary); font-size: 10px; font-weight: 600; }
 .rota-month-empty { padding: 8px 1px; color: var(--color-text-secondary); font-size: 10px; }
@@ -7132,8 +7132,8 @@ select.editinput.placekind-select {
   width: min(280px, calc(100% - 40px));
 }
 .rota-month-coachpick {
-  width: calc(100% - 14px); min-height: 30px; margin: 0 6px 6px 8px; padding: 0 8px;
-  border-radius: 7px; font-size: 10px;
+  width: calc(100% - 24px); min-height: 40px; margin: 0 10px 10px 14px; padding: 0 34px 0 12px;
+  border-radius: 9px; font-size: 12px;
 }
 
 .rotaday.closed .dayrows { opacity: .5; }
