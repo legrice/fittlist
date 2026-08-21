@@ -1,6 +1,3 @@
-/* The native shell owns the iPhone safe area; this selector is inert in Safari. */
-html[data-native="ios"] body { padding-top: env(safe-area-inset-top); }
-
 .native-offline {
   position: fixed;
   z-index: 10000;
@@ -19,21 +16,13 @@ html[data-native="ios"] body { padding-top: env(safe-area-inset-top); }
   box-shadow: none;
 }
 
-/* UIKit owns navigation in the iOS shell. The website keeps the HTML bar. */
+/* UIKit owns bottom navigation in the iOS shell. The current web header stays
+   visible so its controls and branding remain identical on every platform. */
 html[data-native="ios"] .navwrap { display: none; }
-html[data-native="ios"] .brandbar { display: none; }
 /* UIKit's material bar overlays the web view, just like the website's fixed
    bar. Keep the last content and floating action reachable above it. */
 html[data-native="ios"] .cardwrap { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
 html[data-native="ios"] .hasnav .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
-/* The website lets its brand row sit behind the page as content scrolls. That
-   stacking model can still paint over a sticky child inside WKWebView, so the
-   native shell gives the row one unambiguous viewport position: directly below
-   the Dynamic Island, above every page. The column reserves the same height. */
-html[data-native="ios"] .screen.hasnav > .pad {
-  padding-top: 14px;
-}
-
 /* Delight, the brand typeface, self-hosted as woff2.
    Four faces: 700 is reserved for display headlines and decisive actions;
    readable product copy continues to live at 400–600.
