@@ -40,6 +40,28 @@ const fmtDay = (iso: string) =>
     timeZone: "UTC",
   });
 
+const fmtMonth = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+const fmtDayPill = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+
+const localTodayIso = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 /** What the sheet is open on: a slot, or an empty day waiting for one. */
 type Open = {
   iso: string;
@@ -196,6 +218,11 @@ export function GymRota({
   const [desktopView, setDesktopView] = useState<"week" | "month">("month");
   const [month, setMonth] = useState<GymMonthDto | null>(null);
   const [monthLoading, setMonthLoading] = useState(false);
+  const [selectedDayIso, setSelectedDayIso] = useState(() => {
+    const initialDays = week?.days ?? [];
+    const today = localTodayIso();
+    return initialDays.some((day) => day.iso === today) ? today : initialDays[0]?.iso ?? "";
+  });
   const monthRequest = useRef(0);
   const monthCache = useRef(new Map<string, GymMonthDto>());
   // A roster edit should read back immediately while the server updates the
@@ -221,6 +248,14 @@ export function GymRota({
       coachOverrides[occurrenceKey(cls.id, iso)] ?? cls.onUserId ?? "",
     [coachOverrides],
   );
+
+  useEffect(() => {
+    setSelectedDayIso((current) => {
+      if (days.some((day) => day.iso === current)) return current;
+      const today = localTodayIso();
+      return days.some((day) => day.iso === today) ? today : days[0]?.iso ?? "";
+    });
+  }, [days]);
   const matchesShiftFilter = useCallback(
     (cls: GymClassDto, iso: string) => {
       const coachId = effectiveCoach(cls, iso);
@@ -659,6 +694,10 @@ export function GymRota({
     ...day,
     items: day.items.filter((item) => matchesShiftFilter(item, day.iso)),
   }));
+  const renderedWeekDays = desktop
+    ? filteredWeekDays
+    : filteredWeekDays.filter((day) => day.iso === selectedDayIso);
+  const selectedDay = filteredWeekDays.find((day) => day.iso === selectedDayIso) ?? filteredWeekDays[0];
   const weekHref = (offset: number) => {
     const params = new URLSearchParams({ w: String(offset) });
     if (shiftFilter !== "all") params.set("show", shiftFilter);
@@ -905,7 +944,7 @@ export function GymRota({
         <>
           {/* A real week, dates and all, because that's what the spreadsheet is
               and what a swap is about. */}
-          <div className="rotaweek">
+          <div className={`rotaweek${desktop ? "" : " mobile-day-nav"}`}>
             <Link
               className={`rotanav${week && week.offset > 0 ? "" : " off"}`}
               href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))}
@@ -913,18 +952,44 @@ export function GymRota({
             >
               <Icon name="chevron_left" size={20} />
             </Link>
-            <span className="rotaweek-lbl">{week?.label ?? ""}</span>
+            <span className="rotaweek-lbl">
+              {desktop ? week?.label ?? "" : selectedDay ? fmtMonth(selectedDay.iso) : "Calendar"}
+            </span>
             <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
               <Icon name="chevron_right" size={20} />
             </Link>
           </div>
 
+          {!desktop && (
+            <div className="rota-day-pills" role="tablist" aria-label="Choose a day">
+              {filteredWeekDays.map((day) => {
+                const selected = day.iso === selectedDayIso;
+                const today = day.iso === localTodayIso();
+                return (
+                  <button
+                    key={day.iso}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    className={`${selected ? "selected" : ""}${today ? " today" : ""}`}
+                    onClick={() => {
+                      setSelectedDayIso(day.iso);
+                      setDayMenu(null);
+                    }}
+                  >
+                    {fmtDayPill(day.iso)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="calendar-cardlist rota-calendar">
-            {filteredWeekDays.map((day) => (
+            {renderedWeekDays.map((day) => (
               <section key={day.iso} className={`rotaday dayblock${day.closed ? " closed" : ""}`}>
                 <div className="rotaday-h dayband">
                   <span className="dayband-d">
-                    {fmtDay(day.iso)}
+                    {desktop ? fmtDay(day.iso) : ""}
                     {day.closed && <b className="rota-day-closed-label">Closed</b>}
                   </span>
                   <span className="rotaday-actions">
