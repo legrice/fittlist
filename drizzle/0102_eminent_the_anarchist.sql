@@ -1,0 +1,1 @@
+ALTER TABLE "studio_rota_coaches" ADD COLUMN "role" text DEFAULT 'coach' NOT NULL;

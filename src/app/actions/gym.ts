@@ -121,6 +121,10 @@ async function actingFor(studioId: string) {
 
 const ASSIGNABLE_ROSTER_STATES = ["active", "invited", "placeholder"];
 const INTERACTIVE_ROSTER_STATES = ["active", "invited"];
+export type StudioTeamRole = "coach" | "front_desk";
+
+const isStudioTeamRole = (role: unknown): role is StudioTeamRole =>
+  role === "coach" || role === "front_desk";
 
 async function rosterHas(
   db: Awaited<ReturnType<typeof getDb>>,
@@ -135,6 +139,7 @@ async function rosterHas(
       and(
         eq(schema.studioRotaCoaches.studioId, studioId),
         eq(schema.studioRotaCoaches.userId, userId),
+        eq(schema.studioRotaCoaches.role, "coach"),
         eq(schema.studioRotaCoaches.onSchedule, true),
         inArray(schema.studioRotaCoaches.state, states),
       ),
@@ -175,6 +180,7 @@ async function gymCoachesFromDb(
     .where(
       and(
         eq(schema.studioRotaCoaches.studioId, studioId),
+        eq(schema.studioRotaCoaches.role, "coach"),
         eq(schema.studioRotaCoaches.onSchedule, true),
         inArray(schema.studioRotaCoaches.state, ASSIGNABLE_ROSTER_STATES),
       ),
@@ -1320,6 +1326,7 @@ async function coachesHere(
     .where(
       and(
         eq(schema.studioRotaCoaches.studioId, studioId),
+        eq(schema.studioRotaCoaches.role, "coach"),
         eq(schema.studioRotaCoaches.onSchedule, true),
         inArray(schema.studioRotaCoaches.state, INTERACTIVE_ROSTER_STATES),
       ),
@@ -1999,9 +2006,11 @@ export type StudioCoachSearchResult = {
 export async function searchStudioCoachCandidates(
   studioId: string,
   queryRaw: string,
+  role: StudioTeamRole = "coach",
 ): Promise<StudioCoachSearchResult[]> {
   const ctx = await managing(studioId);
   if ("error" in ctx) return [];
+  if (!isStudioTeamRole(role)) return [];
   const query = queryRaw.trim();
   if (query.length < 2) return [];
   const pattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
@@ -2019,7 +2028,9 @@ export async function searchStudioCoachCandidates(
       .where(
         and(
           eq(schema.users.discoverable, true),
-          inArray(schema.users.kind, ["coach", "admin"]),
+          role === "coach"
+            ? inArray(schema.users.kind, ["coach", "admin"])
+            : inArray(schema.users.kind, ["fan", "coach", "admin"]),
           or(ilike(schema.users.name, pattern), ilike(schema.users.handle, pattern)),
         ),
       )
@@ -2046,16 +2057,20 @@ export async function searchStudioCoachCandidates(
 export async function addExistingStudioCoach(
   studioId: string,
   coachUserId: string,
+  role: StudioTeamRole = "coach",
 ): Promise<{ ok: boolean; error?: string }> {
   const ctx = await managing(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
+  if (!isStudioTeamRole(role)) return { ok: false, error: "Choose a staff role." };
   const { db, userId, studio } = ctx;
   const [person] = await db
     .select({ id: schema.users.id, kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, coachUserId));
-  if (!person || (person.kind !== "coach" && person.kind !== "admin"))
-    return { ok: false, error: "That coach could not be added." };
+  if (!person || person.kind === "gym" || person.kind === "placeholder")
+    return { ok: false, error: "That person could not be added." };
+  if (role === "coach" && person.kind !== "coach" && person.kind !== "admin")
+    return { ok: false, error: "That account is not set up as a coach." };
   const [already] = await db
     .select({ id: schema.studioRotaCoaches.id })
     .from(schema.studioRotaCoaches)
@@ -2070,14 +2085,17 @@ export async function addExistingStudioCoach(
     studioId,
     userId: coachUserId,
     state: "active",
-    onSchedule: true,
+    role,
+    onSchedule: role === "coach",
     acceptedAt: new Date(),
   });
   await addNotification(coachUserId, {
     type: "shift_assigned",
     title: `You're on ${studio.name}'s team`,
-    body: "The studio can put you on its calendar and send you coverage requests.",
-    href: `/s/${studio.slug ?? studio.id}/shifts`,
+    body: role === "coach"
+      ? "The studio can put you on its calendar and send you coverage requests."
+      : "The studio added you to its front desk team.",
+    href: role === "coach" ? `/s/${studio.slug ?? studio.id}/shifts` : `/s/${studio.slug ?? studio.id}`,
     actorUserId: userId,
   });
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
@@ -2090,9 +2108,11 @@ export async function inviteStudioCoach(
   studioId: string,
   nameRaw: string,
   emailRaw: string,
+  role: StudioTeamRole = "coach",
 ): Promise<{ ok: boolean; error?: string; invited?: boolean }> {
   const ctx = await managing(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
+  if (!isStudioTeamRole(role)) return { ok: false, error: "Choose a staff role." };
   const { db, userId, studio } = ctx;
   const name = nameRaw.trim().slice(0, 80);
   const email = emailRaw.trim().toLowerCase();
@@ -2102,7 +2122,9 @@ export async function inviteStudioCoach(
 
   const [existing] = await db.select().from(schema.users).where(eq(schema.users.email, email));
   if (existing) {
-    if (existing.kind === "fan" || existing.kind === "gym")
+    if (existing.kind === "gym" || existing.kind === "placeholder")
+      return { ok: false, error: "That account cannot be added to staff." };
+    if (role === "coach" && existing.kind === "fan")
       return { ok: false, error: "That account isn't a coach." };
     const [already] = await db
       .select({ id: schema.studioRotaCoaches.id })
@@ -2120,14 +2142,17 @@ export async function inviteStudioCoach(
         studioId,
         userId: existing.id,
         state: "active",
-        onSchedule: true,
+        role,
+        onSchedule: role === "coach",
         acceptedAt: new Date(),
       });
     await addNotification(existing.id, {
       type: "shift_assigned",
       title: `You're on ${studio.name}'s team`,
-      body: "The studio can put you on its calendar and send you coverage requests.",
-      href: `/s/${studio.slug ?? studio.id}/shifts`,
+      body: role === "coach"
+        ? "The studio can put you on its calendar and send you coverage requests."
+        : "The studio added you to its front desk team.",
+      href: role === "coach" ? `/s/${studio.slug ?? studio.id}/shifts` : `/s/${studio.slug ?? studio.id}`,
       actorUserId: userId,
     });
     revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
@@ -2147,7 +2172,7 @@ export async function inviteStudioCoach(
     );
   if (!already) {
     try {
-      await createPlaceholderCoach({ studioId, name, email });
+      await createPlaceholderCoach({ studioId, name, email, role });
     } catch {
       // The partial unique index is the authority if two managers invite the
       // same address together. Treat the losing insert as a resend instead of
@@ -2168,8 +2193,10 @@ export async function inviteStudioCoach(
   try {
     await sendInviteLink({
       email,
-      subject: `${studio.name} invited you to their FittList roster`,
-      intro: `${studio.name} added you to their coach roster. Tap to join FittList and see the classes you're on`,
+      subject: `${studio.name} invited you to their FittList team`,
+      intro: role === "coach"
+        ? `${studio.name} added you to their coach roster. Tap to join FittList and see the classes you're on`
+        : `${studio.name} added you to their front desk team. Tap to join FittList`,
       invite: true,
     });
   } catch {
@@ -2240,7 +2267,11 @@ export async function setStudioCoachScheduled(
   const { db, studio } = ctx;
   if (typeof onSchedule !== "boolean") return { ok: false, error: "Choose a schedule status." };
   const [row] = await db
-    .select({ id: schema.studioRotaCoaches.id, state: schema.studioRotaCoaches.state })
+    .select({
+      id: schema.studioRotaCoaches.id,
+      state: schema.studioRotaCoaches.state,
+      role: schema.studioRotaCoaches.role,
+    })
     .from(schema.studioRotaCoaches)
     .where(
       and(
@@ -2248,7 +2279,8 @@ export async function setStudioCoachScheduled(
         eq(schema.studioRotaCoaches.userId, userId),
       ),
     );
-  if (!row) return { ok: false, error: "That coach isn't associated with this studio." };
+  if (!row) return { ok: false, error: "That person isn't associated with this studio." };
+  if (row.role !== "coach") return { ok: false, error: "Only coaches can be put on the schedule." };
   if (onSchedule && !ASSIGNABLE_ROSTER_STATES.includes(row.state))
     return { ok: false, error: "Invite this coach before putting them on the schedule." };
   if (!onSchedule && (await hasFutureStudioAssignment(db, studio, userId)))
@@ -2286,7 +2318,7 @@ export async function removeStudioCoach(
         eq(schema.studioRotaCoaches.userId, userId),
       ),
     );
-  if (!row) return { ok: false, error: "That coach isn't associated with this studio." };
+  if (!row) return { ok: false, error: "That person isn't associated with this studio." };
   if (await hasFutureStudioAssignment(db, studio, userId))
     return { ok: false, error: "Reassign or open their future shifts before removing them." };
   await db.delete(schema.studioRotaCoaches).where(eq(schema.studioRotaCoaches.id, row.id));
@@ -2341,9 +2373,9 @@ export async function studioManagersForSettings(studioId: string): Promise<{
   };
 }
 export type StudioStaffDto = {
-  /** Everyone the studio has placed on its roster, including people invited
-   * before they have an account. */
-  roster: {
+  /** One directory of everyone who works here. Permission roles and working
+   * roles can coexist, so an owner who coaches reads Owner · Coach once. */
+  people: {
     id: string;
     name: string;
     email: string | null;
@@ -2351,26 +2383,39 @@ export type StudioStaffDto = {
     color: string | null;
     state: string;
     onSchedule: boolean;
+    staffRole: StudioTeamRole | null;
+    roles: ("owner" | "manager" | StudioTeamRole)[];
   }[];
   hasSchedule: boolean;
 };
 
-/** The invited coach roster for the Staff page. Admins live in Studio settings. */
+/** The complete studio team: owner, managers, coaches, and front desk. */
 export async function studioStaff(studioId: string): Promise<StudioStaffDto | null> {
   const ctx = await managing(studioId);
   if ("error" in ctx) return null;
   const { db, studio } = ctx;
-  const rosterRows = await db
-    .select({
-      userId: schema.studioRotaCoaches.userId,
-      state: schema.studioRotaCoaches.state,
-      invitedEmail: schema.studioRotaCoaches.invitedEmail,
-      onSchedule: schema.studioRotaCoaches.onSchedule,
-    })
-    .from(schema.studioRotaCoaches)
-    .where(eq(schema.studioRotaCoaches.studioId, studioId));
-  const rosterIds = rosterRows.map((row) => row.userId);
-  const rosterPeople = rosterIds.length
+  const [rosterRows, managerRows] = await Promise.all([
+    db
+      .select({
+        userId: schema.studioRotaCoaches.userId,
+        state: schema.studioRotaCoaches.state,
+        role: schema.studioRotaCoaches.role,
+        invitedEmail: schema.studioRotaCoaches.invitedEmail,
+        onSchedule: schema.studioRotaCoaches.onSchedule,
+      })
+      .from(schema.studioRotaCoaches)
+      .where(eq(schema.studioRotaCoaches.studioId, studioId)),
+    db
+      .select({ userId: schema.studioManagers.userId })
+      .from(schema.studioManagers)
+      .where(eq(schema.studioManagers.studioId, studioId)),
+  ]);
+  const personIds = [...new Set([
+    ...(studio.ownerUserId ? [studio.ownerUserId] : []),
+    ...rosterRows.map((row) => row.userId),
+    ...managerRows.map((row) => row.userId),
+  ])];
+  const teamPeople = personIds.length
     ? await db
         .select({
           id: schema.users.id,
@@ -2382,24 +2427,41 @@ export async function studioStaff(studioId: string): Promise<StudioStaffDto | nu
           color: schema.users.avatarColor,
         })
         .from(schema.users)
-        .where(inArray(schema.users.id, rosterIds))
+        .where(inArray(schema.users.id, personIds))
     : [];
-  const personById = new Map(rosterPeople.map((person) => [person.id, person]));
-  const roster = rosterRows
-    .map((row) => {
-      const person = personById.get(row.userId);
+  const personById = new Map(teamPeople.map((person) => [person.id, person]));
+  const rosterById = new Map(rosterRows.map((row) => [row.userId, row]));
+  const managerIds = new Set(managerRows.map((row) => row.userId));
+  const roleRank = (roles: ("owner" | "manager" | StudioTeamRole)[]) => roles.includes("owner")
+    ? 0
+    : roles.includes("manager")
+      ? 1
+      : roles.includes("coach")
+        ? 2
+        : 3;
+  const people = personIds
+    .map((id) => {
+      const person = personById.get(id);
+      const roster = rosterById.get(id);
+      const roles: ("owner" | "manager" | StudioTeamRole)[] = [];
+      if (id === studio.ownerUserId) roles.push("owner");
+      else if (managerIds.has(id)) roles.push("manager");
+      if (roster?.role === "front_desk") roles.push("front_desk");
+      else if (roster) roles.push("coach");
       return {
-        id: row.userId,
-        name: person?.name.trim() || "Coach",
-        email: row.invitedEmail ?? (person?.kind === "placeholder" ? null : person?.email ?? null),
+        id,
+        name: person?.name.trim() || "Staff member",
+        email: roster?.invitedEmail ?? (person?.kind === "placeholder" ? null : person?.email ?? null),
         photo: person?.photoThumb ?? person?.photo ?? null,
         color: person?.color ?? null,
-        state: row.state,
-        onSchedule: row.onSchedule,
+        state: roster?.state ?? "active",
+        onSchedule: roster?.role === "coach" && roster.onSchedule,
+        staffRole: roster && isStudioTeamRole(roster.role) ? roster.role : roster ? "coach" : null,
+        roles,
       };
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
-  return { roster, hasSchedule: !!studio.accountUserId };
+    .sort((a, b) => roleRank(a.roles) - roleRank(b.roles) || a.name.localeCompare(b.name));
+  return { people, hasSchedule: !!studio.accountUserId };
 }
 
 export type StudioCoachDetailDto = {
@@ -2410,6 +2472,7 @@ export type StudioCoachDetailDto = {
   color: string | null;
   state: string;
   onSchedule: boolean;
+  role: StudioTeamRole;
   month: string;
   monthLabel: string;
   firstLabel: string;
@@ -2448,6 +2511,7 @@ export async function studioCoachDetail(
         state: schema.studioRotaCoaches.state,
         invitedEmail: schema.studioRotaCoaches.invitedEmail,
         onSchedule: schema.studioRotaCoaches.onSchedule,
+        role: schema.studioRotaCoaches.role,
       })
       .from(schema.studioRotaCoaches)
       .where(
@@ -2478,11 +2542,12 @@ export async function studioCoachDetail(
   const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
   const firstIso = `${month}-01`;
   const monthStart = new Date(`${firstIso}T00:00:00Z`);
+  const staffRole: StudioTeamRole = roster.role === "front_desk" ? "front_desk" : "coach";
   const [calendarDays, coaches] = await Promise.all([
-    studio.accountUserId
+    staffRole === "coach" && studio.accountUserId
       ? gymDays(db, studio.accountUserId, studioId, monthStart, daysInMonth)
       : Promise.resolve([]),
-    gymCoachesFromDb(db, studioId),
+    staffRole === "coach" ? gymCoachesFromDb(db, studioId) : Promise.resolve([]),
   ]);
   const shifts = calendarDays
     .filter((day) => !day.closed)
@@ -2520,6 +2585,7 @@ export async function studioCoachDetail(
     color: person.color,
     state: roster.state,
     onSchedule: roster.onSchedule,
+    role: staffRole,
     month,
     monthLabel,
     firstLabel: "1st to 15th",
@@ -2900,6 +2966,7 @@ export async function answerShiftRequest(
           and(
             eq(schema.studioRotaCoaches.studioId, live.studioId),
             eq(schema.studioRotaCoaches.userId, live.toUserId),
+            eq(schema.studioRotaCoaches.role, "coach"),
             eq(schema.studioRotaCoaches.onSchedule, true),
             inArray(schema.studioRotaCoaches.state, INTERACTIVE_ROSTER_STATES),
           ),
@@ -3231,6 +3298,7 @@ export async function myStaffStudios(): Promise<
       .where(
         and(
           eq(schema.studioRotaCoaches.userId, userId),
+          eq(schema.studioRotaCoaches.role, "coach"),
           eq(schema.studioRotaCoaches.onSchedule, true),
           inArray(schema.studioRotaCoaches.state, INTERACTIVE_ROSTER_STATES),
         ),

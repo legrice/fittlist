@@ -148,9 +148,9 @@ const studioHref = await matt.locator('a[href^="/s/"]').first().getAttribute("hr
 if (!studioHref) fail("no studio on the coach's page");
 console.log("studio at " + studioHref);
 
-// Publicly listing a studio is not permission to work its schedule. All three
-// coaches chose Ironbound while signing up, but Staff must begin empty: there
-// is no candidate pool assembled from public profiles or old classes.
+// Publicly listing a studio is not permission to work its schedule. Staff is
+// one explicit team directory: the owner/manager is already present, while
+// coaches and front desk only appear after the studio adds them.
 await matt.goto(BASE + studioHref + "/manage/staff");
 await matt.locator(".studio-staff-pad").waitFor();
 {
@@ -158,22 +158,14 @@ await matt.locator(".studio-staff-pad").waitFor();
   const tabs = (await nav.getByRole("link").allInnerTexts()).map((t) => t.trim());
   if (tabs.join("|") !== "Calendar|Staff")
     fail("the manager workspace should have two tabs: " + tabs.join("|"));
-  const views = matt.getByRole("group", { name: "Staff view" });
-  const labels = (await views.getByRole("button").allInnerTexts()).map((t) => t.trim());
-  if (labels.join("|") !== "People|On schedule")
-    fail("Staff should split people from schedule eligibility: " + labels.join("|"));
-  await matt.getByText("No coaches have been invited yet.").waitFor();
-  await views.getByRole("button", { name: "On schedule" }).click();
-  await matt.getByText("Invite a coach under People first.").waitFor();
-  if (await matt.getByRole("switch").count())
-    fail("public studio connections leaked into Staff's schedule list");
-  await views.getByRole("button", { name: "People" }).click();
+  await matt.getByRole("heading", { name: "Staff", exact: true }).waitFor();
+  await matt.getByText("Owner", { exact: true }).waitFor();
 }
 
 // The fixtures become staff the same way a real coach does: an explicit
 // studio invitation. Existing accounts are active and schedulable at once.
 const coachRows = () => matt
-  .getByRole("heading", { name: "Coaches", exact: true })
+  .getByRole("heading", { name: "Staff", exact: true })
   .locator("xpath=following-sibling::div[contains(@class, 'settingslist')][1]")
   .locator(".staffrow");
 for (const [name, email] of [
@@ -181,21 +173,18 @@ for (const [name, email] of [
   ["Julia", "julia@example.com"],
   ["Matt", "matt@example.com"],
 ]) {
+  await matt.getByRole("button", { name: "Add staff" }).click();
+  await matt.getByRole("tab", { name: "Invite by email" }).click();
   await matt.locator("#coachName").fill(name);
   await matt.locator("#coachEmail").fill(email);
   await matt.getByRole("button", { name: "Invite coach" }).click();
   await coachRows().filter({ hasText: email }).waitFor();
 }
-await matt.getByRole("group", { name: "Staff view" }).getByRole("button", { name: "On schedule" }).click();
 {
-  const switches = matt.getByRole("switch");
-  const names = (await switches.locator(".t").allInnerTexts()).map((t) => t.trim()).sort();
-  if (names.join("|") !== "Julia|Matt|Tom")
-    fail("Schedule should contain only the invited coaches: " + names.join("|"));
-  if ((await matt.getByRole("switch", { checked: true }).count()) !== 3)
-    fail("newly added coaches should start on the schedule");
+  for (const name of ["Julia", "Matt", "Tom"])
+    await coachRows().filter({ hasText: name }).getByText("Coach", { exact: true }).waitFor();
 }
-console.log("Staff has explicit People and On schedule lists ok");
+console.log("Staff has owner, managers, and explicitly invited coaches ok");
 
 // Running a place shows up on the account as a direct door to its two-tab
 // workspace. Managers do not pass through the coach-only shifts screen.

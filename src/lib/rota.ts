@@ -43,6 +43,7 @@ export async function sendableAt(studioId: string, exceptUserId: string): Promis
     .where(
       and(
         eq(schema.studioRotaCoaches.studioId, studioId),
+        eq(schema.studioRotaCoaches.role, "coach"),
         eq(schema.studioRotaCoaches.onSchedule, true),
         // A coach the studio has not confirmed cannot receive a shift yet.
         // Invited coaches may: the roster model deliberately lets a studio

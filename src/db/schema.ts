@@ -423,6 +423,9 @@ export const studioRotaCoaches = pgTable(
     userId: uuid("user_id").notNull().references(() => users.id),
     /** active | invited | placeholder | unconfirmed. */
     state: text("state").notNull().default("active"),
+    /** coach | front_desk. Permission roles such as owner and manager remain
+     * in studio_managers; this is the person's working role on the team. */
+    role: text("role").notNull().default("coach"),
     /** The studio keeps the association even when this is off, but the coach
      *  cannot be assigned, receive coverage requests, or use the staff-side
      *  rota until a manager puts them back on the schedule. */

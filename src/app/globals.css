@@ -7873,15 +7873,19 @@ select.editinput.placekind-select {
   width: 100%; margin: 18px 0 32px; display: flex; align-items: center; justify-content: center; gap: 7px;
 }
 .staff-coach-add-sheet { max-height: min(90dvh, 720px); overflow-y: auto; }
+.staff-role-picker,
 .staff-add-modes {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px;
   margin: 20px 0; padding: 4px; border-radius: var(--radius-pill); background: var(--color-surface-muted);
 }
+.staff-role-picker button,
 .staff-add-modes button {
   min-height: 44px; padding: 0 12px; border: 0; border-radius: var(--radius-pill);
   background: transparent; color: var(--color-black); font: inherit; font-size: 14px; font-weight: 700;
 }
+.staff-role-picker button.on,
 .staff-add-modes button.on { background: var(--color-black); color: var(--color-white); }
+.staff-role-picker { margin-bottom: 8px; }
 .staff-coach-search {
   min-height: 54px; padding: 0 16px; display: flex; align-items: center; gap: 10px;
   border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-white);

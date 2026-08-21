@@ -42,6 +42,7 @@ export async function createPlaceholderCoach(input: {
   name: string;
   email?: string | null;
   phone?: string | null;
+  role?: "coach" | "front_desk";
 }): Promise<{ userId: string }> {
   const db = await getDb();
   return db.transaction(async (tx) => {
@@ -50,7 +51,7 @@ export async function createPlaceholderCoach(input: {
       .values({
         kind: PLACEHOLDER_KIND,
         email: placeholderEmail(input.studioId),
-        name: input.name.trim() || "Coach",
+        name: input.name.trim() || ((input.role ?? "coach") === "coach" ? "Coach" : "Staff member"),
         handle: null,
         discoverable: false,
         onboardedAt: new Date(),
@@ -60,6 +61,8 @@ export async function createPlaceholderCoach(input: {
       studioId: input.studioId,
       userId: account.id,
       state: "placeholder",
+      role: input.role ?? "coach",
+      onSchedule: (input.role ?? "coach") === "coach",
       invitedEmail: input.email?.trim().toLowerCase() || null,
       invitedPhone: input.phone?.trim() || null,
       invitedAt: input.email?.trim() || input.phone?.trim() ? new Date() : null,
@@ -121,6 +124,7 @@ export async function mergePlaceholderInto(
       id: schema.studioRotaCoaches.id,
       studioId: schema.studioRotaCoaches.studioId,
       onSchedule: schema.studioRotaCoaches.onSchedule,
+      role: schema.studioRotaCoaches.role,
     })
     .from(schema.studioRotaCoaches)
     .where(eq(schema.studioRotaCoaches.userId, placeholderUserId));
@@ -129,6 +133,7 @@ export async function mergePlaceholderInto(
       .select({
         id: schema.studioRotaCoaches.id,
         onSchedule: schema.studioRotaCoaches.onSchedule,
+        role: schema.studioRotaCoaches.role,
       })
       .from(schema.studioRotaCoaches)
       .where(
@@ -142,7 +147,10 @@ export async function mergePlaceholderInto(
         .update(schema.studioRotaCoaches)
         .set({
           state: "active",
-          onSchedule: already.onSchedule || row.onSchedule,
+          role: already.role === "coach" || row.role === "coach" ? "coach" : "front_desk",
+          onSchedule: already.role === "coach" || row.role === "coach"
+            ? already.onSchedule || row.onSchedule
+            : false,
           acceptedAt: new Date(),
           invitedEmail: null,
           invitedPhone: null,
@@ -177,7 +185,7 @@ export async function claimRosterPlaceholders(emailRaw: string, realUserId: stri
   if (!email) return false;
   const db = await getDb();
   const rows = await db
-    .select({ userId: schema.studioRotaCoaches.userId })
+    .select({ userId: schema.studioRotaCoaches.userId, role: schema.studioRotaCoaches.role })
     .from(schema.studioRotaCoaches)
     .where(
       and(
@@ -186,15 +194,14 @@ export async function claimRosterPlaceholders(emailRaw: string, realUserId: stri
       ),
     );
   if (!rows.length) return false;
-  // A roster invite is specifically an invitation to coach. The generic
-  // fallback signup can otherwise create a member account before this claim
-  // runs, which would make the newly linked coach disappear from every
-  // assignment picker. Carry the role encoded by the invitation through the
-  // merge instead of leaving a broken active roster row pointing at a fan.
-  await db
-    .update(schema.users)
-    .set({ kind: "coach" })
-    .where(eq(schema.users.id, realUserId));
+  // Only a coach invitation changes an account into a coach. Front-desk staff
+  // remain members and never leak into assignment pickers.
+  if (rows.some((row) => row.role === "coach")) {
+    await db
+      .update(schema.users)
+      .set({ kind: "coach" })
+      .where(eq(schema.users.id, realUserId));
+  }
   for (const row of rows) await mergePlaceholderInto(row.userId, realUserId);
   return true;
 }

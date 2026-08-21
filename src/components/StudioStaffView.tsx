@@ -8,6 +8,7 @@ import {
   searchStudioCoachCandidates,
 } from "@/app/actions/gym";
 import type { StudioCoachSearchResult, StudioStaffDto } from "@/app/actions/gym";
+import type { StudioTeamRole } from "@/app/actions/gym";
 import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
@@ -40,7 +41,8 @@ export function StudioStaffView({
     approvalOn?: boolean;
   };
 }) {
-  const coaches = staff.roster;
+  const people = staff.people;
+  const [staffRole, setStaffRole] = useState<StudioTeamRole>("coach");
   const [coachName, setCoachName] = useState("");
   const [coachEmail, setCoachEmail] = useState("");
   const [invitingCoach, setInvitingCoach] = useState(false);
@@ -57,7 +59,7 @@ export function StudioStaffView({
   const addCoach = async () => {
     if (invitingCoach || !coachName.trim() || !coachEmail.trim()) return;
     setInvitingCoach(true);
-    const res = await inviteStudioCoach(studioId, coachName, coachEmail);
+    const res = await inviteStudioCoach(studioId, coachName, coachEmail, staffRole);
     setInvitingCoach(false);
     if (!res.ok) {
       toast(res.error ?? "Couldn't add them");
@@ -80,18 +82,18 @@ export function StudioStaffView({
     const request = ++searchRequest.current;
     setCoachSearching(true);
     const timer = window.setTimeout(async () => {
-      const results = await searchStudioCoachCandidates(studioId, query);
+      const results = await searchStudioCoachCandidates(studioId, query, staffRole);
       if (request !== searchRequest.current) return;
       setCoachResults(results);
       setCoachSearching(false);
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [coachAddMode, coachSearch, coachSheetOpen, studioId]);
+  }, [coachAddMode, coachSearch, coachSheetOpen, staffRole, studioId]);
 
   const addExistingCoach = async (coach: StudioCoachSearchResult) => {
     if (addingCoachId) return;
     setAddingCoachId(coach.id);
-    const res = await addExistingStudioCoach(studioId, coach.id);
+    const res = await addExistingStudioCoach(studioId, coach.id, staffRole);
     setAddingCoachId(null);
     if (!res.ok) {
       toast(res.error ?? "Couldn't add them");
@@ -132,46 +134,53 @@ export function StudioStaffView({
 
       <StudioManageNav slug={studioSlug} active="staff" />
 
-      <h3 className="setgroup-h">Coaches</h3>
+      <h3 className="setgroup-h">Staff</h3>
       <p className="staffnote">
-        Invite the people who work with this studio. Tap a coach to manage their schedule access
-        and see their shifts.
+        Everyone who works with this studio, including its owner, managers, coaches, and front desk.
       </p>
-      {coaches.length > 0 ? (
+      {people.length > 0 ? (
         <div className="settingslist">
-          {coaches.map((coach) => (
-            <Link
-              key={coach.id}
-              className="setrow staffrow staff-person-link"
-              href={`/s/${studioSlug}/manage/staff/${coach.id}`}
-              prefetch={false}
-            >
+          {people.map((person) => {
+            const labels = person.roles.map((role) => role === "front_desk"
+              ? "Front desk"
+              : role[0].toUpperCase() + role.slice(1));
+            const linked = !!person.staffRole;
+            const content = <>
               <AgendaAvatar
-                photo={coach.photo}
-                name={coach.name}
-                color={coach.color ?? "var(--color-text-secondary)"}
+                photo={person.photo}
+                name={person.name}
+                color={person.color ?? "var(--color-text-secondary)"}
                 cls="staff-person-avatar"
               />
               <span className="setrow-txt">
-                <span className="t">{coach.name}</span>
+                <span className="t">{person.name}</span>
                 <span className="s">
-                  {coach.state === "placeholder" || coach.state === "invited"
-                    ? "Invite pending"
-                    : coach.onSchedule
-                      ? "On the schedule"
-                      : "Not on the schedule"}
+                  {labels.join(" · ")}
+                  {(person.state === "placeholder" || person.state === "invited") && " · Invite pending"}
                 </span>
               </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-            </Link>
-          ))}
+              {linked && <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>}
+            </>;
+            return linked ? (
+              <Link
+                key={person.id}
+                className="setrow staffrow staff-person-link"
+                href={`/s/${studioSlug}/manage/staff/${person.id}`}
+                prefetch={false}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div className="setrow staffrow" key={person.id}>{content}</div>
+            );
+          })}
         </div>
       ) : (
-        <p className="adminempty">No coaches have been invited yet.</p>
+        <p className="adminempty">No staff have been added yet.</p>
       )}
       <button className="btn si staff-add-coach-button" onClick={() => setCoachSheetOpen(true)}>
         <Icon name="add" size={21} />
-        Add a coach
+        Add staff
       </button>
 
       {coachSheetOpen && (
@@ -182,8 +191,28 @@ export function StudioStaffView({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setCoachSheetOpen(false)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Add a coach</h2>
-            <div className="staff-add-modes" role="tablist" aria-label="How to add a coach">
+            <h2>Add staff</h2>
+            <div className="staff-role-picker" role="radiogroup" aria-label="Staff role">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={staffRole === "coach"}
+                className={staffRole === "coach" ? "on" : ""}
+                onClick={() => setStaffRole("coach")}
+              >
+                Coach
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={staffRole === "front_desk"}
+                className={staffRole === "front_desk" ? "on" : ""}
+                onClick={() => setStaffRole("front_desk")}
+              >
+                Front desk
+              </button>
+            </div>
+            <div className="staff-add-modes" role="tablist" aria-label="How to add staff">
               <button
                 type="button"
                 role="tab"
@@ -212,7 +241,7 @@ export function StudioStaffView({
                     autoFocus
                     type="search"
                     value={coachSearch}
-                    placeholder="Search coaches"
+                    placeholder={staffRole === "coach" ? "Search coaches" : "Search people"}
                     onChange={(event) => setCoachSearch(event.target.value)}
                   />
                 </label>
@@ -246,7 +275,7 @@ export function StudioStaffView({
                       </button>
                     ))
                   ) : (
-                    <p>No matching coaches. You can invite them by email instead.</p>
+                    <p>No matching people. You can invite them by email instead.</p>
                   )}
                 </div>
               </div>
@@ -255,7 +284,7 @@ export function StudioStaffView({
                 <input
                   id="coachName"
                   value={coachName}
-                  placeholder="Coach name"
+                  placeholder={staffRole === "coach" ? "Coach name" : "Staff name"}
                   onChange={(event) => setCoachName(event.target.value)}
                 />
                 <input
@@ -274,7 +303,7 @@ export function StudioStaffView({
                   disabled={invitingCoach || !coachName.trim() || !coachEmail.trim()}
                   onClick={addCoach}
                 >
-                  {invitingCoach ? "Sending…" : "Invite coach"}
+                  {invitingCoach ? "Sending…" : `Invite ${staffRole === "coach" ? "coach" : "front desk"}`}
                 </button>
               </div>
             )}

@@ -95,6 +95,7 @@ export function StudioCoachSettings({
   };
 
   const pendingInvite = coach.state === "placeholder" || coach.state === "invited";
+  const isCoach = coach.role === "coach";
   const coachOptions = coach.coaches.some((person) => person.id === coach.id)
     ? coach.coaches
     : [{ id: coach.id, name: coach.name, email: coach.email ?? "" }, ...coach.coaches];
@@ -119,14 +120,14 @@ export function StudioCoachSettings({
           />
           <div>
             <h1>{coach.name}</h1>
-            <p className="adminsub">{studioName}</p>
+            <p className="adminsub">{isCoach ? studioName : `Front desk · ${studioName}`}</p>
           </div>
         </div>
       </div>
 
       <StudioManageNav slug={studioSlug} active="staff" />
 
-      <div className="rotaweek studio-coach-month">
+      {isCoach && <><div className="rotaweek studio-coach-month">
         <Link className="rotanav" href={`${staffHref}/${coach.id}?m=${shiftMonth(coach.month, -1)}`}>
           <Icon name="chevron_left" size={20} />
         </Link>
@@ -198,10 +199,11 @@ export function StudioCoachSettings({
           {coach.name} has no shifts at {studioName} in {coach.monthLabel}.
         </p>
       )}
+      </>}
 
-      <h3 className="setgroup-h">Coach settings</h3>
+      <h3 className="setgroup-h">{isCoach ? "Coach settings" : "Staff settings"}</h3>
       <div className="settingslist">
-        <button
+        {isCoach && <button
           className="setrow"
           role="switch"
           aria-checked={onSchedule}
@@ -223,7 +225,7 @@ export function StudioCoachSettings({
           <span className={`switch${onSchedule ? " on" : ""}`} aria-hidden="true">
             <span className="switch-knob" />
           </span>
-        </button>
+        </button>}
         {coach.email && (
           <div className="setrow">
             <span className="setrow-txt">
@@ -245,8 +247,9 @@ export function StudioCoachSettings({
           <div className="sheet confirmsheet">
             <h2>Remove {coach.name}?</h2>
             <p className="lead">
-              They will no longer be associated with this studio. Reassign or open any future
-              shifts first.
+              {isCoach
+                ? "They will no longer be associated with this studio. Reassign or open any future shifts first."
+                : "They will no longer be associated with this studio."}
             </p>
             <div className="publishwrap nostick">
               <button className="btn si" disabled={pending} onClick={remove}>Remove {coach.name}</button>
