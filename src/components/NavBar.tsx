@@ -60,6 +60,17 @@ export function NavBar({
             </Link>
           );
         })}
+        {here === "calendar" && (
+          <button
+            type="button"
+            className="navtab navtab-add"
+            aria-label="Add to your calendar"
+            onClick={() => window.dispatchEvent(new Event("fittlist:add-class"))}
+          >
+            <span className="navglyph"><Icon name="add" size={24} /></span>
+            <span>Add</span>
+          </button>
+        )}
       </nav>
     </div>
   );

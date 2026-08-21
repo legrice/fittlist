@@ -10711,7 +10711,7 @@ a.clspeek-by:active { opacity: .6; }
   padding: 5px 0 6px;
   gap: 1px;
   border-radius: 12px;
-  color: var(--color-black);
+  color: var(--color-text-secondary);
   font-size: 10px;
   font-weight: 700;
 }
@@ -10720,9 +10720,11 @@ a.clspeek-by:active { opacity: .6; }
   color: var(--color-black);
 }
 .navtab.on .navglyph {
-  background:var(--color-lime-soft);
+  background:transparent;
   color: var(--color-black);
 }
+.navtab-add { font:inherit; cursor:pointer; }
+.navtab-add .navglyph { color:var(--color-black); }
 .navglyph {
   width: 48px;
   height: 28px;
@@ -10735,6 +10737,10 @@ a.clspeek-by:active { opacity: .6; }
   width: 22px;
   height: 22px;
   border-radius: 999px;
+}
+
+@media (max-width: 939px) {
+  html:not([data-native="ios"]) .calendar-bottom-actions { display:none; }
 }
 
 @media (max-width: 390px) {
