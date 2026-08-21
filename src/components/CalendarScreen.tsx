@@ -97,6 +97,7 @@ export function CalendarScreen({
   const [visible, setVisible] = useState({ coaching: !member, saved: true, personal: true });
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
+  const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
   const [addOpen, setAddOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
   const [personalAdd, setPersonalAdd] = useState(false);
@@ -141,11 +142,17 @@ export function CalendarScreen({
   const calendarStateKey = `fl-calendar-state:${viewer.id}`;
 
   useEffect(() => {
-    if (openAdder) setAddChoice(true);
+    if (openAdder) {
+      setAddChoiceStep("role");
+      setAddChoice(true);
+    }
   }, [openAdder]);
 
   useEffect(() => {
-    const openFromDesktop = () => setAddChoice(true);
+    const openFromDesktop = () => {
+      setAddChoiceStep("role");
+      setAddChoice(true);
+    };
     window.addEventListener("fittlist:add-class", openFromDesktop);
     return () => window.removeEventListener("fittlist:add-class", openFromDesktop);
   }, []);
@@ -403,6 +410,7 @@ export function CalendarScreen({
       setQuickPrefill(null);
       setAddDate(iso);
       setAddChoiceKind(null);
+      setAddChoiceStep("role");
       setAddChoice(true);
       return;
     }
@@ -421,7 +429,14 @@ export function CalendarScreen({
     setQuickPrefill(null);
     setAddDate(null);
     setAddChoiceKind(null);
+    setAddChoiceStep("role");
     setAddChoice(true);
+  };
+  const openNewCoachingClass = () => {
+    setAddChoice(false);
+    setPersonalAdd(false);
+    setPersonalWorkout(false);
+    setAddOpen(true);
   };
   const continueAdd = () => {
     if (!addChoiceKind) return;
@@ -432,19 +447,20 @@ export function CalendarScreen({
           toast(result.error ?? "Couldn’t turn on coaching");
           return;
         }
-        setAddChoice(false);
-        setPersonalAdd(false);
-        setPersonalWorkout(false);
-        setAddOpen(true);
+        if (composerData?.templates.some((template) => template.isPublic))
+          setAddChoiceStep("regular");
+        else openNewCoachingClass();
       });
       return;
     }
-    setAddChoice(false);
     if (addChoiceKind === "coaching") {
-      setPersonalAdd(false);
-      setPersonalWorkout(false);
-      setAddOpen(true);
-    } else if (addChoiceKind === "saved") setBrowseOpen(true);
+      if (composerData?.templates.some((template) => template.isPublic))
+        setAddChoiceStep("regular");
+      else openNewCoachingClass();
+      return;
+    }
+    setAddChoice(false);
+    if (addChoiceKind === "saved") setBrowseOpen(true);
     else {
       setPersonalAdd(true);
       setPersonalWorkout(true);
@@ -600,31 +616,44 @@ export function CalendarScreen({
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
+            {addChoiceStep === "regular" && (
+              <button className="iconbtn addrole-back" aria-label="Back" onClick={() => setAddChoiceStep("role")}>
+                <Icon name="arrow_back" size={20} />
+              </button>
+            )}
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddChoice(false)}>
               <Icon name="close" size={18} />
             </button>
-            <h2 id="addrole-title">Add to your week</h2>
-            <p className="lead">What are you doing?</p>
-            <AddWeekChoices
-              canCoach={!member || bare}
-              coachDetail={member && bare ? "I also coach" : undefined}
-              disabled={enablingCoach}
-              selected={addChoiceKind}
-              onSelect={setAddChoiceKind}
-            />
-            {addChoiceKind === "coaching" && composerData?.templates.some((template) => template.isPublic) && (
-              <section className="calendar-quick-add" aria-label="Your regular classes">
-                <h3>Add again</h3>
+            {addChoiceStep === "role" ? (
+              <>
+                <h2 id="addrole-title">Add to your week</h2>
+                <p className="lead">What are you doing?</p>
+                <AddWeekChoices
+                  canCoach={!member || bare}
+                  coachDetail={member && bare ? "I also coach" : undefined}
+                  disabled={enablingCoach}
+                  selected={addChoiceKind}
+                  onSelect={setAddChoiceKind}
+                />
+                <button type="button" className="addrole-continue" disabled={!addChoiceKind || enablingCoach || (addChoiceKind === "coaching" && loadingTools)} onClick={continueAdd}>{enablingCoach ? "Turning on coaching…" : addChoiceKind === "coaching" && loadingTools ? "Finding your classes…" : "Continue"}</button>
+              </>
+            ) : (
+              <>
+                <h2 id="addrole-title">Add again</h2>
                 <p>Start with a class you already use.</p>
-                <div>
-                  {composerData.templates.filter((template) => template.isPublic).slice(0, 4).map((template) => {
+                <section className="calendar-quick-add calendar-quick-add-step" aria-label="Your regular classes">
+                  <div>
+                  {(composerData?.templates ?? []).filter((template) => template.isPublic).slice(0, 4).map((template) => {
                     const studio = template.studioId ? studioById.get(template.studioId) : null;
                     return (
                       <button
                         type="button"
                         key={`${template.name}|${template.studioId ?? template.location ?? ""}`}
                         onClick={() => {
-                          setQuickPrefill(prefillFromTemplate(template));
+                          setQuickPrefill({
+                            ...prefillFromTemplate(template),
+                            ...(addDate ? { specificDate: addDate } : {}),
+                          });
                           setAddDate(null);
                           setAddChoice(false);
                           setPersonalAdd(false);
@@ -637,10 +666,14 @@ export function CalendarScreen({
                       </button>
                     );
                   })}
-                </div>
-              </section>
+                  </div>
+                </section>
+                <button type="button" className="addrole-new-class" onClick={openNewCoachingClass}>
+                  <span><Icon name="add" size={20} /> New class</span>
+                  <Icon name="chevron_right" size={19} />
+                </button>
+              </>
             )}
-            <button type="button" className="addrole-continue" disabled={!addChoiceKind || enablingCoach} onClick={continueAdd}>{enablingCoach ? "Turning on coaching…" : "Continue"}</button>
           </div>
         </div>
       )}
