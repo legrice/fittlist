@@ -7076,7 +7076,10 @@ select.editinput.placekind-select {
 .rota-month-event.needs::before { background: var(--color-border-strong); }
 .rota-month-event.cover::before { background: var(--color-coaching); }
 .rota-month-event.draft::before { background: var(--color-personal); }
-.rota-month-event[data-planner-color] { border-top: 4px solid var(--studio-planner-color); }
+.rota-month-event[data-planner-color]::before {
+  width: 4px;
+  background: var(--studio-planner-color);
+}
 .rota-month-eventmain {
   width: 100%; min-width: 0; padding: 11px 12px 5px 14px;
   display: flex; flex-direction: column; gap: 4px;
@@ -7115,7 +7118,7 @@ select.editinput.placekind-select {
 .rota-coach-select:disabled { opacity: .55; cursor: wait; }
 .rota-inline-row .clline { padding-bottom: 72px; }
 .rota-inline-row[data-planner-color] .clline {
-  border-top: 4px solid var(--studio-planner-color);
+  border-left: 4px solid var(--studio-planner-color);
 }
 .rota-inline-coachpick {
   position: absolute; z-index: 2; left: 20px; bottom: 20px;
