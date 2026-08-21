@@ -145,6 +145,8 @@ export function StudioStaffView({
               ? "Front desk"
               : role[0].toUpperCase() + role.slice(1));
             const linked = !!person.staffRole;
+            const invitePending = person.state === "placeholder" || person.state === "invited";
+            const classCopy = `${person.weeklyClassCount} ${person.weeklyClassCount === 1 ? "class" : "classes"} this week`;
             const content = <>
               <AgendaAvatar
                 photo={person.photo}
@@ -153,10 +155,16 @@ export function StudioStaffView({
                 cls="staff-person-avatar"
               />
               <span className="setrow-txt">
+                <span className="staff-role-tags">
+                  {labels.map((label) => <span className="kindtag kindtag-sm" key={label}>{label}</span>)}
+                </span>
                 <span className="t">{person.name}</span>
                 <span className="s">
-                  {labels.join(" · ")}
-                  {(person.state === "placeholder" || person.state === "invited") && " · Invite pending"}
+                  {invitePending
+                    ? "Invite pending"
+                    : person.roles.includes("coach")
+                      ? classCopy
+                      : person.email ?? "Studio team"}
                 </span>
               </span>
               {linked && <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>}

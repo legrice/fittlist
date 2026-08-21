@@ -2385,9 +2385,86 @@ export type StudioStaffDto = {
     onSchedule: boolean;
     staffRole: StudioTeamRole | null;
     roles: ("owner" | "manager" | StudioTeamRole)[];
+    weeklyClassCount: number;
   }[];
   hasSchedule: boolean;
 };
+
+/** A single slim pass over this week's effective rota for the Staff list.
+ * Covers belong to the person actually teaching that date, while closed days
+ * do not inflate anyone's workload. */
+async function studioStaffWeekCounts(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studio: typeof schema.studios.$inferSelect,
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (!studio.accountUserId) return counts;
+  const monday = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+  const dates = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setUTCDate(monday.getUTCDate() + index);
+    return date.toISOString().slice(0, 10);
+  });
+  const rows = await db
+    .select({
+      id: schema.classes.id,
+      coachUserId: schema.classes.coachUserId,
+      dayOfWeek: schema.classes.dayOfWeek,
+      specificDate: schema.classes.specificDate,
+      endsOn: schema.classes.endsOn,
+      skipDates: schema.classes.skipDates,
+    })
+    .from(schema.classes)
+    .where(
+      and(
+        eq(schema.classes.userId, studio.accountUserId),
+        eq(schema.classes.studioId, studio.id),
+      ),
+    );
+  if (!rows.length) return counts;
+  const [covers, closures] = await Promise.all([
+    db
+      .select({
+        classId: schema.shiftCovers.classId,
+        occurrenceDate: schema.shiftCovers.occurrenceDate,
+        coachUserId: schema.shiftCovers.coachUserId,
+      })
+      .from(schema.shiftCovers)
+      .where(
+        and(
+          inArray(schema.shiftCovers.classId, rows.map((row) => row.id)),
+          gte(schema.shiftCovers.occurrenceDate, dates[0]),
+          lte(schema.shiftCovers.occurrenceDate, dates[6]),
+        ),
+      ),
+    db
+      .select({ occurrenceDate: schema.studioClosedDays.occurrenceDate })
+      .from(schema.studioClosedDays)
+      .where(
+        and(
+          eq(schema.studioClosedDays.studioId, studio.id),
+          gte(schema.studioClosedDays.occurrenceDate, dates[0]),
+          lte(schema.studioClosedDays.occurrenceDate, dates[6]),
+        ),
+      ),
+  ]);
+  const coverByOccurrence = new Map(
+    covers.map((cover) => [`${cover.classId}|${cover.occurrenceDate}`, cover.coachUserId]),
+  );
+  const closedDates = new Set(closures.map((closure) => closure.occurrenceDate));
+  for (const [dayOfWeek, iso] of dates.entries()) {
+    if (closedDates.has(iso)) continue;
+    for (const row of rows) {
+      if (!runsOn(row, iso, dayOfWeek)) continue;
+      const key = `${row.id}|${iso}`;
+      const coachUserId = coverByOccurrence.has(key)
+        ? coverByOccurrence.get(key)
+        : row.coachUserId;
+      if (coachUserId) counts.set(coachUserId, (counts.get(coachUserId) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
 
 /** The complete studio team: owner, managers, coaches, and front desk. */
 export async function studioStaff(studioId: string): Promise<StudioStaffDto | null> {
@@ -2415,20 +2492,23 @@ export async function studioStaff(studioId: string): Promise<StudioStaffDto | nu
     ...rosterRows.map((row) => row.userId),
     ...managerRows.map((row) => row.userId),
   ])];
-  const teamPeople = personIds.length
-    ? await db
-        .select({
-          id: schema.users.id,
-          name: schema.users.name,
-          email: schema.users.email,
-          kind: schema.users.kind,
-          photoThumb: schema.users.photoThumb,
-          photo: schema.users.photo,
-          color: schema.users.avatarColor,
-        })
-        .from(schema.users)
-        .where(inArray(schema.users.id, personIds))
-    : [];
+  const [teamPeople, weeklyClassCounts] = await Promise.all([
+    personIds.length
+      ? db
+          .select({
+            id: schema.users.id,
+            name: schema.users.name,
+            email: schema.users.email,
+            kind: schema.users.kind,
+            photoThumb: schema.users.photoThumb,
+            photo: schema.users.photo,
+            color: schema.users.avatarColor,
+          })
+          .from(schema.users)
+          .where(inArray(schema.users.id, personIds))
+      : Promise.resolve([]),
+    studioStaffWeekCounts(db, studio),
+  ]);
   const personById = new Map(teamPeople.map((person) => [person.id, person]));
   const rosterById = new Map(rosterRows.map((row) => [row.userId, row]));
   const managerIds = new Set(managerRows.map((row) => row.userId));
@@ -2458,6 +2538,7 @@ export async function studioStaff(studioId: string): Promise<StudioStaffDto | nu
         onSchedule: roster?.role === "coach" && roster.onSchedule,
         staffRole: roster && isStudioTeamRole(roster.role) ? roster.role : roster ? "coach" : null,
         roles,
+        weeklyClassCount: weeklyClassCounts.get(id) ?? 0,
       };
     })
     .sort((a, b) => roleRank(a.roles) - roleRank(b.roles) || a.name.localeCompare(b.name));

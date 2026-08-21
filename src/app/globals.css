@@ -7805,7 +7805,11 @@ select.editinput.placekind-select {
 .staffnote { font-size: 13px; line-height: 1.5; color: var(--ol); margin: -4px 0 12px; }
 /* A manager's row is read, not tapped: the control is the word at the end. */
 .staffrow { cursor: default; }
-.staff-person-link { min-height: 72px; cursor: pointer; }
+.staff-person-link { min-height: 88px; cursor: pointer; }
+.staff-role-tags {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 5px;
+}
+.staff-role-tags .kindtag { line-height: 1; }
 .staff-person-avatar,
 .studio-coach-avatar {
   width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center;
