@@ -377,6 +377,12 @@ export function AuthFlow({
   };
 
   const urlPreview = slug(handle.trim() || name) || "yourname";
+  const advanceLanding = () => {
+    const next = Math.min(landingSlides.length - 1, landingSlide + 1);
+    const track = landingTrackRef.current;
+    setLandingSlide(next);
+    track?.scrollTo({ left: next * track.clientWidth, behavior: "smooth" });
+  };
   // Which side the claim step is serving. `role` covers the signup sheet; the
   // ref covers arriving here from a login or a magic link, where the sheet was
   // never opened.
@@ -413,15 +419,28 @@ export function AuthFlow({
               ))}
             </div>
             <div className="oblanding-footer">
-              <div className="oblanding-actions">
-                <button className="btn obsignup" onClick={() => { setError(""); setSheet("signup"); }}>
-                  Sign up
-                </button>
-                <button className="btn oblogin" onClick={() => { setError(""); setSheet("login"); }}>
-                  Log in
-                </button>
-              </div>
-              {(providers.google || providers.apple) && (
+              {landingSlide < landingSlides.length - 1 ? (
+                <>
+                  <button className="btn obcontinue" onClick={advanceLanding}>
+                    Continue
+                  </button>
+                  {landingSlide === 0 && (
+                    <button className="obfirst-login" onClick={() => { setError(""); setSheet("login"); }}>
+                      Already have an account? <b>Log in</b>
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="oblanding-actions">
+                  <button className="btn obsignup" onClick={() => { setError(""); setSheet("signup"); }}>
+                    Sign up
+                  </button>
+                  <button className="btn oblogin" onClick={() => { setError(""); setSheet("login"); }}>
+                    Log in
+                  </button>
+                </div>
+              )}
+              {landingSlide === landingSlides.length - 1 && (providers.google || providers.apple) && (
                 <div className="obalts" style={{ marginTop: 16 }}>
                   {providers.google && (
                     <a className="obalt google" href={`/api/google/login${viaQ}`}>

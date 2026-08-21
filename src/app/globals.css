@@ -527,6 +527,15 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 @keyframes obheadline-enter { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 @media (prefers-reduced-motion:reduce) { .ob .oblanding-slide.has-entered h1 { opacity:1; animation:none; } }
 .oblanding-footer { flex:0 0 auto; padding:0 30px; background:var(--ground); }
+.ob .oblanding-footer .obcontinue {
+  width:100%; min-height:58px; border-radius:var(--radius-pill);
+  font-size:18px; font-weight:700;
+}
+.obfirst-login {
+  width:100%; min-height:44px; margin-top:7px; padding:8px;
+  color:var(--ol); font-size:14px; font-weight:500; text-align:center;
+}
+.obfirst-login b { color:var(--ink); font-weight:700; }
 .oblanding-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .ob .oblanding-actions .btn {
   width:100%; min-height:58px; border-radius:var(--radius-pill); box-shadow:none;
