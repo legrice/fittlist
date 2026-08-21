@@ -2419,6 +2419,16 @@ async function studioStaffWeekCounts(
       and(
         eq(schema.classes.userId, studio.accountUserId),
         eq(schema.classes.studioId, studio.id),
+        or(
+          and(
+            gte(schema.classes.specificDate, dates[0]),
+            lte(schema.classes.specificDate, dates[6]),
+          ),
+          and(
+            isNull(schema.classes.specificDate),
+            or(isNull(schema.classes.endsOn), gte(schema.classes.endsOn, dates[0])),
+          ),
+        ),
       ),
     );
   if (!rows.length) return counts;
