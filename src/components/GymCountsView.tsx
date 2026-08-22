@@ -78,7 +78,7 @@ export function GymCountsView({
     <div className="pad">
       <div className="studio-manage-top pagetop">
         <div className="studio-manage-topbar">
-          <BackLink className="evback studio-manage-back" href={backHref} label="Back to the schedule">
+        <BackLink className="evback studio-manage-back" href={backHref} label="Back to studio dashboard">
             <Icon name="arrow_back" size={23} />
           </BackLink>
           <h1 className="studio-calendar-title">Shift counter</h1>
