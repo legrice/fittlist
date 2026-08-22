@@ -42,9 +42,8 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   // /week is retained only as an old address for the calendar.
   if (pathname.startsWith("/feed") || pathname.startsWith("/upcoming")) return "following";
-  if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week"))
-    return "following";
-  if (pathname.startsWith("/you")) return "calendar";
+  if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week") || pathname.startsWith("/you"))
+    return "calendar";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
   return "none";
 }

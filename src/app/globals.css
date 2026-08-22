@@ -1924,12 +1924,24 @@ button.bl-band { cursor: pointer; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
 .social-brandbar { position: sticky; justify-content: center; min-height: 66px; }
 .social-brandbar-logo { position: absolute; left: 50%; transform: translateX(-50%); }
+.social-brandbar-title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 21px; letter-spacing: -.02em; }
 .social-brandbar-side { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; }
 .social-brandbar-left { left: 18px; }
 .social-brandbar-right { right: 18px; }
 .social-brandbar .iconbtn { width: 42px; height: 42px; display: grid; place-items: center; border: 0; background: transparent; color: var(--ink); }
 .social-notifications { position: relative; text-decoration: none; }
 .social-notifications i { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-lime); border: 1px solid var(--shell); }
+.youcalendar-card {
+  min-height: 92px; margin: 20px 0 28px; padding: 16px 18px; display: grid;
+  grid-template-columns: 50px minmax(0,1fr) auto; align-items: center; gap: 14px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-card);
+  background: var(--color-white); color: var(--color-black); text-decoration: none;
+}
+.youcalendar-card-icon { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 16px; background: var(--color-lime); }
+.youcalendar-card span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.youcalendar-card strong { font-size: 18px; }
+.youcalendar-card small { color: var(--color-text-secondary); font-size: 13px; }
+.youcalendar-card:active { background: var(--color-surface-hover); transform: scale(.99); }
 .calbar-title {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1;
   color: var(--ink); margin: 24px 0;

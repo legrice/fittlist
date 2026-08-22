@@ -472,10 +472,6 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      <nav className="social-schedule-switch" aria-label="Schedule view">
-        <Link href="/feed">Following</Link>
-        <Link className="on" href="/calendar" aria-current="page">My schedule</Link>
-      </nav>
       <header className="calendar-page-header calendar-page-actions">
         <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         <button type="button" className="calendar-menu-button" aria-label={`Filter calendar, ${activeFilterCount} selected`} onClick={openFilters}><Icon name="tune" size={22} /><span className="calendar-filter-count">{activeFilterCount}</span></button>

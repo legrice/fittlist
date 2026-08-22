@@ -94,23 +94,30 @@ export function AppHeader({
   }
 
   if (social) {
+    const calendarUtility = pathname.startsWith("/calendar");
     return (
       <div className="brandbar social-brandbar">
         <div className="social-brandbar-side social-brandbar-left">
-          <GlobalAdd />
+          {calendarUtility ? (
+            <Link className="iconbtn social-calendar-back" href="/you" aria-label="Back to You">
+              <Icon name="arrow_back" size={23} />
+            </Link>
+          ) : <GlobalAdd />}
         </div>
-        <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList home">
-          <Wordmark variant="ink" />
-        </Link>
+        {calendarUtility ? <strong className="social-brandbar-title">Calendar</strong> : (
+          <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList home">
+            <Wordmark variant="ink" />
+          </Link>
+        )}
         <div className="social-brandbar-side social-brandbar-right">
-          <Link
+          {!calendarUtility && <Link
             className={`iconbtn social-notifications${pathname.startsWith("/notifications") ? " onroute" : ""}`}
             href="/notifications"
             aria-label={`${notificationUnread} unread notifications`}
           >
             <Icon name="notifications" size={23} />
             {notificationUnread > 0 && <i aria-hidden="true" />}
-          </Link>
+          </Link>}
         </div>
       </div>
     );

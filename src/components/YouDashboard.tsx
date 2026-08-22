@@ -104,6 +104,15 @@ export function YouDashboard({
         <Link href={shareHref}>Share</Link>
       </div>
 
+      <Link className="youcalendar-card" href="/calendar">
+        <span className="youcalendar-card-icon"><Icon name="calendar_month" size={25} /></span>
+        <span>
+          <strong>Calendar</strong>
+          <small>View and manage your schedule</small>
+        </span>
+        <Icon name="chevron_right" size={21} />
+      </Link>
+
       <AccountGroup title="Your account">
         <AccountRow icon="forum" title="Messages" detail="Your conversations" href="/inbox" count={unread.messages} />
         <AccountRow icon="notifications" title="Notifications" detail="Updates about your account and activity" href="/notifications" count={unread.notifications} />
