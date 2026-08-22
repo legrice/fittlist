@@ -507,12 +507,7 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <nav className="social-schedule-switch" aria-label="Schedule view">
-            <Link className="on" href="/feed" aria-current="page">Following</Link>
-            <Link href="/calendar">My schedule</Link>
-          </nav>
-          <div className="following-title-row">
-            <h1 className="tab-page-title">Following</h1>
+          <div className="following-manage-row">
             <Link className="following-manage" href="/following?from=feed">Manage</Link>
           </div>
           <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
