@@ -154,13 +154,19 @@ async function assignmentError(
   db: Awaited<ReturnType<typeof getDb>>,
   studioId: string,
   coachUserId: string | null,
+  actingUserId?: string,
 ) {
   if (!coachUserId) return null;
   const [coach] = await db
     .select({ kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, coachUserId));
-  if (!coach || coach.kind === "fan" || coach.kind === "gym") return "That's not a coach.";
+  if (!coach || coach.kind === "gym") return "That's not a coach.";
+  // An owner or manager may also coach. Studio access already authorizes the
+  // caller, so they should not have to invite themselves to their own roster
+  // before putting themselves on a class.
+  if (coachUserId === actingUserId) return null;
+  if (coach.kind === "fan") return "That's not a coach.";
   if (!(await rosterHas(db, studioId, coachUserId)))
     return "Invite this coach and turn on Schedule before assigning them.";
   return null;
@@ -256,7 +262,18 @@ function nextOccurrence(dayOfWeek: number, fromIso = todayIso()) {
 export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return [];
-  return gymCoachesFromDb(ctx.db, studioId);
+  const coaches = await gymCoachesFromDb(ctx.db, studioId);
+  if (coaches.some((coach) => coach.id === ctx.userId)) return coaches;
+  const [manager] = await ctx.db
+    .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, ctx.userId));
+  if (!manager || manager.kind === "gym") return coaches;
+  return [...coaches, {
+    id: manager.id,
+    name: manager.name.trim() || manager.email.split("@")[0],
+    email: manager.email,
+  }].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 async function gymCoachesFromDb(
@@ -845,10 +862,10 @@ export async function addGymClass(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const bad = validate(input);
   if (bad) return { ok: false, error: bad };
-  const { db, studio, gymId } = ctx;
+  const { db, userId, studio, gymId } = ctx;
 
   const coachUserId = input.coachUserId || null;
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   const identityKey = input.catalogKey?.trim().toLowerCase() || name.toLowerCase();
@@ -1015,7 +1032,7 @@ export async function updateGymClass(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const bad = validate(input);
   if (bad) return { ok: false, error: bad };
-  const { db, studio, gymId } = ctx;
+  const { db, userId, studio, gymId } = ctx;
 
   // Scoped to this gym's own rows: a manager may not reach a coach's personal
   // class, or another studio's, by passing its id.
@@ -1026,7 +1043,7 @@ export async function updateGymClass(
   if (!existing) return { ok: false, error: "Class not found." };
 
   const coachUserId = input.coachUserId || null;
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   // One row is one slot, so an edit is about the slot that was opened: the day
@@ -1437,7 +1454,7 @@ export async function setShiftCover(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
   const { db, userId, studio, gymId } = ctx;
 
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
 
   const [cls] = await db
