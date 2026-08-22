@@ -662,7 +662,7 @@ export function GymRota({
             </div></section>
             <section className="calendar-drawer-section"><h3>Schedule</h3><div>
               {([['all','All shifts'],['assigned','All coaches'],['open','Open shifts'],['mine','My shifts']] as [ShiftFilter,string][]).map(([value,label]) => (
-                <button className={`calendar-drawer-row${shiftFilter === value ? " on" : ""}`} key={value} onClick={() => chooseShiftFilter(value)}><Icon name={value === "open" ? "event_available" : "groups"} size={20} />{label}<span className={`calendar-check${shiftFilter === value ? " on calendar-check-coaching" : ""}`}>{shiftFilter === value && <Icon name="check" size={14} />}</span></button>
+                <button className={`calendar-drawer-row calendar-view-choice${shiftFilter === value ? " on" : ""}`} key={value} onClick={() => chooseShiftFilter(value)}><span className="calendar-view-choice-icon"><Icon name={value === "open" ? "event_available" : "groups"} size={20} /></span>{label}</button>
               ))}
             </div></section>
           </aside>
