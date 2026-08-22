@@ -32,7 +32,6 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
   return (
     <StudioStaffView
       studioId={studio.id}
-      studioName={studio.name}
       studioSlug={studio.slug ?? studio.id}
       staff={staff}
       admin={{

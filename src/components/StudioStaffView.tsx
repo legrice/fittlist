@@ -25,13 +25,11 @@ import { Toast, useToast } from "@/components/Toast";
 // has more than one person running it.
 export function StudioStaffView({
   studioId,
-  studioName,
   studioSlug,
   staff,
   admin,
 }: {
   studioId: string;
-  studioName: string;
   studioSlug: string;
   staff: StudioStaffDto;
   admin: {
@@ -115,6 +113,7 @@ export function StudioStaffView({
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
+          <h1 className="studio-calendar-title">Staff</h1>
           <StudioAdminSheet
             slug={studioSlug}
             canSchedule={staff.hasSchedule}
@@ -124,16 +123,8 @@ export function StudioStaffView({
             settingsTrigger
           />
         </div>
-        <div>
-          <h1>{studioName}</h1>
-          <p className="adminsub">Manage your team</p>
-        </div>
       </div>
 
-      <h3 className="setgroup-h">Staff</h3>
-      <p className="staffnote">
-        Everyone who works with this studio, including its owner, managers, coaches, and front desk.
-      </p>
       {people.length > 0 ? (
         <div className="settingslist">
           {people.map((person) => {
