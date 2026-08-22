@@ -13,8 +13,8 @@ export type NavItem = {
 };
 
 /**
- * The social shell has three universal destinations. Calendar management is
- * reached through You instead of occupying a fourth primary tab.
+ * Three jobs, not three content types: use schedules, find schedules, and
+ * manage the calendars that belong to you.
  */
 export function navTabs(
   _coach: boolean,
@@ -28,11 +28,11 @@ export function navTabs(
     {
       id: "following" as const,
       href: "/feed",
-      icon: "home",
-      label: "Calendar",
+      icon: "calendar_month",
+      label: "Schedules",
     },
-    { id: "discover", href: "/search", icon: "search", label: "Search" },
-    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
+    { id: "discover", href: "/search", icon: "search", label: "Find" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Manage" },
   ];
 }
 
