@@ -47,7 +47,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
-  // The Calendar tab points at one place now. It used to differ by kind,
+  // My schedule points at one place now. It used to differ by kind,
   // because a coach's calendar was /app and a member had their own at /week;
   // a member has no calendar at all, so there is nothing to fork on and the
   // tab is not drawn for them in the first place.
@@ -100,7 +100,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           notificationUnread={unread.notifications}
           messageUnread={unread.messages}
-          home="/calendar"
+          home="/feed"
           admin={isAdmin}
           adminAttention={adminAttention}
           adminActivity={adminActivity}

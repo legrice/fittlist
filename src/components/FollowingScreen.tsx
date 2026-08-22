@@ -507,29 +507,25 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
+          <nav className="social-schedule-switch" aria-label="Schedule view">
+            <Link className="on" href="/feed" aria-current="page">Following</Link>
+            <Link href="/calendar">My schedule</Link>
+          </nav>
           <div className="following-title-row">
-            <h1 className="tab-page-title">This Week</h1>
+            <h1 className="tab-page-title">Following</h1>
             <Link className="following-manage" href="/following?from=feed">Manage</Link>
           </div>
           <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
             <div className="tray-scroll">
               <button
-                className={`trayitem${coachFilter && !selectedSelf ? " dim" : ""}`}
-                aria-pressed={selectedSelf}
-                onClick={chooseSelf}
+                className={`trayitem${coachFilter ? " dim" : ""}`}
+                aria-pressed={coachFilter === null}
+                onClick={() => setCoachFilter(null)}
               >
-                <span
-                  className={`trayav trayav-you${selectedSelf ? " sel" : ""}`}
-                  style={{ background: meFace.color }}
-                >
-                  {meFace.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={meFace.photo} alt="" />
-                  ) : (
-                    <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
-                  )}
+                <span className={`trayav trayav-all${coachFilter === null ? " sel" : ""}`}>
+                  <Icon name="groups" size={25} />
                 </span>
-                <span className="trayitem-nm">Your week</span>
+                <span className="trayitem-nm">All</span>
               </button>
               {coachOptions.map((coach) => (
                 <button
@@ -620,10 +616,10 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome ? "Your week is empty" : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">{isHome ? "Nothing from your follows yet" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? "Follow a coach or add a class to make this place less lonely."
+                ? "Follow a person with an active calendar and their upcoming classes will appear here."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
             {isHome && (
@@ -631,8 +627,8 @@ export function FollowingScreen({
                 <button className="btn ghost" onClick={() => setFind(true)}>
                   Find a coach
                 </button>
-                <Link className="btn si" href="/calendar?add=1">
-                  Add a class
+                <Link className="btn si" href="/discover?half=people">
+                  Discover people
                 </Link>
               </div>
             )}

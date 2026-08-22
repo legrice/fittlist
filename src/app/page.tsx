@@ -49,7 +49,7 @@ export default async function Home({
     // no identity, in what read as random places.
     const pendingGroupToken=(await cookies()).get("fl_group_join")?.value;
     if(user?.handle&&pendingGroupToken&&/^[a-f0-9]{32,64}$/.test(pendingGroupToken))redirect(`/g/join/${pendingGroupToken}`);
-    if (user?.handle) redirect("/calendar");
+    if (user?.handle) redirect("/feed");
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
     // ask which they are before demanding a URL. Someone who already answered

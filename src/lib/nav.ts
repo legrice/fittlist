@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "calendar" | "discover" | "saved" | "none";
+export type NavTab = "following" | "discover" | "calendar" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -13,9 +13,8 @@ export type NavItem = {
 };
 
 /**
- * Calendar is the signed-in front door. Discover finds people and places;
- * Favorites keeps separate shortcuts to the people, places, and groups this
- * person wants nearby. Saved is reserved for classes on their calendar.
+ * Following is the signed-in front door. Discover grows that world; My
+ * schedule keeps only the activities this person has committed to.
  */
 export function navTabs(
   _coach: boolean,
@@ -27,13 +26,13 @@ export function navTabs(
 ): NavItem[] {
   return [
     {
-      id: "calendar" as const,
-      href: scheduleHref ?? "/calendar",
-      icon: "calendar_month",
-      label: "Calendar",
+      id: "following" as const,
+      href: "/feed",
+      icon: "groups",
+      label: "Following",
     },
     { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
-    { id: "saved", href: "/saved", icon: "favorite", label: "Favorites" },
+    { id: "calendar", href: scheduleHref ?? "/calendar", icon: "calendar_month", label: "My schedule" },
   ];
 }
 
@@ -42,11 +41,11 @@ export function navTabs(
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   // /week is retained only as an old address for the calendar.
+  if (pathname.startsWith("/feed") || pathname.startsWith("/upcoming")) return "following";
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app"))
     return "calendar";
   if (pathname.startsWith("/week")) return "calendar";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
-  if (pathname.startsWith("/saved")) return "saved";
   return "none";
 }
 
@@ -69,16 +68,11 @@ export function backToFor(from: string | undefined, signedIn: boolean): { href: 
   if (from === "discover-groups") return { href: "/discover?half=groups", label: "Back to groups" };
   if (from === "saved") return { href: "/saved", label: "Back to Favorites" };
   if (from === "search") return { href: "/search", label: "Back to search" };
-  // The Home tab is parked, so its token answers like anything unknown:
-  // the front door. Old links carrying ?from=home still land somewhere real.
-  // Following is parked, so its token answers like anything unknown: the front
-  // door, which is the calendar now. Old links carrying ?from=following and
-  // ?from=home still land somewhere real, which is the whole reason this
-  // function never answers null.
+  // Old links carrying former Home tokens still need a stable signed-in
+  // destination. Following is the front door again, so the general fallback
+  // below is also the honest place for those links to land.
   if (from === "schedule") return { href: "/calendar", label: "Back to your calendar" };
-  // The cold-open fallback is the calendar: it has to land somewhere every
-  // signed-in viewer can actually open, and /week sends a coach to /app.
-  // Following for a signed-in viewer: it is the one screen everybody has, and
-  // a member has no calendar to be sent back to.
-  return signedIn ? { href: "/calendar", label: "Back to your calendar" } : { href: "/", label: "Back" };
+  // Following is the one shared screen every signed-in account can open,
+  // regardless of whether they publish a calendar themselves.
+  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
 }
