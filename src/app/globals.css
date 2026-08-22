@@ -6913,7 +6913,10 @@ select.editinput.placekind-select {
   .rota-view-switch { flex: 0 0 auto; }
   .rota-view-switch button { min-width: 58px; padding-inline: 11px; }
   .rotaweek.mobile-day-nav {
+    min-height: 52px;
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
     margin-top: 18px;
+    border-radius: var(--radius-control);
     background: var(--color-surface-muted);
     position: relative;
   }
@@ -6921,12 +6924,14 @@ select.editinput.placekind-select {
     min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .mobile-day-nav .rotaweek-lbl {
-    font-size: 20px;
+    font-size: 18px;
   }
   .mobile-day-nav .rotanav {
+    width: 52px;
+    height: 52px;
     border: 0;
     background: transparent;
-    border-radius: 50%;
+    border-radius: 16px;
   }
   .mobile-day-nav .rota-day-more {
     width: 36px; min-width: 36px; height: 36px; background: var(--color-white);
