@@ -105,7 +105,7 @@ export function AppHeader({
             {adminActivity > 0 && <b>{adminActivity > 99 ? "99+" : adminActivity}</b>}
           </Link>
         )}
-        <Link className="header-search-trigger" href="/search" aria-label="Search FittList">
+        <Link className="header-search-trigger" href="/discover" aria-label="Discover people, studios, groups, and classes">
           <Icon name="search" size={21} />
         </Link>
         <HeaderAccountButton

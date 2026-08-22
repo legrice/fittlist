@@ -13,8 +13,9 @@ export type NavItem = {
 };
 
 /**
- * Following is the signed-in front door. Discover grows that world; My
- * schedule keeps only the activities this person has committed to.
+ * Following is the signed-in front door; My schedule keeps only the
+ * activities this person has committed to. Discovery stays behind search so
+ * the primary navigation remains one stream and one personal schedule.
  */
 export function navTabs(
   _coach: boolean,
@@ -31,7 +32,6 @@ export function navTabs(
       icon: "groups",
       label: "Following",
     },
-    { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
     { id: "calendar", href: scheduleHref ?? "/calendar", icon: "calendar_month", label: "My schedule" },
   ];
 }
