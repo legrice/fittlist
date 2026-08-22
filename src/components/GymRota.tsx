@@ -20,7 +20,6 @@ import {
 } from "@/app/actions/gym";
 import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
@@ -510,13 +509,14 @@ export function GymRota({
       <div className="pad">
         <div className="studio-manage-top pagetop">
           <div className="studio-manage-topbar">
-            <BackLink
+            <Link
               className="evback studio-manage-back"
               href={dashboardHref}
-              label="Back to studio dashboard"
+              aria-label="Back to studio dashboard"
+              replace
             >
               <Icon name="arrow_back" size={23} />
-            </BackLink>
+            </Link>
             <h1 className="studio-calendar-title">Calendar</h1>
             <span aria-hidden="true" />
           </div>
@@ -655,13 +655,14 @@ export function GymRota({
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
       <div className="studio-manage-top pagetop">
         <div className="studio-manage-topbar">
-          <BackLink
+          <Link
             className="evback studio-manage-back"
             href={dashboardHref}
-            label="Back to studio dashboard"
+            aria-label="Back to studio dashboard"
+            replace
           >
             <Icon name="arrow_back" size={23} />
-          </BackLink>
+          </Link>
           <h1 className="studio-calendar-title">Calendar</h1>
           <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
             <Icon name="tune" size={23} />
