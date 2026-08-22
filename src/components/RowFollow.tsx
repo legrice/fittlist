@@ -21,6 +21,7 @@ export function RowFollow({
   isCoach,
   following: initialFollowing,
   requested: initialRequested,
+  calendarLanguage = false,
 }: {
   handle: string;
   name: string;
@@ -28,6 +29,8 @@ export function RowFollow({
   isCoach: boolean;
   following: boolean;
   requested: boolean;
+  /** Use calendar-first language in discovery without changing relationship data. */
+  calendarLanguage?: boolean;
 }) {
   const router = useRouter();
   const [following, setFollowing] = useState(initialFollowing);
@@ -68,11 +71,25 @@ export function RowFollow({
         className={`disfollow${following || requested ? " on" : ""}`}
         disabled={pending}
         aria-label={
-          following ? `Unfollow ${name}` : requested ? `Cancel your follow request to ${name}` : `Follow ${name}`
+          calendarLanguage
+            ? following
+              ? `Remove ${name}'s calendar`
+              : requested
+                ? `Cancel your request to keep ${name}'s calendar`
+                : `Keep ${name}'s calendar`
+            : following
+              ? `Unfollow ${name}`
+              : requested
+                ? `Cancel your follow request to ${name}`
+                : `Follow ${name}`
         }
         onClick={toggle}
       >
-        {following ? "Following" : requested ? "Requested" : "Follow"}
+        {following
+          ? calendarLanguage ? "Kept" : "Following"
+          : requested
+            ? "Requested"
+            : calendarLanguage ? "Keep calendar" : "Follow"}
       </button>
       <FollowHint name={first} handle={handle} on={hint} onClose={() => setHint(false)} />
     </>

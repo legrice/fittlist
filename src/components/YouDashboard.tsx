@@ -74,9 +74,19 @@ export function YouDashboard({
   shareHref,
   isAdmin,
   unread,
+  people = [],
+  places = [],
+  yourGroups = [],
+  favoriteGroups = [],
   onOpenSettings,
-}: YouAccountData & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
+}: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
+  const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
+  const keptPeople = people.filter((person) => person.hasCalendar);
+  const joinedGroups = yourGroups.filter((group) => group.role !== "owner" && group.role !== "admin");
+  const keptGroups = [...joinedGroups, ...favoriteGroups].filter(
+    (group, index, groups) => groups.findIndex((candidate) => candidate.id === group.id) === index,
+  );
   return (
     <main className="youpage">
       <section className="youaccount-head">
@@ -118,8 +128,8 @@ export function YouDashboard({
         <AccountRow icon="notifications" title="Notifications" detail="Updates about your account and activity" href="/notifications" count={unread.notifications} />
       </AccountGroup>
 
-      {managed.length > 0 && (
-        <AccountGroup title="Places you manage">
+      {(managed.length > 0 || managedGroups.length > 0) && (
+        <AccountGroup title="Calendars you manage">
           {managed.map((place) => (
             <AccountRow
               icon="storefront"
@@ -128,6 +138,51 @@ export function YouDashboard({
               href={`/s/${place.slug}/manage`}
               avatar={{ photo: place.photo, name: place.name }}
               key={place.id}
+            />
+          ))}
+          {managedGroups.map((group) => (
+            <AccountRow
+              icon="groups"
+              title={group.name}
+              detail="Group calendar and members"
+              href={`/g/${group.slug}`}
+              avatar={{ photo: group.photo, name: group.name }}
+              key={group.id}
+            />
+          ))}
+        </AccountGroup>
+      )}
+
+      {(keptPeople.length > 0 || places.length > 0 || keptGroups.length > 0) && (
+        <AccountGroup title="Kept calendars">
+          {keptPeople.map((person) => (
+            <AccountRow
+              icon="person"
+              title={person.name}
+              detail="Coach calendar"
+              href={`/${person.handle}/schedule?from=you`}
+              avatar={{ photo: person.photo, name: person.name }}
+              key={person.id}
+            />
+          ))}
+          {places.map((place) => (
+            <AccountRow
+              icon="storefront"
+              title={place.name}
+              detail="Studio calendar"
+              href={`/s/${place.slug}/schedule?from=you`}
+              avatar={{ photo: place.photo, name: place.name }}
+              key={place.id}
+            />
+          ))}
+          {keptGroups.map((group) => (
+            <AccountRow
+              icon="groups"
+              title={group.name}
+              detail="Group calendar"
+              href={`/g/${group.slug}?from=you`}
+              avatar={{ photo: group.photo, name: group.name }}
+              key={group.id}
             />
           ))}
         </AccountGroup>

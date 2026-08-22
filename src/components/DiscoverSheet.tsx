@@ -145,7 +145,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
                   </h2>
                   <div className="dislist dislist-bare">
                     {people.map((p) => (
-                      <PersonRow key={p.id} person={p} from="following" follow />
+                      <PersonRow key={p.id} person={p} from="following" follow calendarLanguage />
                     ))}
                   </div>
                 </div>
@@ -191,11 +191,8 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
           )
         ) : data ? (
           <>
-            {/* The one place coach and member rows differ: a Coach tag and
-                a next-class line on theirs, nothing on a member's. Follow
-                on every row, unlimited. */}
             <p className="whoseg-sub">
-              Follow as many as you like. Their classes show up first on Home.
+              Keep useful calendars here. You can save individual classes to your own schedule.
             </p>
             <div className="nearlist">
               {data.people.map((p) => (
@@ -274,7 +271,7 @@ function PeopleRow({ p }: { p: DirPerson }) {
         disabled={busy}
         onClick={toggle}
       >
-        {state === "following" ? "Following" : state === "requested" ? "Requested" : "Follow"}
+        {state === "following" ? "Kept" : state === "requested" ? "Requested" : "Keep calendar"}
       </button>
     </div>
   );
