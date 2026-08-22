@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
@@ -54,6 +54,36 @@ export function AppHeader({
   const pathname = usePathname();
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    setHeaderHidden(false);
+    lastScrollY.current = window.scrollY;
+    if (!social || pathname === "/search") return undefined;
+    let frame = 0;
+    const readScroll = () => {
+      frame = 0;
+      const next = Math.max(0, window.scrollY);
+      if (next <= 24) {
+        setHeaderHidden(false);
+        lastScrollY.current = next;
+        return;
+      }
+      const delta = next - lastScrollY.current;
+      if (Math.abs(delta) < 6) return;
+      setHeaderHidden(delta > 0);
+      lastScrollY.current = next;
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(readScroll);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [pathname, social]);
 
   if (pathname === "/search") {
     const updateSearch = (value: string) => {
@@ -96,7 +126,7 @@ export function AppHeader({
   if (social) {
     const calendarUtility = pathname.startsWith("/calendar");
     return (
-      <div className="brandbar social-brandbar">
+      <div className={`brandbar social-brandbar${headerHidden ? " is-hidden" : ""}`}>
         <div className="social-brandbar-side social-brandbar-left">
           {calendarUtility ? (
             <Link className="iconbtn social-calendar-back" href="/you" aria-label="Back to You">

@@ -1922,7 +1922,11 @@ button.bl-band { cursor: pointer; }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
-.screen.hasnav .brandbar.social-brandbar { position: sticky; top: 0; justify-content: center; min-height: 66px; }
+.screen.hasnav .brandbar.social-brandbar {
+  position: sticky; top: 0; z-index: 40; justify-content: center; min-height: 66px;
+  transition: transform .22s ease; will-change: transform;
+}
+.screen.hasnav .brandbar.social-brandbar.is-hidden { transform: translateY(calc(-100% - env(safe-area-inset-top))); pointer-events:none; }
 .social-brandbar-logo { position: absolute; left: 50%; transform: translateX(-50%); }
 .social-brandbar-title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 21px; letter-spacing: -.02em; }
 .social-brandbar-side { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; }
