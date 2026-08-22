@@ -1,11 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { answerShiftRequest, type ShiftRequestDto } from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import type { StudioEditProps } from "@/components/StudioOwnerBar";
+import { Toast, useToast } from "@/components/Toast";
 
 export function StudioManageDashboard({
-  studioName, studioSlug, hasAccount, classCount, openShiftCount, staffCount, requestCount, admin,
+  studioName, studioSlug, hasAccount, classCount, openShiftCount, staffCount, requests, admin,
 }: {
   studioName: string;
   studioSlug: string;
@@ -13,13 +18,29 @@ export function StudioManageDashboard({
   classCount: number;
   openShiftCount: number;
   staffCount: number;
-  requestCount: number;
+  requests: ShiftRequestDto[];
   admin: { studio: StudioEditProps; showCoaches?: boolean; approvalOn?: boolean };
 }) {
   const base = `/s/${studioSlug}/manage`;
+  const [toDo, setToDo] = useState(requests);
+  const [answering, setAnswering] = useState<string | null>(null);
+  const [toastMsg, toastOn, toast] = useToast();
   const classSummary = hasAccount
     ? `${classCount} ${classCount === 1 ? "class" : "classes"} this week${openShiftCount ? ` · ${openShiftCount} open` : ""}`
     : "Set up classes and coach coverage";
+
+  const answer = async (requestId: string, approve: boolean) => {
+    if (answering) return;
+    setAnswering(requestId);
+    const result = await answerShiftRequest(requestId, approve);
+    setAnswering(null);
+    if (!result.ok) {
+      toast(result.error ?? "Couldn't answer that request");
+      return;
+    }
+    setToDo((current) => current.filter((request) => request.id !== requestId));
+    toast(approve ? "Approved" : "Denied");
+  };
 
   return (
     <main className="pad studio-dashboard">
@@ -42,12 +63,37 @@ export function StudioManageDashboard({
         </div>
       </div>
 
-      {requestCount > 0 && (
-        <Link className="studio-dashboard-alert" href={`${base}/calendar?panel=notifications`}>
-          <span className="studio-dashboard-alert-icon"><Icon name="notifications" size={20} /></span>
-          <span><strong>{requestCount} shift {requestCount === 1 ? "request" : "requests"}</strong><small>Waiting for your review</small></span>
-          <Icon name="chevron_right" size={22} />
-        </Link>
+      {toDo.length > 0 && (
+        <section className="studio-dashboard-todo" aria-labelledby="studio-todo-title">
+          <div className="studio-dashboard-todo-head">
+            <div>
+              <h2 id="studio-todo-title">To do</h2>
+              <p>Things that need your attention</p>
+            </div>
+            <span>{toDo.length}</span>
+          </div>
+          <div className="studio-dashboard-todo-list">
+            {toDo.slice(0, 3).map((request) => (
+              <div className="studio-dashboard-todo-row" key={request.id}>
+                <span className="studio-dashboard-todo-copy">
+                  <strong>
+                    {request.kind === "pickup"
+                      ? `${request.toName} wants ${request.className}`
+                      : request.scope === "standing"
+                        ? `${request.fromName ?? "A coach"} wants to make ${request.toName} the regular coach for ${request.className}`
+                        : `${request.fromName ?? "A coach"} is handing ${request.className} to ${request.toName}`}
+                  </strong>
+                  <small>{request.whenLong}</small>
+                </span>
+                <span className="studio-dashboard-todo-actions">
+                  <button disabled={!!answering} onClick={() => void answer(request.id, true)}>Approve</button>
+                  <button disabled={!!answering} onClick={() => void answer(request.id, false)}>Deny</button>
+                </span>
+              </div>
+            ))}
+          </div>
+          {toDo.length > 3 && <p className="studio-dashboard-todo-more">{toDo.length - 3} more waiting</p>}
+        </section>
       )}
 
       <div className="studio-dashboard-grid">
@@ -67,6 +113,7 @@ export function StudioManageDashboard({
           <Icon name="arrow_forward" size={22} />
         </Link>
       </div>
+      <Toast msg={toastMsg} on={toastOn} />
     </main>
   );
 }

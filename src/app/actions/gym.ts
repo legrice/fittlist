@@ -3174,7 +3174,7 @@ async function fileRequest(
         args.scope === "standing"
           ? `Starting ${fmtDateLong(args.occurrenceDate)}, every ${DAYS[args.cls.dayOfWeek]} at ${fmtTime(args.cls.startTime)}. Waiting on you.`
           : `${when}. Waiting on you.`,
-      href: `/s/${args.studio.slug ?? args.studio.id}/manage/calendar?panel=notifications`,
+      href: `/s/${args.studio.slug ?? args.studio.id}/manage`,
       actorUserId: args.askedBy,
     },
     false,

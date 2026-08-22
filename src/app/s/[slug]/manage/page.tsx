@@ -50,7 +50,7 @@ export default async function ManageStudioPage({
     shiftRequests(studio.id),
   ]);
   const studioSlug = studio.slug ?? studio.id;
-  const calendarKeys = ["w", "view", "m", "show", "panel"];
+  const calendarKeys = ["w", "view", "m", "show"];
   if (calendarKeys.some((key) => legacyParams[key] !== undefined)) {
     const query = new URLSearchParams();
     for (const key of calendarKeys) {
@@ -73,7 +73,7 @@ export default async function ManageStudioPage({
       classCount={classes}
       openShiftCount={openShifts}
       staffCount={coaches.length}
-      requestCount={requests.length}
+      requests={requests}
       admin={{
         showCoaches: studio.showCoaches,
         approvalOn: studio.approveShiftChanges,

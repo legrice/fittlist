@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
-import { gymCatalog, gymCoaches, gymSchedule, shiftRequests } from "@/app/actions/gym";
+import { gymCatalog, gymCoaches, gymSchedule } from "@/app/actions/gym";
 import { GymRota } from "@/components/GymRota";
 import type { PlaceKind } from "@/lib/studio";
 
@@ -41,12 +41,11 @@ export default async function StudioCalendarPage({
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
-  const [week, coaches, catalog, typeRows, requests] = await Promise.all([
+  const [week, coaches, catalog, typeRows] = await Promise.all([
     gymSchedule(studio.id, Number(w) || 0),
     gymCoaches(studio.id),
     gymCatalog(studio.id),
     db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
-    shiftRequests(studio.id),
   ]);
   const studioSlug = studio.slug ?? studio.id;
 
@@ -64,7 +63,6 @@ export default async function StudioCalendarPage({
       catalog={catalog}
       customTypes={typeRows.map((t) => t.name)}
       viewerId={viewerId}
-      requests={requests}
       admin={{
         showCoaches: studio.showCoaches,
         approvalOn: studio.approveShiftChanges,

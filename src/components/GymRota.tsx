@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   applyStandardDay,
-  answerShiftRequest,
   closeGymDay,
   enableStudioSchedule,
   gymMonth,
@@ -18,7 +17,6 @@ import {
   type GymDayDto,
   type GymMonthDto,
   type GymWeekDto,
-  type ShiftRequestDto,
 } from "@/app/actions/gym";
 import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
@@ -183,7 +181,6 @@ export function GymRota({
   catalog,
   customTypes,
   viewerId,
-  requests,
   admin,
 }: {
   studioId: string;
@@ -201,8 +198,6 @@ export function GymRota({
   customTypes: string[];
   /** The manager viewing the planner, used only by the local My shifts filter. */
   viewerId: string;
-  /** Pending, studio-scoped shift requests; never the full personal notification feed. */
-  requests: ShiftRequestDto[];
   /** The existing studio overflow, now kept in the calendar workspace. */
   admin: GymRotaAdmin;
 }) {
@@ -213,8 +208,6 @@ export function GymRota({
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [dayMenu, setDayMenu] = useState<string | null>(null);
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
-  const [requestSheet, setRequestSheet] = useState(false);
-  const [requestRows, setRequestRows] = useState(requests);
   const [desktop, setDesktop] = useState(false);
   const [desktopView, setDesktopView] = useState<"week" | "month">("month");
   const [month, setMonth] = useState<GymMonthDto | null>(null);
@@ -288,10 +281,6 @@ export function GymRota({
   }, [studioId]);
 
   useEffect(() => {
-    setRequestRows(requests);
-  }, [requests]);
-
-  useEffect(() => {
     const storageKey = `fittlist:studio-calendar-filter:${studioId}`;
     const restore = () => {
       const params = new URLSearchParams(window.location.search);
@@ -309,16 +298,6 @@ export function GymRota({
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, [studioId]);
-
-  useEffect(() => {
-    const restore = () => {
-      const params = new URLSearchParams(window.location.search);
-      setRequestSheet(params.get("panel") === "notifications");
-    };
-    restore();
-    window.addEventListener("popstate", restore);
-    return () => window.removeEventListener("popstate", restore);
-  }, []);
 
   useEffect(() => {
     if (!hasAccount) return;
@@ -370,31 +349,6 @@ export function GymRota({
     if (next === "all") url.searchParams.delete("show");
     else url.searchParams.set("show", next);
     window.history.replaceState({}, "", url);
-  };
-
-  const showRequestSheet = (showing: boolean) => {
-    setRequestSheet(showing);
-    const url = new URL(window.location.href);
-    if (showing) url.searchParams.set("panel", "notifications");
-    else url.searchParams.delete("panel");
-    window.history.replaceState({}, "", url);
-  };
-
-  const answerRequest = (requestId: string, approve: boolean) => {
-    if (pending) return;
-    start(async () => {
-      const res = await answerShiftRequest(requestId, approve);
-      if (!res.ok) {
-        toast(res.error ?? "Couldn't answer that request");
-        return;
-      }
-      setRequestRows((current) => current.filter((request) => request.id !== requestId));
-      toast(approve ? "Approved" : "Declined");
-      // Approval changes who is on the occurrence; decline only changes the
-      // notification. Reload the planner only when its visible data changed.
-      if (approve) refreshView();
-      else router.refresh();
-    });
   };
 
   const show = (
@@ -747,17 +701,6 @@ export function GymRota({
               </button>
             </div>
           )}
-          <button
-            type="button"
-            className="rota-notification-button"
-            aria-label={`Shift notifications${requestRows.length ? `, ${requestRows.length} waiting` : ""}`}
-            onClick={() => showRequestSheet(true)}
-          >
-            <Icon name="notifications" size={21} />
-            {requestRows.length > 0 && (
-              <span className="rota-notification-badge" aria-hidden="true">{requestRows.length}</span>
-            )}
-          </button>
         </div>
       </div>
 
@@ -1062,72 +1005,6 @@ export function GymRota({
             ))}
           </div>
         </>
-      )}
-
-      {requestSheet && (
-        <div
-          className="sheet-scrim"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) showRequestSheet(false);
-          }}
-        >
-          <div
-            className="sheet rota-request-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rota-request-title"
-          >
-            <div className="sheettitle rota-request-titlebar">
-              <div>
-                <h2 id="rota-request-title">Shift notifications</h2>
-                <p>Pickups and hand-overs waiting for an answer.</p>
-              </div>
-              <button
-                className="iconbtn sheetclose"
-                aria-label="Close"
-                onClick={() => showRequestSheet(false)}
-              >
-                <Icon name="close" size={18} />
-              </button>
-            </div>
-            {requestRows.length === 0 ? (
-              <p className="rota-request-empty">Nothing waiting.</p>
-            ) : (
-              <div className="rota-request-list">
-                {requestRows.map((request) => (
-                  <div className="rota-request-row" key={request.id}>
-                    <span className="rota-request-copy">
-                      <strong>
-                        {request.kind === "pickup"
-                          ? `${request.toName} wants ${request.className}`
-                          : request.scope === "standing"
-                            ? `${request.fromName ?? "A coach"} wants to make ${request.toName} the regular coach for ${request.className}`
-                            : `${request.fromName ?? "A coach"} is handing ${request.className} to ${request.toName}`}
-                      </strong>
-                      <small>{request.whenLong}</small>
-                    </span>
-                    <span className="rota-request-actions">
-                      <button
-                        className="btn si"
-                        disabled={pending}
-                        onClick={() => answerRequest(request.id, true)}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        className="tertiary"
-                        disabled={pending}
-                        onClick={() => answerRequest(request.id, false)}
-                      >
-                        Decline
-                      </button>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {coachPick && (
