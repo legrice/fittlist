@@ -190,7 +190,7 @@ export function AvatarZoom({
                   <span className={`avact-ic${following ? " on" : ""}`}>
                     <Icon name={following ? "check" : requested ? "schedule" : "person_add"} size={24} />
                   </span>
-                  {following ? "Following" : requested ? "Requested" : "Follow"}
+                  {following ? "Saved" : requested ? "Requested" : "Save calendar"}
                 </button>
               )}
               <button className="avact" onClick={share}>

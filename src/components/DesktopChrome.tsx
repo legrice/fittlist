@@ -50,7 +50,7 @@ export function DesktopChrome({
   return (
     <>
       <aside className="desktop-left" aria-label="Desktop navigation">
-        <Link className="desktop-logo" href="/feed" aria-label="FittList Following">
+        <Link className="desktop-logo" href="/feed" aria-label="FittList calendar">
           <Wordmark variant="ink" />
         </Link>
         <nav className="desktop-nav" aria-label="Main">

@@ -73,10 +73,10 @@ export function RowFollow({
         aria-label={
           calendarLanguage
             ? following
-              ? `Remove ${name}'s calendar`
+              ? `Remove ${name}'s saved calendar`
               : requested
-                ? `Cancel your request to keep ${name}'s calendar`
-                : `Keep ${name}'s calendar`
+                ? `Cancel your request to save ${name}'s calendar`
+                : `Save ${name}'s calendar`
             : following
               ? `Unfollow ${name}`
               : requested
@@ -86,10 +86,10 @@ export function RowFollow({
         onClick={toggle}
       >
         {following
-          ? calendarLanguage ? "Kept" : "Following"
+          ? calendarLanguage ? "Saved" : "Following"
           : requested
             ? "Requested"
-            : calendarLanguage ? "Keep calendar" : "Follow"}
+            : calendarLanguage ? "Save calendar" : "Follow"}
       </button>
       <FollowHint name={first} handle={handle} on={hint} onClose={() => setHint(false)} />
     </>

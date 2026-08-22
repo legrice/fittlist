@@ -19,11 +19,11 @@ export function SavedScreen({ people, places, yourGroups, favoriteGroups, invita
     document.querySelector(".youfav-highlight")?.scrollIntoView({ behavior:"smooth", block:"nearest", inline:"center" });
   }, [highlight]);
   return <main className="savedpage">
-    <header className="savedhead"><h1>Favorites</h1></header>
-    <SavedRail kind="people" title="People" empty="Favorite people to keep their individual calendars close by." addHref="/discover">
+    <header className="savedhead"><h1>Saved calendars</h1></header>
+    <SavedRail kind="people" title="People" empty="Save a coach or creator calendar to find it here." addHref="/discover">
       {calendarPeople.map((person) => <Link className={`youfav${person.handle.toLowerCase()===highlight?" youfav-highlight":""}`} href={`/${person.handle}?from=saved`} key={person.id}>{person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<strong>{person.name}</strong>{person.coaching ? <small className="youfav-coaching">Coach</small> : person.title ? <small>{person.title}</small> : null}</Link>)}
     </SavedRail>
-    <SavedRail kind="places" title="Studios" empty="Favorite studios to find their schedules again quickly." addHref="/discover?half=places">
+    <SavedRail kind="places" title="Studios" empty="Save studio calendars to find their schedules again quickly." addHref="/discover?half=places">
       {places.map((place) => <Link className="youfav" href={`/s/${place.slug}?from=saved`} key={place.id}>{place.photo ? <img src={place.photo} alt="" loading="lazy" decoding="async" /> : <span>{place.name.charAt(0).toUpperCase()}</span>}<strong>{place.name}</strong>{place.types.length > 0 && <small>{place.types.slice(0, 2).join(" · ")}</small>}</Link>)}
     </SavedRail>
     {invitations.length > 0 && <section className="saved-block saved-rail-invitations"><h2>Invitations</h2><div className="saved-invitations">{invitations.map((invite) => <GroupInvitationCard invite={invite} key={invite.id} />)}</div></section>}

@@ -449,35 +449,6 @@ export function ProfileSheet({
           </button>
         </div>
 
-        {/* Three counts of people, and every one of them opens the list it
-            counts, which is why every one carries a chevron. Profile views
-            left: it was the only number here with nowhere to go, and a
-            vanity figure beside two relationships is the wrong thing to put
-            at the top of somebody's own page. */}
-        <div className="acctstats acctstats-grid">
-          <button className="acctstat" onClick={() => router.push("/following")}>
-            <span className="n">{followingCount}</span>
-            <span className="l">
-              Following <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-          <button className="acctstat" onClick={() => router.push("/followers")}>
-            <span className="n">{subsCount}</span>
-            <span className="l">
-              Followers <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-          <button className="acctstat" onClick={() => router.push("/requests")}>
-            <span className="n">
-              {requestCount}
-              {requestCount > 0 && <span className="acctstat-dot" aria-hidden="true" />}
-            </span>
-            <span className="l">
-              Requests <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-        </div>
-
         {/* Two buttons where five tiles were. Four of those tiles were the
             same act in different output formats and they took the whole
             first screen of somebody's own page; they are rows in one sheet

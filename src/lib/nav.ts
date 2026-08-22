@@ -29,7 +29,7 @@ export function navTabs(
       id: "following" as const,
       href: "/feed",
       icon: "home",
-      label: "Home",
+      label: "Calendar",
     },
     { id: "discover", href: "/search", icon: "search", label: "Search" },
     { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
@@ -73,5 +73,5 @@ export function backToFor(from: string | undefined, signedIn: boolean): { href: 
   if (from === "schedule") return { href: "/calendar", label: "Back to your calendar" };
   // Following is the one shared screen every signed-in account can open,
   // regardless of whether they publish a calendar themselves.
-  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
+  return signedIn ? { href: "/feed", label: "Back to calendar" } : { href: "/", label: "Back" };
 }

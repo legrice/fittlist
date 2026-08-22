@@ -191,10 +191,10 @@ export function CoachPeek({
                   onClick={toggleFollow}
                 >
                   {follow === "following"
-                    ? "Following"
+                    ? "Saved"
                     : follow === "requested"
                       ? "Requested"
-                      : "Follow"}
+                      : "Save calendar"}
                 </button>
               ) : null}
             </div>
@@ -206,7 +206,7 @@ export function CoachPeek({
         {peek && !visibleDays.length && (
           <p className="peekempty">
             {peek.gated
-              ? `Follow ${name} to see their week.`
+              ? `Save ${name}'s calendar to see their week.`
               : `${name} has nothing up for the next couple of weeks. Their circle lights up when they do.`}
           </p>
         )}

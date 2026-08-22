@@ -120,7 +120,7 @@ export function PersonRow({
               no pill to say the same thing. */}
           <span className="sub">
             {c.title || `fittlist.co/${c.handle}`}
-            {follow ? "" : c.following ? " · Following" : c.requested ? " · Requested" : ""}
+            {follow ? "" : c.following ? " · Saved" : c.requested ? " · Requested" : ""}
           </span>
           {weekLine && c.kind === "coach" && (
             <span className="wk">

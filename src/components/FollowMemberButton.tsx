@@ -44,10 +44,10 @@ export function FollowMemberButton({
         }
         if (res.requested) {
           setState("requested");
-          toast(`Asked to follow ${first}`);
+          toast(`Asked to save ${first}'s calendar`);
         } else {
           setState("following");
-          toast(`Following ${first}`);
+          toast(`${first}'s calendar saved`);
         }
       } else {
         const res = await unfollowTrainer(handle);
@@ -57,7 +57,7 @@ export function FollowMemberButton({
         }
         const wasRequest = state === "requested";
         setState("off");
-        toast(wasRequest ? "Request withdrawn" : "Unfollowed");
+        toast(wasRequest ? "Request withdrawn" : "Calendar removed");
       }
     });
   };
@@ -71,12 +71,12 @@ export function FollowMemberButton({
       >
         {state === "following" ? (
           <>
-            <Icon name="check" size={19} /> Following
+            <Icon name="check" size={19} /> Saved
           </>
         ) : state === "requested" ? (
           "Requested"
         ) : (
-          "Follow"
+          "Save calendar"
         )}
       </button>
       <Toast msg={toastMsg} on={toastOn} />

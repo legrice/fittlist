@@ -192,7 +192,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
         ) : data ? (
           <>
             <p className="whoseg-sub">
-              Keep useful calendars here. You can save individual classes to your own schedule.
+              Save useful calendars here. You can also save individual classes to your schedule.
             </p>
             <div className="nearlist">
               {data.people.map((p) => (
@@ -271,7 +271,7 @@ function PeopleRow({ p }: { p: DirPerson }) {
         disabled={busy}
         onClick={toggle}
       >
-        {state === "following" ? "Kept" : state === "requested" ? "Requested" : "Keep calendar"}
+        {state === "following" ? "Saved" : state === "requested" ? "Requested" : "Save calendar"}
       </button>
     </div>
   );

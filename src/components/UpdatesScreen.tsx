@@ -184,7 +184,7 @@ export function UpdatesScreen({
         <div>
           <h1>{mode === "notifications" ? "Notifications" : "Messages"}</h1>
           <p className="adminsub">
-            {mode === "notifications" ? "Follows, badges, and activity" : "Your conversations"}
+            {mode === "notifications" ? "Calendar, badge, and account activity" : "Your conversations"}
           </p>
         </div>
         <div className="updates-actions">

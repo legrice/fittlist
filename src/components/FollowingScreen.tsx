@@ -508,9 +508,9 @@ export function FollowingScreen({
             <Icon name="chevron_right" size={20} />
           </Link>
           <div className="home-calendars-title">
-            <h2>Your calendars</h2>
+            <h2>Saved calendars</h2>
           </div>
-          <div className="tray following-rail" aria-label="Your calendars">
+          <div className="tray following-rail" aria-label="Saved calendars">
             <div className="tray-scroll">
               <Link className="trayitem" href="/calendar">
                 <span className="trayav" style={{ background: meFace.color }}>
@@ -563,9 +563,9 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </Link>})}
-              <button className="trayitem trayitem-more" type="button" onClick={() => setFind(true)} aria-label="Discover more profiles">
+              <button className="trayitem trayitem-more" type="button" onClick={() => setFind(true)} aria-label="Find more calendars">
                 <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
-                <span className="trayitem-nm">Discover</span>
+                <span className="trayitem-nm">Add calendar</span>
               </button>
             </div>
           </div>
@@ -573,9 +573,9 @@ export function FollowingScreen({
       )}
       {isHome && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">Your upcoming</span>
+          <span className="feedfilter-txt">Upcoming</span>
           <Link href="/calendar" className="feedfilter-link">
-            Manage schedule <Icon name="chevron_right" size={17} />
+            Your calendar <Icon name="chevron_right" size={17} />
           </Link>
         </div>
       )}

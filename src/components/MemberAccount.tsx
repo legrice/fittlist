@@ -146,29 +146,6 @@ export function MemberAccount({
         </button>
       </div>
 
-      {/* The same counts a coach's screen carries, minus Requests, and each
-          opens the list it counts. Two rather than three, because they are
-          the two relationships that exist for somebody who does not teach.
-          Followers is where they come off: a person who followed you and
-          shouldn't have is removed from that list, and it is the only place
-          in the app that can do it. */}
-      {handle && (
-        <div className="acctstats acctstats-grid acctstats-two">
-          <button className="acctstat" onClick={() => router.push("/following")}>
-            <span className="n">{followingCount}</span>
-            <span className="l">
-              Following <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-          <button className="acctstat" onClick={() => router.push("/followers")}>
-            <span className="n">{followerCount}</span>
-            <span className="l">
-              Followers <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-        </div>
-      )}
-
       {handle && (
         <div className="acctacts">
           <button className="btn ghost" onClick={() => router.push(`/${handle}`)}>

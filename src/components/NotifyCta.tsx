@@ -58,14 +58,14 @@ export function NotifyCta({
   const [toastMsg, toastOn, toast] = useToast();
 
   const firstName = trainerName.trim().split(/\s+/)[0] || trainerName;
-  // Favorite, per the brief: a shortcut to a person, not a subscription.
-  // Requested survives it (approve-first still gates who may favorite).
+  // A signed-in account saves the calendar. The existing relationship table
+  // remains the permission and delivery mechanism underneath that utility.
   const label = account
     ? following
-      ? "Favorited"
+      ? "Saved"
       : requested
         ? "Requested"
-        : "Add to favorites"
+        : "Save calendar"
     : subscribed
       ? "On the list"
       : "Subscribe";
@@ -77,14 +77,14 @@ export function NotifyCta({
           const wasRequest = requested && !following;
           setFollowing(false);
           setRequested(false);
-          toast(wasRequest ? "Favorite request withdrawn" : `${firstName} removed from favorites`);
+          toast(wasRequest ? "Calendar request withdrawn" : `${firstName}'s calendar removed`);
         } else toast(res.error ?? "Something went wrong");
       } else {
         const res = await followTrainer(handle);
         if (res.ok) {
           if (res.requested) {
             setRequested(true);
-            toast(`Favorite request sent to ${firstName}`);
+            toast(`Calendar request sent to ${firstName}`);
           } else {
             setFollowing(true);
             if (!followHintOff()) setHint(true);

@@ -82,9 +82,9 @@ export function YouDashboard({
 }: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
-  const keptPeople = people.filter((person) => person.hasCalendar);
+  const savedPeople = people.filter((person) => person.hasCalendar);
   const joinedGroups = yourGroups.filter((group) => group.role !== "owner" && group.role !== "admin");
-  const keptGroups = [...joinedGroups, ...favoriteGroups].filter(
+  const savedGroups = [...joinedGroups, ...favoriteGroups].filter(
     (group, index, groups) => groups.findIndex((candidate) => candidate.id === group.id) === index,
   );
   return (
@@ -153,9 +153,9 @@ export function YouDashboard({
         </AccountGroup>
       )}
 
-      {(keptPeople.length > 0 || places.length > 0 || keptGroups.length > 0) && (
-        <AccountGroup title="Kept calendars">
-          {keptPeople.map((person) => (
+      {(savedPeople.length > 0 || places.length > 0 || savedGroups.length > 0) && (
+        <AccountGroup title="Saved calendars">
+          {savedPeople.map((person) => (
             <AccountRow
               icon="person"
               title={person.name}
@@ -175,7 +175,7 @@ export function YouDashboard({
               key={place.id}
             />
           ))}
-          {keptGroups.map((group) => (
+          {savedGroups.map((group) => (
             <AccountRow
               icon="groups"
               title={group.name}

@@ -36,15 +36,15 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
       onClick={toggle}
     >
       <Icon name={selected ? "favorite_filled" : "favorite"} size={18} />
-      {selected ? "Favorited" : "Favorite"}
+      {selected ? "Saved" : "Save calendar"}
       {count > 0 && <span className="studio-been-count">{count}</span>}
     </button>
     <SignupPrompt
       open={signup}
       onClose={() => setSignup(false)}
       next={`/s/${slug}`}
-      title="Save the places you love"
-      body="Sign up to add this gym or studio to your profile and share your favorite places with people you know."
+      title="Save this calendar"
+      body="Sign up to save this gym or studio schedule and find it anytime."
     />
     </>
   );
