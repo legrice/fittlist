@@ -8064,6 +8064,25 @@ select.editinput.placekind-select {
   border: 0; border-radius: 50%; background: var(--color-lime); color: var(--color-black); cursor: pointer;
 }
 .studio-staff-add:active { background: var(--color-lime-pressed); }
+.counts-menu-wrap { position: relative; display: flex; justify-content: flex-end; }
+.counts-menu-trigger {
+  width: var(--tap-size); min-width: var(--tap-size); height: var(--tap-size); padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--color-border); border-radius: 50%;
+  background: var(--color-white); color: var(--color-black); cursor: pointer;
+}
+.counts-menu-trigger:active { background: var(--color-surface-hover); }
+.counts-menu {
+  position: absolute; top: calc(var(--tap-size) + 7px); right: 0; z-index: 20;
+  min-width: 180px; padding: 5px; border: 1px solid var(--color-border);
+  border-radius: 12px; background: var(--color-white); box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.counts-menu button {
+  width: 100%; min-height: 42px; padding: 0 11px; display: flex; align-items: center; gap: 9px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--color-black);
+  font: inherit; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer;
+}
+.counts-menu button:active { background: var(--color-surface-hover); }
 .studio-manage-back {
   flex: 0 0 var(--tap-size); background: var(--color-white);
   border: 1px solid var(--color-border);
