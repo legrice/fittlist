@@ -272,8 +272,10 @@ export function FollowingScreen({
             const coachMatch = favIds.includes(item.coachId);
             const studioMatch = savedStudios.some((studio) => item.whereHref === `/s/${studio.slug}`);
             const groupMatch = socialGroups.some((group) => group.classKeys.includes(item.key));
-            if (!profileFilter) return coachMatch || studioMatch || groupMatch;
+            const selfMatch = item.saved || (!!meId && item.coachId === meId);
+            if (!profileFilter) return selfMatch || coachMatch || studioMatch || groupMatch;
             const [kind, id] = profileFilter.split(":", 2);
+            if (kind === "self") return selfMatch;
             if (kind === "coach") return item.coachId === id;
             if (kind === "studio") {
               const studio = savedStudios.find((entry) => entry.id === id);
@@ -300,6 +302,7 @@ export function FollowingScreen({
   const selectedGroup = profileFilter?.startsWith("group:")
     ? socialGroups.find((group) => `group:${group.id}` === profileFilter) ?? null
     : null;
+  const selectedSelf = profileFilter === `self:${meId}`;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -523,10 +526,6 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <nav className="social-source-tabs" aria-label="Schedule view">
-            <button type="button" className="on" aria-current="page">Following</button>
-            <Link href="/calendar">My schedule</Link>
-          </nav>
           <div className={`tray following-rail${profileFilter ? " has-context" : ""}`} role="group" aria-label="Filter followed profiles">
             <div className="tray-scroll">
               <button
@@ -538,6 +537,18 @@ export function FollowingScreen({
                   <Icon name="groups" size={25} />
                 </span>
                 <span className="trayitem-nm">All</span>
+              </button>
+              <button
+                className={`trayitem${profileFilter && !selectedSelf ? " dim" : ""}`}
+                aria-pressed={selectedSelf}
+                onClick={() => setProfileFilter(selectedSelf ? null : `self:${meId}`)}
+              >
+                <span className={`trayav${selectedSelf ? " sel" : ""}`} style={{ background: meFace.color }}>
+                  {meFace.photo ? <img src={meFace.photo} alt="" /> : (
+                    <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
+                  )}
+                </span>
+                <span className="trayitem-nm">You</span>
               </button>
               {coachOptions.map((coach) => {
                 const key = `coach:${coach.id}`;
@@ -596,15 +607,19 @@ export function FollowingScreen({
           </div>
         </header>
       )}
-      {isHome && (selectedCoach || selectedStudio || selectedGroup) && (
+      {isHome && (selectedSelf || selectedCoach || selectedStudio || selectedGroup) && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">
-            {selectedCoach
+            {selectedSelf
+              ? "Your schedule"
+              : selectedCoach
               ? `Classes with ${selectedCoach.name.split(/\s+/)[0]}`
               : `Classes from ${(selectedStudio ?? selectedGroup)!.name}`}
           </span>
           <Link
-            href={selectedCoach?.handle
+            href={selectedSelf
+              ? "/calendar"
+              : selectedCoach?.handle
                 ? `/${selectedCoach.handle}?from=feed`
                 : selectedStudio
                   ? `/s/${selectedStudio.slug}`
@@ -613,7 +628,7 @@ export function FollowingScreen({
                     : "/feed"}
             className="feedfilter-link"
           >
-            View profile <Icon name="chevron_right" size={17} />
+            {selectedSelf ? "Manage schedule" : "View profile"} <Icon name="chevron_right" size={17} />
           </Link>
         </div>
       )}
@@ -628,10 +643,14 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome ? "Nothing from profiles you follow yet" : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">{isHome
+              ? selectedSelf ? "Nothing on your schedule yet" : "Nothing from profiles you follow yet"
+              : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? "Follow people, studios, and groups to combine their upcoming classes in one schedule."
+                ? selectedSelf
+                  ? "Add a class or save one from a profile you follow to build your schedule."
+                  : "Follow people, studios, and groups to combine their upcoming classes in one schedule."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
             {isHome && (
