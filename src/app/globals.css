@@ -10637,6 +10637,7 @@ a.clspeek-by:active { opacity: .6; }
   margin:4px 0; background:var(--ground);
 }
 .calendar-page-header.calendar-page-actions { grid-template-columns: auto 44px; justify-content: end; }
+.calendar-desktop-controls { display:none; }
 .calendar-page-header h1 { margin:0; font-size:34px; line-height:1.05; letter-spacing:-.025em; }
 .calendar-menu-button,
 .calendar-header-share {
@@ -10648,6 +10649,17 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-menu-button { position:relative; }
 .calendar-menu-button > .calendar-filter-count { position:absolute; top:-7px; right:-5px; min-width:20px; height:20px; padding:0 5px; display:grid; place-items:center; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font-size:11px; font-weight:700; }
 .calendar-header-share { width:auto; padding:0 14px; gap:7px; border:1px solid var(--color-border); border-radius:var(--radius-pill); box-shadow:none; font:inherit; font-weight:700; }
+@media (min-width: 760px) {
+  .calendar-page-header.calendar-page-actions { display:flex; justify-content:flex-end; gap:10px; }
+  .calendar-desktop-controls { display:flex; align-items:center; gap:10px; margin-right:auto; }
+  .calendar-desktop-view { height:44px; padding:4px; display:flex; align-items:center; gap:3px; border-radius:var(--radius-pill); background:var(--color-surface-muted); }
+  .calendar-desktop-view button { min-width:76px; height:36px; padding:0 16px; border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; }
+  .calendar-desktop-view button.on { background:var(--color-black); color:var(--color-white); }
+  .calendar-desktop-filter { height:44px; min-width:220px; padding:0 12px 0 16px; display:flex; align-items:center; gap:9px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); }
+  .calendar-desktop-filter span { font-size:13px; font-weight:700; color:var(--color-text-secondary); }
+  .calendar-desktop-filter select { flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--color-black); font:inherit; font-size:14px; font-weight:700; }
+  .calendar-menu-button { display:none; }
+}
 .calendar-menu-button:active,
 .calendar-header-share:active { transform:scale(.94); }
 .calendar-drawer-scrim {

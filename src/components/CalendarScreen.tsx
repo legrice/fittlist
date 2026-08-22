@@ -468,11 +468,43 @@ export function CalendarScreen({
     }
   };
 
+  const desktopCategory = (() => {
+    const choices = member ? (["saved", "personal"] as const) : (["coaching", "saved", "personal"] as const);
+    const on = choices.filter((key) => visible[key]);
+    if (on.length === choices.length) return "all";
+    if (on.length === 1) return on[0];
+    return "custom";
+  })();
+  const chooseDesktopCategory = (value: string) => {
+    if (value === "custom") return;
+    setVisible({
+      coaching: !member && (value === "all" || value === "coaching"),
+      saved: value === "all" || value === "saved",
+      personal: value === "all" || value === "personal",
+    });
+  };
+
   return (
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       <header className="calendar-page-header calendar-page-actions">
+        <div className="calendar-desktop-controls">
+          <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
+            <button type="button" className={view === "list" ? "on" : ""} aria-pressed={view === "list"} onClick={() => setView("list")}>Day</button>
+            <button type="button" className={view === "month" ? "on" : ""} aria-pressed={view === "month"} onClick={() => setView("month")}>Month</button>
+          </div>
+          <label className="calendar-desktop-filter">
+            <span>Show</span>
+            <select value={desktopCategory} onChange={(event) => chooseDesktopCategory(event.target.value)}>
+              <option value="all">Everything</option>
+              {!member && <option value="coaching">Coaching</option>}
+              <option value="saved">Saved classes</option>
+              <option value="personal">Personal activities</option>
+              {desktopCategory === "custom" && <option value="custom">Custom selection</option>}
+            </select>
+          </label>
+        </div>
         <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         <button type="button" className="calendar-menu-button" aria-label={`Filter calendar, ${activeFilterCount} selected`} onClick={openFilters}><Icon name="tune" size={22} /><span className="calendar-filter-count">{activeFilterCount}</span></button>
       </header>
