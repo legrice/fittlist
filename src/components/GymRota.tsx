@@ -634,7 +634,7 @@ export function GymRota({
             <Icon name="arrow_back" size={23} />
           </BackLink>
           <h1 className="studio-calendar-title">Calendar</h1>
-          <button className="studio-manage-settings" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
+          <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
             <Icon name="tune" size={23} />
           </button>
         </div>
@@ -646,29 +646,26 @@ export function GymRota({
       </div>
 
       {filterOpen && (
-        <div className="sheet-scrim" onClick={(event) => event.target === event.currentTarget && setFilterOpen(false)}>
-          <div className="sheet rota-filter-sheet" role="dialog" aria-modal="true" aria-labelledby="rota-filter-title">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setFilterOpen(false)}><Icon name="close" size={18} /></button>
-            <h2 id="rota-filter-title">Calendar filters</h2>
-            <h3>View</h3>
-            <div className="rota-filter-options">
+        <div className="calendar-drawer-scrim" onClick={(event) => event.target === event.currentTarget && setFilterOpen(false)}>
+          <aside className="calendar-drawer" role="dialog" aria-modal="true" aria-labelledby="rota-filter-title">
+            <div className="calendar-drawer-head"><h2 id="rota-filter-title">Calendar filters</h2><button className="iconbtn" aria-label="Close" onClick={() => setFilterOpen(false)}><Icon name="close" size={18} /></button></div>
+            <section className="calendar-drawer-section"><h3>View</h3>
+            <div>
               {([desktop ? "week" : "day", "month"] as const).map((view) => {
                 const selected = desktop ? desktopView === view : mobileView === view;
-                return <button className={selected ? "on" : ""} key={view} onClick={() => {
+                return <button className={`calendar-drawer-row calendar-view-choice${selected ? " on" : ""}`} key={view} onClick={() => {
                   if (desktop) chooseDesktopView(view === "day" ? "week" : view);
                   else setMobileView(view === "week" ? "day" : view);
                   if (view === "month" && !month) void loadMonth();
-                }}>{view[0].toUpperCase() + view.slice(1)}{selected && <Icon name="check" size={18} />}</button>;
+                }}><span className="calendar-view-choice-icon"><Icon name={view === "month" ? "calendar_view_month" : "calendar_view_day"} size={20} /></span>{view[0].toUpperCase() + view.slice(1)}</button>;
               })}
-            </div>
-            <h3>Schedule</h3>
-            <div className="rota-filter-options">
+            </div></section>
+            <section className="calendar-drawer-section"><h3>Schedule</h3><div>
               {([['all','All shifts'],['assigned','All coaches'],['open','Open shifts'],['mine','My shifts']] as [ShiftFilter,string][]).map(([value,label]) => (
-                <button className={shiftFilter === value ? "on" : ""} key={value} onClick={() => chooseShiftFilter(value)}>{label}{shiftFilter === value && <Icon name="check" size={18} />}</button>
+                <button className={`calendar-drawer-row${shiftFilter === value ? " on" : ""}`} key={value} onClick={() => chooseShiftFilter(value)}><Icon name={value === "open" ? "event_available" : "groups"} size={20} />{label}<span className={`calendar-check${shiftFilter === value ? " on calendar-check-coaching" : ""}`}>{shiftFilter === value && <Icon name="check" size={14} />}</span></button>
               ))}
-            </div>
-            <button className="btn si" onClick={() => setFilterOpen(false)}>Done</button>
-          </div>
+            </div></section>
+          </aside>
         </div>
       )}
 
@@ -704,7 +701,7 @@ export function GymRota({
                   return (
                     <section
                       key={day.iso}
-                      className={`rota-month-day${outside ? " outside" : ""}${day.closed ? " closed" : ""}`}
+                      className={`rota-month-day${outside ? " outside" : ""}${day.closed ? " closed" : ""}${day.iso === localTodayIso() ? " today" : ""}`}
                       onClick={!desktop && !outside ? () => {
                         setSelectedDayIso(day.iso);
                         setMobileView("day");
