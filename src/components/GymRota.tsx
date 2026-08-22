@@ -74,10 +74,10 @@ type CoachPick = {
   cls: GymClassDto;
 };
 
-type ShiftFilter = "all" | "mine" | "open";
+type ShiftFilter = "all" | "assigned" | "mine" | "open";
 
 const isShiftFilter = (value: string | null): value is ShiftFilter =>
-  value === "all" || value === "mine" || value === "open";
+  value === "all" || value === "assigned" || value === "mine" || value === "open";
 
 export type GymRotaAdmin = {
   studio: StudioEditProps;
@@ -210,6 +210,7 @@ export function GymRota({
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
   const [desktop, setDesktop] = useState(false);
   const [desktopView, setDesktopView] = useState<"week" | "month">("month");
+  const [mobileView, setMobileView] = useState<"day" | "month">("day");
   const [month, setMonth] = useState<GymMonthDto | null>(null);
   const [monthLoading, setMonthLoading] = useState(false);
   const [selectedDayIso, setSelectedDayIso] = useState(() => {
@@ -255,6 +256,7 @@ export function GymRota({
       const coachId = effectiveCoach(cls, iso);
       if (shiftFilter === "mine") return coachId === viewerId;
       if (shiftFilter === "open") return !coachId;
+      if (shiftFilter === "assigned") return !!coachId;
       return true;
     },
     [effectiveCoach, shiftFilter, viewerId],
@@ -632,8 +634,10 @@ export function GymRota({
   }));
   const renderedWeekDays = desktop
     ? filteredWeekDays
-    : filteredWeekDays.filter((day) => day.iso === selectedDayIso);
-  const selectedDay = filteredWeekDays.find((day) => day.iso === selectedDayIso) ?? filteredWeekDays[0];
+    : [month?.days.find((day) => day.iso === selectedDayIso) ?? filteredWeekDays.find((day) => day.iso === selectedDayIso)]
+        .filter((day): day is GymDayDto => !!day)
+        .map((day) => ({ ...day, items: day.items.filter((item) => matchesShiftFilter(item, day.iso)) }));
+  const selectedDay = renderedWeekDays[0] ?? filteredWeekDays[0];
   const weekHref = (offset: number) => {
     const params = new URLSearchParams({ w: String(offset) });
     if (shiftFilter !== "all") params.set("show", shiftFilter);
@@ -679,33 +683,38 @@ export function GymRota({
               onChange={(event) => chooseShiftFilter(event.target.value as ShiftFilter)}
             >
               <option value="all">All shifts</option>
+              <option value="assigned">All coaches</option>
               <option value="mine">My shifts</option>
               <option value="open">Open shifts</option>
             </select>
           </label>
-          {desktop && (
-            <div className="rota-view-switch" role="group" aria-label="Calendar view">
+          <div className="rota-view-switch" role="group" aria-label="Calendar view">
               <button
-                className={desktopView === "week" ? "on" : ""}
-                aria-pressed={desktopView === "week"}
-                onClick={() => chooseDesktopView("week")}
+                className={(desktop ? desktopView === "week" : mobileView === "day") ? "on" : ""}
+                aria-pressed={desktop ? desktopView === "week" : mobileView === "day"}
+                onClick={() => desktop ? chooseDesktopView("week") : setMobileView("day")}
               >
-                Week
+                {desktop ? "Week" : "Day"}
               </button>
               <button
-                className={desktopView === "month" ? "on" : ""}
-                aria-pressed={desktopView === "month"}
-                onClick={() => chooseDesktopView("month")}
+                className={(desktop ? desktopView === "month" : mobileView === "month") ? "on" : ""}
+                aria-pressed={desktop ? desktopView === "month" : mobileView === "month"}
+                onClick={() => {
+                  if (desktop) chooseDesktopView("month");
+                  else {
+                    setMobileView("month");
+                    if (!month) void loadMonth();
+                  }
+                }}
               >
                 Month
               </button>
             </div>
-          )}
         </div>
       </div>
 
-      {desktop && desktopView === "month" ? (
-        <div className="rota-month-view">
+      {(desktop ? desktopView === "month" : mobileView === "month") ? (
+        <div className={`rota-month-view${desktop ? "" : " mobile"}`}>
           <div className="rota-month-toolbar">
             <div className="rota-month-nav">
               <button
@@ -737,6 +746,10 @@ export function GymRota({
                     <section
                       key={day.iso}
                       className={`rota-month-day${outside ? " outside" : ""}${day.closed ? " closed" : ""}`}
+                      onClick={!desktop && !outside ? () => {
+                        setSelectedDayIso(day.iso);
+                        setMobileView("day");
+                      } : undefined}
                     >
                       <div className="rota-month-dayhead">
                         <span>

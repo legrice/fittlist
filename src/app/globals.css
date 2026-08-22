@@ -6909,6 +6909,10 @@ select.editinput.placekind-select {
 }
 
 @media (max-width: 1099px) {
+  .rota-calendar-tools { width: 100%; justify-content: stretch; }
+  .rota-shift-filter { min-width: 0; flex: 1; }
+  .rota-view-switch { flex: 0 0 auto; }
+  .rota-view-switch button { min-width: 58px; padding-inline: 11px; }
   .rotaweek.mobile-day-nav {
     margin-top: 18px;
     background: transparent;
@@ -6957,6 +6961,33 @@ select.editinput.placekind-select {
   .rota-calendar { margin-top: 16px; }
   .rota-calendar .rotaday-actions { margin-left: auto; }
   .rota-calendar .dayband-d:empty { display: none; }
+  .rota-month-view.mobile { margin-top: 18px; }
+  .rota-month-view.mobile .rota-month-toolbar { margin-bottom: 10px; }
+  .rota-month-view.mobile .rota-month-board { overflow: hidden; }
+  .rota-month-view.mobile .rota-month-weekdays,
+  .rota-month-view.mobile .rota-month-grid { min-width: 0; }
+  .rota-month-view.mobile .rota-month-weekdays span {
+    min-height: 34px; font-size: 0;
+  }
+  .rota-month-view.mobile .rota-month-weekdays span::first-letter { font-size: 11px; }
+  .rota-month-view.mobile .rota-month-day {
+    min-height: 68px; padding: 7px 6px; cursor: pointer;
+  }
+  .rota-month-view.mobile .rota-month-dayhead { min-height: 20px; }
+  .rota-month-view.mobile .rota-month-dayhead > span { font-size: 12px; }
+  .rota-month-view.mobile .rota-month-daytools,
+  .rota-month-view.mobile .rota-day-closed-label,
+  .rota-month-view.mobile .rota-month-eventmain,
+  .rota-month-view.mobile .rota-month-coachpick,
+  .rota-month-view.mobile .rota-month-empty { display: none; }
+  .rota-month-view.mobile .rota-month-events {
+    margin-top: 7px; display: flex; flex-flow: row wrap; gap: 3px;
+  }
+  .rota-month-view.mobile .rota-month-event {
+    width: 7px; height: 7px; min-height: 0; flex: 0 0 7px;
+    border: 0; border-radius: 50%; background: var(--color-border-strong);
+  }
+  .rota-month-view.mobile .rota-month-event::before { inset: 0; width: auto; border-radius: inherit; }
 }
 
 /* Desktop studio planning: a dense month replaces the tall phone agenda.
