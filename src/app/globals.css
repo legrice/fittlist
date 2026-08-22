@@ -8119,10 +8119,10 @@ select.editinput.placekind-select {
   border: 1px solid var(--color-border);
 }
 .studio-dashboard { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
-.studio-dashboard-backbar > :last-child { grid-column: 1; }
 .studio-dashboard-hero {
-  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
 }
+.studio-dashboard-hero > .studio-manage-back { position: absolute; top: 0; left: 0; }
 .studio-dashboard-hero h1 { margin: 0; }
 .studio-dashboard-photo {
   width: 112px; height: 112px; overflow: hidden; display: grid; place-items: center;

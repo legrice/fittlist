@@ -45,12 +45,10 @@ export function StudioManageDashboard({
   return (
     <main className="pad studio-dashboard">
       <div className="studio-manage-top pagetop">
-        <div className="studio-manage-topbar studio-dashboard-backbar">
+        <div className="studio-dashboard-hero">
           <BackLink className="evback studio-manage-back" href="/settings" anywhere notUnder={`/s/${studioSlug}`} label="Back to your account">
             <Icon name="arrow_back" size={23} />
           </BackLink>
-        </div>
-        <div className="studio-dashboard-hero">
           <span className="studio-dashboard-photo">
             {admin.studio.photo ? <img src={admin.studio.photo} alt="" /> : <Icon name="storefront" size={42} />}
           </span>
