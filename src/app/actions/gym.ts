@@ -24,6 +24,8 @@ import { sendInviteLink } from "@/lib/invite-link";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
 import { coachAnalytics } from "@/lib/visits";
+import { avatarColor } from "@/lib/avatar";
+import { pushToUser } from "@/lib/push";
 import {
   isStudioPlannerColor,
   type StudioPlannerColor,
@@ -153,13 +155,19 @@ async function assignmentError(
   db: Awaited<ReturnType<typeof getDb>>,
   studioId: string,
   coachUserId: string | null,
+  actingUserId?: string,
 ) {
   if (!coachUserId) return null;
   const [coach] = await db
     .select({ kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, coachUserId));
-  if (!coach || coach.kind === "fan" || coach.kind === "gym") return "That's not a coach.";
+  if (!coach || coach.kind === "gym") return "That's not a coach.";
+  // An owner or manager may also coach. Studio access already authorizes the
+  // caller, so they should not have to invite themselves to their own roster
+  // before putting themselves on a class.
+  if (coachUserId === actingUserId) return null;
+  if (coach.kind === "fan") return "That's not a coach.";
   if (!(await rosterHas(db, studioId, coachUserId)))
     return "Invite this coach and turn on Schedule before assigning them.";
   return null;
@@ -255,7 +263,18 @@ function nextOccurrence(dayOfWeek: number, fromIso = todayIso()) {
 export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return [];
-  return gymCoachesFromDb(ctx.db, studioId);
+  const coaches = await gymCoachesFromDb(ctx.db, studioId);
+  if (coaches.some((coach) => coach.id === ctx.userId)) return coaches;
+  const [manager] = await ctx.db
+    .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, ctx.userId));
+  if (!manager || manager.kind === "gym") return coaches;
+  return [...coaches, {
+    id: manager.id,
+    name: manager.name.trim() || manager.email.split("@")[0],
+    email: manager.email,
+  }].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 async function gymCoachesFromDb(
@@ -490,6 +509,54 @@ export async function saveStandardWeek(
     .where(eq(schema.studios.id, studioId));
   revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}/manage`);
   return { ok: true, count };
+}
+
+export type StandardCalendarSlot = {
+  name: string;
+  startTime: string;
+  durationMin: number;
+  plannerColor: StudioPlannerColor | null;
+};
+
+/** Save the studio's class-only weekly source of truth. */
+export async function setStandardCalendar(
+  studioId: string,
+  input: Record<string, StandardCalendarSlot[]>,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const standardWeek: schema.StandardWeek = {};
+  let total = 0;
+  for (let day = 0; day < 7; day++) {
+    const slots = Array.isArray(input[String(day)]) ? input[String(day)] : [];
+    const clean = slots.flatMap((slot) => {
+      const name = slot.name?.trim().slice(0, 100);
+      const startTime = slot.startTime?.trim();
+      const durationMin = Number(slot.durationMin);
+      if (!name || !/^\d{2}:\d{2}$/.test(startTime) || !Number.isInteger(durationMin) || durationMin < 5 || durationMin > 600)
+        return [];
+      return [{
+        name,
+        classType: null,
+        description: null,
+        image: null,
+        startTime,
+        durationMin,
+        links: [],
+        plannerColor: isStudioPlannerColor(slot.plannerColor) ? slot.plannerColor : null,
+        isPublic: true,
+      }];
+    }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    total += clean.length;
+    if (total > 150) return { ok: false, error: "Keep the standard calendar under 150 classes." };
+    standardWeek[String(day) as keyof schema.StandardWeek] = clean;
+  }
+  await ctx.db.update(schema.studios).set({ standardWeek }).where(eq(schema.studios.id, studioId));
+  const slug = ctx.studio.slug ?? ctx.studio.id;
+  revalidatePath(`/s/${slug}/manage`);
+  revalidatePath(`/s/${slug}/manage/calendar`);
+  revalidatePath(`/s/${slug}/manage/standard`);
+  return { ok: true };
 }
 
 /** Add one weekday from the standard week to a real date. Existing rows win,
@@ -844,10 +911,10 @@ export async function addGymClass(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const bad = validate(input);
   if (bad) return { ok: false, error: bad };
-  const { db, studio, gymId } = ctx;
+  const { db, userId, studio, gymId } = ctx;
 
   const coachUserId = input.coachUserId || null;
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   const identityKey = input.catalogKey?.trim().toLowerCase() || name.toLowerCase();
@@ -1014,7 +1081,7 @@ export async function updateGymClass(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const bad = validate(input);
   if (bad) return { ok: false, error: bad };
-  const { db, studio, gymId } = ctx;
+  const { db, userId, studio, gymId } = ctx;
 
   // Scoped to this gym's own rows: a manager may not reach a coach's personal
   // class, or another studio's, by passing its id.
@@ -1025,7 +1092,7 @@ export async function updateGymClass(
   if (!existing) return { ok: false, error: "Class not found." };
 
   const coachUserId = input.coachUserId || null;
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   // One row is one slot, so an edit is about the slot that was opened: the day
@@ -1436,7 +1503,7 @@ export async function setShiftCover(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
   const { db, userId, studio, gymId } = ctx;
 
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
 
   const [cls] = await db
@@ -2049,6 +2116,8 @@ export type GymCountRow = {
 export type GymCounts = {
   /** The month being counted, as "2026-08", and how it reads. */
   month: string;
+  startDate: string;
+  endDate: string;
   label: string;
   /** The two halves, so it lines up with a semi-monthly pay run. */
   firstLabel: string;
@@ -2072,7 +2141,12 @@ export type GymCounts = {
  * number goes to whoever actually pays people. Every coach can see their own,
  * which is what makes fifteen people the check on it.
  */
-export async function gymCounts(studioId: string, monthIso?: string): Promise<GymCounts | null> {
+export async function gymCounts(
+  studioId: string,
+  monthIso?: string,
+  startInput?: string,
+  endInput?: string,
+): Promise<GymCounts | null> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return null;
   const { db, gymId } = ctx;
@@ -2080,7 +2154,14 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
   const month = /^\d{4}-\d{2}$/.test(monthIso ?? "") ? monthIso! : todayIso().slice(0, 7);
   const [y, mo] = month.split("-").map(Number);
   const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
-  const iso = (d: number) => `${month}-${String(d).padStart(2, "0")}`;
+  const monthStart = `${month}-01`;
+  const monthEnd = `${month}-${String(daysInMonth).padStart(2, "0")}`;
+  const validDate = (value?: string) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "");
+  const startDate = validDate(startInput) ? startInput! : monthStart;
+  const endDate = validDate(endInput) && endInput! >= startDate ? endInput! : monthEnd;
+  const rangeDays = Math.floor((Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 864e5) + 1;
+  if (rangeDays < 1 || rangeDays > 366) return null;
+  const midpoint = Math.ceil(rangeDays / 2);
 
   const rows = await db
     .select()
@@ -2107,8 +2188,10 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
 
   const tally = new Map<string, { first: number; second: number }>();
   let openSlots = 0;
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = iso(d);
+  for (let d = 0; d < rangeDays; d++) {
+    const cursor = new Date(`${startDate}T00:00:00Z`);
+    cursor.setUTCDate(cursor.getUTCDate() + d);
+    const date = cursor.toISOString().slice(0, 10);
     const dow = (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
     for (const r of rows) {
       if (date < (startedOn.get(r.id) ?? "")) continue;
@@ -2120,7 +2203,7 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
         continue;
       }
       const cur = tally.get(who) ?? { first: 0, second: 0 };
-      if (d <= 15) cur.first++;
+      if (d < midpoint) cur.first++;
       else cur.second++;
       tally.set(who, cur);
     }
@@ -2133,23 +2216,23 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
   const nameOf = new Map(
     people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]] as const),
   );
-  // 31st, not 31th.
-  const ordinal = (n: number) => {
-    const rem100 = n % 100;
-    if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
-    return `${n}${["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
-  };
-  const monthName = new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
+  const rangeLabel = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
   });
+  const firstEnd = new Date(`${startDate}T00:00:00Z`);
+  firstEnd.setUTCDate(firstEnd.getUTCDate() + midpoint - 1);
+  const secondStart = new Date(firstEnd);
+  secondStart.setUTCDate(secondStart.getUTCDate() + 1);
 
   return {
     month,
-    label: monthName,
-    firstLabel: "1st to 15th",
-    secondLabel: `16th to ${ordinal(daysInMonth)}`,
+    startDate,
+    endDate,
+    label: `${rangeLabel(startDate)} – ${rangeLabel(endDate)}`,
+    firstLabel: `${rangeLabel(startDate)} – ${rangeLabel(firstEnd.toISOString().slice(0, 10))}`,
+    secondLabel: midpoint < rangeDays
+      ? `${rangeLabel(secondStart.toISOString().slice(0, 10))} – ${rangeLabel(endDate)}`
+      : "Later",
     openSlots,
     rows: ids
       .map((id) => {
@@ -2384,31 +2467,24 @@ export async function inviteStudioCoach(
         ),
       );
     if (already) return { ok: false, error: "They're already associated with this studio." };
-    await db
-      .insert(schema.studioRotaCoaches)
-      .values({
-        studioId,
-        userId: existing.id,
-        state: "active",
-        role,
-        onSchedule: role === "coach",
-        acceptedAt: new Date(),
-      });
+    await createPlaceholderCoach({ studioId, name, email, role });
     await addNotification(existing.id, {
-      type: "shift_assigned",
-      title: `You're on ${studio.name}'s team`,
+      type: "studio_invite",
+      title: `${studio.name} invited you to its team`,
       body: role === "coach"
-        ? "The studio can put you on its calendar and send you coverage requests."
-        : "The studio added you to its front desk team.",
-      href: role === "coach" ? `/s/${studio.slug ?? studio.id}/shifts` : `/s/${studio.slug ?? studio.id}`,
+        ? "Open the email invite to accept and see the classes you're on."
+        : "Open the email invite to accept the front desk role.",
+      href: `/s/${studio.slug ?? studio.id}`,
       actorUserId: userId,
     });
-    revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
-    revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
-    return { ok: true };
+    void pushToUser(existing.id, {
+      title: `${studio.name} invited you`,
+      body: role === "coach" ? "Accept your coaching invite on FittList." : "Accept your team invite on FittList.",
+      url: `/s/${studio.slug ?? studio.id}`,
+    });
   }
 
-  const [already] = await db
+  const [already] = existing ? [true] : await db
     .select({ id: schema.studioRotaCoaches.id })
     .from(schema.studioRotaCoaches)
     .where(
@@ -2588,6 +2664,54 @@ export type StaffPerson = {
   isYou: boolean;
   isOwner: boolean;
 };
+
+export type StudioManagerCandidate = {
+  id: string;
+  name: string;
+  handle: string | null;
+  email: string;
+  photo: string | null;
+  color: string;
+};
+
+/** Existing FittList accounts an owner can add directly as a manager. */
+export async function searchStudioManagerCandidates(
+  studioId: string,
+  queryRaw: string,
+): Promise<StudioManagerCandidate[]> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx || ctx.studio.ownerUserId !== ctx.userId) return [];
+  const query = queryRaw.trim();
+  if (query.length < 2) return [];
+  const matches = await ctx.db
+    .select()
+    .from(schema.users)
+    .where(and(
+      ne(schema.users.kind, "gym"),
+      or(
+        ilike(schema.users.name, `%${query}%`),
+        ilike(schema.users.handle, `%${query}%`),
+        ilike(schema.users.email, `%${query}%`),
+      ),
+    ))
+    .limit(20);
+  const current = await ctx.db
+    .select({ userId: schema.studioManagers.userId })
+    .from(schema.studioManagers)
+    .where(eq(schema.studioManagers.studioId, studioId));
+  const currentIds = new Set(current.map((row) => row.userId));
+  return matches
+    .filter((person) => !currentIds.has(person.id))
+    .slice(0, 8)
+    .map((person) => ({
+      id: person.id,
+      name: person.name.trim() || person.email.split("@")[0],
+      handle: person.handle,
+      email: person.email,
+      photo: person.photoThumb ?? person.photo,
+      color: avatarColor(person),
+    }));
+}
 
 /** Focused loader for the Admin access view in Studio settings. It avoids
  * loading the coach roster just to show the small list of page managers. */
@@ -2981,6 +3105,21 @@ export async function addStudioManager(
     title: `You run ${studio.name} on fittlist`,
     body: "You can edit its page, and its details are yours to state.",
     href: `/s/${studio.slug ?? studio.id}`,
+  });
+  try {
+    await sendInviteLink({
+      email: user.email,
+      subject: `${studio.name} invited you to help manage its FittList page`,
+      intro: `${studio.name} invited you to manage its page and calendar. Tap to open FittList`,
+      invite: true,
+    });
+  } catch {
+    return { ok: false, error: "They were added, but the invitation email couldn't be sent. Try again." };
+  }
+  void pushToUser(user.id, {
+    title: `${studio.name} made you an admin`,
+    body: "You can now help manage its page and calendar.",
+    url: `/s/${studio.slug ?? studio.id}/manage`,
   });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);

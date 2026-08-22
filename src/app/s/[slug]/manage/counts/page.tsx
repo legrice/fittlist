@@ -17,10 +17,10 @@ export default async function CountsPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ m?: string }>;
+  searchParams: Promise<{ m?: string; from?: string; to?: string }>;
 }) {
   const { slug } = await params;
-  const { m } = await searchParams;
+  const { m, from, to } = await searchParams;
   const db = await getDb();
   const [studio] = await db
     .select()
@@ -41,7 +41,7 @@ export default async function CountsPage({
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
-  const counts = await gymCounts(studio.id, m);
+  const counts = await gymCounts(studio.id, m, from, to);
   const base = `/s/${studio.slug ?? studio.id}/manage`;
   return (
     <GymCountsView

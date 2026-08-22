@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   addStudioManager,
   removeStudioManager,
   saveStandardWeek,
   setStudioShiftApproval,
+  searchStudioManagerCandidates,
   studioManagersForSettings,
   studioPageViews,
   transferStudioOwnership,
   type StaffPerson,
+  type StudioManagerCandidate,
 } from "@/app/actions/gym";
 import { setStudioShowCoaches } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
@@ -60,6 +62,9 @@ export function StudioAdminSheet({
   const [admins, setAdmins] = useState<StaffPerson[] | null>(null);
   const [canManageAdmins, setCanManageAdmins] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
+  const [managerSearch, setManagerSearch] = useState("");
+  const [managerCandidates, setManagerCandidates] = useState<StudioManagerCandidate[]>([]);
+  const [managerSearchPending, startManagerSearch] = useTransition();
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [adminConfirm, setAdminConfirm] = useState<{
     person: StaffPerson;
@@ -72,6 +77,24 @@ export function StudioAdminSheet({
   const [, startApprovals] = useTransition();
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
+
+  useEffect(() => {
+    if (!adminsOpen || !canManageAdmins || managerSearch.trim().length < 2) {
+      setManagerCandidates([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      startManagerSearch(async () => {
+        const candidates = await searchStudioManagerCandidates(studio.id, managerSearch);
+        if (!cancelled) setManagerCandidates(candidates);
+      });
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [adminsOpen, canManageAdmins, managerSearch, studio.id]);
 
   const toggleNames = () => {
     const next = !names;
@@ -159,6 +182,23 @@ export function StudioAdminSheet({
     setAdmins(refreshed.people);
     setCanManageAdmins(refreshed.canManage);
     toast("Manager added");
+  };
+
+  const addExistingAdmin = async (person: StudioManagerCandidate) => {
+    if (addingAdmin) return;
+    setAddingAdmin(true);
+    const result = await addStudioManager(studio.id, person.email);
+    setAddingAdmin(false);
+    if (!result.ok) {
+      toast(result.error ?? "Couldn't add them");
+      return;
+    }
+    setManagerSearch("");
+    setManagerCandidates([]);
+    const refreshed = await studioManagersForSettings(studio.id);
+    setAdmins(refreshed.people);
+    setCanManageAdmins(refreshed.canManage);
+    toast(`${person.name} is now a manager`);
   };
 
   const removeAdmin = async (person: StaffPerson) => {
@@ -310,20 +350,38 @@ export function StudioAdminSheet({
                     ))}
                   </div>
                 )}
-                {canManageAdmins && <div className="staffadd studio-admin-add">
-                  <input
-                    type="email"
-                    aria-label="Manager email"
-                    value={adminEmail}
-                    placeholder="their@email.com"
-                    onChange={(event) => setAdminEmail(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") addAdmin();
-                    }}
-                  />
-                  <button className="btn si staffaddbtn" disabled={addingAdmin || !adminEmail.trim()} onClick={addAdmin}>
-                    {addingAdmin ? "Adding…" : "Add manager"}
-                  </button>
+                {canManageAdmins && <div className="studio-manager-add-panel">
+                  <label className="studio-manager-search">
+                    <span>Add someone on FittList</span>
+                    <span><Icon name="search" size={19} /><input type="search" value={managerSearch} placeholder="Search name or username" onChange={(event) => setManagerSearch(event.target.value)} /></span>
+                  </label>
+                  {managerSearch.trim().length >= 2 && (
+                    <div className="studio-manager-results" aria-live="polite">
+                      {managerSearchPending ? <p>Searching…</p> : managerCandidates.length ? managerCandidates.map((person) => (
+                        <button key={person.id} disabled={addingAdmin} onClick={() => void addExistingAdmin(person)}>
+                          {person.photo ? <img src={person.photo} alt="" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}
+                          <span><strong>{person.name}</strong><small>{person.handle ? `@${person.handle}` : person.email}</small></span>
+                          <Icon name="add_circle" size={22} />
+                        </button>
+                      )) : <p>No matching accounts.</p>}
+                    </div>
+                  )}
+                  <div className="studio-manager-email-label"><span>Or use their account email</span></div>
+                  <div className="staffadd studio-admin-add">
+                    <input
+                      type="email"
+                      aria-label="Manager email"
+                      value={adminEmail}
+                      placeholder="their@email.com"
+                      onChange={(event) => setAdminEmail(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") addAdmin();
+                      }}
+                    />
+                    <button className="btn si staffaddbtn" disabled={addingAdmin || !adminEmail.trim()} onClick={addAdmin}>
+                      {addingAdmin ? "Adding…" : "Add manager"}
+                    </button>
+                  </div>
                 </div>}
               </div>
             ) : (
@@ -359,14 +417,14 @@ export function StudioAdminSheet({
                 </Link>
               )}
               {canSchedule && (
-                <button className="setrow" onClick={() => setStandardOpen(true)}>
+                <Link className="setrow" href={`/s/${slug}/manage/standard`}>
                   <span className="setrow-ic"><Icon name="calendar_month" size={24} /></span>
                   <span className="setrow-txt">
-                    <span className="t">Standard week</span>
-                    <span className="s">Choose the class schedule used as your weekly source</span>
+                    <span className="t">Standard calendar</span>
+                    <span className="s">Edit the class-only weekly source of truth</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-                </button>
+                </Link>
               )}
               <button
                 className="setrow"

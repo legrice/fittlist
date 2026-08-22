@@ -14,6 +14,39 @@ function configured(): boolean {
   return !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 }
 
+/** Send a push to one account on every device it has registered. */
+export async function pushToUser(userId: string, payload: {
+  title: string;
+  body: string;
+  url: string;
+}): Promise<void> {
+  if (!configured()) return;
+  webpush.setVapidDetails(
+    `mailto:${process.env.MAIL_REPLY_TO || "hello@fittlist.co"}`,
+    process.env.VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  );
+  const db = await getDb();
+  const subs = await db
+    .select()
+    .from(schema.pushSubscriptions)
+    .where(eq(schema.pushSubscriptions.userId, userId));
+  await Promise.all(subs.map(async (s) => {
+    try {
+      await webpush.sendNotification(
+        { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+        JSON.stringify(payload),
+        { TTL: 60 * 60 * 24 },
+      );
+    } catch (err: unknown) {
+      const code = (err as { statusCode?: number }).statusCode;
+      if (code === 404 || code === 410)
+        await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, s.endpoint));
+      else console.error("push failed", s.endpoint.slice(0, 48), err);
+    }
+  }));
+}
+
 /** Send to every subscribed admin device. Dead subscriptions (the browser
  *  revoked or the app was uninstalled) come back 404/410 and are pruned, so
  *  the table can't fill with ghosts. Failures never propagate: a push is a

@@ -172,7 +172,7 @@ export function StudioCoachSettings({
                   </span>
                   <strong>{shift.name}</strong>
                   <span className="studio-coach-shift-status">
-                    {shift.covered ? "Cover" : "Regular shift"}
+                    {shift.covered ? "One-time assignment" : "Regular shift"}
                     {!shift.isPublic && " · Draft"}
                   </span>
                 </div>
