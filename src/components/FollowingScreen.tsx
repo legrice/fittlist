@@ -289,17 +289,25 @@ export function FollowingScreen({
   );
 
   const coachOptions = useMemo(
-    () => myRail.filter((person) => person.id !== meId),
-    [myRail, meId],
+    () => myRail.filter((person) => person.id !== meId && items.some((item) => item.coachId === person.id)),
+    [myRail, meId, items],
   );
+  const studioOptions = useMemo(
+    () => savedStudios.filter((studio) => items.some((item) => item.whereHref === `/s/${studio.slug}`)),
+    [savedStudios, items],
+  );
+  const groupOptions = useMemo(() => {
+    const feedKeys = new Set(items.map((item) => item.key));
+    return socialGroups.filter((group) => group.classKeys.some((key) => feedKeys.has(key)));
+  }, [socialGroups, items]);
   const selectedCoach = profileFilter?.startsWith("coach:")
     ? coachOptions.find((person) => `coach:${person.id}` === profileFilter) ?? null
     : null;
   const selectedStudio = profileFilter?.startsWith("studio:")
-    ? savedStudios.find((studio) => `studio:${studio.id}` === profileFilter) ?? null
+    ? studioOptions.find((studio) => `studio:${studio.id}` === profileFilter) ?? null
     : null;
   const selectedGroup = profileFilter?.startsWith("group:")
-    ? socialGroups.find((group) => `group:${group.id}` === profileFilter) ?? null
+    ? groupOptions.find((group) => `group:${group.id}` === profileFilter) ?? null
     : null;
   const selectedSelf = profileFilter === `self:${meId}`;
 
@@ -572,7 +580,7 @@ export function FollowingScreen({
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
                 </button>
               )})}
-              {savedStudios.map((studio) => {
+              {studioOptions.map((studio) => {
                 const key = `studio:${studio.id}`;
                 return <button
                 key={studio.id}
@@ -585,7 +593,7 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{studio.name}</span>
               </button>})}
-              {socialGroups.map((group) => {
+              {groupOptions.map((group) => {
                 const key = `group:${group.id}`;
                 return <button
                 key={group.id}
