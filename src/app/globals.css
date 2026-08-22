@@ -8061,10 +8061,7 @@ select.editinput.placekind-select {
   border: 1px solid var(--color-border);
 }
 .studio-dashboard { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
-.studio-dashboard-kicker {
-  margin: 0 0 5px; color: var(--color-text-secondary);
-  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-}
+.studio-dashboard .studio-manage-topbar > :last-child { grid-column: 3; }
 .studio-dashboard-alert {
   min-height: 72px; margin: 2px 0 18px; padding: 12px 14px;
   display: flex; align-items: center; gap: 12px;

@@ -38,9 +38,7 @@ export function StudioManageDashboard({
           />
         </div>
         <div>
-          <p className="studio-dashboard-kicker">Studio dashboard</p>
           <h1>{studioName}</h1>
-          <p className="adminsub">Everything you need to run today.</p>
         </div>
       </div>
 
