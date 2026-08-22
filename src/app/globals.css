@@ -6934,8 +6934,9 @@ select.editinput.placekind-select {
     border-radius: 16px;
   }
   .mobile-day-nav .rota-day-more {
-    width: 36px; min-width: 36px; height: 36px; background: var(--color-white);
+    width: 32px; min-width: 32px; height: 36px; border: 0; background: transparent;
   }
+  .mobile-day-nav .rota-day-more:active { background: transparent; opacity: .55; }
   .mobile-day-nav .rota-day-menu { top: 42px; }
   .studio-calendar-add { bottom: calc(24px + env(safe-area-inset-bottom)); }
   .rota-calendar { margin-top: 16px; }

@@ -42,17 +42,6 @@ const localTodayIso = () => {
   return `${year}-${month}-${day}`;
 };
 
-const fmtDayNavigator = (iso: string) => {
-  const today = localTodayIso();
-  const difference = Math.round(
-    (new Date(`${iso}T00:00:00Z`).getTime() - new Date(`${today}T00:00:00Z`).getTime()) / 86_400_000,
-  );
-  if (difference === 0) return "Today";
-  if (difference === 1) return "Tomorrow";
-  if (difference === -1) return "Yesterday";
-  return fmtDay(iso);
-};
-
 /** What the sheet is open on: a slot, or an empty day waiting for one. */
 type Open = {
   iso: string;
@@ -856,7 +845,7 @@ export function GymRota({
               <span className="rotaweek-lbl">{week?.label ?? ""}</span>
             ) : (
               <span className="rotaweek-center">
-                <span className="rotaweek-lbl">{selectedDay ? fmtDayNavigator(selectedDay.iso) : "Today"}</span>
+                <span className="rotaweek-lbl">{selectedDay ? fmtDay(selectedDay.iso) : "Calendar"}</span>
                 {selectedDay && (
                   <span className="rota-day-menuwrap">
                     <button
