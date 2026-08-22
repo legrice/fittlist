@@ -51,7 +51,7 @@ export function StudioManageDashboard({
       )}
 
       <div className="studio-dashboard-grid">
-        <Link className="studio-dashboard-card primary" href={`${base}/calendar`} prefetch={false}>
+        <Link className="studio-dashboard-card" href={`${base}/calendar`} prefetch={false}>
           <span className="studio-dashboard-card-icon"><Icon name="calendar_month" size={28} /></span>
           <span className="studio-dashboard-card-copy"><strong>Calendar</strong><small>{classSummary}</small></span>
           <Icon name="arrow_forward" size={22} />

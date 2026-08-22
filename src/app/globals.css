@@ -8083,16 +8083,13 @@ select.editinput.placekind-select {
   background: var(--color-white); color: var(--color-black); text-decoration: none;
 }
 .studio-dashboard-card > svg { position: absolute; top: 24px; right: 22px; }
-.studio-dashboard-card.primary { background: var(--color-black); color: var(--color-white); }
 .studio-dashboard-card-icon {
   width: 52px; height: 52px; display: grid; place-items: center;
   border-radius: 16px; background: var(--color-surface-muted); color: var(--color-black);
 }
-.studio-dashboard-card.primary .studio-dashboard-card-icon { background: var(--color-lime); }
 .studio-dashboard-card-copy { min-width: 0; margin-top: auto; display: grid; gap: 5px; }
 .studio-dashboard-card-copy strong { font-size: 22px; line-height: 1.1; }
 .studio-dashboard-card-copy small { color: var(--color-text-secondary); font-size: 13px; line-height: 1.35; }
-.studio-dashboard-card.primary .studio-dashboard-card-copy small { color: rgba(255,255,255,.7); }
 .studio-dashboard-card:active { transform: scale(.99); }
 @media (max-width: 760px) {
   .studio-dashboard-grid { grid-template-columns: 1fr; gap: 10px; }
