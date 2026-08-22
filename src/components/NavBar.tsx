@@ -20,6 +20,7 @@ export function NavBar({
   coach = true,
   scheduleHref,
   profileHref,
+  face,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
    *  A screen off the tabs that belongs to one passes it. */
@@ -30,6 +31,7 @@ export function NavBar({
   scheduleHref?: string;
   /** Where Profile goes: your own page. Defaults to /you, which redirects. */
   profileHref?: string;
+  face?: { photo: string | null; color: string; initial: string };
 }) {
   const here = activeTab(usePathname(), active);
   const router = useRouter();
@@ -48,7 +50,11 @@ export function NavBar({
           const inner = (
             <>
               <span className="navglyph">
-                <Icon name={t.icon} size={22} />
+                {t.id === "calendar" && face ? (
+                  face.photo ? <img className="navav" src={face.photo} alt="" /> : (
+                    <span className="navav navav-empty" style={{ background: face.color }}>{face.initial}</span>
+                  )
+                ) : <Icon name={t.icon} size={22} />}
               </span>
               <span>{t.label}</span>
             </>

@@ -10,6 +10,7 @@ import { InvitesBanner } from "@/components/InvitesBanner";
 import { lookMode } from "@/lib/darkmode";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
+import { NavBar } from "@/components/NavBar";
 import { currentUser } from "@/lib/current-user";
 import { adminNewActivityCount } from "@/lib/adminactivity";
 
@@ -77,7 +78,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <section className="screen" data-mode={lookMode(me.look)}>
+    <section className="screen hasnav" data-mode={lookMode(me.look)}>
       <DesktopChrome
         coach={isCoach}
         scheduleHref={scheduleHref}
@@ -106,10 +107,17 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           face={face}
           profileHref={profileHref}
           accountData={accountData}
+          social
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
+      <NavBar
+        coach={isCoach}
+        scheduleHref={scheduleHref}
+        profileHref={profileHref}
+        face={face}
+      />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

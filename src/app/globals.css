@@ -1922,6 +1922,14 @@ button.bl-band { cursor: pointer; }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
+.social-brandbar { position: sticky; justify-content: center; min-height: 66px; }
+.social-brandbar-logo { position: absolute; left: 50%; transform: translateX(-50%); }
+.social-brandbar-side { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; }
+.social-brandbar-left { left: 18px; }
+.social-brandbar-right { right: 18px; }
+.social-brandbar .iconbtn { width: 42px; height: 42px; display: grid; place-items: center; border: 0; background: transparent; color: var(--ink); }
+.social-notifications { position: relative; text-decoration: none; }
+.social-notifications i { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-lime); border: 1px solid var(--shell); }
 .calbar-title {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1;
   color: var(--ink); margin: 24px 0;

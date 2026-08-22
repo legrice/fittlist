@@ -134,6 +134,7 @@ export async function AppChrome({
         scheduleHref={scheduleHref}
         profileHref={profileHref}
         active={active}
+        face={face}
       />
     </>
   );

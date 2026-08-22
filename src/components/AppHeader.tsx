@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { HeaderAccountButton } from "@/components/HeaderAccountButton";
+import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
@@ -26,6 +27,7 @@ export function AppHeader({
   face,
   profileHref = "/you",
   accountData,
+  social = false,
 }: {
   notificationUnread?: number;
   messageUnread?: number;
@@ -46,6 +48,8 @@ export function AppHeader({
   face?: HeaderFace;
   profileHref?: string;
   accountData?: YouAccountData;
+  /** The social calendar shell: creation left, brand centered, alerts right. */
+  social?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -84,6 +88,29 @@ export function AppHeader({
               <Icon name="close" size={18} />
             </button>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (social) {
+    return (
+      <div className="brandbar social-brandbar">
+        <div className="social-brandbar-side social-brandbar-left">
+          <GlobalAdd />
+        </div>
+        <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList home">
+          <Wordmark variant="ink" />
+        </Link>
+        <div className="social-brandbar-side social-brandbar-right">
+          <Link
+            className={`iconbtn social-notifications${pathname.startsWith("/notifications") ? " onroute" : ""}`}
+            href="/notifications"
+            aria-label={`${notificationUnread} unread notifications`}
+          >
+            <Icon name="notifications" size={23} />
+            {notificationUnread > 0 && <i aria-hidden="true" />}
+          </Link>
         </div>
       </div>
     );

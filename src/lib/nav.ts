@@ -13,9 +13,8 @@ export type NavItem = {
 };
 
 /**
- * Following is the signed-in front door; My schedule keeps only the
- * activities this person has committed to. Discovery stays behind search so
- * the primary navigation remains one stream and one personal schedule.
+ * The social shell has three universal destinations. Calendar management is
+ * reached through You instead of occupying a fourth primary tab.
  */
 export function navTabs(
   _coach: boolean,
@@ -29,10 +28,11 @@ export function navTabs(
     {
       id: "following" as const,
       href: "/feed",
-      icon: "groups",
-      label: "Following",
+      icon: "home",
+      label: "Home",
     },
-    { id: "calendar", href: scheduleHref ?? "/calendar", icon: "calendar_month", label: "My schedule" },
+    { id: "discover", href: "/search", icon: "search", label: "Search" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
   ];
 }
 
@@ -42,9 +42,9 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   // /week is retained only as an old address for the calendar.
   if (pathname.startsWith("/feed") || pathname.startsWith("/upcoming")) return "following";
-  if (pathname.startsWith("/calendar") || pathname.startsWith("/app"))
-    return "calendar";
-  if (pathname.startsWith("/week")) return "calendar";
+  if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week"))
+    return "following";
+  if (pathname.startsWith("/you")) return "calendar";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
   return "none";
 }
