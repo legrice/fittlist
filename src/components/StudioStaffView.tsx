@@ -100,7 +100,6 @@ export function StudioStaffView({
           <BackLink
             className="evback studio-manage-back"
             href={`/s/${studioSlug}/manage`}
-            anywhere
             label="Back to studio dashboard"
           >
             <Icon name="arrow_back" size={23} />

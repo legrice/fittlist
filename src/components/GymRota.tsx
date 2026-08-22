@@ -512,7 +512,6 @@ export function GymRota({
             <BackLink
               className="evback studio-manage-back"
               href={dashboardHref}
-              anywhere
               label="Back to studio dashboard"
             >
               <Icon name="arrow_back" size={23} />
@@ -630,7 +629,6 @@ export function GymRota({
           <BackLink
             className="evback studio-manage-back"
             href={dashboardHref}
-            anywhere
             label="Back to studio dashboard"
           >
             <Icon name="arrow_back" size={23} />
