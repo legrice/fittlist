@@ -63,54 +63,50 @@ html[data-native="ios"] .screen.hasnav > .pad {
      the legacy aliases below map to them while older surfaces migrate. */
   --color-lime: #9FE870;
   --color-lime-pressed: #8BD85D;
-  --color-lime-soft: #E6F8D5;
+  --color-lime-soft: #DDF5CC;
   --color-action: var(--color-lime);
   --color-action-pressed: var(--color-lime-pressed);
   --color-action-soft: var(--color-lime-soft);
   --color-favorite: #D62F3A;
   --color-danger-soft: #FCE8E8;
-  --color-olive: #405D16;
+  --color-olive: #334A18;
   --color-black: #000000;
   --color-white: #FFFFFF;
-  --color-background: #FAFAF8;
+  --color-background: #F7F8F7;
   --color-surface: #FFFFFF;
-  --color-surface-muted: #F2F2F0;
-  --color-surface-hover: #EAEAE7;
-  --color-border: #DEDEDB;
-  --color-border-strong: #C7C7C2;
+  --color-surface-muted: #EEF0EE;
+  --color-surface-hover: #E4E7E4;
+  --color-border: #D3D7D3;
+  --color-border-strong: #B5BBB5;
   --color-text-primary: #000000;
-  --color-text-secondary: #6B6B68;
-  --color-text-muted: #92928D;
-  --color-coaching: #CFE7FF;
-  --color-coaching-soft: #EAF4FF;
-  --color-coaching-text: #163B5C;
-  --color-attending: #DCC8FF;
+  --color-text-secondary: #5F645F;
+  --color-text-muted: #858B85;
+  --color-coaching: #AFCFEC;
+  --color-coaching-soft: #E2EDF6;
+  --color-coaching-text: #153A55;
+  --color-attending: #C8C3DB;
   --color-attending-text: #211731;
-  --color-personal: #FFD8C2;
-  --color-personal-text: #582713;
+  --color-personal: #D8C6B4;
+  --color-personal-text: #442D1F;
   /* Optional private accents for the studio management planner. Cards remain
      white; these colors only mark their top edge and the editor swatches. */
-  --color-planner-sky: #A9D8FF;
-  --color-planner-lavender: #DCC8FF;
-  --color-planner-peach: #FFD8C2;
-  --color-planner-rose: #FFC4D8;
-  --color-planner-amber: #FFD978;
+  --color-planner-sky: #87B7D8;
+  --color-planner-lavender: #AAA3C4;
+  --color-planner-peach: #D5A985;
+  --color-planner-rose: #C98B9E;
+  --color-planner-amber: #D9B44A;
   --radius-control: 18px;
   --radius-card: 20px;
   --radius-pill: 999px;
-  /* Delight typeface. Warm charcoal ink, cream ground, and bright lime CTA.
+  /* Delight typeface. Black ink, cool neutral ground, and bright lime CTA.
 
      Product typography stays at 400/500/600. The 700 face is available for
      short display headlines and primary actions, where confidence helps;
      dense schedules and supporting copy deliberately remain quieter.
 
-     The whole set lifted one step toward white, keeping its warmth. The
-     creams were mixed for a page of white cards floating on them: with the
-     cards gone the ground *is* the surface, over the whole screen, and at the
-     old values a phone of it read as aged paper rather than as light. Warm
-     and light are not the same axis, so the hue is unchanged and only the
-     lightness moved; a lift that also desaturated would have traded drab for
-     grey, which is the other way to lose the brand. */
+     The neutrals carry a slight graphite cast so white cards and black type
+     feel crisp rather than delicate. Role colors are muted steel, slate, and
+     sand; the unchanged lime remains the unmistakable action color. */
   --cl: var(--color-surface-muted);
   --cl-d: var(--color-surface-hover);
   --paper: var(--color-surface);
