@@ -6897,7 +6897,6 @@ select.editinput.placekind-select {
   background: transparent; color: inherit; border: 0;
 }
 .rotanav.off { opacity: .35; pointer-events: none; }
-.rota-day-pills { display: none; }
 .rota-publish {
   min-height: 42px; margin-top: 10px; padding: 0 16px; border: 0; border-radius: var(--radius-pill);
   background: var(--color-lime); color: var(--color-black); font: inherit; font-size: 13px; font-weight: 700;
@@ -6924,39 +6923,6 @@ select.editinput.placekind-select {
     border: 1px solid var(--color-border);
     background: var(--color-white);
     border-radius: 50%;
-  }
-  .rota-day-pills {
-    display: flex;
-    gap: 8px;
-    margin: 12px calc(var(--pad-x, 20px) * -1) 0;
-    padding: 2px var(--pad-x, 20px) 6px;
-    overflow-x: auto;
-    scroll-padding-inline: var(--pad-x, 20px);
-    scrollbar-width: none;
-  }
-  .rota-day-pills::-webkit-scrollbar { display: none; }
-  .rota-day-pills > button {
-    min-width: 70px;
-    min-height: 46px;
-    padding: 0 12px;
-    flex: 0 0 auto;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
-    background: var(--color-white);
-    color: var(--color-black);
-    font: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-  .rota-day-pills > button.today:not(.selected) {
-    border-color: var(--color-black);
-  }
-  .rota-day-pills > button.selected {
-    border-color: var(--color-black);
-    background: var(--color-black);
-    color: var(--color-white);
   }
   .rota-calendar { margin-top: 16px; }
   .rota-calendar .rotaday-actions { margin-left: auto; }

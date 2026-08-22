@@ -35,26 +35,23 @@ const fmtDay = (iso: string) =>
     timeZone: "UTC",
   });
 
-const fmtMonth = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-
-const fmtDayPill = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    weekday: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-
 const localTodayIso = () => {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+};
+
+const fmtDayNavigator = (iso: string) => {
+  const today = localTodayIso();
+  const difference = Math.round(
+    (new Date(`${iso}T00:00:00Z`).getTime() - new Date(`${today}T00:00:00Z`).getTime()) / 86_400_000,
+  );
+  if (difference === 0) return "Today";
+  if (difference === 1) return "Tomorrow";
+  if (difference === -1) return "Yesterday";
+  return fmtDay(iso);
 };
 
 /** What the sheet is open on: a slot, or an empty day waiting for one. */
@@ -238,6 +235,10 @@ export function GymRota({
       const today = localTodayIso();
       return days.some((day) => day.iso === today) ? today : days[0]?.iso ?? "";
     });
+  }, [days]);
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("d");
+    if (requested && days.some((day) => day.iso === requested)) setSelectedDayIso(requested);
   }, [days]);
   const matchesShiftFilter = useCallback(
     (cls: GymClassDto, iso: string) => {
@@ -617,10 +618,29 @@ export function GymRota({
         .filter((day): day is GymDayDto => !!day)
         .map((day) => ({ ...day, items: day.items.filter((item) => matchesShiftFilter(item, day.iso)) }));
   const selectedDay = renderedWeekDays[0] ?? filteredWeekDays[0];
+  const canMoveToPreviousDay = Boolean(
+    week && selectedDayIso && (week.offset > 0 || selectedDayIso !== days[0]?.iso),
+  );
   const weekHref = (offset: number) => {
     const params = new URLSearchParams({ w: String(offset) });
     if (shiftFilter !== "all") params.set("show", shiftFilter);
     return `${manageBase}?${params.toString()}`;
+  };
+  const moveMobileDay = (delta: number) => {
+    if (!selectedDayIso || !week) return;
+    if (delta < 0 && !canMoveToPreviousDay) return;
+    const nextDate = new Date(`${selectedDayIso}T00:00:00Z`);
+    nextDate.setUTCDate(nextDate.getUTCDate() + delta);
+    const nextIso = nextDate.toISOString().slice(0, 10);
+    if (days.some((day) => day.iso === nextIso)) {
+      setSelectedDayIso(nextIso);
+      setDayMenu(null);
+      return;
+    }
+    const nextOffset = Math.max(0, week.offset + (delta > 0 ? 1 : -1));
+    const params = new URLSearchParams({ w: String(nextOffset), d: nextIso });
+    if (shiftFilter !== "all") params.set("show", shiftFilter);
+    window.location.assign(`${manageBase}?${params.toString()}`);
   };
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
@@ -819,44 +839,16 @@ export function GymRota({
           {/* A real week, dates and all, because that's what the spreadsheet is
               and what a swap is about. */}
           <div className={`rotaweek${desktop ? "" : " mobile-day-nav"}`}>
-            <Link
-              className={`rotanav${week && week.offset > 0 ? "" : " off"}`}
-              href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))}
-              aria-disabled={!week || week.offset === 0}
-            >
+            {desktop ? <Link className={`rotanav${week && week.offset > 0 ? "" : " off"}`} href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))} aria-disabled={!week || week.offset === 0}>
               <Icon name="chevron_left" size={20} />
-            </Link>
+            </Link> : <button className={`rotanav${canMoveToPreviousDay ? "" : " off"}`} aria-label="Previous day" disabled={!canMoveToPreviousDay} onClick={() => moveMobileDay(-1)}><Icon name="chevron_left" size={20} /></button>}
             <span className="rotaweek-lbl">
-              {desktop ? week?.label ?? "" : selectedDay ? fmtMonth(selectedDay.iso) : "Calendar"}
+              {desktop ? week?.label ?? "" : selectedDay ? fmtDayNavigator(selectedDay.iso) : "Today"}
             </span>
-            <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
+            {desktop ? <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
               <Icon name="chevron_right" size={20} />
-            </Link>
+            </Link> : <button className="rotanav" aria-label="Next day" onClick={() => moveMobileDay(1)}><Icon name="chevron_right" size={20} /></button>}
           </div>
-
-          {!desktop && (
-            <div className="rota-day-pills" role="tablist" aria-label="Choose a day">
-              {filteredWeekDays.map((day) => {
-                const selected = day.iso === selectedDayIso;
-                const today = day.iso === localTodayIso();
-                return (
-                  <button
-                    key={day.iso}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    className={`${selected ? "selected" : ""}${today ? " today" : ""}`}
-                    onClick={() => {
-                      setSelectedDayIso(day.iso);
-                      setDayMenu(null);
-                    }}
-                  >
-                    {fmtDayPill(day.iso)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
 
           <div className="calendar-cardlist rota-calendar">
             {renderedWeekDays.map((day) => (
