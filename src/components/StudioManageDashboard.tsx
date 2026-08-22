@@ -45,22 +45,23 @@ export function StudioManageDashboard({
   return (
     <main className="pad studio-dashboard">
       <div className="studio-manage-top pagetop">
-        <div className="studio-manage-topbar">
+        <div className="studio-manage-topbar studio-dashboard-backbar">
           <BackLink className="evback studio-manage-back" href="/settings" anywhere notUnder={`/s/${studioSlug}`} label="Back to your account">
             <Icon name="arrow_back" size={23} />
           </BackLink>
-          <StudioAdminSheet
-            slug={studioSlug}
-            canSchedule={hasAccount}
-            studio={admin.studio}
-            showCoaches={admin.showCoaches}
-            approvalOn={admin.approvalOn}
-            settingsTrigger
-          />
         </div>
-        <div>
+        <div className="studio-dashboard-hero">
+          <span className="studio-dashboard-photo">
+            {admin.studio.photo ? <img src={admin.studio.photo} alt="" /> : <Icon name="storefront" size={42} />}
+          </span>
           <h1>{studioName}</h1>
         </div>
+      </div>
+
+      <div className="studio-dashboard-grid">
+        <Link className="studio-dashboard-card" href={`${base}/calendar`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="calendar_month" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Calendar</strong><small>{classSummary}</small></span><Icon name="arrow_forward" size={22} /></Link>
+        <Link className="studio-dashboard-card" href={`${base}/staff`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="groups" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Staff</strong><small>{staffCount} {staffCount === 1 ? "person" : "people"} on your coaching team</small></span><Icon name="arrow_forward" size={22} /></Link>
+        <Link className="studio-dashboard-card" href={`${base}/counts`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="activity" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Class counts</strong><small>Review coaching totals by month</small></span><Icon name="arrow_forward" size={22} /></Link>
       </div>
 
       {toDo.length > 0 && (
@@ -96,23 +97,13 @@ export function StudioManageDashboard({
         </section>
       )}
 
-      <div className="studio-dashboard-grid">
-        <Link className="studio-dashboard-card" href={`${base}/calendar`} prefetch={false}>
-          <span className="studio-dashboard-card-icon"><Icon name="calendar_month" size={28} /></span>
-          <span className="studio-dashboard-card-copy"><strong>Calendar</strong><small>{classSummary}</small></span>
-          <Icon name="arrow_forward" size={22} />
-        </Link>
-        <Link className="studio-dashboard-card" href={`${base}/staff`} prefetch={false}>
-          <span className="studio-dashboard-card-icon"><Icon name="groups" size={28} /></span>
-          <span className="studio-dashboard-card-copy"><strong>Staff</strong><small>{staffCount} {staffCount === 1 ? "person" : "people"} on your coaching team</small></span>
-          <Icon name="arrow_forward" size={22} />
-        </Link>
-        <Link className="studio-dashboard-card" href={`${base}/counts`} prefetch={false}>
-          <span className="studio-dashboard-card-icon"><Icon name="activity" size={28} /></span>
-          <span className="studio-dashboard-card-copy"><strong>Class counts</strong><small>Review coaching totals by month</small></span>
-          <Icon name="arrow_forward" size={22} />
-        </Link>
-      </div>
+      <section className="studio-dashboard-settings">
+        <h2>Settings</h2>
+        <div className="settingslist">
+          <Link className="setrow" href={`/s/${studioSlug}`}><span className="setrow-ic"><Icon name="storefront" size={24} /></span><span className="setrow-txt"><span className="t">View studio profile</span><span className="s">See the public page</span></span><span className="setrow-chev"><Icon name="chevron_right" size={22} /></span></Link>
+          <StudioAdminSheet slug={studioSlug} canSchedule={hasAccount} studio={admin.studio} showCoaches={admin.showCoaches} approvalOn={admin.approvalOn} dashboardTrigger />
+        </div>
+      </section>
       <Toast msg={toastMsg} on={toastOn} />
     </main>
   );

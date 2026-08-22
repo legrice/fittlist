@@ -8134,6 +8134,16 @@ select.editinput.placekind-select {
   border: 1px solid var(--color-border);
 }
 .studio-dashboard { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+.studio-dashboard-backbar > :last-child { grid-column: 1; }
+.studio-dashboard-hero {
+  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+}
+.studio-dashboard-hero h1 { margin: 0; }
+.studio-dashboard-photo {
+  width: 112px; height: 112px; overflow: hidden; display: grid; place-items: center;
+  border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface-muted); color: var(--color-black);
+}
+.studio-dashboard-photo img { width: 100%; height: 100%; object-fit: cover; }
 .studio-dashboard .studio-manage-topbar > :last-child { grid-column: 3; }
 .studio-dashboard-todo {
   margin: 2px 0 20px; overflow: hidden; border: 1px solid var(--color-border);
@@ -8169,7 +8179,7 @@ select.editinput.placekind-select {
   .studio-dashboard-todo-actions { width: 100%; }
   .studio-dashboard-todo-actions button { flex: 1; }
 }
-.studio-dashboard-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.studio-dashboard-grid { margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .studio-dashboard-card {
   position: relative; min-height: 190px; padding: 22px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 18px;
@@ -8185,6 +8195,10 @@ select.editinput.placekind-select {
 .studio-dashboard-card-copy strong { font-size: 22px; line-height: 1.1; }
 .studio-dashboard-card-copy small { color: var(--color-text-secondary); font-size: 13px; line-height: 1.35; }
 .studio-dashboard-card:active { transform: scale(.99); }
+.studio-dashboard-settings { margin-top: 26px; }
+.studio-dashboard-settings > h2 { margin: 0 0 10px; font-size: 20px; }
+.studio-dashboard-settings .settingslist { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-white); }
+.studio-dashboard-settings-row { width: 100%; border: 0; cursor: pointer; }
 @media (max-width: 760px) {
   .studio-dashboard-grid { grid-template-columns: 1fr; gap: 10px; }
   .studio-dashboard-card {

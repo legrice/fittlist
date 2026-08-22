@@ -31,6 +31,7 @@ export function StudioAdminSheet({
   showCoaches = true,
   approvalOn = true,
   settingsTrigger = false,
+  dashboardTrigger = false,
 }: {
   slug: string;
   /** The gym account is on, so the rota and the counts exist to link to. */
@@ -46,6 +47,7 @@ export function StudioAdminSheet({
   approvalOn?: boolean;
   /** Use the settings control shown in the studio-management header. */
   settingsTrigger?: boolean;
+  dashboardTrigger?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -191,11 +193,15 @@ export function StudioAdminSheet({
   return (
     <>
       <button
-        className={settingsTrigger ? "iconbtn studio-manage-settings" : "btn ghost staffbar-b staffmore"}
+        className={dashboardTrigger ? "setrow studio-dashboard-settings-row" : settingsTrigger ? "iconbtn studio-manage-settings" : "btn ghost staffbar-b staffmore"}
         aria-label="Studio settings"
         onClick={openAdmin}
       >
-        <Icon name={settingsTrigger ? "settings" : "more_horiz"} size={settingsTrigger ? 22 : 20} />
+        {dashboardTrigger ? <>
+          <span className="setrow-ic"><Icon name="settings" size={24} /></span>
+          <span className="setrow-txt"><span className="t">Studio settings</span><span className="s">Details, standard week, managers, and schedule rules</span></span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+        </> : <Icon name={settingsTrigger ? "settings" : "more_horiz"} size={settingsTrigger ? 22 : 20} />}
       </button>
 
       {open && (
