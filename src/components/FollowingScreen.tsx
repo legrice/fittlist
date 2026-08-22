@@ -194,12 +194,6 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  // Nothing selected is the combined week. A face is an explicit filter,
-  // including your own face at the front of the rail.
-  // Profile types stay meaningful to the schedule graph, but not to the
-  // person browsing it. One rail can therefore mix a coach, a studio and a
-  // run club while each selection still follows the right relationship.
-  const [profileFilter, setProfileFilter] = useState<string | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -267,25 +261,10 @@ export function FollowingScreen({
       items.filter(
         (item) =>
           passes(item) &&
-          (!isHome || (() => {
-            const coachMatch = favIds.includes(item.coachId);
-            const studioMatch = savedStudios.some((studio) => item.whereHref === `/s/${studio.slug}`);
-            const groupMatch = socialGroups.some((group) => group.classKeys.includes(item.key));
-            const selfMatch = item.saved || (!!meId && item.coachId === meId);
-            if (!profileFilter) return selfMatch || coachMatch || studioMatch || groupMatch;
-            const [kind, id] = profileFilter.split(":", 2);
-            if (kind === "self") return selfMatch;
-            if (kind === "coach") return item.coachId === id;
-            if (kind === "studio") {
-              const studio = savedStudios.find((entry) => entry.id === id);
-              return !!studio && item.whereHref === `/s/${studio.slug}`;
-            }
-            const group = socialGroups.find((entry) => entry.id === id);
-            return !!group && group.classKeys.includes(item.key);
-          })()),
+          (!isHome || item.saved || (!!meId && item.coachId === meId)),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo, isHome, profileFilter, favIds, savedStudios, socialGroups],
+    [items, f, geo, isHome, meId],
   );
 
   const coachOptions = useMemo(
@@ -300,16 +279,6 @@ export function FollowingScreen({
     const feedKeys = new Set(items.map((item) => item.key));
     return socialGroups.filter((group) => group.classKeys.some((key) => feedKeys.has(key)));
   }, [socialGroups, items]);
-  const selectedCoach = profileFilter?.startsWith("coach:")
-    ? coachOptions.find((person) => `coach:${person.id}` === profileFilter) ?? null
-    : null;
-  const selectedStudio = profileFilter?.startsWith("studio:")
-    ? studioOptions.find((studio) => `studio:${studio.id}` === profileFilter) ?? null
-    : null;
-  const selectedGroup = profileFilter?.startsWith("group:")
-    ? groupOptions.find((group) => `group:${group.id}` === profileFilter) ?? null
-    : null;
-  const selectedSelf = profileFilter === `self:${meId}`;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -533,41 +502,33 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <div className={`tray following-rail${profileFilter ? " has-context" : ""}`} role="group" aria-label="Filter followed profiles">
+          <Link className="home-class-search" href="/search">
+            <span><Icon name="search" size={22} /></span>
+            <span><strong>Find a class</strong><small>Activity, time, or place</small></span>
+            <Icon name="chevron_right" size={20} />
+          </Link>
+          <div className="home-calendars-title">
+            <h2>Your calendars</h2>
+          </div>
+          <div className="tray following-rail" aria-label="Your calendars">
             <div className="tray-scroll">
-              <button
-                className={`trayitem${profileFilter ? " dim" : ""}`}
-                aria-pressed={profileFilter === null}
-                onClick={() => setProfileFilter(null)}
-              >
-                <span className={`trayav trayav-all${profileFilter === null ? " sel" : ""}`}>
-                  <Icon name="groups" size={25} />
-                </span>
-                <span className="trayitem-nm">All</span>
-              </button>
-              <button
-                className={`trayitem${profileFilter && !selectedSelf ? " dim" : ""}`}
-                aria-pressed={selectedSelf}
-                onClick={() => setProfileFilter(selectedSelf ? null : `self:${meId}`)}
-              >
-                <span className={`trayav${selectedSelf ? " sel" : ""}`} style={{ background: meFace.color }}>
+              <Link className="trayitem" href="/calendar">
+                <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
                 </span>
                 <span className="trayitem-nm">You</span>
-              </button>
+              </Link>
               {coachOptions.map((coach) => {
-                const key = `coach:${coach.id}`;
                 return (
-                <button
+                <Link
                   key={coach.id}
-                  className={`trayitem${profileFilter && profileFilter !== key ? " dim" : ""}`}
-                  aria-pressed={profileFilter === key}
-                  onClick={() => setProfileFilter(profileFilter === key ? null : key)}
+                  className="trayitem"
+                  href={coach.handle ? `/${coach.handle}/schedule?from=feed` : "/feed"}
                 >
                   <span
-                    className={`trayav${profileFilter === key ? " sel" : ""}`}
+                    className="trayav"
                     style={{ background: coach.color }}
                   >
                     {coach.photo ? (
@@ -578,34 +539,30 @@ export function FollowingScreen({
                     )}
                   </span>
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
-                </button>
+                </Link>
               )})}
               {studioOptions.map((studio) => {
-                const key = `studio:${studio.id}`;
-                return <button
+                return <Link
                 key={studio.id}
-                className={`trayitem social-place-item${profileFilter && profileFilter !== key ? " dim" : ""}`}
-                aria-pressed={profileFilter === key}
-                onClick={() => setProfileFilter(profileFilter === key ? null : key)}
+                className="trayitem social-place-item"
+                href={`/s/${studio.slug}/schedule?from=feed`}
               >
-                <span className={`trayav social-place-av${profileFilter === key ? " sel" : ""}`} style={{ background: studio.color }}>
+                <span className="trayav social-place-av" style={{ background: studio.color }}>
                   {studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}
                 </span>
                 <span className="trayitem-nm">{studio.name}</span>
-              </button>})}
+              </Link>})}
               {groupOptions.map((group) => {
-                const key = `group:${group.id}`;
-                return <button
+                return <Link
                 key={group.id}
-                className={`trayitem${profileFilter && profileFilter !== key ? " dim" : ""}`}
-                aria-pressed={profileFilter === key}
-                onClick={() => setProfileFilter(profileFilter === key ? null : key)}
+                className="trayitem"
+                href={`/g/${group.slug}?from=feed`}
               >
-                <span className={`trayav${profileFilter === key ? " sel" : ""}`}>
+                <span className="trayav">
                   {group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={25} />}
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
-              </button>})}
+              </Link>})}
               <button className="trayitem trayitem-more" type="button" onClick={() => setFind(true)} aria-label="Discover more profiles">
                 <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
                 <span className="trayitem-nm">Discover</span>
@@ -614,28 +571,11 @@ export function FollowingScreen({
           </div>
         </header>
       )}
-      {isHome && (selectedSelf || selectedCoach || selectedStudio || selectedGroup) && (
+      {isHome && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">
-            {selectedSelf
-              ? "Your schedule"
-              : selectedCoach
-              ? `Classes with ${selectedCoach.name.split(/\s+/)[0]}`
-              : `Classes from ${(selectedStudio ?? selectedGroup)!.name}`}
-          </span>
-          <Link
-            href={selectedSelf
-              ? "/calendar"
-              : selectedCoach?.handle
-                ? `/${selectedCoach.handle}?from=feed`
-                : selectedStudio
-                  ? `/s/${selectedStudio.slug}`
-                  : selectedGroup
-                    ? `/g/${selectedGroup.slug}`
-                    : "/feed"}
-            className="feedfilter-link"
-          >
-            {selectedSelf ? "Manage schedule" : "View profile"} <Icon name="chevron_right" size={17} />
+          <span className="feedfilter-txt">Your upcoming</span>
+          <Link href="/calendar" className="feedfilter-link">
+            Manage schedule <Icon name="chevron_right" size={17} />
           </Link>
         </div>
       )}
@@ -650,24 +590,16 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome
-              ? selectedSelf ? "Nothing on your schedule yet" : "Nothing from profiles you follow yet"
-              : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">{isHome ? "Nothing on your schedule yet" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? selectedSelf
-                  ? "Add a class or save one from a profile you follow to build your schedule."
-                  : "Follow people, studios, and groups to combine their upcoming classes in one schedule."
+                ? "Save a class you want to remember, or add something of your own."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
             {isHome && (
               <div className="wkempty-actions">
-                <button className="btn ghost" onClick={() => setFind(true)}>
-                  Search
-                </button>
-                <button className="btn si" type="button" onClick={() => setFind(true)}>
-                  Discover profiles
-                </button>
+                <Link className="btn si" href="/search">Find classes</Link>
+                <button className="btn ghost" type="button" onClick={() => setFind(true)}>Find calendars</button>
               </div>
             )}
           </div>
