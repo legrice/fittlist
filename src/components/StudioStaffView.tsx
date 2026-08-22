@@ -104,7 +104,7 @@ export function StudioStaffView({
   return (
     <div className="pad studio-staff-pad">
       <div className="studio-manage-top pagetop">
-        <div className="studio-manage-topbar">
+        <div className="studio-manage-topbar studio-staff-topbar">
           <BackLink
             className="evback studio-manage-back"
             href={`/s/${studioSlug}/manage`}
@@ -114,14 +114,24 @@ export function StudioStaffView({
             <Icon name="arrow_back" size={23} />
           </BackLink>
           <h1 className="studio-calendar-title">Staff</h1>
-          <StudioAdminSheet
-            slug={studioSlug}
-            canSchedule={staff.hasSchedule}
-            studio={admin.studio}
-            showCoaches={admin.showCoaches}
-            approvalOn={admin.approvalOn}
-            settingsTrigger
-          />
+          <div className="studio-staff-header-actions">
+            <button
+              type="button"
+              className="studio-staff-add"
+              aria-label="Add staff"
+              onClick={() => setCoachSheetOpen(true)}
+            >
+              <Icon name="add" size={23} />
+            </button>
+            <StudioAdminSheet
+              slug={studioSlug}
+              canSchedule={staff.hasSchedule}
+              studio={admin.studio}
+              showCoaches={admin.showCoaches}
+              approvalOn={admin.approvalOn}
+              settingsTrigger
+            />
+          </div>
         </div>
       </div>
 
@@ -173,11 +183,6 @@ export function StudioStaffView({
       ) : (
         <p className="adminempty">No staff have been added yet.</p>
       )}
-      <button className="btn si staff-add-coach-button" onClick={() => setCoachSheetOpen(true)}>
-        <Icon name="add" size={21} />
-        Add staff
-      </button>
-
       {coachSheetOpen && (
         <div className="sheet-scrim" onClick={(event) => {
           if (event.target === event.currentTarget) setCoachSheetOpen(false);
