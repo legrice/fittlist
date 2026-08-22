@@ -24,6 +24,7 @@ import { sendInviteLink } from "@/lib/invite-link";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
 import { coachAnalytics } from "@/lib/visits";
+import { avatarColor } from "@/lib/avatar";
 import {
   isStudioPlannerColor,
   type StudioPlannerColor,
@@ -2588,6 +2589,54 @@ export type StaffPerson = {
   isYou: boolean;
   isOwner: boolean;
 };
+
+export type StudioManagerCandidate = {
+  id: string;
+  name: string;
+  handle: string | null;
+  email: string;
+  photo: string | null;
+  color: string;
+};
+
+/** Existing FittList accounts an owner can add directly as a manager. */
+export async function searchStudioManagerCandidates(
+  studioId: string,
+  queryRaw: string,
+): Promise<StudioManagerCandidate[]> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx || ctx.studio.ownerUserId !== ctx.userId) return [];
+  const query = queryRaw.trim();
+  if (query.length < 2) return [];
+  const matches = await ctx.db
+    .select()
+    .from(schema.users)
+    .where(and(
+      ne(schema.users.kind, "gym"),
+      or(
+        ilike(schema.users.name, `%${query}%`),
+        ilike(schema.users.handle, `%${query}%`),
+        ilike(schema.users.email, `%${query}%`),
+      ),
+    ))
+    .limit(20);
+  const current = await ctx.db
+    .select({ userId: schema.studioManagers.userId })
+    .from(schema.studioManagers)
+    .where(eq(schema.studioManagers.studioId, studioId));
+  const currentIds = new Set(current.map((row) => row.userId));
+  return matches
+    .filter((person) => !currentIds.has(person.id))
+    .slice(0, 8)
+    .map((person) => ({
+      id: person.id,
+      name: person.name.trim() || person.email.split("@")[0],
+      handle: person.handle,
+      email: person.email,
+      photo: person.photoThumb ?? person.photo,
+      color: avatarColor(person),
+    }));
+}
 
 /** Focused loader for the Admin access view in Studio settings. It avoids
  * loading the coach roster just to show the small list of page managers. */
