@@ -8618,7 +8618,7 @@ select.editinput.placekind-select {
 }
 .social-schedule-switch a.on { background: var(--color-black); color: var(--color-white); }
 .social-source-tabs {
-  display: grid; grid-template-columns: repeat(4, minmax(max-content, 1fr)); gap: 4px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
   padding: 5px; overflow-x: auto; border-radius: 999px; background: var(--color-surface-muted);
   scrollbar-width: none;
 }
@@ -8631,10 +8631,6 @@ select.editinput.placekind-select {
 .social-source-tabs button.on { background: var(--color-black); color: var(--color-white); }
 .social-place-av { border-radius: 18px; }
 .social-place-item .trayitem-nm { max-width: 78px; }
-@media (max-width: 430px) {
-  .social-source-tabs { display: flex; }
-  .social-source-tabs :is(button, a) { flex: 0 0 auto; padding: 0 16px; }
-}
 .trayav-all { background: var(--color-black); color: var(--color-white); }
 .following-title-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;

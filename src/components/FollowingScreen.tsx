@@ -130,8 +130,6 @@ type Filters = {
   place: "any" | string[];
 };
 const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
-const SELF_FILTER = "__your_week__";
-const WEEK_INTRO_KEY = "fl-your-week-intro-seen";
 
 /**
  * Following: the coaches you keep up with and their combined schedule.
@@ -149,7 +147,6 @@ export function FollowingScreen({
   todayIso,
   meId,
   myRail,
-  meKind,
   meFace,
   savedStudios = [],
   socialGroups = [],
@@ -198,12 +195,12 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [weekIntro, setWeekIntro] = useState(false);
   // Nothing selected is the combined week. A face is an explicit filter,
   // including your own face at the front of the rail.
-  const [coachFilter, setCoachFilter] = useState<string | null>(null);
-  const [sourceTab, setSourceTab] = useState<"coaches" | "studios" | "groups">("coaches");
-  const [sourceFilter, setSourceFilter] = useState<string | null>(null);
+  // Profile types stay meaningful to the schedule graph, but not to the
+  // person browsing it. One rail can therefore mix a coach, a studio and a
+  // run club while each selection still follows the right relationship.
+  const [profileFilter, setProfileFilter] = useState<string | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -211,24 +208,6 @@ export function FollowingScreen({
     toast(msg);
   };
   const router = useRouter();
-
-  const chooseSelf = () => {
-    if (selectedSelf) {
-      setCoachFilter(null);
-      return;
-    }
-    setCoachFilter(SELF_FILTER);
-    try {
-      if (!localStorage.getItem(WEEK_INTRO_KEY)) {
-        localStorage.setItem(WEEK_INTRO_KEY, "1");
-        setWeekIntro(true);
-      }
-    } catch {
-      // Storage can be unavailable in private browsing. The current session
-      // still gets the explanation without blocking the week itself.
-      setWeekIntro(true);
-    }
-  };
 
   const closeFind = () => {
     setFind(false);
@@ -289,30 +268,38 @@ export function FollowingScreen({
       items.filter(
         (item) =>
           passes(item) &&
-          (!isHome || (sourceTab === "coaches"
-            ? favIds.includes(item.coachId) && (
-              coachFilter === null ||
-              (coachFilter === SELF_FILTER
-                ? item.saved || (!!meId && item.coachId === meId)
-                : item.coachId === coachFilter)
-            )
-            : sourceTab === "studios"
-              ? savedStudios.some((studio) =>
-                (!sourceFilter || studio.id === sourceFilter) && item.whereHref === `/s/${studio.slug}`)
-              : socialGroups.some((group) =>
-                (!sourceFilter || group.id === sourceFilter) && group.classKeys.includes(item.key)))),
+          (!isHome || (() => {
+            const coachMatch = favIds.includes(item.coachId);
+            const studioMatch = savedStudios.some((studio) => item.whereHref === `/s/${studio.slug}`);
+            const groupMatch = socialGroups.some((group) => group.classKeys.includes(item.key));
+            if (!profileFilter) return coachMatch || studioMatch || groupMatch;
+            const [kind, id] = profileFilter.split(":", 2);
+            if (kind === "coach") return item.coachId === id;
+            if (kind === "studio") {
+              const studio = savedStudios.find((entry) => entry.id === id);
+              return !!studio && item.whereHref === `/s/${studio.slug}`;
+            }
+            const group = socialGroups.find((entry) => entry.id === id);
+            return !!group && group.classKeys.includes(item.key);
+          })()),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo, isHome, sourceTab, coachFilter, sourceFilter, favIds, savedStudios, socialGroups],
+    [items, f, geo, isHome, profileFilter, favIds, savedStudios, socialGroups],
   );
 
   const coachOptions = useMemo(
     () => myRail.filter((person) => person.id !== meId),
     [myRail, meId],
   );
-  const railById = useMemo(() => new Map(myRail.map((person) => [person.id, person])), [myRail]);
-  const selectedCoach = coachFilter && coachFilter !== SELF_FILTER ? railById.get(coachFilter) ?? null : null;
-  const selectedSelf = coachFilter === SELF_FILTER;
+  const selectedCoach = profileFilter?.startsWith("coach:")
+    ? coachOptions.find((person) => `coach:${person.id}` === profileFilter) ?? null
+    : null;
+  const selectedStudio = profileFilter?.startsWith("studio:")
+    ? savedStudios.find((studio) => `studio:${studio.id}` === profileFilter) ?? null
+    : null;
+  const selectedGroup = profileFilter?.startsWith("group:")
+    ? socialGroups.find((group) => `group:${group.id}` === profileFilter) ?? null
+    : null;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -536,41 +523,33 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <nav className="social-source-tabs" aria-label="Calendar source">
-            {(["coaches", "studios", "groups"] as const).map((source) => <button
-              type="button"
-              key={source}
-              className={sourceTab === source ? "on" : ""}
-              aria-current={sourceTab === source ? "page" : undefined}
-              onClick={() => {
-                setSourceTab(source);
-                setSourceFilter(null);
-                setCoachFilter(null);
-              }}
-            >{source[0].toUpperCase() + source.slice(1)}</button>)}
+          <nav className="social-source-tabs" aria-label="Schedule view">
+            <button type="button" className="on" aria-current="page">Following</button>
             <Link href="/calendar">My schedule</Link>
           </nav>
-          <div className={`tray following-rail${coachFilter || sourceFilter ? " has-context" : ""}`} role="group" aria-label={`Filter ${sourceTab}`}>
+          <div className={`tray following-rail${profileFilter ? " has-context" : ""}`} role="group" aria-label="Filter followed profiles">
             <div className="tray-scroll">
               <button
-                className={`trayitem${coachFilter || sourceFilter ? " dim" : ""}`}
-                aria-pressed={coachFilter === null && sourceFilter === null}
-                onClick={() => { setCoachFilter(null); setSourceFilter(null); }}
+                className={`trayitem${profileFilter ? " dim" : ""}`}
+                aria-pressed={profileFilter === null}
+                onClick={() => setProfileFilter(null)}
               >
-                <span className={`trayav trayav-all${coachFilter === null && sourceFilter === null ? " sel" : ""}`}>
-                  <Icon name={sourceTab === "studios" ? "storefront" : "groups"} size={25} />
+                <span className={`trayav trayav-all${profileFilter === null ? " sel" : ""}`}>
+                  <Icon name="groups" size={25} />
                 </span>
                 <span className="trayitem-nm">All</span>
               </button>
-              {sourceTab === "coaches" && coachOptions.map((coach) => (
+              {coachOptions.map((coach) => {
+                const key = `coach:${coach.id}`;
+                return (
                 <button
                   key={coach.id}
-                  className={`trayitem${coachFilter && coachFilter !== coach.id ? " dim" : ""}`}
-                  aria-pressed={coachFilter === coach.id}
-                  onClick={() => setCoachFilter(coachFilter === coach.id ? null : coach.id)}
+                  className={`trayitem${profileFilter && profileFilter !== key ? " dim" : ""}`}
+                  aria-pressed={profileFilter === key}
+                  onClick={() => setProfileFilter(profileFilter === key ? null : key)}
                 >
                   <span
-                    className={`trayav${coachFilter === coach.id ? " sel" : ""}`}
+                    className={`trayav${profileFilter === key ? " sel" : ""}`}
                     style={{ background: coach.color }}
                   >
                     {coach.photo ? (
@@ -582,84 +561,60 @@ export function FollowingScreen({
                   </span>
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
                 </button>
-              ))}
-              {sourceTab === "studios" && savedStudios.map((studio) => <button
+              )})}
+              {savedStudios.map((studio) => {
+                const key = `studio:${studio.id}`;
+                return <button
                 key={studio.id}
-                className={`trayitem social-place-item${sourceFilter && sourceFilter !== studio.id ? " dim" : ""}`}
-                aria-pressed={sourceFilter === studio.id}
-                onClick={() => setSourceFilter(sourceFilter === studio.id ? null : studio.id)}
+                className={`trayitem social-place-item${profileFilter && profileFilter !== key ? " dim" : ""}`}
+                aria-pressed={profileFilter === key}
+                onClick={() => setProfileFilter(profileFilter === key ? null : key)}
               >
-                <span className={`trayav social-place-av${sourceFilter === studio.id ? " sel" : ""}`} style={{ background: studio.color }}>
+                <span className={`trayav social-place-av${profileFilter === key ? " sel" : ""}`} style={{ background: studio.color }}>
                   {studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}
                 </span>
                 <span className="trayitem-nm">{studio.name}</span>
-              </button>)}
-              {sourceTab === "groups" && socialGroups.map((group) => <button
+              </button>})}
+              {socialGroups.map((group) => {
+                const key = `group:${group.id}`;
+                return <button
                 key={group.id}
-                className={`trayitem${sourceFilter && sourceFilter !== group.id ? " dim" : ""}`}
-                aria-pressed={sourceFilter === group.id}
-                onClick={() => setSourceFilter(sourceFilter === group.id ? null : group.id)}
+                className={`trayitem${profileFilter && profileFilter !== key ? " dim" : ""}`}
+                aria-pressed={profileFilter === key}
+                onClick={() => setProfileFilter(profileFilter === key ? null : key)}
               >
-                <span className={`trayav${sourceFilter === group.id ? " sel" : ""}`}>
+                <span className={`trayav${profileFilter === key ? " sel" : ""}`}>
                   {group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={25} />}
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
-              </button>)}
-              <Link className="trayitem trayitem-more" href={`/discover?half=${sourceTab}`} aria-label={`Discover more ${sourceTab}`}>
+              </button>})}
+              <button className="trayitem trayitem-more" type="button" onClick={() => setFind(true)} aria-label="Discover more profiles">
                 <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
                 <span className="trayitem-nm">Discover</span>
-              </Link>
+              </button>
             </div>
           </div>
         </header>
       )}
-      {isHome && (selectedCoach || selectedSelf) && (
+      {isHome && (selectedCoach || selectedStudio || selectedGroup) && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">
-            {selectedSelf ? "Your classes this week" : `Classes with ${selectedCoach!.name.split(/\s+/)[0]}`}
+            {selectedCoach
+              ? `Classes with ${selectedCoach.name.split(/\s+/)[0]}`
+              : `Classes from ${(selectedStudio ?? selectedGroup)!.name}`}
           </span>
           <Link
-            href={selectedSelf
-              ? (meKind === "coach" ? "/coachshare" : "/membershare")
-              : selectedCoach?.handle
+            href={selectedCoach?.handle
                 ? `/${selectedCoach.handle}?from=feed`
-                : "/feed"}
+                : selectedStudio
+                  ? `/s/${selectedStudio.slug}`
+                  : selectedGroup
+                    ? `/g/${selectedGroup.slug}`
+                    : "/feed"}
             className="feedfilter-link"
           >
-            {selectedSelf ? "Share your week" : "View profile"} <Icon name="chevron_right" size={17} />
+            View profile <Icon name="chevron_right" size={17} />
           </Link>
-        </div>
-      )}
-      {weekIntro && (
-        <div
-          className="sheet-scrim"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setWeekIntro(false);
-          }}
-        >
-          <section className="sheet confirmsheet weekeducation" role="dialog" aria-modal="true" aria-labelledby="week-intro-title">
-            <button className="peekclose sheetclose" type="button" onClick={() => setWeekIntro(false)} aria-label="Close">
-              <Icon name="close" size={22} />
-            </button>
-            <span className="circleeducation-icon" aria-hidden="true">
-              <Icon name="calendar_month" size={24} />
-            </span>
-            <h2 id="week-intro-title">Build your week</h2>
-            <p className="lead">
-              Your week is the fitness you plan to do. Add your own classes and workouts, or follow coaches and add something from their schedules.
-            </p>
-            <div className="publishwrap nostick saveeducation-actions">
-              <Link className="btn si" href="/calendar?add=1" onClick={() => setWeekIntro(false)}>
-                Build your schedule
-              </Link>
-              <Link className="btn ghost" href="/discover?half=coaches" onClick={() => setWeekIntro(false)}>
-                Find coaches
-              </Link>
-            </div>
-            <button className="confirm-keep" type="button" onClick={() => setWeekIntro(false)}>
-              Keep browsing
-            </button>
-          </section>
         </div>
       )}
       {(isHome ? shown.length === 0 : items.length === 0) ? (
@@ -673,16 +628,10 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome
-              ? sourceTab === "coaches" ? "Nothing from your coaches yet" : sourceTab === "studios" ? "No saved studio classes yet" : "No group classes yet"
-              : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">{isHome ? "Nothing from profiles you follow yet" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? sourceTab === "coaches"
-                  ? "Follow a coach with an active calendar and their upcoming classes will appear here."
-                  : sourceTab === "studios"
-                    ? "Save a studio to keep its calendar one tap away."
-                    : "Join or follow a group to see its shared classes here."
+                ? "Follow people, studios, and groups to combine their upcoming classes in one schedule."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
             {isHome && (
@@ -690,9 +639,9 @@ export function FollowingScreen({
                 <button className="btn ghost" onClick={() => setFind(true)}>
                   Search
                 </button>
-                <Link className="btn si" href={`/discover?half=${sourceTab}`}>
-                  Discover {sourceTab}
-                </Link>
+                <button className="btn si" type="button" onClick={() => setFind(true)}>
+                  Discover profiles
+                </button>
               </div>
             )}
           </div>
