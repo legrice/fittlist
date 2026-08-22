@@ -5,7 +5,6 @@ import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
 import { gymCatalog, gymCoaches, gymSchedule } from "@/app/actions/gym";
 import { GymRota } from "@/components/GymRota";
-import type { PlaceKind } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
 
@@ -63,23 +62,6 @@ export default async function StudioCalendarPage({
       catalog={catalog}
       customTypes={typeRows.map((t) => t.name)}
       viewerId={viewerId}
-      admin={{
-        showCoaches: studio.showCoaches,
-        approvalOn: studio.approveShiftChanges,
-        studio: {
-          id: studio.id,
-          name: studio.name,
-          address: studio.address,
-          placeKind: studio.placeKind as PlaceKind,
-          types: studio.types,
-          about: studio.about ?? "",
-          photo: studio.photo,
-          contactEmail: studio.contactEmail ?? "",
-          phone: studio.phone ?? "",
-          website: studio.website ?? "",
-          instagram: studio.instagram ?? "",
-        },
-      }}
     />
   );
 }

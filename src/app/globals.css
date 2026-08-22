@@ -8114,6 +8114,17 @@ select.editinput.placekind-select {
   font: inherit; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer;
 }
 .counts-menu button:active { background: var(--color-surface-hover); }
+.rota-filter-sheet { max-height: min(84dvh, 680px); overflow-y: auto; }
+.rota-filter-sheet > h2 { margin: 0 44px 22px 0; font-size: 24px; }
+.rota-filter-sheet > h3 { margin: 20px 0 9px; font-size: 13px; }
+.rota-filter-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.rota-filter-options button {
+  min-height: 52px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-control);
+  background: var(--color-white); color: var(--color-black); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.rota-filter-options button.on { border-color: var(--color-black); background: var(--color-surface-muted); }
+.rota-filter-sheet > .btn { margin-top: 24px; }
 .studio-manage-back {
   flex: 0 0 var(--tap-size); background: var(--color-white);
   border: 1px solid var(--color-border);

@@ -12,8 +12,6 @@ import type { StudioTeamRole } from "@/app/actions/gym";
 import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { StudioAdminSheet } from "@/components/StudioAdminSheet";
-import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 
 // The studio's invited people. Scheduling access is part of each coach rather
@@ -27,16 +25,10 @@ export function StudioStaffView({
   studioId,
   studioSlug,
   staff,
-  admin,
 }: {
   studioId: string;
   studioSlug: string;
   staff: StudioStaffDto;
-  admin: {
-    studio: StudioEditProps;
-    showCoaches?: boolean;
-    approvalOn?: boolean;
-  };
 }) {
   const people = staff.people;
   const [staffRole, setStaffRole] = useState<StudioTeamRole>("coach");
@@ -123,14 +115,6 @@ export function StudioStaffView({
             >
               <Icon name="add" size={23} />
             </button>
-            <StudioAdminSheet
-              slug={studioSlug}
-              canSchedule={staff.hasSchedule}
-              studio={admin.studio}
-              showCoaches={admin.showCoaches}
-              approvalOn={admin.approvalOn}
-              settingsTrigger
-            />
           </div>
         </div>
       </div>

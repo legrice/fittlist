@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { studioStaff } from "@/app/actions/gym";
 import { StudioStaffView } from "@/components/StudioStaffView";
-import type { PlaceKind } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
 
@@ -34,23 +33,6 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
       studioId={studio.id}
       studioSlug={studio.slug ?? studio.id}
       staff={staff}
-      admin={{
-        showCoaches: studio.showCoaches,
-        approvalOn: studio.approveShiftChanges,
-        studio: {
-          id: studio.id,
-          name: studio.name,
-          address: studio.address,
-          placeKind: studio.placeKind as PlaceKind,
-          types: studio.types,
-          about: studio.about ?? "",
-          photo: studio.photo,
-          contactEmail: studio.contactEmail ?? "",
-          phone: studio.phone ?? "",
-          website: studio.website ?? "",
-          instagram: studio.instagram ?? "",
-        },
-      }}
     />
   );
 }

@@ -22,8 +22,6 @@ import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { StudioAdminSheet } from "@/components/StudioAdminSheet";
-import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
 import { studioPlannerColorLabel } from "@/lib/studio-planner";
@@ -78,14 +76,6 @@ type ShiftFilter = "all" | "assigned" | "mine" | "open";
 
 const isShiftFilter = (value: string | null): value is ShiftFilter =>
   value === "all" || value === "assigned" || value === "mine" || value === "open";
-
-export type GymRotaAdmin = {
-  studio: StudioEditProps;
-  /** Kept nullable so calendar rendering never has to wait for analytics. */
-  pageViews?: number | null;
-  showCoaches?: boolean;
-  approvalOn?: boolean;
-};
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -181,7 +171,6 @@ export function GymRota({
   catalog,
   customTypes,
   viewerId,
-  admin,
 }: {
   studioId: string;
   studioName: string;
@@ -198,8 +187,6 @@ export function GymRota({
   customTypes: string[];
   /** The manager viewing the planner, used only by the local My shifts filter. */
   viewerId: string;
-  /** The existing studio overflow, now kept in the calendar workspace. */
-  admin: GymRotaAdmin;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<Open | null>(null);
@@ -208,6 +195,7 @@ export function GymRota({
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [dayMenu, setDayMenu] = useState<string | null>(null);
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const [desktopView, setDesktopView] = useState<"week" | "month">("month");
   const [mobileView, setMobileView] = useState<"day" | "month">("day");
@@ -530,15 +518,7 @@ export function GymRota({
               <Icon name="arrow_back" size={23} />
             </BackLink>
             <h1 className="studio-calendar-title">Calendar</h1>
-            <StudioAdminSheet
-              slug={studioSlug}
-              canSchedule={false}
-              pageViews={admin.pageViews ?? null}
-              studio={admin.studio}
-              showCoaches={admin.showCoaches}
-              approvalOn={admin.approvalOn}
-              settingsTrigger
-            />
+            <span aria-hidden="true" />
           </div>
         </div>
         <div className="empty-block" style={{ marginTop: 24 }}>
@@ -656,15 +636,9 @@ export function GymRota({
             <Icon name="arrow_back" size={23} />
           </BackLink>
           <h1 className="studio-calendar-title">Calendar</h1>
-          <StudioAdminSheet
-            slug={studioSlug}
-            canSchedule={hasAccount}
-            pageViews={admin.pageViews ?? null}
-            studio={admin.studio}
-            showCoaches={admin.showCoaches}
-            approvalOn={admin.approvalOn}
-            settingsTrigger
-          />
+          <button className="studio-manage-settings" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
+            <Icon name="tune" size={23} />
+          </button>
         </div>
         {visibleDrafts > 0 && (
           <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
@@ -673,45 +647,32 @@ export function GymRota({
         )}
       </div>
 
-      <div className="studio-calendar-controls">
-        <div className="rota-calendar-tools">
-          <label className="rota-shift-filter">
-            <span>Show:</span>
-            <select
-              aria-label="Show shifts"
-              value={shiftFilter}
-              onChange={(event) => chooseShiftFilter(event.target.value as ShiftFilter)}
-            >
-              <option value="all">All shifts</option>
-              <option value="assigned">All coaches</option>
-              <option value="mine">My shifts</option>
-              <option value="open">Open shifts</option>
-            </select>
-          </label>
-          <div className="rota-view-switch" role="group" aria-label="Calendar view">
-              <button
-                className={(desktop ? desktopView === "week" : mobileView === "day") ? "on" : ""}
-                aria-pressed={desktop ? desktopView === "week" : mobileView === "day"}
-                onClick={() => desktop ? chooseDesktopView("week") : setMobileView("day")}
-              >
-                {desktop ? "Week" : "Day"}
-              </button>
-              <button
-                className={(desktop ? desktopView === "month" : mobileView === "month") ? "on" : ""}
-                aria-pressed={desktop ? desktopView === "month" : mobileView === "month"}
-                onClick={() => {
-                  if (desktop) chooseDesktopView("month");
-                  else {
-                    setMobileView("month");
-                    if (!month) void loadMonth();
-                  }
-                }}
-              >
-                Month
-              </button>
+      {filterOpen && (
+        <div className="sheet-scrim" onClick={(event) => event.target === event.currentTarget && setFilterOpen(false)}>
+          <div className="sheet rota-filter-sheet" role="dialog" aria-modal="true" aria-labelledby="rota-filter-title">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setFilterOpen(false)}><Icon name="close" size={18} /></button>
+            <h2 id="rota-filter-title">Calendar filters</h2>
+            <h3>View</h3>
+            <div className="rota-filter-options">
+              {([desktop ? "week" : "day", "month"] as const).map((view) => {
+                const selected = desktop ? desktopView === view : mobileView === view;
+                return <button className={selected ? "on" : ""} key={view} onClick={() => {
+                  if (desktop) chooseDesktopView(view === "day" ? "week" : view);
+                  else setMobileView(view === "week" ? "day" : view);
+                  if (view === "month" && !month) void loadMonth();
+                }}>{view[0].toUpperCase() + view.slice(1)}{selected && <Icon name="check" size={18} />}</button>;
+              })}
             </div>
+            <h3>Schedule</h3>
+            <div className="rota-filter-options">
+              {([['all','All shifts'],['assigned','All coaches'],['open','Open shifts'],['mine','My shifts']] as [ShiftFilter,string][]).map(([value,label]) => (
+                <button className={shiftFilter === value ? "on" : ""} key={value} onClick={() => chooseShiftFilter(value)}>{label}{shiftFilter === value && <Icon name="check" size={18} />}</button>
+              ))}
+            </div>
+            <button className="btn si" onClick={() => setFilterOpen(false)}>Done</button>
+          </div>
         </div>
-      </div>
+      )}
 
       {(desktop ? desktopView === "month" : mobileView === "month") ? (
         <div className={`rota-month-view${desktop ? "" : " mobile"}`}>
