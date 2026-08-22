@@ -721,7 +721,11 @@ export function GymRota({
                     <section
                       key={day.iso}
                       className={`rota-month-day${outside ? " outside" : ""}${day.closed ? " closed" : ""}${day.iso === localTodayIso() ? " today" : ""}`}
-                      onClick={!desktop && !outside ? () => {
+                      onClickCapture={!desktop && !outside ? (event) => {
+                        // The compact month is navigation, not a second tiny
+                        // editing surface. Any tap opens the readable day.
+                        event.preventDefault();
+                        event.stopPropagation();
                         setSelectedDayIso(day.iso);
                         setMobileView("day");
                       } : undefined}
@@ -937,7 +941,6 @@ export function GymRota({
                       const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
                       const selectedCoachName = coachNameById.get(selectedCoachId)
                         ?? (selectedCoachId === c.onUserId ? c.onName : "");
-                      const isCover = selectedCoachId !== (c.coachUserId ?? "");
                       return (
                         <div
                           className="clrow rota-inline-row"
@@ -958,14 +961,10 @@ export function GymRota({
                               dur: `${c.durationMin} min`,
                               tag: !c.isPublic
                                 ? "Draft"
-                                : selectedCoachId && isCover
-                                  ? "Cover"
-                                  : undefined,
+                                : undefined,
                               tagTone: !c.isPublic
                                 ? "personal"
-                                : selectedCoachId && isCover
-                                  ? "coaching"
-                                  : undefined,
+                                : undefined,
                               onTap: day.closed ? undefined : () => show(day.iso, day.dayOfWeek, c),
                             }}
                           />

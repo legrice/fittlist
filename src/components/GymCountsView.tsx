@@ -102,6 +102,12 @@ export function GymCountsView({
         </div>
       </div>
 
+      <form className="counts-range" action={countsBase} method="get">
+        <label>From<input type="date" name="from" defaultValue={counts.startDate} /></label>
+        <label>To<input type="date" name="to" defaultValue={counts.endDate} /></label>
+        <button className="btn si" type="submit">Apply range</button>
+      </form>
+
       <div className="rotaweek">
         <Link className="rotanav" href={`${countsBase}?m=${shift(counts.month, -1)}`}>
           <Icon name="chevron_left" size={20} />

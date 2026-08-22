@@ -417,14 +417,14 @@ export function StudioAdminSheet({
                 </Link>
               )}
               {canSchedule && (
-                <button className="setrow" onClick={() => setStandardOpen(true)}>
+                <Link className="setrow" href={`/s/${slug}/manage/standard`}>
                   <span className="setrow-ic"><Icon name="calendar_month" size={24} /></span>
                   <span className="setrow-txt">
-                    <span className="t">Standard week</span>
-                    <span className="s">Choose the class schedule used as your weekly source</span>
+                    <span className="t">Standard calendar</span>
+                    <span className="s">Edit the class-only weekly source of truth</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-                </button>
+                </Link>
               )}
               <button
                 className="setrow"
