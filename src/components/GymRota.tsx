@@ -642,6 +642,15 @@ export function GymRota({
     if (shiftFilter !== "all") params.set("show", shiftFilter);
     window.location.assign(`${manageBase}?${params.toString()}`);
   };
+  const floatingAddDay = (() => {
+    if (mobileView === "day" && selectedDay) return selectedDay;
+    if (month) {
+      const today = localTodayIso();
+      return month.days.find((day) => day.iso === today)
+        ?? month.days.find((day) => day.iso.startsWith(month.month));
+    }
+    return selectedDay ?? days[0];
+  })();
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
       <div className="studio-manage-top pagetop">
@@ -842,9 +851,40 @@ export function GymRota({
             {desktop ? <Link className={`rotanav${week && week.offset > 0 ? "" : " off"}`} href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))} aria-disabled={!week || week.offset === 0}>
               <Icon name="chevron_left" size={20} />
             </Link> : <button className={`rotanav${canMoveToPreviousDay ? "" : " off"}`} aria-label="Previous day" disabled={!canMoveToPreviousDay} onClick={() => moveMobileDay(-1)}><Icon name="chevron_left" size={20} /></button>}
-            <span className="rotaweek-lbl">
-              {desktop ? week?.label ?? "" : selectedDay ? fmtDayNavigator(selectedDay.iso) : "Today"}
-            </span>
+            {desktop ? (
+              <span className="rotaweek-lbl">{week?.label ?? ""}</span>
+            ) : (
+              <span className="rotaweek-center">
+                <span className="rotaweek-lbl">{selectedDay ? fmtDayNavigator(selectedDay.iso) : "Today"}</span>
+                {selectedDay && (
+                  <span className="rota-day-menuwrap">
+                    <button
+                      className="rota-day-more"
+                      aria-label={`Actions for ${fmtDay(selectedDay.iso)}`}
+                      aria-expanded={dayMenu === selectedDay.iso}
+                      onClick={() => setDayMenu(dayMenu === selectedDay.iso ? null : selectedDay.iso)}
+                    >
+                      <Icon name="more_horiz" size={20} />
+                    </button>
+                    {dayMenu === selectedDay.iso && (
+                      <span className="rota-day-menu">
+                        <button onClick={() => void shareDay(selectedDay)}>Share day</button>
+                        <button
+                          disabled={pending}
+                          onClick={() => {
+                            setDayMenu(null);
+                            if (selectedDay.closed) openDay(selectedDay);
+                            else setClosingDay({ iso: selectedDay.iso, label: fmtDay(selectedDay.iso) });
+                          }}
+                        >
+                          {selectedDay.closed ? "Open day" : "Close day"}
+                        </button>
+                      </span>
+                    )}
+                  </span>
+                )}
+              </span>
+            )}
             {desktop ? <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
               <Icon name="chevron_right" size={20} />
             </Link> : <button className="rotanav" aria-label="Next day" onClick={() => moveMobileDay(1)}><Icon name="chevron_right" size={20} /></button>}
@@ -858,7 +898,7 @@ export function GymRota({
                     {desktop ? fmtDay(day.iso) : ""}
                     {day.closed && <b className="rota-day-closed-label">Closed</b>}
                   </span>
-                  <span className="rotaday-actions">
+                  {desktop && <span className="rotaday-actions">
                     {!day.closed && (
                       <button
                         className="rota-day-add"
@@ -893,7 +933,7 @@ export function GymRota({
                         </span>
                       )}
                     </span>
-                  </span>
+                  </span>}
                 </div>
                 {day.items.length === 0 ? (
                   <p className="rotaempty">
@@ -1028,6 +1068,18 @@ export function GymRota({
             </div>
             <p className="rota-coach-note">This changes only {coachPick.label}. Open the class to change every week.</p>
           </div>
+        </div>
+      )}
+
+      {!desktop && floatingAddDay && (
+        <div className="calendar-bottom-actions studio-calendar-add" aria-label="Calendar actions">
+          <button
+            className="calendar-bottom-add"
+            aria-label={`Add a class on ${fmtDay(floatingAddDay.iso)}`}
+            onClick={() => show(floatingAddDay.iso, floatingAddDay.dayOfWeek, null, true)}
+          >
+            <Icon name="add" size={28} />
+          </button>
         </div>
       )}
 
