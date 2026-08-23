@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -196,6 +197,7 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -270,6 +272,10 @@ export function FollowingScreen({
     const feedKeys = new Set(items.map((item) => item.key));
     return socialGroups.filter((group) => group.classKeys.some((key) => feedKeys.has(key)));
   }, [socialGroups, items]);
+  const railCoachOptions = coachOptions.slice(0, 10);
+  const railStudioOptions = studioOptions.slice(0, Math.max(0, 10 - railCoachOptions.length));
+  const railGroupOptions = groupOptions.slice(0, Math.max(0, 10 - railCoachOptions.length - railStudioOptions.length));
+  const railHasMore = coachOptions.length + studioOptions.length + groupOptions.length > 10;
 
   const selectedCalendar = useMemo(() => {
     if (calendarFilter === "all") return null;
@@ -541,26 +547,24 @@ export function FollowingScreen({
                 <span className={`trayav trayav-all${calendarFilter === "all" ? " sel" : ""}`}><Icon name="calendar_month" size={25} /></span>
                 <span className="trayitem-nm">All</span>
               </button>
-              <button className={`trayitem${calendarFilter !== "all" && calendarFilter !== "you" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter("you")}>
-                <span className={`trayav${calendarFilter === "you" ? " sel" : ""}`} style={{ background: meFace.color }}>
+              <button className="trayitem" type="button" onClick={() => { if (meId) setPersonPeekOpen({ id:meId, name:meFace.name, photo:meFace.photo, color:meFace.color, self:true }); }}>
+                <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
                 </span>
                 <span className="trayitem-nm">You</span>
               </button>
-              {coachOptions.map((coach) => {
-                const filter = `coach:${coach.id}` as const;
+              {railCoachOptions.map((coach) => {
                 return (
                 <button
                   key={coach.id}
                   type="button"
-                  className={`trayitem${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`}
-                  aria-pressed={calendarFilter === filter}
-                  onClick={() => setCalendarFilter(filter)}
+                  className="trayitem"
+                  onClick={() => setPersonPeekOpen({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, self:false })}
                 >
                   <span
-                    className={`trayav${calendarFilter === filter ? " sel" : ""}`}
+                    className="trayav"
                     style={{ background: coach.color }}
                   >
                     {coach.photo ? (
@@ -573,7 +577,7 @@ export function FollowingScreen({
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
                 </button>
               )})}
-              {studioOptions.map((studio) => {
+              {railStudioOptions.map((studio) => {
                 const filter = `studio:${studio.id}` as const;
                 return <button
                 key={studio.id}
@@ -587,7 +591,7 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{studio.name}</span>
               </button>})}
-              {groupOptions.map((group) => {
+              {railGroupOptions.map((group) => {
                 const filter = `group:${group.id}` as const;
                 return <button
                 key={group.id}
@@ -601,6 +605,7 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </button>})}
+              {railHasMore && <Link className="trayitem" href="/saved"><span className="trayav trayav-add"><Icon name="more_horiz" size={28} /></span><span className="trayitem-nm">More</span></Link>}
             </div>
           </div>
         </header>
@@ -816,6 +821,17 @@ export function FollowingScreen({
           onToast={notify}
           onChanged={() => {}}
           allowWeekAdd={false}
+        />
+      )}
+      {personPeekOpen && (
+        <CoachPeek
+          id={personPeekOpen.id}
+          name={personPeekOpen.name}
+          photo={personPeekOpen.photo}
+          color={personPeekOpen.color}
+          self={personPeekOpen.self}
+          shareHref={personPeekOpen.self ? (meKind === "coach" ? "/coachshare" : "/membershare") : undefined}
+          onClose={() => setPersonPeekOpen(null)}
         />
       )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />

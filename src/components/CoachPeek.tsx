@@ -6,6 +6,7 @@ import { personPeek, type Peek } from "@/app/actions/peek";
 import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
+import { MessageComposer } from "@/components/MessageComposer";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
@@ -57,6 +58,7 @@ export function CoachPeek({
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [follow, setFollow] = useState<null | "following" | "requested" | "off">(null);
   const [followBusy, setFollowBusy] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -175,24 +177,27 @@ export function CoachPeek({
           <h2 className="peekhead-nm">{name}</h2>
           {peek?.handle && (
             <div className="peekacts">
-              <Link className="peekfollow peekview" href={`/${peek.handle}`}>
-                View profile
-              </Link>
               {self && shareHref ? (
                 <Link className="peekfollow on" href={shareHref}>
                   Share your week
                 </Link>
-              ) : follow !== null ? (
-                <button
-                  className={`peekfollow save-ribbon-only${follow !== "off" ? " on" : ""}`}
-                  aria-pressed={follow !== "off"}
-                  aria-label={follow === "following" ? "Remove saved calendar" : follow === "requested" ? "Cancel calendar request" : "Save calendar"}
-                  disabled={followBusy}
-                  onClick={toggleFollow}
-                >
-                  <Icon name={follow === "following" ? "bookmark_added" : follow === "requested" ? "schedule" : "bookmark"} size={20} />
-                </button>
-              ) : null}
+              ) : (
+                <>
+                  {peek.messagesOpen && <button className="peekfollow" type="button" onClick={() => setMessageOpen(true)}>Message</button>}
+                  <Link className="peekfollow peekview" href={`/${peek.handle}`}>View profile</Link>
+                  {follow !== null && (
+                    <button
+                      className={`peekfollow save-ribbon-only${follow !== "off" ? " on" : ""}`}
+                      aria-pressed={follow !== "off"}
+                      aria-label={follow === "following" ? "Remove saved calendar" : follow === "requested" ? "Cancel calendar request" : "Save calendar"}
+                      disabled={followBusy}
+                      onClick={toggleFollow}
+                    >
+                      <Icon name={follow === "following" ? "bookmark_added" : follow === "requested" ? "schedule" : "bookmark"} size={20} />
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -217,6 +222,15 @@ export function CoachPeek({
           <p className="peekfoot">Add anything here to put it on your own week.</p>
         )}
       </div>
+      {messageOpen && peek?.handle && (
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMessageOpen(false); }}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-label={`Message ${name}`}>
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMessageOpen(false)}><Icon name="close" size={18} /></button>
+            <h2>Message {name.split(/\s+/)[0]}</h2>
+            <MessageComposer handle={peek.handle} coachName={name} signedIn />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

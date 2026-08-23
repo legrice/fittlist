@@ -45,6 +45,7 @@ export type Peek = {
    *  same words whatever the week holds. A coach's teaching half is never
    *  gated, because their page is the product. */
   gated: boolean;
+  messagesOpen: boolean;
   days: PeekDay[];
 };
 
@@ -268,6 +269,7 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
     following,
     shared,
     gated,
+    messagesOpen: person.messagesOpen,
     days,
   };
 }
