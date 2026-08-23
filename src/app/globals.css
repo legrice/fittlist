@@ -8716,7 +8716,6 @@ select.editinput.placekind-select {
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
 .cash-class-time { flex:0 0 auto; align-self:flex-start; padding-top:1px; font-size:16px; line-height:1.2; white-space:nowrap; }
 .cash-class-main > svg { flex:0 0 auto; color:var(--ink); }
-.cash-class-row .following-add { top:54px; left:42px; right:auto; width:28px; height:28px; border:2px solid var(--ground); background:var(--card); }
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
   border-radius: 0; border-bottom: 1px solid var(--line); background: transparent;

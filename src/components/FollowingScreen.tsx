@@ -700,7 +700,6 @@ export function FollowingScreen({
                               <span className="cash-class-copy"><strong>{row.item.name}</strong><span>{row.item.where || "Location to come"}</span><small>{coach?.name || "Coach to come"}</small></span>
                               <strong className="cash-class-time">{row.item.hm}{row.item.ap.toLowerCase()}</strong>
                             </button>
-                            {row.corner}
                           </article>;
                         })}
                       </div>
