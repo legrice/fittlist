@@ -270,6 +270,21 @@ export function FollowingScreen({
     return socialGroups.filter((group) => group.classKeys.some((key) => feedKeys.has(key)));
   }, [socialGroups, items]);
 
+  const selectedCalendar = useMemo(() => {
+    if (calendarFilter === "all") return null;
+    if (calendarFilter === "you") return { name: "You", href: "/you", label: "Your classes" };
+    if (calendarFilter.startsWith("coach:")) {
+      const coach = coachOptions.find((option) => option.id === calendarFilter.slice(6));
+      return coach ? { name: coach.name, href: coach.handle ? `/${coach.handle}` : "", label: `Classes with ${coach.name.split(/\s+/)[0]}` } : null;
+    }
+    if (calendarFilter.startsWith("studio:")) {
+      const studio = studioOptions.find((option) => option.id === calendarFilter.slice(7));
+      return studio ? { name: studio.name, href: `/s/${studio.slug}`, label: studio.name } : null;
+    }
+    const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
+    return group ? { name: group.name, href: `/g/${group.slug}`, label: group.name } : null;
+  }, [calendarFilter, coachOptions, studioOptions, groupOptions]);
+
   const shown = useMemo(() => {
     const coachIds = new Set(coachOptions.map((person) => person.id));
     const studioHrefs = new Set(studioOptions.map((studio) => `/s/${studio.slug}`));
@@ -521,7 +536,7 @@ export function FollowingScreen({
                 <span className={`trayav trayav-all${calendarFilter === "all" ? " sel" : ""}`}><Icon name="groups" size={25} /></span>
                 <span className="trayitem-nm">All</span>
               </button>
-              <button className={`trayitem${calendarFilter !== "you" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter("you")}>
+              <button className={`trayitem${calendarFilter !== "all" && calendarFilter !== "you" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter("you")}>
                 <span className={`trayav${calendarFilter === "you" ? " sel" : ""}`} style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
@@ -535,7 +550,7 @@ export function FollowingScreen({
                 <button
                   key={coach.id}
                   type="button"
-                  className={`trayitem${calendarFilter !== filter ? " dim" : ""}`}
+                  className={`trayitem${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`}
                   aria-pressed={calendarFilter === filter}
                   onClick={() => setCalendarFilter(filter)}
                 >
@@ -558,7 +573,7 @@ export function FollowingScreen({
                 return <button
                 key={studio.id}
                 type="button"
-                className={`trayitem social-place-item${calendarFilter !== filter ? " dim" : ""}`}
+                className={`trayitem social-place-item${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`}
                 aria-pressed={calendarFilter === filter}
                 onClick={() => setCalendarFilter(filter)}
               >
@@ -572,7 +587,7 @@ export function FollowingScreen({
                 return <button
                 key={group.id}
                 type="button"
-                className={`trayitem${calendarFilter !== filter ? " dim" : ""}`}
+                className={`trayitem${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`}
                 aria-pressed={calendarFilter === filter}
                 onClick={() => setCalendarFilter(filter)}
               >
@@ -584,6 +599,14 @@ export function FollowingScreen({
             </div>
           </div>
         </header>
+      )}
+      {isHome && selectedCalendar && (
+        <div className="feedfilterbar following-coach-context">
+          <span className="feedfilter-txt">{selectedCalendar.label}</span>
+          {selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">
+            View profile <Icon name="chevron_right" size={17} />
+          </Link>}
+        </div>
       )}
       {(isHome ? shown.length === 0 : items.length === 0) ? (
         <>
