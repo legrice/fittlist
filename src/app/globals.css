@@ -1927,7 +1927,7 @@ button.bl-band { cursor: pointer; }
   transition: transform .22s ease; will-change: transform;
 }
 .screen.hasnav .brandbar.social-brandbar.is-hidden { transform: translateY(calc(-100% - env(safe-area-inset-top))); pointer-events:none; }
-.social-brandbar-logo { position: absolute; left: 50%; transform: translateX(-50%); }
+.social-brandbar-logo { position: static; margin-right: auto; transform: none; }
 .social-brandbar-title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 21px; letter-spacing: -.02em; }
 .social-brandbar-side { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; }
 .social-brandbar-left { left: 18px; }
@@ -5945,6 +5945,7 @@ select.editinput.placekind-select {
 .dissearchrow.discover-searchrow { margin: 0 0 var(--space-1); padding-top: 0; }
 .discover-searchrow .dissearch { box-shadow: none; }
 .discover-searchrow .dissearch:focus-within { box-shadow: 0 0 0 3px var(--si); }
+.discover-search-door { min-height:50px; color:var(--muted); text-decoration:none; }
 .discover-filterrow {
   display:flex; align-items:center; gap:var(--space-1); overflow-x:auto; overflow-y:hidden;
   margin:0 0 var(--space-2); padding:0; scrollbar-width:none;

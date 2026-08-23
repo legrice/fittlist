@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { fansVisible } from "@/lib/flags";
 import { DiscoverList, type DiscoverHalf } from "@/components/DiscoverList";
-import { addBrowse } from "@/app/actions/discover";
 import { currentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +30,6 @@ export default async function DiscoverPage({
   if (!(await fansVisible())) redirect("/");
   const me = await currentUser();
   if (!me) redirect("/");
-  const upcoming = await addBrowse();
   return (
     <DiscoverList
       people={[]}
@@ -41,7 +39,7 @@ export default async function DiscoverPage({
       myLat={me.locationLat}
       myLng={me.locationLng}
       startHalf={startHalf}
-      upcoming={upcoming?.days ?? []}
+      upcoming={[]}
       groups={[]}
       backHref="/feed"
       hideBack

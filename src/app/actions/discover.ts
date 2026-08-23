@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
@@ -25,20 +25,53 @@ export type DiscoverData = {
  * would list somebody in one place and not the other, and nobody would notice
  * for months.
  */
-export async function discoverPeople(): Promise<DiscoverData> {
+const nearBounds = (lat: number | null, lng: number | null, miles?: number) => {
+  if (lat == null || lng == null || !miles || miles <= 0) return null;
+  const latDelta = miles / 69;
+  const lngDelta = miles / Math.max(6, 69 * Math.cos(lat * Math.PI / 180));
+  return { minLat:lat-latDelta, maxLat:lat+latDelta, minLng:lng-lngDelta, maxLng:lng+lngDelta };
+};
+
+export async function discoverPeople(distanceMiles?: number): Promise<DiscoverData> {
   const me = await currentUser();
   if (!me) return { people: [], cities: [], myCity: null };
   const userId = me.id;
   const db = await getDb();
+  const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
 
   // Blocked in either direction: not on the list. Discover is where someone
   // who was removed would go looking, so it has to be the same nothing the
   // profile is, and it drops the ones you removed too so you aren't handed
   // them back as a suggestion.
   const [everyone, hidden, followRows, askRows] = await Promise.all([
-    // Gyms come along: they own classes and have no handle, so a
-    // handle-filtered query would drop every rota out of the counts.
-    db.select().from(schema.users),
+    // Keep this projection lean: legacy profile photos can be large, and the
+    // schedule builder only needs the coach IDs and public-shift preference.
+    db.select({
+      id:schema.users.id,
+      handle:schema.users.handle,
+      name:schema.users.name,
+      photo:sql<string|null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+      title:schema.users.title,
+      about:schema.users.about,
+      location:schema.users.location,
+      locationLat:schema.users.locationLat,
+      locationLng:schema.users.locationLng,
+      availability:schema.users.availability,
+      disciplines:schema.users.disciplines,
+      avatarColor:schema.users.avatarColor,
+      shiftsPublic:schema.users.shiftsPublic,
+      createdAt:schema.users.createdAt,
+    }).from(schema.users).where(and(
+      eq(schema.users.discoverable,true),
+      eq(schema.users.kind,"coach"),
+      isNotNull(schema.users.handle),
+      bounds ? and(
+        gte(schema.users.locationLat,bounds.minLat),
+        lte(schema.users.locationLat,bounds.maxLat),
+        gte(schema.users.locationLng,bounds.minLng),
+        lte(schema.users.locationLng,bounds.maxLng),
+      ) : undefined,
+    )),
     hiddenFrom(userId),
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
@@ -51,9 +84,7 @@ export async function discoverPeople(): Promise<DiscoverData> {
       .from(schema.followRequests)
       .where(eq(schema.followRequests.requesterUserId, userId)),
   ]);
-  const rows = everyone.filter(
-    (r) => !!r.handle && r.discoverable && r.kind !== "fan" && r.kind !== "gym" && !hidden.has(r.id),
-  );
+  const rows = everyone.filter((r) => !hidden.has(r.id));
 
   // Their own classes plus the shifts each has chosen to show, so the count
   // matches what opening their page actually shows.
@@ -166,12 +197,21 @@ export type AddBrowseData = {
   myLng: number | null;
 };
 
-export async function discoverStudios(): Promise<DirStudio[]> {
+export async function discoverStudios(distanceMiles?: number): Promise<DirStudio[]> {
   const me = await currentUser();
   if (!me) return [];
   const db = await getDb();
+  const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
   const [studios, favoriteRows] = await Promise.all([
-    db.select().from(schema.studios).orderBy(schema.studios.name),
+    db.select({
+      id:schema.studios.id, slug:schema.studios.slug, name:schema.studios.name,
+      address:schema.studios.address, placeKind:schema.studios.placeKind,
+      lat:schema.studios.lat, lng:schema.studios.lng, photo:schema.studios.photo,
+      types:schema.studios.types, accountUserId:schema.studios.accountUserId,
+    }).from(schema.studios).where(bounds ? and(
+      gte(schema.studios.lat,bounds.minLat), lte(schema.studios.lat,bounds.maxLat),
+      gte(schema.studios.lng,bounds.minLng), lte(schema.studios.lng,bounds.maxLng),
+    ) : undefined).orderBy(schema.studios.name),
     db.select({ studioId:schema.studioEndorsements.targetStudioId }).from(schema.studioEndorsements).where(and(eq(schema.studioEndorsements.endorserUserId, me.id), eq(schema.studioEndorsements.trait, "been_here"))),
   ]);
   const favorites = new Set(favoriteRows.map((row) => row.studioId));
@@ -183,10 +223,11 @@ export async function discoverStudios(): Promise<DirStudio[]> {
   }));
 }
 
-export async function discoverGroups() {
+export async function discoverGroups(distanceMiles?: number) {
   const me = await currentUser();
   if (!me) return [];
   const db = await getDb();
+  const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
   const [groups, favoriteRows] = await Promise.all([db
     .select({
       id:schema.groups.id,
@@ -199,7 +240,13 @@ export async function discoverGroups() {
     })
     .from(schema.groups)
     .innerJoin(schema.users, eq(schema.groups.ownerUserId, schema.users.id))
-    .where(eq(schema.groups.visibility, "public")),
+    .where(and(
+      eq(schema.groups.visibility, "public"),
+      bounds ? and(
+        gte(schema.users.locationLat,bounds.minLat), lte(schema.users.locationLat,bounds.maxLat),
+        gte(schema.users.locationLng,bounds.minLng), lte(schema.users.locationLng,bounds.maxLng),
+      ) : undefined,
+    )),
   db.select({ groupId:schema.groupFavorites.groupId })
     .from(schema.groupFavorites)
     .where(eq(schema.groupFavorites.userId, me.id)),

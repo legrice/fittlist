@@ -127,27 +127,28 @@ export function AppHeader({
     const calendarUtility = pathname.startsWith("/calendar");
     return (
       <div className={`brandbar social-brandbar${headerHidden ? " is-hidden" : ""}`}>
-        <div className="social-brandbar-side social-brandbar-left">
-          {calendarUtility ? (
-            <Link className="iconbtn social-calendar-back" href="/you" aria-label="Back to You">
-              <Icon name="arrow_back" size={23} />
-            </Link>
-          ) : <GlobalAdd />}
-        </div>
+        {calendarUtility && <div className="social-brandbar-side social-brandbar-left">
+          <Link className="iconbtn social-calendar-back" href="/you" aria-label="Back to You">
+            <Icon name="arrow_back" size={23} />
+          </Link>
+        </div>}
         {calendarUtility ? <strong className="social-brandbar-title">Your calendar</strong> : (
           <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList calendar">
             <Wordmark variant="ink" />
           </Link>
         )}
         <div className="social-brandbar-side social-brandbar-right">
-          {!calendarUtility && <Link
-            className={`iconbtn social-notifications${pathname.startsWith("/notifications") ? " onroute" : ""}`}
-            href="/notifications"
-            aria-label={`${notificationUnread} unread notifications`}
-          >
-            <Icon name="notifications" size={23} />
-            {notificationUnread > 0 && <i aria-hidden="true" />}
-          </Link>}
+          {!calendarUtility && <>
+            <GlobalAdd />
+            <Link
+              className={`iconbtn social-notifications${pathname.startsWith("/notifications") ? " onroute" : ""}`}
+              href="/notifications"
+              aria-label={`${notificationUnread} unread notifications`}
+            >
+              <Icon name="notifications" size={23} />
+              {notificationUnread > 0 && <i aria-hidden="true" />}
+            </Link>
+          </>}
         </div>
       </div>
     );
@@ -169,7 +170,7 @@ export function AppHeader({
             {adminActivity > 0 && <i aria-hidden="true" />}
           </Link>
         )}
-        <Link className="header-search-trigger" href="/discover" aria-label="Discover people, studios, groups, and classes">
+        <Link className="header-search-trigger" href="/search" aria-label="Search FittList">
           <Icon name="search" size={21} />
         </Link>
         <HeaderAccountButton

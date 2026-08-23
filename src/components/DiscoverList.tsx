@@ -21,7 +21,7 @@ import { PLACE_KIND_LABELS, PLACE_KINDS } from "@/lib/studio";
 export type DiscoverHalf = "people" | "places" | "classes" | "groups";
 type Group = { id:string; name:string; slug:string; description:string|null; purpose:string; lat:number|null; lng:number|null; favorited:boolean };
 type UpcomingItem = BrowseDay["items"][number] & { day:string };
-const distanceOptions = [["1","Within 1 mile"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]] as const;
+const distanceOptions = [["1","Within 1 mile"],["2","Within 2 miles"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]] as const;
 
 export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,startHalf,upcoming=[],groups=[],backHref,hideBack=false }: { people:DirPerson[];studios?:DirStudio[];cities:string[];myCity?:string|null;myLat?:number|null;myLng?:number|null;startHalf?:DiscoverHalf;upcoming?:BrowseDay[];groups?:Group[];backHref:string;hideBack?:boolean }) {
   const router=useRouter();
@@ -38,24 +38,24 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
   const [groupRows,setGroupRows]=useState(groups);
   const [peopleRows,setPeopleRows]=useState(people);
   const [directoryPending,startDirectory]=useTransition();
-  const loadedDirectories=useRef(new Set<DiscoverHalf>());
-  const [searchOpen,setSearchOpen]=useState(false); const [query,setQuery]=useState("");
-  const [classType,setClassType]=useState(""); const [distance,setDistance]=useState("");
-  const [discipline,setDiscipline]=useState(""); const [peopleDistance,setPeopleDistance]=useState("");
-  const [placeKind,setPlaceKind]=useState(""); const [studioType,setStudioType]=useState(""); const [studioDistance,setStudioDistance]=useState("");
-  const [purpose,setPurpose]=useState(""); const [groupDistance,setGroupDistance]=useState(""); const [groupSort,setGroupSort]=useState("");
+  const loadedDirectories=useRef(new Map<DiscoverHalf,string>());
+  const directoryRequests=useRef(new Map<DiscoverHalf,number>());
+  const initialDistance=myLat!=null&&myLng!=null?"2":"";
+  const [classType,setClassType]=useState(""); const [distance,setDistance]=useState(initialDistance);
+  const [discipline,setDiscipline]=useState(""); const [peopleDistance,setPeopleDistance]=useState(initialDistance);
+  const [placeKind,setPlaceKind]=useState(""); const [studioType,setStudioType]=useState(""); const [studioDistance,setStudioDistance]=useState(initialDistance);
+  const [purpose,setPurpose]=useState(""); const [groupDistance,setGroupDistance]=useState(initialDistance); const [groupSort,setGroupSort]=useState("");
   const activeFilters=tab==="classes"?Number(!!classType)+Number(!!distance):tab==="people"?Number(!!discipline)+Number(!!peopleDistance):tab==="places"?Number(!!placeKind)+Number(!!studioType)+Number(!!studioDistance):Number(!!purpose)+Number(!!groupDistance)+Number(!!groupSort);
   const clearFilters=()=>{if(tab==="classes"){setClassType("");setDistance("");}else if(tab==="people"){setDiscipline("");setPeopleDistance("");}else if(tab==="places"){setPlaceKind("");setStudioType("");setStudioDistance("");}else{setPurpose("");setGroupDistance("");setGroupSort("");}};
-  const q=query.trim().toLowerCase();
-  const allUpcoming=useMemo(()=>upcoming.flatMap((day)=>day.items.map((item)=>({...item,day:day.label}))).filter((item)=>!q||[item.name,item.where,item.attributionName].some((value)=>(value??"").toLowerCase().includes(q))),[upcoming,q]);
+  const allUpcoming=useMemo(()=>upcoming.flatMap((day)=>day.items.map((item)=>({...item,day:day.label}))),[upcoming]);
   const classTypes=[...new Set(allUpcoming.map((item)=>item.classType).filter((value):value is string=>!!value))].sort();
   const filteredUpcoming=allUpcoming.filter((item)=>{if(classType&&item.classType!==classType)return false;if(distance){if(myLat==null||myLng==null||item.lat==null||item.lng==null)return false;if(milesBetween(myLat,myLng,item.lat,item.lng)>Number(distance))return false;}return true;});
   const filteredUpcomingDays=upcoming.map((day)=>({iso:day.iso,label:day.label,items:filteredUpcoming.filter((item)=>item.iso===day.iso)})).filter((day)=>day.items.length>0);
   const disciplines=[...new Set(peopleRows.flatMap((person)=>person.disciplines))].sort();
-  const shownPeople=peopleRows.filter((person)=>person.kind==="coach"&&(!q||[person.name,person.title,person.location,person.handle,...person.disciplines].some((value)=>value.toLowerCase().includes(q)))&&(!discipline||person.disciplines.includes(discipline))&&(!peopleDistance||(myLat!=null&&myLng!=null&&person.lat!=null&&person.lng!=null&&milesBetween(myLat,myLng,person.lat,person.lng)<=Number(peopleDistance))));
+  const shownPeople=peopleRows.filter((person)=>person.kind==="coach"&&(!discipline||person.disciplines.includes(discipline))&&(!peopleDistance||(myLat!=null&&myLng!=null&&person.lat!=null&&person.lng!=null&&milesBetween(myLat,myLng,person.lat,person.lng)<=Number(peopleDistance))));
   const studioTypes=[...new Set(studioRows.flatMap((studio)=>studio.types))].sort();
-  const shownStudios=studioRows.filter((studio)=>(!q||[studio.name,studio.address,...studio.types].some((value)=>value.toLowerCase().includes(q)))&&(!placeKind||studio.placeKind===placeKind)&&(!studioType||studio.types.includes(studioType))&&(!studioDistance||(myLat!=null&&myLng!=null&&studio.lat!=null&&studio.lng!=null&&milesBetween(myLat,myLng,studio.lat,studio.lng)<=Number(studioDistance))));
-  const shownGroups=groupRows.filter((group)=>(!q||`${group.name} ${group.description??""}`.toLowerCase().includes(q))&&(!purpose||group.purpose===purpose)&&(!groupDistance||(myLat!=null&&myLng!=null&&group.lat!=null&&group.lng!=null&&milesBetween(myLat,myLng,group.lat,group.lng)<=Number(groupDistance)))).sort((a,b)=>groupSort==="name"?a.name.localeCompare(b.name):0);
+  const shownStudios=studioRows.filter((studio)=>(!placeKind||studio.placeKind===placeKind)&&(!studioType||studio.types.includes(studioType))&&(!studioDistance||(myLat!=null&&myLng!=null&&studio.lat!=null&&studio.lng!=null&&milesBetween(myLat,myLng,studio.lat,studio.lng)<=Number(studioDistance))));
+  const shownGroups=groupRows.filter((group)=>(!purpose||group.purpose===purpose)&&(!groupDistance||(myLat!=null&&myLng!=null&&group.lat!=null&&group.lng!=null&&milesBetween(myLat,myLng,group.lat,group.lng)<=Number(groupDistance)))).sort((a,b)=>groupSort==="name"?a.name.localeCompare(b.name):0);
   const activityByName=upcoming.flatMap((day)=>day.items).reduce((counts,item)=>{const key=item.attributionName.trim().toLowerCase();if(key)counts.set(key,(counts.get(key)??0)+1);return counts;},new Map<string,number>());
   const showSavedConfirmation=async(item:UpcomingItem)=>{setSaveGroups(await managedGroupDestinations());setGroupSaved({});setSavedSheet(item);};
   const openSavedConfirmation=(item:UpcomingItem)=>startSave(()=>showSavedConfirmation(item));
@@ -64,14 +64,32 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
   const saveToGroup=(item:UpcomingItem,group:GroupDestination)=>startSave(async()=>{const result=await addGroupClasses(group.slug,[{classId:item.classId,iso:item.iso}]);if(!result.ok)return toast(result.error);setGroupSaved((current)=>({...current,[group.id]:true}));toast(`${item.name} was added to ${group.name}`);});
   const discoverCalendarDays:WeekDayRows[]=filteredUpcomingDays.map((day)=>({iso:day.iso,label:day.label,rows:day.items.map((item)=>{const isSaved=!!saved[`${item.classId}|${item.iso}`];const base=item.base.replace(/^\//,"");return {key:`${item.classId}.${item.iso}`,name:item.name,where:item.where||"Location to come",hm:item.hm,ap:item.ap,coach:{id:item.classId,name:item.attributionName,color:item.coachColor,photo:item.coachPhoto},href:`/${base}/${item.classId}?d=${item.iso}&from=discover-classes`,classId:item.classId,iso:item.iso,base,corner:item.own?undefined:<button type="button" aria-label={isSaved?`Manage saved class ${item.name}`:`Save ${item.name} to your calendar`} className={`calendar-save-action calendar-overlay-save${isSaved?" saved":""}`} disabled={savePending} onClick={()=>isSaved?openSavedConfirmation(item):saveClass(item)}><Icon name={isSaved?"bookmark_added":"bookmark"} size={17}/></button>};})}));
   useEffect(()=>{
-    if(loadedDirectories.current.has(tab))return;
-    if(tab==="places"){loadedDirectories.current.add(tab);startDirectory(async()=>setStudioRows(await discoverStudios()));}
-    if(tab==="groups"){loadedDirectories.current.add(tab);startDirectory(async()=>setGroupRows(await discoverGroups()));}
-    if(tab==="people"){loadedDirectories.current.add(tab);startDirectory(async()=>{const data=await discoverPeople();setPeopleRows(data.people);});}
-  },[tab,studioRows.length,groupRows.length,peopleRows.length]);
+    if(tab==="classes")return;
+    const distanceValue=tab==="people"?peopleDistance:tab==="places"?studioDistance:groupDistance;
+    const key=distanceValue||"any";
+    if(loadedDirectories.current.get(tab)===key)return;
+    loadedDirectories.current.set(tab,key);
+    const request=(directoryRequests.current.get(tab)??0)+1;
+    directoryRequests.current.set(tab,request);
+    const miles=distanceValue?Number(distanceValue):undefined;
+    startDirectory(async()=>{
+      if(tab==="places"){
+        const rows=await discoverStudios(miles);
+        if(directoryRequests.current.get(tab)===request)setStudioRows(rows);
+      }
+      if(tab==="groups"){
+        const rows=await discoverGroups(miles);
+        if(directoryRequests.current.get(tab)===request)setGroupRows(rows);
+      }
+      if(tab==="people"){
+        const data=await discoverPeople(miles);
+        if(directoryRequests.current.get(tab)===request)setPeopleRows(data.people);
+      }
+    });
+  },[tab,peopleDistance,studioDistance,groupDistance]);
   return <>
-    <div className="discover-title-row"><h1>Near you</h1><button type="button" aria-label="Search near you" aria-expanded={searchOpen} onClick={()=>setSearchOpen((open)=>!open)}><Icon name="search" size={24}/></button></div>
-    {searchOpen&&<div className="dissearchrow discover-searchrow"><label className="dissearch"><Icon name="search" size={20} className="dissearch-ic"/><input autoFocus className="dissearch-in" type="search" value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Search FittList" aria-label="Search FittList"/>{query&&<button type="button" className="dissearch-x" onClick={()=>setQuery("")} aria-label="Clear search"><Icon name="close" size={19}/></button>}</label></div>}
+    <div className="discover-title-row"><h1>Near you</h1></div>
+    <div className="dissearchrow discover-searchrow"><Link className="dissearch discover-search-door" href="/search"><Icon name="search" size={20} className="dissearch-ic"/><span>Search FittList</span></Link></div>
     <div className="discover-directory-tabs" role="tablist">{([['people','People'],['places','Studios'],['groups','Groups']] as const).map(([value,label])=><button role="tab" aria-selected={tab===value} className={tab===value?"on":""} onClick={()=>setTab(value)} key={value}>{label}</button>)}</div>
     {tab==="classes"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={classType} onChange={setClassType} all="Any type" options={classTypes}/></FilterRow>{discoverCalendarDays.length?<ClassOpener handle=""><CalendarList className="discover-calendar-list" days={discoverCalendarDays}/></ClassOpener>:<Empty>There are no classes matching these filters.</Empty>}</>}
     {tab==="people"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={peopleDistance} onChange={setPeopleDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Specialty" value={discipline} onChange={setDiscipline} all="Any specialty" options={disciplines}/></FilterRow>{directoryPending?<Empty>Loading people…</Empty>:shownPeople.length?<div className="discover-person-grid">{shownPeople.map((person,index)=><DiscoverPerson person={person} index={index} activity={activityByName.get(person.name.trim().toLowerCase())??person.classesThisWeek} key={person.id}/>)}</div>:<Empty>There are no people matching these filters.</Empty>}</>}
