@@ -279,10 +279,9 @@ export function FollowingScreen({
   }, [socialGroups, items]);
   const sortedCoachOptions = [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`)));
   const sortedStudioOptions = [...studioOptions].sort((a, b) => Number(pins.has(`studio:${b.id}`)) - Number(pins.has(`studio:${a.id}`)));
-  const railCoachOptions = sortedCoachOptions.slice(0, 10);
-  const railStudioOptions = sortedStudioOptions.slice(0, Math.max(0, 10 - railCoachOptions.length));
-  const railGroupOptions = groupOptions.slice(0, Math.max(0, 10 - railCoachOptions.length - railStudioOptions.length));
-  const railHasMore = coachOptions.length + studioOptions.length + groupOptions.length > 10;
+  const railCoachOptions = sortedCoachOptions;
+  const railStudioOptions = sortedStudioOptions;
+  const railGroupOptions = groupOptions;
   const togglePin = (entityType: "person" | "studio", entityId: string) => {
     const key = `${entityType}:${entityId}`;
     setPins((current) => {
@@ -610,7 +609,6 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </button>})}
-              {railHasMore && <Link className="trayitem" href="/saved"><span className="trayav trayav-add"><Icon name="more_horiz" size={28} /></span><span className="trayitem-nm">More</span></Link>}
             </div>
           </div>
         </header>
