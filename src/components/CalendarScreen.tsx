@@ -11,7 +11,6 @@ import {
   ScrollHead,
   monthLabel,
   useScrolledPast,
-  useTopDayLabel,
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import type { PeekClass } from "@/components/ClassPeek";
@@ -114,11 +113,9 @@ export function CalendarScreen({
   } | null>(null);
   const [, startRemove] = useTransition();
   const [enablingCoach, startEnablingCoach] = useTransition();
-  // The overlay header's words: the day under it on the list, the month in
-  // view on the grid. The grid's label is set from the first render (this
-  // month is in view at rest), so the grid gates the bar on scroll depth
-  // instead of on having a label at all.
-  const topDay = useTopDayLabel();
+  // The month grid uses a fixed weekday rail once the page has scrolled.
+  // Day view relies on its actual date bands as sticky headers instead of
+  // rendering a second, competing overlay.
   const [ymInView, setYmInView] = useState<string | null>(null);
   const scrolled = useScrolledPast(120);
   // The tapped occurrence, and the editor it can open onto.
@@ -512,21 +509,14 @@ export function CalendarScreen({
         </div>
       )}
 
-      {/* The overlay header: nothing at rest, a glass bar once you're deep,
-          naming the day (or month) under it with the toggle and Add along
-          for the ride, so the two things the title row offered are never a
-          long scroll away. */}
-      {!bare && days.length > 0 && (
+      {/* Month view needs its weekday rail fixed above the grid. Day view
+          uses the real date bands as sticky headers so there is only one
+          date label competing for the top edge while scrolling. */}
+      {!bare && days.length > 0 && view === "month" && (
         <ScrollHead
-          on={view === "month" ? scrolled : !!topDay}
-          label={
-            view === "month"
-              ? ymInView
-                ? monthLabel(ymInView, todayIso)
-                : ""
-              : topDay
-          }
-          sub={view === "month" ? <MonthHeadRow /> : undefined}
+          on={scrolled}
+          label={ymInView ? monthLabel(ymInView, todayIso) : ""}
+          sub={<MonthHeadRow />}
         />
       )}
 
