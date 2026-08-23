@@ -5778,11 +5778,12 @@ select.editinput.placekind-select {
    the tab-wide wash were both tried and came off. The You tab's face is a
    photo and marks itself by opacity instead. */
 .navtab.on { background: none; color: var(--si); }
-/* Your face is the You tab. Dim until it's the current one. Exactly the
-   icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
+/* Your face is the Profile tab and stays fully visible in every tab state.
+   Exactly the icons' 26px box: a hair smaller and the whole tab reads as
+   sitting low. */
 .navav {
   width: 26px; height: 26px; border-radius: 999px; object-fit: cover; display: block;
-  background: #f0ebdd; opacity: .55; transition: opacity .12s;
+  background: #f0ebdd; opacity: 1;
 }
 .navav-empty {
   display: flex; align-items: center; justify-content: center; color: #fff;
