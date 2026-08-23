@@ -265,6 +265,7 @@ export function FollowingScreen({
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
+  const [sharePrompt, setSharePrompt] = useState(false);
   const [visibleRailCoachCount, setVisibleRailCoachCount] = useState(16);
   const railMoreRef = useRef<HTMLSpanElement>(null);
   const [visibleHomeDayCount, setVisibleHomeDayCount] = useState(2);
@@ -276,6 +277,15 @@ export function FollowingScreen({
     toast(msg);
   };
   const router = useRouter();
+
+  useEffect(() => {
+    setSharePrompt(window.localStorage.getItem("fittlist:week-shared") !== "1");
+  }, []);
+
+  const markWeekShared = () => {
+    window.localStorage.setItem("fittlist:week-shared", "1");
+    setSharePrompt(false);
+  };
 
   const closeFind = () => {
     setFind(false);
@@ -662,7 +672,7 @@ export function FollowingScreen({
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll" ref={followingRailRef}>
               <button className="trayitem" type="button" onClick={() => { if (meId) setPersonPeekOpen({ id:meId, name:meFace.name, photo:meFace.photo, color:meFace.color, self:true }); }}>
-                <span className="trayav" style={{ background: meFace.color }}>
+                <span className={`trayav${sharePrompt ? " trayav-share-prompt" : ""}`} style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
@@ -951,6 +961,7 @@ export function FollowingScreen({
           color={personPeekOpen.color}
           self={personPeekOpen.self}
           shareHref={personPeekOpen.self ? (meKind === "coach" ? "/coachshare" : "/membershare") : undefined}
+          onShare={personPeekOpen.self ? markWeekShared : undefined}
           onPinChange={!personPeekOpen.self ? (pinned) => setPins((current) => { const next=new Set(current); const key=`person:${personPeekOpen.id}`; if(pinned)next.add(key);else next.delete(key); return next; }) : undefined}
           onClose={() => setPersonPeekOpen(null)}
         />

@@ -36,6 +36,7 @@ export function CoachPeek({
   self = false,
   scheduleOnly = false,
   shareHref,
+  onShare,
   onPinChange,
   onClose,
 }: {
@@ -51,6 +52,7 @@ export function CoachPeek({
    * privately added for themselves. */
   scheduleOnly?: boolean;
   shareHref?: string;
+  onShare?: () => void;
   /** Lets a parent rail discard any old priority state after an unfollow. */
   onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
@@ -237,7 +239,7 @@ export function CoachPeek({
         )}
         {self && shareHref && (
           <div className="peek-share-sticky">
-            <Link className="peek-share-cta" href={shareHref}>
+            <Link className="peek-share-cta" href={shareHref} onClick={onShare}>
               <Icon name="reply" className="share-arrow-forward" size={21} />
               <span>Share your week</span>
             </Link>
