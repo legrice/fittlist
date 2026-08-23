@@ -8771,12 +8771,12 @@ select.editinput.placekind-select {
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
 .following-rail { margin: 4px -18px 0; }
 .following-rail .tray-scroll { gap:8px; padding-top:6px; padding-bottom:6px; }
-.following-rail .trayitem { width:64px; gap:6px; }
-.following-rail .trayav { width:60px; height:60px; }
-.following-rail .trayitem-nm { max-width:64px; font-size:12px; }
-.cash-rail-item { position:relative; width:64px; flex:0 0 64px; }
+.following-rail .trayitem { width:72px; gap:6px; }
+.following-rail .trayav { width:68px; height:68px; }
+.following-rail .trayitem-nm { max-width:72px; font-size:12.5px; }
+.cash-rail-item { position:relative; width:72px; flex:0 0 72px; }
 .cash-pin {
-  position:absolute; top:41px; right:0; z-index:3; width:24px; height:24px; padding:0;
+  position:absolute; top:49px; right:0; z-index:3; width:24px; height:24px; padding:0;
   display:grid; place-items:center; border:2px solid var(--ground); border-radius:50%;
   background:var(--card); color:var(--ink); cursor:pointer;
 }
@@ -8803,15 +8803,15 @@ select.editinput.placekind-select {
 .cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
 .cash-class-row { position:relative; min-height:72px; }
 .cash-class-main {
-  width:100%; min-height:72px; padding:8px 0; display:flex; align-items:center; gap:12px;
+  width:100%; min-height:80px; padding:8px 0; display:flex; align-items:center; gap:12px;
   border:0; background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
 }
 .cash-class-avatar {
-  width:56px; height:56px; flex:0 0 56px; display:grid; place-items:center; overflow:hidden;
+  width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:hidden;
   border-radius:50%; color:#fff; font-size:18px; font-weight:700;
 }
 .cash-class-avatar.studio {
-  width:56px; height:44px; flex-basis:56px; border-radius:12px;
+  width:64px; height:50px; flex-basis:64px; border-radius:12px;
   border:1px solid var(--line); background:var(--card);
 }
 .cash-class-avatar img { width:100%; height:100%; object-fit:cover; }
@@ -11047,14 +11047,14 @@ a.clspeek-by:active { opacity: .6; }
   margin-top: 0;
 }
 .calendar-cardlist .clline {
-  grid-template-columns: 48px minmax(0, 1fr) auto;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
   grid-template-rows: auto auto auto auto;
   column-gap: 12px;
   row-gap: 2px;
   align-items: center;
   align-content: center;
-  min-height: 72px;
-  padding: 8px 0;
+  min-height: 80px;
+  padding: 10px 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -11141,8 +11141,8 @@ a.clspeek-by:active { opacity: .6; }
   grid-column: 1;
   grid-row: 1 / 4;
   align-self: center;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   font-size: 16px;
 }
