@@ -565,14 +565,6 @@ export function FollowingScreen({
           </div>
         </header>
       )}
-      {isHome && (
-        <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">Upcoming</span>
-          <Link href="/calendar" className="feedfilter-link">
-            Manage calendar <Icon name="chevron_right" size={17} />
-          </Link>
-        </div>
-      )}
       {myCalendarMenu && typeof document !== "undefined" && createPortal(
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMyCalendarMenu(false); }}>
           <div className="sheet my-calendar-sheet" role="dialog" aria-modal="true" aria-labelledby="my-calendar-title">
