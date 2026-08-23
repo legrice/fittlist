@@ -16,6 +16,7 @@ import {
   adminRemoveStudioManager,
   adminBroadcast,
   adminDeleteUser,
+  adminBackfillGeolocation,
   adminFixLocations,
   adminInvite,
   adminDeleteInvite,
@@ -608,6 +609,7 @@ export function AdminPanel({
               </button>
             </div>
             <FixLocations toast={toast} />
+            <BackfillGeolocation toast={toast} />
             <div className="admincards">
               {shownPeople.map((c) => (
                 <PersonCard key={c.id} c={c} toast={toast} adminEmail={adminEmail} />
@@ -862,6 +864,48 @@ function FixLocations({ toast }: { toast: (m: string) => void }) {
           Done
         </button>
       </div>
+    </div>
+  );
+}
+
+function BackfillGeolocation({ toast }: { toast: (m: string) => void }) {
+  const [pending, start] = useTransition();
+  const [summary, setSummary] = useState<string | null>(null);
+
+  const run = () =>
+    start(async () => {
+      let profiles = 0;
+      let studios = 0;
+      let lastRemaining = Number.POSITIVE_INFINITY;
+      let unresolved: string[] = [];
+      for (let pass = 0; pass < 20; pass += 1) {
+        const result = await adminBackfillGeolocation();
+        if (!result.ok) {
+          toast(result.error ?? "Couldn't add coordinates");
+          return;
+        }
+        profiles += result.profilesUpdated ?? 0;
+        studios += result.studiosUpdated ?? 0;
+        unresolved = result.unresolved ?? [];
+        const remaining = (result.profilesRemaining ?? 0) + (result.studiosRemaining ?? 0);
+        if (!remaining || remaining >= lastRemaining) {
+          lastRemaining = remaining;
+          break;
+        }
+        lastRemaining = remaining;
+      }
+      const remaining = Number.isFinite(lastRemaining) ? lastRemaining : 0;
+      const text = `Added coordinates to ${profiles} profiles and ${studios} studios${remaining ? `; ${remaining} still need a clearer location` : ""}.`;
+      setSummary(unresolved.length ? `${text} Could not place: ${unresolved.join(", ")}.` : text);
+      toast(text);
+    });
+
+  return (
+    <div className="adminaddform" style={{ marginTop: 10 }}>
+      <button className="btn ghost adminaddbtn" disabled={pending} onClick={run}>
+        {pending ? "Adding coordinates…" : "Add missing coordinates"}
+      </button>
+      {summary && <p className="fixnote">{summary}</p>}
     </div>
   );
 }
