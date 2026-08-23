@@ -343,9 +343,10 @@ export async function PublicProfileView({
             list: a coach flipping between their calendar and their page was
             reading two apps. It is one row now, everywhere a class is listed.
 
-            The profile uses the same save ribbon as every other calendar; the
-            only profile-specific omission is the coach name the page already
-            says at the top. */}
+            The profile uses the same row and save ribbon as every other
+            calendar. Identity stays in the row even though the page names the
+            coach above it: the repeated face is what makes mixed studio and
+            group calendars immediately scannable too. */}
         <>
           {(() => {
             const listDays = (source: typeof days): WeekDayRows[] => source.map((d) => ({
@@ -368,6 +369,12 @@ export async function PublicProfileView({
                       where: where ?? null,
                       hm: start.hm,
                       ap: start.ap,
+                      coach: {
+                        id: user.id,
+                        name: user.name,
+                        color: avatarColor(user),
+                        photo: user.photo,
+                      },
                       href,
                       classId: c.id,
                       iso: d.iso,

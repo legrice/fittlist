@@ -133,8 +133,8 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
   );
 }
 
-/** The only public shell for a calendar list. It owns the density and card
- * treatment so every schedule changes together when these rules change. */
+/** The only public shell for a calendar list. It owns the homepage's compact
+ * row treatment so every schedule changes together when these rules change. */
 export function CalendarList({
   days,
   className = "",
@@ -155,17 +155,9 @@ export function CalendarList({
 export function ClassLine({ row }: { row: WeekRow }) {
   const inner = (
     <>
-      {/* Whose row this is leads, full width over both columns: the by-line
-          and the shift tag sat inside the class column for a while, which
-          pushed the name down while the time stayed pinned at the top, so
-          the two things meant to read as one line never lined up.
-
-          The row itself is the grid, and every cell names its column: the
-          time shares a baseline with the name and the length shares one
-          with the studio. Every row says its own time, even beside another
-          at the same hour, by Matt's call: each is its own box now, and a
-          box with a blank time column read as a box missing something
-          rather than as a second thing at six. */}
+      {/* Identity is part of every occurrence, including a coach's own page.
+          The shared CSS places the face first, class and place in the middle,
+          and time at the right—the same scan order as the homepage. */}
       {row.coach && (
         <span className="clline-by">
           <span className="clline-av" style={{ background: row.coach.color }}>

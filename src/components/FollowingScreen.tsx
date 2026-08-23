@@ -952,14 +952,15 @@ export function FollowingScreen({
           onClose={() => setPersonPeekOpen(null)}
         />
       )}
-      {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
+      {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} coaches={coachById} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
   );
 }
 
-function EntityCalendarPeek({ entity, pinned, onPinned, onClose }: {
+function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
   entity: { type: "studio" | "group"; id: string; name: string; photo: string | null; color: string; href: string; items: FeedItem[] };
+  coaches: Map<string, FeedCoach>;
   pinned: boolean;
   onPinned: (pinned: boolean) => void;
   onClose: () => void;
@@ -986,10 +987,14 @@ function EntityCalendarPeek({ entity, pinned, onPinned, onClose }: {
         </div>
         {sorted.length ? (
           <div className="cash-activity-list entity-peek-list">
-            {sorted.map((item) => <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
-              <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span><small>{entity.name}</small></span>
-              <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
-            </Link>)}
+            {sorted.map((item) => {
+              const coach = coaches.get(item.coachId);
+              return <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
+                <span className={`cash-class-avatar${!coach && entity.type === "studio" ? " studio" : ""}`} style={{ background:coach?.color ?? entity.color }}>{(coach?.photo ?? entity.photo) ? <img src={(coach?.photo ?? entity.photo)!} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>
+                <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span><small>{coach?.name || entity.name}</small></span>
+                <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
+              </Link>;
+            })}
           </div>
         ) : <p className="peekempty">Nothing coming up right now.</p>}
       </div>

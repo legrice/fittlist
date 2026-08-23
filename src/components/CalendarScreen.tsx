@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -28,7 +27,7 @@ import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
 import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
-import { loadCalendarComposerData, loadCalendarShareData, loadFavoriteCalendars, type CalendarComposerData, type FavoriteCalendarData } from "@/app/actions/calendar-data";
+import { loadCalendarComposerData, loadCalendarShareData, type CalendarComposerData } from "@/app/actions/calendar-data";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -58,6 +57,7 @@ const ShareHubScreen = dynamic(() => import("@/components/ShareHubScreen").then(
  *  hundred identical rows; Month is the view for anything further out. */
 
 type View = "list" | "month";
+type CalendarFilter = "all" | "coaching" | "saved" | "personal";
 
 const prefillFromTemplate = (template: TemplateDto): AdderPrefill => ({
   ...template,
@@ -93,8 +93,7 @@ export function CalendarScreen({
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [visible, setVisible] = useState({ coaching: !member, saved: true, personal: true });
+  const [filter, setFilter] = useState<CalendarFilter>("all");
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -132,14 +131,13 @@ export function CalendarScreen({
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
   const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string } | null>(null);
   const [loadingTools, startTools] = useTransition();
-  const [favoriteData, setFavoriteData] = useState<FavoriteCalendarData | null>(null);
-  const [favoriteLoading, startFavoriteLoading] = useTransition();
-  const [selectedFavorites, setSelectedFavorites] = useState<string[]>([]);
-  const [overlaySaved, setOverlaySaved] = useState<Record<string,boolean>>({});
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
-  const activeFilterCount = Number(visible.coaching) + Number(visible.saved) + Number(visible.personal) + selectedFavorites.length;
-  const favoriteSelectionKey = `fl-calendar-favorites:${viewer.id}`;
   const calendarStateKey = `fl-calendar-state:${viewer.id}`;
+  const visible = {
+    coaching: !member && (filter === "all" || filter === "coaching"),
+    saved: filter === "all" || filter === "saved",
+    personal: filter === "all" || filter === "personal",
+  };
 
   useEffect(() => {
     if (openAdder) {
@@ -172,29 +170,17 @@ export function CalendarScreen({
       if (data) setShareData(data);
     });
   };
-  const openFilters = () => {
-    setMenuOpen(true);
-    if (!favoriteData) startFavoriteLoading(async () => setFavoriteData(await loadFavoriteCalendars() ?? { people:[], events:[] }));
-  };
-  const rememberFavoriteSelection = useCallback((ids:string[]) => {
-    const next=ids.slice(0,2);
-    setSelectedFavorites(next);
-    try { localStorage.setItem(favoriteSelectionKey,JSON.stringify(next)); } catch { /* private mode */ }
-  },[favoriteSelectionKey]);
-  const toggleFavorite = (id:string) => rememberFavoriteSelection(selectedFavorites.includes(id) ? selectedFavorites.filter((value) => value !== id) : selectedFavorites.length < 2 ? [...selectedFavorites,id] : selectedFavorites);
-
   useEffect(() => {
     try {
       const stored: unknown = JSON.parse(localStorage.getItem(calendarStateKey) ?? "null");
       if (stored && typeof stored === "object") {
-        const state = stored as { view?: unknown; visible?: Record<string, unknown> };
+        const state = stored as { view?: unknown; filter?: unknown; visible?: Record<string, unknown> };
         if (state.view === "list" || state.view === "month") setView(state.view);
-        if (state.visible) {
-          setVisible({
-            coaching: member ? false : typeof state.visible.coaching === "boolean" ? state.visible.coaching : true,
-            saved: typeof state.visible.saved === "boolean" ? state.visible.saved : true,
-            personal: typeof state.visible.personal === "boolean" ? state.visible.personal : true,
-          });
+        if (state.filter === "all" || state.filter === "coaching" || state.filter === "saved" || state.filter === "personal")
+          setFilter(member && state.filter === "coaching" ? "all" : state.filter);
+        else if (state.visible) {
+          const legacy = (["coaching", "saved", "personal"] as const).filter((key) => state.visible?.[key] === true);
+          setFilter(legacy.length === 1 && !(member && legacy[0] === "coaching") ? legacy[0] : "all");
         }
       }
     } catch { /* malformed or unavailable storage */ }
@@ -203,34 +189,14 @@ export function CalendarScreen({
 
   useEffect(() => {
     if (!calendarStateLoaded) return;
-    try { localStorage.setItem(calendarStateKey, JSON.stringify({ view, visible })); } catch { /* private mode */ }
-  }, [calendarStateKey, calendarStateLoaded, view, visible]);
+    try { localStorage.setItem(calendarStateKey, JSON.stringify({ view, filter })); } catch { /* private mode */ }
+  }, [calendarStateKey, calendarStateLoaded, filter, view]);
 
   useEffect(() => {
-    let stored:string[]=[];
-    try {
-      const value=JSON.parse(localStorage.getItem(favoriteSelectionKey) ?? "[]");
-      if(Array.isArray(value)) stored=value.filter((id):id is string=>typeof id==="string").slice(0,2);
-    } catch { /* malformed or unavailable storage */ }
-    if(!stored.length) return;
-    setSelectedFavorites(stored);
-    let cancelled=false;
-    void loadFavoriteCalendars().then((data)=>{
-      if(cancelled||!data)return;
-      setFavoriteData(data);
-      const available=new Set(data.people.map((person)=>person.id));
-      const valid=stored.filter((id)=>available.has(id));
-      rememberFavoriteSelection(valid);
-    });
-    return ()=>{cancelled=true;};
-  },[favoriteSelectionKey,rememberFavoriteSelection]);
-
-  useEffect(() => {
-    if (!shareOpen && !menuOpen) return;
+    if (!shareOpen) return;
     document.body.classList.add("sheet-open");
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      setMenuOpen(false);
       setShareOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
@@ -238,7 +204,7 @@ export function CalendarScreen({
       document.body.classList.remove("sheet-open");
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [shareOpen, menuOpen]);
+  }, [shareOpen]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const savedByIso = useMemo(
@@ -251,14 +217,6 @@ export function CalendarScreen({
       ),
     [savedDays, gone],
   );
-  const favoriteByIso = useMemo(() => {
-    const map = new Map<string,FavoriteCalendarData["events"]>();
-    for (const event of favoriteData?.events ?? []) {
-      if (!selectedFavorites.includes(event.personId) || overlaySaved[`${event.classId}|${event.iso}`]) continue;
-      map.set(event.iso,[...(map.get(event.iso) ?? []),event]);
-    }
-    return map;
-  },[favoriteData,selectedFavorites,overlaySaved]);
   const atOf = (r: { hm: string; ap: string }) => {
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
@@ -312,8 +270,9 @@ export function CalendarScreen({
         where: i.where,
         hm: i.hm,
         ap: i.ap,
-        coach:
-          !i.personal && i.coachName
+        coach: i.personal
+          ? viewer
+          : i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
         tag: i.personal ? "Personal" : "Saved",
@@ -341,32 +300,14 @@ export function CalendarScreen({
         ),
       };
       });
-      const favoriteRows = (favoriteByIso.get(iso) ?? []).map((event) => {
-        const person = favoriteData?.people.find((item) => item.id === event.personId);
-        const key = `${event.classId}|${event.iso}`;
-        return {
-          key:`overlay|${event.personId}|${key}`, classId:event.classId, iso:event.iso, base:event.base,
-          name:event.name, where:event.where, hm:event.hm, ap:event.ap,
-          coach:person ? { id:person.id, name:person.name, photo:person.photo, color:person.color } : null,
-          overlayColor:person?.color,
-          href:`/${event.base}/${event.classId}?d=${event.iso}&from=schedule`,
-          corner:<button type="button" className="calendar-save-action calendar-overlay-save" onClick={() => startRemove(async () => {
-            setOverlaySaved((current) => ({...current,[key]:true}));
-            const result=await setGoing(event.classId,event.iso,true);
-            if(!result.ok){setOverlaySaved((current)=>({...current,[key]:false}));toast(result.error??"Couldn't save that class");return;}
-            toast(`${event.name} was saved to your calendar`);router.refresh();
-          })} aria-label={`Save ${event.name} to your calendar`}><Icon name="bookmark" size={17}/></button>,
-        };
-      });
       const rows = [
         ...(visible.coaching ? coachingRows : []),
         ...addedRows.filter((row) => row.tagTone === "personal" ? visible.personal : visible.saved),
-        ...favoriteRows,
       ].sort((a, b) => atOf(a) - atOf(b));
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, visible, savedByIso, favoriteByIso, favoriteData, router, viewer]);
+  }, [classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -390,16 +331,14 @@ export function CalendarScreen({
         name: i.name,
         at: atOf(i),
       }));
-      const favoriteRows = (favoriteByIso.get(iso) ?? []).map((event) => ({ kind:"overlay" as const, name:event.name, at:atOf(event), color:favoriteData?.people.find((person)=>person.id===event.personId)?.color }));
       const rows = [
         ...(visible.coaching ? coachingRows : []),
         ...addedRows.filter((row) => row.kind === "private" ? visible.personal : visible.saved),
-        ...favoriteRows,
       ].sort((a, b) => a.at - b.at);
       if (rows.length) m.set(iso, rows);
     }
     return m;
-  }, [classes, todayIso, visible, savedByIso, favoriteByIso, favoriteData]);
+  }, [classes, todayIso, visible.coaching, visible.personal, visible.saved, savedByIso]);
 
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
@@ -468,77 +407,28 @@ export function CalendarScreen({
     }
   };
 
-  const desktopCategory = (() => {
-    const choices = member ? (["saved", "personal"] as const) : (["coaching", "saved", "personal"] as const);
-    const on = choices.filter((key) => visible[key]);
-    if (on.length === choices.length) return "all";
-    if (on.length === 1) return on[0];
-    return "custom";
-  })();
-  const chooseDesktopCategory = (value: string) => {
-    if (value === "custom") return;
-    setVisible({
-      coaching: !member && (value === "all" || value === "coaching"),
-      saved: value === "all" || value === "saved",
-      personal: value === "all" || value === "personal",
-    });
-  };
-
   return (
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-desktop-controls">
+          <label className="calendar-desktop-filter">
+            <span className="sr-only">View calendar</span>
+            <select value={filter} onChange={(event) => setFilter(event.target.value as CalendarFilter)}>
+              <option value="all">View all</option>
+              {!member && <option value="coaching">View coaching</option>}
+              <option value="saved">View saved</option>
+              <option value="personal">View personal</option>
+            </select>
+          </label>
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             <button type="button" className={view === "list" ? "on" : ""} aria-pressed={view === "list"} onClick={() => setView("list")}>Day</button>
             <button type="button" className={view === "month" ? "on" : ""} aria-pressed={view === "month"} onClick={() => setView("month")}>Month</button>
           </div>
-          <label className="calendar-desktop-filter">
-            <span>Show</span>
-            <select value={desktopCategory} onChange={(event) => chooseDesktopCategory(event.target.value)}>
-              <option value="all">Everything</option>
-              {!member && <option value="coaching">Coaching</option>}
-              <option value="saved">Saved classes</option>
-              <option value="personal">Personal activities</option>
-              {desktopCategory === "custom" && <option value="custom">Custom selection</option>}
-            </select>
-          </label>
         </div>
         <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
-        <button type="button" className="calendar-menu-button" aria-label={`Filter calendar, ${activeFilterCount} selected`} onClick={openFilters}><Icon name="tune" size={22} /><span className="calendar-filter-count">{activeFilterCount}</span></button>
       </header>
-
-      {menuOpen && <div className="calendar-drawer-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
-        <aside className="calendar-drawer" aria-label="Calendar controls">
-          <div className="calendar-drawer-head"><h2>Calendar</h2><button type="button" className="iconbtn" aria-label="Close calendar menu" onClick={() => setMenuOpen(false)}><Icon name="close" size={20} /></button></div>
-          <section className="calendar-drawer-section">
-            <h3>View</h3>
-            {([['list','calendar_view_day','List'],['month','calendar_month','Month']] as const).map(([value,icon,label]) => {
-              const on=view===value;
-              return <button type="button" className={`calendar-drawer-row calendar-view-choice${on?' on':''}`} aria-pressed={on} onClick={()=>{setView(value);setMenuOpen(false);}} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span></button>;
-            })}
-          </section>
-          <section className="calendar-drawer-section">
-            <h3>My calendar</h3>
-            {([...(member ? [] : [["coaching", "Coaching"]] as const), ["saved", "Saved"], ["personal", "Personal"]] as const).map(([value, label]) => {
-              const on = visible[value];
-              const icon = value === "coaching" ? "event_available" : value === "saved" ? "bookmark" : "activity";
-              return <button type="button" className="calendar-drawer-row calendar-category-row" aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-category-icon calendar-category-icon-${value}`}><Icon name={icon} size={20} /></span><span>{label}</span><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`}>{on && <Icon name="check" size={16} />}</span></button>;
-            })}
-          </section>
-          <section className="calendar-drawer-section calendar-favorite-section">
-            <h3>Favorite calendars</h3>
-            <small>Show up to two calendars at a time.</small>
-            {favoriteLoading ? <p>Finding active calendars…</p> : favoriteData?.people.length ? <>{favoriteData.people.map((person) => {
-              const on=selectedFavorites.includes(person.id); const full=!on&&selectedFavorites.length>=2;
-              return <button type="button" className="calendar-drawer-row calendar-favorite-row" aria-pressed={on} disabled={full} onClick={()=>toggleFavorite(person.id)} key={person.id}>{person.photo?<img src={person.photo} alt="" loading="lazy" decoding="async"/>:<span className="calendar-favorite-avatar" style={{background:person.color}}>{person.name.charAt(0).toUpperCase()}</span>}<span>{person.name}</span><span className={`calendar-check${on?" on":""}`} style={on?{background:person.color}:undefined}>{on&&<Icon name="check" size={16}/>}</span></button>;
-            })}</> : <div className="calendar-favorite-empty"><span><Icon name="travel_explore" size={24}/></span><strong>Find favorite calendars</strong><p>Favorite people with upcoming classes, then their calendars will appear here.</p><Link href="/discover?half=people" onClick={()=>setMenuOpen(false)}>Discover people</Link></div>}
-          </section>
-        </aside>
-      </div>}
-
-      {selectedFavorites.length>0 && <div className="calendar-overlay-context"><span>Showing your calendar + {selectedFavorites.map((id)=>favoriteData?.people.find((person)=>person.id===id)?.name).filter(Boolean).join(" + ")}</span><button type="button" onClick={()=>rememberFavoriteSelection([])}>Clear</button></div>}
 
       <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
@@ -550,7 +440,7 @@ export function CalendarScreen({
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
-      {bare && selectedFavorites.length===0 ? (
+      {bare ? (
         <WeekEmpty
           first
           title="This is your calendar"
@@ -572,7 +462,7 @@ export function CalendarScreen({
         <WeekEmpty
           first
           title="Nothing showing"
-          body="Choose calendars from the menu, or add something to your week."
+          body="Choose another view above, or add something to your week."
         />
       ) : (
         <CalendarList
@@ -625,7 +515,7 @@ export function CalendarScreen({
           naming the day (or month) under it with the toggle and Add along
           for the ride, so the two things the title row offered are never a
           long scroll away. */}
-      {(!bare || selectedFavorites.length > 0) && days.length > 0 && (
+      {!bare && days.length > 0 && (
         <ScrollHead
           on={view === "month" ? scrolled : !!topDay}
           label={

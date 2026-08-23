@@ -117,6 +117,7 @@ export function CoachPeek({
         hm: item.hm,
         ap: item.ap,
         dur: `${item.durationMin} min`,
+        coach: { id, name, color, photo },
         href: `/${item.base}/${item.classId}?d=${item.iso}`,
         classId: item.classId,
         iso: item.iso,
