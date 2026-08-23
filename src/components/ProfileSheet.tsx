@@ -565,38 +565,68 @@ export function ProfileSheet({
           </button>
         </div>
 
-        {/* Plain links, not a section. Admin, Brand and Ethos are internal
-            and were three rows under their own heading on every staff
-            account's page; a footer is where a thing you use twice a month
-            belongs. */}
-        <div className="acctfoot">
-          {canSendFeedback && (
-            <a className="acctfoot-l" href="/feedback">
-              Send feedback
-            </a>
+        <h3 className="setgroup-h">FittList</h3>
+        <div className="settingslist">
+          {isAdmin && (
+            <Link className="setrow" href="/admin" prefetch={false} onClick={onClose}>
+              <span className="setrow-ic"><Icon name="admin_panel_settings" size={24} /></span>
+              <span className="setrow-txt">
+                <span className="t">Admin</span>
+                <span className="s">Activity, people, studios, and maintenance</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+            </Link>
           )}
-          <a className="acctfoot-l" href="/privacy">
-            Privacy
-          </a>
+          {canSendFeedback && (
+            <Link className="setrow" href="/feedback" onClick={onClose}>
+              <span className="setrow-ic"><Icon name="chat_bubble" size={24} /></span>
+              <span className="setrow-txt">
+                <span className="t">Send feedback</span>
+                <span className="s">Tell us what is working or what needs attention</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+            </Link>
+          )}
+          <Link className="setrow" href="/privacy" onClick={onClose}>
+            <span className="setrow-ic"><Icon name="shield" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Privacy policy</span>
+              <span className="s">How FittList handles your information</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+          </Link>
           {isAdmin && (
             <>
-              <a className="acctfoot-l" href="/admin">
-                Admin
-              </a>
-              <a className="acctfoot-l" href="/brand">
-                Brand
-              </a>
-              <a className="acctfoot-l" href="/ethos">
-                Ethos
-              </a>
+              <Link className="setrow" href="/brand" onClick={onClose}>
+                <span className="setrow-ic"><Icon name="palette" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Brand</span>
+                  <span className="s">Logos, colors, and visual direction</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </Link>
+              <Link className="setrow" href="/ethos" onClick={onClose}>
+                <span className="setrow-ic"><Icon name="favorite" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Ethos</span>
+                  <span className="s">What FittList believes</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </Link>
             </>
           )}
-          <form action={logout}>
-            <button type="submit" className="acctfoot-l acctfoot-out">
-              Log out
-            </button>
-          </form>
         </div>
+
+        <h3 className="setgroup-h">Session</h3>
+        <form action={logout} className="settingslist">
+          <button type="submit" className="setrow">
+            <span className="setrow-ic"><Icon name="logout" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Log out</span>
+              <span className="s">Sign out of this device</span>
+            </span>
+          </button>
+        </form>
 
       </div>
 

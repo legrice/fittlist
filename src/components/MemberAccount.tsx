@@ -253,23 +253,38 @@ export function MemberAccount({
         </button>
       </div>
 
-      {/* Plain links and the way out, in one block, the way a coach's are.
-          Send feedback was a headed group of one row on its own. */}
-      <div className="acctfoot">
+      <h3 className="setgroup-h">FittList</h3>
+      <div className="settingslist">
         {canSendFeedback && (
-          <a className="acctfoot-l" href="/feedback">
-            Send feedback
-          </a>
+          <Link className="setrow" href="/feedback" onClick={onClose}>
+            <span className="setrow-ic"><Icon name="chat_bubble" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Send feedback</span>
+              <span className="s">Tell us what is working or what needs attention</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+          </Link>
         )}
-        <a className="acctfoot-l" href="/privacy">
-          Privacy
-        </a>
-        <form action={logout}>
-          <button type="submit" className="acctfoot-l acctfoot-out">
-            Log out
-          </button>
-        </form>
+        <Link className="setrow" href="/privacy" onClick={onClose}>
+          <span className="setrow-ic"><Icon name="shield" size={24} /></span>
+          <span className="setrow-txt">
+            <span className="t">Privacy policy</span>
+            <span className="s">How FittList handles your information</span>
+          </span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+        </Link>
       </div>
+
+      <h3 className="setgroup-h">Session</h3>
+      <form action={logout} className="settingslist">
+        <button type="submit" className="setrow">
+          <span className="setrow-ic"><Icon name="logout" size={24} /></span>
+          <span className="setrow-txt">
+            <span className="t">Log out</span>
+            <span className="s">Sign out of this device</span>
+          </span>
+        </button>
+      </form>
       </div>
 
       {/* The four sub-screens. Each holds the rows that used to sit under a
