@@ -8825,7 +8825,7 @@ select.editinput.placekind-select {
 .cash-class-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:1.2; font-weight:700; }
 .cash-class-copy > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
-.cash-class-time { flex:0 0 auto; font-size:17px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-class-time { flex:0 0 auto; font-size:14px; line-height:1.2; font-weight:600; white-space:nowrap; }
 .cash-class-main > svg { flex:0 0 auto; color:var(--ink); }
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
