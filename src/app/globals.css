@@ -8699,6 +8699,9 @@ select.editinput.placekind-select {
 .following-rail .trayitem-more { opacity: 1; }
 .cash-activity-list { padding:0; }
 .cash-day + .cash-day { margin-top:34px; }
+.cash-day { content-visibility:auto; contain-intrinsic-size:420px; }
+.cash-days-more { height:2px; }
+.cash-rail-more { flex:0 0 2px; align-self:stretch; }
 .cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
 .cash-class-row { position:relative; min-height:86px; }
 .cash-class-main {

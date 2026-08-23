@@ -1,4 +1,4 @@
-import { and, inArray, ne } from "drizzle-orm";
+import { and, getTableColumns, inArray, ne, type SQL } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { dowOfDate } from "@/lib/format";
 
@@ -75,6 +75,28 @@ export async function publicSchedules(who: Who[]): Promise<ScheduleRow[]> {
 }
 
 /**
+ * The same public schedule graph, without class photos.
+ *
+ * Calendar feeds never render the class image from their server payload: the
+ * detail sheet fetches it only when somebody opens a class. Older images are
+ * data URLs, so selecting one for every class across a large follow graph can
+ * turn a small calendar response into several megabytes before recurrence
+ * expansion even starts. Keep the full loader as the default for profile and
+ * sharing surfaces, and give list-only callers an explicitly lightweight
+ * path.
+ */
+export async function publicFeedSchedules(who: Who[]): Promise<ScheduleRow[]> {
+  const ids = [...new Set(who.map((w) => w.id))];
+  if (!ids.length) return [];
+  const rows = await build(
+    ids,
+    who.filter((w) => w.shiftsPublic).map((w) => w.id),
+    true,
+  );
+  return rows.filter((r) => !r.duplicateOf);
+}
+
+/**
  * A coach's own schedule, shifts always included.
  *
  * `shiftsPublic` answers "does anyone else see these", which is a question
@@ -86,23 +108,37 @@ export async function mySchedule(userId: string): Promise<ScheduleRow[]> {
   return build([userId], [userId]);
 }
 
-async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
+const { image: _classImage, ...feedClassColumns } = getTableColumns(schema.classes);
+
+async function selectClassesWithoutImages(
+  db: Awaited<ReturnType<typeof getDb>>,
+  where: SQL | undefined,
+) {
+  // Kept as a small helper so own rows, shifts and cover extras all use the
+  // same projection. The `where` expression is deliberately accepted as the
+  // query builder's runtime SQL shape; Drizzle validates it at `.where()`.
+  const rows = await db.select(feedClassColumns).from(schema.classes).where(where);
+  return rows.map((row) => ({ ...row, image: null })) as (typeof schema.classes.$inferSelect)[];
+}
+
+async function build(ids: string[], sharing: string[], withoutImages = false): Promise<ScheduleRow[]> {
   const db = await getDb();
-  const rows = await db.select().from(schema.classes).where(inArray(schema.classes.userId, ids));
+  const ownWhere = inArray(schema.classes.userId, ids);
+  const rows = withoutImages
+    ? await selectClassesWithoutImages(db, ownWhere)
+    : await db.select().from(schema.classes).where(ownWhere);
   const out = rows.map(own);
   if (!sharing.length) return out;
 
   // Slots these coaches are on at a gym. Their own rows are already in hand,
   // and a coach can't be on their own class in the rota sense.
-  const shifts = await db
-    .select()
-    .from(schema.classes)
-    .where(
-      and(
-        inArray(schema.classes.coachUserId, sharing),
-        ne(schema.classes.userId, schema.classes.coachUserId),
-      ),
-    );
+  const shiftsWhere = and(
+    inArray(schema.classes.coachUserId, sharing),
+    ne(schema.classes.userId, schema.classes.coachUserId),
+  );
+  const shifts = withoutImages
+    ? await selectClassesWithoutImages(db, shiftsWhere)
+    : await db.select().from(schema.classes).where(shiftsWhere);
   const mine = new Set(rows.map((r) => r.id));
   const standing = shifts.filter((s) => !mine.has(s.id));
 
@@ -170,7 +206,9 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
     (id) => !standingById.has(id) && !mine.has(id),
   );
   const extras = extraIds.length
-    ? await db.select().from(schema.classes).where(inArray(schema.classes.id, extraIds))
+    ? withoutImages
+      ? await selectClassesWithoutImages(db, inArray(schema.classes.id, extraIds))
+      : await db.select().from(schema.classes).where(inArray(schema.classes.id, extraIds))
     : [];
   const extraById = new Map(extras.map((e) => [e.id, e]));
   for (const cv of handedOver) {

@@ -2,16 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { CoachPeek } from "@/components/CoachPeek";
-import { DiscoverSheet } from "@/components/DiscoverSheet";
+import type { PeekClass } from "@/components/ClassPeek";
 import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { setGoing } from "@/app/actions/going";
 import { toggleCalendarPin } from "@/app/actions/pins";
+
+const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
+const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
+const DiscoverSheet = dynamic(() => import("@/components/DiscoverSheet").then((module) => module.DiscoverSheet));
 
 export type FeedCoach = {
   id: string;
@@ -77,7 +80,7 @@ export type SocialGroup = {
  *  riding along so the pill under the face starts right. */
 export type FeedItem = {
   key: string;
-  /** Which of the three weeks it falls in, decided on the server. */
+  /** Which seven-day chunk of the rolling month it falls in. */
   week: number;
   iso: string;
   classId: string;
@@ -205,6 +208,10 @@ export function FollowingScreen({
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
+  const [visibleRailCoachCount, setVisibleRailCoachCount] = useState(16);
+  const railMoreRef = useRef<HTMLSpanElement>(null);
+  const [visibleHomeDayCount, setVisibleHomeDayCount] = useState(2);
+  const homeMoreRef = useRef<HTMLDivElement>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -219,6 +226,7 @@ export function FollowingScreen({
   };
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
+  const favoriteIds = useMemo(() => new Set(favIds), [favIds]);
 
   // The viewer's pin: taken silently when the browser already granted it
   // somewhere else (the studio tiles say how far, the rail sorts by real
@@ -267,23 +275,45 @@ export function FollowingScreen({
     return true;
   };
 
+  const itemFacets = useMemo(() => ({
+    coachIds: new Set(items.map((item) => item.coachId)),
+    studioHrefs: new Set(items.flatMap((item) => item.whereHref ? [item.whereHref] : [])),
+    keys: new Set(items.map((item) => item.key)),
+  }), [items]);
   const coachOptions = useMemo(
-    () => myRail.filter((person) => person.id !== meId && items.some((item) => item.coachId === person.id)),
-    [myRail, meId, items],
+    () => myRail.filter((person) => person.id !== meId && itemFacets.coachIds.has(person.id)),
+    [myRail, meId, itemFacets],
   );
   const studioOptions = useMemo(
-    () => savedStudios.filter((studio) => items.some((item) => item.whereHref === `/s/${studio.slug}`)),
-    [savedStudios, items],
+    () => savedStudios.filter((studio) => itemFacets.studioHrefs.has(`/s/${studio.slug}`)),
+    [savedStudios, itemFacets],
   );
   const groupOptions = useMemo(() => {
-    const feedKeys = new Set(items.map((item) => item.key));
-    return socialGroups.filter((group) => group.classKeys.some((key) => feedKeys.has(key)));
-  }, [socialGroups, items]);
-  const sortedCoachOptions = [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`)));
-  const sortedStudioOptions = [...studioOptions].sort((a, b) => Number(pins.has(`studio:${b.id}`)) - Number(pins.has(`studio:${a.id}`)));
-  const railCoachOptions = sortedCoachOptions;
+    return socialGroups.filter((group) => group.classKeys.some((key) => itemFacets.keys.has(key)));
+  }, [socialGroups, itemFacets]);
+  const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
+  const sortedStudioOptions = useMemo(() => [...studioOptions].sort((a, b) => Number(pins.has(`studio:${b.id}`)) - Number(pins.has(`studio:${a.id}`))), [studioOptions, pins]);
+  const railCoachOptions = sortedCoachOptions.slice(0, visibleRailCoachCount);
   const railStudioOptions = sortedStudioOptions;
   const railGroupOptions = groupOptions;
+  const railCoachesComplete = visibleRailCoachCount >= sortedCoachOptions.length;
+
+  useEffect(() => {
+    if (!isHome || railCoachesComplete) return undefined;
+    const root = followingRailRef.current;
+    const target = railMoreRef.current;
+    if (!root || !target) return undefined;
+    if (typeof IntersectionObserver === "undefined") {
+      setVisibleRailCoachCount(sortedCoachOptions.length);
+      return undefined;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      setVisibleRailCoachCount((count) => Math.min(sortedCoachOptions.length, count + 16));
+    }, { root, rootMargin: "0px 600px 0px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isHome, railCoachesComplete, sortedCoachOptions.length, visibleRailCoachCount]);
 
   const selectedCalendar = useMemo(() => {
     if (calendarFilter === "all") return null;
@@ -358,7 +388,7 @@ export function FollowingScreen({
       tag: meId && i.coachId === meId ? "You" : undefined,
       tagTone: meId && i.coachId === meId ? "coaching" : undefined,
       coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
-      onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
+      onTap: () => setPeek(peekOf(i, c ?? null, favoriteIds.has(i.coachId))),
       corner:
         meId && i.coachId !== meId ? (
           <FollowingAdd
@@ -380,22 +410,25 @@ export function FollowingScreen({
   }, [shown, day, coachById, favIds]);
 
   // Calendar is a rolling month: today plus the following thirty days. The
-  // server loads five calendar-week buckets so this remains complete even
-  // when today lands near the end of a week.
-  const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
+  // server expands that exact range, independent of where today lands in its
+  // calendar week.
+  const homeRows: FeedItem[] = useMemo(
     () => {
       const monthEnd = plusDays(todayIso, 30);
       return [...shown]
         .filter((item) => item.iso >= todayIso && item.iso <= monthEnd)
-        .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
-        .map(rowOf);
+        .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, todayIso, coachById, favIds],
+    [shown, todayIso],
   );
   const homeDays = useMemo(() => {
-    const days = new Map<string, (WeekRow & { item: FeedItem })[]>();
-    for (const row of homeRows) days.set(row.item.iso, [...(days.get(row.item.iso) ?? []), row]);
+    const days = new Map<string, FeedItem[]>();
+    for (const item of homeRows) {
+      const rows = days.get(item.iso);
+      if (rows) rows.push(item);
+      else days.set(item.iso, [item]);
+    }
     return [...days.entries()].map(([iso, rows]) => ({
       iso,
       label: daySectionLabel(iso, todayIso),
@@ -403,6 +436,23 @@ export function FollowingScreen({
       rows,
     }));
   }, [homeRows, todayIso]);
+  const visibleHomeDays = homeDays.slice(0, visibleHomeDayCount);
+
+  useEffect(() => {
+    if (!isHome || visibleHomeDayCount >= homeDays.length) return undefined;
+    const target = homeMoreRef.current;
+    if (!target) return undefined;
+    if (typeof IntersectionObserver === "undefined") {
+      setVisibleHomeDayCount(homeDays.length);
+      return undefined;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      setVisibleHomeDayCount((count) => Math.min(homeDays.length, count + 4));
+    }, { rootMargin: "800px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [homeDays.length, isHome, visibleHomeDayCount]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -566,7 +616,7 @@ export function FollowingScreen({
                     <span className="trayav" style={{ background: coach.color }}>
                       {coach.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={coach.photo} alt="" />
+                        <img src={coach.photo} alt="" width={80} height={80} loading="lazy" decoding="async" />
                       ) : (
                         <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
                       )}
@@ -576,9 +626,10 @@ export function FollowingScreen({
                   {pins.has(`person:${coach.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}
                 </div>
               )})}
-              {railStudioOptions.map((studio) => {
-                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}</div>})}
-              {railGroupOptions.map((group) => {
+              {!railCoachesComplete && <span className="cash-rail-more" ref={railMoreRef} aria-hidden="true" />}
+              {railCoachesComplete && railStudioOptions.map((studio) => {
+                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={80} height={80} loading="lazy" decoding="async" /> : <Icon name="storefront" size={25} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}</div>})}
+              {railCoachesComplete && railGroupOptions.map((group) => {
                 return <button
                 key={group.id}
                 type="button"
@@ -586,7 +637,7 @@ export function FollowingScreen({
                 onClick={() => setEntityPeekOpen({type:"group",id:group.id,name:group.name,photo:group.photo,color:"var(--color-surface-muted)",href:`/g/${group.slug}`,items:items.filter((item)=>group.classKeys.includes(item.key))})}
               >
                 <span className="trayav">
-                  {group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={25} />}
+                  {group.photo ? <img src={group.photo} alt="" width={80} height={80} loading="lazy" decoding="async" /> : <Icon name="groups" size={25} />}
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </button>})}
@@ -691,23 +742,24 @@ export function FollowingScreen({
             <div className="cardwrap home-schedule">
               {isHome ? (
                 <div className="cash-activity-list">
-                  {homeDays.map((section) => (
+                  {visibleHomeDays.map((section) => (
                     <section className="cash-day" key={section.iso}>
                       <h2>{section.label}</h2>
                       <div>
-                        {section.rows.map((row) => {
-                          const coach = coachById.get(row.item.coachId);
-                          return <article className="cash-class-row" key={row.key}>
-                            <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(row.item, coach ?? null, favIds.includes(row.item.coachId)))}>
-                              <span className="cash-class-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" /> : <span>{(coach?.name ?? row.item.name).charAt(0).toUpperCase()}</span>}</span>
-                              <span className="cash-class-copy"><strong>{row.item.name}</strong><span>{row.item.where || "Location to come"}</span><small>{coach?.name || "Coach to come"}</small></span>
-                              <strong className="cash-class-time">{row.item.hm}{row.item.ap.toLowerCase()}</strong>
+                        {section.rows.map((item) => {
+                          const coach = coachById.get(item.coachId);
+                          return <article className="cash-class-row" key={item.key}>
+                            <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                              <span className="cash-class-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={64} height={64} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
+                              <span className="cash-class-copy"><strong>{item.name}</strong><span>{item.where || "Location to come"}</span><small>{coach?.name || "Coach to come"}</small></span>
+                              <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
                             </button>
                           </article>;
                         })}
                       </div>
                     </section>
                   ))}
+                  {visibleHomeDayCount < homeDays.length && <div className="cash-days-more" ref={homeMoreRef} aria-hidden="true" />}
                 </div>
               ) : (
                 <>

@@ -36,14 +36,12 @@ export function RailArrows({ railRef }: { railRef: React.RefObject<HTMLDivElemen
     };
     el.addEventListener("scroll", onScroll, { passive: true });
 
-    // The rail's own box stays put while its contents change width, so watch
-    // the children too: a name label reflows when the webfont swaps in, and
-    // that alone decides whether anything is off the edge.
+    // Watch the rail itself and remeasure when progressive content is added.
+    // Every item has explicit dimensions, so observing dozens of individual
+    // avatars only multiplies observer work without improving the result.
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    for (const child of Array.from(el.children)) ro.observe(child);
     const mo = new MutationObserver(() => {
-      for (const child of Array.from(el.children)) ro.observe(child);
       measure();
     });
     mo.observe(el, { childList: true });

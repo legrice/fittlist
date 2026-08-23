@@ -18,34 +18,48 @@ export default async function DiscoverPage() {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
 
-  const feed = await buildDiscoverFeed(userId, me);
-  const [savedStudioRows, groupRows, pinRows] = await Promise.all([
+  // The feed is the expensive branch. Studio saves, groups and pins are
+  // independent, so don't make them wait for every schedule and occurrence
+  // to finish before their first query even starts.
+  const [feed, savedStudioRows, groupData, pinRows] = await Promise.all([
+    buildDiscoverFeed(userId, me),
     db.select({ studioId: schema.studioEndorsements.targetStudioId })
       .from(schema.studioEndorsements)
       .where(and(eq(schema.studioEndorsements.endorserUserId, userId), eq(schema.studioEndorsements.trait, "been_here"))),
-    db.select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, photo: schema.groups.photo })
-      .from(schema.groups)
-      .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
-      .leftJoin(schema.groupFavorites, eq(schema.groupFavorites.groupId, schema.groups.id))
-      .where(or(
-        eq(schema.groups.ownerUserId, userId),
-        eq(schema.groupMembers.userId, userId),
-        eq(schema.groupFavorites.userId, userId),
-      )),
+    (async () => {
+      const rows = await db.selectDistinct({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, photo: schema.groups.photo })
+        .from(schema.groups)
+        .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
+        .leftJoin(schema.groupFavorites, eq(schema.groupFavorites.groupId, schema.groups.id))
+        .where(or(
+          eq(schema.groups.ownerUserId, userId),
+          eq(schema.groupMembers.userId, userId),
+          eq(schema.groupFavorites.userId, userId),
+        ));
+      const ids = rows.map((row) => row.id);
+      const classRows = ids.length
+        ? await db.select({ groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate })
+          .from(schema.groupClasses)
+          .where(inArray(schema.groupClasses.groupId, ids))
+        : [];
+      return { rows, classRows };
+    })(),
     db.select({ entityType: schema.calendarPins.entityType, entityId: schema.calendarPins.entityId })
       .from(schema.calendarPins)
       .where(eq(schema.calendarPins.userId, userId)),
   ]);
   const studioIds = [...new Set(savedStudioRows.map((row) => row.studioId))];
-  const studios = studioIds.length
-    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
-    : [];
-  const groupIds = [...new Set(groupRows.map((row) => row.id))];
-  const groupClassRows = groupIds.length
-    ? await db.select({ groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate })
-      .from(schema.groupClasses)
-      .where(inArray(schema.groupClasses.groupId, groupIds))
-    : [];
+  const savedStudioSet = new Set(studioIds);
+  // buildDiscoverFeed already loads the complete studio directory for its
+  // place rail. Reuse those compact records instead of fetching the same
+  // studios again after the feed resolves.
+  const studios = feed.nearStudios.filter((studio) => savedStudioSet.has(studio.id));
+  const classKeysByGroup = new Map<string, string[]>();
+  for (const row of groupData.classRows) {
+    const keys = classKeysByGroup.get(row.groupId) ?? [];
+    keys.push(`${row.classId}|${row.iso}`);
+    classKeysByGroup.set(row.groupId, keys);
+  }
   return (
     <FollowingScreen
       items={feed.items}
@@ -68,13 +82,11 @@ export default async function DiscoverPage() {
         slug: studio.slug ?? studio.id,
         name: studio.name,
         photo: studio.photo,
-        color: feed.nearStudios.find((item) => item.id === studio.id)?.color ?? "var(--color-surface-muted)",
+        color: studio.color,
       }))}
-      socialGroups={groupRows.map((group) => ({
+      socialGroups={groupData.rows.map((group) => ({
         ...group,
-        classKeys: groupClassRows
-          .filter((row) => row.groupId === group.id)
-          .map((row) => `${row.classId}|${row.iso}`),
+        classKeys: classKeysByGroup.get(group.id) ?? [],
       }))}
       initialPins={pinRows.map((pin) => `${pin.entityType}:${pin.entityId}`)}
     />
