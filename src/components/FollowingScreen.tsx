@@ -272,17 +272,17 @@ export function FollowingScreen({
 
   const selectedCalendar = useMemo(() => {
     if (calendarFilter === "all") return null;
-    if (calendarFilter === "you") return { name: "You", href: "/you", label: "Your classes" };
+    if (calendarFilter === "you") return { name: "You", href: "/you", label: "Your schedule" };
     if (calendarFilter.startsWith("coach:")) {
       const coach = coachOptions.find((option) => option.id === calendarFilter.slice(6));
-      return coach ? { name: coach.name, href: coach.handle ? `/${coach.handle}` : "", label: `Classes with ${coach.name.split(/\s+/)[0]}` } : null;
+      return coach ? { name: coach.name, href: coach.handle ? `/${coach.handle}` : "", label: `${coach.name.split(/\s+/)[0]}’s schedule` } : null;
     }
     if (calendarFilter.startsWith("studio:")) {
       const studio = studioOptions.find((option) => option.id === calendarFilter.slice(7));
-      return studio ? { name: studio.name, href: `/s/${studio.slug}`, label: studio.name } : null;
+      return studio ? { name: studio.name, href: `/s/${studio.slug}`, label: `${studio.name}’s schedule` } : null;
     }
     const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
-    return group ? { name: group.name, href: `/g/${group.slug}`, label: group.name } : null;
+    return group ? { name: group.name, href: `/g/${group.slug}`, label: `${group.name}’s schedule` } : null;
   }, [calendarFilter, coachOptions, studioOptions, groupOptions]);
 
   const shown = useMemo(() => {
