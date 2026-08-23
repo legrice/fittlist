@@ -983,7 +983,7 @@ function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
         <div className="peekhead peekhead-stack">
           <span className="peekav">{entity.photo ? <img src={entity.photo} alt="" /> : <span className="peekav-ini" style={{ background: entity.color }}><Icon name={entity.type === "studio" ? "storefront" : "groups"} size={25} /></span>}</span>
           <h2 className="peekhead-nm">{entity.name}</h2>
-          <div className="peekacts"><Link className="peekfollow peekview" href={entity.href}>View profile</Link></div>
+          <div className="peekacts"><Link className="peekfollow peekaction" href={entity.href}><Icon name={entity.type === "studio" ? "storefront" : "groups"} size={18} /><span>View profile</span></Link></div>
         </div>
         {sorted.length ? (
           <div className="cash-activity-list entity-peek-list">

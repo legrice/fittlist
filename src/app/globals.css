@@ -9136,7 +9136,12 @@ select.editinput.placekind-select {
 .peekhead-stack .peekclose { position: absolute; top: 0; right: 0; }
 .peekhead-stack .peekhead-nm { margin: 14px 0 0; }
 .peekacts { display: flex; gap: 8px; margin: 12px 0 2px; }
-.peekview { display: inline-flex; align-items: center; text-decoration: none; }
+.peekaction {
+  min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 0 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  text-decoration: none;
+}
+.peekaction .icon { flex: 0 0 auto; }
 /* The footer that teaches the ribbon: quiet, because the rows are the
    content. */
 .peekfoot { margin: 14px 0 4px; font-size: 12.5px; color: var(--ol); }
