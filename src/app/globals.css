@@ -8324,6 +8324,9 @@ select.editinput.placekind-select {
   flex: 0 0 var(--tap-size); background: var(--color-white);
   border: 1px solid var(--color-border);
 }
+.screen.hasnav > .pad.studio-manage-shell > .pad {
+  width: 100%; max-width: none; margin: 0; padding-inline: 0;
+}
 .studio-dashboard { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
 .studio-dashboard-hero {
   position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
@@ -8337,8 +8340,8 @@ select.editinput.placekind-select {
 .studio-dashboard-photo img { width: 100%; height: 100%; object-fit: cover; }
 .studio-dashboard .studio-manage-topbar > :last-child { grid-column: 3; }
 .studio-dashboard-todo {
-  margin: 2px 0 20px; overflow: hidden; border: 1px solid var(--color-border);
-  border-radius: var(--radius-card); background: var(--color-white);
+  margin: 2px 0 20px; overflow: hidden; border: 1px solid var(--line);
+  border-radius: var(--radius-card); background: var(--card);
 }
 .studio-dashboard-todo-head {
   padding: 17px 18px 13px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
@@ -8359,8 +8362,8 @@ select.editinput.placekind-select {
 .studio-dashboard-todo-copy small { color: var(--color-text-secondary); font-size: 12px; line-height: 1.3; }
 .studio-dashboard-todo-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
 .studio-dashboard-todo-actions button {
-  min-height: 38px; padding: 0 13px; border: 1px solid var(--color-border); border-radius: var(--radius-pill);
-  background: var(--color-white); color: var(--color-black); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  min-height: 38px; padding: 0 13px; border: 1px solid var(--line); border-radius: var(--radius-pill);
+  background: var(--card); color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
 }
 .studio-dashboard-todo-actions button:first-child { border-color: var(--color-lime); background: var(--color-lime); }
 .studio-dashboard-todo-actions button:disabled { opacity: .5; cursor: default; }
@@ -8374,8 +8377,8 @@ select.editinput.placekind-select {
 .studio-dashboard-card {
   position: relative; min-height: 190px; padding: 22px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 18px;
-  border: 1px solid var(--color-border); border-radius: var(--radius-card);
-  background: var(--color-white); color: var(--color-black); text-decoration: none;
+  border: 1px solid var(--line); border-radius: var(--radius-card);
+  background: var(--card); color: var(--ink); text-decoration: none;
 }
 .studio-dashboard-card > svg { position: absolute; top: 24px; right: 22px; }
 .studio-dashboard-card-icon {
@@ -8388,7 +8391,7 @@ select.editinput.placekind-select {
 .studio-dashboard-card:active { transform: scale(.99); }
 .studio-dashboard-settings { margin-top: 26px; }
 .studio-dashboard-settings > h2 { margin: 0 0 10px; font-size: 20px; }
-.studio-dashboard-settings .settingslist { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-white); }
+.studio-dashboard-settings .settingslist { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); }
 .studio-dashboard-settings-row { width: 100%; border: 0; cursor: pointer; }
 @media (max-width: 760px) {
   .studio-dashboard-grid { grid-template-columns: 1fr; gap: 10px; }

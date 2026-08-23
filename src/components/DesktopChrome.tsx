@@ -89,9 +89,9 @@ export function DesktopChrome({
         </nav>
         <div className="desktop-profile-row">
           <Link
-            className={`desktop-profile-link${pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
+            className={`desktop-profile-link${here === "calendar" || pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
             href={profileHref}
-            aria-current={pathname.startsWith(profileHref) ? "page" : undefined}
+            aria-current={here === "calendar" || pathname.startsWith(profileHref) ? "page" : undefined}
           >
             {person.photo ? (
               // eslint-disable-next-line @next/next/no-img-element

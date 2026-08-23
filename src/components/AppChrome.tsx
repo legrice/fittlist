@@ -1,5 +1,3 @@
-import { eq, sql } from "drizzle-orm";
-import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { unreadHeaderCounts } from "@/lib/notify";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
@@ -8,6 +6,7 @@ import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
 import { DesktopChrome } from "@/components/DesktopChrome";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
+import { currentUser } from "@/lib/current-user";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
@@ -22,6 +21,7 @@ export async function AppChrome({
   bar = false,
   headerNav,
   active,
+  social = false,
 }: {
   userId: string;
   bar?: boolean;
@@ -34,25 +34,14 @@ export async function AppChrome({
   headerNav?: boolean;
   /** Light a tab the pathname alone can't name: your own profile is You. */
   active?: NavTab;
+  /** Use the current calendar shell: create left, wordmark centered, alerts right. */
+  social?: boolean;
 }) {
-  const db = await getDb();
-  const [me] = await db
-    .select({
-      kind: schema.users.kind,
-      handle: schema.users.handle,
-      name: schema.users.name,
-      title: schema.users.title,
-      email: schema.users.email,
-      photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
-      photoThumb: schema.users.photoThumb,
-      avatarColor: schema.users.avatarColor,
-      location: schema.users.location,
-      id: schema.users.id,
-      adminActivityAt: schema.users.adminActivityAt,
-    })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId));
-  if (!me) return null;
+  // AppChrome and an enclosing route layout often need the same viewer. The
+  // cached identity loader keeps that to one small projection instead of two
+  // full users queries before any page content can stream.
+  const me = await currentUser();
+  if (!me || me.id !== userId) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
@@ -115,15 +104,16 @@ export async function AppChrome({
       <AppHeader
         notificationUnread={unread.notifications}
         messageUnread={unread.messages}
-        // Calendar is the signed-in front door. Keeping this explicit makes
-        // screens outside the tab layout (including Search) agree with it.
-        home="/calendar"
+        // The shared calendar feed is the signed-in front door. Keeping this
+        // explicit makes screens outside the tabs agree with the main shell.
+        home="/feed"
         admin={isAdmin}
         adminAttention={adminAttention}
         adminActivity={adminActivity}
         face={face}
         profileHref={profileHref}
         accountData={accountData}
+        social={social}
       />
     </>
   );

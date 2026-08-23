@@ -1,7 +1,7 @@
 import { eq, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { getSessionUserId } from "@/lib/session";
+import { currentUser } from "@/lib/current-user";
 import { studioAccess } from "@/lib/studioaccess";
 import { gymCounts } from "@/app/actions/gym";
 import { GymCountsView } from "@/components/GymCountsView";
@@ -31,13 +31,9 @@ export default async function CountsPage({
         : eq(schema.studios.slug, slug),
     );
   if (!studio) notFound();
-  const viewerId = await getSessionUserId();
-  if (!viewerId) notFound();
-  const [me] = await db
-    .select({ kind: schema.users.kind })
-    .from(schema.users)
-    .where(eq(schema.users.id, viewerId));
+  const me = await currentUser();
   if (!me) notFound();
+  const viewerId = me.id;
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
