@@ -83,7 +83,12 @@ export function SettingsGear({ header = false, pill = false }: {
         aria-expanded={open}
         onClick={openSheet}
       >
-        {pill ? "Settings" : <Icon name="settings" size={23} />}
+        {pill ? (
+          <>
+            <Icon name="settings" size={18} />
+            <span>Settings</span>
+          </>
+        ) : <Icon name="settings" size={23} />}
       </button>
       {open && (
         <BodyPortal>

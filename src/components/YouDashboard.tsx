@@ -100,13 +100,25 @@ export function YouDashboard({
       </section>
 
       <div className="youquickactions" aria-label="Profile actions">
-        <Link href={`/${me.handle}`}>View profile</Link>
+        <Link href={`/${me.handle}`}>
+          <Icon name="account_circle" size={18} />
+          <span>View profile</span>
+        </Link>
         {onOpenSettings ? (
-          <button type="button" onClick={() => onOpenSettings("page")}>Edit profile</button>
+          <button type="button" onClick={() => onOpenSettings("page")}>
+            <Icon name="edit" size={18} />
+            <span>Edit profile</span>
+          </button>
         ) : (
-          <Link href="/settings?edit=1">Edit profile</Link>
+          <Link href="/settings?edit=1">
+            <Icon name="edit" size={18} />
+            <span>Edit profile</span>
+          </Link>
         )}
-        <Link href={shareHref}>Share</Link>
+        <Link href={shareHref}>
+          <Icon name="ios_share" size={18} />
+          <span>Share</span>
+        </Link>
         <SettingsGear pill />
       </div>
 

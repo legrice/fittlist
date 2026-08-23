@@ -194,10 +194,12 @@ export function ProfileOwnerBar({
           bio is a thing you do twice a year. */}
       <div className="profacts">
         <button className="actpill actpill-primary" onClick={() => setShareMenu(true)}>
-          Share profile
+          <Icon name="ios_share" size={18} />
+          <span>Share profile</span>
         </button>
         <button className="actpill" onClick={openEdit}>
-          Edit profile
+          <Icon name="edit" size={18} />
+          <span>Edit profile</span>
         </button>
       </div>
 
