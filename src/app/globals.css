@@ -7991,6 +7991,7 @@ select.editinput.placekind-select {
 .youfav-add > span { border: 1.5px dashed var(--div); background: transparent; color: var(--ol); }
 .youemptycopy { max-width: 330px; margin: 10px 0 0; color: var(--ol); font-size: 14px; line-height: 1.4; }
 .youaccount-group { margin-top: 34px; }
+.youaccount-empty { margin:0; padding:18px 2px; color:var(--ol); font-size:14px; line-height:1.4; }
 .youaccount-row {
   width: 100%; min-height: 76px; display: flex; align-items: center; gap: 16px;
   padding: 14px 2px; border: 0; background: none; color: var(--ink); text-decoration: none;

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { logout } from "@/app/actions/auth";
 import { Icon } from "@/components/Icon";
 
 export type YouFavoritePerson = {
@@ -63,6 +62,7 @@ export type YouDashboardData = YouAccountData & {
   yourGroups: YouFavoriteGroup[];
   favoriteGroups: YouFavoriteGroup[];
   groupInvitations: YouGroupInvitation[];
+  savedItems: { id: string; name: string; detail: string; href: string }[];
 };
 
 export type ProfileSettingsView = "page" | "calendar" | "reach" | "account";
@@ -71,14 +71,14 @@ export function YouDashboard({
   me,
   managed,
   shareHref,
-  isAdmin,
   unread: _unread,
   people = [],
   places = [],
   yourGroups = [],
   favoriteGroups = [],
+  savedItems = [],
   onOpenSettings,
-}: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
+}: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups" | "savedItems">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
   return (
@@ -152,63 +152,13 @@ export function YouDashboard({
       )}
 
       <AccountGroup title="Saved items">
-        <AccountRow icon="bookmark" title="Saved classes and events" detail="Everything you added to your personal calendar" href="/calendar" />
-      </AccountGroup>
-
-      <AccountGroup title="Settings">
-        <SettingsRow icon="account_circle" title="Profile & public page" detail="Profile, handle, contact info, and availability" view="page" onOpen={onOpenSettings} />
-        <SettingsRow icon="event" title="Calendar & sync" detail="Google, Apple and Outlook, your week as text" view="calendar" onOpen={onOpenSettings} />
-        <SettingsRow icon="public_off" title="Privacy & communication" detail="Messages, listing, approvals, and removed people" view="reach" onOpen={onOpenSettings} />
-        <SettingsRow icon="lock" title="Account & preferences" detail="Login, notifications, appearance, and account access" view="account" onOpen={onOpenSettings} />
-      </AccountGroup>
-
-      {isAdmin && (
-        <AccountGroup title="Admin tools">
-          <AccountRow icon="admin_panel_settings" title="Admin" detail="Site operations and reports" href="/admin" />
-        </AccountGroup>
-      )}
-
-      <AccountGroup title="Support & legal">
-        <AccountRow icon="forum" title="Help and support" detail="Get help with FittList" href="/support" />
-        <AccountRow icon="mail" title="Send feedback" detail="Tell us what you think" href="/feedback" />
-        <AccountRow icon="shield" title="Privacy policy" detail="How FittList handles your information" href="/privacy" />
-      </AccountGroup>
-
-      <AccountGroup title="Actions">
-        <form action={logout} className="youlogout">
-          <button className="youaccount-row" type="submit">
-            <span className="youaccount-icon"><Icon name="arrow_outward" size={20} /></span>
-            <span className="youaccount-copy"><strong>Log out</strong></span>
-            <Icon className="youaccount-chevron" name="chevron_right" size={19} />
-          </button>
-        </form>
+        {savedItems.length > 0 ? savedItems.map((item) => (
+          <AccountRow icon="bookmark" title={item.name} detail={item.detail} href={item.href} key={item.id} />
+        )) : (
+          <p className="youaccount-empty">Classes and events you save will appear here.</p>
+        )}
       </AccountGroup>
     </main>
-  );
-}
-
-function SettingsRow({
-  icon,
-  title,
-  detail,
-  view,
-  onOpen,
-}: {
-  icon: string;
-  title: string;
-  detail: string;
-  view: ProfileSettingsView;
-  onOpen?: (view: ProfileSettingsView) => void;
-}) {
-  if (!onOpen) {
-    return <AccountRow icon={icon} title={title} detail={detail} href="/settings" />;
-  }
-  return (
-    <button className="youaccount-row" type="button" onClick={() => onOpen(view)}>
-      <span className="youaccount-icon"><Icon name={icon} size={20} /></span>
-      <span className="youaccount-copy"><strong>{title}</strong><small>{detail}</small></span>
-      <Icon className="youaccount-chevron" name="chevron_right" size={19} />
-    </button>
   );
 }
 

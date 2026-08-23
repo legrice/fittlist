@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, desc, eq, gte, inArray, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { myStaffStudios } from "@/app/actions/gym";
 import type { YouAccountData, YouDashboardData, YouFavoriteGroup, YouFavoritePerson, YouFavoritePlace } from "@/components/YouDashboard";
 import { getDb, schema } from "@/db";
@@ -117,7 +117,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me?.handle || !me.onboardedAt) return null;
 
-  const [favoriteRows, placeRows, groupMembershipRows, ownedGroupRows, groupFavoriteRows, groupInvitationRows, managed, unread] = await Promise.all([
+  const [favoriteRows, placeRows, groupMembershipRows, ownedGroupRows, groupFavoriteRows, groupInvitationRows, savedRows, managed, unread] = await Promise.all([
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
@@ -146,6 +146,24 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       .select({ id: schema.groupInvitations.id, groupId: schema.groupInvitations.groupId, role: schema.groupInvitations.role, invitedByUserId: schema.groupInvitations.invitedByUserId })
       .from(schema.groupInvitations)
       .where(eq(schema.groupInvitations.inviteeUserId, userId)),
+    db
+      .select({
+        classId: schema.classes.id,
+        name: schema.classes.name,
+        startTime: schema.classes.startTime,
+        occurrenceDate: schema.attendances.occurrenceDate,
+        ownerHandle: schema.users.handle,
+        studioSlug: schema.studios.slug,
+        studioName: schema.studios.name,
+        location: schema.classes.location,
+      })
+      .from(schema.attendances)
+      .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
+      .innerJoin(schema.users, eq(schema.users.id, schema.classes.userId))
+      .leftJoin(schema.studios, eq(schema.studios.id, schema.classes.studioId))
+      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso())))
+      .orderBy(asc(schema.attendances.occurrenceDate), asc(schema.classes.startTime))
+      .limit(12),
     myStaffStudios(),
     unreadHeaderCounts(userId, me.email),
   ]);
@@ -258,6 +276,24 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     yourGroups: groups.filter((group) => group.role),
     favoriteGroups: groups.filter((group) => !group.role),
     groupInvitations,
+    savedItems: savedRows.map((item) => {
+      const date = new Date(`${item.occurrenceDate}T00:00:00Z`).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      });
+      const [hourText, minute] = item.startTime.split(":");
+      const hour = Number(hourText);
+      const time = `${hour % 12 || 12}:${minute}${hour >= 12 ? " PM" : " AM"}`;
+      const base = item.studioSlug ? `/s/${item.studioSlug}` : `/${item.ownerHandle}`;
+      return {
+        id: `${item.classId}-${item.occurrenceDate}`,
+        name: item.name,
+        detail: `${date} · ${time}${item.studioName || item.location ? ` · ${item.studioName ?? item.location}` : ""}`,
+        href: `${base}/${item.classId}?d=${item.occurrenceDate}&from=you`,
+      };
+    }),
     managed,
     shareHref: me.kind === "fan" ? "/membershare" : "/coachshare",
     isAdmin: adminEmails().includes(me.email.toLowerCase()),
