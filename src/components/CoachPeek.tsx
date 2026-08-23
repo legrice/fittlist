@@ -7,6 +7,7 @@ import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
 import { MessageComposer } from "@/components/MessageComposer";
+import { toggleCalendarPin } from "@/app/actions/pins";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
@@ -35,6 +36,8 @@ export function CoachPeek({
   self = false,
   scheduleOnly = false,
   shareHref,
+  initialPinned = false,
+  onPinChange,
   onClose,
 }: {
   id: string;
@@ -49,6 +52,8 @@ export function CoachPeek({
    * privately added for themselves. */
   scheduleOnly?: boolean;
   shareHref?: string;
+  initialPinned?: boolean;
+  onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
 }) {
   const [peek, setPeek] = useState<Peek | null>(null);
@@ -59,6 +64,7 @@ export function CoachPeek({
   const [follow, setFollow] = useState<null | "following" | "requested" | "off">(null);
   const [followBusy, setFollowBusy] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
+  const [pinned, setPinned] = useState(initialPinned);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -160,6 +166,7 @@ export function CoachPeek({
         <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
           <Icon name="close" size={18} />
         </button>
+        {!self && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} aria-pressed={pinned} onClick={() => { const next=!pinned; setPinned(next); onPinChange?.(next); startTransition(async()=>{const result=await toggleCalendarPin("person",id); if(!result.ok){setPinned(!next);onPinChange?.(!next);}}); }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>}
         {/* The head stacks, by Matt's call: close alone in the corner, then
             the face, the name on its own line under it, and two actions
             below. Your own sheet swaps Follow for Share your week. */}

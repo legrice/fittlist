@@ -27,6 +27,7 @@ import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { StudioBeenHere } from "@/components/StudioBeenHere";
+import { CalendarPinButton } from "@/components/CalendarPinButton";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -382,7 +383,7 @@ export async function StudioView({
           avatar={null}
           backTo={backTo}
           badges={null}
-          ownerTop={null}
+          ownerTop={viewerId ? <CalendarPinButton entityType="studio" entityId={s.id} /> : null}
           actions={
             /* Nothing to offer, no row: an empty pills row still spends its
                margin, which read as stray space between the address and the

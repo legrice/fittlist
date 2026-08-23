@@ -21,3 +21,15 @@ export async function toggleCalendarPin(entityType: "person" | "studio", entityI
   await db.insert(schema.calendarPins).values({ userId, entityType, entityId }).onConflictDoNothing();
   return { ok: true as const, pinned: true };
 }
+
+export async function calendarPinState(entityType: "person" | "studio", entityId: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return false;
+  const db = await getDb();
+  const [row] = await db.select({ id: schema.calendarPins.id }).from(schema.calendarPins).where(and(
+    eq(schema.calendarPins.userId, userId),
+    eq(schema.calendarPins.entityType, entityType),
+    eq(schema.calendarPins.entityId, entityId),
+  ));
+  return !!row;
+}

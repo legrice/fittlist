@@ -199,10 +199,10 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
+  const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
-  const [, startPin] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -282,18 +282,6 @@ export function FollowingScreen({
   const railCoachOptions = sortedCoachOptions;
   const railStudioOptions = sortedStudioOptions;
   const railGroupOptions = groupOptions;
-  const togglePin = (entityType: "person" | "studio", entityId: string) => {
-    const key = `${entityType}:${entityId}`;
-    setPins((current) => {
-      const next = new Set(current);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
-    startPin(async () => {
-      const result = await toggleCalendarPin(entityType, entityId);
-      if (!result.ok) setPins(new Set(initialPins));
-    });
-  };
 
   const selectedCalendar = useMemo(() => {
     if (calendarFilter === "all") return null;
@@ -561,10 +549,6 @@ export function FollowingScreen({
         <header className="following-head">
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll">
-              <button className={`trayitem${calendarFilter !== "all" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => setCalendarFilter("all")}>
-                <span className={`trayav trayav-all${calendarFilter === "all" ? " sel" : ""}`}><Icon name="calendar_month" size={25} /></span>
-                <span className="trayitem-nm">All</span>
-              </button>
               <button className="trayitem" type="button" onClick={() => { if (meId) setPersonPeekOpen({ id:meId, name:meFace.name, photo:meFace.photo, color:meFace.color, self:true }); }}>
                 <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
@@ -587,24 +571,19 @@ export function FollowingScreen({
                     </span>
                     <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
                   </button>
-                  <button className={`cash-pin${pins.has(`person:${coach.id}`) ? " on" : ""}`} type="button" aria-label={`${pins.has(`person:${coach.id}`) ? "Unpin" : "Pin"} ${coach.name}`} onClick={() => togglePin("person", coach.id)}>
-                    <Icon name={pins.has(`person:${coach.id}`) ? "star_filled" : "star"} size={18} />
-                  </button>
+                  {pins.has(`person:${coach.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}
                 </div>
               )})}
               {railStudioOptions.map((studio) => {
-                const filter = `studio:${studio.id}` as const;
-                return <div className="cash-rail-item" key={studio.id}><button type="button" className={`trayitem social-place-item${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`} aria-pressed={calendarFilter === filter} onClick={() => setCalendarFilter(filter)}><span className={`trayav social-place-av${calendarFilter === filter ? " sel" : ""}`} style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}</span><span className="trayitem-nm">{studio.name}</span></button><button className={`cash-pin${pins.has(`studio:${studio.id}`) ? " on" : ""}`} type="button" aria-label={`${pins.has(`studio:${studio.id}`) ? "Unpin" : "Pin"} ${studio.name}`} onClick={() => togglePin("studio", studio.id)}><Icon name={pins.has(`studio:${studio.id}`) ? "star_filled" : "star"} size={18} /></button></div>})}
+                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}</div>})}
               {railGroupOptions.map((group) => {
-                const filter = `group:${group.id}` as const;
                 return <button
                 key={group.id}
                 type="button"
-                className={`trayitem${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`}
-                aria-pressed={calendarFilter === filter}
-                onClick={() => setCalendarFilter(filter)}
+                className="trayitem"
+                onClick={() => setEntityPeekOpen({type:"group",id:group.id,name:group.name,photo:group.photo,color:"var(--color-surface-muted)",href:`/g/${group.slug}`,items:items.filter((item)=>group.classKeys.includes(item.key))})}
               >
-                <span className={`trayav${calendarFilter === filter ? " sel" : ""}`}>
+                <span className="trayav">
                   {group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={25} />}
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
@@ -853,11 +832,51 @@ export function FollowingScreen({
           color={personPeekOpen.color}
           self={personPeekOpen.self}
           shareHref={personPeekOpen.self ? (meKind === "coach" ? "/coachshare" : "/membershare") : undefined}
+          initialPinned={!personPeekOpen.self && pins.has(`person:${personPeekOpen.id}`)}
+          onPinChange={!personPeekOpen.self ? (pinned) => setPins((current) => { const next=new Set(current); const key=`person:${personPeekOpen.id}`; if(pinned)next.add(key);else next.delete(key); return next; }) : undefined}
           onClose={() => setPersonPeekOpen(null)}
         />
       )}
+      {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
+  );
+}
+
+function EntityCalendarPeek({ entity, pinned, onPinned, onClose }: {
+  entity: { type: "studio" | "group"; id: string; name: string; photo: string | null; color: string; href: string; items: FeedItem[] };
+  pinned: boolean;
+  onPinned: (pinned: boolean) => void;
+  onClose: () => void;
+}) {
+  const [busy, start] = useTransition();
+  const sorted = entity.items.slice().sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
+  return (
+    <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="sheet sheet-full peeksheet entity-peeksheet">
+        <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
+        {entity.type === "studio" && (
+          <button className={`iconbtn peekpin${pinned ? " on" : ""}`} disabled={busy} aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} onClick={() => {
+            const next = !pinned;
+            onPinned(next);
+            start(async () => { const result = await toggleCalendarPin("studio", entity.id); if (!result.ok) onPinned(!next); });
+          }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>
+        )}
+        <div className="peekhead peekhead-stack">
+          <span className="peekav">{entity.photo ? <img src={entity.photo} alt="" /> : <span className="peekav-ini" style={{ background: entity.color }}><Icon name={entity.type === "studio" ? "storefront" : "groups"} size={25} /></span>}</span>
+          <h2 className="peekhead-nm">{entity.name}</h2>
+          <div className="peekacts"><Link className="peekfollow peekview" href={entity.href}>View profile</Link></div>
+        </div>
+        {sorted.length ? (
+          <div className="cash-activity-list entity-peek-list">
+            {sorted.map((item) => <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
+              <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span><small>{item.hm}{item.ap.toLowerCase()}</small></span>
+              <Icon name="chevron_right" size={22} />
+            </Link>)}
+          </div>
+        ) : <p className="peekempty">Nothing coming up right now.</p>}
+      </div>
+    </div>
   );
 }
 

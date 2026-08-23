@@ -15,6 +15,7 @@ import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
+import { CalendarPinButton } from "@/components/CalendarPinButton";
 import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
@@ -541,7 +542,7 @@ export async function PublicProfileView({
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
-          ownerTop={null}
+          ownerTop={!isOwner && account?.following ? <CalendarPinButton entityType="person" entityId={user.id} /> : null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
