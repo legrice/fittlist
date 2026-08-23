@@ -183,7 +183,13 @@ export function YouDashboard({
       </section>
 
       <AccountGroup title="Your calendars">
-        <AccountRow icon="calendar_month" title="Personal calendar" detail="View, manage, and share your schedule" href="/calendar" />
+        <AccountRow
+          icon="calendar_month"
+          title="Personal calendar"
+          detail="View, manage, and share your schedule"
+          href="/calendar"
+          avatar={{ photo: photoPreview, name: me.name, color: me.color }}
+        />
           {managed.map((place) => (
             <AccountRow
               icon="storefront"
@@ -251,10 +257,10 @@ function FollowingCountCircle({ href, count, singular, plural, photo, icon }: { 
   </Link>;
 }
 
-function AccountRow({ icon, title, detail, href, count = 0, avatar }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string } }) {
+function AccountRow({ icon, title, detail, href, count = 0, avatar }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string; color?: string } }) {
   return (
     <Link className="youaccount-row" href={href}>
-      {avatar ? <span className="youaccount-icon youaccount-place-avatar">{avatar.photo ? <img src={avatar.photo} alt="" /> : <span>{(avatar.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span> : <span className="youaccount-icon"><Icon name={icon} size={20} /></span>}
+      {avatar ? <span className="youaccount-icon youaccount-place-avatar" style={avatar.photo ? undefined : { background: avatar.color }}>{avatar.photo ? <img src={avatar.photo} alt="" /> : <span>{(avatar.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span> : <span className="youaccount-icon"><Icon name={icon} size={20} /></span>}
       <span className="youaccount-copy">
         <strong>{title}</strong>
         {detail && <small>{detail}</small>}
