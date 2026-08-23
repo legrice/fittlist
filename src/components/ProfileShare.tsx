@@ -20,7 +20,7 @@ export function ProfileShare({ path, name, pill = false, cta = false, ctaText = 
   return (
     <>
       <button className={cta ? "profile-share-cta-btn" : pill ? "actpill profile-share-pill" : "evback profshare-btn"} aria-label={`Share ${name}`} onClick={() => setOpen(true)}>
-        <Icon name="ios_share" size={21} />
+        <Icon name="reply" className="share-arrow-forward" size={21} />
         {pill ? <span>Share</span> : cta ? <span>{ctaText}</span> : null}
       </button>
       {open && (

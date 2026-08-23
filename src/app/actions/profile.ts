@@ -273,6 +273,36 @@ export async function updateProfile(input: {
   return { ok: true };
 }
 
+/** Update only the profile image, so the header never has to fetch and send
+ * every profile field merely to change one photo. */
+export async function updateProfilePhoto(input: {
+  photo: string | null;
+  photoThumb: string | null;
+}): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  for (const image of [input.photo, input.photoThumb]) {
+    if (image && !image.startsWith("data:image/") && !/^https:\/\//.test(image)) {
+      return { ok: false, error: "That photo couldn't be read." };
+    }
+    if (image?.startsWith("data:image/") && image.length > 2_500_000) {
+      return { ok: false, error: "Photo is too large. Try a smaller image." };
+    }
+  }
+  const [photo, photoThumb] = await Promise.all([
+    storeImage(input.photo, "u"),
+    storeImage(input.photoThumb, "ut"),
+  ]);
+  const db = await getDb();
+  const [user] = await db.update(schema.users)
+    .set({ photo: photo || null, photoThumb: photoThumb || null })
+    .where(eq(schema.users.id, userId))
+    .returning({ handle: schema.users.handle });
+  revalidatePath("/", "layout");
+  if (user?.handle) revalidatePath(`/${user.handle}`);
+  return { ok: true };
+}
+
 // The coach's page look — themes both their app and their public page for
 // every visitor. "dark" today; more looks later.
 // Opt in or out of the Find coaches directory. Their page stays public and

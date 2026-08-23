@@ -88,7 +88,7 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
     });
   },[tab,peopleDistance,studioDistance,groupDistance]);
   return <>
-    <div className="discover-title-row"><h1>Near you</h1></div>
+    <div className="discover-title-row"><h1>Discover</h1></div>
     <div className="dissearchrow discover-searchrow"><Link className="dissearch discover-search-door" href="/search"><Icon name="search" size={20} className="dissearch-ic"/><span>Search FittList</span></Link></div>
     <div className="discover-directory-tabs" role="tablist">{([['people','People'],['places','Studios'],['groups','Groups']] as const).map(([value,label])=><button role="tab" aria-selected={tab===value} className={tab===value?"on":""} onClick={()=>setTab(value)} key={value}>{label}</button>)}</div>
     {tab==="classes"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={classType} onChange={setClassType} all="Any type" options={classTypes}/></FilterRow>{discoverCalendarDays.length?<ClassOpener handle=""><CalendarList className="discover-calendar-list" days={discoverCalendarDays}/></ClassOpener>:<Empty>There are no classes matching these filters.</Empty>}</>}

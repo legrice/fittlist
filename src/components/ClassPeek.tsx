@@ -418,7 +418,7 @@ export function ClassPeek({
                 void share();
               }}
             >
-              <Icon name="ios_share" size={19} /> Share class
+              <Icon name="reply" className="share-arrow-forward" size={19} /> Share class
             </button>
             {(cls.mine && onEdit || full.adminEdit) && (
               <button className="ovmenu-item" role="menuitem" onClick={editClass}>

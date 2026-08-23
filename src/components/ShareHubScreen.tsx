@@ -577,7 +577,7 @@ export function ShareHubScreen({
                     "Opening…"
                   ) : (
                     <>
-                      Share <Icon name="ios_share" size={18} />
+                      Share <Icon name="reply" className="share-arrow-forward" size={18} />
                     </>
                   )}
                 </button>

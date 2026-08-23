@@ -1,6 +1,14 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
+import { updateProfilePhoto } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 import { SettingsGear } from "@/components/SettingsGear";
+import { Toast, useToast } from "@/components/Toast";
+import { readPhotoPair } from "@/lib/photo";
 
 export type YouFavoritePerson = {
   id: string;
@@ -80,21 +88,75 @@ export function YouDashboard({
   savedItems = [],
   onOpenSettings,
 }: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups" | "savedItems">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
+  const router = useRouter();
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [photoMenu, setPhotoMenu] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(me.photo);
+  const [photoPending, startPhoto] = useTransition();
+  const [toastMsg, toastOn, toast] = useToast();
+
+  const savePhoto = (file: File) => {
+    readPhotoPair(file, (full, thumb) => {
+      setPhotoPreview(full);
+      setPhotoMenu(false);
+      startPhoto(async () => {
+        const result = await updateProfilePhoto({ photo: full, photoThumb: thumb });
+        if (!result.ok) {
+          setPhotoPreview(me.photo);
+          toast(result.error ?? "Couldn't update your photo");
+          return;
+        }
+        toast("Profile photo updated");
+        router.refresh();
+      });
+    });
+  };
+
+  const nativePhoto = async (source: "camera" | "library") => {
+    try {
+      const { Camera, CameraDirection, MediaTypeSelection } = await import("@capacitor/camera");
+      const result = source === "camera"
+        ? await Camera.takePhoto({ quality: 92, editable: "in-app", cameraDirection: CameraDirection.Front })
+        : (await Camera.chooseFromGallery({ mediaType: MediaTypeSelection.Photo, allowMultipleSelection: false, editable: "in-app", quality: 92 })).results[0];
+      const sourceUrl = result?.webPath || result?.uri;
+      if (!sourceUrl) return;
+      const response = await fetch(sourceUrl);
+      const blob = await response.blob();
+      savePhoto(new File([blob], "profile-photo.jpg", { type: blob.type || "image/jpeg" }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (!/cancel/i.test(message)) toast("Couldn't open that photo");
+    }
+  };
+
+  const choosePhoto = (source: "camera" | "library") => {
+    if (Capacitor.isNativePlatform()) void nativePhoto(source);
+    else fileRef.current?.click();
+  };
   return (
     <main className="youpage">
       <section className="youaccount-head">
-        {me.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="youavatar" src={me.photo} alt="" />
-        ) : (
-          <span className="youavatar youavatar-empty" style={{ background: me.color }}>
-            {initial}
-          </span>
-        )}
+        <button className="youavatar-edit" type="button" disabled={photoPending} onClick={() => setPhotoMenu(true)} aria-label="Change profile photo">
+          {photoPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="youavatar" src={photoPreview} alt="" />
+          ) : (
+            <span className="youavatar youavatar-empty" style={{ background: me.color }}>{initial}</span>
+          )}
+          <span><Icon name="image" size={15} /></span>
+        </button>
+        <input ref={fileRef} className="sr-only" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) savePhoto(file); event.currentTarget.value = ""; }} />
         <div className="youaccount-identity">
-          <span className="youhandle">@{me.handle}</span>
+          <div className="youhandle-row">
+            <span className="youhandle">@{me.handle}</span>
+            {onOpenSettings ? (
+              <button className="youeditlink" type="button" onClick={() => onOpenSettings("page")}>Edit profile</button>
+            ) : (
+              <Link className="youeditlink" href="/settings?edit=1">Edit profile</Link>
+            )}
+          </div>
           <h1>{me.name}</h1>
         </div>
       </section>
@@ -104,19 +166,8 @@ export function YouDashboard({
           <Icon name="account_circle" size={18} />
           <span>View profile</span>
         </Link>
-        {onOpenSettings ? (
-          <button type="button" onClick={() => onOpenSettings("page")}>
-            <Icon name="edit" size={18} />
-            <span>Edit profile</span>
-          </button>
-        ) : (
-          <Link href="/settings?edit=1">
-            <Icon name="edit" size={18} />
-            <span>Edit profile</span>
-          </Link>
-        )}
         <Link href={shareHref}>
-          <Icon name="ios_share" size={18} />
+          <Icon name="reply" className="share-arrow-forward" size={18} />
           <span>Share</span>
         </Link>
         <SettingsGear pill />
@@ -167,6 +218,17 @@ export function YouDashboard({
           <p className="youaccount-empty">Classes and events you save will appear here.</p>
         )}
       </AccountGroup>
+      {photoMenu && (
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPhotoMenu(false); }}>
+          <section className="sheet youphoto-sheet" role="dialog" aria-modal="true" aria-labelledby="youphoto-title">
+            <button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={() => setPhotoMenu(false)}><Icon name="close" size={18} /></button>
+            <h2 id="youphoto-title">Profile photo</h2>
+            <button type="button" onClick={() => choosePhoto("library")}><Icon name="image" size={21} /><span><strong>Choose a photo</strong><small>Crop it before it saves</small></span></button>
+            <button type="button" onClick={() => choosePhoto("camera")}><Icon name="image" size={21} /><span><strong>Take a photo</strong><small>Use your camera</small></span></button>
+          </section>
+        </div>
+      )}
+      <Toast msg={toastMsg} on={toastOn} />
     </main>
   );
 }

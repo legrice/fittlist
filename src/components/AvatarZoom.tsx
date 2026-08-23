@@ -194,7 +194,7 @@ export function AvatarZoom({
               )}
               <button className="avact" onClick={share}>
                 <span className="avact-ic">
-                  <Icon name="ios_share" size={24} />
+                  <Icon name="reply" className="share-arrow-forward" size={24} />
                 </span>
                 Share
               </button>

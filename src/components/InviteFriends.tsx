@@ -106,7 +106,7 @@ export function InviteSheet({
 
             <div className="publishwrap nostick">
               <button className="btn si" disabled={!url} onClick={canShare ? share : copy}>
-                <Icon name="ios_share" size={20} /> {canShare ? "Share the link" : "Copy the link"}
+                <Icon name="reply" className="share-arrow-forward" size={20} /> {canShare ? "Share the link" : "Copy the link"}
               </button>
               {canShare && (
                 <button

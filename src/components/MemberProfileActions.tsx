@@ -30,7 +30,7 @@ export function MemberProfileActions({ handle }: { handle: string }) {
     <>
       <div className="profacts">
         <button className="actpill actpill-primary" onClick={() => setMenu(true)}>
-          <Icon name="ios_share" size={18} />
+          <Icon name="reply" className="share-arrow-forward" size={18} />
           <span>Share profile</span>
         </button>
         <button className="actpill" onClick={() => router.push("/settings?edit=1")}>
