@@ -93,8 +93,8 @@ export function YouDashboard({
           </span>
         )}
         <div className="youaccount-identity">
-          <h1>{me.name}</h1>
           <span className="youhandle">@{me.handle}</span>
+          <h1>{me.name}</h1>
         </div>
       </section>
 
