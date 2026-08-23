@@ -13,7 +13,7 @@ export type NavItem = {
 };
 
 /**
- * Three jobs, not three content types: use schedules, find schedules, and
+ * Three jobs, not three content types: use your calendar, find classes, and
  * manage the calendars that belong to you.
  */
 export function navTabs(
@@ -29,7 +29,7 @@ export function navTabs(
       id: "following" as const,
       href: "/feed",
       icon: "calendar_month",
-      label: "Schedules",
+      label: "Calendar",
     },
     { id: "discover", href: "/search", icon: "search", label: "Find" },
     { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Manage" },

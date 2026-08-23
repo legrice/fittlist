@@ -8630,17 +8630,6 @@ select.editinput.placekind-select {
 .following-head {
   padding: 4px 0 6px;
 }
-.home-class-search {
-  min-height:64px; margin:4px 0 16px; padding:10px 14px; display:grid;
-  grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px;
-  border:1px solid var(--color-border); border-radius:var(--radius-control);
-  background:var(--color-white); color:var(--color-black); text-decoration:none;
-}
-.home-class-search > span:first-child { width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime); }
-.home-class-search > span:nth-child(2) { min-width:0; display:flex; flex-direction:column; gap:2px; }
-.home-class-search strong { font-size:16px; }
-.home-class-search small { color:var(--color-text-secondary); font-size:13px; }
-.home-class-search:active { background:var(--color-surface-hover); transform:scale(.99); }
 .home-calendars-title { display:flex; align-items:center; justify-content:space-between; min-height:30px; }
 .home-calendars-title h2 { margin:0; font-size:18px; letter-spacing:-.015em; }
 .following-head .trayitem { border:0; padding:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }

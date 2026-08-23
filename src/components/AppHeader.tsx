@@ -135,7 +135,7 @@ export function AppHeader({
           ) : <GlobalAdd />}
         </div>
         {calendarUtility ? <strong className="social-brandbar-title">Your calendar</strong> : (
-          <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList schedules">
+          <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList calendar">
             <Wordmark variant="ink" />
           </Link>
         )}
