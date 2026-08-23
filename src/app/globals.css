@@ -8805,7 +8805,11 @@ select.editinput.placekind-select {
 .cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
 .cash-class-row { position:relative; min-height:72px; }
 .cash-class-main {
-  width:100%; min-height:80px; padding:8px 0; display:flex; align-items:center; gap:12px;
+  /* Anchor every row to one top line: avatar, class name and time share the
+     same edge even when a studio-owned class intentionally omits its coach
+     line. Centering the variable-height copy was what pushed two-line rows
+     down while leaving the time above them. */
+  width:100%; min-height:80px; padding:8px 0; display:flex; align-items:flex-start; gap:12px;
   border:0; background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
 }
 .cash-class-avatar {
@@ -8821,7 +8825,7 @@ select.editinput.placekind-select {
 .cash-class-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:1.2; font-weight:700; }
 .cash-class-copy > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
-.cash-class-time { flex:0 0 auto; align-self:flex-start; font-size:17px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-class-time { flex:0 0 auto; font-size:17px; line-height:1.2; font-weight:600; white-space:nowrap; }
 .cash-class-main > svg { flex:0 0 auto; color:var(--ink); }
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
