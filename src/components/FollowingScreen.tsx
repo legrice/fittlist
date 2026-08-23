@@ -539,25 +539,23 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <nav className="calendar-type-tabs" aria-label="Calendar types">
-            {([
-              ["all", "calendar_month", "All"],
-              ["people", "person", "People"],
-              ["studios", "storefront", "Studios"],
-              ["groups", "groups", "Groups"],
-            ] as const).map(([value, icon, label]) => (
-              <button
-                type="button"
-                className={calendarType === value ? "on" : ""}
-                aria-pressed={calendarType === value}
-                onClick={() => { setCalendarType(value); setCalendarFilter("all"); }}
-                key={value}
-              >
-                <Icon name={icon} size={21} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
+          <label className="calendar-type-select">
+            <Icon name={calendarType === "studios" ? "storefront" : calendarType === "groups" ? "groups" : calendarType === "people" ? "person" : "calendar_month"} size={18} />
+            <select
+              value={calendarType}
+              aria-label="Show calendar type"
+              onChange={(event) => {
+                setCalendarType(event.target.value as typeof calendarType);
+                setCalendarFilter("all");
+              }}
+            >
+              <option value="all">All calendars</option>
+              <option value="people">People</option>
+              <option value="studios">Studios</option>
+              <option value="groups">Groups</option>
+            </select>
+            <Icon name="expand_more" size={18} />
+          </label>
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll">
               <button className={`trayitem${calendarFilter !== "all" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => setCalendarFilter("all")}>

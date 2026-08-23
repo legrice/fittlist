@@ -8630,23 +8630,16 @@ select.editinput.placekind-select {
 .following-head {
   padding: 4px 0 6px;
 }
-.calendar-type-tabs {
-  display:flex; align-items:stretch; gap:6px; margin:0 -4px 6px; overflow-x:auto;
-  border-bottom:1px solid var(--line); scrollbar-width:none;
+.calendar-type-select {
+  width:max-content; min-height:34px; margin:0 0 5px; padding:0 3px;
+  display:inline-flex; align-items:center; gap:5px; color:var(--muted); cursor:pointer;
 }
-.calendar-type-tabs::-webkit-scrollbar { display:none; }
-.calendar-type-tabs button {
-  position:relative; min-width:76px; min-height:62px; padding:8px 10px 11px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-  border:0; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:600; cursor:pointer;
+.calendar-type-select select {
+  width:auto; min-height:34px; padding:0; border:0; border-radius:0; appearance:none;
+  background:transparent; color:var(--ink); font:inherit; font-size:14px; font-weight:600; cursor:pointer;
 }
-.calendar-type-tabs button::after {
-  content:""; position:absolute; left:12px; right:12px; bottom:-1px; height:3px;
-  border-radius:3px 3px 0 0; background:transparent;
-}
-.calendar-type-tabs button.on { color:var(--ink); }
-.calendar-type-tabs button.on::after { background:var(--ink); }
-.calendar-type-tabs button:active { color:var(--ink); }
+.calendar-type-select select:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
+.calendar-type-select > svg:last-child { pointer-events:none; }
 .following-head .trayitem { border:0; padding:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
 .social-schedule-switch {
   width: 100%; min-height: 48px; margin: 4px 0 20px; padding: 4px;
