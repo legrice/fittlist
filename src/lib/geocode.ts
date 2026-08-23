@@ -26,6 +26,10 @@ const US_STATES: Record<string, string> = {
   Wyoming: "WY", "District of Columbia": "DC",
 };
 
+const US_STATE_NAMES = new Map(
+  Object.entries(US_STATES).map(([name, abbreviation]) => [abbreviation, name]),
+);
+
 type OpenMeteoHit = {
   name: string;
   latitude: number;
@@ -47,9 +51,13 @@ export function placeLabel(hit: OpenMeteoHit): string {
 
 const OPEN_METEO = "https://geocoding-api.open-meteo.com/v1/search";
 
-async function fetchWithTimeout(url: string, headers?: Record<string, string>) {
+async function fetchWithTimeout(
+  url: string,
+  headers?: Record<string, string>,
+  timeoutMs = 2500,
+) {
   const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), 2500);
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     return await fetch(url, { signal: ctl.signal, headers });
   } finally {
@@ -60,15 +68,32 @@ async function fetchWithTimeout(url: string, headers?: Record<string, string>) {
 /** The server's own copy of the picker's lookup, for text that was typed
  *  rather than picked: the best single match, or null. */
 export async function geocodeCity(q: string): Promise<GeoPlace | null> {
-  const name = q.trim().split(",")[0];
+  const parts = q.split(",").map((part) => part.trim()).filter(Boolean);
+  const name = parts[0] ?? "";
   if (name.length < 2) return null;
   try {
     const res = await fetchWithTimeout(
-      `${OPEN_METEO}?name=${encodeURIComponent(name)}&count=1&language=en&format=json`,
+      `${OPEN_METEO}?name=${encodeURIComponent(name)}&count=10&language=en&format=json`,
     );
     if (!res.ok) return null;
     const data = (await res.json()) as { results?: OpenMeteoHit[] };
-    const hit = data.results?.[0];
+    const context = parts.slice(1).join(" ").toLowerCase();
+    const stateName = US_STATE_NAMES.get(parts[1]?.toUpperCase() ?? "")?.toLowerCase();
+    const hit = [...(data.results ?? [])].sort((a, b) => {
+      const score = (candidate: OpenMeteoHit) => {
+        if (!context) return 0;
+        const admin = candidate.admin1?.toLowerCase() ?? "";
+        const country = candidate.country?.toLowerCase() ?? "";
+        const countryCode = candidate.country_code?.toLowerCase() ?? "";
+        return (
+          (stateName && admin === stateName ? 4 : 0) +
+          (context.includes(admin) && admin ? 3 : 0) +
+          (context.includes(country) && country ? 2 : 0) +
+          (context.includes(countryCode) && countryCode ? 1 : 0)
+        );
+      };
+      return score(b) - score(a);
+    })[0];
     if (!hit) return null;
     return { label: placeLabel(hit), lat: hit.latitude, lng: hit.longitude };
   } catch {
@@ -82,6 +107,25 @@ export async function geocodeCity(q: string): Promise<GeoPlace | null> {
 export async function geocodeAddress(q: string): Promise<{ lat: number; lng: number } | null> {
   if (q.trim().length < 4) return null;
   try {
+    // Census is particularly good at US route/highway addresses, which the
+    // global provider sometimes cannot resolve. Prefer it when the text has
+    // an obvious state + ZIP, then retain Nominatim for everywhere else.
+    if (/\b[A-Z]{2}\s+\d{5}(?:-\d{4})?\b/i.test(q)) {
+      const census = await fetchWithTimeout(
+        `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(q)}&benchmark=Public_AR_Current&format=json`,
+        undefined,
+        5000,
+      );
+      if (census.ok) {
+        const data = (await census.json()) as {
+          result?: { addressMatches?: { coordinates?: { x: number; y: number } }[] };
+        };
+        const coordinates = data.result?.addressMatches?.[0]?.coordinates;
+        if (coordinates && Number.isFinite(coordinates.x) && Number.isFinite(coordinates.y)) {
+          return { lat: coordinates.y, lng: coordinates.x };
+        }
+      }
+    }
     const res = await fetchWithTimeout(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
       { "User-Agent": "fittlist.co (hello@fittlist.co)" },

@@ -9,6 +9,7 @@
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
+    "db:backfill-geolocation": "tsx scripts/backfill-geolocation.ts",
     "check:copy": "node scripts/check-copy.mjs",
     "check:story": "tsx scripts/storyplan-check.mjs",
     "check:icons": "node scripts/icon-check.mjs",
