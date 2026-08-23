@@ -8820,7 +8820,7 @@ select.editinput.placekind-select {
   border-radius:50%; color:#fff; font-size:18px; font-weight:700;
 }
 .cash-class-avatar.studio {
-  width:64px; height:50px; flex-basis:64px; border-radius:12px;
+  width:64px; height:64px; flex-basis:64px; border-radius:12px;
   border:1px solid var(--line); background:var(--card);
 }
 .cash-class-avatar img { width:100%; height:100%; object-fit:cover; }
