@@ -132,7 +132,7 @@ export function AppHeader({
             <Icon name="arrow_back" size={23} />
           </Link>
         </div>}
-        {calendarUtility ? <strong className="social-brandbar-title">Your calendar</strong> : (
+        {!calendarUtility && (
           <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList calendar">
             <Wordmark variant="ink" />
           </Link>
