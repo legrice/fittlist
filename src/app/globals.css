@@ -8699,7 +8699,7 @@ select.editinput.placekind-select {
 .following-rail .trayitem-more { opacity: 1; }
 .cash-activity-list { padding:0; }
 .cash-day + .cash-day { margin-top:34px; }
-.cash-day > h2 { margin:0 0 14px; font-size:28px; line-height:1.05; letter-spacing:-.035em; }
+.cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
 .cash-class-row { position:relative; min-height:86px; }
 .cash-class-main {
   width:100%; min-height:86px; padding:10px 0; display:flex; align-items:center; gap:15px;
