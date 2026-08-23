@@ -56,6 +56,13 @@ export function SettingsGear({ header = false, pill = false }: {
     setData(null);
     router.refresh();
   };
+  // A link is already taking the user to a new route. Dismiss the sheet
+  // without refreshing the page underneath it: that refresh can race the
+  // link navigation and leave the user back on their profile.
+  const dismissForNavigation = () => {
+    setOpen(false);
+    setData(null);
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -97,7 +104,7 @@ export function SettingsGear({ header = false, pill = false }: {
               className="header-account-sheet settings-account-sheet"
               onMouseDown={(event) => event.stopPropagation()}
               onClickCapture={(event) => {
-                if ((event.target as HTMLElement).closest("a")) close();
+                if ((event.target as HTMLElement).closest("a")) dismissForNavigation();
               }}
             >
               {data ? data.kind === "coach" ? (

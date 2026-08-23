@@ -568,7 +568,7 @@ export function ProfileSheet({
         <h3 className="setgroup-h">FittList</h3>
         <div className="settingslist">
           {isAdmin && (
-            <Link className="setrow" href="/admin" prefetch={false} onClick={onClose}>
+            <Link className="setrow" href="/admin" prefetch={false}>
               <span className="setrow-ic"><Icon name="admin_panel_settings" size={24} /></span>
               <span className="setrow-txt">
                 <span className="t">Admin</span>
@@ -578,7 +578,7 @@ export function ProfileSheet({
             </Link>
           )}
           {canSendFeedback && (
-            <Link className="setrow" href="/feedback" onClick={onClose}>
+            <Link className="setrow" href="/feedback">
               <span className="setrow-ic"><Icon name="chat_bubble" size={24} /></span>
               <span className="setrow-txt">
                 <span className="t">Send feedback</span>
@@ -587,7 +587,7 @@ export function ProfileSheet({
               <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
             </Link>
           )}
-          <Link className="setrow" href="/privacy" onClick={onClose}>
+          <Link className="setrow" href="/privacy">
             <span className="setrow-ic"><Icon name="shield" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Privacy policy</span>
@@ -597,7 +597,7 @@ export function ProfileSheet({
           </Link>
           {isAdmin && (
             <>
-              <Link className="setrow" href="/brand" onClick={onClose}>
+              <Link className="setrow" href="/brand">
                 <span className="setrow-ic"><Icon name="palette" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Brand</span>
@@ -605,7 +605,7 @@ export function ProfileSheet({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </Link>
-              <Link className="setrow" href="/ethos" onClick={onClose}>
+              <Link className="setrow" href="/ethos">
                 <span className="setrow-ic"><Icon name="favorite" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Ethos</span>

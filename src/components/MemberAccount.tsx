@@ -256,7 +256,7 @@ export function MemberAccount({
       <h3 className="setgroup-h">FittList</h3>
       <div className="settingslist">
         {canSendFeedback && (
-          <Link className="setrow" href="/feedback" onClick={onClose}>
+          <Link className="setrow" href="/feedback">
             <span className="setrow-ic"><Icon name="chat_bubble" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Send feedback</span>
@@ -265,7 +265,7 @@ export function MemberAccount({
             <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
           </Link>
         )}
-        <Link className="setrow" href="/privacy" onClick={onClose}>
+        <Link className="setrow" href="/privacy">
           <span className="setrow-ic"><Icon name="shield" size={24} /></span>
           <span className="setrow-txt">
             <span className="t">Privacy policy</span>
