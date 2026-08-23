@@ -8794,6 +8794,23 @@ select.editinput.placekind-select {
 .following-rail .trayitem { width:72px; gap:6px; }
 .following-rail .trayav { width:68px; height:68px; }
 .following-rail .trayitem-nm { max-width:72px; font-size:12.5px; }
+.trayitem-share { position:relative; }
+.following-rail .trayav-share {
+  box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-lime);
+  animation:share-week-glow 2.8s ease-in-out infinite;
+}
+.tray-share-badge {
+  position:absolute; top:47px; right:-1px; z-index:3; width:24px; height:24px;
+  display:grid; place-items:center; border:2px solid var(--ground); border-radius:50%;
+  background:var(--color-lime); color:var(--color-black);
+}
+@keyframes share-week-glow {
+  0%, 100% { box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-lime); }
+  50% { box-shadow:0 0 0 3px var(--ground), 0 0 0 8px color-mix(in srgb,var(--color-lime) 58%,transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .following-rail .trayav-share { animation:none; }
+}
 .cash-rail-item { position:relative; width:72px; flex:0 0 72px; }
 .cash-pin {
   position:absolute; top:49px; right:0; z-index:3; width:24px; height:24px; padding:0;
