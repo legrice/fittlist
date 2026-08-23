@@ -92,10 +92,12 @@ export function YouDashboard({
             {initial}
           </span>
         )}
-        <h1>{me.name}</h1>
-        <p>{me.title || "Your FittList account"}</p>
-        {me.location && <p>{me.location}</p>}
-        <span className="youhandle">@{me.handle}</span>
+        <div className="youaccount-identity">
+          <h1>{me.name}</h1>
+          <p>{me.title || "Your FittList account"}</p>
+          {me.location && <p>{me.location}</p>}
+          <span className="youhandle">@{me.handle}</span>
+        </div>
       </section>
 
       <div className="youquickactions" aria-label="Profile actions">
