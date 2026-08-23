@@ -1706,6 +1706,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    so it never blocks the list under it. */
 .toast.has-act.on { pointer-events: auto; }
 .toast-act { flex: 0 0 auto; color: #fff; text-decoration: underline; margin-left: 12px; font-weight: 600; white-space: nowrap; }
+.toast button.toast-act { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
 [data-mode="dark"] .toast-act { color: #191502; }
 .empty { color: var(--ol); font-size: 13px; padding: 14px 0; }
 

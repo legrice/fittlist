@@ -7,11 +7,12 @@ import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
 import { MessageComposer } from "@/components/MessageComposer";
-import { toggleCalendarPin } from "@/app/actions/pins";
+import { calendarPinState, toggleCalendarPin } from "@/app/actions/pins";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
 import { announceSaved } from "@/components/SaveEducation";
+import { Toast, useToast } from "@/components/Toast";
 
 /**
  * One person's week, opened from their circle, and the place you save from.
@@ -36,7 +37,7 @@ export function CoachPeek({
   self = false,
   scheduleOnly = false,
   shareHref,
-  initialPinned = false,
+  initialPinned,
   onPinChange,
   onClose,
 }: {
@@ -62,8 +63,10 @@ export function CoachPeek({
   // round trip. Keyed the way the loader keys it.
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [messageOpen, setMessageOpen] = useState(false);
-  const [pinned, setPinned] = useState(initialPinned);
+  const [pinned, setPinned] = useState(initialPinned ?? false);
   const [, startTransition] = useTransition();
+  const [pinPending, startPinTransition] = useTransition();
+  const [toastMsg, toastOn, , dismissToast, toastFor] = useToast();
 
   useEffect(() => {
     personPeek(id).then((res) => {
@@ -74,6 +77,11 @@ export function CoachPeek({
       setPeek(res);
     });
   }, [id]);
+
+  useEffect(() => {
+    if (self || initialPinned !== undefined) return;
+    calendarPinState("person", id).then(setPinned);
+  }, [id, initialPinned, self]);
 
   const save = (classId: string, iso: string, on: boolean) => {
     const key = `${classId}|${iso}`;
@@ -155,7 +163,22 @@ export function CoachPeek({
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
-          {!self && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" aria-label={pinned ? "Remove favorite" : "Favorite"} aria-pressed={pinned} onClick={() => { const next=!pinned; setPinned(next); onPinChange?.(next); startTransition(async()=>{const result=await toggleCalendarPin("person",id); if(!result.ok){setPinned(!next);onPinChange?.(!next);}}); }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>}
+          {!self && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" disabled={pinPending} aria-label={pinned ? "Remove favorite" : "Favorite"} aria-pressed={pinned} onClick={() => {
+            const next = !pinned;
+            setPinned(next);
+            onPinChange?.(next);
+            startPinTransition(async () => {
+              const result = await toggleCalendarPin("person", id);
+              if (!result.ok) {
+                setPinned(!next);
+                onPinChange?.(!next);
+                return;
+              }
+              setPinned(result.pinned);
+              onPinChange?.(result.pinned);
+              if (result.pinned) toastFor(`You favorited ${name}. Their calendar will appear near the front.`, 5200);
+            });
+          }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>}
         </div>
         {/* The head stacks, by Matt's call: close alone in the corner, then
             the face, the name on its own line under it, and two actions
@@ -224,6 +247,7 @@ export function CoachPeek({
           </div>
         </div>
       )}
+      <Toast msg={toastMsg} on={toastOn} dismiss={{ label: "Great, thanks", onClick: dismissToast }} />
     </div>
   );
 }
