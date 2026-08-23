@@ -2099,7 +2099,7 @@ button.bl-band { cursor: pointer; }
 /* The face is a column of its own rather than a chip inside the name line: at
    card size it is what the eye lands on first, and inline it was a decoration
    on a line of grey text. */
-.ps-eav { width: 50px; height: 50px; border-radius: 999px; object-fit: cover; flex: 0 0 auto; display: block; }
+.ps-eav { width: 56px; height: 56px; border-radius: 999px; object-fit: cover; flex: 0 0 auto; display: block; }
 .ps-eav-empty {
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-size: 18px; font-weight: 600;
@@ -8792,7 +8792,7 @@ select.editinput.placekind-select {
   border:0; background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
 }
 .cash-class-avatar {
-  width:52px; height:52px; flex:0 0 52px; display:grid; place-items:center; overflow:hidden;
+  width:56px; height:56px; flex:0 0 56px; display:grid; place-items:center; overflow:hidden;
   border-radius:50%; color:#fff; font-size:18px; font-weight:700;
 }
 .cash-class-avatar.studio {
