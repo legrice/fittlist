@@ -102,9 +102,9 @@ export function DesktopChrome({
             <span>Profile</span>
           </Link>
           {admin && (
-            <Link className="desktop-profile-activity" href="/admin?activity=1" aria-label={`${adminActivity} new product activity ${adminActivity === 1 ? "event" : "events"}`}>
+            <Link className="desktop-profile-activity" href="/admin?activity=1" aria-label={adminActivity > 0 ? "New product activity" : "Product activity"}>
               <Icon name="activity" size={19} />
-              {adminActivity > 0 && <b>{adminActivity > 99 ? "99+" : adminActivity}</b>}
+              {adminActivity > 0 && <i aria-hidden="true" />}
             </Link>
           )}
         </div>

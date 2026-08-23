@@ -2470,13 +2470,11 @@ button.ps-card { cursor: pointer; }
 }
 .header-admin-activity:active,
 .header-search-trigger:active { background: var(--color-lime-soft); }
-.header-admin-activity b {
-  min-width: 18px; height: 18px; padding: 0 4px;
+.header-admin-activity > i {
+  width: 10px; height: 10px;
   position: absolute; top: -6px; right: -6px;
-  display: inline-flex; align-items: center; justify-content: center;
   border: 2px solid var(--shell); border-radius: 999px;
   background: var(--color-lime); color: var(--color-black);
-  font-size: 10px; line-height: 1; font-weight: 700;
 }
 /* Bare glyphs: Search, Notifications and Settings read as one quiet utility row
    rather than three white circles fighting the wordmark. */
@@ -5027,6 +5025,86 @@ select.editinput.placekind-select {
 .adminaddform-row .btn { width: auto; padding: 12px 20px; }
 .adminempty { font-size: 14px; color: var(--ol); padding: 14px 2px; }
 .adminsec-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--ol); margin: 4px 0 10px; }
+
+/* The three private lists behind You's Following counts. They borrow Dice's
+   simple hierarchy: one centered entity title, a two-choice underline, then
+   identity rows with the relationship control in the far corner. */
+.follow-directory-screen { background: var(--paper); color: var(--ink); }
+.follow-directory {
+  width: min(100%, 640px); min-height: 100dvh; margin: 0 auto;
+  padding: calc(22px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom));
+}
+.follow-directory-head {
+  display: grid; grid-template-columns: 52px 1fr 52px; align-items: center;
+  min-height: 52px; margin-bottom: 12px;
+}
+.follow-directory-head h1 {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 20px; font-weight: 600; text-align: center; letter-spacing: -.01em;
+}
+.follow-directory-back {
+  display: grid; place-items: center; width: 52px; height: 52px;
+  color: var(--ink); background: var(--cl); border: 1px solid var(--line);
+  border-radius: 999px; text-decoration: none; -webkit-tap-highlight-color: transparent;
+}
+.follow-directory-tabs {
+  display: grid; grid-template-columns: 1fr 1fr;
+  margin: 0 -20px 12px; border-bottom: 1px solid var(--line);
+}
+.follow-directory-tabs button {
+  position: relative; padding: 16px 8px 15px;
+  color: var(--ol); font: inherit; font-size: 16px; background: transparent;
+}
+.follow-directory-tabs button.on { color: var(--ink); font-weight: 600; }
+.follow-directory-tabs button.on::after {
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: var(--ink); content: "";
+}
+.follow-directory-list { display: flex; flex-direction: column; }
+.follow-directory-row {
+  display: flex; align-items: center; gap: 12px; min-height: 78px;
+  border-bottom: 1px solid var(--div);
+}
+.follow-directory-person {
+  display: flex; align-items: center; gap: 13px; min-width: 0; flex: 1;
+  color: var(--ink); text-decoration: none; -webkit-tap-highlight-color: transparent;
+}
+.follow-directory-person > img,
+.follow-directory-avatar {
+  display: grid; place-items: center; flex: 0 0 52px; width: 52px; height: 52px;
+  border-radius: 999px; object-fit: cover; overflow: hidden;
+  color: #fff; font-size: 19px; font-weight: 600;
+}
+.follow-directory-copy { display: flex; flex-direction: column; min-width: 0; }
+.follow-directory-copy strong {
+  overflow: hidden; color: var(--ink); font-size: 16px; font-weight: 600;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.follow-directory-copy small {
+  overflow: hidden; margin-top: 2px; color: var(--ol); font-size: 13px;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.follow-directory-toggle {
+  flex: 0 0 auto; min-width: 88px; padding: 9px 14px;
+  border: 1px solid var(--ink); border-radius: 999px;
+  color: var(--ink); font: inherit; font-size: 12px; font-weight: 600;
+  background: var(--paper);
+}
+.follow-directory-toggle.on { color: var(--paper); background: var(--ink); }
+.follow-directory-toggle:disabled { opacity: .55; }
+.follow-directory-more {
+  align-self: center; min-width: 132px; margin: 22px auto 4px; padding: 11px 18px;
+  border: 1px solid var(--line); border-radius: 999px;
+  color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; background: var(--paper);
+}
+.follow-directory-more:disabled { opacity: .55; }
+.follow-directory-empty { padding: 56px 12px 0; text-align: center; }
+.follow-directory-empty h2 { font-size: 19px; font-weight: 600; }
+.follow-directory-empty p { margin-top: 7px; color: var(--ol); font-size: 14px; line-height: 1.45; }
+@media (min-width: 760px) {
+  .follow-directory { padding-top: 34px; }
+  .follow-directory-tabs { margin-left: 0; margin-right: 0; }
+}
 
 /* What "Tidy up locations" rewrote: the old string, then the one it became. */
 .fixlist { display: flex; flex-direction: column; gap: 2px; }
@@ -8698,6 +8776,13 @@ select.editinput.placekind-select {
 .following-rail.has-context::after { display: none; }
 .following-rail .trayitem-more { opacity: 1; }
 .cash-activity-list { padding:0; }
+.calendar-stream-loading {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
 .cash-day + .cash-day { margin-top:34px; }
 .cash-day { content-visibility:auto; contain-intrinsic-size:420px; }
 .cash-days-more { height:2px; }
@@ -8810,11 +8895,9 @@ select.editinput.placekind-select {
     color: var(--ink); text-decoration: none;
   }
   .desktop-profile-activity:hover { background: var(--color-lime-soft); }
-  .desktop-profile-activity b {
-    min-width: 18px; height: 18px; padding: 0 4px; position: absolute; top: -5px; right: -4px;
-    display: inline-flex; align-items: center; justify-content: center;
+  .desktop-profile-activity > i {
+    width: 10px; height: 10px; position: absolute; top: -3px; right: -2px;
     border-radius: 999px; background: var(--color-lime); color: var(--ink);
-    font-size: 10px; line-height: 1; font-weight: 700;
   }
   .desktop-profile-link:hover,
   .desktop-profile-link.on { background: var(--cl); }

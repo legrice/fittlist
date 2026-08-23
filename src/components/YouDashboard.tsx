@@ -113,9 +113,9 @@ export function YouDashboard({
       <section className="profile-following">
         <h2>Following</h2>
         <div className="profile-following-rail">
-          <FollowingCountCircle href="/saved#people" count={people.length} singular="person" plural="people" photo={people.find((person) => person.photo)?.photo ?? null} icon="person" />
-          <FollowingCountCircle href="/saved#studios" count={places.length} singular="studio" plural="studios" photo={places.find((place) => place.photo)?.photo ?? null} icon="storefront" />
-          <FollowingCountCircle href="/saved#groups" count={favoriteGroups.length} singular="group" plural="groups" photo={favoriteGroups.find((group) => group.photo)?.photo ?? null} icon="groups" />
+          <FollowingCountCircle href="/following/people" count={people.length} singular="person" plural="people" photo={people.find((person) => person.photo)?.photo ?? null} icon="person" />
+          <FollowingCountCircle href="/following/studios" count={places.length} singular="studio" plural="studios" photo={places.find((place) => place.photo)?.photo ?? null} icon="storefront" />
+          <FollowingCountCircle href="/following/groups" count={favoriteGroups.length} singular="group" plural="groups" photo={favoriteGroups.find((group) => group.photo)?.photo ?? null} icon="groups" />
         </div>
       </section>
 

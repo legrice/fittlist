@@ -11,6 +11,7 @@ import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { setGoing } from "@/app/actions/going";
 import { toggleCalendarPin } from "@/app/actions/pins";
+import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -145,14 +146,14 @@ const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any"
  * Discovery stays behind its own door; this screen is the value of a follow.
  */
 export function FollowingScreen({
-  items,
-  coaches,
+  items: initialItems,
+  coaches: initialCoaches,
   favIds,
-  cats,
+  cats: initialCats,
   todayIso,
   meId,
   meKind,
-  myRail,
+  myRail: initialMyRail,
   meFace,
   savedStudios = [],
   socialGroups = [],
@@ -187,6 +188,62 @@ export function FollowingScreen({
   mode?: "home" | "upcoming";
 }) {
   const isHome = mode === "home";
+  const [items, setItems] = useState(initialItems);
+  const [coaches, setCoaches] = useState(initialCoaches);
+  const [cats, setCats] = useState(initialCats);
+  const [myRail, setMyRail] = useState(initialMyRail);
+  const [calendarPending, setCalendarPending] = useState(mode === "home");
+  const streamGeneration = useRef(0);
+
+  // Give the browser the useful screen first. The network request for days
+  // 3–31 begins only after hydration, then merges without replacing today's
+  // already-interactive rows or resetting any filters/peek state.
+  useEffect(() => {
+    const generation = ++streamGeneration.current;
+    // A server refresh can change the relationship graph without unmounting
+    // this client component. Reset to that new first response, then stream a
+    // matching remainder; otherwise an old month can survive an unfollow.
+    setItems(initialItems);
+    setCoaches(initialCoaches);
+    setCats(initialCats);
+    setMyRail(initialMyRail);
+    if (!isHome) return undefined;
+    setCalendarPending(true);
+    const frame = requestAnimationFrame(() => {
+      void loadCalendarRemainder()
+        .then((remainder) => {
+          if (!remainder || streamGeneration.current !== generation) return;
+          setItems((current) => {
+            const merged = new Map(current.map((item) => [item.key, item]));
+            for (const item of remainder.items) merged.set(item.key, item);
+            return [...merged.values()];
+          });
+          // Keep identities that occur only in Today/Tomorrow. The remainder
+          // intentionally queries days 3–31, so replacing this array would
+          // make an initial one-off row lose its coach/studio name and face as
+          // soon as the background month finished loading.
+          setCoaches((current) => {
+            const merged = new Map(current.map((coach) => [coach.id, coach]));
+            for (const coach of remainder.coaches) merged.set(coach.id, coach);
+            return [...merged.values()];
+          });
+          setCats([...new Set([...initialCats, ...remainder.cats])]);
+          setMyRail(remainder.myRail);
+        })
+        .catch(() => {
+          // The first two days remain fully usable offline or on a failed
+          // continuation request; a later navigation naturally retries.
+        })
+        .finally(() => {
+          if (streamGeneration.current === generation) setCalendarPending(false);
+        });
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (streamGeneration.current === generation) streamGeneration.current += 1;
+    };
+  }, [initialCats, initialCoaches, initialItems, initialMyRail, isHome]);
+
   // The containerless list lands on today or the first day that holds
   // anything. Home keeps only the date rail and the selected day's results;
   // the dedicated Upcoming view adds the four value-showing filter chips.
@@ -336,7 +393,6 @@ export function FollowingScreen({
   }, [calendarFilter, coachOptions, studioOptions, groupOptions, meKind]);
 
   const shown = useMemo(() => {
-    const coachIds = new Set(coachOptions.map((person) => person.id));
     const studioHrefs = new Set(studioOptions.map((studio) => `/s/${studio.slug}`));
     const groupKeys = new Set(groupOptions.flatMap((group) => group.classKeys));
     return items.filter((item) => {
@@ -352,13 +408,16 @@ export function FollowingScreen({
         const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
         return Boolean(group?.classKeys.includes(item.key));
       }
-      const fromPeople = item.saved || (!!meId && item.coachId === meId) || coachIds.has(item.coachId);
+      // The rail is presentation and may be progressively truncated. The
+      // relationship itself is the source of truth for the combined view,
+      // otherwise a class from followed person 17 can vanish on first paint.
+      const fromPeople = item.saved || (!!meId && item.coachId === meId) || favoriteIds.has(item.coachId);
       const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
       const fromGroups = groupKeys.has(item.key);
       return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions]);
+  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds]);
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -654,7 +713,9 @@ export function FollowingScreen({
           </Link>}
         </div>
       )}
-      {(isHome ? shown.length === 0 : items.length === 0) ? (
+      {isHome && shown.length === 0 && calendarPending ? (
+        <div className="calendar-stream-loading" role="status">Loading your schedule</div>
+      ) : (isHome ? shown.length === 0 : items.length === 0) ? (
         <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}

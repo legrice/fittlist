@@ -34,6 +34,18 @@ export type DiscoverFeed = {
   nearStudios: NearStudio[];
 };
 
+export type DiscoverFeedOptions = {
+  /** Inclusive offsets from today. Home uses 0–1 for first paint, then asks
+   * for 2–30 after hydration; discovery keeps the complete rolling month. */
+  startDay?: number;
+  endDay?: number;
+  /** Home is a calendar of relationships the viewer chose. It must not pay
+   * to load every discoverable coach merely to discard most of them later. */
+  calendarOnly?: boolean;
+  /** Keep first-paint identity data to the faces that can actually be seen. */
+  initialRailLimit?: number;
+};
+
 /** How far ahead a face has to have something for the rail to carry it:
  *  the peek's own fortnight, so a circle never opens onto nothing. */
 const RAIL_AHEAD_DAYS = 14;
@@ -41,6 +53,7 @@ const RAIL_AHEAD_DAYS = 14;
 export async function buildDiscoverFeed(
   userId: string,
   me: { email: string; kind: string; handle: string | null; location?: string | null },
+  options: DiscoverFeedOptions = {},
 ): Promise<DiscoverFeed> {
   const db = await getDb();
   // By email, the way every other follow lookup does it: somebody who followed
@@ -60,9 +73,76 @@ export async function buildDiscoverFeed(
     .filter((id) => id !== userId && !hidden.has(id));
   const followedSet = new Set(followed);
   const today = todayIso();
+  const startDay = Math.max(0, options.startDay ?? 0);
+  const endDay = Math.max(startDay, Math.min(30, options.endDay ?? 30));
+  const startDate = new Date(`${today}T00:00:00Z`);
+  startDate.setUTCDate(startDate.getUTCDate() + startDay);
+  const from = startDate.toISOString().slice(0, 10);
   const throughDate = new Date(`${today}T00:00:00Z`);
-  throughDate.setUTCDate(throughDate.getUTCDate() + 30);
+  throughDate.setUTCDate(throughDate.getUTCDate() + endDay);
   const through = throughDate.toISOString().slice(0, 10);
+
+  // Home is not the directory. Resolve the small graph that can contribute
+  // to the viewer's calendar before selecting users or schedules: their own
+  // account, follows, saved occurrences, saved studios and group calendars.
+  // This is the important boundary for people following 90 accounts: it
+  // prevents one calendar visit from loading every public coach in FittList.
+  const calendarOwnerIds = new Set<string>([userId, ...followed]);
+  if (options.calendarOnly) {
+    const [savedStudioOwners, groupRows, savedClassOwners] = await Promise.all([
+      db
+        .select({ studioId: schema.studios.id, ownerId: schema.studios.accountUserId })
+        .from(schema.studioEndorsements)
+        .innerJoin(schema.studios, eq(schema.studios.id, schema.studioEndorsements.targetStudioId))
+        .where(and(
+          eq(schema.studioEndorsements.endorserUserId, userId),
+          eq(schema.studioEndorsements.trait, "been_here"),
+        )),
+      db
+        .selectDistinct({ id: schema.groups.id })
+        .from(schema.groups)
+        .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
+        .leftJoin(schema.groupFavorites, eq(schema.groupFavorites.groupId, schema.groups.id))
+        .where(sql`${schema.groups.ownerUserId} = ${userId} OR ${schema.groupMembers.userId} = ${userId} OR ${schema.groupFavorites.userId} = ${userId}`),
+      db
+        .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
+        .from(schema.attendances)
+        .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
+        .where(and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, from),
+          lte(schema.attendances.occurrenceDate, through),
+        )),
+    ]);
+    for (const row of savedStudioOwners) if (row.ownerId) calendarOwnerIds.add(row.ownerId);
+    for (const row of savedClassOwners) {
+      calendarOwnerIds.add(row.ownerId);
+      if (row.coachId) calendarOwnerIds.add(row.coachId);
+    }
+    const [groupClassOwners, studioClassPeople] = await Promise.all([
+      groupRows.length
+        ? db
+        .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
+        .from(schema.groupClasses)
+        .innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId))
+        .where(and(
+          inArray(schema.groupClasses.groupId, groupRows.map((row) => row.id)),
+          gte(schema.groupClasses.occurrenceDate, from),
+          lte(schema.groupClasses.occurrenceDate, through),
+        ))
+        : Promise.resolve([]),
+      savedStudioOwners.length
+        ? db
+          .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
+          .from(schema.classes)
+          .where(inArray(schema.classes.studioId, savedStudioOwners.map((row) => row.studioId)))
+        : Promise.resolve([]),
+    ]);
+    for (const row of [...groupClassOwners, ...studioClassPeople]) {
+      calendarOwnerIds.add(row.ownerId);
+      if (row.coachId) calendarOwnerIds.add(row.coachId);
+    }
+  }
   // Discover, per the brief: the list is classes near you, from every
   // listable coach, whether or not anybody favorited them. A favorite is a
   // shortcut to a person (the rail on top), not a subscription that fills
@@ -83,26 +163,36 @@ export async function buildDiscoverFeed(
     // and its thumbnail made the DB ship the large original even though the
     // list immediately discarded it whenever a thumbnail existed.
     photo: sql<null>`null`,
-    photoThumb: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+    // The first Home response enriches only the visible rail + coaches with
+    // rows today/tomorrow below. Do not pull 90 image values merely because
+    // the schedule graph needs 90 ids.
+    photoThumb: options.initialRailLimit
+      ? sql<null>`null`
+      : sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
     shiftsPublic: schema.users.shiftsPublic,
     avatarColor: schema.users.avatarColor,
   };
   const studioListColumns = {
     id: schema.studios.id,
+    accountUserId: schema.studios.accountUserId,
     slug: schema.studios.slug,
     name: schema.studios.name,
     address: schema.studios.address,
-    photo: schema.studios.photo,
+    // Home class rows display coach faces, never studio artwork. Saved studio
+    // rail art is selected directly by the page, outside this builder.
+    photo: options.calendarOnly ? sql<null>`null` : schema.studios.photo,
     types: schema.studios.types,
     lat: schema.studios.lat,
     lng: schema.studios.lng,
   };
-  const [everyoneRows, followedUsers, mineMarkRows, activityRows, allStudios] = await Promise.all([
+  const [everyoneRows, followedUserRows, mineMarkRows, activityRows, studioDirectoryRows] = await Promise.all([
     db
       .select(userListColumns)
       .from(schema.users)
-      .where(and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true))),
-    followed.length
+      .where(options.calendarOnly
+        ? inArray(schema.users.id, [...calendarOwnerIds])
+        : and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true))),
+    followed.length && !options.calendarOnly
       ? db.select(userListColumns).from(schema.users).where(inArray(schema.users.id, followed))
       : Promise.resolve([]),
     // Only marks inside the rendered rolling range can affect this payload.
@@ -116,7 +206,7 @@ export async function buildDiscoverFeed(
       .from(schema.attendances)
       .where(and(
         eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, today),
+        gte(schema.attendances.occurrenceDate, from),
         lte(schema.attendances.occurrenceDate, through),
       )),
     followed.length
@@ -129,10 +219,18 @@ export async function buildDiscoverFeed(
           .where(and(inArray(schema.classes.userId, followed), eq(schema.classes.isPublic, true)))
           .groupBy(schema.classes.userId)
       : Promise.resolve([]),
-    db.select(studioListColumns).from(schema.studios).orderBy(schema.studios.name),
+    options.calendarOnly
+      ? Promise.resolve([])
+      : db.select(studioListColumns).from(schema.studios).orderBy(schema.studios.name),
   ]);
+  const followedUsers = options.calendarOnly
+    ? everyoneRows.filter((user) => followedSet.has(user.id))
+    : followedUserRows;
   const coachRows = everyoneRows.filter(
-    (u) => u.kind !== "fan" && u.kind !== "gym" && (u.id === userId || !hidden.has(u.id)),
+    (u) =>
+      u.kind !== "fan" &&
+      (options.calendarOnly || u.kind !== "gym") &&
+      (u.id === userId || !hidden.has(u.id)),
   );
   const followedCoaches = followedUsers.filter(
     (u) => u.kind !== "fan" && u.kind !== "gym" && !!u.handle,
@@ -145,14 +243,27 @@ export async function buildDiscoverFeed(
   // result. Reusing those rows avoids loading the same classes, shifts and
   // cover exceptions twice (the old path did exactly that for all 90 follows).
   const [allClassRows, missingFollowedSchedules] = await Promise.all([
-    coachRows.length ? publicFeedSchedules(coachRows) : Promise.resolve([]),
+    coachRows.length ? publicFeedSchedules(coachRows, { start: from, end: through }) : Promise.resolve([]),
     missingFollowedCoaches.length
-      ? publicFeedSchedules(missingFollowedCoaches)
+      ? publicFeedSchedules(missingFollowedCoaches, { start: from, end: through })
       : Promise.resolve([]),
   ]);
+  // Discovery needs the whole place directory. Home needs only the places
+  // named by its relevant schedules; selecting every studio photo for two
+  // days of calendar rows was another avoidable chunk of first-paint work.
+  const scheduleStudioIds = options.calendarOnly
+    ? [...new Set([...allClassRows, ...missingFollowedSchedules]
+      .map((row) => row.studioId)
+      .filter((id): id is string => !!id))]
+    : [];
+  const allStudios = options.calendarOnly
+    ? scheduleStudioIds.length
+      ? await db.select(studioListColumns).from(schema.studios).where(inArray(schema.studios.id, scheduleStudioIds))
+      : []
+    : studioDirectoryRows;
   const classRows = allClassRows.filter((c) => c.isPublic);
-  const coaches = coachRows.filter((c) => !!c.handle);
-  const coachById = new Map(coaches.map((c) => [c.id, c]));
+  const coaches = coachRows.filter((c) => c.kind !== "gym" && !!c.handle);
+  const coachById = new Map(coachRows.map((c) => [c.id, c]));
   const studioById = new Map(allStudios.map((s) => [s.id, s]));
 
   // What the viewer already saved, so the row ribbons start right.
@@ -160,7 +271,7 @@ export async function buildDiscoverFeed(
     mineMarkRows.map((m) => `${m.classId}|${m.occurrenceDate}`),
   );
   const items: FeedItem[] = [];
-  for (let n = 0; n <= 30; n++) {
+  for (let n = startDay; n <= endDay; n++) {
     const occurrenceDate = new Date(`${today}T00:00:00Z`);
     occurrenceDate.setUTCDate(occurrenceDate.getUTCDate() + n);
     const iso = occurrenceDate.toISOString().slice(0, 10);
@@ -174,9 +285,16 @@ export async function buildDiscoverFeed(
       // A shift is owned by the gym and shown under the coach, so the person
       // this row is about is ownerUserId, never userId.
       const coach = coachById.get(c.ownerUserId);
-      if (!coach?.handle) continue;
+      if (!coach) continue;
       const st = c.studioId ? studioById.get(c.studioId) : undefined;
-      const at = classAddress(c, coach.handle, st?.slug);
+      const studioSlug = st ? st.slug ?? st.id : null;
+      // A saved/group studio calendar is itself a public source of truth.
+      // Its open shifts and coaches who keep shifts private still belong on
+      // that studio calendar; keep the attribution at the studio rather than
+      // leaking a private coach name or dropping the class completely.
+      const at = coach.kind === "gym" && studioSlug
+        ? { key: studioSlug, base: `s/${studioSlug}` }
+        : classAddress(c, coach.handle, studioSlug);
       if (!at) continue;
       const t = clockParts(c.startTime);
       items.push({
@@ -190,7 +308,7 @@ export async function buildDiscoverFeed(
         where: st?.name ?? c.location ?? null,
         // A studio has a page; a class's own free-text location names a
         // room, which has nothing to open.
-        whereHref: st ? `/s/${st.slug}` : null,
+        whereHref: studioSlug ? `/s/${studioSlug}` : null,
         hm: t.hm,
         ap: t.ap,
         durationMin: c.durationMin,
@@ -407,14 +525,54 @@ export async function buildDiscoverFeed(
   // Coaches near you: every listable coach, your city first, then whoever
   // teaches soonest, with the viewer's follow state riding along so the
   // pill under each face starts right.
+  let initialRail = options.initialRailLimit
+    ? myRail.slice(0, options.initialRailLimit)
+    : myRail;
+  const initialCoachIds = options.initialRailLimit
+    ? new Set([...items.map((item) => item.coachId), ...initialRail.map((person) => person.id)])
+    : null;
+  const studioByAccountId = new Map(
+    allStudios.filter((studio) => !!studio.accountUserId).map((studio) => [studio.accountUserId!, studio]),
+  );
+  const studioIdentities: FeedCoach[] = options.calendarOnly
+    ? coachRows
+      .filter((coach) => coach.kind === "gym")
+      .map((coach) => {
+        const studio = studioByAccountId.get(coach.id);
+        return {
+          id: coach.id,
+          name: studio?.name ?? coach.name,
+          handle: studio ? `s/${studio.slug ?? studio.id}` : "",
+          photo: null,
+          color: avatarColor({ id: studio?.id ?? coach.id }),
+          next: nextLabel(coach.id),
+        };
+      })
+    : [];
+  const calendarIdentities = [...rail, ...studioIdentities];
+  let returnedRail = initialCoachIds
+    ? calendarIdentities.filter((coach) => initialCoachIds.has(coach.id))
+    : calendarIdentities;
+  if (initialCoachIds?.size) {
+    const visiblePhotos = await db
+      .select({
+        id: schema.users.id,
+        photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+      })
+      .from(schema.users)
+      .where(inArray(schema.users.id, [...initialCoachIds]));
+    const photoById = new Map(visiblePhotos.map((row) => [row.id, row.photo]));
+    returnedRail = returnedRail.map((coach) => ({ ...coach, photo: photoById.get(coach.id) ?? null }));
+    initialRail = initialRail.map((person) => ({ ...person, photo: photoById.get(person.id) ?? null }));
+  }
   return {
     items,
-    rail,
+    rail: returnedRail,
     favIds: [...favSet],
     cats,
     follows: followedCoaches.length,
     today,
-    myRail,
-    nearStudios,
+    myRail: initialRail,
+    nearStudios: options.calendarOnly ? [] : nearStudios,
   };
 }

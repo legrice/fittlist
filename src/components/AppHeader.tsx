@@ -163,10 +163,10 @@ export function AppHeader({
           <Link
             className="header-admin-activity"
             href="/admin?activity=1"
-            aria-label={`${adminActivity} new product activity ${adminActivity === 1 ? "event" : "events"}`}
+            aria-label={adminActivity > 0 ? "New product activity" : "Product activity"}
           >
             <Icon name="bolt_filled" size={20} />
-            {adminActivity > 0 && <b>{adminActivity > 99 ? "99+" : adminActivity}</b>}
+            {adminActivity > 0 && <i aria-hidden="true" />}
           </Link>
         )}
         <Link className="header-search-trigger" href="/discover" aria-label="Discover people, studios, groups, and classes">
