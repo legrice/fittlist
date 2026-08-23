@@ -129,7 +129,7 @@ export function YouDashboard({
       </AccountGroup>
 
       {(managed.length > 0 || managedGroups.length > 0) && (
-        <AccountGroup title="Calendars you manage">
+        <AccountGroup title="Studios and groups you manage">
           {managed.map((place) => (
             <AccountRow
               icon="storefront"

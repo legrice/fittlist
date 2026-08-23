@@ -31,8 +31,8 @@ export function navTabs(
       icon: "calendar_month",
       label: "Calendar",
     },
-    { id: "discover", href: "/search", icon: "search", label: "Find" },
-    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Manage" },
+    { id: "discover", href: "/discover", icon: "search", label: "Search" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile" },
   ];
 }
 
