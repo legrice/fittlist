@@ -6155,7 +6155,7 @@ select.editinput.placekind-select {
 .group-update-class { margin-top:14px; padding:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid var(--line); border-radius:16px; background:var(--paper); }
 .group-update-class > div { min-width:0; display:flex; flex-direction:column; gap:3px; }
 .group-update-class small,.group-update-class span { color:var(--muted); font-size:12px; }
-.group-update-class button { min-height:38px; padding:0 13px; display:inline-flex; align-items:center; gap:5px; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:#000; font:inherit; font-weight:700; }
+.group-update-class button { width:38px; min-height:38px; padding:0; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:#000; font:inherit; font-weight:700; }
 .group-update-class button.saved { background:var(--color-surface-muted); }
 .group-reactions { margin-top:14px; display:flex; gap:7px; }
 .group-reactions button { min-height:34px; padding:0 11px; border:1px solid var(--line); border-radius:var(--radius-pill); background:var(--paper); color:var(--ink); }
@@ -7992,6 +7992,7 @@ select.editinput.placekind-select {
 .youemptycopy { max-width: 330px; margin: 10px 0 0; color: var(--ol); font-size: 14px; line-height: 1.4; }
 .youaccount-group { margin-top: 34px; }
 .youaccount-empty { margin:0; padding:18px 2px; color:var(--ol); font-size:14px; line-height:1.4; }
+.save-ribbon-only { width:42px; min-width:42px; height:42px; min-height:42px; padding:0; display:inline-grid; place-items:center; }
 .youaccount-row {
   width: 100%; min-height: 76px; display: flex; align-items: center; gap: 16px;
   padding: 14px 2px; border: 0; background: none; color: var(--ink); text-decoration: none;
@@ -9062,6 +9063,7 @@ select.editinput.placekind-select {
   box-shadow: inset 0 0 0 1.5px var(--ink);
 }
 .clsfull-btn.save.on { background: var(--ink); color: var(--paper); box-shadow: none; }
+.clsfull-btn.save.ribbon { flex:0 0 54px; width:54px; padding:0; }
 .clspeek-rsvpnote { margin: 10px 0 0; font-size: 12.5px; color: var(--ol); }
 
 /* At the page gutter, like everything else: the label and the chips share
@@ -9469,8 +9471,8 @@ select.editinput.placekind-select {
    nobody has learned the mark yet, and this is the one action the whole pull
    model turns on. */
 .peekadd {
-  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
-  height: 34px; padding: 0 12px; border-radius: 999px;
+  width:34px; flex:0 0 34px; display:inline-flex; align-items:center; justify-content:center;
+  height:34px; padding:0; border-radius:999px;
   border: 1px solid var(--line); background: var(--card);
   font-size: 13.5px; font-weight: 600; color: var(--ink); cursor: pointer;
 }
@@ -10913,21 +10915,21 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-cardlist .clline-overlay { border-left:4px solid var(--overlay-color, var(--color-border-strong)); }
 .calendar-overlay-save {
-  position:absolute; right:14px; top:14px; bottom:auto; min-height:34px; padding:0 12px;
-  display:inline-flex; align-items:center; gap:4px; border:1px solid var(--color-border);
+  position:absolute; right:14px; top:14px; bottom:auto; width:34px; min-height:34px; padding:0;
+  display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--color-border);
   border-radius:var(--radius-pill); background:var(--color-white); color:var(--color-black);
   font:inherit; font-size:12px; font-weight:700; cursor:pointer;
 }
 .calendar-cardlist .calendar-save-action {
   position:absolute; top:14px; right:14px; bottom:auto; z-index:2;
-  width:auto; min-width:0; height:34px; min-height:34px; padding:0 10px;
+  width:34px; min-width:34px; height:34px; min-height:34px; padding:0;
   display:inline-flex; align-items:center; justify-content:center; gap:4px;
   border:1px solid var(--color-border); border-radius:var(--radius-pill);
   background:var(--color-white); color:var(--color-black); font:inherit; font-size:12px; font-weight:700;
 }
 .calendar-cardlist .calendar-save-action:is(.saved,.on) { border-color:transparent; background:var(--color-attending); color:var(--color-black); }
 .calendar-cardlist .calendar-save-action svg { width:17px; height:17px; padding:0; border-radius:0; background:none; color:currentColor; }
-.calendar-cardlist .clrow:has(.calendar-save-action) .clline-head { padding-right:82px; }
+.calendar-cardlist .clrow:has(.calendar-save-action) .clline-head { padding-right:48px; }
 .calendar-overlay-context {
   margin:0 0 12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px;
   border:1px solid var(--color-border); border-radius:var(--radius-control); background:var(--color-white);

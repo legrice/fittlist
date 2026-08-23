@@ -574,8 +574,9 @@ export function ClassPeek({
               const word = full?.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Remove from calendar" : "Save to calendar";
               return (
                 <button
-                  className={`clsfull-btn save${on ? " on" : ""}`}
+                  className={`clsfull-btn save${full?.rsvp ? " rsvp" : " ribbon"}${on ? " on" : ""}`}
                   disabled={saveBusy}
+                  aria-label={word}
                   aria-pressed={on}
                   onClick={async () => {
                     if (saveBusy) return;
@@ -598,10 +599,7 @@ export function ClassPeek({
                     onChanged();
                   }}
                 >
-                  {!full?.rsvp && (
-                    <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
-                  )}
-                  {word}
+                  {full?.rsvp ? word : <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />}
                 </button>
               );
             })()}

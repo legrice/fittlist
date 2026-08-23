@@ -65,19 +65,12 @@ export function FollowMemberButton({
   return (
     <>
       <button
-        className={`followpill${state === "following" ? " on" : ""}`}
+        className={`followpill save-ribbon-only${state === "following" ? " on" : ""}`}
         disabled={pending}
+        aria-label={state === "following" ? "Remove saved calendar" : state === "requested" ? "Cancel calendar request" : "Save calendar"}
         onClick={toggle}
       >
-        {state === "following" ? (
-          <>
-            <Icon name="check" size={19} /> Saved
-          </>
-        ) : state === "requested" ? (
-          "Requested"
-        ) : (
-          "Save calendar"
-        )}
+        <Icon name={state === "following" ? "bookmark_added" : state === "requested" ? "schedule" : "bookmark"} size={20} />
       </button>
       <Toast msg={toastMsg} on={toastOn} />
     </>

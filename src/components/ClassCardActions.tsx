@@ -68,7 +68,6 @@ export function ClassCardActions({
           onClick={toggle}
         >
           <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
-          <span className="evcard-add-t">{on ? "Saved" : "Save"}</span>
         </button>
       )}
       {/* The same note every other Add answers with, naming the list it

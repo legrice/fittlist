@@ -38,5 +38,5 @@ export function FavoritePersonButton({ person }: { person: DirPerson }) {
   });
   const label = favorited ? "Saved" : requested ? "Requested" : "Save calendar";
   const firstName=person.name.trim().split(/\s+/)[0]||person.name;
-  return <><button type="button" className={`discover-favorite-person${favorited || requested ? " on" : ""}`} disabled={pending} onClick={toggle} aria-label={`${label}: ${person.name}`}><Icon name={favorited ? "favorite_filled" : "favorite"} size={17} /><span>{label}</span></button><BodyPortal><FollowHint name={firstName} handle={person.handle} on={hint} onClose={()=>setHint(false)}/></BodyPortal><Toast msg={toastMsg} on={toastOn} /></>;
+  return <><button type="button" className={`discover-favorite-person save-ribbon-only${favorited || requested ? " on" : ""}`} disabled={pending} onClick={toggle} aria-label={`${label}: ${person.name}`}><Icon name={favorited ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={19} /></button><BodyPortal><FollowHint name={firstName} handle={person.handle} on={hint} onClose={()=>setHint(false)}/></BodyPortal><Toast msg={toastMsg} on={toastOn} /></>;
 }

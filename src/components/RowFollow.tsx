@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { FollowHint, followHintOff } from "@/components/FollowHint";
+import { Icon } from "@/components/Icon";
 
 // The directory row's Follow pill.
 //
@@ -85,11 +86,9 @@ export function RowFollow({
         }
         onClick={toggle}
       >
-        {following
-          ? calendarLanguage ? "Saved" : "Following"
-          : requested
-            ? "Requested"
-            : calendarLanguage ? "Save calendar" : "Follow"}
+        {calendarLanguage
+          ? <Icon name={following ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={19} />
+          : following ? "Following" : requested ? "Requested" : "Follow"}
       </button>
       <FollowHint name={first} handle={handle} on={hint} onClose={() => setHint(false)} />
     </>

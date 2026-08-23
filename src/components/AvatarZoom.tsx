@@ -186,11 +186,10 @@ export function AvatarZoom({
             <div className="avoverlay-bottom">
             <div className="avoverlay-acts">
               {follow && (
-                <button className="avact" disabled={pending} onClick={toggleFollow}>
+                <button className="avact save-ribbon-only" disabled={pending} onClick={toggleFollow} aria-label={following ? "Remove saved calendar" : requested ? "Cancel calendar request" : "Save calendar"}>
                   <span className={`avact-ic${following ? " on" : ""}`}>
-                    <Icon name={following ? "check" : requested ? "schedule" : "person_add"} size={24} />
+                    <Icon name={following ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={24} />
                   </span>
-                  {following ? "Saved" : requested ? "Requested" : "Save calendar"}
                 </button>
               )}
               <button className="avact" onClick={share}>

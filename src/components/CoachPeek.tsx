@@ -118,7 +118,6 @@ export function CoachPeek({
           aria-label={on ? `Saved to your week: ${item.name}` : `Save ${item.name} to your week`}
         >
           <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
-          <span>{on ? "Saved" : "Save"}</span>
         </button>
       ) : undefined;
       return {
@@ -185,16 +184,13 @@ export function CoachPeek({
                 </Link>
               ) : follow !== null ? (
                 <button
-                  className={`peekfollow${follow !== "off" ? " on" : ""}`}
+                  className={`peekfollow save-ribbon-only${follow !== "off" ? " on" : ""}`}
                   aria-pressed={follow !== "off"}
+                  aria-label={follow === "following" ? "Remove saved calendar" : follow === "requested" ? "Cancel calendar request" : "Save calendar"}
                   disabled={followBusy}
                   onClick={toggleFollow}
                 >
-                  {follow === "following"
-                    ? "Saved"
-                    : follow === "requested"
-                      ? "Requested"
-                      : "Save calendar"}
+                  <Icon name={follow === "following" ? "bookmark_added" : follow === "requested" ? "schedule" : "bookmark"} size={20} />
                 </button>
               ) : null}
             </div>

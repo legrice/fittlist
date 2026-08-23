@@ -672,7 +672,6 @@ export function ScheduleScreen({
                               onClick={() => removeGoing(p)}
                             >
                               <Icon name="bookmark_added" size={22} />
-                              <span className="evcard-add-t">Saved</span>
                             </button>
                           )}
                           </div>

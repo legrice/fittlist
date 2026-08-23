@@ -32,12 +32,11 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
       type="button"
       className={`actpill studio-been-here${selected ? " on" : ""}`}
       aria-pressed={selected}
+      aria-label={`${selected ? "Remove saved calendar" : "Save calendar"}. ${count} ${count === 1 ? "save" : "saves"}`}
       disabled={pending}
       onClick={toggle}
     >
-      <Icon name={selected ? "favorite_filled" : "favorite"} size={18} />
-      {selected ? "Saved" : "Save calendar"}
-      {count > 0 && <span className="studio-been-count">{count}</span>}
+      <Icon name={selected ? "bookmark_added" : "bookmark"} size={20} />
     </button>
     <SignupPrompt
       open={signup}

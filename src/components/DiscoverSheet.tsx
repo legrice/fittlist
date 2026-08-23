@@ -266,12 +266,13 @@ function PeopleRow({ p }: { p: DirPerson }) {
         </span>
       </Link>
       <button
-        className={`peekfollow${state !== "off" ? " on" : ""}`}
+        className={`peekfollow save-ribbon-only${state !== "off" ? " on" : ""}`}
         aria-pressed={state !== "off"}
+        aria-label={state === "following" ? "Remove saved calendar" : state === "requested" ? "Cancel calendar request" : "Save calendar"}
         disabled={busy}
         onClick={toggle}
       >
-        {state === "following" ? "Saved" : state === "requested" ? "Requested" : "Save calendar"}
+        <Icon name={state === "following" ? "bookmark_added" : state === "requested" ? "schedule" : "bookmark"} size={20} />
       </button>
     </div>
   );

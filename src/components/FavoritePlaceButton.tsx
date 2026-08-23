@@ -12,5 +12,5 @@ export function FavoritePlaceButton({ studio }: { studio: DirStudio }) {
   const [favorited, setFavorited] = useState(!!studio.favorited);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-  return <><button type="button" className={`discover-favorite-place${favorited ? " on" : ""}`} disabled={pending} aria-label={`${favorited ? "Remove" : "Save"} ${studio.name} calendar`} onClick={() => start(async () => { const result = await toggleStudioVisit(studio.slug); if (!result.ok) return; const next = !!result.selected; setFavorited(next); toast(`${studio.name} calendar ${next ? "saved" : "removed"}`); router.refresh(); })}><Icon name={favorited ? "favorite_filled" : "favorite"} size={20} /></button><Toast msg={toastMsg} on={toastOn} /></>;
+  return <><button type="button" className={`discover-favorite-place save-ribbon-only${favorited ? " on" : ""}`} disabled={pending} aria-label={`${favorited ? "Remove" : "Save"} ${studio.name} calendar`} onClick={() => start(async () => { const result = await toggleStudioVisit(studio.slug); if (!result.ok) return; const next = !!result.selected; setFavorited(next); toast(`${studio.name} calendar ${next ? "saved" : "removed"}`); router.refresh(); })}><Icon name={favorited ? "bookmark_added" : "bookmark"} size={20} /></button><Toast msg={toastMsg} on={toastOn} /></>;
 }

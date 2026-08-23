@@ -881,7 +881,6 @@ function FollowingAdd({
       onClick={toggle}
     >
       <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
-      <span>{on ? "Saved" : "Save"}</span>
     </button>
   );
 }
