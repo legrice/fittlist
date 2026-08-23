@@ -9543,11 +9543,28 @@ select.editinput.placekind-select {
 .peekstar.on { color: var(--si); }
 .peekstar[disabled] { opacity: .55; }
 
-/* The peek. A bottom sheet rather than the class overlay: this is a list you
-   skim and act on several times before closing, and the overlay's shape says
-   one thing, whole screen. `.sheet.sheet-full` normally removes top padding;
-   the doubled selector wins that specificity and restores a real top inset. */
-.sheet.peeksheet { padding-top: 24px; }
+/* The peek is a real bottom sheet, not a full-screen page. `sheet-full` still
+   gives its long calendar an internal scroller, but this more specific rule
+   releases the height and corners that made a quick look feel like a route. */
+.peek-scrim { background:rgba(23,26,31,.42); }
+.sheet.sheet-full.peeksheet {
+  width:100%; height:min(88dvh,780px); max-height:88dvh; padding-top:24px;
+  border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
+  animation:peek-sheet-up .3s cubic-bezier(.22,.82,.28,1);
+}
+@keyframes peek-sheet-up {
+  from { transform:translateY(100%); opacity:.92; }
+  to { transform:translateY(0); opacity:1; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .sheet.sheet-full.peeksheet { animation:none; }
+}
+@media (min-width:940px) {
+  .sheet.sheet-full.peeksheet {
+    width:min(620px,100%); height:min(82dvh,760px); max-height:82dvh;
+    border-radius:var(--radius-sheet);
+  }
+}
 .peekcontrols { position:sticky; top:14px; z-index:8; display:flex; align-items:center; justify-content:space-between; min-height:44px; margin:0 0 22px; pointer-events:none; }
 .peekcontrols > * { pointer-events:auto; }
 .peekcontrols .peekclose { position:static; display:flex; margin:0; box-shadow:none; }

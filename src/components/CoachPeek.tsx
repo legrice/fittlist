@@ -137,12 +137,17 @@ export function CoachPeek({
 
   return (
     <div
-      className="sheet-scrim"
+      className="sheet-scrim peek-scrim"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="sheet sheet-full peeksheet">
+      <div
+        className="sheet sheet-full peeksheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${name} calendar`}
+      >
         {/* A direct child of the scrolling sheet so sticky can hold it for
             the full week. Inside the short header it was constrained to the
             header and disappeared as soon as the dates began. */}
