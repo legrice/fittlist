@@ -9612,6 +9612,7 @@ select.editinput.placekind-select {
 .peekcontrols { position:sticky; top:14px; z-index:8; display:flex; align-items:center; justify-content:space-between; min-height:44px; margin:0 0 22px; pointer-events:none; }
 .peekcontrols > * { pointer-events:auto; }
 .peekcontrols .peekclose { position:static; display:flex; margin:0; box-shadow:none; }
+.peekrelationship { min-height:44px; padding-inline:18px; }
 .peekpin { position:static; display:flex; margin:0; background:var(--card); color:var(--ink); }
 .peekpin.on { background:var(--ink); color:var(--card); }
 .calendar-pin-button { width:42px; height:42px; padding:0; display:grid; place-items:center; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--ink); }

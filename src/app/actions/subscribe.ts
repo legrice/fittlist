@@ -217,6 +217,18 @@ export async function unfollowTrainer(handle: string): Promise<{ ok: boolean; er
         eq(schema.followRequests.requesterUserId, userId),
       ),
     );
+  // Following is the relationship that makes a person eligible for the
+  // calendar rail. Do not leave an orphaned priority pin behind after an
+  // unfollow, or they can appear to remain followed until another refresh.
+  await db
+    .delete(schema.calendarPins)
+    .where(
+      and(
+        eq(schema.calendarPins.userId, userId),
+        eq(schema.calendarPins.entityType, "person"),
+        eq(schema.calendarPins.entityId, trainer.id),
+      ),
+    );
   followChanged();
   const { recordProductActivity } = await import("@/lib/product-activity");
   await recordProductActivity(userId, "favorite_person_removed");

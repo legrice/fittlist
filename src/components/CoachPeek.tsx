@@ -7,7 +7,6 @@ import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
 import { MessageComposer } from "@/components/MessageComposer";
-import { calendarPinState, toggleCalendarPin } from "@/app/actions/pins";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
@@ -37,7 +36,6 @@ export function CoachPeek({
   self = false,
   scheduleOnly = false,
   shareHref,
-  initialPinned,
   onPinChange,
   onClose,
 }: {
@@ -53,7 +51,7 @@ export function CoachPeek({
    * privately added for themselves. */
   scheduleOnly?: boolean;
   shareHref?: string;
-  initialPinned?: boolean;
+  /** Lets a parent rail discard any old priority state after an unfollow. */
   onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
 }) {
@@ -63,9 +61,9 @@ export function CoachPeek({
   // round trip. Keyed the way the loader keys it.
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [messageOpen, setMessageOpen] = useState(false);
-  const [pinned, setPinned] = useState(initialPinned ?? false);
+  const [relationship, setRelationship] = useState<"off" | "following" | "requested" | null>(null);
   const [, startTransition] = useTransition();
-  const [pinPending, startPinTransition] = useTransition();
+  const [followPending, startFollowTransition] = useTransition();
   const [toastMsg, toastOn, , dismissToast, toastFor] = useToast();
 
   useEffect(() => {
@@ -75,13 +73,33 @@ export function CoachPeek({
         return;
       }
       setPeek(res);
+      setRelationship(res.following ? "following" : "off");
     });
   }, [id]);
 
-  useEffect(() => {
-    if (self || initialPinned !== undefined) return;
-    calendarPinState("person", id).then(setPinned);
-  }, [id, initialPinned, self]);
+  const toggleFollow = () => {
+    if (!peek?.handle || relationship === null || followPending) return;
+    const before = relationship;
+    const next = before === "off" ? "following" : "off";
+    setRelationship(next);
+    startFollowTransition(async () => {
+      const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
+      const result = before === "off" ? await followTrainer(peek.handle!) : await unfollowTrainer(peek.handle!);
+      if (!result.ok) {
+        setRelationship(before);
+        return;
+      }
+      if (before === "off") {
+        const requested = "requested" in result && !!result.requested;
+        setRelationship(requested ? "requested" : "following");
+        toastFor(requested ? `Requested to follow ${name}.` : `Following ${name}.`, 3600);
+      } else {
+        setRelationship("off");
+        onPinChange?.(false);
+        toastFor(`Unfollowed ${name}.`, 3600);
+      }
+    });
+  };
 
   const save = (classId: string, iso: string, on: boolean) => {
     const key = `${classId}|${iso}`;
@@ -164,22 +182,7 @@ export function CoachPeek({
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
-          {!self && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" disabled={pinPending} aria-label={pinned ? "Remove favorite" : "Favorite"} aria-pressed={pinned} onClick={() => {
-            const next = !pinned;
-            setPinned(next);
-            onPinChange?.(next);
-            startPinTransition(async () => {
-              const result = await toggleCalendarPin("person", id);
-              if (!result.ok) {
-                setPinned(!next);
-                onPinChange?.(!next);
-                return;
-              }
-              setPinned(result.pinned);
-              onPinChange?.(result.pinned);
-              if (result.pinned) toastFor(`You favorited ${name}. Their calendar will appear near the front.`, 5200);
-            });
-          }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>}
+          {!self && relationship !== null && <button className={`peekfollow peekrelationship${relationship !== "off" ? " on" : ""}`} type="button" disabled={followPending} aria-label={relationship === "following" ? `Unfollow ${name}` : relationship === "requested" ? `Cancel follow request for ${name}` : `Follow ${name}`} aria-pressed={relationship !== "off"} onClick={toggleFollow}>{relationship === "following" ? "Following" : relationship === "requested" ? "Requested" : "Follow"}</button>}
         </div>
         {/* The head stacks, by Matt's call: close alone in the corner, then
             the face, the name on its own line under it, and two actions
