@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
-import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
 // Following a member. Same verb and same table as following a coach; what it
@@ -44,10 +43,10 @@ export function FollowMemberButton({
         }
         if (res.requested) {
           setState("requested");
-          toast(`Asked to save ${first}'s calendar`);
+          toast(`Follow request sent to ${first}`);
         } else {
           setState("following");
-          toast(`${first}'s calendar saved`);
+          toast(`Following ${first}`);
         }
       } else {
         const res = await unfollowTrainer(handle);
@@ -57,7 +56,7 @@ export function FollowMemberButton({
         }
         const wasRequest = state === "requested";
         setState("off");
-        toast(wasRequest ? "Request withdrawn" : "Calendar removed");
+        toast(wasRequest ? "Follow request withdrawn" : `Unfollowed ${first}`);
       }
     });
   };
@@ -65,12 +64,12 @@ export function FollowMemberButton({
   return (
     <>
       <button
-        className={`followpill save-ribbon-only${state === "following" ? " on" : ""}`}
+        className={`followpill${state === "following" ? " on" : ""}`}
         disabled={pending}
-        aria-label={state === "following" ? "Remove saved calendar" : state === "requested" ? "Cancel calendar request" : "Save calendar"}
+        aria-pressed={state === "following"}
         onClick={toggle}
       >
-        <Icon name={state === "following" ? "bookmark_added" : state === "requested" ? "schedule" : "bookmark"} size={20} />
+        {state === "following" ? "Following" : state === "requested" ? "Requested" : "Follow"}
       </button>
       <Toast msg={toastMsg} on={toastOn} />
     </>

@@ -859,7 +859,7 @@ function EntityCalendarPeek({ entity, pinned, onPinned, onClose }: {
         <div className="peekcontrols">
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
           {entity.type === "studio" && (
-            <button className={`iconbtn peekpin${pinned ? " on" : ""}`} disabled={busy} aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} onClick={() => {
+            <button className={`iconbtn peekpin${pinned ? " on" : ""}`} disabled={busy} aria-label={pinned ? "Remove favorite" : "Favorite"} onClick={() => {
               const next = !pinned;
               onPinned(next);
               start(async () => { const result = await toggleCalendarPin("studio", entity.id); if (!result.ok) onPinned(!next); });

@@ -62,10 +62,10 @@ export function NotifyCta({
   // remains the permission and delivery mechanism underneath that utility.
   const label = account
     ? following
-      ? "Saved"
+      ? "Following"
       : requested
         ? "Requested"
-        : "Save calendar"
+        : "Follow"
     : subscribed
       ? "On the list"
       : "Subscribe";
@@ -77,14 +77,14 @@ export function NotifyCta({
           const wasRequest = requested && !following;
           setFollowing(false);
           setRequested(false);
-          toast(wasRequest ? "Calendar request withdrawn" : `${firstName}'s calendar removed`);
+          toast(wasRequest ? "Follow request withdrawn" : `Unfollowed ${firstName}`);
         } else toast(res.error ?? "Something went wrong");
       } else {
         const res = await followTrainer(handle);
         if (res.ok) {
           if (res.requested) {
             setRequested(true);
-            toast(`Calendar request sent to ${firstName}`);
+            toast(`Follow request sent to ${firstName}`);
           } else {
             setFollowing(true);
             if (!followHintOff()) setHint(true);
@@ -161,13 +161,12 @@ export function NotifyCta({
   return (
     <>
       <button
-        className={`followpill${account ? " favorite" : ""}${compact ? " mini" : ""}${following || subscribed ? " on" : ""}`}
+        className={`followpill${compact ? " mini" : ""}${following || subscribed ? " on" : ""}`}
         disabled={pending}
         aria-pressed={account ? following : subscribed}
         onClick={onCta}
       >
         {/* A tick on the yes state, so the pill reports rather than offers. */}
-        {account && <Icon name={following ? "favorite_filled" : "favorite"} size={compact ? 15 : 17} />}
         {!account && (following || subscribed) && <Icon name="check" size={compact ? 15 : 17} />}
         {label}
       </button>

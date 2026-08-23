@@ -8,5 +8,5 @@ export function CalendarPinButton({ entityType, entityId, className = "calendar-
   const [pinned, setPinned] = useState(false);
   const [pending, start] = useTransition();
   useEffect(() => { calendarPinState(entityType, entityId).then(setPinned); }, [entityId, entityType]);
-  return <button type="button" className={`${className}${pinned ? " on" : ""}`} disabled={pending} aria-pressed={pinned} aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} onClick={() => { const next=!pinned; setPinned(next); start(async()=>{const result=await toggleCalendarPin(entityType,entityId); if(!result.ok)setPinned(!next);}); }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>;
+  return <button type="button" className={`${className}${pinned ? " on" : ""}`} disabled={pending} aria-pressed={pinned} aria-label={pinned ? "Remove favorite" : "Favorite"} onClick={() => { const next=!pinned; setPinned(next); start(async()=>{const result=await toggleCalendarPin(entityType,entityId); if(!result.ok)setPinned(!next);}); }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>;
 }
