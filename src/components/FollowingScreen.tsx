@@ -7,6 +7,7 @@ import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
+import { RailArrows } from "@/components/RailArrows";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { setGoing } from "@/app/actions/going";
@@ -197,6 +198,7 @@ export function FollowingScreen({
   // Where the auto-landing went, so the note under the tabs can say why
   // Today isn't selected; it only ever names this one day.
   const landed = useRef(day);
+  const followingRailRef = useRef<HTMLDivElement>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [calendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
@@ -548,7 +550,7 @@ export function FollowingScreen({
       {isHome && (
         <header className="following-head">
           <div className="tray following-rail" aria-label="Calendars">
-            <div className="tray-scroll">
+            <div className="tray-scroll" ref={followingRailRef}>
               <button className="trayitem" type="button" onClick={() => { if (meId) setPersonPeekOpen({ id:meId, name:meFace.name, photo:meFace.photo, color:meFace.color, self:true }); }}>
                 <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
@@ -589,6 +591,7 @@ export function FollowingScreen({
                 <span className="trayitem-nm">{group.name}</span>
               </button>})}
             </div>
+            <RailArrows railRef={followingRailRef} />
           </div>
         </header>
       )}
