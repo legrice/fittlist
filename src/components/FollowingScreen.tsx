@@ -809,9 +809,10 @@ export function FollowingScreen({
                       <div>
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
+                          const studioOwned = item.base.startsWith("s/");
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
-                              <span className="cash-class-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={64} height={64} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
+                              <span className={`cash-class-avatar${studioOwned ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={studioOwned ? 72 : 64} height={studioOwned ? 56 : 64} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
                               <span className="cash-class-copy"><strong>{item.name}</strong><span>{item.where || "Location to come"}</span><small>{coach?.name || "Coach to come"}</small></span>
                               <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
                             </button>

@@ -178,9 +178,10 @@ export async function buildDiscoverFeed(
     slug: schema.studios.slug,
     name: schema.studios.name,
     address: schema.studios.address,
-    // Home class rows display coach faces, never studio artwork. Saved studio
-    // rail art is selected directly by the page, outside this builder.
-    photo: options.calendarOnly ? sql<null>`null` : schema.studios.photo,
+    // A gym-owned class is attributed to the studio, not to a pretend person.
+    // Keep this on the unique studio identity below rather than copying the
+    // same image into every occurrence row in the rolling calendar payload.
+    photo: schema.studios.photo,
     types: schema.studios.types,
     lat: schema.studios.lat,
     lng: schema.studios.lng,
@@ -543,7 +544,7 @@ export async function buildDiscoverFeed(
           id: coach.id,
           name: studio?.name ?? coach.name,
           handle: studio ? `s/${studio.slug ?? studio.id}` : "",
-          photo: null,
+          photo: studio?.photo ?? null,
           color: avatarColor({ id: studio?.id ?? coach.id }),
           next: nextLabel(coach.id),
         };
@@ -562,7 +563,12 @@ export async function buildDiscoverFeed(
       .from(schema.users)
       .where(inArray(schema.users.id, [...initialCoachIds]));
     const photoById = new Map(visiblePhotos.map((row) => [row.id, row.photo]));
-    returnedRail = returnedRail.map((coach) => ({ ...coach, photo: photoById.get(coach.id) ?? null }));
+    returnedRail = returnedRail.map((coach) => ({
+      ...coach,
+      // Gym identities intentionally use the studio's artwork. They have no
+      // user avatar, so do not erase that image while enriching person rows.
+      photo: photoById.get(coach.id) ?? coach.photo ?? null,
+    }));
     initialRail = initialRail.map((person) => ({ ...person, photo: photoById.get(person.id) ?? null }));
   }
   return {

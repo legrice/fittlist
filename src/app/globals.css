@@ -8795,6 +8795,10 @@ select.editinput.placekind-select {
   width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:hidden;
   border-radius:50%; color:#fff; font-size:22px; font-weight:700;
 }
+.cash-class-avatar.studio {
+  width:72px; height:56px; flex-basis:72px; border-radius:14px;
+  border:1px solid var(--line); background:var(--card);
+}
 .cash-class-avatar img { width:100%; height:100%; object-fit:cover; }
 .cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
 .cash-class-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:1.2; font-weight:700; }
