@@ -187,7 +187,7 @@ export async function discoverGroups() {
   const me = await currentUser();
   if (!me) return [];
   const db = await getDb();
-  return db
+  const [groups, favoriteRows] = await Promise.all([db
     .select({
       id:schema.groups.id,
       name:schema.groups.name,
@@ -199,7 +199,13 @@ export async function discoverGroups() {
     })
     .from(schema.groups)
     .innerJoin(schema.users, eq(schema.groups.ownerUserId, schema.users.id))
-    .where(eq(schema.groups.visibility, "public"));
+    .where(eq(schema.groups.visibility, "public")),
+  db.select({ groupId:schema.groupFavorites.groupId })
+    .from(schema.groupFavorites)
+    .where(eq(schema.groupFavorites.userId, me.id)),
+  ]);
+  const favorites = new Set(favoriteRows.map((row) => row.groupId));
+  return groups.map((group) => ({ ...group, favorited:favorites.has(group.id) }));
 }
 
 /**

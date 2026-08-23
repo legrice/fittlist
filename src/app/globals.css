@@ -5970,8 +5970,8 @@ select.editinput.placekind-select {
 }
 .discover-person-main { display:flex; flex-direction:row; align-items:center; gap:12px; min-width:0; flex:1 1 auto; text-decoration:none; }
 .discover-person-face {
-  display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%;
-  overflow:hidden; color:#fff; font-size:18px; flex:0 0 56px;
+  display:flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%;
+  overflow:hidden; color:#fff; font-size:16px; flex:0 0 46px;
 }
 .discover-person-face img { width:100%; height:100%; object-fit:cover; }
 .discover-person-copy { min-width:0; flex:1 1 auto; }
@@ -5982,13 +5982,13 @@ select.editinput.placekind-select {
   display:block; max-width:100%; margin-top:3px; overflow:hidden; text-overflow:ellipsis;
   color:var(--muted); font-size:13.5px; line-height:1.3; white-space:nowrap;
 }
-.discover-favorite-person {
-  flex:0 0 auto; min-height:36px; margin:0; padding:7px 11px; border:0; border-radius:var(--radius-pill);
-  display:inline-flex; align-items:center; gap:5px; background:var(--cl); color:var(--ink);
-  font:inherit; font-size:12px; font-weight:700;
+.discover-follow-button {
+  flex:0 0 auto; min-height:38px; margin:0; padding:8px 13px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
+  display:inline-flex; align-items:center; justify-content:center; background:var(--color-white); color:var(--ink);
+  font:inherit; font-size:12px; font-weight:700; line-height:1;
 }
-.discover-favorite-person svg { color:var(--muted); }
-.discover-favorite-person.on svg { color:var(--color-favorite); }
+.discover-follow-button.on { background:var(--color-surface-muted); }
+.discover-follow-button:disabled { opacity:.58; }
 .discover-studio-grid {
   display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-2); margin-top:var(--space-2);
 }
@@ -6000,12 +6000,7 @@ select.editinput.placekind-select {
   display:flex; align-items:center; justify-content:center; width:100%; aspect-ratio:1.35;
   border-radius:var(--radius-control); object-fit:cover; color:#fff; font-size:34px;
 }
-.discover-favorite-place {
-  position:absolute; top:8px; right:8px; z-index:2; width:38px; height:38px; padding:0;
-  display:grid; place-items:center; border:0; border-radius:50%; background:rgba(255,255,255,.94);
-  color:var(--muted); box-shadow:0 1px 8px rgba(0,0,0,.12);
-}
-.discover-favorite-place.on { color:var(--color-favorite); }
+.discover-follow-place { position:absolute; top:8px; right:8px; z-index:2; }
 .discover-studio-tile strong,
 .discover-studio-tile small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .discover-studio-tile strong { margin-top:8px; font-size:16px; }
@@ -6091,10 +6086,12 @@ select.editinput.placekind-select {
 .discover-event-day > h2 { margin:0 0 var(--space-1); font-size:20px; line-height:1.15; }
 .discover-event-day > div { display:flex; flex-direction:column; gap:var(--space-1); }
 .discover-group-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-.discover-group-tile { min-height:150px; padding:16px; display:flex; flex-direction:column; align-items:flex-start; border:1px solid var(--color-border); border-radius:var(--radius-card); background:var(--card); color:var(--ink); text-decoration:none; }
-.discover-group-tile > span { width:48px; height:48px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime-soft); color:var(--color-olive); }
+.discover-group-tile { min-height:180px; padding:16px; display:flex; flex-direction:column; align-items:flex-start; border:1px solid var(--color-border); border-radius:var(--radius-card); background:var(--card); color:var(--ink); }
+.discover-group-tile > a { width:100%; min-width:0; flex:1; display:flex; flex-direction:column; align-items:flex-start; color:inherit; text-decoration:none; }
+.discover-group-tile > a > span { width:48px; height:48px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime-soft); color:var(--color-olive); }
 .discover-group-tile strong { margin-top:auto; font-size:17px; line-height:1.15; }
 .discover-group-tile small { margin-top:5px; color:var(--muted); font-size:13px; line-height:1.3; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+.discover-follow-group { width:100%; margin-top:12px; }
 
 /* A group begins in Favorites, in the same bottom-sheet language as the rest
    of the member side. The form stays flat: one name, then familiar people. */
