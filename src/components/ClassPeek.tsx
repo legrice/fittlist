@@ -507,27 +507,18 @@ export function ClassPeek({
           </div>
         )}
 
-        {!cls.mine && (bookLinks.length > 0 || full) && (
+        {!cls.mine && bookLinks.length > 0 && (
           <div className="clsfull-sections">
-            {bookLinks.length > 0 && (
-              <section className="clsfull-linksection">
-                <h3>Where to book</h3>
-                <div className="clsfull-linkrows">
-                  {bookLinks.map((link) => (
-                    <a key={link.url} href={link.url} target="_blank" rel="noopener nofollow">
-                      <span>{link.label}</span>
-                      <Icon name="north_east" size={19} />
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )}
             <section className="clsfull-linksection">
-              <h3>Share</h3>
-              <button type="button" onClick={share}>
-                <span>Share this class</span>
-                <Icon name="reply" size={20} className="share-arrow-forward" />
-              </button>
+              <h3>Where to book</h3>
+              <div className="clsfull-linkrows">
+                {bookLinks.map((link) => (
+                  <a key={link.url} href={link.url} target="_blank" rel="noopener nofollow">
+                    <span>{link.label}</span>
+                    <Icon name="north_east" size={19} />
+                  </a>
+                ))}
+              </div>
             </section>
           </div>
         )}
@@ -558,23 +549,24 @@ export function ClassPeek({
           <p className="clspeek-rsvpnote">Your name goes to whoever runs it when you RSVP.</p>
         )}
 
-        {/* The footer is reserved for a calendar state change. Booking and
-            sharing are useful details above, not the primary purpose of the
-            sheet. */}
-        {(cls.mine && cls.shift || cls.saved || full?.canAdd && (full.rsvp || allowWeekAdd)) && (
+        {/* Share and Save stay available at the bottom while the class facts
+            scroll. They are the two universal actions on somebody else's
+            class, and equal width keeps either one from reading as secondary. */}
+        {(!cls.mine || cls.mine && cls.shift) && (
         <div className="clsfull-cta">
           {cls.mine && cls.shift && (
             <button className="clsfull-btn manage" onClick={openManage}>
               {loading ? "Opening…" : "Manage shift"}
             </button>
           )}
-          {(cls.saved || full?.canAdd && (full.rsvp || allowWeekAdd)) &&
+          {!cls.mine && <button className="clsfull-btn share" type="button" onClick={share}>Share</button>}
+          {!cls.mine && (allowWeekAdd || cls.saved || full?.canAdd) &&
             (() => {
               const on = savedNow ?? cls.saved ?? full?.added ?? false;
-              const word = full?.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Remove from calendar" : "Save to calendar";
+              const word = on ? "Saved" : "Save";
               return (
                 <button
-                  className={`clsfull-btn save${full?.rsvp ? " rsvp" : " ribbon"}${on ? " on" : ""}`}
+                  className={`clsfull-btn save${on ? " on" : ""}`}
                   disabled={saveBusy}
                   aria-label={word}
                   aria-pressed={on}
@@ -599,7 +591,7 @@ export function ClassPeek({
                     onChanged();
                   }}
                 >
-                  {full?.rsvp ? word : <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />}
+                  {word}
                 </button>
               );
             })()}

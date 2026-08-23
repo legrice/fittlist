@@ -9743,7 +9743,7 @@ select.editinput.placekind-select {
   position: sticky; bottom: calc(var(--pad-b) * -1);
   margin: 22px -20px calc(var(--pad-b) * -1);
   padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
-  background: var(--card);
+  background: var(--card); border-top:1px solid var(--line);
   display: flex; gap: 10px;
 }
 .clsfull-btn {

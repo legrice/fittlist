@@ -823,7 +823,6 @@ export function FollowingScreen({
           onClose={() => setPeek(null)}
           onToast={notify}
           onChanged={() => {}}
-          allowWeekAdd={false}
         />
       )}
       {personPeekOpen && (
