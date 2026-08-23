@@ -10897,6 +10897,18 @@ a.clspeek-by:active { opacity: .6; }
   padding-top: 4px;
   padding-bottom: calc(92px + env(safe-area-inset-bottom));
 }
+/* Keep the date in view while its classes pass underneath, then let the next
+   date replace it. Signed-in screens normally make day bands static because
+   most lists sit below other page chrome; Calendar's controls scroll away,
+   so its date can pin directly to the viewport without colliding with them.
+   The opaque ground matters here: the app shell deliberately makes ordinary
+   bands transparent, which would let class rows show through a sticky date. */
+.screen.hasnav .calendar-cardwrap .dayband {
+  position: sticky;
+  top: 0;
+  z-index: 7;
+  background: var(--ground);
+}
 .calendar-cardwrap .calsticky:empty { display:none; }
 .schedule-kind-tabs button {
   min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
