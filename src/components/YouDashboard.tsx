@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { SettingsGear } from "@/components/SettingsGear";
 
 export type YouFavoritePerson = {
   id: string;
@@ -106,11 +107,7 @@ export function YouDashboard({
           <Link href="/settings?edit=1">Edit profile</Link>
         )}
         <Link href={shareHref}>Share</Link>
-        {onOpenSettings ? (
-          <button type="button" onClick={() => onOpenSettings("account")}>Settings</button>
-        ) : (
-          <Link href="/settings">Settings</Link>
-        )}
+        <SettingsGear pill />
       </div>
 
       <section className="profile-following">
