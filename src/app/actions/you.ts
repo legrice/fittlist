@@ -258,7 +258,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     yourGroups: groups.filter((group) => group.role),
     favoriteGroups: groups.filter((group) => !group.role),
     groupInvitations,
-    managed: managed.filter((place) => place.admin),
+    managed,
     shareHref: me.kind === "fan" ? "/membershare" : "/coachshare",
     isAdmin: adminEmails().includes(me.email.toLowerCase()),
     unread,

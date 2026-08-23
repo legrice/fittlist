@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { Icon } from "@/components/Icon";
-import { TeachToggle } from "@/components/TeachToggle";
 
 export type YouFavoritePerson = {
   id: string;
@@ -73,7 +72,7 @@ export function YouDashboard({
   managed,
   shareHref,
   isAdmin,
-  unread,
+  unread: _unread,
   people = [],
   places = [],
   yourGroups = [],
@@ -112,34 +111,40 @@ export function YouDashboard({
           <Link href="/settings?edit=1">Edit profile</Link>
         )}
         <Link href={shareHref}>Share</Link>
+        {onOpenSettings ? (
+          <button type="button" onClick={() => onOpenSettings("account")}>Settings</button>
+        ) : (
+          <Link href="/settings">Settings</Link>
+        )}
       </div>
 
-      <Link className="youcalendar-card" href="/calendar">
-        <span className="youcalendar-card-icon"><Icon name="calendar_month" size={25} /></span>
-        <span>
-          <strong>Calendar</strong>
-          <small>View and manage your schedule</small>
-        </span>
-        <Icon name="chevron_right" size={21} />
-      </Link>
+      {(savedPeople.length > 0 || places.length > 0 || savedGroups.length > 0) && (
+        <section className="profile-following">
+          <h2>Following</h2>
+          <div className="profile-following-rail">
+            {savedPeople.map((person) => <ProfileCircle href={`/${person.handle}?from=you`} name={person.name} photo={person.photo} color={person.color} key={person.id} />)}
+            {places.map((place) => <ProfileCircle href={`/s/${place.slug}?from=you`} name={place.name} photo={place.photo} icon="storefront" key={place.id} />)}
+            {savedGroups.map((group) => <ProfileCircle href={`/g/${group.slug}?from=you`} name={group.name} photo={group.photo} icon="groups" key={group.id} />)}
+          </div>
+        </section>
+      )}
 
-      <AccountGroup title="Your account">
-        <AccountRow icon="forum" title="Messages" detail="Your conversations" href="/inbox" count={unread.messages} />
-        <AccountRow icon="notifications" title="Notifications" detail="Updates about your account and activity" href="/notifications" count={unread.notifications} />
-      </AccountGroup>
-
-      {(managed.length > 0 || managedGroups.length > 0) && (
-        <AccountGroup title="Studios and groups you manage">
+      <AccountGroup title="Your calendars">
+        <AccountRow icon="calendar_month" title="Personal calendar" detail="View, manage, and share your schedule" href="/calendar" />
           {managed.map((place) => (
             <AccountRow
               icon="storefront"
               title={place.name}
-              detail="Calendar and staff"
-              href={`/s/${place.slug}/manage`}
+              detail={place.admin ? "Manage calendar and staff" : "Team calendar"}
+              href={place.admin ? `/s/${place.slug}/manage` : `/s/${place.slug}/schedule?from=you`}
               avatar={{ photo: place.photo, name: place.name }}
               key={place.id}
             />
           ))}
+      </AccountGroup>
+
+      {managedGroups.length > 0 && (
+        <AccountGroup title="Groups you manage">
           {managedGroups.map((group) => (
             <AccountRow
               icon="groups"
@@ -153,43 +158,11 @@ export function YouDashboard({
         </AccountGroup>
       )}
 
-      {(savedPeople.length > 0 || places.length > 0 || savedGroups.length > 0) && (
-        <AccountGroup title="Saved calendars">
-          {savedPeople.map((person) => (
-            <AccountRow
-              icon="person"
-              title={person.name}
-              detail="Coach calendar"
-              href={`/${person.handle}/schedule?from=you`}
-              avatar={{ photo: person.photo, name: person.name }}
-              key={person.id}
-            />
-          ))}
-          {places.map((place) => (
-            <AccountRow
-              icon="storefront"
-              title={place.name}
-              detail="Studio calendar"
-              href={`/s/${place.slug}/schedule?from=you`}
-              avatar={{ photo: place.photo, name: place.name }}
-              key={place.id}
-            />
-          ))}
-          {savedGroups.map((group) => (
-            <AccountRow
-              icon="groups"
-              title={group.name}
-              detail="Group calendar"
-              href={`/g/${group.slug}?from=you`}
-              avatar={{ photo: group.photo, name: group.name }}
-              key={group.id}
-            />
-          ))}
-        </AccountGroup>
-      )}
+      <AccountGroup title="Saved items">
+        <AccountRow icon="bookmark" title="Saved classes and events" detail="Everything you added to your personal calendar" href="/calendar" />
+      </AccountGroup>
 
       <AccountGroup title="Settings">
-        <TeachToggle on={me.coaching} canTurnOn account />
         <SettingsRow icon="account_circle" title="Profile & public page" detail="Profile, handle, contact info, and availability" view="page" onOpen={onOpenSettings} />
         <SettingsRow icon="event" title="Calendar & sync" detail="Google, Apple and Outlook, your week as text" view="calendar" onOpen={onOpenSettings} />
         <SettingsRow icon="public_off" title="Privacy & communication" detail="Messages, listing, approvals, and removed people" view="reach" onOpen={onOpenSettings} />
@@ -253,6 +226,15 @@ function AccountGroup({ title, children }: { title: string; children: React.Reac
       <div>{children}</div>
     </section>
   );
+}
+
+function ProfileCircle({ href, name, photo, color, icon }: { href: string; name: string; photo: string | null; color?: string; icon?: string }) {
+  return <Link className="profile-following-item" href={href}>
+    <span style={{ background: color ?? "var(--soft)" }}>
+      {photo ? <img src={photo} alt="" /> : icon ? <Icon name={icon} size={24} /> : (name.trim().charAt(0) || "?").toUpperCase()}
+    </span>
+    <strong>{name}</strong>
+  </Link>;
 }
 
 function AccountRow({ icon, title, detail, href, count = 0, avatar }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string } }) {
