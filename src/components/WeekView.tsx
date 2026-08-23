@@ -42,6 +42,9 @@ export type WeekRow = {
   dur?: string;
   /** Following only: whose class this is. */
   coach?: { id: string; name: string; color: string; photo: string | null } | null;
+  /** A profile peek already establishes whose schedule this is in its
+   *  header, so its rows keep the coach name but do not repeat the face. */
+  hideCoachAvatar?: boolean;
   /** A word above the name saying which kind of yours this is: "Shift" on a
    *  date a gym has you on. Which hat comes before what the class is. */
   tag?: string;
@@ -158,14 +161,16 @@ export function ClassLine({ row }: { row: WeekRow }) {
           and time at the right—the same scan order as the homepage. */}
       {row.coach && (
         <span className="clline-by">
-          <span className="clline-av" style={{ background: row.coach.color }}>
-            {row.coach.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={row.coach.photo} alt="" />
-            ) : (
-              initials(row.coach.name)
-            )}
-          </span>
+          {!row.hideCoachAvatar && (
+            <span className="clline-av" style={{ background: row.coach.color }}>
+              {row.coach.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={row.coach.photo} alt="" />
+              ) : (
+                initials(row.coach.name)
+              )}
+            </span>
+          )}
           <span className="clline-by-name">{row.coach.name}</span>
         </span>
       )}
@@ -191,7 +196,7 @@ export function ClassLine({ row }: { row: WeekRow }) {
   if (row.href)
     return (
       <a
-        className="clline"
+        className={`clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}`}
         href={row.href}
         data-cid={row.classId}
         data-d={row.iso}
@@ -201,12 +206,12 @@ export function ClassLine({ row }: { row: WeekRow }) {
         {inner}
       </a>
     );
-  if (!row.onTap) return <div className="clline">{inner}</div>;
+  if (!row.onTap) return <div className={`clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}`}>{inner}</div>;
   return (
     // The data keys ride the button too, when the row has them: the landing
     // highlight (?hl) finds a row by them, and a row that opens a sheet
     // instead of navigating is still the row the highlight means.
-    <button className="clline" onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
+    <button className={`clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}`} onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
       {inner}
     </button>
   );

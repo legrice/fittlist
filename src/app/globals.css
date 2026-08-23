@@ -11153,6 +11153,17 @@ a.clspeek-by:active { opacity: .6; }
   border-radius: 50%;
   font-size: 16px;
 }
+/* The profile photo already leads a person peek. Its rows keep the same
+   class/place/name/time grammar without repeating that face down the list. */
+.calendar-cardlist .clline-no-avatar {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.calendar-cardlist .clline-no-avatar .clline-nm,
+.calendar-cardlist .clline-no-avatar .clline-w,
+.calendar-cardlist .clline-no-avatar .clline-by-name { grid-column: 1; }
+.calendar-cardlist .clline-no-avatar .clline-t,
+.calendar-cardlist .clline-no-avatar .clline-tag { grid-column: 2; }
+.calendar-cardlist .clline-no-avatar .clline-extra { grid-column: 1 / 3; }
 .calendar-cardlist .clline-tag {
   grid-column: 3;
   grid-row: 2 / 4;
