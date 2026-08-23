@@ -13,7 +13,7 @@ import {
 } from "@/app/actions/studios";
 import { Adder } from "@/components/Adder";
 import { AddBrowse } from "@/components/AddBrowse";
-import { AddWeekChoices } from "@/components/AddWeekChoices";
+import { CreateGroupSheet } from "@/components/SavedScreen";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { TypeMultiSelect } from "@/components/TypePicker";
@@ -40,6 +40,7 @@ export function GlobalAdd({
   classOnly?: boolean;
 } = {}) {
   const [open, setOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
   const [mode, setMode] = useState<null | "class" | "browse" | "personal" | "place">(null);
   const [classRole, setClassRole] = useState<null | "coaching" | "attending">(null);
   const [placeStep, setPlaceStep] = useState<"identity" | "details">("identity");
@@ -111,6 +112,10 @@ export function GlobalAdd({
     setMode(null);
     setClassRole(null);
     resetPlace();
+  };
+  const openGroup = () => {
+    close();
+    setGroupOpen(true);
   };
   const openChooser = () => {
     if (classOnly) {
@@ -485,21 +490,25 @@ export function GlobalAdd({
                 <button className="iconbtn sheetclose" aria-label="Close add menu" onClick={close}>
                   <Icon name="close" size={18} />
                 </button>
-                <h2 id="globaladd-chooser-title">Add to your week</h2>
-                <p className="lead">What are you doing?</p>
-                <AddWeekChoices
-                  canCoach={Boolean(data?.canCoach)}
-                  disabled={pending}
-                  onCoach={() => {
-                    setClassRole("coaching");
-                    setMode("class");
-                  }}
-                  onAttend={() => {
-                    setClassRole("attending");
-                    setMode("browse");
-                  }}
-                  onPersonal={() => choose("personal")}
-                />
+                <h2 id="globaladd-chooser-title">Create</h2>
+                <p className="lead">What would you like to add?</p>
+                <div className="globaladd-chooser-options">
+                  <button type="button" disabled={pending} onClick={() => choose("class")}>
+                    <i><Icon name="calendar_month" size={23} /></i>
+                    <span>Add a class</span>
+                    <Icon name="chevron_right" size={20} />
+                  </button>
+                  <button type="button" disabled={pending} onClick={openGroup}>
+                    <i><Icon name="groups" size={23} /></i>
+                    <span>Add a group</span>
+                    <Icon name="chevron_right" size={20} />
+                  </button>
+                  <button type="button" disabled={pending} onClick={() => choose("place")}>
+                    <i><Icon name="storefront" size={23} /></i>
+                    <span>Add a studio</span>
+                    <Icon name="chevron_right" size={20} />
+                  </button>
+                </div>
               </div>
             )}
           </div>,
@@ -518,6 +527,10 @@ export function GlobalAdd({
         <Icon name="add" size={24} />
       </button>
       {composer}
+      {groupOpen && typeof document !== "undefined" && createPortal(
+        <CreateGroupSheet onClose={() => setGroupOpen(false)} />,
+        document.body,
+      )}
       {match && typeof document !== "undefined" && createPortal(
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMatch(null); }}>
           <div className="sheet confirmsheet" role="dialog" aria-modal="true">

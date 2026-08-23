@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
@@ -145,6 +146,7 @@ export function FollowingScreen({
   cats,
   todayIso,
   meId,
+  meKind,
   myRail,
   meFace,
   savedStudios = [],
@@ -194,6 +196,7 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
+  const [myCalendarMenu, setMyCalendarMenu] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -502,24 +505,19 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <Link className="home-class-search" href="/search">
-            <span><Icon name="search" size={22} /></span>
-            <span><strong>Find a class</strong><small>Activity, time, or place</small></span>
-            <Icon name="chevron_right" size={20} />
-          </Link>
           <div className="home-calendars-title">
-            <h2>Saved calendars</h2>
+            <h2>Calendars</h2>
           </div>
-          <div className="tray following-rail" aria-label="Saved calendars">
+          <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll">
-              <Link className="trayitem" href="/calendar">
+              <button className="trayitem" type="button" onClick={() => setMyCalendarMenu(true)}>
                 <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
                 </span>
                 <span className="trayitem-nm">You</span>
-              </Link>
+              </button>
               {coachOptions.map((coach) => {
                 return (
                 <Link
@@ -563,10 +561,6 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </Link>})}
-              <button className="trayitem trayitem-more" type="button" onClick={() => setFind(true)} aria-label="Find more calendars">
-                <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
-                <span className="trayitem-nm">Add calendar</span>
-              </button>
             </div>
           </div>
         </header>
@@ -575,9 +569,33 @@ export function FollowingScreen({
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">Upcoming</span>
           <Link href="/calendar" className="feedfilter-link">
-            Your calendar <Icon name="chevron_right" size={17} />
+            Manage calendar <Icon name="chevron_right" size={17} />
           </Link>
         </div>
+      )}
+      {myCalendarMenu && typeof document !== "undefined" && createPortal(
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMyCalendarMenu(false); }}>
+          <div className="sheet my-calendar-sheet" role="dialog" aria-modal="true" aria-labelledby="my-calendar-title">
+            <button className="iconbtn sheetclose" type="button" aria-label="Close" onClick={() => setMyCalendarMenu(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <div className="my-calendar-sheet-head">
+              <span className="trayav" style={{ background: meFace.color }}>
+                {meFace.photo ? <img src={meFace.photo} alt="" /> : <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}
+              </span>
+              <div><h2 id="my-calendar-title">Your calendar</h2><p>{meFace.name}</p></div>
+            </div>
+            <div className="my-calendar-actions">
+              <Link href="/calendar" onClick={() => setMyCalendarMenu(false)}>
+                <Icon name="calendar_month" size={23} /><span><strong>Manage calendar</strong><small>Add, edit, and view your schedule</small></span><Icon name="chevron_right" size={20} />
+              </Link>
+              <Link href={meKind === "coach" ? "/coachshare" : "/membershare"} onClick={() => setMyCalendarMenu(false)}>
+                <Icon name="share" size={23} /><span><strong>Share calendar</strong><small>Send your schedule to someone</small></span><Icon name="chevron_right" size={20} />
+              </Link>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
       {(isHome ? shown.length === 0 : items.length === 0) ? (
         <>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HeaderAccountButton } from "@/components/HeaderAccountButton";
+import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
@@ -131,7 +132,7 @@ export function AppHeader({
             <Link className="iconbtn social-calendar-back" href="/you" aria-label="Back to You">
               <Icon name="arrow_back" size={23} />
             </Link>
-          ) : null}
+          ) : <GlobalAdd />}
         </div>
         {calendarUtility ? <strong className="social-brandbar-title">Your calendar</strong> : (
           <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList schedules">
