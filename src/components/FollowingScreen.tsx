@@ -195,6 +195,7 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
+  const [calendarType, setCalendarType] = useState<"all" | "people" | "studios" | "groups">("all");
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
@@ -308,11 +309,16 @@ export function FollowingScreen({
         const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
         return Boolean(group?.classKeys.includes(item.key));
       }
-      return item.saved || (!!meId && item.coachId === meId) || coachIds.has(item.coachId) ||
-        Boolean(item.whereHref && studioHrefs.has(item.whereHref)) || groupKeys.has(item.key);
+      const fromPeople = item.saved || (!!meId && item.coachId === meId) || coachIds.has(item.coachId);
+      const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
+      const fromGroups = groupKeys.has(item.key);
+      if (calendarType === "people") return fromPeople;
+      if (calendarType === "studios") return fromStudios;
+      if (calendarType === "groups") return fromGroups;
+      return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions]);
+  }, [items, f, geo, isHome, meId, calendarType, calendarFilter, coachOptions, studioOptions, groupOptions]);
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -533,21 +539,40 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
+          <nav className="calendar-type-tabs" aria-label="Calendar types">
+            {([
+              ["all", "calendar_month", "All"],
+              ["people", "person", "People"],
+              ["studios", "storefront", "Studios"],
+              ["groups", "groups", "Groups"],
+            ] as const).map(([value, icon, label]) => (
+              <button
+                type="button"
+                className={calendarType === value ? "on" : ""}
+                aria-pressed={calendarType === value}
+                onClick={() => { setCalendarType(value); setCalendarFilter("all"); }}
+                key={value}
+              >
+                <Icon name={icon} size={21} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </nav>
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll">
               <button className={`trayitem${calendarFilter !== "all" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => setCalendarFilter("all")}>
-                <span className={`trayav trayav-all${calendarFilter === "all" ? " sel" : ""}`}><Icon name="groups" size={25} /></span>
+                <span className={`trayav trayav-all${calendarFilter === "all" ? " sel" : ""}`}><Icon name={calendarType === "studios" ? "storefront" : calendarType === "groups" ? "groups" : calendarType === "people" ? "person" : "calendar_month"} size={25} /></span>
                 <span className="trayitem-nm">All</span>
               </button>
-              <button className={`trayitem${calendarFilter !== "all" && calendarFilter !== "you" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter("you")}>
+              {(calendarType === "all" || calendarType === "people") && <button className={`trayitem${calendarFilter !== "all" && calendarFilter !== "you" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter("you")}>
                 <span className={`trayav${calendarFilter === "you" ? " sel" : ""}`} style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
                 </span>
                 <span className="trayitem-nm">You</span>
-              </button>
-              {coachOptions.map((coach) => {
+              </button>}
+              {(calendarType === "all" || calendarType === "people") && coachOptions.map((coach) => {
                 const filter = `coach:${coach.id}` as const;
                 return (
                 <button
@@ -571,7 +596,7 @@ export function FollowingScreen({
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
                 </button>
               )})}
-              {studioOptions.map((studio) => {
+              {(calendarType === "all" || calendarType === "studios") && studioOptions.map((studio) => {
                 const filter = `studio:${studio.id}` as const;
                 return <button
                 key={studio.id}
@@ -585,7 +610,7 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{studio.name}</span>
               </button>})}
-              {groupOptions.map((group) => {
+              {(calendarType === "all" || calendarType === "groups") && groupOptions.map((group) => {
                 const filter = `group:${group.id}` as const;
                 return <button
                 key={group.id}
