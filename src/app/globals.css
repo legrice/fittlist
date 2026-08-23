@@ -1579,7 +1579,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   background: var(--color-personal);
   color: var(--color-personal-text);
 }
-.monthpill.ev-overlay { background:var(--color-white); border:1px solid currentColor; }
 .monthmore { font-size: 10px; font-weight: 600; color: var(--ol); text-align: center; }
 /* The two persistent doors: Today bottom left (back to now) and Add bottom
    right, in bright green. Share is not down here; it sits in the header's
@@ -11033,7 +11032,6 @@ a.clspeek-by:active { opacity: .6; }
   opacity: 1;
   background: var(--color-surface-hover);
 }
-.calendar-cardlist .clline-overlay { border-left:4px solid var(--overlay-color, var(--color-border-strong)); padding-left:8px; }
 .calendar-overlay-save {
   position:absolute; right:14px; top:14px; bottom:auto; width:34px; min-height:34px; padding:0;
   display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--color-border);

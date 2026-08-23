@@ -416,10 +416,10 @@ export function CalendarScreen({
           <label className="calendar-desktop-filter">
             <span className="sr-only">View calendar</span>
             <select value={filter} onChange={(event) => setFilter(event.target.value as CalendarFilter)}>
-              <option value="all">View all</option>
-              {!member && <option value="coaching">View coaching</option>}
-              <option value="saved">View saved</option>
-              <option value="personal">View personal</option>
+              <option value="all">View: All</option>
+              {!member && <option value="coaching">View: Coaching</option>}
+              <option value="saved">View: Saved</option>
+              <option value="personal">View: Personal</option>
             </select>
           </label>
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">

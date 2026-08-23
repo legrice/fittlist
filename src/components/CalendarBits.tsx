@@ -825,7 +825,7 @@ export function useListMonthSpy(
 }
 
 /** One row of the month: what to draw in a day's cell. */
-export type MonthCellItem = { kind: CalKind | "overlay"; name: string; at: number; color?: string };
+export type MonthCellItem = { kind: CalKind; name: string; at: number };
 
 /** How far the month scroll reaches: back to where the list's past window
  *  ends, forward a year. */
@@ -902,7 +902,7 @@ function MonthBlock({
             >
               {c.inMonth && <span className="monthday-n">{c.day}</span>}
               {rows.slice(0, MAX).map((r, i) => (
-                <span key={i} className={`monthpill ev-${r.kind}`} style={r.kind === "overlay" ? { borderColor:r.color, color:r.color } : undefined}>
+                <span key={i} className={`monthpill ev-${r.kind}`}>
                   {r.name}
                 </span>
               ))}
