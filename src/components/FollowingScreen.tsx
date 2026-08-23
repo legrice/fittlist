@@ -350,8 +350,9 @@ export function FollowingScreen({
   }, [socialGroups, itemFacets]);
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
   const sortedStudioOptions = useMemo(() => [...studioOptions].sort((a, b) => Number(pins.has(`studio:${b.id}`)) - Number(pins.has(`studio:${a.id}`))), [studioOptions, pins]);
+  const pinnedStudioOptions = sortedStudioOptions.filter((studio) => pins.has(`studio:${studio.id}`));
   const railCoachOptions = sortedCoachOptions.slice(0, visibleRailCoachCount);
-  const railStudioOptions = sortedStudioOptions;
+  const railStudioOptions = sortedStudioOptions.filter((studio) => !pins.has(`studio:${studio.id}`));
   const railGroupOptions = groupOptions;
   const railCoachesComplete = visibleRailCoachCount >= sortedCoachOptions.length;
 
@@ -668,6 +669,9 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">You</span>
               </button>
+              {pinnedStudioOptions.map((studio) => {
+                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button><span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span></div>;
+              })}
               {railCoachOptions.map((coach) => {
                 return (
                 <div className="cash-rail-item" key={coach.id}>
