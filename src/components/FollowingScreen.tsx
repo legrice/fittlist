@@ -809,11 +809,10 @@ export function FollowingScreen({
                       <div>
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
-                          const studioOwned = item.base.startsWith("s/");
                           const placeIsCoach = sameCalendarIdentity(coach, item.where);
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
-                              <span className={`cash-class-avatar${studioOwned ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={studioOwned ? 56 : 48} height={studioOwned ? 44 : 48} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
+                              <span className={`cash-class-avatar${placeIsCoach ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={placeIsCoach ? 56 : 48} height={placeIsCoach ? 44 : 48} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
                               <span className="cash-class-copy"><strong>{item.name}</strong><span>{item.where || "Location to come"}</span>{!placeIsCoach && <small>{coach?.name || "Coach to come"}</small>}</span>
                               <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
                             </button>
@@ -992,7 +991,7 @@ function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
               const coach = coaches.get(item.coachId);
               const placeIsCoach = sameCalendarIdentity(coach, item.where) || (entity.type === "studio" && !coach);
               return <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
-                <span className={`cash-class-avatar${!coach && entity.type === "studio" ? " studio" : ""}`} style={{ background:coach?.color ?? entity.color }}>{(coach?.photo ?? entity.photo) ? <img src={(coach?.photo ?? entity.photo)!} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>
+                <span className={`cash-class-avatar${placeIsCoach ? " studio" : ""}`} style={{ background:coach?.color ?? entity.color }}>{(coach?.photo ?? entity.photo) ? <img src={(coach?.photo ?? entity.photo)!} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>
                 <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span>{!placeIsCoach && <small>{coach?.name || entity.name}</small>}</span>
                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
               </Link>;
