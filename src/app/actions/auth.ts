@@ -617,7 +617,12 @@ export async function deleteMyAccount(): Promise<{ ok: boolean; error?: string }
     return { ok: false, error: "An admin account can't be deleted from here." };
   if (me.kind === "gym")
     return { ok: false, error: "That's a studio's account. Remove the studio instead." };
-  await purgeUser(db, userId);
+  try {
+    await purgeUser(db, userId);
+  } catch (error) {
+    console.error("deleteMyAccount failed", { userId, error });
+    return { ok: false, error: "Your account couldn't be deleted. Nothing was changed. Please try again." };
+  }
   await destroySession();
   return { ok: true };
 }

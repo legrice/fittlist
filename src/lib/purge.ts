@@ -24,6 +24,11 @@ export async function purgeUser(
   db: Awaited<ReturnType<typeof getDb>>,
   id: string,
 ): Promise<void> {
+  // This teardown is deliberately atomic. A newly-added foreign key must not
+  // leave half an account behind if its cleanup is accidentally omitted: the
+  // transaction either removes the whole account or changes nothing.
+  const run = async (database: typeof db) => {
+  const db = database;
   // Magic links are keyed on the address rather than the account, so the
   // address has to be read before the row goes.
   const [u] = await db
@@ -89,6 +94,7 @@ export async function purgeUser(
   await db.delete(schema.coachStudios).where(eq(schema.coachStudios.userId, id));
   await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, id));
   await db.delete(schema.eventAttendances).where(eq(schema.eventAttendances.userId, id));
+  await db.delete(schema.calendarPins).where(eq(schema.calendarPins.userId, id));
   await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 
   // Shared records they created — keep, just drop the attribution FK.
@@ -107,6 +113,10 @@ export async function purgeUser(
     .update(schema.shiftCovers)
     .set({ createdByUserId: null })
     .where(eq(schema.shiftCovers.createdByUserId, id));
+  await db
+    .update(schema.studioClosedDays)
+    .set({ createdByUserId: null })
+    .where(eq(schema.studioClosedDays.createdByUserId, id));
   // Their keys go with them; a page they ran alone returns to the commons
   // rather than being left locked with nobody holding it. Their place on any
   // gym's shift list goes too: a list naming somebody who left is a hand-off
@@ -159,5 +169,41 @@ export async function purgeUser(
   await db.update(schema.invites).set({ invitedByUserId: null }).where(eq(schema.invites.invitedByUserId, id));
   await db.update(schema.invites).set({ acceptedUserId: null, acceptedAt: null }).where(eq(schema.invites.acceptedUserId, id));
 
+  // Social proof about a deleted person no longer has a subject, while proof
+  // they left on somebody else's profile cannot keep its non-null author FK.
+  await db.delete(schema.profileEndorsements).where(eq(schema.profileEndorsements.targetUserId, id));
+  await db.delete(schema.profileEndorsements).where(eq(schema.profileEndorsements.endorserUserId, id));
+  await db.delete(schema.studioEndorsements).where(eq(schema.studioEndorsements.endorserUserId, id));
+  await db.delete(schema.shoutouts).where(eq(schema.shoutouts.targetUserId, id));
+  await db.delete(schema.shoutouts).where(eq(schema.shoutouts.authorUserId, id));
+
+  // Keep a group alive when another member can inherit it. An empty group has
+  // nobody who could ever reach or manage it, so delete it and let its
+  // cascading children go with it.
+  const ownedGroups = await db
+    .select({ id: schema.groups.id })
+    .from(schema.groups)
+    .where(eq(schema.groups.ownerUserId, id));
+  for (const group of ownedGroups) {
+    const [successor] = await db
+      .select({ userId: schema.groupMembers.userId })
+      .from(schema.groupMembers)
+      .where(and(eq(schema.groupMembers.groupId, group.id), ne(schema.groupMembers.userId, id)))
+      .orderBy(schema.groupMembers.createdAt)
+      .limit(1);
+    if (successor) {
+      await db.update(schema.groups).set({ ownerUserId: successor.userId }).where(eq(schema.groups.id, group.id));
+      await db
+        .update(schema.groupMembers)
+        .set({ role: "admin" })
+        .where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, successor.userId)));
+    } else {
+      await db.delete(schema.groups).where(eq(schema.groups.id, group.id));
+    }
+  }
+
   await db.delete(schema.users).where(eq(schema.users.id, id));
+  };
+
+  await db.transaction(async (tx) => run(tx as unknown as typeof db));
 }

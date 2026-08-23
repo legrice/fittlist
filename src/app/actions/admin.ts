@@ -739,7 +739,12 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
     return { ok: false, error: "That's a roster placeholder. Remove it from the studio's roster." };
   }
 
-  await purgeUser(db, id);
+  try {
+    await purgeUser(db, id);
+  } catch (error) {
+    console.error("adminDeleteUser failed", { userId: id, error });
+    return { ok: false, error: "That account couldn't be deleted. Nothing was changed. Please try again." };
+  }
   revalidatePath("/admin");
   return { ok: true };
 }
