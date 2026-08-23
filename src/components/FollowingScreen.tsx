@@ -697,8 +697,8 @@ export function FollowingScreen({
                           return <article className="cash-class-row" key={row.key}>
                             <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(row.item, coach ?? null, favIds.includes(row.item.coachId)))}>
                               <span className="cash-class-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" /> : <span>{(coach?.name ?? row.item.name).charAt(0).toUpperCase()}</span>}</span>
-                              <span className="cash-class-copy"><strong>{row.item.name}</strong><span>{row.item.where || coach?.name || "Location to come"}</span><small>{row.item.hm}{row.item.ap.toLowerCase()}</small></span>
-                              <Icon name="chevron_right" size={22} />
+                              <span className="cash-class-copy"><strong>{row.item.name}</strong><span>{row.item.where || "Location to come"}</span><small>{coach?.name || "Coach to come"}</small></span>
+                              <strong className="cash-class-time">{row.item.hm}{row.item.ap.toLowerCase()}</strong>
                             </button>
                             {row.corner}
                           </article>;
@@ -870,8 +870,8 @@ function EntityCalendarPeek({ entity, pinned, onPinned, onClose }: {
         {sorted.length ? (
           <div className="cash-activity-list entity-peek-list">
             {sorted.map((item) => <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
-              <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span><small>{item.hm}{item.ap.toLowerCase()}</small></span>
-              <Icon name="chevron_right" size={22} />
+              <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span><small>{entity.name}</small></span>
+              <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
             </Link>)}
           </div>
         ) : <p className="peekempty">Nothing coming up right now.</p>}

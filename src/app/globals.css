@@ -8713,7 +8713,8 @@ select.editinput.placekind-select {
 .cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
 .cash-class-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:1.2; font-weight:700; }
 .cash-class-copy > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
-.cash-class-copy small { color:var(--ink); font-size:14px; }
+.cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
+.cash-class-time { flex:0 0 auto; align-self:flex-start; padding-top:1px; font-size:16px; line-height:1.2; white-space:nowrap; }
 .cash-class-main > svg { flex:0 0 auto; color:var(--ink); }
 .cash-class-row .following-add { top:54px; left:42px; right:auto; width:28px; height:28px; border:2px solid var(--ground); background:var(--card); }
 .following-coach-context {
