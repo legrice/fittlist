@@ -7903,10 +7903,11 @@ select.editinput.placekind-select {
 .profile-following h2 { margin:0 0 12px; font-size:20px; line-height:1.15; letter-spacing:-.025em; }
 .profile-following-rail { display:flex; gap:12px; margin:0 -18px; padding:0 18px 5px; overflow-x:auto; scrollbar-width:none; }
 .profile-following-rail::-webkit-scrollbar { display:none; }
-.profile-following-item { width:76px; flex:0 0 76px; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--ink); text-decoration:none; text-align:center; }
-.profile-following-item > span { width:68px; height:68px; display:grid; place-items:center; overflow:hidden; border-radius:50%; color:var(--ink); font-size:22px; }
+.profile-following-item { width:112px; flex:0 0 112px; display:flex; flex-direction:column; align-items:center; gap:9px; color:var(--ink); text-decoration:none; text-align:center; }
+.profile-following-item > span { width:96px; height:96px; display:grid; place-items:center; overflow:hidden; border:1px solid var(--line); border-radius:50%; background:var(--soft); color:var(--ink); font-size:22px; }
 .profile-following-item img { width:100%; height:100%; object-fit:cover; }
-.profile-following-item strong { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:600; }
+.profile-following-item strong { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13.5px; font-weight:600; }
+.savedsection { scroll-margin-top:90px; }
 .yougroup-title { margin: 0 0 12px; font-size: 20px; line-height: 1.15; letter-spacing: -.025em; }
 .youfavorites-title { margin-top: 34px; margin-bottom: -12px; }
 .yousection { margin-top: 26px; }

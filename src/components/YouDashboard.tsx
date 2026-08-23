@@ -81,11 +81,6 @@ export function YouDashboard({
 }: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
-  const savedPeople = people.filter((person) => person.hasCalendar);
-  const joinedGroups = yourGroups.filter((group) => group.role !== "owner" && group.role !== "admin");
-  const savedGroups = [...joinedGroups, ...favoriteGroups].filter(
-    (group, index, groups) => groups.findIndex((candidate) => candidate.id === group.id) === index,
-  );
   return (
     <main className="youpage">
       <section className="youaccount-head">
@@ -118,16 +113,14 @@ export function YouDashboard({
         )}
       </div>
 
-      {(savedPeople.length > 0 || places.length > 0 || savedGroups.length > 0) && (
-        <section className="profile-following">
-          <h2>Following</h2>
-          <div className="profile-following-rail">
-            {savedPeople.map((person) => <ProfileCircle href={`/${person.handle}?from=you`} name={person.name} photo={person.photo} color={person.color} key={person.id} />)}
-            {places.map((place) => <ProfileCircle href={`/s/${place.slug}?from=you`} name={place.name} photo={place.photo} icon="storefront" key={place.id} />)}
-            {savedGroups.map((group) => <ProfileCircle href={`/g/${group.slug}?from=you`} name={group.name} photo={group.photo} icon="groups" key={group.id} />)}
-          </div>
-        </section>
-      )}
+      <section className="profile-following">
+        <h2>Following</h2>
+        <div className="profile-following-rail">
+          <FollowingCountCircle href="/saved#people" count={people.length} singular="person" plural="people" photo={people.find((person) => person.photo)?.photo ?? null} icon="person" />
+          <FollowingCountCircle href="/saved#studios" count={places.length} singular="studio" plural="studios" photo={places.find((place) => place.photo)?.photo ?? null} icon="storefront" />
+          <FollowingCountCircle href="/saved#groups" count={favoriteGroups.length} singular="group" plural="groups" photo={favoriteGroups.find((group) => group.photo)?.photo ?? null} icon="groups" />
+        </div>
+      </section>
 
       <AccountGroup title="Your calendars">
         <AccountRow icon="calendar_month" title="Personal calendar" detail="View, manage, and share your schedule" href="/calendar" />
@@ -143,13 +136,13 @@ export function YouDashboard({
           ))}
       </AccountGroup>
 
-      {managedGroups.length > 0 && (
-        <AccountGroup title="Groups you manage">
-          {managedGroups.map((group) => (
+      {yourGroups.length > 0 && (
+        <AccountGroup title="Your groups">
+          {yourGroups.map((group) => (
             <AccountRow
               icon="groups"
               title={group.name}
-              detail="Group calendar and members"
+              detail={managedGroups.some((managedGroup) => managedGroup.id === group.id) ? "Manage calendar and members" : "Group calendar"}
               href={`/g/${group.slug}`}
               avatar={{ photo: group.photo, name: group.name }}
               key={group.id}
@@ -228,12 +221,12 @@ function AccountGroup({ title, children }: { title: string; children: React.Reac
   );
 }
 
-function ProfileCircle({ href, name, photo, color, icon }: { href: string; name: string; photo: string | null; color?: string; icon?: string }) {
+function FollowingCountCircle({ href, count, singular, plural, photo, icon }: { href: string; count: number; singular: string; plural: string; photo: string | null; icon: string }) {
   return <Link className="profile-following-item" href={href}>
-    <span style={{ background: color ?? "var(--soft)" }}>
-      {photo ? <img src={photo} alt="" /> : icon ? <Icon name={icon} size={24} /> : (name.trim().charAt(0) || "?").toUpperCase()}
+    <span>
+      {photo ? <img src={photo} alt="" /> : <Icon name={icon} size={28} />}
     </span>
-    <strong>{name}</strong>
+    <strong>{count} {count === 1 ? singular : plural}</strong>
   </Link>;
 }
 

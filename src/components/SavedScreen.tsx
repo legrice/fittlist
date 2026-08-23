@@ -20,14 +20,14 @@ export function SavedScreen({ people, places, yourGroups, favoriteGroups, invita
   }, [highlight]);
   return <main className="savedpage">
     <header className="savedhead"><h1>Saved calendars</h1></header>
-    <SavedRail kind="people" title="People" empty="Save a coach or creator calendar to find it here." addHref="/discover">
+    <SavedRail id="people" kind="people" title="People" empty="Save a coach or creator calendar to find it here." addHref="/discover">
       {calendarPeople.map((person) => <Link className={`youfav${person.handle.toLowerCase()===highlight?" youfav-highlight":""}`} href={`/${person.handle}?from=saved`} key={person.id}>{person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}<strong>{person.name}</strong>{person.coaching ? <small className="youfav-coaching">Coach</small> : person.title ? <small>{person.title}</small> : null}</Link>)}
     </SavedRail>
-    <SavedRail kind="places" title="Studios" empty="Save studio calendars to find their schedules again quickly." addHref="/discover?half=places">
+    <SavedRail id="studios" kind="places" title="Studios" empty="Save studio calendars to find their schedules again quickly." addHref="/discover?half=places">
       {places.map((place) => <Link className="youfav" href={`/s/${place.slug}?from=saved`} key={place.id}>{place.photo ? <img src={place.photo} alt="" loading="lazy" decoding="async" /> : <span>{place.name.charAt(0).toUpperCase()}</span>}<strong>{place.name}</strong>{place.types.length > 0 && <small>{place.types.slice(0, 2).join(" · ")}</small>}</Link>)}
     </SavedRail>
     {invitations.length > 0 && <section className="saved-block saved-rail-invitations"><h2>Invitations</h2><div className="saved-invitations">{invitations.map((invite) => <GroupInvitationCard invite={invite} key={invite.id} />)}</div></section>}
-    <SavedRail kind="groups" title="Groups" empty="Make a group for the people you plan and train with." onAdd={() => setGroupOpen(true)}>
+    <SavedRail id="groups" kind="groups" title="Groups" empty="Make a group for the people you plan and train with." onAdd={() => setGroupOpen(true)}>
       {groups.map((group) => <GroupRailCard group={group} key={group.id} />)}
     </SavedRail>
     {groupOpen && <CreateGroupSheet onClose={() => setGroupOpen(false)} />}
@@ -48,10 +48,10 @@ function GroupInvitationCard({ invite }: { invite: YouGroupInvitation }) {
   return <article className="saved-invitation"><span><Icon name="groups" size={25} /></span><div><strong>{invite.name}</strong><small>{invite.inviterName} invited you as {invite.role === "admin" ? "an admin" : "a member"}.</small></div><div><button type="button" disabled={pending} onClick={() => respond(false)}>Decline</button><button type="button" disabled={pending} onClick={() => respond(true)}>{pending ? "Joining…" : "Join"}</button></div></article>;
 }
 
-function SavedRail({ title, empty, addHref, onAdd, kind, children }: { title:string; empty:string; addHref?:string; onAdd?:()=>void; kind:"people"|"places"|"groups"; children?:ReactNode }) {
+function SavedRail({ id, title, empty, addHref, onAdd, kind, children }: { id?:string; title:string; empty:string; addHref?:string; onAdd?:()=>void; kind:"people"|"places"|"groups"; children?:ReactNode }) {
   const hasItems=Children.count(children)>0;
   const addContents=<><span><Icon name="add" size={28}/></span><strong>{hasItems?"Add more":"Add"}</strong></>;
-  return <section className={`yousection savedsection savedsection-${kind}`}><div className="yousection-head"><h2>{title}</h2></div><div className="youfavrail">{children}{onAdd?<button type="button" className="youfav youfav-add" onClick={onAdd}>{addContents}</button>:<Link className="youfav youfav-add" href={addHref!}>{addContents}</Link>}</div>{!hasItems&&<p className="youemptycopy">{empty}</p>}</section>;
+  return <section id={id} className={`yousection savedsection savedsection-${kind}`}><div className="yousection-head"><h2>{title}</h2></div><div className="youfavrail">{children}{onAdd?<button type="button" className="youfav youfav-add" onClick={onAdd}>{addContents}</button>:<Link className="youfav youfav-add" href={addHref!}>{addContents}</Link>}</div>{!hasItems&&<p className="youemptycopy">{empty}</p>}</section>;
 }
 
 export function CreateGroupSheet({ onClose }: { onClose: () => void }) {
