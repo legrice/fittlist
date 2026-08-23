@@ -675,7 +675,7 @@ export function FollowingScreen({
                     <span className="trayav" style={{ background: coach.color }}>
                       {coach.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={coach.photo} alt="" width={80} height={80} loading="lazy" decoding="async" />
+                        <img src={coach.photo} alt="" width={56} height={56} loading="lazy" decoding="async" />
                       ) : (
                         <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
                       )}
@@ -687,7 +687,7 @@ export function FollowingScreen({
               )})}
               {!railCoachesComplete && <span className="cash-rail-more" ref={railMoreRef} aria-hidden="true" />}
               {railCoachesComplete && railStudioOptions.map((studio) => {
-                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={80} height={80} loading="lazy" decoding="async" /> : <Icon name="storefront" size={25} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}</div>})}
+                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span>}</div>})}
               {railCoachesComplete && railGroupOptions.map((group) => {
                 return <button
                 key={group.id}
@@ -696,7 +696,7 @@ export function FollowingScreen({
                 onClick={() => setEntityPeekOpen({type:"group",id:group.id,name:group.name,photo:group.photo,color:"var(--color-surface-muted)",href:`/g/${group.slug}`,items:items.filter((item)=>group.classKeys.includes(item.key))})}
               >
                 <span className="trayav">
-                  {group.photo ? <img src={group.photo} alt="" width={80} height={80} loading="lazy" decoding="async" /> : <Icon name="groups" size={25} />}
+                  {group.photo ? <img src={group.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="groups" size={22} />}
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </button>})}
@@ -812,7 +812,7 @@ export function FollowingScreen({
                           const studioOwned = item.base.startsWith("s/");
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
-                              <span className={`cash-class-avatar${studioOwned ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={studioOwned ? 72 : 64} height={studioOwned ? 56 : 64} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
+                              <span className={`cash-class-avatar${studioOwned ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={studioOwned ? 56 : 48} height={studioOwned ? 44 : 48} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
                               <span className="cash-class-copy"><strong>{item.name}</strong><span>{item.where || "Location to come"}</span><small>{coach?.name || "Coach to come"}</small></span>
                               <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
                             </button>

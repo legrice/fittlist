@@ -8755,13 +8755,13 @@ select.editinput.placekind-select {
 }
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
 .following-rail { margin: 4px -18px 0; }
-.following-rail .tray-scroll { gap: 10px; padding-top: 6px; padding-bottom: 6px; }
-.following-rail .trayitem { width:86px; gap:8px; }
-.following-rail .trayav { width:80px; height:80px; }
-.following-rail .trayitem-nm { max-width:84px; font-size:13px; }
-.cash-rail-item { position:relative; width:86px; flex:0 0 86px; }
+.following-rail .tray-scroll { gap:8px; padding-top:6px; padding-bottom:6px; }
+.following-rail .trayitem { width:60px; gap:6px; }
+.following-rail .trayav { width:56px; height:56px; }
+.following-rail .trayitem-nm { max-width:60px; font-size:12px; }
+.cash-rail-item { position:relative; width:60px; flex:0 0 60px; }
 .cash-pin {
-  position:absolute; top:57px; right:0; z-index:3; width:28px; height:28px; padding:0;
+  position:absolute; top:37px; right:0; z-index:3; width:24px; height:24px; padding:0;
   display:grid; place-items:center; border:2px solid var(--ground); border-radius:50%;
   background:var(--card); color:var(--ink); cursor:pointer;
 }
@@ -8786,17 +8786,17 @@ select.editinput.placekind-select {
 .cash-days-more { height:2px; }
 .cash-rail-more { flex:0 0 2px; align-self:stretch; }
 .cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
-.cash-class-row { position:relative; min-height:86px; }
+.cash-class-row { position:relative; min-height:72px; }
 .cash-class-main {
-  width:100%; min-height:86px; padding:10px 0; display:flex; align-items:center; gap:15px;
+  width:100%; min-height:72px; padding:8px 0; display:flex; align-items:center; gap:12px;
   border:0; background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
 }
 .cash-class-avatar {
-  width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:hidden;
-  border-radius:50%; color:#fff; font-size:22px; font-weight:700;
+  width:48px; height:48px; flex:0 0 48px; display:grid; place-items:center; overflow:hidden;
+  border-radius:50%; color:#fff; font-size:18px; font-weight:700;
 }
 .cash-class-avatar.studio {
-  width:72px; height:56px; flex-basis:72px; border-radius:14px;
+  width:56px; height:44px; flex-basis:56px; border-radius:12px;
   border:1px solid var(--line); background:var(--card);
 }
 .cash-class-avatar img { width:100%; height:100%; object-fit:cover; }
