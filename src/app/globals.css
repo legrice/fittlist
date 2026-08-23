@@ -8683,12 +8683,39 @@ select.editinput.placekind-select {
 .following-rail .trayitem { width:86px; gap:8px; }
 .following-rail .trayav { width:80px; height:80px; }
 .following-rail .trayitem-nm { max-width:84px; font-size:13px; }
+.cash-rail-item { position:relative; width:86px; flex:0 0 86px; }
+.cash-pin {
+  position:absolute; top:57px; right:0; z-index:3; width:28px; height:28px; padding:0;
+  display:grid; place-items:center; border:2px solid var(--ground); border-radius:50%;
+  background:var(--card); color:var(--ink); cursor:pointer;
+}
+.cash-pin.on { background:var(--ink); color:var(--card); }
+.cash-pin:active { transform:scale(.92); }
 .following-rail::after {
   content: ""; position: absolute; left: 18px; right: 18px; bottom: -8px;
   height: 1px; background: var(--line); pointer-events: none;
 }
 .following-rail.has-context::after { display: none; }
 .following-rail .trayitem-more { opacity: 1; }
+.cash-activity-list { padding:0; }
+.cash-day + .cash-day { margin-top:34px; }
+.cash-day > h2 { margin:0 0 14px; font-size:28px; line-height:1.05; letter-spacing:-.035em; }
+.cash-class-row { position:relative; min-height:86px; }
+.cash-class-main {
+  width:100%; min-height:86px; padding:10px 0; display:flex; align-items:center; gap:15px;
+  border:0; background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
+}
+.cash-class-avatar {
+  width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:hidden;
+  border-radius:50%; color:#fff; font-size:22px; font-weight:700;
+}
+.cash-class-avatar img { width:100%; height:100%; object-fit:cover; }
+.cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
+.cash-class-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:1.2; font-weight:700; }
+.cash-class-copy > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
+.cash-class-copy small { color:var(--ink); font-size:14px; }
+.cash-class-main > svg { flex:0 0 auto; color:var(--ink); }
+.cash-class-row .following-add { top:54px; left:42px; right:auto; width:28px; height:28px; border:2px solid var(--ground); background:var(--card); }
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
   border-radius: 0; border-bottom: 1px solid var(--line); background: transparent;

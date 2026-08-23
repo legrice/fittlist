@@ -10,6 +10,7 @@ import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { setGoing } from "@/app/actions/going";
+import { toggleCalendarPin } from "@/app/actions/pins";
 
 export type FeedCoach = {
   id: string;
@@ -151,6 +152,7 @@ export function FollowingScreen({
   meFace,
   savedStudios = [],
   socialGroups = [],
+  initialPins = [],
   mode = "home",
 }: {
   items: FeedItem[];
@@ -176,6 +178,7 @@ export function FollowingScreen({
   nearStudios: NearStudio[];
   savedStudios?: SocialStudio[];
   socialGroups?: SocialGroup[];
+  initialPins?: string[];
   /** Following is the combined schedule; Upcoming is the filtered browser. */
   mode?: "home" | "upcoming";
 }) {
@@ -198,6 +201,8 @@ export function FollowingScreen({
   const [find, setFind] = useState(false);
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
+  const [pins, setPins] = useState(() => new Set(initialPins));
+  const [, startPin] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -272,10 +277,24 @@ export function FollowingScreen({
     const feedKeys = new Set(items.map((item) => item.key));
     return socialGroups.filter((group) => group.classKeys.some((key) => feedKeys.has(key)));
   }, [socialGroups, items]);
-  const railCoachOptions = coachOptions.slice(0, 10);
-  const railStudioOptions = studioOptions.slice(0, Math.max(0, 10 - railCoachOptions.length));
+  const sortedCoachOptions = [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`)));
+  const sortedStudioOptions = [...studioOptions].sort((a, b) => Number(pins.has(`studio:${b.id}`)) - Number(pins.has(`studio:${a.id}`)));
+  const railCoachOptions = sortedCoachOptions.slice(0, 10);
+  const railStudioOptions = sortedStudioOptions.slice(0, Math.max(0, 10 - railCoachOptions.length));
   const railGroupOptions = groupOptions.slice(0, Math.max(0, 10 - railCoachOptions.length - railStudioOptions.length));
   const railHasMore = coachOptions.length + studioOptions.length + groupOptions.length > 10;
+  const togglePin = (entityType: "person" | "studio", entityId: string) => {
+    const key = `${entityType}:${entityId}`;
+    setPins((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+    startPin(async () => {
+      const result = await toggleCalendarPin(entityType, entityId);
+      if (!result.ok) setPins(new Set(initialPins));
+    });
+  };
 
   const selectedCalendar = useMemo(() => {
     if (calendarFilter === "all") return null;
@@ -557,40 +576,26 @@ export function FollowingScreen({
               </button>
               {railCoachOptions.map((coach) => {
                 return (
-                <button
-                  key={coach.id}
-                  type="button"
-                  className="trayitem"
-                  onClick={() => setPersonPeekOpen({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, self:false })}
-                >
-                  <span
-                    className="trayav"
-                    style={{ background: coach.color }}
-                  >
-                    {coach.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={coach.photo} alt="" />
-                    ) : (
-                      <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
-                    )}
-                  </span>
-                  <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
-                </button>
+                <div className="cash-rail-item" key={coach.id}>
+                  <button type="button" className="trayitem" onClick={() => setPersonPeekOpen({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, self:false })}>
+                    <span className="trayav" style={{ background: coach.color }}>
+                      {coach.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={coach.photo} alt="" />
+                      ) : (
+                        <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
+                      )}
+                    </span>
+                    <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
+                  </button>
+                  <button className={`cash-pin${pins.has(`person:${coach.id}`) ? " on" : ""}`} type="button" aria-label={`${pins.has(`person:${coach.id}`) ? "Unpin" : "Pin"} ${coach.name}`} onClick={() => togglePin("person", coach.id)}>
+                    <Icon name={pins.has(`person:${coach.id}`) ? "star_filled" : "star"} size={18} />
+                  </button>
+                </div>
               )})}
               {railStudioOptions.map((studio) => {
                 const filter = `studio:${studio.id}` as const;
-                return <button
-                key={studio.id}
-                type="button"
-                className={`trayitem social-place-item${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`}
-                aria-pressed={calendarFilter === filter}
-                onClick={() => setCalendarFilter(filter)}
-              >
-                <span className={`trayav social-place-av${calendarFilter === filter ? " sel" : ""}`} style={{ background: studio.color }}>
-                  {studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}
-                </span>
-                <span className="trayitem-nm">{studio.name}</span>
-              </button>})}
+                return <div className="cash-rail-item" key={studio.id}><button type="button" className={`trayitem social-place-item${calendarFilter !== "all" && calendarFilter !== filter ? " dim" : ""}`} aria-pressed={calendarFilter === filter} onClick={() => setCalendarFilter(filter)}><span className={`trayav social-place-av${calendarFilter === filter ? " sel" : ""}`} style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}</span><span className="trayitem-nm">{studio.name}</span></button><button className={`cash-pin${pins.has(`studio:${studio.id}`) ? " on" : ""}`} type="button" aria-label={`${pins.has(`studio:${studio.id}`) ? "Unpin" : "Pin"} ${studio.name}`} onClick={() => togglePin("studio", studio.id)}><Icon name={pins.has(`studio:${studio.id}`) ? "star_filled" : "star"} size={18} /></button></div>})}
               {railGroupOptions.map((group) => {
                 const filter = `group:${group.id}` as const;
                 return <button
@@ -705,7 +710,26 @@ export function FollowingScreen({
 
             <div className="cardwrap home-schedule">
               {isHome ? (
-                <CalendarList days={homeDays} className="following-calendar-list" />
+                <div className="cash-activity-list">
+                  {homeDays.map((section) => (
+                    <section className="cash-day" key={section.iso}>
+                      <h2>{section.label}</h2>
+                      <div>
+                        {section.rows.map((row) => {
+                          const coach = coachById.get(row.item.coachId);
+                          return <article className="cash-class-row" key={row.key}>
+                            <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(row.item, coach ?? null, favIds.includes(row.item.coachId)))}>
+                              <span className="cash-class-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" /> : <span>{(coach?.name ?? row.item.name).charAt(0).toUpperCase()}</span>}</span>
+                              <span className="cash-class-copy"><strong>{row.item.name}</strong><span>{row.item.where || coach?.name || "Location to come"}</span><small>{row.item.hm}{row.item.ap.toLowerCase()}</small></span>
+                              <Icon name="chevron_right" size={22} />
+                            </button>
+                            {row.corner}
+                          </article>;
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
               ) : (
                 <>
               {/* Why Today isn't the selected tab, said once: the landing
@@ -918,7 +942,9 @@ function daySectionLabel(iso: string, today: string): string {
     day: "numeric",
     timeZone: "UTC",
   });
-  return iso === today ? `Today, ${date.split(", ")[1]}` : date;
+  if (iso === today) return "Today";
+  if (iso === plusDays(today, 1)) return "Tomorrow";
+  return date;
 }
 
 /** Miles between two pins, the haversine way, close enough for a rail. */

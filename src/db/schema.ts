@@ -873,6 +873,23 @@ export const subscribers = pgTable(
   ],
 );
 
+// A small, deliberate front row inside Following. Following can be broad;
+// pinning says which people and places should stay within immediate reach.
+// Entity ids are text because people and studios are separate tables, while
+// the type makes the pair unambiguous and keeps either side independently
+// removable without changing the follow relationship itself.
+export const calendarPins = pgTable(
+  "calendar_pins",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("calendar_pins_user_entity").on(t.userId, t.entityType, t.entityId)],
+);
+
 // "I'm going" — a member marking a class they intend to attend. Deliberately
 // NOT a booking: most classes are reserved through the studio, so this is a
 // personal note that drives their week and their share image, nothing more.

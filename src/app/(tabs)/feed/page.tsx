@@ -19,7 +19,7 @@ export default async function DiscoverPage() {
   if (!me) redirect("/");
 
   const feed = await buildDiscoverFeed(userId, me);
-  const [savedStudioRows, groupRows] = await Promise.all([
+  const [savedStudioRows, groupRows, pinRows] = await Promise.all([
     db.select({ studioId: schema.studioEndorsements.targetStudioId })
       .from(schema.studioEndorsements)
       .where(and(eq(schema.studioEndorsements.endorserUserId, userId), eq(schema.studioEndorsements.trait, "been_here"))),
@@ -32,6 +32,9 @@ export default async function DiscoverPage() {
         eq(schema.groupMembers.userId, userId),
         eq(schema.groupFavorites.userId, userId),
       )),
+    db.select({ entityType: schema.calendarPins.entityType, entityId: schema.calendarPins.entityId })
+      .from(schema.calendarPins)
+      .where(eq(schema.calendarPins.userId, userId)),
   ]);
   const studioIds = [...new Set(savedStudioRows.map((row) => row.studioId))];
   const studios = studioIds.length
@@ -73,6 +76,7 @@ export default async function DiscoverPage() {
           .filter((row) => row.groupId === group.id)
           .map((row) => `${row.classId}|${row.iso}`),
       }))}
+      initialPins={pinRows.map((pin) => `${pin.entityType}:${pin.entityId}`)}
     />
   );
 }
