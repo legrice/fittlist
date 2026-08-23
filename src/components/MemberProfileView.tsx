@@ -119,11 +119,9 @@ export async function MemberProfileView({
   const week =
     user.handle && (await canSeeWeek(viewerId, user)) ? await memberWeek(user.id) : [];
 
-  // No arrow on your own page. It is what the Profile tab opens now, so
-  // there is nothing behind it to go back to: the bar underneath is the way
-  // on, and an arrow pointing at Following on a screen you reached from a tab
-  // is a control offering to undo a tap you did not make.
-  const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
+  const backTo = isOwner
+    ? from === "profile" ? { href: "/you", label: "Back to your profile" } : undefined
+    : backToFor(from, !!viewerId);
   const shoutoutRows = await db
     .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
     .from(schema.shoutouts)

@@ -126,11 +126,13 @@ export async function PublicProfileView({
     }
   }
 
-  // No arrow on your own page. It is what the Profile tab opens now, so
-  // there is nothing behind it to go back to: the bar underneath is the way
-  // on, and an arrow pointing at Following on a screen you reached from a tab
-  // is a control offering to undo a tap you did not make.
-  const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
+  // The Profile tab itself needs no arrow, but its explicit "View profile"
+  // action is a preview with a real screen underneath it. Preserve that
+  // distinction in the URL so the preview has an honest way back without
+  // adding an arrow to every normal visit to your own public page.
+  const backTo = isOwner
+    ? from === "profile" ? { href: "/you", label: "Back to your profile" } : undefined
+    : backToFor(from, !!viewerId);
 
   // Their own classes, plus the shifts a gym has them on when they've said
   // those belong here. One loader, so the page, the share, the feed and the
