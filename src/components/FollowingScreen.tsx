@@ -810,10 +810,11 @@ export function FollowingScreen({
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
                           const studioOwned = item.base.startsWith("s/");
+                          const placeIsCoach = sameCalendarIdentity(coach, item.where);
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className={`cash-class-avatar${studioOwned ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={studioOwned ? 56 : 48} height={studioOwned ? 44 : 48} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
-                              <span className="cash-class-copy"><strong>{item.name}</strong><span>{item.where || "Location to come"}</span><small>{coach?.name || "Coach to come"}</small></span>
+                              <span className="cash-class-copy"><strong>{item.name}</strong><span>{item.where || "Location to come"}</span>{!placeIsCoach && <small>{coach?.name || "Coach to come"}</small>}</span>
                               <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
                             </button>
                           </article>;
@@ -989,9 +990,10 @@ function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
           <div className="cash-activity-list entity-peek-list">
             {sorted.map((item) => {
               const coach = coaches.get(item.coachId);
+              const placeIsCoach = sameCalendarIdentity(coach, item.where) || (entity.type === "studio" && !coach);
               return <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
                 <span className={`cash-class-avatar${!coach && entity.type === "studio" ? " studio" : ""}`} style={{ background:coach?.color ?? entity.color }}>{(coach?.photo ?? entity.photo) ? <img src={(coach?.photo ?? entity.photo)!} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>
-                <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span><small>{coach?.name || entity.name}</small></span>
+                <span className="cash-class-copy"><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span>{!placeIsCoach && <small>{coach?.name || entity.name}</small>}</span>
                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
               </Link>;
             })}
@@ -1086,6 +1088,17 @@ function daySectionLabel(iso: string, today: string): string {
   return date;
 }
 
+/** A studio-owned occurrence uses a studio-shaped identity so open classes
+ * still have artwork and a valid profile destination. That identity is the
+ * same fact as the place line, not a second coach line. The name comparison
+ * also covers older rows created before studio identities had `s/` handles. */
+function sameCalendarIdentity(coach: FeedCoach | null | undefined, where: string | null): boolean {
+  if (!coach) return false;
+  if (coach.handle.startsWith("s/")) return true;
+  const clean = (value: string) => value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
+  return !!where && clean(coach.name) === clean(where);
+}
+
 /** Miles between two pins, the haversine way, close enough for a rail. */
 function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const rad = (x: number) => (x * Math.PI) / 180;
@@ -1113,7 +1126,7 @@ function peekOf(i: FeedItem, coach: FeedCoach | null, following?: boolean): Peek
     time: `${i.hm} ${i.ap.toLowerCase()}`,
     studio: i.where,
     studioHref: i.whereHref,
-    coach: coach
+    coach: coach && !sameCalendarIdentity(coach, i.where)
       ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color, favorited: following }
       : null,
     // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's
