@@ -202,16 +202,10 @@ export function CoachPeek({
           {peek?.handle && (
             <div className="peekacts">
               {self && shareHref ? (
-                <>
-                  <Link className="peekfollow peekaction" href={`/${peek.handle}`}>
-                    <Icon name="account_circle" size={18} />
-                    <span>View profile</span>
-                  </Link>
-                  <Link className="peekfollow peekaction" href={shareHref}>
-                    <Icon name="reply" className="share-arrow-forward" size={18} />
-                    <span>Share week</span>
-                  </Link>
-                </>
+                <Link className="peekfollow peekaction" href={`/${peek.handle}`}>
+                  <Icon name="account_circle" size={18} />
+                  <span>View profile</span>
+                </Link>
               ) : (
                 <>
                   {peek.messagesOpen && <button className="peekfollow peekaction" type="button" onClick={() => setMessageOpen(true)}><Icon name="chat" size={18} /><span>Message</span></button>}
@@ -240,6 +234,14 @@ export function CoachPeek({
 
         {!self && !scheduleOnly && peek && visibleDays.length > 0 && (
           <p className="peekfoot">Add anything here to put it on your own week.</p>
+        )}
+        {self && shareHref && (
+          <div className="peek-share-sticky">
+            <Link className="peek-share-cta" href={shareHref}>
+              <Icon name="reply" className="share-arrow-forward" size={21} />
+              <span>Share your week</span>
+            </Link>
+          </div>
         )}
       </div>
       {messageOpen && peek?.handle && (
