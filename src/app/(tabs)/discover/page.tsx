@@ -25,7 +25,7 @@ export default async function DiscoverPage({
       : half === "people" || half === "coaches"
         ? "people"
         : half === "classes"
-          ? "classes"
+          ? "people"
           : undefined;
 
   if (!(await fansVisible())) redirect("/");
