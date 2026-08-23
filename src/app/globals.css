@@ -8630,19 +8630,7 @@ select.editinput.placekind-select {
 .following-head {
   padding: 4px 0 6px;
 }
-.home-calendars-title { display:flex; align-items:center; justify-content:space-between; min-height:30px; }
-.home-calendars-title h2 { margin:0; font-size:18px; letter-spacing:-.015em; }
 .following-head .trayitem { border:0; padding:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
-.my-calendar-sheet-head { display:flex; align-items:center; gap:14px; padding:4px 42px 18px 0; }
-.my-calendar-sheet-head .trayav { flex:0 0 auto; }
-.my-calendar-sheet-head h2 { margin:0; padding:0; }
-.my-calendar-sheet-head p { margin:3px 0 0; color:var(--muted); font-size:14px; }
-.my-calendar-actions { display:grid; gap:9px; }
-.my-calendar-actions a { min-height:70px; padding:12px 14px; display:grid; grid-template-columns:28px minmax(0,1fr) 20px; align-items:center; gap:12px; border:1px solid var(--color-border); border-radius:var(--radius-control); color:var(--ink); text-decoration:none; }
-.my-calendar-actions a > span { display:grid; gap:2px; }
-.my-calendar-actions strong { font-size:16px; }
-.my-calendar-actions small { color:var(--muted); font-size:13px; }
-.my-calendar-actions a:active { background:var(--cl); }
 .social-schedule-switch {
   width: 100%; min-height: 48px; margin: 4px 0 20px; padding: 4px;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;

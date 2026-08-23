@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
@@ -146,7 +145,6 @@ export function FollowingScreen({
   cats,
   todayIso,
   meId,
-  meKind,
   myRail,
   meFace,
   savedStudios = [],
@@ -196,7 +194,7 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [myCalendarMenu, setMyCalendarMenu] = useState(false);
+  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -259,17 +257,6 @@ export function FollowingScreen({
     return true;
   };
 
-  const shown = useMemo(
-    () =>
-      items.filter(
-        (item) =>
-          passes(item) &&
-          (!isHome || item.saved || (!!meId && item.coachId === meId)),
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo, isHome, meId],
-  );
-
   const coachOptions = useMemo(
     () => myRail.filter((person) => person.id !== meId && items.some((item) => item.coachId === person.id)),
     [myRail, meId, items],
@@ -282,6 +269,29 @@ export function FollowingScreen({
     const feedKeys = new Set(items.map((item) => item.key));
     return socialGroups.filter((group) => group.classKeys.some((key) => feedKeys.has(key)));
   }, [socialGroups, items]);
+
+  const shown = useMemo(() => {
+    const coachIds = new Set(coachOptions.map((person) => person.id));
+    const studioHrefs = new Set(studioOptions.map((studio) => `/s/${studio.slug}`));
+    const groupKeys = new Set(groupOptions.flatMap((group) => group.classKeys));
+    return items.filter((item) => {
+      if (!passes(item)) return false;
+      if (!isHome) return true;
+      if (calendarFilter === "you") return item.saved || (!!meId && item.coachId === meId);
+      if (calendarFilter.startsWith("coach:")) return item.coachId === calendarFilter.slice(6);
+      if (calendarFilter.startsWith("studio:")) {
+        const studio = studioOptions.find((option) => option.id === calendarFilter.slice(7));
+        return Boolean(studio && item.whereHref === `/s/${studio.slug}`);
+      }
+      if (calendarFilter.startsWith("group:")) {
+        const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
+        return Boolean(group?.classKeys.includes(item.key));
+      }
+      return item.saved || (!!meId && item.coachId === meId) || coachIds.has(item.coachId) ||
+        Boolean(item.whereHref && studioHrefs.has(item.whereHref)) || groupKeys.has(item.key);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions]);
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -505,13 +515,14 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <div className="home-calendars-title">
-            <h2>Calendars</h2>
-          </div>
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll">
-              <button className="trayitem" type="button" onClick={() => setMyCalendarMenu(true)}>
-                <span className="trayav" style={{ background: meFace.color }}>
+              <button className={`trayitem${calendarFilter !== "all" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => setCalendarFilter("all")}>
+                <span className={`trayav trayav-all${calendarFilter === "all" ? " sel" : ""}`}><Icon name="groups" size={25} /></span>
+                <span className="trayitem-nm">All</span>
+              </button>
+              <button className={`trayitem${calendarFilter !== "you" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter("you")}>
+                <span className={`trayav${calendarFilter === "you" ? " sel" : ""}`} style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
@@ -519,14 +530,17 @@ export function FollowingScreen({
                 <span className="trayitem-nm">You</span>
               </button>
               {coachOptions.map((coach) => {
+                const filter = `coach:${coach.id}` as const;
                 return (
-                <Link
+                <button
                   key={coach.id}
-                  className="trayitem"
-                  href={coach.handle ? `/${coach.handle}/schedule?from=feed` : "/feed"}
+                  type="button"
+                  className={`trayitem${calendarFilter !== filter ? " dim" : ""}`}
+                  aria-pressed={calendarFilter === filter}
+                  onClick={() => setCalendarFilter(filter)}
                 >
                   <span
-                    className="trayav"
+                    className={`trayav${calendarFilter === filter ? " sel" : ""}`}
                     style={{ background: coach.color }}
                   >
                     {coach.photo ? (
@@ -537,57 +551,39 @@ export function FollowingScreen({
                     )}
                   </span>
                   <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
-                </Link>
+                </button>
               )})}
               {studioOptions.map((studio) => {
-                return <Link
+                const filter = `studio:${studio.id}` as const;
+                return <button
                 key={studio.id}
-                className="trayitem social-place-item"
-                href={`/s/${studio.slug}/schedule?from=feed`}
+                type="button"
+                className={`trayitem social-place-item${calendarFilter !== filter ? " dim" : ""}`}
+                aria-pressed={calendarFilter === filter}
+                onClick={() => setCalendarFilter(filter)}
               >
-                <span className="trayav social-place-av" style={{ background: studio.color }}>
+                <span className={`trayav social-place-av${calendarFilter === filter ? " sel" : ""}`} style={{ background: studio.color }}>
                   {studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={25} />}
                 </span>
                 <span className="trayitem-nm">{studio.name}</span>
-              </Link>})}
+              </button>})}
               {groupOptions.map((group) => {
-                return <Link
+                const filter = `group:${group.id}` as const;
+                return <button
                 key={group.id}
-                className="trayitem"
-                href={`/g/${group.slug}?from=feed`}
+                type="button"
+                className={`trayitem${calendarFilter !== filter ? " dim" : ""}`}
+                aria-pressed={calendarFilter === filter}
+                onClick={() => setCalendarFilter(filter)}
               >
-                <span className="trayav">
+                <span className={`trayav${calendarFilter === filter ? " sel" : ""}`}>
                   {group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={25} />}
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
-              </Link>})}
+              </button>})}
             </div>
           </div>
         </header>
-      )}
-      {myCalendarMenu && typeof document !== "undefined" && createPortal(
-        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMyCalendarMenu(false); }}>
-          <div className="sheet my-calendar-sheet" role="dialog" aria-modal="true" aria-labelledby="my-calendar-title">
-            <button className="iconbtn sheetclose" type="button" aria-label="Close" onClick={() => setMyCalendarMenu(false)}>
-              <Icon name="close" size={18} />
-            </button>
-            <div className="my-calendar-sheet-head">
-              <span className="trayav" style={{ background: meFace.color }}>
-                {meFace.photo ? <img src={meFace.photo} alt="" /> : <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}
-              </span>
-              <div><h2 id="my-calendar-title">Your calendar</h2><p>{meFace.name}</p></div>
-            </div>
-            <div className="my-calendar-actions">
-              <Link href="/calendar" onClick={() => setMyCalendarMenu(false)}>
-                <Icon name="calendar_month" size={23} /><span><strong>Manage calendar</strong><small>Add, edit, and view your schedule</small></span><Icon name="chevron_right" size={20} />
-              </Link>
-              <Link href={meKind === "coach" ? "/coachshare" : "/membershare"} onClick={() => setMyCalendarMenu(false)}>
-                <Icon name="share" size={23} /><span><strong>Share calendar</strong><small>Send your schedule to someone</small></span><Icon name="chevron_right" size={20} />
-              </Link>
-            </div>
-          </div>
-        </div>,
-        document.body,
       )}
       {(isHome ? shown.length === 0 : items.length === 0) ? (
         <>
