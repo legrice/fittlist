@@ -1,8 +1,11 @@
-import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, gte, inArray, isNull, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
+
+const { image: _classImage, ...weekClassColumns } = getTableColumns(schema.classes);
+const { image: _personalImage, ...weekPersonalColumns } = getTableColumns(schema.personalClasses);
 
 // The classes someone has added, from today forward.
 //
@@ -308,7 +311,7 @@ export async function memberWeek(
  *  today forward, exactly as before. */
 export async function myWeek(
   userId: string,
-  opts?: { pastDays?: number },
+  opts?: { pastDays?: number; email?: string },
 ): Promise<WeekDay[]> {
   const db = await getDb();
   const pastDays = opts?.pastDays ?? 0;
@@ -317,32 +320,48 @@ export async function myWeek(
     d.setUTCDate(d.getUTCDate() - pastDays);
     return d.toISOString().slice(0, 10);
   })();
-  const marks = await db
-    .select()
-    .from(schema.attendances)
-    .where(
-      and(
-        eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, sinceIso),
-      ),
-    )
-    .orderBy(asc(schema.attendances.occurrenceDate));
-  const own = await db
-    .select()
-    .from(schema.personalClasses)
-    .where(eq(schema.personalClasses.userId, userId));
+  const [marks, own] = await Promise.all([
+    db
+      .select()
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, sinceIso),
+        ),
+      )
+      .orderBy(asc(schema.attendances.occurrenceDate)),
+    // Calendar rows never display the personal entry's artwork. Fetching it
+    // here made every repeat carry a potentially large data URL.
+    db
+      .select(weekPersonalColumns)
+      .from(schema.personalClasses)
+      .where(eq(schema.personalClasses.userId, userId)),
+  ]);
   if (marks.length === 0 && own.length === 0) return [];
 
   const classIds = [...new Set(marks.map((m) => m.classId))];
   const classRows = await db
-    .select()
+    .select(weekClassColumns)
     .from(schema.classes)
     .where(inArray(schema.classes.id, classIds));
   const classById = new Map(classRows.map((c) => [c.id, c]));
 
   const coachIds = [...new Set(classRows.map((c) => c.userId))];
   const coaches = coachIds.length
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
+    ? await db
+        .select({
+          id: schema.users.id,
+          kind: schema.users.kind,
+          email: schema.users.email,
+          name: schema.users.name,
+          handle: schema.users.handle,
+          photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+          photoThumb: schema.users.photoThumb,
+          avatarColor: schema.users.avatarColor,
+        })
+        .from(schema.users)
+        .where(inArray(schema.users.id, coachIds))
     : [];
   const coachById = new Map(coaches.map((u) => [u.id, u]));
   // A gym owns its classes, so the row's owner is the place. Who is actually
@@ -361,7 +380,14 @@ export async function myWeek(
     ),
   ];
   const studios = studioIds.length
-    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
+    ? await db
+        .select({
+          id: schema.studios.id,
+          slug: schema.studios.slug,
+          name: schema.studios.name,
+        })
+        .from(schema.studios)
+        .where(inArray(schema.studios.id, studioIds))
     : [];
   const studioById = new Map(studios.map((s) => [s.id, s]));
   const ownStudioById = studioById;
@@ -371,16 +397,16 @@ export async function myWeek(
   // following someone never shows them your week; agreeing to each other does.
   const alsoByKey = new Map<string, { name: string; photo: string | null; color: string; handle: string | null }[]>();
   if (marks.length) {
-    const [me] = await db
+    const email = opts?.email ?? (await db
       .select({ email: schema.users.email })
       .from(schema.users)
-      .where(eq(schema.users.id, userId));
-    if (me) {
+      .where(eq(schema.users.id, userId)))[0]?.email;
+    if (email) {
       const [iFollowRows, followMeRows] = await Promise.all([
         db
           .select({ trainerUserId: schema.subscribers.trainerUserId })
           .from(schema.subscribers)
-          .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+          .where(and(eq(schema.subscribers.email, email), isNull(schema.subscribers.optedOutAt))),
         db
           .select({ userId: schema.subscribers.userId, email: schema.subscribers.email })
           .from(schema.subscribers)
@@ -421,7 +447,14 @@ export async function myWeek(
         if (overlapping.length) {
           const peopleIds = [...new Set(overlapping.map((t) => t.userId))];
           const people = await db
-            .select()
+            .select({
+              id: schema.users.id,
+              email: schema.users.email,
+              name: schema.users.name,
+              handle: schema.users.handle,
+              photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+              avatarColor: schema.users.avatarColor,
+            })
             .from(schema.users)
             .where(inArray(schema.users.id, peopleIds));
           const personById = new Map(people.map((p) => [p.id, p]));

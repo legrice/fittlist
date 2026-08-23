@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 import { avatarColor } from "@/lib/avatar";
 import { INVITES_PER_USER, invitesCapped, inviteOnly } from "@/lib/invites";
+import { inviteBannerCountFor } from "@/lib/invite-banner";
 import { joinCodeFor, joinUrl } from "@/lib/joinlink";
 import { getSessionUserId } from "@/lib/session";
 
@@ -47,18 +48,13 @@ export async function invitesBannerCount(): Promise<number> {
     })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
-  // Mid-setup, or they've already closed it.
-  if (!me || !me.onboardedAt || me.dismissed) return 0;
-  // Admins have no cap, so there's no number to announce.
-  if (adminEmails().includes(me.email.toLowerCase())) return 0;
-  // Nor does anyone else now. -1 means "you can invite, we're not counting":
-  // the banner still says the door exists, it just doesn't ration it.
-  if (!invitesCapped()) return -1;
-  const rows = await db
-    .select({ id: schema.invites.id })
-    .from(schema.invites)
-    .where(eq(schema.invites.invitedByUserId, userId));
-  return Math.max(0, INVITES_PER_USER - rows.length);
+  if (!me) return 0;
+  return inviteBannerCountFor({
+    id: userId,
+    email: me.email,
+    onboardedAt: me.onboardedAt,
+    invitesBannerAt: me.dismissed,
+  });
 }
 
 // Closing it is permanent. The settings row is the door that stays; this was

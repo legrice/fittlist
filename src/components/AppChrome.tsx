@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { unreadHeaderCounts } from "@/lib/notify";
@@ -7,7 +7,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
 import { DesktopChrome } from "@/components/DesktopChrome";
-import { adminNewActivityCount } from "@/lib/adminactivity";
+import { adminActivityFreshSince } from "@/lib/adminactivity";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
@@ -43,11 +43,12 @@ export async function AppChrome({
       name: schema.users.name,
       title: schema.users.title,
       email: schema.users.email,
-      photo: schema.users.photo,
+      photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
       photoThumb: schema.users.photoThumb,
       avatarColor: schema.users.avatarColor,
       location: schema.users.location,
       id: schema.users.id,
+      adminActivityAt: schema.users.adminActivityAt,
     })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
@@ -55,11 +56,12 @@ export async function AppChrome({
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, adminAttention, adminActivity] = await Promise.all([
+  const [unread, adminAttention, adminActivityFresh] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
     isAdmin ? adminAttentionCount() : Promise.resolve(0),
-    isAdmin ? adminNewActivityCount(me.id) : Promise.resolve(0),
+    isAdmin ? adminActivityFreshSince(me.adminActivityAt) : Promise.resolve(false),
   ]);
+  const adminActivity = adminActivityFresh ? 1 : 0;
   // One calendar, at one address. This forked by kind for months, back when a
   // coach's was /app and a member had their own at /week; a member has no
   // calendar at all now, and the tab is not drawn for them. Left as it was, it

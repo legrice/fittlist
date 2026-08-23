@@ -30,6 +30,7 @@ import {
   isStudioPlannerColor,
   type StudioPlannerColor,
 } from "@/lib/studio-planner";
+import { staffStudiosForUser } from "@/lib/staff-studios";
 
 // A gym's own schedule: the rota, replacing the spreadsheet.
 //
@@ -3784,44 +3785,5 @@ export async function myStaffStudios(): Promise<
 > {
   const userId = await getSessionUserId();
   if (!userId) return [];
-  const db = await getDb();
-  const [rostered, managed] = await Promise.all([
-    db
-      .select({ studioId: schema.studioRotaCoaches.studioId })
-      .from(schema.studioRotaCoaches)
-      .where(
-        and(
-          eq(schema.studioRotaCoaches.userId, userId),
-          eq(schema.studioRotaCoaches.role, "coach"),
-          eq(schema.studioRotaCoaches.onSchedule, true),
-          inArray(schema.studioRotaCoaches.state, INTERACTIVE_ROSTER_STATES),
-        ),
-      ),
-    db
-      .select({ studioId: schema.studioManagers.studioId })
-      .from(schema.studioManagers)
-      .where(eq(schema.studioManagers.userId, userId)),
-  ]);
-  const runs = new Set(managed.map((r) => r.studioId));
-  const ids = [
-    ...new Set(
-      [...rostered, ...managed]
-        .map((r) => r.studioId)
-        .filter((id): id is string => !!id),
-    ),
-  ];
-  if (!ids.length) return [];
-  const rows = await db
-    .select({
-      id: schema.studios.id,
-      name: schema.studios.name,
-      slug: schema.studios.slug,
-      photo: schema.studios.photo,
-    })
-    .from(schema.studios)
-    .where(inArray(schema.studios.id, ids));
-  return rows
-    .map((s) => ({ id: s.id, name: s.name, slug: s.slug ?? s.id, admin: runs.has(s.id), photo: s.photo }))
-    // The places you run first: they carry the work that only you can do.
-    .sort((a, b) => Number(b.admin) - Number(a.admin) || a.name.localeCompare(b.name));
+  return staffStudiosForUser(userId);
 }

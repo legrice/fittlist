@@ -1,7 +1,6 @@
 "use server";
 
-import { and, asc, count, desc, eq, gte, inArray, isNull } from "drizzle-orm";
-import { myStaffStudios } from "@/app/actions/gym";
+import { and, asc, count, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import type { YouAccountData, YouDashboardData, YouFavoriteGroup, YouFavoritePerson, YouFavoritePlace } from "@/components/YouDashboard";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
@@ -11,6 +10,7 @@ import { todayIso } from "@/lib/format";
 import { unreadHeaderCounts } from "@/lib/notify";
 import { publicSchedules } from "@/lib/coachweek";
 import { occurrenceEnded, runsOn } from "@/lib/format";
+import { staffStudiosForUser } from "@/lib/staff-studios";
 
 /** The private profile/account surface intentionally has its own small query.
  * Favorites and group calendars belong to /saved; loading all of them before
@@ -29,7 +29,7 @@ export async function youAccountData(): Promise<YouAccountData | null> {
       title: schema.users.title,
       location: schema.users.location,
       kind: schema.users.kind,
-      photo: schema.users.photo,
+      photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
       photoThumb: schema.users.photoThumb,
       avatarColor: schema.users.avatarColor,
       onboardedAt: schema.users.onboardedAt,
@@ -39,7 +39,7 @@ export async function youAccountData(): Promise<YouAccountData | null> {
   if (!me?.handle || !me.onboardedAt) return null;
 
   const [managed, unread] = await Promise.all([
-    myStaffStudios(),
+    staffStudiosForUser(userId),
     unreadHeaderCounts(userId, me.email),
   ]);
   return {
@@ -164,7 +164,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso())))
       .orderBy(asc(schema.attendances.occurrenceDate), asc(schema.classes.startTime))
       .limit(12),
-    myStaffStudios(),
+    staffStudiosForUser(userId),
     unreadHeaderCounts(userId, me.email),
   ]);
 

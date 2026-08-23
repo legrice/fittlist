@@ -1,4 +1,4 @@
-import { countDistinct, eq } from "drizzle-orm";
+import { countDistinct, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 
@@ -36,10 +36,15 @@ export async function currentAdmin(): Promise<{ id: string; email: string; look:
  */
 export async function adminAttentionCount(): Promise<number> {
   const db = await getDb();
-  const [classReports, studioReports] = await Promise.all([
-    db.select({ n: countDistinct(schema.classReports.seriesId) }).from(schema.classReports),
-    db.select({ n: countDistinct(schema.studioReports.studioId) }).from(schema.studioReports),
-  ]);
+  // Both badge sources are aggregates over tiny scalar answers. Keeping them
+  // in one statement avoids a second database/network round trip on every
+  // admin page render.
+  const [row] = await db
+    .select({
+      classes: countDistinct(schema.classReports.seriesId),
+      studios: sql<number>`(select count(distinct ${schema.studioReports.studioId}) from ${schema.studioReports})`,
+    })
+    .from(schema.classReports);
 
-  return Number(classReports[0]?.n ?? 0) + Number(studioReports[0]?.n ?? 0);
+  return Number(row?.classes ?? 0) + Number(row?.studios ?? 0);
 }

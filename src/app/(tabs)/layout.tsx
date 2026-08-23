@@ -1,8 +1,8 @@
 import type { Viewport } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { avatarColor } from "@/lib/avatar";
-import { invitesBannerCount } from "@/app/actions/invites";
-import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
+import { feedbackHost, feedbackPromptDueFor } from "@/lib/feedback";
 import { unreadHeaderCounts } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
@@ -12,7 +12,8 @@ import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
 import { NavBar } from "@/components/NavBar";
 import { currentUser } from "@/lib/current-user";
-import { adminNewActivityCount } from "@/lib/adminactivity";
+import { adminActivityFreshSince } from "@/lib/adminactivity";
+import { inviteBannerCountFor } from "@/lib/invite-banner";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,28 @@ export const dynamic = "force-dynamic";
 // white navigation surface, so matching that color removes the beige seam
 // between the site bar and Safari's own bottom controls.
 export const viewport: Viewport = { themeColor: "#ffffff" };
+
+type DeferredViewer = {
+  id: string;
+  email: string;
+  createdAt: Date;
+  onboardedAt: Date | null;
+  feedbackPromptedAt: Date | null;
+  invitesBannerAt: Date | null;
+};
+
+/** These prompts are useful, but neither is required to navigate or use the
+ * calendar. Keeping them behind Suspense lets the signed-in shell and page
+ * stream while their uncommon eligibility checks finish. */
+async function DeferredInviteBanner({ viewer }: { viewer: DeferredViewer }) {
+  return (await inviteBannerCountFor(viewer)) !== 0 ? <InvitesBanner /> : null;
+}
+
+async function DeferredFeedbackPrompt({ viewer }: { viewer: DeferredViewer }) {
+  const host = await feedbackHost();
+  if (!host || !(await feedbackPromptDueFor(viewer, host))) return null;
+  return <FeedbackPrompt hostName={host.name.trim() || "We"} />;
+}
 
 // The shell the tabbed screens share: header, content, tab bar.
 //
@@ -38,15 +61,23 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // switch, so awaiting them one by one would stack extra round trips onto every
   // tap of the bar.
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, promptDue, invitesLeft, adminAttention, adminActivity] = await Promise.all([
+  const [unread, adminAttention, adminActivityFresh] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
-    feedbackPromptDue(userId),
-    invitesBannerCount(),
     isAdmin ? adminAttentionCount() : Promise.resolve(0),
-    isAdmin ? adminNewActivityCount(me.id) : Promise.resolve(0),
+    isAdmin ? adminActivityFreshSince(me.adminActivityAt) : Promise.resolve(false),
   ]);
-  // "How is it going?", once they have been here long enough to know.
-  const askFeedback = promptDue ? await feedbackHost() : null;
+  // The chrome only needs to advertise that something is new. Computing the
+  // exact total required six COUNT queries on every navigation for the admin;
+  // six indexed existence checks answer the product question with less work.
+  const adminActivity = adminActivityFresh ? 1 : 0;
+  const deferredViewer: DeferredViewer = {
+    id: me.id,
+    email: me.email,
+    createdAt: me.createdAt,
+    onboardedAt: me.onboardedAt,
+    feedbackPromptedAt: me.feedbackPromptedAt,
+    invitesBannerAt: me.invitesBannerAt,
+  };
   // My schedule points at one place now. It used to differ by kind,
   // because a coach's calendar was /app and a member had their own at /week;
   // a member has no calendar at all, so there is nothing to fork on and the
@@ -109,7 +140,9 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           accountData={accountData}
           social
         />
-        {invitesLeft !== 0 && <InvitesBanner />}
+        <Suspense fallback={null}>
+          <DeferredInviteBanner viewer={deferredViewer} />
+        </Suspense>
         {children}
       </div>
       <NavBar
@@ -118,7 +151,9 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         profileHref={profileHref}
         face={face}
       />
-      {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
+      <Suspense fallback={null}>
+        <DeferredFeedbackPrompt viewer={deferredViewer} />
+      </Suspense>
     </section>
   );
 }

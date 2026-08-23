@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
@@ -34,12 +34,7 @@ export function NavBar({
   face?: { photo: string | null; color: string; initial: string };
 }) {
   const here = activeTab(usePathname(), active);
-  const router = useRouter();
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
-
-  useEffect(() => {
-    for (const tab of tabs) if (tab.id !== here) router.prefetch(tab.href);
-  }, [here, router, tabs]);
 
   return (
     <div className="navwrap">

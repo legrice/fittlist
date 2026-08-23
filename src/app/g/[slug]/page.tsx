@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -25,21 +25,49 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const [group] = await db.select().from(schema.groups).where(eq(schema.groups.slug, slug));
   if (!group) notFound();
   const viewerId = await getSessionUserId();
-  const [membership] = viewerId ? await db.select().from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, viewerId))) : [];
-  const [invitation] = viewerId ? await db.select({ role: schema.groupInvitations.role }).from(schema.groupInvitations).where(and(eq(schema.groupInvitations.groupId, group.id), eq(schema.groupInvitations.inviteeUserId, viewerId))) : [];
+  const [[membership], [invitation]] = viewerId ? await Promise.all([
+    db.select().from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, viewerId))),
+    db.select({ role: schema.groupInvitations.role }).from(schema.groupInvitations).where(and(eq(schema.groupInvitations.groupId, group.id), eq(schema.groupInvitations.inviteeUserId, viewerId))),
+  ]) : [[], []];
   if (group.visibility === "private" && !membership && !invitation) notFound();
   const manager = group.ownerUserId === viewerId || membership?.role === "owner" || membership?.role === "admin";
-  const [invitePeople, setupClasses] = manager ? await Promise.all([groupInvitePeople(), groupClassOptions()]) : [[], []];
-  const [favorite] = viewerId ? await db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, viewerId))) : [];
-  const memberRows = await db.select({ id: schema.users.id, name: schema.users.name, photo: schema.users.photo, avatarColor: schema.users.avatarColor, role: schema.groupMembers.role }).from(schema.groupMembers).innerJoin(schema.users, eq(schema.groupMembers.userId, schema.users.id)).where(eq(schema.groupMembers.groupId, group.id));
-  const selections = await db.select().from(schema.groupClasses).where(eq(schema.groupClasses.groupId, group.id));
-  const classRows = selections.length ? await db.select().from(schema.classes).where(inArray(schema.classes.id, selections.map((item) => item.classId))) : [];
+  type ManagerData = [
+    Awaited<ReturnType<typeof groupInvitePeople>>,
+    Awaited<ReturnType<typeof groupClassOptions>>,
+  ];
+  const managerDataPromise: Promise<ManagerData> = manager
+    ? Promise.all([groupInvitePeople(), groupClassOptions()])
+    : Promise.resolve([[], []]);
+  const [managerData, favoriteRows, memberRows, selections, postRows] = await Promise.all([
+    managerDataPromise,
+    viewerId ? db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, viewerId))) : Promise.resolve([]),
+    db.select({
+      id: schema.users.id,
+      name: schema.users.name,
+      photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+      avatarColor: schema.users.avatarColor,
+      role: schema.groupMembers.role,
+    }).from(schema.groupMembers).innerJoin(schema.users, eq(schema.groupMembers.userId, schema.users.id)).where(eq(schema.groupMembers.groupId, group.id)),
+    db.select().from(schema.groupClasses).where(eq(schema.groupClasses.groupId, group.id)),
+    db.select().from(schema.groupPosts).where(eq(schema.groupPosts.groupId, group.id)).orderBy(desc(schema.groupPosts.createdAt)).limit(50),
+  ]);
+  const [invitePeople, setupClasses] = managerData;
+  const [favorite] = favoriteRows;
+  const { image: _classImage, ...classColumns } = getTableColumns(schema.classes);
+  const classRows = selections.length ? await db.select(classColumns).from(schema.classes).where(inArray(schema.classes.id, selections.map((item) => item.classId))) : [];
   const classById = new Map(classRows.map((item) => [item.id, item]));
   const coachIds = [...new Set(classRows.map((item) => item.userId))];
-  const coaches = coachIds.length ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds)) : [];
+  const coaches = coachIds.length ? await db.select({
+    id: schema.users.id,
+    email: schema.users.email,
+    name: schema.users.name,
+    handle: schema.users.handle,
+    photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+    avatarColor: schema.users.avatarColor,
+  }).from(schema.users).where(inArray(schema.users.id, coachIds)) : [];
   const coachById = new Map(coaches.map((item) => [item.id, item]));
   const studioIds = [...new Set(classRows.map((item) => item.studioId).filter((id): id is string => !!id))];
-  const studios = studioIds.length ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds)) : [];
+  const studios = studioIds.length ? await db.select({ id: schema.studios.id, slug: schema.studios.slug, name: schema.studios.name }).from(schema.studios).where(inArray(schema.studios.id, studioIds)) : [];
   const studioById = new Map(studios.map((item) => [item.id, item]));
   const today = todayIso();
   const byDay = new Map<string, WeekDayRows["rows"]>();
@@ -58,15 +86,20 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const days: WeekDayRows[] = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([iso, rows]) => ({ iso, label: fmtDayHeaderRel(iso, today), today: iso === today, rows }));
   const emptyCopy: Record<GroupPurpose, string> = { plan: "Add a class you’re going to and invite people to join you.", community: "Add the first class or session to start the community calendar.", event: "Add the first class, session, or meetup to build the event schedule." };
   const purpose = (["plan", "community", "event"].includes(group.purpose) ? group.purpose : "plan") as GroupPurpose;
-  const postRows = await db.select().from(schema.groupPosts).where(eq(schema.groupPosts.groupId, group.id)).orderBy(desc(schema.groupPosts.createdAt)).limit(50);
   const postIds = postRows.map((post) => post.id);
+  const updateClassIds = [...new Set(postRows.map((post) => post.classId).filter((id): id is string => !!id))];
   const [commentRows,reactionRows,savedRows] = await Promise.all([
     postIds.length ? db.select().from(schema.groupPostComments).where(inArray(schema.groupPostComments.postId,postIds)) : [],
     postIds.length ? db.select().from(schema.groupPostReactions).where(inArray(schema.groupPostReactions.postId,postIds)) : [],
-    viewerId ? db.select({classId:schema.attendances.classId,iso:schema.attendances.occurrenceDate}).from(schema.attendances).where(eq(schema.attendances.userId,viewerId)) : [],
+    viewerId && updateClassIds.length ? db.select({classId:schema.attendances.classId,iso:schema.attendances.occurrenceDate}).from(schema.attendances).where(and(eq(schema.attendances.userId,viewerId), inArray(schema.attendances.classId, updateClassIds))) : [],
   ]);
   const updateAuthorIds=[...new Set([...postRows.map((row)=>row.authorUserId),...commentRows.map((row)=>row.authorUserId)])];
-  const updateAuthors=updateAuthorIds.length ? await db.select().from(schema.users).where(inArray(schema.users.id,updateAuthorIds)) : [];
+  const updateAuthors=updateAuthorIds.length ? await db.select({
+    id: schema.users.id,
+    name: schema.users.name,
+    photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+    avatarColor: schema.users.avatarColor,
+  }).from(schema.users).where(inArray(schema.users.id,updateAuthorIds)) : [];
   const updateAuthorById=new Map(updateAuthors.map((person)=>[person.id,person]));
   const savedSet=new Set(savedRows.map((row)=>`${row.classId}|${row.iso}`));
   const updates:GroupUpdate[]=postRows.flatMap((post)=>{
@@ -74,7 +107,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     const cls=post.classId ? classById.get(post.classId) : null; const studio=cls?.studioId ? studioById.get(cls.studioId) : null;
     const time=cls ? clockParts(cls.startTime) : null;
     const reactionKinds=["heart","strong","in"].map((reaction)=>({reaction,count:reactionRows.filter((row)=>row.postId===post.id&&row.reaction===reaction).length,mine:reactionRows.some((row)=>row.postId===post.id&&row.reaction===reaction&&row.userId===viewerId)}));
-    return [{ id:post.id,kind:post.kind,body:post.body,createdAt:post.createdAt.toISOString(),author:{name:author.name,photo:author.photoThumb??author.photo,color:avatarColor(author)},cls:cls&&post.occurrenceDate&&time?{id:cls.id,iso:post.occurrenceDate,name:cls.name,detail:`${new Date(`${post.occurrenceDate}T00:00:00Z`).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"})} · ${time.hm} ${time.ap}`,where:studio?.name??cls.location??"Location to come",saved:savedSet.has(`${cls.id}|${post.occurrenceDate}`)}:null,comments:commentRows.filter((row)=>row.postId===post.id).map((row)=>{const person=updateAuthorById.get(row.authorUserId)!;return{id:row.id,body:row.body,author:{name:person.name,photo:person.photoThumb??person.photo,color:avatarColor(person)}}}),reactions:reactionKinds }];
+    return [{ id:post.id,kind:post.kind,body:post.body,createdAt:post.createdAt.toISOString(),author:{name:author.name,photo:author.photo,color:avatarColor(author)},cls:cls&&post.occurrenceDate&&time?{id:cls.id,iso:post.occurrenceDate,name:cls.name,detail:`${new Date(`${post.occurrenceDate}T00:00:00Z`).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"})} · ${time.hm} ${time.ap}`,where:studio?.name??cls.location??"Location to come",saved:savedSet.has(`${cls.id}|${post.occurrenceDate}`)}:null,comments:commentRows.filter((row)=>row.postId===post.id).flatMap((row)=>{const person=updateAuthorById.get(row.authorUserId);return person?[{id:row.id,body:row.body,author:{name:person.name,photo:person.photo,color:avatarColor(person)}}]:[]}),reactions:reactionKinds }];
   });
   const settingsMembers = memberRows.map((member) => ({ id:member.id, name:member.name, photo:member.photo, color:avatarColor(member), role:member.role }));
   const schedule = <section className="group-section group-schedule-section"><div className="group-section-head"><h2>Upcoming</h2>{manager && <GroupAddClass slug={slug} classes={setupClasses} />}</div>{days.length ? <ClassOpener handle=""><CalendarList days={days} /></ClassOpener> : <div className="empty-block group-schedule-empty"><h2>Nothing planned yet</h2><p>{emptyCopy[purpose]}</p></div>}</section>;
