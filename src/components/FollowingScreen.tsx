@@ -854,14 +854,16 @@ function EntityCalendarPeek({ entity, pinned, onPinned, onClose }: {
   return (
     <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="sheet sheet-full peeksheet entity-peeksheet">
-        <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
-        {entity.type === "studio" && (
-          <button className={`iconbtn peekpin${pinned ? " on" : ""}`} disabled={busy} aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} onClick={() => {
-            const next = !pinned;
-            onPinned(next);
-            start(async () => { const result = await toggleCalendarPin("studio", entity.id); if (!result.ok) onPinned(!next); });
-          }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>
-        )}
+        <div className="peekcontrols">
+          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
+          {entity.type === "studio" && (
+            <button className={`iconbtn peekpin${pinned ? " on" : ""}`} disabled={busy} aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} onClick={() => {
+              const next = !pinned;
+              onPinned(next);
+              start(async () => { const result = await toggleCalendarPin("studio", entity.id); if (!result.ok) onPinned(!next); });
+            }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>
+          )}
+        </div>
         <div className="peekhead peekhead-stack">
           <span className="peekav">{entity.photo ? <img src={entity.photo} alt="" /> : <span className="peekav-ini" style={{ background: entity.color }}><Icon name={entity.type === "studio" ? "storefront" : "groups"} size={25} /></span>}</span>
           <h2 className="peekhead-nm">{entity.name}</h2>

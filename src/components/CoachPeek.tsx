@@ -61,8 +61,6 @@ export function CoachPeek({
   // The mark, locally, so the ribbon fills on the tap rather than on the
   // round trip. Keyed the way the loader keys it.
   const [marks, setMarks] = useState<Record<string, boolean>>({});
-  const [follow, setFollow] = useState<null | "following" | "requested" | "off">(null);
-  const [followBusy, setFollowBusy] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
   const [pinned, setPinned] = useState(initialPinned);
   const [, startTransition] = useTransition();
@@ -74,7 +72,6 @@ export function CoachPeek({
         return;
       }
       setPeek(res);
-      setFollow(res.following ? "following" : "off");
     });
   }, [id]);
 
@@ -88,21 +85,6 @@ export function CoachPeek({
       if (!res.ok) setMarks((m) => ({ ...m, [key]: !on }));
       else if (on) announceSaved(classId, iso);
     });
-  };
-
-  const toggleFollow = async () => {
-    if (!peek?.handle || followBusy || follow === null) return;
-    setFollowBusy(true);
-    const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
-    if (follow === "off") {
-      const res = await followTrainer(peek.handle);
-      if (res.ok) setFollow(res.requested ? "requested" : "following");
-    } else {
-      // Unfollow also withdraws a pending ask, so Requested is the cancel.
-      const res = await unfollowTrainer(peek.handle);
-      if (res.ok) setFollow("off");
-    }
-    setFollowBusy(false);
   };
 
   const visibleDays = peek
@@ -163,10 +145,12 @@ export function CoachPeek({
         {/* A direct child of the scrolling sheet so sticky can hold it for
             the full week. Inside the short header it was constrained to the
             header and disappeared as soon as the dates began. */}
-        <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={18} />
-        </button>
-        {!self && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} aria-pressed={pinned} onClick={() => { const next=!pinned; setPinned(next); onPinChange?.(next); startTransition(async()=>{const result=await toggleCalendarPin("person",id); if(!result.ok){setPinned(!next);onPinChange?.(!next);}}); }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>}
+        <div className="peekcontrols">
+          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={18} />
+          </button>
+          {!self && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" aria-label={pinned ? "Unpin from calendar rail" : "Pin to calendar rail"} aria-pressed={pinned} onClick={() => { const next=!pinned; setPinned(next); onPinChange?.(next); startTransition(async()=>{const result=await toggleCalendarPin("person",id); if(!result.ok){setPinned(!next);onPinChange?.(!next);}}); }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>}
+        </div>
         {/* The head stacks, by Matt's call: close alone in the corner, then
             the face, the name on its own line under it, and two actions
             below. Your own sheet swaps Follow for Share your week. */}
@@ -192,17 +176,6 @@ export function CoachPeek({
                 <>
                   {peek.messagesOpen && <button className="peekfollow" type="button" onClick={() => setMessageOpen(true)}>Message</button>}
                   <Link className="peekfollow peekview" href={`/${peek.handle}`}>View profile</Link>
-                  {follow !== null && (
-                    <button
-                      className={`peekfollow save-ribbon-only${follow !== "off" ? " on" : ""}`}
-                      aria-pressed={follow !== "off"}
-                      aria-label={follow === "following" ? "Remove saved calendar" : follow === "requested" ? "Cancel calendar request" : "Save calendar"}
-                      disabled={followBusy}
-                      onClick={toggleFollow}
-                    >
-                      <Icon name={follow === "following" ? "bookmark_added" : follow === "requested" ? "schedule" : "bookmark"} size={20} />
-                    </button>
-                  )}
                 </>
               )}
             </div>

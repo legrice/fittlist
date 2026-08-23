@@ -9461,12 +9461,10 @@ select.editinput.placekind-select {
    one thing, whole screen. `.sheet.sheet-full` normally removes top padding;
    the doubled selector wins that specificity and restores a real top inset. */
 .sheet.peeksheet { padding-top: 24px; }
-.sheet.peeksheet > .peekclose {
-  position:sticky; top:14px; left:0; z-index:7;
-  display:flex; margin:0 auto -38px 0;
-  box-shadow: none;
-}
-.peekpin { position:sticky; top:14px; z-index:8; display:flex; margin:0 0 -44px auto; background:var(--card); color:var(--ink); }
+.peekcontrols { position:sticky; top:14px; z-index:8; display:flex; align-items:center; justify-content:space-between; min-height:44px; margin:0 0 22px; pointer-events:none; }
+.peekcontrols > * { pointer-events:auto; }
+.peekcontrols .peekclose { position:static; display:flex; margin:0; box-shadow:none; }
+.peekpin { position:static; display:flex; margin:0; background:var(--card); color:var(--ink); }
 .peekpin.on { background:var(--ink); color:var(--card); }
 .calendar-pin-button { width:42px; height:42px; padding:0; display:grid; place-items:center; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--ink); }
 .calendar-pin-button.on { background:var(--ink); color:var(--card); }
