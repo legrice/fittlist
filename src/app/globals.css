@@ -8630,16 +8630,20 @@ select.editinput.placekind-select {
 .following-head {
   padding: 4px 0 6px;
 }
-.calendar-type-select {
-  width:max-content; min-height:34px; margin:0 0 5px; padding:0 3px;
-  display:inline-flex; align-items:center; gap:5px; color:var(--muted); cursor:pointer;
+.calendar-type-rail {
+  min-height:34px; margin:0 0 5px; display:flex; align-items:stretch; gap:18px;
+  overflow-x:auto; border-bottom:1px solid var(--line); scrollbar-width:none;
 }
-.calendar-type-select select {
-  width:auto; min-height:34px; padding:0; border:0; border-radius:0; appearance:none;
-  background:transparent; color:var(--ink); font:inherit; font-size:14px; font-weight:600; cursor:pointer;
+.calendar-type-rail::-webkit-scrollbar { display:none; }
+.calendar-type-rail button {
+  position:relative; min-height:34px; padding:0 1px 7px; border:0; background:transparent;
+  color:var(--muted); font:inherit; font-size:12.5px; font-weight:600; white-space:nowrap; cursor:pointer;
 }
-.calendar-type-select select:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
-.calendar-type-select > svg:last-child { pointer-events:none; }
+.calendar-type-rail button::after {
+  content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; border-radius:2px 2px 0 0; background:transparent;
+}
+.calendar-type-rail button.on { color:var(--ink); }
+.calendar-type-rail button.on::after { background:var(--ink); }
 .following-head .trayitem { border:0; padding:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
 .social-schedule-switch {
   width: 100%; min-height: 48px; margin: 4px 0 20px; padding: 4px;

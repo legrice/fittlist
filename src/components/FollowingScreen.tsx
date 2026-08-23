@@ -539,23 +539,19 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="following-head">
-          <label className="calendar-type-select">
-            <Icon name={calendarType === "studios" ? "storefront" : calendarType === "groups" ? "groups" : calendarType === "people" ? "person" : "calendar_month"} size={18} />
-            <select
-              value={calendarType}
-              aria-label="Show calendar type"
-              onChange={(event) => {
-                setCalendarType(event.target.value as typeof calendarType);
-                setCalendarFilter("all");
-              }}
-            >
-              <option value="all">All calendars</option>
-              <option value="people">People</option>
-              <option value="studios">Studios</option>
-              <option value="groups">Groups</option>
-            </select>
-            <Icon name="expand_more" size={18} />
-          </label>
+          <nav className="calendar-type-rail" aria-label="Calendar types">
+            {(["all", "people", "studios", "groups"] as const).map((value) => (
+              <button
+                type="button"
+                className={calendarType === value ? "on" : ""}
+                aria-pressed={calendarType === value}
+                onClick={() => { setCalendarType(value); setCalendarFilter("all"); }}
+                key={value}
+              >
+                {value[0].toUpperCase() + value.slice(1)}
+              </button>
+            ))}
+          </nav>
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll">
               <button className={`trayitem${calendarFilter !== "all" ? " dim" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => setCalendarFilter("all")}>
