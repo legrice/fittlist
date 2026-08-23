@@ -11393,6 +11393,10 @@ a.clspeek-by:active { opacity: .6; }
    with staffing as a second, independent control. On phones that control
    stays tucked beneath the class details; on desktop it gets its own column
    so it can never cover the time or class name. */
+.rota-calendar .dayrows {
+  gap: 14px;
+}
+
 @media (max-width: 1099px) {
   .rota-calendar .rota-inline-row .clline {
     padding: 20px 20px 82px;
