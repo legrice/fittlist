@@ -219,7 +219,7 @@ export async function buildDiscoverFeed(
       return a.name.localeCompare(b.name);
     });
 
-  // The category pills, from what the fortnight actually holds: a filter is
+  // The category pills, from what the rolling month actually holds: a filter is
   // only offered where it can narrow something.
   const catCount = new Map<string, number>();
   for (const i of items) if (i.classType) catCount.set(i.classType, (catCount.get(i.classType) ?? 0) + 1);

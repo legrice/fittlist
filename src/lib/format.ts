@@ -541,7 +541,9 @@ export function mondayOfCurrentWeek(now = new Date()): string {
  * Sunday-led, like every other week this app draws. `mondayOfCurrentWeek` is
  * still here for the digests, which think in working weeks.
  */
-export const WEEKS_AHEAD = 2;
+// The calendar feed promises a rolling month. Five calendar-week buckets are
+// needed to cover 31 days when today falls near the end of a week.
+export const WEEKS_AHEAD = 4;
 
 export function sundayOfWeek(offset = 0, today = todayIso()): string {
   const d = new Date(`${today}T00:00:00Z`);

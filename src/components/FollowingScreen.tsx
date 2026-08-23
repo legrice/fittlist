@@ -357,17 +357,14 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Following is the complete rolling week: today through the same weekday
-  // next week. The inclusive end is what makes Wednesday-to-Wednesday read as
-  // a full visible week rather than mysteriously stopping on Tuesday.
-  // It used to stop after twelve rows, which meant a busy Saturday could hide
-  // Sunday entirely and made the page answer "the next twelve" rather than
-  // the question people came with: what are my coaches doing this week?
+  // Calendar is a rolling month: today plus the following thirty days. The
+  // server loads five calendar-week buckets so this remains complete even
+  // when today lands near the end of a week.
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
     () => {
-      const nextWeek = plusDays(todayIso, 7);
+      const monthEnd = plusDays(todayIso, 30);
       return [...shown]
-        .filter((item) => item.iso >= todayIso && item.iso <= nextWeek)
+        .filter((item) => item.iso >= todayIso && item.iso <= monthEnd)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
         .map(rowOf);
     },
