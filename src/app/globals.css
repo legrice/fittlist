@@ -390,7 +390,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   text-align:center;
 }
 .ob:has(.oblanding-mark) > .pad > .mark { display:none; }
-.oblanding-mark { display:flex; flex:0 0 auto; margin:0 30px 18px; }
+.oblanding-mark { display:flex; flex:0 0 auto; flex-direction:column; align-items:center; gap:17px; margin:0 30px 18px; }
 .oblanding-progress-track {
   width:100%; height:6px; display:grid; grid-template-columns:repeat(5,1fr); gap:5px;
 }
@@ -400,7 +400,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .oblanding-progress-track > span.is-on { background:var(--color-black); }
 /* The front door uses the complete brand rather than the mark alone. */
-.oblanding-logo { font-size:29px; --wm-ink:var(--ink); --wm-mark:var(--si); }
+.oblanding-logo { font-size:29px; --wm-ink:var(--ink); --wm-mark:var(--ink); }
 .oblanding-track {
   display:flex; flex:1 1 auto; min-height:0; overflow-x:auto; overflow-y:hidden;
   scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain;
@@ -598,6 +598,12 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   padding: calc(20px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));
   width: 100%; max-width: 460px; margin: 0 auto;
 }
+.wizbrandbar {
+  display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:30px;
+  padding-bottom:17px; border-bottom:1px solid var(--line);
+}
+.wizbrand { font-size:24px; }
+.wizbrandbar > span { color:var(--ol); font-size:13px; font-weight:600; }
 .wiztop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
 .wizdots { display: flex; gap: 7px; }
 .wizdot { width: 22px; height: 5px; border-radius: 999px; background: var(--line); transition: background .2s; }

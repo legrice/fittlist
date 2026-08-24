@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { LocationPicker } from "@/components/LocationPicker";
+import { Wordmark } from "@/components/Wordmark";
 import { updateProfile } from "@/app/actions/profile";
 import { cityFromCoordinates, completeOnboarding } from "@/app/actions/onboarding";
 import { setTeaching } from "@/app/actions/auth";
@@ -131,6 +132,10 @@ export function OnboardingWizard({
   return (
     <section className="screen wiz">
       <div className="pad">
+        <div className="wizbrandbar">
+          <Wordmark variant="ink" className="wizbrand" />
+          <span>{step} of 2</span>
+        </div>
         {step === 2 && (
           <button className="wizback" type="button" onClick={() => setStep(1)} aria-label="Back">
             <Icon name="arrow_back" size={22} />

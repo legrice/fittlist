@@ -395,8 +395,9 @@ export function AuthFlow({
 
         {stage === "landing" && (
           <>
-            <div className="oblanding-mark" aria-hidden="true">
-              <span className="oblanding-progress-track">
+            <div className="oblanding-mark">
+              <Wordmark variant="ink" className="oblanding-logo" />
+              <span className="oblanding-progress-track" aria-hidden="true">
                 {landingSlides.map((slide, index) => <span className={index <= landingSlide ? "is-on" : ""} key={slide.art} />)}
               </span>
             </div>
