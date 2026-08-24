@@ -9,7 +9,7 @@ import { storeImage } from "@/lib/storage";
 import type { BookingLink } from "@/db/schema";
 import { currentAdmin } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
-import { detectProvider, dowOfDate, todayIso } from "@/lib/format";
+import { detectProvider, dowOfDate, occurrenceEnded, todayIso } from "@/lib/format";
 import { syncUserToGoogle } from "@/lib/gcal";
 import { humanTime, notifyCancelled } from "@/lib/cancel";
 
@@ -91,7 +91,15 @@ function cleanLinks(links: BookingLink[]): BookingLink[] {
 
 // `id` is the first inserted row, so the moment after publishing can offer
 // the class itself (its link, its card) without a second lookup.
-type SaveResult = { ok: boolean; count?: number; id?: string; error?: string };
+type SaveResult = {
+  ok: boolean;
+  count?: number;
+  id?: string;
+  /** The first upcoming occurrence created by this save. Calendar uses it to
+   *  show somebody exactly where their new class landed. */
+  focus?: { id: string; iso: string };
+  error?: string;
+};
 
 // Shared by publish (new rows) and edit (replaceClassId set: the original
 // row is swapped for rows on the selected days).
@@ -420,7 +428,31 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // not a per-change email, so publishing just updates the page + Google sync.
   syncGoogleAfter(userId);
   revalidatePath("/app");
-  return { ok: true, count: days.length, id: inserted[0]?.id };
+  revalidatePath("/calendar");
+
+  const first = inserted[0];
+  let focusIso: string | null = oneOff;
+  if (first && !focusIso) {
+    const cursor = new Date(`${todayIso()}T00:00:00Z`);
+    for (let offset = 0; offset < 14; offset++) {
+      const iso = cursor.toISOString().slice(0, 10);
+      if (
+        dowOfDate(iso) === first.dayOfWeek &&
+        !occurrenceEnded(iso, input.startTime, durationMin) &&
+        (!endsOn || iso <= endsOn)
+      ) {
+        focusIso = iso;
+        break;
+      }
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+  }
+  return {
+    ok: true,
+    count: days.length,
+    id: first?.id,
+    focus: first && focusIso ? { id: first.id, iso: focusIso } : undefined,
+  };
 }
 
 export async function publishClasses(input: PublishInput): Promise<SaveResult> {

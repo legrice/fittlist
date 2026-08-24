@@ -639,14 +639,26 @@ export function CalendarScreen({
             setPersonalWorkout(false);
           }}
           onToast={toast}
-          onPublished={(msg) => {
+          onPublished={(msg, _planId, _live, focus) => {
             setAddOpen(false);
             setQuickPrefill(null);
             setAddDate(null);
             setPersonalAdd(false);
             setPersonalWorkout(false);
             toast(msg);
-            router.refresh();
+            if (focus) {
+              // A new class can land outside the saved view or in Month view.
+              // Put the calendar in the one state where its exact row is
+              // visible, then let HighlightOnLand scroll to and light it.
+              setFilter("all");
+              setView("list");
+              try {
+                localStorage.setItem(calendarStateKey, JSON.stringify({ view: "list", filter: "all" }));
+              } catch { /* private mode */ }
+              router.replace(`/calendar?hl=${encodeURIComponent(`${focus.id}.${focus.iso}`)}`, { scroll: false });
+            } else {
+              router.refresh();
+            }
           }}
           onDeleted={(msg) => {
             setAddOpen(false);

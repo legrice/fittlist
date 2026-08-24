@@ -153,7 +153,12 @@ export function Adder({
    *  offers to share it, and a picture needs to know which one. */
   /** `live` arrives for a brand new public class: the just-published thing,
    *  so the host can offer sharing it while the moment is warm. */
-  onPublished: (msg: string, planId?: string, live?: { id: string; name: string }) => void;
+  onPublished: (
+    msg: string,
+    planId?: string,
+    live?: { id: string; name: string },
+    focus?: { id: string; iso: string },
+  ) => void;
   onDeleted: (msg: string) => void;
   /** Personal mode only: the class they're describing is already on fittlist,
    *  under somebody who keeps it up to date. The caller offers the real one,
@@ -634,6 +639,9 @@ export function Adder({
               : undefined;
           return id ? { id, name } : undefined;
         })(),
+        !gym && !isEdit && !isPersonal && "focus" in res
+          ? (res as { focus?: { id: string; iso: string } }).focus
+          : undefined,
       );
     });
   };

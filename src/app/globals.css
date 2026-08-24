@@ -1483,19 +1483,23 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    measure, and their own name row is what pins there. The band is a band on
    those screens; it just doesn't follow. */
 .pub .ps-agenda.callist .ps-daycol { position: static; }
-/* "See it" lands on the week and points at the one row it means. A wash
-   rather than an outline, because the row already has a coloured bar and a
-   second edge would fight it, and it fades on its own: a mark that stayed
-   would become part of how the row looks. The negative inset lets the wash
-   reach past the row's own padding so it reads as one lit block. */
+/* "See it" lands on the calendar and points at the one row it means. The
+   soft green ring makes a newly published class unmistakable, then fades so
+   it never becomes part of the permanent calendar styling. */
 .ps-hl {
   border-radius: 10px;
   margin: 0 -8px; padding: 0 8px;
   animation: ps-hl-fade 3s ease-out forwards;
 }
 @keyframes ps-hl-fade {
-  0%, 60% { background: rgba(240, 200, 60, .38); }
-  100% { background: rgba(240, 200, 60, 0); }
+  0%, 60% {
+    background:var(--color-lime-soft);
+    box-shadow:0 0 0 3px var(--color-lime);
+  }
+  100% {
+    background:transparent;
+    box-shadow:0 0 0 3px transparent;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .ps-hl { animation-duration: 3s; }
