@@ -31,6 +31,11 @@ export type WeekItem = {
   /** A personal entry: theirs alone, with no class page behind it. The id is
    *  the personal_classes row, and removing it is removePersonalClass. */
   personal?: boolean;
+  /** Recurrence metadata lets the client extend a personal calendar lazily
+   *  without asking the server to serialize years of weekly copies. */
+  repeatDay?: number;
+  specificDate?: string | null;
+  endsOn?: string | null;
   /** Mutual follows who added this same occurrence. Empty for everyone else:
    *  one-way follows see nothing, which is what makes following safe. */
   alsoGoing?: { name: string; photo: string | null; color: string; handle: string | null }[];
@@ -577,6 +582,9 @@ export async function myWeek(
         // when there is no photo, and sand under white text was unreadable.
         coachColor: "#77705a",
         personal: true,
+        repeatDay: p.dayOfWeek,
+        specificDate: p.specificDate,
+        endsOn: p.endsOn,
       });
       byDay.set(iso, list);
     }

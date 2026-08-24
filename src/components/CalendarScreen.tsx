@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -117,6 +117,10 @@ export function CalendarScreen({
   // Day view relies on its actual date bands as sticky headers instead of
   // rendering a second, competing overlay.
   const [ymInView, setYmInView] = useState<string | null>(null);
+  const [dayHorizon, setDayHorizon] = useState(56);
+  const [monthHorizon, setMonthHorizon] = useState(12);
+  const dayMoreRef = useRef<HTMLButtonElement>(null);
+  const lastAutoDayCount = useRef(-1);
   const scrolled = useScrolledPast(120);
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
@@ -204,16 +208,40 @@ export function CalendarScreen({
   }, [shareOpen]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
-  const savedByIso = useMemo(
-    () =>
-      new Map(
-        savedDays.map((day) => [
-          day.iso,
-          day.items.filter((item) => !gone[`added|${item.personal ? item.id : item.classId}|${item.iso}`]),
-        ] as const),
-      ),
-    [savedDays, gone],
-  );
+  const savedByIso = useMemo(() => {
+    const byIso = new Map(
+      savedDays.map((day) => [
+        day.iso,
+        day.items.filter((item) => !gone[`added|${item.personal ? item.id : item.classId}|${item.iso}`]),
+      ] as const),
+    );
+    const personal = new Map<string, WeekItem>();
+    for (const day of savedDays)
+      for (const item of day.items)
+        if (item.personal && item.repeatDay !== undefined && !item.specificDate) personal.set(item.id, item);
+    const start = new Date(`${todayIso}T00:00:00Z`);
+    const through = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + monthHorizon + 1, 1));
+    const dayThrough = new Date(start);
+    dayThrough.setUTCDate(start.getUTCDate() + dayHorizon);
+    if (dayThrough > through) through.setTime(dayThrough.getTime());
+    for (const item of personal.values()) {
+      const firstOffset = ((item.repeatDay! - ((start.getUTCDay() + 6) % 7)) + 7) % 7;
+      const cursor = new Date(start);
+      cursor.setUTCDate(start.getUTCDate() + firstOffset);
+      while (cursor < through) {
+        const iso = cursor.toISOString().slice(0, 10);
+        if (item.endsOn && iso > item.endsOn) break;
+        const key = `added|${item.id}|${iso}`;
+        if (!gone[key]) {
+          const list = byIso.get(iso) ?? [];
+          if (!list.some((entry) => entry.personal && entry.id === item.id))
+            byIso.set(iso, [...list, { ...item, iso, dayLabel: dayBandLabel(iso, todayIso) }]);
+        }
+        cursor.setUTCDate(cursor.getUTCDate() + 7);
+      }
+    }
+    return byIso;
+  }, [savedDays, gone, todayIso, dayHorizon, monthHorizon]);
   const atOf = (r: { hm: string; ap: string }) => {
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
@@ -225,9 +253,9 @@ export function CalendarScreen({
   const days: WeekDayRows[] = useMemo(() => {
     const out: WeekDayRows[] = [];
     const start = Date.parse(`${todayIso}T00:00:00Z`);
-    // List is a continuous upcoming schedule, not a disguised week view.
-    // Eight weeks keeps it useful without rendering an unbounded recurrence.
-    for (let i = 0; i < 56; i++) {
+    // The horizon grows as the end approaches. This keeps first paint small
+    // without placing a product limit on how far ahead somebody can plan.
+    for (let i = 0; i < dayHorizon; i++) {
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
@@ -304,14 +332,17 @@ export function CalendarScreen({
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer]);
+  }, [classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer, dayHorizon]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
   const monthItems = useMemo(() => {
     const m = new Map<string, MonthCellItem[]>();
     const start = Date.parse(`${todayIso}T00:00:00Z`) - 62 * 864e5;
-    for (let i = 0; i < 62 + 380; i++) {
+    const [year, month] = todayIso.slice(0, 7).split("-").map(Number);
+    const rangeEnd = Date.UTC(year, month - 1 + monthHorizon + 1, 1);
+    const rangeDays = Math.ceil((rangeEnd - start) / 864e5);
+    for (let i = 0; i < rangeDays; i++) {
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
@@ -335,7 +366,20 @@ export function CalendarScreen({
       if (rows.length) m.set(iso, rows);
     }
     return m;
-  }, [classes, todayIso, visible.coaching, visible.personal, visible.saved, savedByIso]);
+  }, [classes, todayIso, visible.coaching, visible.personal, visible.saved, savedByIso, monthHorizon]);
+
+  useEffect(() => {
+    if (view !== "list") return;
+    if (days.length <= lastAutoDayCount.current) return;
+    lastAutoDayCount.current = days.length;
+    const target = dayMoreRef.current;
+    if (!target || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) setDayHorizon((value) => value + 84);
+    }, { rootMargin: "600px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [view, dayHorizon, days.length]);
 
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
@@ -350,11 +394,13 @@ export function CalendarScreen({
       setAddChoice(true);
       return;
     }
+    const offset = Math.max(0, Math.floor((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${todayIso}T00:00:00Z`)) / 864e5));
+    if (offset >= dayHorizon) setDayHorizon(offset + 28);
     setView("list");
     requestAnimationFrame(() => {
       document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start" });
     });
-  }, [ensureComposer, monthItems]);
+  }, [ensureComposer, monthItems, todayIso, dayHorizon]);
 
   // Whether this coach has published anything at all, not whether the next
   // eight weeks do: the empty state offers the thing to do only when there is
@@ -452,20 +498,20 @@ export function CalendarScreen({
           items={monthItems}
           onDay={openDay}
           onMonthInView={setYmInView}
-        />
-      ) : days.length === 0 ? (
-        // A week that has run its course still offers the one act that
-        // changes it: the same Add the title row carries, where somebody
-        // reading "nothing coming up" is already looking.
-        <WeekEmpty
-          first
-          title="Nothing showing"
-          body="Choose another view above, or add something to your week."
+          monthsAhead={monthHorizon}
+          onNeedMore={() => setMonthHorizon((value) => value + 12)}
         />
       ) : (
-        <CalendarList
-          days={days}
-        />
+        <>
+          {days.length ? (
+            <CalendarList days={days} />
+          ) : (
+            <WeekEmpty first title="Nothing showing" body="Keep looking ahead, choose another view, or add something to your calendar." />
+          )}
+          <button ref={dayMoreRef} className="calendar-load-more" type="button" onClick={() => setDayHorizon((value) => value + 84)}>
+            Show more dates
+          </button>
+        </>
       )}
       </div>
 

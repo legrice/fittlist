@@ -122,16 +122,32 @@ export async function StudioView({
     // of truth. Coach-contributed rows remain useful while a place is still
     // unclaimed, but showing both after a studio takes over produces stale
     // duplicates and lets the business maintain a schedule nobody sees.
-    const official = await db
+    const managerRows = await db
+      .select({ userId: schema.studioManagers.userId })
+      .from(schema.studioManagers)
+      .where(eq(schema.studioManagers.studioId, s.id));
+    const calendarOwnerIds = [
+      ...new Set([s.accountUserId, ...managerRows.map((row) => row.userId)]),
+    ];
+    const calendarRows = await db
       .select()
       .from(schema.classes)
       .where(
         and(
-          eq(schema.classes.userId, s.accountUserId),
+          inArray(schema.classes.userId, calendarOwnerIds),
           eq(schema.classes.studioId, s.id),
           eq(schema.classes.isPublic, true),
         ),
       );
+    // A manager may have created a personal copy before the studio took over
+    // its own calendar. Prefer the studio-owned slot when both exist, while
+    // still showing manager-owned classes that exist only on their calendar.
+    const official = [...calendarRows]
+      .sort((a, b) => Number(b.userId === s.accountUserId) - Number(a.userId === s.accountUserId))
+      .filter((row, index, all) => {
+        const key = `${row.specificDate ?? row.dayOfWeek}|${row.startTime}|${row.name.trim().toLowerCase()}`;
+        return all.findIndex((candidate) => `${candidate.specificDate ?? candidate.dayOfWeek}|${candidate.startTime}|${candidate.name.trim().toLowerCase()}` === key) === index;
+      });
     const start = new Date(`${todayIso()}T00:00:00Z`);
     const startIso = start.toISOString().slice(0, 10);
     const end = new Date(start);

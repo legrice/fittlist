@@ -9,6 +9,7 @@ import { Icon } from "@/components/Icon";
 import { SettingsGear } from "@/components/SettingsGear";
 import { Toast, useToast } from "@/components/Toast";
 import { readPhotoPair } from "@/lib/photo";
+import { EmbedScheduleButton } from "@/components/EmbedScheduleButton";
 
 export type YouFavoritePerson = {
   id: string;
@@ -170,6 +171,7 @@ export function YouDashboard({
           <Icon name="reply" className="share-arrow-forward" size={18} />
           <span>Share</span>
         </Link>
+        <EmbedScheduleButton handle={me.handle} />
         <SettingsGear pill />
       </div>
 
