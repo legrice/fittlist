@@ -207,7 +207,7 @@ export function renderStory(model: StoryModel) {
                 width: square ? 780 : 840,
                 padding: compact ? "30px 42px" : "38px 48px",
                 borderRadius: 28,
-                background: "#111111",
+                background: "#020D08",
                 textAlign: "center",
                 fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
                 fontStyle: guest?.italic ? "italic" : "normal",
@@ -299,7 +299,7 @@ export function renderStory(model: StoryModel) {
               justifyContent: "space-between",
               padding: "20px 24px",
               borderRadius: 18,
-              background: "#111111",
+              background: "#020D08",
             }}
           >
             <span style={{ fontSize: 30, fontWeight: 600 }}>{url}</span>

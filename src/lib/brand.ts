@@ -1,6 +1,6 @@
 // The FittList mark: three descending rounded bars. It reads as both an F and
 // a short list, without needing a box or a separate vertical stem.
-export function brandIcon(color = "#000000"): string {
+export function brandIcon(color = "#020D08"): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 103" fill="${color}" aria-hidden="true"><rect width="108" height="27" rx="4"/><rect y="38" width="72" height="27" rx="4"/><rect y="76" width="36" height="27" rx="4"/></svg>`;
 }
 

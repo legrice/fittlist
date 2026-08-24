@@ -13,7 +13,7 @@ import ImageIO
 import UniformTypeIdentifiers
 
 let lime = CGColor(red: 159.0 / 255.0, green: 232.0 / 255.0, blue: 112.0 / 255.0, alpha: 1)
-let ink = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
+let ink = CGColor(red: 2.0 / 255.0, green: 13.0 / 255.0, blue: 8.0 / 255.0, alpha: 1)
 let paper = CGColor(red: 253.0 / 255.0, green: 252.0 / 255.0, blue: 247.0 / 255.0, alpha: 1)
 
 struct MarkRect {

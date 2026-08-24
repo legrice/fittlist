@@ -12,7 +12,7 @@ import fs from "node:fs";
 import { brandIcon } from "../src/lib/brand.ts";
 
 const LIME = "#9FE870";
-const INK_COLOR = "#000000";
+const INK_COLOR = "#020D08";
 
 // brandIcon's ink fills its 108x103 viewBox exactly, so the centre is the box
 // centre. Scale by the larger side, so the mark fits its share of the square in

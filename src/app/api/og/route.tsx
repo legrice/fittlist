@@ -12,7 +12,7 @@ export const dynamic = "force-static";
 const font = (file: string) => readFileSync(join(process.cwd(), "public/fonts", file));
 
 export async function GET() {
-  const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon("#000000")).toString("base64")}`;
+  const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon("#020D08")).toString("base64")}`;
   const yogaUri = `data:image/png;base64,${readFileSync(
     join(process.cwd(), "public/illustrations/following-empty.png"),
   ).toString("base64")}`;
@@ -28,7 +28,7 @@ export async function GET() {
           alignItems: "stretch",
           justifyContent: "center",
           background: "#9FE870",
-          color: "#000000",
+          color: "#020D08",
           fontFamily: "Delight",
           padding: "50px 68px 44px",
         }}
@@ -57,7 +57,7 @@ export async function GET() {
                 width: 700,
                 fontSize: 31,
                 fontWeight: 600,
-                color: "#000000",
+                color: "#020D08",
                 marginTop: 28,
                 lineHeight: 1.28,
               }}
