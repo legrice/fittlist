@@ -559,7 +559,7 @@ export function Adder({
     );
   };
 
-  const publish = () => {
+  const publish = (allowCoachConflict = false) => {
     if (!whenChosen || !durValid || (!isEvent && !isGym && !studioId)) return;
     startTransition(async () => {
       const input = {
@@ -594,17 +594,24 @@ export function Adder({
               coachUserId: coachUserId || null,
               plannerColor,
               catalogKey,
+              allowCoachConflict,
             })
           : await addGymClass(gym.studioId, {
               ...input,
               coachUserId: coachUserId || null,
               plannerColor,
               catalogKey,
+              allowCoachConflict,
             })
         : isEdit
           ? await updateClass(prefill!.classId!, input)
           : await publishClasses(input);
       if (!res.ok) {
+        if (gym && res.error?.startsWith("Schedule conflict:")) {
+          const detail = res.error.replace(/^Schedule conflict:\s*/, "");
+          if (window.confirm(`${detail}\n\nAssign this coach anyway?`)) publish(true);
+          return;
+        }
         onToast(res.error ?? "Something went wrong");
         return;
       }
@@ -1387,7 +1394,7 @@ export function Adder({
               <button
                 className="btn si"
                 disabled={!whenChosen || pending || (!isEvent && !isGym && !studioId)}
-                onClick={publish}
+                onClick={() => publish()}
               >
                 {pending ? (isEdit || isPersonalEdit ? "Saving…" : "Publishing…") : publishLabel}
               </button>

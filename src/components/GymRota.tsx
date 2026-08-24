@@ -354,12 +354,17 @@ export function GymRota({
 
   // Who's on this one date. A swap is about a date, so it never touches the
   // standing rota; setting it back to the regular coach clears the exception.
-  const cover = (who: string) => {
-    if (!open?.cls || pending) return;
+  const cover = (who: string, allowCoachConflict = false) => {
+    if (!open?.cls || (pending && !allowCoachConflict)) return;
     const cls = open.cls;
     start(async () => {
-      const res = await setShiftCover(studioId, cls.id, open.iso, who || null);
+      const res = await setShiftCover(studioId, cls.id, open.iso, who || null, allowCoachConflict);
       if (!res.ok) {
+        if (res.error?.startsWith("Schedule conflict:")) {
+          const detail = res.error.replace(/^Schedule conflict:\s*/, "");
+          if (window.confirm(`${detail}\n\nAssign this coach anyway?`)) cover(who, true);
+          return;
+        }
         toast(res.error ?? "Couldn't change that");
         return;
       }
@@ -373,16 +378,21 @@ export function GymRota({
   // The coach is the field a manager changes over and over. Keep it on the
   // occurrence itself: the rest of the card still opens the full class form,
   // while this picker writes the one-date assignment directly.
-  const assignCoach = (cls: GymClassDto, iso: string, who: string) => {
+  const assignCoach = (cls: GymClassDto, iso: string, who: string, allowCoachConflict = false) => {
     const key = occurrenceKey(cls.id, iso);
-    if (coachSaving[key]) return;
+    if (coachSaving[key] && !allowCoachConflict) return;
     const previous = coachOverrides[key] ?? cls.onUserId ?? "";
     setCoachOverrides((current) => ({ ...current, [key]: who }));
     setCoachSaving((current) => ({ ...current, [key]: true }));
     void (async () => {
-      const res = await setShiftCover(studioId, cls.id, iso, who || null);
+      const res = await setShiftCover(studioId, cls.id, iso, who || null, allowCoachConflict);
       if (!res.ok) {
         setCoachOverrides((current) => ({ ...current, [key]: previous }));
+        if (res.error?.startsWith("Schedule conflict:")) {
+          const detail = res.error.replace(/^Schedule conflict:\s*/, "");
+          if (window.confirm(`${detail}\n\nAssign this coach anyway?`)) assignCoach(cls, iso, who, true);
+          return;
+        }
         toast(res.error ?? "Couldn't change that");
       } else {
         const name = coachNameById.get(who);

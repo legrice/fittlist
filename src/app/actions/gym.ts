@@ -648,6 +648,9 @@ export type GymClassInput = {
   catalogKey?: string | null;
   /** False keeps a new or edited slot in the manager's draft schedule. */
   isPublic?: boolean;
+  /** Studio managers may deliberately keep a double-booking after seeing the
+   * exact conflicting class. Regular coach/member flows never set this. */
+  allowCoachConflict?: boolean;
 };
 
 /** A class already described at this studio, ready to be pulled in. */
@@ -942,7 +945,7 @@ export async function addGymClass(
           startTime,
           input.durationMin,
         );
-        if (conflict) return { ok: false, error: conflict };
+        if (conflict && !input.allowCoachConflict) return { ok: false, error: conflict };
       }
     }
   }
@@ -1113,7 +1116,7 @@ export async function updateGymClass(
         input.durationMin,
         classId,
       );
-      if (conflict) return { ok: false, error: conflict };
+      if (conflict && !input.allowCoachConflict) return { ok: false, error: conflict };
     }
   }
 
@@ -1498,6 +1501,7 @@ export async function setShiftCover(
   classId: string,
   occurrenceDate: string,
   coachUserId: string | null,
+  allowCoachConflict = false,
 ): Promise<{ ok: boolean; error?: string }> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
@@ -1523,7 +1527,7 @@ export async function setShiftCover(
     cls.durationMin,
     cls.id,
   );
-  if (conflict) return { ok: false, error: conflict };
+  if (conflict && !allowCoachConflict) return { ok: false, error: conflict };
 
   const changed = await db.transaction(async (tx) => {
     const [existing] = await tx

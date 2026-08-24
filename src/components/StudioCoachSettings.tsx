@@ -44,13 +44,18 @@ export function StudioCoachSettings({
     setShifts(coach.shifts);
   }, [coach.shifts]);
 
-  const assignShift = (classId: string, date: string, who: string) => {
+  const assignShift = (classId: string, date: string, who: string, allowCoachConflict = false) => {
     const key = `${classId}:${date}`;
-    if (savingShift[key]) return;
+    if (savingShift[key] && !allowCoachConflict) return;
     setSavingShift((current) => ({ ...current, [key]: true }));
     void (async () => {
-      const result = await setShiftCover(studioId, classId, date, who || null);
+      const result = await setShiftCover(studioId, classId, date, who || null, allowCoachConflict);
       if (!result.ok) {
+        if (result.error?.startsWith("Schedule conflict:")) {
+          const detail = result.error.replace(/^Schedule conflict:\s*/, "");
+          if (window.confirm(`${detail}\n\nAssign this coach anyway?`)) assignShift(classId, date, who, true);
+          return;
+        }
         toast(result.error ?? "Couldn't change that shift");
       } else {
         const nextCoach = coach.coaches.find((person) => person.id === who);
