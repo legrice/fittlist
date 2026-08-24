@@ -80,10 +80,7 @@ export async function desktopSidebarData(): Promise<DesktopSidebarData> {
             name: schema.users.name,
             email: schema.users.email,
             handle: schema.users.handle,
-            photo: sql<string | null>`coalesce(
-              ${schema.users.photoThumb},
-              case when ${schema.users.photo} not like 'data:%' then ${schema.users.photo} end
-            )`,
+            photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
             color: schema.users.avatarColor,
           })
           .from(schema.users)
@@ -95,9 +92,7 @@ export async function desktopSidebarData(): Promise<DesktopSidebarData> {
             id: schema.studios.id,
             name: schema.studios.name,
             slug: schema.studios.slug,
-            photo: sql<string | null>`case
-              when ${schema.studios.photo} not like 'data:%' then ${schema.studios.photo}
-            end`,
+            photo: schema.studios.photo,
           })
           .from(schema.studios)
           .where(inArray(schema.studios.id, studioIds))

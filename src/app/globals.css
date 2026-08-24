@@ -9033,7 +9033,7 @@ select.editinput.placekind-select {
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 8px;
   }
   .desktop-favorites-grid > a {
-    min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 7px;
+    position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 7px;
     color: var(--ink); text-decoration: none;
   }
   .desktop-favorites-grid > a > span,
@@ -9043,6 +9043,11 @@ select.editinput.placekind-select {
   }
   .desktop-favorites-grid > a > span.studio { border-radius: 14px; }
   .desktop-favorites-grid img { width: 100%; height: 100%; object-fit: cover; }
+  .desktop-favorite-star {
+    position: absolute; top: 38px; right: 1px; width: 22px; height: 22px;
+    display: grid; place-items: center; border: 2px solid var(--paper); border-radius: 50%;
+    background: var(--ink); color: var(--paper); font-style: normal;
+  }
   .desktop-favorites-grid small {
     width: 100%; overflow: hidden; text-align: center; text-overflow: ellipsis;
     white-space: nowrap; font-size: 11.5px; line-height: 1.2;

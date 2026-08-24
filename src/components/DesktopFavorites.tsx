@@ -83,6 +83,9 @@ export function DesktopFavorites() {
                     favorite.name.charAt(0).toUpperCase()
                   )}
                 </span>
+                <i className="desktop-favorite-star" aria-label="Favorite">
+                  <Icon name="star" size={16} />
+                </i>
                 <small>{favorite.name}</small>
               </Link>
             ))}
