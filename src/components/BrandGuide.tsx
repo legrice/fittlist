@@ -74,10 +74,8 @@ export function BrandGuide({ mark }: { mark: string }) {
       <section className="brandsec">
         <h2 className="brandh">The mark</h2>
         <p className="brandp">
-          An F built from rounded blocks: three stacked on the left, a long bar off the top and a
-          shorter one off the middle. It reads as a week laid out, which is the whole product in
-          one shape. The ink fills its box exactly, so it centres on the box rather than needing
-          an offset.
+          Three descending rounded bars: an F and a list in the same shape. It stays legible at a
+          browser-icon size and needs no container or outline.
         </p>
         <div className="brandmarks">
           <div className="brandmark on-si" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#ffffff"') }} />

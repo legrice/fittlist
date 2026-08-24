@@ -11,29 +11,29 @@ import { chromium } from "playwright";
 import fs from "node:fs";
 import { brandIcon } from "../src/lib/brand.ts";
 
-const ORANGE = "#C2410C"; // --si, the accent the whole app is built around
-const WHITE = "#ffffff";
+const LIME = "#9FE870";
+const INK_COLOR = "#000000";
 
-// brandIcon's ink fills its 134x136 viewBox exactly, so the centre is the box
+// brandIcon's ink fills its 100x100 viewBox exactly, so the centre is the box
 // centre. Scale by the larger side, so the mark fits its share of the square in
 // both directions; `fill` is how much of the 120 box it takes up.
-const INK = { cx: 67, cy: 68, w: 136 };
+const INK = { cx: 50, cy: 50, w: 100 };
 function square(size, radius, fill) {
   // brandIcon carries its colour on the <svg> element, which is exactly the
   // part being unwrapped, so the group has to carry it instead.
-  const inner = brandIcon(WHITE)
+  const inner = brandIcon(INK_COLOR)
     .replace(/^<svg[^>]*>/, "")
     .replace(/<\/svg>$/, "");
   const scale = fill / INK.w;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="${size}" height="${size}">
-    <rect width="120" height="120" rx="${radius}" fill="${ORANGE}"/>
-    <g fill="${WHITE}" transform="translate(60 60) scale(${scale}) translate(${-INK.cx} ${-INK.cy})">${inner}</g>
+    <rect width="120" height="120" rx="${radius}" fill="${LIME}"/>
+    <g fill="${INK_COLOR}" transform="translate(60 60) scale(${scale}) translate(${-INK.cx} ${-INK.cy})">${inner}</g>
   </svg>`;
 }
 
 // A plain icon may use its whole square. A maskable one gets cropped to
 // whatever shape the launcher likes, so its mark pulls into the safe zone and
-// the orange runs to the edge. An Apple touch icon is masked by iOS too, but
+// the lime runs to the edge. An Apple touch icon is masked by iOS too, but
 // only ever to a rounded square, so it can sit closer to the edge.
 const ICONS = [
   { file: "icon-192.png", size: 192, radius: 27, fill: 66 },

@@ -1,19 +1,19 @@
 // Generate the committed web and iOS brand rasters from the same geometry and
-// orange as the live product. Run from the repository root:
+// lime as the live product. Run from the repository root:
 //
 //   swift scripts/make-native-brand.swift
 //
 // App Store icons are intentionally opaque. Browser icons with their own
 // rounded square keep transparency outside the square; maskable and Apple
-// icons run the orange all the way to the edge.
+// icons run the lime all the way to the edge.
 
 import CoreGraphics
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-let orange = CGColor(red: 194.0 / 255.0, green: 65.0 / 255.0, blue: 12.0 / 255.0, alpha: 1)
-let white = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+let lime = CGColor(red: 159.0 / 255.0, green: 232.0 / 255.0, blue: 112.0 / 255.0, alpha: 1)
+let ink = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
 let paper = CGColor(red: 253.0 / 255.0, green: 252.0 / 255.0, blue: 247.0 / 255.0, alpha: 1)
 
 struct MarkRect {
@@ -24,11 +24,9 @@ struct MarkRect {
 }
 
 let markRects = [
-  MarkRect(x: 0, y: 0, width: 40, height: 40),
-  MarkRect(x: 48, y: 0, width: 86, height: 40),
-  MarkRect(x: 0, y: 48, width: 40, height: 40),
-  MarkRect(x: 48, y: 48, width: 46, height: 40),
-  MarkRect(x: 0, y: 96, width: 40, height: 40),
+  MarkRect(x: 0, y: 0, width: 100, height: 24),
+  MarkRect(x: 0, y: 38, width: 68, height: 24),
+  MarkRect(x: 0, y: 76, width: 36, height: 24),
 ]
 
 func context(size: Int, alpha: Bool) -> CGContext {
@@ -45,16 +43,16 @@ func context(size: Int, alpha: Bool) -> CGContext {
 }
 
 func drawMark(_ ctx: CGContext, in rect: CGRect, color: CGColor) {
-  let scale = rect.width / 134
+  let scale = rect.width / 100
   ctx.setFillColor(color)
   for item in markRects {
     let target = CGRect(
       x: rect.minX + item.x * scale,
-      y: rect.minY + (136 - item.y - item.height) * scale,
+      y: rect.minY + (100 - item.y - item.height) * scale,
       width: item.width * scale,
       height: item.height * scale
     )
-    ctx.addPath(CGPath(roundedRect: target, cornerWidth: 4 * scale, cornerHeight: 4 * scale, transform: nil))
+    ctx.addPath(CGPath(roundedRect: target, cornerWidth: 6 * scale, cornerHeight: 6 * scale, transform: nil))
     ctx.fillPath()
   }
 }
@@ -75,7 +73,7 @@ func writePNG(_ ctx: CGContext, to path: String) {
 func appIcon(size: Int, radius: CGFloat, markWidth: CGFloat, alpha: Bool, path: String) {
   let ctx = context(size: size, alpha: alpha)
   if alpha { ctx.clear(CGRect(x: 0, y: 0, width: size, height: size)) }
-  ctx.setFillColor(orange)
+  ctx.setFillColor(lime)
   ctx.addPath(CGPath(
     roundedRect: CGRect(x: 0, y: 0, width: size, height: size),
     cornerWidth: CGFloat(size) * radius,
@@ -86,8 +84,8 @@ func appIcon(size: Int, radius: CGFloat, markWidth: CGFloat, alpha: Bool, path: 
   let width = CGFloat(size) * markWidth
   drawMark(
     ctx,
-    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width * 136 / 134) / 2, width: width, height: width * 136 / 134),
-    color: white
+    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width) / 2, width: width, height: width),
+    color: ink
   )
   writePNG(ctx, to: path)
 }
@@ -99,8 +97,8 @@ func splash(size: Int, path: String) {
   let width = CGFloat(size) * 0.105
   drawMark(
     ctx,
-    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width * 136 / 134) / 2, width: width, height: width * 136 / 134),
-    color: orange
+    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width) / 2, width: width, height: width),
+    color: lime
   )
   writePNG(ctx, to: path)
 }
