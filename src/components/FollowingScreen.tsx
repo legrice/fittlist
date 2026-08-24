@@ -764,7 +764,7 @@ export function FollowingScreen({
             {isHome && (firstRun ? (
               <div className="wkempty-actions single">
                 {meKind === "member" ? (
-                  <button className="btn si" type="button" onClick={() => setFind(true)}>Find a calendar to follow</button>
+                  <Link className="btn si" href="/discover">Find a calendar to follow</Link>
                 ) : (
                   <Link className="btn si" href="/calendar?add=1">Add your first class</Link>
                 )}
