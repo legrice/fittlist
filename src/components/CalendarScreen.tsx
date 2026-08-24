@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -488,9 +489,20 @@ export function CalendarScreen({
         <WeekEmpty
           first
           title="This is your calendar"
-          body="You can add classes you’re taking or teaching, or even your own workout."
-          cta="Add your first class"
-          onCta={openAdd}
+          body={member
+            ? "Follow a coach to find classes and start building your calendar."
+            : "Follow people whose classes you want to see, or add the first class you teach."
+          }
+          actions={member ? (
+            <div className="calendar-empty-actions calendar-empty-actions-member">
+              <Link className="btn si" href="/discover">Find a coach to follow</Link>
+            </div>
+          ) : (
+            <div className="calendar-empty-actions">
+              <Link className="btn ghost" href="/discover">Find someone to follow</Link>
+              <button className="btn si" type="button" onClick={openAdd}>Add your first class</button>
+            </div>
+          )}
         />
       ) : view === "month" ? (
         <MonthScroll

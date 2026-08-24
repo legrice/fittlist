@@ -187,21 +187,29 @@ export function CoachPeek({
           </button>
           {!self && relationship !== null && <button className={`peekfollow peekrelationship${relationship !== "off" ? " on" : ""}`} type="button" disabled={followPending} aria-label={relationship === "following" ? `Unfollow ${name}` : relationship === "requested" ? `Cancel follow request for ${name}` : `Follow ${name}`} aria-pressed={relationship !== "off"} onClick={toggleFollow}>{relationship === "following" ? "Following" : relationship === "requested" ? "Requested" : "Follow"}</button>}
         </div>
-        {/* The head stacks, by Matt's call: close alone in the corner, then
-            the face, the name on its own line under it, and two actions
-            below. Your own sheet swaps Follow for Share your week. */}
+        {/* Identity stays compact: face beside the name, then the person's
+            role and location underneath. Actions remain on their own row. */}
         <div className="peekhead peekhead-stack">
-          <span className="peekav">
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photo} alt="" />
-            ) : (
-              <span className="peekav-ini" style={{ background: color }}>
-                {initialOf(name)}
-              </span>
-            )}
-          </span>
-          <h2 className="peekhead-nm">{name}</h2>
+          <div className="peekidentity">
+            <span className="peekav">
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo} alt="" />
+              ) : (
+                <span className="peekav-ini" style={{ background: color }}>
+                  {initialOf(name)}
+                </span>
+              )}
+            </span>
+            <div className="peekhead-txt">
+              <h2 className="peekhead-nm">{name}</h2>
+              {peek && (
+                <p className="peekhead-meta">
+                  {peek.personType}{peek.location ? ` · ${peek.location}` : ""}
+                </p>
+              )}
+            </div>
+          </div>
           {peek?.handle && (
             <div className="peekacts">
               {self && shareHref ? (

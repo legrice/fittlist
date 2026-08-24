@@ -7,8 +7,10 @@ import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, today
 
 export const dynamic = "force-dynamic";
 
-export default async function EmbeddedSchedule({ params }: { params: Promise<{ handle: string }> }) {
+export default async function EmbeddedSchedule({ params, searchParams }: { params: Promise<{ handle: string }>; searchParams: Promise<{ studio?: string | string[] }> }) {
   const { handle } = await params;
+  const requestedStudios = await searchParams;
+  const studioFilter = new Set(typeof requestedStudios.studio === "string" ? [requestedStudios.studio] : requestedStudios.studio ?? []);
   const db = await getDb();
   const [person] = await db
     .select({ id: schema.users.id, name: schema.users.name, handle: schema.users.handle, shiftsPublic: schema.users.shiftsPublic })
@@ -17,7 +19,8 @@ export default async function EmbeddedSchedule({ params }: { params: Promise<{ h
     .limit(1);
   if (!person?.handle) notFound();
 
-  const classes = await publicSchedules([{ id: person.id, shiftsPublic: person.shiftsPublic }]);
+  const classes = (await publicSchedules([{ id: person.id, shiftsPublic: person.shiftsPublic }]))
+    .filter((row) => studioFilter.size === 0 || (!!row.studioId && studioFilter.has(row.studioId)));
   const studioIds = [...new Set(classes.map((row) => row.studioId).filter((id): id is string => !!id))];
   const studios = studioIds.length
     ? await db.select({ id: schema.studios.id, name: schema.studios.name, slug: schema.studios.slug }).from(schema.studios).where(inArray(schema.studios.id, studioIds))

@@ -26,6 +26,7 @@ import { MessagesToggle } from "@/components/MessagesToggle";
 import { MyCalendar } from "@/components/MyCalendar";
 import { InviteSheet } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
+import { EmbedScheduleButton } from "@/components/EmbedScheduleButton";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { myWeekText } from "@/app/actions/weektext";
@@ -44,6 +45,7 @@ type View =
   | "security"
   | "contact"
   | "gcal"
+  | "embed"
   | "availability";
 
 // The trainer's account. Home shows the profile tile, the share cards, and
@@ -395,6 +397,7 @@ export function ProfileSheet({
     contact: "Contact info",
     availability: "Availability",
     gcal: "Google Calendar",
+    embed: "Embed your schedule",
   };
   const viewTitle = view === "home" ? "" : VIEW_TITLE[view];
 
@@ -708,8 +711,18 @@ export function ProfileSheet({
                   <span className="s">Ready to paste anywhere</span>
                 </span>
               </button>
+              <button className="setrow" onClick={() => openView("embed")}>
+                <span className="setrow-ic"><Icon name="link" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Website embed</span>
+                  <span className="s">Choose which teaching studios to include</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </button>
             </div>
           )}
+
+          {view === "embed" && <EmbedScheduleButton handle={handle} inline />}
 
           {/* Who gets to you, and how. The switches live behind a tap rather
               than on the landing screen, because a toggle you can catch with

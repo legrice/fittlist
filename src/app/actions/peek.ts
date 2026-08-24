@@ -35,6 +35,8 @@ export type Peek = {
   handle: string | null;
   photo: string | null;
   color: string;
+  personType: "Trainer" | "Person";
+  location: string | null;
   /** "Week of Aug 9": the header's second line. */
   weekOf: string;
   /** For the header's Follow / Following pill. */
@@ -265,6 +267,8 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
     handle: person.handle,
     photo: person.photo,
     color: avatarColor(person),
+    personType: person.kind === "fan" ? "Person" : "Trainer",
+    location: person.location?.trim() || null,
     weekOf: `Week of ${new Date(`${today}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`,
     following,
     shared,

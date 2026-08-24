@@ -146,9 +146,6 @@ export function OnboardingWizard({
           <>
             <h1>Where are you based?</h1>
             <p>Your city helps us show you people, places, and fitness nearby.</p>
-            <button className="btn ghost wizlocate" type="button" onClick={useMyLocation} disabled={locating}>
-              {locating ? "Finding your city…" : "Use my location"}
-            </button>
             <label className="flabel" htmlFor="wLocation">City and state</label>
             <LocationPicker
               id="wLocation"
@@ -158,6 +155,10 @@ export function OnboardingWizard({
                 setPPlace(place);
               }}
             />
+            <button className="wizlocate" type="button" onClick={useMyLocation} disabled={locating}>
+              <Icon name="explore" size={20} />
+              <span>{locating ? "Finding your city…" : "Use my location"}</span>
+            </button>
             <div className="wizfoot">
               <button className="btn si" onClick={continueFromLocation} disabled={!pLocation.trim()}>
                 Continue

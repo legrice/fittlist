@@ -17,6 +17,8 @@ export type FollowingDirectoryPerson = {
   photo: string | null;
   color: string;
   detail: string;
+  location: string;
+  disciplines: string[];
   following: boolean;
   requested: boolean;
 };
@@ -29,6 +31,8 @@ export type FollowingDirectoryStudio = {
   photo: string | null;
   color: string;
   detail: string;
+  placeKind: string;
+  types: string[];
   following: boolean;
 };
 
@@ -40,6 +44,7 @@ export type FollowingDirectoryGroup = {
   photo: string | null;
   color: string;
   detail: string;
+  purpose: string;
   following: boolean;
 };
 
@@ -70,6 +75,7 @@ type PersonRow = {
   handle: string | null;
   title: string | null;
   location: string | null;
+  disciplines: string[];
   photo: string | null;
   avatarColor: string | null;
 };
@@ -104,6 +110,7 @@ const personColumns = {
   handle: schema.users.handle,
   title: schema.users.title,
   location: schema.users.location,
+  disciplines: schema.users.disciplines,
   photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
   avatarColor: schema.users.avatarColor,
 };
@@ -140,6 +147,8 @@ function peopleFromRows(
     photo: account.photo,
     color: avatarColor(account),
     detail: account.title?.trim() || account.location?.trim() || `@${account.handle}`,
+    location: account.location?.trim() ?? "",
+    disciplines: account.disciplines,
     following: following.has(account.id),
     requested: requested.has(account.id),
   }));
@@ -157,6 +166,8 @@ function studiosFromRows(
     photo: studio.photo,
     color: avatarColor({ id: studio.id }),
     detail: studio.types.slice(0, 2).join(" · ") || studio.address || studio.placeKind,
+    placeKind: studio.placeKind,
+    types: studio.types,
     following: following.has(studio.id),
   }));
 }
@@ -173,6 +184,7 @@ function groupsFromRows(
     photo: group.photo,
     color: avatarColor({ id: group.id }),
     detail: group.description?.trim() || group.purpose || "Fitness group",
+    purpose: group.purpose,
     following: following.has(group.id),
   }));
 }

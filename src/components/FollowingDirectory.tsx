@@ -7,6 +7,7 @@ import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { toggleStudioVisit } from "@/app/actions/endorsements";
 import { toggleGroupFavorite } from "@/app/actions/groups";
 import { Icon } from "@/components/Icon";
+import { PLACE_KIND_LABELS } from "@/lib/studio";
 import type {
   FollowingDirectoryData,
   FollowingDirectoryEntity,
@@ -22,10 +23,34 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
   const [hasMore, setHasMore] = useState<Record<DirectoryTab, boolean>>({ following: data.hasMore, discover: false });
   const [loadFailed, setLoadFailed] = useState<Record<DirectoryTab, boolean>>({ following: false, discover: false });
   const [loading, startLoading] = useTransition();
+  const [primaryFilter, setPrimaryFilter] = useState("");
+  const [secondaryFilter, setSecondaryFilter] = useState("");
+  const [sort, setSort] = useState("");
+  const discoverEntities = useMemo(() => entities.filter((entity) => !entity.following), [entities]);
+  const primaryOptions = useMemo(() => {
+    if (data.kind === "people") return [...new Set(discoverEntities.flatMap((entity) => entity.type === "person" ? entity.disciplines : []))].sort();
+    if (data.kind === "studios") return [...new Set(discoverEntities.flatMap((entity) => entity.type === "studio" ? [entity.placeKind] : []))].sort();
+    return [...new Set(discoverEntities.flatMap((entity) => entity.type === "group" ? [entity.purpose] : []))].sort();
+  }, [data.kind, discoverEntities]);
+  const secondaryOptions = useMemo(() => {
+    if (data.kind === "people") return [...new Set(discoverEntities.flatMap((entity) => entity.type === "person" && entity.location ? [entity.location] : []))].sort();
+    if (data.kind === "studios") return [...new Set(discoverEntities.flatMap((entity) => entity.type === "studio" ? entity.types : []))].sort();
+    return [];
+  }, [data.kind, discoverEntities]);
   const visible = useMemo(
-    () => entities.filter((entity) => tab === "following" ? entity.following : !entity.following),
-    [entities, tab],
+    () => entities
+      .filter((entity) => tab === "following" ? entity.following : !entity.following)
+      .filter((entity) => tab === "following" || (
+        entity.type === "person"
+          ? (!primaryFilter || entity.disciplines.includes(primaryFilter)) && (!secondaryFilter || entity.location === secondaryFilter)
+          : entity.type === "studio"
+            ? (!primaryFilter || entity.placeKind === primaryFilter) && (!secondaryFilter || entity.types.includes(secondaryFilter))
+            : !primaryFilter || entity.purpose === primaryFilter
+      ))
+      .sort((a, b) => sort === "name" ? a.name.localeCompare(b.name) : 0),
+    [entities, primaryFilter, secondaryFilter, sort, tab],
   );
+  const activeFilters = Number(!!primaryFilter) + Number(!!secondaryFilter) + Number(!!sort);
 
   const loadTab = (nextTab: DirectoryTab, nextLimit: number) => {
     setLoadFailed((current) => ({ ...current, [nextTab]: false }));
@@ -87,6 +112,44 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
           </button>
         </div>
 
+        {tab === "discover" && loaded.discover && (
+          <div className="follow-directory-filters" aria-label={`${data.title} filters`}>
+            <button
+              type="button"
+              className={activeFilters ? "on" : ""}
+              aria-label={activeFilters ? `Clear ${activeFilters} filters` : "Filters"}
+              disabled={!activeFilters}
+              onClick={() => { setPrimaryFilter(""); setSecondaryFilter(""); setSort(""); }}
+            >
+              <Icon name="tune" size={19} />
+              {activeFilters > 0 && <span>{activeFilters}</span>}
+            </button>
+            <label>
+              <span className="sr-only">{data.kind === "people" ? "Specialty" : data.kind === "studios" ? "Type" : "Purpose"}</span>
+              <select value={primaryFilter} onChange={(event) => setPrimaryFilter(event.target.value)}>
+                <option value="">{data.kind === "people" ? "Any specialty" : data.kind === "studios" ? "Any type" : "Any purpose"}</option>
+                {primaryOptions.map((option) => <option value={option} key={option}>{data.kind === "studios" ? PLACE_KIND_LABELS[option as keyof typeof PLACE_KIND_LABELS] ?? option : option}</option>)}
+              </select>
+            </label>
+            {data.kind !== "groups" && (
+              <label>
+                <span className="sr-only">{data.kind === "people" ? "Location" : "Category"}</span>
+                <select value={secondaryFilter} onChange={(event) => setSecondaryFilter(event.target.value)}>
+                  <option value="">{data.kind === "people" ? "Any location" : "Any category"}</option>
+                  {secondaryOptions.map((option) => <option value={option} key={option}>{option}</option>)}
+                </select>
+              </label>
+            )}
+            <label>
+              <span className="sr-only">Sort</span>
+              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                <option value="">Suggested</option>
+                <option value="name">Name</option>
+              </select>
+            </label>
+          </div>
+        )}
+
         {loading && !loaded[tab] ? (
           <div className="follow-directory-empty" aria-live="polite">
             <p>Loading {data.title.toLowerCase()}…</p>
@@ -115,8 +178,8 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
           </div>
         ) : (
           <div className="follow-directory-empty">
-            <h2>{loadFailed[tab] ? "Couldn’t load this list" : tab === "following" ? `No ${data.title.toLowerCase()} followed yet` : `No more ${data.title.toLowerCase()} to discover`}</h2>
-            <p>{loadFailed[tab] ? "Try again when your connection is ready." : tab === "following" ? "Profiles you follow will be easy to manage here." : "Check back as more profiles join FittList."}</p>
+            <h2>{loadFailed[tab] ? "Couldn’t load this list" : tab === "following" ? `No ${data.title.toLowerCase()} followed yet` : activeFilters ? `No ${data.title.toLowerCase()} match these filters` : `No more ${data.title.toLowerCase()} to discover`}</h2>
+            <p>{loadFailed[tab] ? "Try again when your connection is ready." : tab === "following" ? "Profiles you follow will be easy to manage here." : activeFilters ? "Try clearing a filter to see more suggestions." : "Check back as more profiles join FittList."}</p>
             {loadFailed[tab] && (
               <button type="button" className="follow-directory-more" onClick={() => loadTab(tab, Math.max(data.pageSize, limits[tab]))}>
                 Try again

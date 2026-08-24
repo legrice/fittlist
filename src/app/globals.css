@@ -635,7 +635,15 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .switchrow strong { font-size: 16px; }
 .switchrow small { color: var(--ol); font-size: 13px; line-height: 1.35; }
 .switchrow input { width: 22px; height: 22px; accent-color: var(--si); flex: 0 0 auto; }
-.wizlocate { width: auto; margin-bottom: 22px; background: var(--card); }
+.wizlocate {
+  width: fit-content; margin: 11px 0 2px; padding: 4px 0;
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 0; background: transparent; color: var(--ink);
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.wizlocate svg { flex: 0 0 auto; }
+.wizlocate:active { opacity: .6; }
+.wizlocate:disabled { cursor: wait; opacity: .55; }
 .wizcategories { margin-bottom: 22px; }
 .wizcategories select.editinput { appearance: auto; background: var(--card); }
 .wizother { margin-top: 10px; }
@@ -1934,6 +1942,7 @@ button.bl-band { cursor: pointer; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
 .screen.hasnav .brandbar.social-brandbar {
   position: sticky; top: 0; z-index: 40; justify-content: center; min-height: 66px;
+  border-bottom: 1px solid var(--line);
   transition: transform .22s ease; will-change: transform;
 }
 .screen.hasnav .brandbar.social-brandbar.is-hidden { transform: translateY(calc(-100% - env(safe-area-inset-top))); pointer-events:none; }
@@ -1942,7 +1951,11 @@ button.bl-band { cursor: pointer; }
 .social-brandbar-side { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; }
 .social-brandbar-left { left: 18px; }
 .social-brandbar-right { right: 18px; }
-.social-brandbar .iconbtn { width: 42px; height: 42px; display: grid; place-items: center; border: 0; background: transparent; color: var(--ink); }
+.social-brandbar .iconbtn {
+  width: 42px; height: 42px; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--color-white); color: var(--ink);
+}
 .social-notifications { position: relative; text-decoration: none; }
 .social-notifications i { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-lime); border: 1px solid var(--shell); }
 .youcalendar-card {
@@ -5070,6 +5083,30 @@ select.editinput.placekind-select {
   position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
   background: var(--ink); content: "";
 }
+.follow-directory-filters {
+  display: flex; gap: 8px; margin: 0 -20px; padding: 0 20px 12px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.follow-directory-filters::-webkit-scrollbar { display: none; }
+.follow-directory-filters > button,
+.follow-directory-filters select {
+  height: 40px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--color-white); color: var(--ink); font: inherit;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.follow-directory-filters > button {
+  position: relative; flex: 0 0 40px; width: 40px; padding: 0;
+  display: grid; place-items: center;
+}
+.follow-directory-filters > button:disabled { opacity: 1; }
+.follow-directory-filters > button.on { background: var(--ink); color: var(--paper); }
+.follow-directory-filters > button span {
+  position: absolute; top: -4px; right: -3px; min-width: 17px; height: 17px;
+  display: grid; place-items: center; padding: 0 4px; border-radius: 999px;
+  background: var(--si); color: var(--color-black); font-size: 10px;
+}
+.follow-directory-filters label { flex: 0 0 auto; }
+.follow-directory-filters select { appearance: auto; max-width: 180px; padding: 0 12px; }
 .follow-directory-list { display: flex; flex-direction: column; }
 .follow-directory-row {
   display: flex; align-items: center; gap: 12px; min-height: 78px;
@@ -8815,11 +8852,9 @@ select.editinput.placekind-select {
 }
 .cash-pin.on { background:var(--ink); color:var(--card); }
 .cash-pin:active { transform:scale(.92); }
-.following-rail::after {
-  content: ""; position: absolute; left: 18px; right: 18px; bottom: -8px;
-  height: 1px; background: var(--line); pointer-events: none;
-}
-.following-rail.has-context::after { display: none; }
+/* The header owns the single structural hairline. The calendar circles flow
+   directly into the activity list, like Cash App's shortcut rail. */
+.following-rail::after { display: none; }
 .following-rail .trayitem-more { opacity: 1; }
 .cash-activity-list { padding:0; }
 .calendar-stream-loading {
@@ -8868,8 +8903,12 @@ select.editinput.placekind-select {
   background: var(--ground); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--ink);
   border-bottom: 0;
 }
+.screen.hasnav .brandbar.social-brandbar { border-bottom: 1px solid var(--line); }
 .screen.hasnav .brandbar .iconbtn {
   width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: transparent;
+}
+.screen.hasnav .brandbar.social-brandbar .iconbtn {
+  border: 1px solid var(--line); border-radius: 50%; background: var(--color-white);
 }
 .screen.hasnav .brandbar .iconbtn:active { background: var(--cl); }
 .screen.hasnav .brandbar .headnav-l { color: var(--ol); }
@@ -9237,15 +9276,14 @@ select.editinput.placekind-select {
   font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink);
 }
 .peekfollow.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-/* The person peek's stacked head, by Matt's call: close alone in the
-   corner, the face, the name on its own line clear of the close row, and
-   the two pills under both. View profile wears the follow pill's own
-   outline, because the pair reads as one row of equals. */
+/* The person peek's identity is one compact row: face beside the name, with
+   role and location beneath. The action pills sit below as a separate row. */
 /* Doubled selector on purpose: .peekhead's own flex is declared later in
    the file, and at equal specificity the later rule wins. */
 .peekhead.peekhead-stack { position: relative; display: block; }
 .peekhead-stack .peekclose { position: absolute; top: 0; right: 0; }
-.peekhead-stack .peekhead-nm { margin: 14px 0 0; }
+.peekidentity { display:flex; align-items:center; gap:12px; min-width:0; }
+.peekhead-meta { margin:3px 0 0; color:var(--ol); font-size:13px; line-height:1.35; }
 .peekacts { display: flex; gap: 8px; margin: 12px 0 2px; }
 .peekaction {
   min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
@@ -9855,6 +9893,7 @@ select.editinput.placekind-select {
   margin-top: 22px;
 }
 .wkempty-actions .btn { width: 100%; margin: 0; }
+.wkempty-actions.single { grid-template-columns: 1fr; }
 .calendar-empty-actions {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px;
 }
@@ -9865,6 +9904,7 @@ select.editinput.placekind-select {
 .calendar-empty-actions .btn.ghost {
   background: var(--card); color: var(--ink); border: 1px solid var(--div);
 }
+.calendar-empty-actions-member { grid-template-columns: 1fr; }
 .calendar-empty-actions .btn.si { background: var(--ink); color: var(--paper); }
 /* The one filled control on the calendar: adding a class. It floats bottom
    right, where a thumb already is, and it is the only thing on this screen
@@ -11555,6 +11595,15 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-load-more{display:block;margin:20px auto 32px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 18px;font:inherit;font-weight:650;cursor:pointer}
 .embed-sheet textarea{width:100%;resize:none;border:1px solid var(--line);border-radius:12px;background:var(--muted-surface);color:var(--ink);padding:14px;font:500 13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
 .embed-sheet .btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px}
+.embed-setup>p{margin:0 0 14px;color:var(--ol);font-size:14px;line-height:1.45}
+.embed-setup>textarea{width:100%;resize:none;border:1px solid var(--line);border-radius:12px;background:var(--muted-surface);color:var(--ink);padding:14px;font:500 13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+.embed-setup>.btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px}
+.embed-studio-options{display:grid;gap:8px;margin-bottom:16px}
+.embed-studio-options>button{width:100%;min-height:58px;padding:10px 13px;display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);text-align:left;font:inherit}
+.embed-studio-options>button.on{border-color:var(--ink)}
+.embed-studio-options>button>span{display:grid;gap:2px}
+.embed-studio-options>button strong{font-size:14px}
+.embed-studio-options>button small,.embed-studio-options>p{color:var(--ol);font-size:12px}
 .embed-calendar{max-width:760px;margin:0 auto;padding:28px 22px 40px;color:var(--ink);background:var(--paper);font-family:var(--font-body),sans-serif}
 .embed-calendar>header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:30px}
 .embed-calendar>header span{color:var(--sub);font-size:13px}.embed-calendar h1{margin:2px 0 0;font-size:32px}.embed-calendar>header>a,.embed-calendar footer a{color:var(--ink);font-weight:700;text-decoration:none}

@@ -3,8 +3,8 @@
 //
 //   swift scripts/make-native-brand.swift
 //
-// App Store icons keep the lime field. Browser and Apple touch icons use the
-// reversed dark-green field with the lime mark.
+// App Store, browser, and Apple touch icons use the reversed dark-green field
+// with the lime mark.
 
 import CoreGraphics
 import Foundation
@@ -72,7 +72,7 @@ func writePNG(_ ctx: CGContext, to path: String) {
 func appIcon(size: Int, radius: CGFloat, markWidth: CGFloat, alpha: Bool, path: String) {
   let ctx = context(size: size, alpha: alpha)
   if alpha { ctx.clear(CGRect(x: 0, y: 0, width: size, height: size)) }
-  ctx.setFillColor(lime)
+  ctx.setFillColor(ink)
   ctx.addPath(CGPath(
     roundedRect: CGRect(x: 0, y: 0, width: size, height: size),
     cornerWidth: CGFloat(size) * radius,
@@ -84,7 +84,7 @@ func appIcon(size: Int, radius: CGFloat, markWidth: CGFloat, alpha: Bool, path: 
   drawMark(
     ctx,
     in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width * 103 / 108) / 2, width: width, height: width * 103 / 108),
-    color: ink
+    color: lime
   )
   writePNG(ctx, to: path)
 }

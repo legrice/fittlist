@@ -149,6 +149,7 @@ export function FollowingScreen({
   items: initialItems,
   coaches: initialCoaches,
   favIds,
+  follows,
   cats: initialCats,
   todayIso,
   meId,
@@ -430,6 +431,16 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds]);
 
+  // A brand-new account has no useful calendar identity to put in the rail
+  // yet. Showing a lone “You” circle above an empty state makes the circle
+  // look like content when it is really only a placeholder. Once they follow,
+  // save, join, or add anything, the normal rail comes back.
+  const firstRun = isHome
+    && follows === 0
+    && savedStudios.length === 0
+    && socialGroups.length === 0
+    && shown.length === 0;
+
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
   // reads as a broken calendar rather than a quiet Tuesday.
@@ -667,7 +678,7 @@ export function FollowingScreen({
           <p>Browse classes by day, time, distance, type, or place.</p>
         </header>
       )}
-      {isHome && (
+      {isHome && !firstRun && (
         <header className="following-head">
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll" ref={followingRailRef}>
@@ -743,15 +754,27 @@ export function FollowingScreen({
             <h2 className="wkempty-t">{isHome ? "Nothing on your schedule yet" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? "Save a class you want to remember, or add something of your own."
+                ? firstRun
+                  ? meKind === "member"
+                    ? "Follow a calendar to start filling your schedule."
+                    : "Add the first class you teach to start your schedule."
+                  : "Save a class you want to remember, or add something of your own."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
-            {isHome && (
+            {isHome && (firstRun ? (
+              <div className="wkempty-actions single">
+                {meKind === "member" ? (
+                  <button className="btn si" type="button" onClick={() => setFind(true)}>Find a calendar to follow</button>
+                ) : (
+                  <Link className="btn si" href="/calendar?add=1">Add your first class</Link>
+                )}
+              </div>
+            ) : (
               <div className="wkempty-actions">
                 <Link className="btn si" href="/search">Find classes</Link>
                 <button className="btn ghost" type="button" onClick={() => setFind(true)}>Find calendars</button>
               </div>
-            )}
+            ))}
           </div>
         </>
       ) : (
