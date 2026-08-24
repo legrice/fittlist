@@ -56,6 +56,7 @@ export function FollowMemberButton({
         }
         const wasRequest = state === "requested";
         setState("off");
+        window.dispatchEvent(new Event("calendar-pins-changed"));
         toast(wasRequest ? "Follow request withdrawn" : `Unfollowed ${first}`);
       }
     });

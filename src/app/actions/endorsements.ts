@@ -127,7 +127,21 @@ export async function toggleStudioVisit(slug: string) {
     .from(schema.studioEndorsements)
     .where(where);
   if (existing) {
-    await db.delete(schema.studioEndorsements).where(eq(schema.studioEndorsements.id, existing.id));
+    await db.transaction(async (tx) => {
+      await tx.delete(schema.studioEndorsements).where(eq(schema.studioEndorsements.id, existing.id));
+      // A studio can only stay in Favorites while it is also in Following.
+      // Remove the priority pin with the relationship so every calendar
+      // surface agrees immediately after an unfollow.
+      await tx
+        .delete(schema.calendarPins)
+        .where(
+          and(
+            eq(schema.calendarPins.userId, viewerId),
+            eq(schema.calendarPins.entityType, "studio"),
+            eq(schema.calendarPins.entityId, target.id),
+          ),
+        );
+    });
   } else {
     await db.insert(schema.studioEndorsements).values({
       targetStudioId: target.id,

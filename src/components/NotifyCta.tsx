@@ -60,6 +60,7 @@ export function NotifyCta({
         const wasRequest = requested && !following;
         setFollowing(false);
         setRequested(false);
+        window.dispatchEvent(new Event("calendar-pins-changed"));
         toast(wasRequest ? "Follow request withdrawn" : `Unfollowed ${firstName}`);
         return;
       }

@@ -35,9 +35,15 @@ const placeKey = (value: string) =>
 export function GlobalAdd({
   floating = false,
   classOnly = false,
+  triggerClassName,
+  triggerLabel,
 }: {
   floating?: boolean;
   classOnly?: boolean;
+  /** Desktop can give the same composer a full-width labelled trigger while
+   * phone headers keep the compact plus button. */
+  triggerClassName?: string;
+  triggerLabel?: string;
 } = {}) {
   const [open, setOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
@@ -519,12 +525,13 @@ export function GlobalAdd({
   return (
     <>
       <button
-        className={floating ? "wkfab" : "iconbtn"}
+        className={triggerClassName ?? (floating ? "wkfab" : "iconbtn")}
         aria-label={classOnly ? "Add a class" : "Add"}
         disabled={pending}
         onClick={openChooser}
       >
         <Icon name="add" size={24} />
+        {triggerLabel && <span>{triggerLabel}</span>}
       </button>
       {composer}
       {groupOpen && typeof document !== "undefined" && createPortal(

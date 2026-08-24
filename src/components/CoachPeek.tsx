@@ -98,6 +98,7 @@ export function CoachPeek({
       } else {
         setRelationship("off");
         onPinChange?.(false);
+        window.dispatchEvent(new Event("calendar-pins-changed"));
         toastFor(`Unfollowed ${name}.`, 3600);
       }
     });

@@ -52,6 +52,7 @@ export function RowFollow({
         if (!res.ok) return;
         setFollowing(false);
         setRequested(false);
+        window.dispatchEvent(new Event("calendar-pins-changed"));
       } else {
         const res = await followTrainer(handle);
         if (!res.ok) return;

@@ -24,6 +24,7 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
     if (!result.ok || result.selected === undefined) return;
     setSelected(result.selected);
     setCount((current) => Math.max(0, current + (result.selected ? 1 : -1)));
+    if (!result.selected) window.dispatchEvent(new Event("calendar-pins-changed"));
   });
 
   return (

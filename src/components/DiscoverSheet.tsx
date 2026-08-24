@@ -233,7 +233,10 @@ function PeopleRow({ p }: { p: DirPerson }) {
     } else {
       // Unfollow also withdraws a pending ask, so Requested is the cancel.
       const res = await unfollowTrainer(p.handle);
-      if (res.ok) setState("off");
+      if (res.ok) {
+        setState("off");
+        window.dispatchEvent(new Event("calendar-pins-changed"));
+      }
     }
     setBusy(false);
   };

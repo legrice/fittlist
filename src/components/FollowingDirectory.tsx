@@ -145,7 +145,10 @@ function FollowingDirectoryRow({
     if (entity.type === "person") {
       if (entity.following || entity.requested) {
         const result = await unfollowTrainer(entity.handle);
-        if (result.ok) onChange({ following: false, requested: false });
+        if (result.ok) {
+          onChange({ following: false, requested: false });
+          window.dispatchEvent(new Event("calendar-pins-changed"));
+        }
       } else {
         const result = await followTrainer(entity.handle);
         if (result.ok) onChange({ following: !result.requested, requested: !!result.requested });
@@ -154,7 +157,10 @@ function FollowingDirectoryRow({
     }
     if (entity.type === "studio") {
       const result = await toggleStudioVisit(entity.slug);
-      if (result.ok && result.selected !== undefined) onChange({ following: result.selected });
+      if (result.ok && result.selected !== undefined) {
+        onChange({ following: result.selected });
+        if (!result.selected) window.dispatchEvent(new Event("calendar-pins-changed"));
+      }
       return;
     }
     const result = await toggleGroupFavorite(entity.slug);

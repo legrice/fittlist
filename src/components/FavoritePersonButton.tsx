@@ -21,6 +21,7 @@ export function FavoritePersonButton({ person }: { person: DirPerson }) {
       if (!result.ok) return;
       setFavorited(false);
       setRequested(false);
+      window.dispatchEvent(new Event("calendar-pins-changed"));
       toast(`${person.name}'s calendar removed`);
     } else {
       const result = await followTrainer(person.handle);

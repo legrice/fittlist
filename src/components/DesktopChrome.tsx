@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { DesktopFavorites } from "@/components/DesktopFavorites";
+import { GlobalAdd } from "@/components/GlobalAdd";
 import { LinkPending } from "@/components/LinkPending";
 import { Wordmark } from "@/components/Wordmark";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
@@ -87,6 +89,7 @@ export function DesktopChrome({
             </Link>
           )}
         </nav>
+        <GlobalAdd triggerClassName="desktop-create" triggerLabel="Add" />
         <div className="desktop-profile-row">
           <Link
             className={`desktop-profile-link${here === "calendar" || pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
@@ -110,31 +113,47 @@ export function DesktopChrome({
         </div>
       </aside>
 
-      <aside className="desktop-right" aria-label="Your profile">
-        <section className="desktop-profile-card">
-          <div className="desktop-profile-kicker">Your profile</div>
-          <Link className="desktop-profile-person" href={profileHref}>
-            {person.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={person.photo} alt="" />
-            ) : (
-              <span style={{ background: person.color }}>{person.initial}</span>
-            )}
-            <div>
-              <strong>{person.name}</strong>
-              {person.location && <small>{person.location}</small>}
-            </div>
-          </Link>
-          <div className="desktop-profile-actions">
-            <Link href={profileHref}>View profile</Link>
-            <Link href={coach ? "/coachshare" : "/membershare"}>Share your week</Link>
+      <aside className="desktop-right" aria-label="Explore FittList">
+        <Link className="desktop-side-search" href="/discover">
+          <Icon name="search" size={20} />
+          <span>Search FittList</span>
+        </Link>
+
+        <DesktopFavorites />
+
+        <section className="desktop-side-card desktop-explore-card">
+          <header className="desktop-side-head">
+            <h2>Explore</h2>
+            <Link href="/discover">See all</Link>
+          </header>
+          <div className="desktop-explore-list">
+            <Link href="/following/people">
+              <i><Icon name="account_circle" size={20} /></i>
+              <span><strong>People</strong><small>Following and discover</small></span>
+              <Icon name="chevron_right" size={18} />
+            </Link>
+            <Link href="/following/studios">
+              <i><Icon name="storefront" size={20} /></i>
+              <span><strong>Studios</strong><small>Schedules and places</small></span>
+              <Icon name="chevron_right" size={18} />
+            </Link>
+            <Link href="/following/groups">
+              <i><Icon name="groups" size={20} /></i>
+              <span><strong>Groups</strong><small>Your communities</small></span>
+              <Icon name="chevron_right" size={18} />
+            </Link>
+            <Link href="/saved">
+              <i><Icon name="bookmark" size={20} /></i>
+              <span><strong>Saved</strong><small>Your saved classes</small></span>
+              <Icon name="chevron_right" size={18} />
+            </Link>
           </div>
         </section>
-        <section className="desktop-week-card">
-          <strong>Your week in fitness.</strong>
-          <p>Keep your schedule current, then share it from one place.</p>
-          <Link href={coach ? "/coachshare" : "/membershare"}>Share your week <Icon name="arrow_forward" size={18} /></Link>
-        </section>
+
+        <Link className="desktop-share-card" href={coach ? "/coachshare" : "/membershare"}>
+          <span><strong>Share your week</strong><small>Send your live FittList calendar.</small></span>
+          <Icon name="arrow_forward" size={19} />
+        </Link>
       </aside>
     </>
   );

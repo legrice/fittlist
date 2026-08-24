@@ -39,6 +39,7 @@ export function CalendarPinButton({
               return;
             }
             setPinned(result.pinned);
+            window.dispatchEvent(new Event("calendar-pins-changed"));
             if (result.pinned && entityType === "person" && entityName) {
               toastFor(`You favorited ${entityName}. Their calendar will appear near the front.`, 5200);
             }

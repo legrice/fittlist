@@ -80,6 +80,7 @@ export function AvatarZoom({
         }
         setFollowing(false);
         setRequested(false);
+        window.dispatchEvent(new Event("calendar-pins-changed"));
       } else {
         const res = await followTrainer(handle);
         if (!res.ok) {

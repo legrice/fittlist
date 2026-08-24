@@ -12,5 +12,5 @@ export function FavoritePlaceButton({ studio }: { studio: DirStudio }) {
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const label=favorited?"Following":"Follow";
-  return <><button type="button" className={`discover-follow-button discover-follow-place${favorited ? " on" : ""}`} disabled={pending} aria-label={`${label}: ${studio.name}`} aria-pressed={favorited} onClick={() => start(async () => { const result = await toggleStudioVisit(studio.slug); if (!result.ok) return; const next = !!result.selected; setFavorited(next); toast(`${next ? "Following" : "Unfollowed"} ${studio.name}`); router.refresh(); })}>{label}</button><Toast msg={toastMsg} on={toastOn} /></>;
+  return <><button type="button" className={`discover-follow-button discover-follow-place${favorited ? " on" : ""}`} disabled={pending} aria-label={`${label}: ${studio.name}`} aria-pressed={favorited} onClick={() => start(async () => { const result = await toggleStudioVisit(studio.slug); if (!result.ok) return; const next = !!result.selected; setFavorited(next); if (!next) window.dispatchEvent(new Event("calendar-pins-changed")); toast(`${next ? "Following" : "Unfollowed"} ${studio.name}`); router.refresh(); })}>{label}</button><Toast msg={toastMsg} on={toastOn} /></>;
 }

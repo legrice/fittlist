@@ -990,7 +990,15 @@ function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
             <button className={`iconbtn peekpin${pinned ? " on" : ""}`} disabled={busy} aria-label={pinned ? "Remove favorite" : "Favorite"} onClick={() => {
               const next = !pinned;
               onPinned(next);
-              start(async () => { const result = await toggleCalendarPin("studio", entity.id); if (!result.ok) onPinned(!next); });
+              start(async () => {
+                const result = await toggleCalendarPin("studio", entity.id);
+                if (!result.ok) {
+                  onPinned(!next);
+                  return;
+                }
+                onPinned(result.pinned);
+                window.dispatchEvent(new Event("calendar-pins-changed"));
+              });
             }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>
           )}
         </div>
