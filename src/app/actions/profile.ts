@@ -413,6 +413,29 @@ export async function setStoryPrefs(input: {
   return { ok: true };
 }
 
+/** A reusable full-bleed photo for the share poster. It lives with the other
+ * story preferences, not the profile photo: changing a campaign image should
+ * never change somebody's identity everywhere else in the app. */
+export async function setStoryBackground(
+  dataUrl: string | null,
+): Promise<{ ok: boolean; background?: string; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in again to add a background." };
+  if (dataUrl && (!dataUrl.startsWith("data:image/") || dataUrl.length > 2_500_000)) {
+    return { ok: false, error: "That photo is too large. Try choosing it again." };
+  }
+  const db = await getDb();
+  const [u] = await db
+    .select({ storyPrefs: schema.users.storyPrefs })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  const prefs = { ...(u?.storyPrefs ?? {}) };
+  if (dataUrl) prefs.background = (await storeImage(dataUrl, "story-background")) ?? undefined;
+  else delete prefs.background;
+  await db.update(schema.users).set({ storyPrefs: prefs }).where(eq(schema.users.id, userId));
+  return { ok: true, background: prefs.background };
+}
+
 
 const HANDLE_CHANGE_DAYS = 90;
 

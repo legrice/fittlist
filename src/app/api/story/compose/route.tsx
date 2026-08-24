@@ -47,6 +47,7 @@ export async function GET(req: Request) {
   const byDay = await shareWeek(userId, from, days, hide);
 
   const prefs = me.storyPrefs ?? {};
+  const backgroundPhoto = qs.get("bg") === "1" ? prefs.background ?? null : null;
   // No headline at all, by Matt's call: a switch in the Headline sheet, so
   // the picture can be the week alone. Distinct from an empty field, which
   // falls back, because a blank poster by accident is worse than either.
@@ -116,6 +117,7 @@ export async function GET(req: Request) {
     line2: noHead ? "" : line2,
     headlineSize: hSize,
     photo: showPhoto ? me.photo : null,
+    backgroundPhoto,
     plan,
     empty: byDay.length === 0,
     emptyLine: fan

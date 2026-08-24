@@ -12,11 +12,13 @@ import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
 import { DECOS, type DecoId } from "@/lib/decorations";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
+import { setStoryBackground } from "@/app/actions/profile";
 import { setGoing } from "@/app/actions/going";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { readPhoto } from "@/lib/photo";
 
 // The Share tab's screen, on Matt's concept: one surface, four subjects.
 // Week, Profile and QR code are segments rather than tiles, the title says
@@ -66,6 +68,7 @@ export function ShareHubScreen({
   defaultFrom,
   today,
   savedHeadline,
+  savedBackground,
   studios,
   templates,
   customTypes,
@@ -95,6 +98,8 @@ export function ShareHubScreen({
    *  one, so the Message chip never claims the default while the picture
    *  draws something else. */
   savedHeadline: string;
+  /** The last background picked in this editor, reusable next time. */
+  savedBackground: string | null;
   /** The adder's ingredients, loaded only for a member: their hub carries
    *  the personal adder, because building the week is what the tab is for. */
   studios: StudioDto[];
@@ -113,6 +118,9 @@ export function ShareHubScreen({
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
+  const [background, setBackground] = useState(savedBackground);
+  const [backgroundBusy, setBackgroundBusy] = useState(false);
+  const backgroundRef = useRef<HTMLInputElement>(null);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
@@ -180,6 +188,40 @@ export function ShareHubScreen({
     });
   };
   const [toastMsg, toastOn, toast] = useToast();
+
+  const chooseBackground = (file: File) => {
+    if (backgroundBusy) return;
+    readPhoto(
+      file,
+      async (dataUrl) => {
+        setBackgroundBusy(true);
+        const result = await setStoryBackground(dataUrl);
+        setBackgroundBusy(false);
+        if (!result.ok || !result.background) {
+          toast(result.error ?? "Couldn't add that background");
+          return;
+        }
+        setBackground(result.background);
+        setBust(Date.now());
+        toast("Photo background added");
+      },
+      () => toast("That photo format isn't supported"),
+    );
+  };
+
+  const removeBackground = async () => {
+    if (backgroundBusy) return;
+    setBackgroundBusy(true);
+    const result = await setStoryBackground(null);
+    setBackgroundBusy(false);
+    if (!result.ok) {
+      toast(result.error ?? "Couldn't remove the background");
+      return;
+    }
+    setBackground(null);
+    setBust(Date.now());
+    toast("Photo background removed");
+  };
 
   // A server change (an add, a mark) has to reach both the list and the
   // picture: refresh re-runs the page's loader for the list, the bust
@@ -268,10 +310,10 @@ export function ShareHubScreen({
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
-    `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0` +
+    `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}` +
-    `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}`;
+    `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
   const fileName =
@@ -537,6 +579,33 @@ export function ShareHubScreen({
                   <span className="shctrl-k">Style</span>
                   <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
                 </button>
+                <button
+                  className="shctrl"
+                  disabled={backgroundBusy}
+                  onClick={() => backgroundRef.current?.click()}
+                >
+                  <span className="shctrl-k">Background</span>
+                  <span className="shctrl-v">
+                    {backgroundBusy ? "Preparing…" : background ? "Change photo" : "Add photo"}
+                  </span>
+                </button>
+                {background && (
+                  <button className="shctrl" disabled={backgroundBusy} onClick={removeBackground}>
+                    <span className="shctrl-k">Background</span>
+                    <span className="shctrl-v">Remove photo</span>
+                  </button>
+                )}
+                <input
+                  ref={backgroundRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    if (file) chooseBackground(file);
+                    event.currentTarget.value = "";
+                  }}
+                />
                 <button className="shctrl" onClick={() => setPick("classes")}>
                   <span className="shctrl-k">Classes</span>
                   <span className="shctrl-v">

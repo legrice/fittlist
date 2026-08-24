@@ -48,7 +48,7 @@ export async function loadCalendarComposerData(): Promise<CalendarComposerData |
   };
 }
 
-export async function loadCalendarShareData(): Promise<{ items: HubItem[]; defaultFrom: string; savedHeadline: string } | null> {
+export async function loadCalendarShareData(): Promise<{ items: HubItem[]; defaultFrom: string; savedHeadline: string; savedBackground: string | null } | null> {
   const me = await currentUser();
   if (!me) return null;
   const today = todayIso();
@@ -57,5 +57,6 @@ export async function loadCalendarShareData(): Promise<{ items: HubItem[]; defau
     items: days.flatMap((day) => day.items.map((item) => ({ key:item.key, iso:item.iso, time:item.time, name:item.name, where:item.where, own:item.own, coaching:item.coaching }))),
     defaultFrom: days[0]?.iso ?? today,
     savedHeadline: me.storyPrefs?.headline ?? "",
+    savedBackground: me.storyPrefs?.background ?? null,
   };
 }

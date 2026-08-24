@@ -111,7 +111,7 @@ export const users = pgTable("users", {
   // Share-image customisation: headline, photo chip, preferred theme. A blob so
   // later knobs (background image, formats) slot in without schema churn.
   storyPrefs: jsonb("story_prefs")
-    .$type<{ headline?: string; showPhoto?: boolean; theme?: string }>()
+    .$type<{ headline?: string; showPhoto?: boolean; theme?: string; background?: string }>()
     .notNull()
     .default({}),
   // Set when the coach finishes (or skips) the post-signup setup wizard. Null =

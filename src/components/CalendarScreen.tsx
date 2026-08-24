@@ -130,7 +130,7 @@ export function CalendarScreen({
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
-  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string } | null>(null);
+  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string; savedBackground:string | null } | null>(null);
   const [loadingTools, startTools] = useTransition();
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
   const calendarStateKey = `fl-calendar-state:${viewer.id}`;
@@ -546,6 +546,7 @@ export function CalendarScreen({
               defaultFrom={shareData.defaultFrom}
               today={todayIso}
               savedHeadline={shareData.savedHeadline}
+              savedBackground={shareData.savedBackground}
               studios={studios}
               templates={composerData?.templates ?? []}
               customTypes={composerData?.customTypes ?? []}
