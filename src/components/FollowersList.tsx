@@ -74,7 +74,8 @@ export function FollowersList({
         toast(res.error ?? "Something went wrong.");
         return;
       }
-      if (!next) window.dispatchEvent(new Event("calendar-pins-changed"));
+      if (next) window.dispatchEvent(new Event("follows-changed"));
+      else window.dispatchEvent(new Event("calendar-pins-changed"));
       toast(next ? `Following ${f.name.trim().split(/\s+/)[0]}` : "Unfollowed");
       if (managingFollowing) router.refresh();
     });

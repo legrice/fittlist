@@ -15,11 +15,13 @@ export function NotifyCta({
   trainerName,
   handle,
   account = null,
+  followsYou = false,
   compact = false,
 }: {
   trainerName: string;
   handle: string;
   account?: { following: boolean; requested?: boolean } | null;
+  followsYou?: boolean;
   /** Kept for callers during the removal of the old email-subscribe flow. */
   canSignUp?: boolean;
   compact?: boolean;
@@ -43,7 +45,9 @@ export function NotifyCta({
       ? "Following"
       : requested
         ? "Requested"
-        : "Follow";
+        : followsYou
+          ? "Follow back"
+          : "Follow";
 
   const onCta = () => {
     if (!account) {
@@ -77,6 +81,7 @@ export function NotifyCta({
         setFollowing(true);
         if (!followHintOff()) setHint(true);
       }
+      window.dispatchEvent(new Event("follows-changed"));
     });
   };
 

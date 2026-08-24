@@ -9057,6 +9057,35 @@ select.editinput.placekind-select {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     color: var(--muted); text-decoration: none; font-size: 13px; line-height: 1.35;
   }
+  .desktop-followback-list { display: grid; gap: 5px; }
+  .desktop-followback-row {
+    min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center; gap: 8px;
+  }
+  .desktop-followback-row > a {
+    min-width: 0; padding: 5px 0; display: flex; align-items: center; gap: 10px;
+    color: var(--ink); text-decoration: none;
+  }
+  .desktop-followback-row > a > span:first-child {
+    width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center;
+    overflow: hidden; border-radius: 50%; font-size: 14px; font-weight: 700;
+  }
+  .desktop-followback-row img { width: 100%; height: 100%; object-fit: cover; }
+  .desktop-followback-row > a > span:last-child { min-width: 0; }
+  .desktop-followback-row strong,
+  .desktop-followback-row small {
+    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .desktop-followback-row strong { font-size: 13.5px; line-height: 1.2; }
+  .desktop-followback-row small { margin-top: 3px; color: var(--muted); font-size: 11.5px; }
+  .desktop-followback-row > button {
+    min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--paper); color: var(--ink); font: inherit; font-size: 11.5px;
+    font-weight: 700; cursor: pointer;
+  }
+  .desktop-followback-row > button:hover { background: var(--cl); }
+  .desktop-followback-row > button.on { color: var(--muted); }
+  .desktop-followback-row > button:disabled { cursor: default; }
   .desktop-explore-list { display: grid; gap: 3px; }
   .desktop-explore-list > a {
     min-height: 52px; margin: 0 -7px; padding: 6px 7px;

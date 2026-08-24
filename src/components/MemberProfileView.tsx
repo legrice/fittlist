@@ -58,27 +58,33 @@ export async function MemberProfileView({
   // less on purpose: nothing lands in your week, nothing public changes. Its
   // one payoff is mutual: you both follow each other and both add a class,
   // and Your week says they're going too.
-  let follow: { following: boolean; requested: boolean } | null = null;
+  let follow: { following: boolean; requested: boolean; followsYou: boolean } | null = null;
   if (viewerId && !isOwner && user.handle && (await fansVisible())) {
     const [viewer] = await db
       .select({ email: schema.users.email })
       .from(schema.users)
       .where(eq(schema.users.id, viewerId));
     if (viewer) {
-      const [row] = await db
-        .select({ optedOutAt: schema.subscribers.optedOutAt })
-        .from(schema.subscribers)
-        .where(
-          and(
-            eq(schema.subscribers.trainerUserId, user.id),
-            eq(schema.subscribers.email, viewer.email),
+      const [[row], [reverse], [req]] = await Promise.all([
+        db
+          .select({ optedOutAt: schema.subscribers.optedOutAt })
+          .from(schema.subscribers)
+          .where(
+            and(
+              eq(schema.subscribers.trainerUserId, user.id),
+              eq(schema.subscribers.email, viewer.email),
+            ),
           ),
-        );
-      const following = !!row && !row.optedOutAt;
-      // A pending ask renders as "Requested", so a tap can withdraw it.
-      let requested = false;
-      if (!following) {
-        const [req] = await db
+        db
+          .select({ optedOutAt: schema.subscribers.optedOutAt })
+          .from(schema.subscribers)
+          .where(
+            and(
+              eq(schema.subscribers.trainerUserId, viewerId),
+              eq(schema.subscribers.email, user.email),
+            ),
+          ),
+        db
           .select({ id: schema.followRequests.id })
           .from(schema.followRequests)
           .where(
@@ -86,10 +92,12 @@ export async function MemberProfileView({
               eq(schema.followRequests.trainerUserId, user.id),
               eq(schema.followRequests.requesterUserId, viewerId),
             ),
-          );
-        requested = !!req;
-      }
-      follow = { following, requested };
+          ),
+      ]);
+      const following = !!row && !row.optedOutAt;
+      // A pending ask renders as "Requested", so a tap can withdraw it.
+      const requested = !following && !!req;
+      follow = { following, requested, followsYou: !!reverse && !reverse.optedOutAt };
     }
   }
 
@@ -227,6 +235,7 @@ export async function MemberProfileView({
                     name={name}
                     initialFollowing={follow.following}
                     initialRequested={follow.requested}
+                    followsYou={follow.followsYou}
                   />
                 )}
                 {showContact && (

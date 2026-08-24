@@ -19,11 +19,13 @@ export function FollowMemberButton({
   name,
   initialFollowing,
   initialRequested = false,
+  followsYou = false,
 }: {
   handle: string;
   name: string;
   initialFollowing: boolean;
   initialRequested?: boolean;
+  followsYou?: boolean;
 }) {
   const [state, setState] = useState<FollowState>(
     initialFollowing ? "following" : initialRequested ? "requested" : "off",
@@ -48,6 +50,7 @@ export function FollowMemberButton({
           setState("following");
           toast(`Following ${first}`);
         }
+        window.dispatchEvent(new Event("follows-changed"));
       } else {
         const res = await unfollowTrainer(handle);
         if (!res.ok) {
@@ -70,7 +73,7 @@ export function FollowMemberButton({
         aria-pressed={state === "following"}
         onClick={toggle}
       >
-        {state === "following" ? "Following" : state === "requested" ? "Requested" : "Follow"}
+        {state === "following" ? "Following" : state === "requested" ? "Requested" : followsYou ? "Follow back" : "Follow"}
       </button>
       <Toast msg={toastMsg} on={toastOn} />
     </>
