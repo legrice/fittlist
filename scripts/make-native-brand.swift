@@ -3,9 +3,8 @@
 //
 //   swift scripts/make-native-brand.swift
 //
-// App Store icons are intentionally opaque. Browser icons with their own
-// rounded square keep transparency outside the square; maskable and Apple
-// icons run the lime all the way to the edge.
+// App Store icons keep the lime field. Browser and Apple touch icons use the
+// reversed dark-green field with the lime mark.
 
 import CoreGraphics
 import Foundation
@@ -90,6 +89,21 @@ func appIcon(size: Int, radius: CGFloat, markWidth: CGFloat, alpha: Bool, path: 
   writePNG(ctx, to: path)
 }
 
+func webIcon(size: Int, markWidth: CGFloat, path: String) {
+  let ctx = context(size: size, alpha: false)
+  ctx.setFillColor(ink)
+  ctx.fill(CGRect(x: 0, y: 0, width: size, height: size))
+  let width = CGFloat(size) * markWidth
+  let height = width * 103 / 108
+  let visualTop = CGFloat(size) * 0.202
+  drawMark(
+    ctx,
+    in: CGRect(x: CGFloat(size) * 0.20, y: CGFloat(size) - visualTop - height, width: width, height: height),
+    color: lime
+  )
+  writePNG(ctx, to: path)
+}
+
 func splash(size: Int, path: String) {
   let ctx = context(size: size, alpha: false)
   ctx.setFillColor(paper)
@@ -103,11 +117,11 @@ func splash(size: Int, path: String) {
   writePNG(ctx, to: path)
 }
 
-appIcon(size: 192, radius: 27.0 / 120.0, markWidth: 66.0 / 120.0, alpha: true, path: "public/icon-192.png")
-appIcon(size: 512, radius: 27.0 / 120.0, markWidth: 66.0 / 120.0, alpha: true, path: "public/icon-512.png")
-appIcon(size: 192, radius: 0, markWidth: 52.0 / 120.0, alpha: false, path: "public/icon-192-maskable.png")
-appIcon(size: 512, radius: 0, markWidth: 52.0 / 120.0, alpha: false, path: "public/icon-512-maskable.png")
-appIcon(size: 180, radius: 0, markWidth: 62.0 / 120.0, alpha: false, path: "public/apple-touch-icon.png")
+webIcon(size: 192, markWidth: 0.66, path: "public/icon-192.png")
+webIcon(size: 512, markWidth: 0.66, path: "public/icon-512.png")
+webIcon(size: 192, markWidth: 0.533, path: "public/icon-192-maskable.png")
+webIcon(size: 512, markWidth: 0.533, path: "public/icon-512-maskable.png")
+webIcon(size: 180, markWidth: 0.66, path: "public/apple-touch-icon.png")
 appIcon(size: 1024, radius: 0, markWidth: 66.0 / 120.0, alpha: false, path: "ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png")
 
 for name in ["splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"] {
