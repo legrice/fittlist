@@ -14,10 +14,10 @@ import { brandIcon } from "../src/lib/brand.ts";
 const LIME = "#9FE870";
 const INK_COLOR = "#000000";
 
-// brandIcon's ink fills its 100x100 viewBox exactly, so the centre is the box
+// brandIcon's ink fills its 108x103 viewBox exactly, so the centre is the box
 // centre. Scale by the larger side, so the mark fits its share of the square in
 // both directions; `fill` is how much of the 120 box it takes up.
-const INK = { cx: 50, cy: 50, w: 100 };
+const INK = { cx: 54, cy: 51.5, w: 108 };
 function square(size, radius, fill) {
   // brandIcon carries its colour on the <svg> element, which is exactly the
   // part being unwrapped, so the group has to carry it instead.

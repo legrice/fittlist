@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
   <rect width="120" height="120" rx="27" fill="#9FE870"/>
-  <g fill="#000000" transform="translate(27 27) scale(.66)">
-    <rect width="100" height="24" rx="6"/>
-    <rect y="38" width="68" height="24" rx="6"/>
-    <rect y="76" width="36" height="24" rx="6"/>
+  <g fill="#000000" transform="translate(27 28.5278) scale(.611111)">
+    <rect width="108" height="27" rx="4"/>
+    <rect y="38" width="72" height="27" rx="4"/>
+    <rect y="76" width="36" height="27" rx="4"/>
   </g>
 </svg>

@@ -24,9 +24,9 @@ struct MarkRect {
 }
 
 let markRects = [
-  MarkRect(x: 0, y: 0, width: 100, height: 24),
-  MarkRect(x: 0, y: 38, width: 68, height: 24),
-  MarkRect(x: 0, y: 76, width: 36, height: 24),
+  MarkRect(x: 0, y: 0, width: 108, height: 27),
+  MarkRect(x: 0, y: 38, width: 72, height: 27),
+  MarkRect(x: 0, y: 76, width: 36, height: 27),
 ]
 
 func context(size: Int, alpha: Bool) -> CGContext {
@@ -43,16 +43,16 @@ func context(size: Int, alpha: Bool) -> CGContext {
 }
 
 func drawMark(_ ctx: CGContext, in rect: CGRect, color: CGColor) {
-  let scale = rect.width / 100
+  let scale = rect.width / 108
   ctx.setFillColor(color)
   for item in markRects {
     let target = CGRect(
       x: rect.minX + item.x * scale,
-      y: rect.minY + (100 - item.y - item.height) * scale,
+      y: rect.minY + (103 - item.y - item.height) * scale,
       width: item.width * scale,
       height: item.height * scale
     )
-    ctx.addPath(CGPath(roundedRect: target, cornerWidth: 6 * scale, cornerHeight: 6 * scale, transform: nil))
+    ctx.addPath(CGPath(roundedRect: target, cornerWidth: 4 * scale, cornerHeight: 4 * scale, transform: nil))
     ctx.fillPath()
   }
 }
@@ -84,7 +84,7 @@ func appIcon(size: Int, radius: CGFloat, markWidth: CGFloat, alpha: Bool, path: 
   let width = CGFloat(size) * markWidth
   drawMark(
     ctx,
-    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width) / 2, width: width, height: width),
+    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width * 103 / 108) / 2, width: width, height: width * 103 / 108),
     color: ink
   )
   writePNG(ctx, to: path)
@@ -97,7 +97,7 @@ func splash(size: Int, path: String) {
   let width = CGFloat(size) * 0.105
   drawMark(
     ctx,
-    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width) / 2, width: width, height: width),
+    in: CGRect(x: (CGFloat(size) - width) / 2, y: (CGFloat(size) - width * 103 / 108) / 2, width: width, height: width * 103 / 108),
     color: lime
   )
   writePNG(ctx, to: path)
