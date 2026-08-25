@@ -64,6 +64,29 @@ const prefillFromTemplate = (template: TemplateDto): AdderPrefill => ({
   days: [],
 });
 
+/**
+ * A coach can still have an older personal copy of a class after the studio
+ * starts owning that same slot. Covers and manager conflict overrides can
+ * then make both records eligible for the coach's calendar. They are two
+ * records, but one real class occurrence, so prefer the studio-owned shift.
+ */
+function uniqueCoachingOccurrences(rows: ClassDto[]) {
+  const bySlot = new Map<string, ClassDto>();
+  for (const row of rows) {
+    // coachweek identifies the exact legacy pair when it can. Keeping that
+    // copy out also covers dates where the canonical series is skipped.
+    if (row.duplicateOf) continue;
+    const place = row.studioId
+      ? `studio:${row.studioId}`
+      : `place:${(row.location ?? "").trim().toLocaleLowerCase()}`;
+    const name = row.name.trim().toLocaleLowerCase();
+    const slot = `${place}|${name}|${row.startTime}|${row.durationMin}`;
+    const current = bySlot.get(slot);
+    if (!current || (row.shift && !current.shift)) bySlot.set(slot, row);
+  }
+  return [...bySlot.values()];
+}
+
 export function CalendarScreen({
   handle,
   viewer,
@@ -260,8 +283,9 @@ export function CalendarScreen({
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
-      const coachingRows = classes
-        .filter((c) => runsOn(c, iso, dow))
+      const coachingRows = uniqueCoachingOccurrences(
+        classes.filter((c) => runsOn(c, iso, dow)),
+      )
         // Been and gone is not on a schedule. Today keeps the ones still to
         // come and drops the six o'clock you already taught.
         .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
@@ -347,8 +371,9 @@ export function CalendarScreen({
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
-      const coachingRows = classes
-        .filter((c) => runsOn(c, iso, dow))
+      const coachingRows = uniqueCoachingOccurrences(
+        classes.filter((c) => runsOn(c, iso, dow)),
+      )
         .map((c) => ({
           kind: "coaching" as const,
           name: c.name,
