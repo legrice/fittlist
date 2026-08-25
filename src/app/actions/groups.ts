@@ -1,13 +1,14 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, dowOfDate, runsOn, todayIso, weekDates } from "@/lib/format";
+import { clockParts, dowOfDate, occurrenceEnded, runsOn, todayIso, weekDates } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { storeImage } from "@/lib/storage";
+import { hiddenFrom } from "@/lib/blocks";
 
 export type GroupClassChoice = { classId: string; iso: string; name: string; detail: string };
 export type GroupDestination = { id: string; name: string; slug: string };
@@ -63,6 +64,76 @@ export async function groupClassOptions(): Promise<GroupClassChoice[]> {
     const time = clockParts(item.startTime);
     return [{ classId: mark.classId, iso: mark.iso, name: item.name, detail: `${date} · ${time.hm} ${time.ap}` }];
   });
+}
+
+/** Search the public class directory for a group calendar. Group managers
+ * can curate a useful calendar without first adding every class to their own
+ * schedule. A match may come from the class, its coach, or its studio. */
+export async function searchGroupClassOptions(query: string): Promise<GroupClassChoice[]> {
+  const userId = await getSessionUserId();
+  const needle = query.trim();
+  if (!userId || needle.length < 2) return [];
+  const db = await getDb();
+  const pattern = `%${needle.replace(/[\\%_]/g, "\\$&")}%`;
+  const [rows, hidden] = await Promise.all([
+    db.select({
+      classId: schema.classes.id,
+      userId: schema.classes.userId,
+      dayOfWeek: schema.classes.dayOfWeek,
+      specificDate: schema.classes.specificDate,
+      endsOn: schema.classes.endsOn,
+      skipDates: schema.classes.skipDates,
+      startTime: schema.classes.startTime,
+      durationMin: schema.classes.durationMin,
+      name: schema.classes.name,
+      ownerKind: schema.users.kind,
+      ownerName: schema.users.name,
+      ownerHandle: schema.users.handle,
+      ownerDiscoverable: schema.users.discoverable,
+      studioName: schema.studios.name,
+      studioSlug: schema.studios.slug,
+    })
+      .from(schema.classes)
+      .innerJoin(schema.users, eq(schema.users.id, schema.classes.userId))
+      .leftJoin(schema.studios, eq(schema.studios.id, schema.classes.studioId))
+      .where(and(
+        eq(schema.classes.isPublic, true),
+        or(
+          ilike(schema.classes.name, pattern),
+          ilike(schema.users.name, pattern),
+          ilike(schema.studios.name, pattern),
+        ),
+      ))
+      .limit(80),
+    hiddenFrom(userId),
+  ]);
+  const today = todayIso();
+  const start = new Date(`${today}T00:00:00Z`);
+  const choices: (GroupClassChoice & { at: number })[] = [];
+  for (let offset = 0; offset < 31; offset += 1) {
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + offset);
+    const iso = date.toISOString().slice(0, 10);
+    for (const row of rows) {
+      if (hidden.has(row.userId)) continue;
+      if (row.ownerKind === "gym" ? !row.studioSlug : !row.ownerHandle || !row.ownerDiscoverable) continue;
+      if (!runsOn(row, iso, dowOfDate(iso)) || occurrenceEnded(iso, row.startTime, row.durationMin)) continue;
+      const dateLabel = date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+      const time = clockParts(row.startTime);
+      const context = [row.studioName, row.ownerKind === "gym" ? null : row.ownerName].filter(Boolean).join(" · ");
+      choices.push({
+        classId: row.classId,
+        iso,
+        name: row.name,
+        detail: `${dateLabel} · ${time.hm} ${time.ap}${context ? ` · ${context}` : ""}`,
+        at: Number(row.startTime.slice(0, 2)) * 60 + Number(row.startTime.slice(3, 5)),
+      });
+    }
+  }
+  return choices
+    .sort((a, b) => a.iso.localeCompare(b.iso) || a.at - b.at || a.name.localeCompare(b.name))
+    .slice(0, 60)
+    .map(({ at: _at, ...choice }) => choice);
 }
 
 /** Groups whose calendar the current person is allowed to edit. */
@@ -244,10 +315,38 @@ export async function addGroupClasses(slug: string, choices: { classId: string; 
   if (!manager) return { ok: false, error: "Only group admins can add classes." } as const;
   const requested = [...new Map(choices.filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.iso)).map((item) => [`${item.classId}|${item.iso}`, item])).values()].slice(0, 30);
   if (!requested.length) return { ok: false, error: "Choose at least one class." } as const;
-  const saved = await manager.db.select({ classId: schema.attendances.classId, iso: schema.attendances.occurrenceDate }).from(schema.attendances).where(and(eq(schema.attendances.userId, manager.userId), inArray(schema.attendances.classId, requested.map((item) => item.classId))));
-  const allowed = new Set(saved.map((item) => `${item.classId}|${item.iso}`));
-  const rows = requested.filter((item) => allowed.has(`${item.classId}|${item.iso}`));
-  if (!rows.length) return { ok: false, error: "Save the class to your calendar first." } as const;
+  const [publicClasses, hidden] = await Promise.all([
+    manager.db.select({
+      id: schema.classes.id,
+      userId: schema.classes.userId,
+      dayOfWeek: schema.classes.dayOfWeek,
+      specificDate: schema.classes.specificDate,
+      endsOn: schema.classes.endsOn,
+      skipDates: schema.classes.skipDates,
+      startTime: schema.classes.startTime,
+      durationMin: schema.classes.durationMin,
+      ownerKind: schema.users.kind,
+      ownerHandle: schema.users.handle,
+      ownerDiscoverable: schema.users.discoverable,
+      studioSlug: schema.studios.slug,
+    })
+      .from(schema.classes)
+      .innerJoin(schema.users, eq(schema.users.id, schema.classes.userId))
+      .leftJoin(schema.studios, eq(schema.studios.id, schema.classes.studioId))
+      .where(and(
+        eq(schema.classes.isPublic, true),
+        inArray(schema.classes.id, requested.map((item) => item.classId)),
+      )),
+    hiddenFrom(manager.userId),
+  ]);
+  const byId = new Map(publicClasses.map((item) => [item.id, item]));
+  const rows = requested.filter((item) => {
+    const cls = byId.get(item.classId);
+    if (!cls || item.iso < todayIso() || hidden.has(cls.userId)) return false;
+    if (cls.ownerKind === "gym" ? !cls.studioSlug : !cls.ownerHandle || !cls.ownerDiscoverable) return false;
+    return runsOn(cls, item.iso, dowOfDate(item.iso)) && !occurrenceEnded(item.iso, cls.startTime, cls.durationMin);
+  });
+  if (!rows.length) return { ok: false, error: "Those classes are no longer available." } as const;
   const added = await manager.db.insert(schema.groupClasses).values(rows.map((item) => ({ groupId: manager.groupId, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing().returning({ classId:schema.groupClasses.classId, iso:schema.groupClasses.occurrenceDate });
   if (added.length) {
     await manager.db.insert(schema.groupPosts).values(added.map((item) => ({ groupId:manager.groupId, authorUserId:manager.userId, kind:"class_added", classId:item.classId, occurrenceDate:item.iso }))).onConflictDoNothing();

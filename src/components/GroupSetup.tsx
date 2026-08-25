@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addGroupClasses, inviteGroupPeople, leaveGroup, removeGroupMember, updateGroupDetails, updateGroupVisibility, type GroupClassChoice } from "@/app/actions/groups";
+import { addGroupClasses, inviteGroupPeople, leaveGroup, removeGroupMember, searchGroupClassOptions, updateGroupDetails, updateGroupVisibility, type GroupClassChoice } from "@/app/actions/groups";
 import type { YouFavoritePerson } from "@/components/YouDashboard";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -73,13 +73,34 @@ export function GroupMembers({ slug, inviteToken, members, people, canManage, vi
 export function GroupAddClass({ slug, classes }: { slug: string; classes: GroupClassChoice[] }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<GroupClassChoice[]>(classes);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const [searchPending, startSearch] = useTransition();
+  const searchVersion = useRef(0);
   const router = useRouter();
+  useEffect(() => {
+    if (!open) return;
+    const value = query.trim();
+    const version = ++searchVersion.current;
+    if (value.length < 2) {
+      setResults(classes);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      startSearch(async () => {
+        const found = await searchGroupClassOptions(value);
+        if (searchVersion.current === version) setResults(found);
+      });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [classes, open, query]);
   const toggle = (key: string) => setSelected((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
-  const save = () => start(async () => { const choices = classes.filter((item) => selected.includes(`${item.classId}|${item.iso}`)).map(({ classId, iso }) => ({ classId, iso })); const result = await addGroupClasses(slug, choices); if (!result.ok) return setError(result.error); setOpen(false); router.refresh(); });
-  return <><button type="button" className="group-empty-add" onClick={() => setOpen(true)}><Icon name="add" size={22} />Add a class</button>{open && <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}><div className="sheet group-settings-sheet"><button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}><Icon name="close" size={18} /></button><ClassPicker classes={classes} selected={selected} toggle={toggle} />{error && <p className="formerror">{error}</p>}<div className="create-group-actions"><div><button type="button" className="btn ghost" onClick={() => setOpen(false)}>Cancel</button><button type="button" className="btn create-group-submit" disabled={pending || !selected.length} onClick={save}>{pending ? "Adding…" : "Add to schedule"}</button></div></div></div></div>}</>;
+  const close = () => { if (!pending) { setOpen(false); setSelected([]); setQuery(""); setResults(classes); setError(""); } };
+  const save = () => start(async () => { const choices = selected.map((key) => { const [classId, iso] = key.split("|"); return { classId, iso }; }); const result = await addGroupClasses(slug, choices); if (!result.ok) return setError(result.error); close(); router.refresh(); });
+  return <><button type="button" className="group-empty-add" onClick={() => setOpen(true)}><Icon name="add" size={22} />Add a class</button>{open && <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) close(); }}><div className="sheet group-settings-sheet"><button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={close}><Icon name="close" size={18} /></button><ClassPicker classes={results} selected={selected} toggle={toggle} query={query} setQuery={setQuery} pending={searchPending} />{error && <p className="formerror">{error}</p>}<div className="create-group-actions"><div><button type="button" className="btn ghost" onClick={close}>Cancel</button><button type="button" className="btn create-group-submit" disabled={pending || !selected.length} onClick={save}>{pending ? "Adding…" : "Add to schedule"}</button></div></div></div></div>}</>;
 }
 
-function ClassPicker({ classes, selected, toggle }: { classes: GroupClassChoice[]; selected: string[]; toggle:(key:string)=>void }) { return <><h2>Add a class</h2><p>Choose a class from your calendar. Coaching and saved classes appear here.</p><div className="create-group-classes">{classes.length ? classes.map((item) => { const key=`${item.classId}|${item.iso}`; const on=selected.includes(key); return <button type="button" className={`create-group-class${on ? " on" : ""}`} onClick={() => toggle(key)} key={key}><span><strong>{item.name}</strong><small>{item.detail}</small></span><Icon name={on ? "check_circle" : "add_circle"} size={22} /></button>; }) : <p>Add a class on your calendar first, then it will be ready to share with this group.</p>}</div></>; }
+function ClassPicker({ classes, selected, toggle, query, setQuery, pending=false }: { classes: GroupClassChoice[]; selected: string[]; toggle:(key:string)=>void; query?:string; setQuery?:(value:string)=>void; pending?:boolean }) { const searching=query!==undefined; return <><h2>Add a class</h2><p>{searching ? "Search public classes by class, coach, or studio." : "Choose a class to add to this group."}</p>{searching&&setQuery&&<label className="create-group-search"><Icon name="search" size={19}/><input autoFocus type="search" value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Search all classes"/></label>}<div className="create-group-classes">{pending ? <p>Searching…</p> : classes.length ? classes.map((item) => { const key=`${item.classId}|${item.iso}`; const on=selected.includes(key); return <button type="button" className={`create-group-class${on ? " on" : ""}`} onClick={() => toggle(key)} key={key}><span><strong>{item.name}</strong><small>{item.detail}</small></span><Icon name={on ? "check_circle" : "add_circle"} size={22} /></button>; }) : <p>{query&&query.trim().length>=2 ? "No matching classes." : "Your coaching and saved classes appear here, or search for anyone else’s class."}</p>}</div></>; }
 function InvitePicker({ people, selected, search, setSearch, toggle, autoFocus=false }: { people:YouFavoritePerson[]; selected:string[]; search:string; setSearch:(value:string)=>void; toggle:(key:string)=>void; autoFocus?:boolean }) { const asked=search.trim().length>0; return <><label className="create-group-search"><Icon name="search" size={19} /><input autoFocus={autoFocus} type="search" value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search people" /></label>{asked&&<div className="create-group-people">{people.length ? people.map((person)=><button type="button" className={`create-group-person${selected.includes(person.id) ? " on" : ""}`} onClick={()=>toggle(person.id)} key={person.id}>{person.photo ? <img src={person.photo} alt="" /> : <span style={{background:person.color}}>{person.name.charAt(0).toUpperCase()}</span>}<span className="create-group-person-copy"><strong>{person.name}</strong>{person.title && <small>{person.title}</small>}</span><Icon name={selected.includes(person.id) ? "check_circle" : "add_circle"} size={22}/></button>) : <p>No matching people.</p>}</div>}</>; }
