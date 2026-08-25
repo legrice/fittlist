@@ -472,6 +472,7 @@ export async function PublicProfileView({
           ]}
           sectionToggle
           name={user.name}
+          handle={handle}
           summary={null}
           title={user.title ?? ""}
           location={user.location ?? ""}
