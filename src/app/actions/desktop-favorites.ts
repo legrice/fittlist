@@ -80,7 +80,7 @@ export async function desktopSidebarData(): Promise<DesktopSidebarData> {
             name: schema.users.name,
             email: schema.users.email,
             handle: schema.users.handle,
-            photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+            photo: schema.users.photo,
             color: schema.users.avatarColor,
           })
           .from(schema.users)
