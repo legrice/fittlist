@@ -176,9 +176,9 @@ export function YouDashboard({
       <section className="profile-following">
         <h2>Following</h2>
         <div className="profile-following-rail">
-          <FollowingCountCircle href="/following/people" count={people.length} singular="person" plural="people" photo={people.find((person) => person.photo)?.photo ?? null} icon="person" />
-          <FollowingCountCircle href="/following/studios" count={places.length} singular="studio" plural="studios" photo={places.find((place) => place.photo)?.photo ?? null} icon="storefront" />
-          <FollowingCountCircle href="/following/groups" count={favoriteGroups.length} singular="group" plural="groups" photo={favoriteGroups.find((group) => group.photo)?.photo ?? null} icon="groups" />
+          <FollowingCountCircle href="/following/people" count={people.length} singular="person" plural="people" photos={people.flatMap((person) => person.photo ? [person.photo] : []).slice(0, 3)} icon="person" />
+          <FollowingCountCircle href="/following/studios" count={places.length} singular="studio" plural="studios" photos={places.flatMap((place) => place.photo ? [place.photo] : []).slice(0, 3)} icon="storefront" />
+          <FollowingCountCircle href="/following/groups" count={favoriteGroups.length} singular="group" plural="groups" photos={favoriteGroups.flatMap((group) => group.photo ? [group.photo] : []).slice(0, 3)} icon="groups" />
         </div>
       </section>
 
@@ -248,10 +248,10 @@ function AccountGroup({ title, children }: { title: string; children: React.Reac
   );
 }
 
-function FollowingCountCircle({ href, count, singular, plural, photo, icon }: { href: string; count: number; singular: string; plural: string; photo: string | null; icon: string }) {
+function FollowingCountCircle({ href, count, singular, plural, photos, icon }: { href: string; count: number; singular: string; plural: string; photos: string[]; icon: string }) {
   return <Link className="profile-following-item" href={href}>
-    <span>
-      {photo ? <img src={photo} alt="" /> : <Icon name={icon} size={28} />}
+    <span className={photos.length ? `profile-following-preview has-${photos.length}` : undefined}>
+      {photos.length ? photos.map((photo, index) => <img src={photo} alt="" loading="lazy" decoding="async" key={`${photo.slice(-24)}-${index}`} />) : <Icon name={icon} size={28} />}
     </span>
     <strong>{count} {count === 1 ? singular : plural}</strong>
   </Link>;
