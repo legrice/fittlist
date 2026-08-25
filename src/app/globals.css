@@ -8994,7 +8994,7 @@ select.editinput.placekind-select {
   }
   .desktop-nav-link .icon { color: var(--color-black); }
   .desktop-nav-link:hover { background: var(--cl); color: var(--ink); }
-  .desktop-nav-link.on { background: var(--cl); color: var(--ink); font-weight: 700; }
+  .desktop-nav-link.on { background: var(--color-action-soft); color: var(--ink); font-weight: 700; }
   .desktop-nav-link.on .icon { color: var(--color-black); }
   .desktop-count {
     min-width: 19px; height: 19px; margin-left: auto; padding: 0 5px;
