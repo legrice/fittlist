@@ -8883,6 +8883,7 @@ select.editinput.placekind-select {
 .cash-rail-more { flex:0 0 2px; align-self:stretch; }
 .cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
 .cash-class-row { position:relative; min-height:72px; }
+.cash-class-row + .cash-class-row { margin-top:8px; }
 .cash-class-main {
   /* Anchor every row to one top line: avatar, class name and time share the
      same edge even when a studio-owned class intentionally omits its coach
