@@ -243,8 +243,14 @@ export async function buildDiscoverFeed(
   // Followed, discoverable coaches are already in the directory schedule
   // result. Reusing those rows avoids loading the same classes, shifts and
   // cover exceptions twice (the old path did exactly that for all 90 follows).
+  // The combined calendar is private to its viewer. Their assigned shifts
+  // must be present even when they keep shifts off their public profile;
+  // everyone else's own visibility choice remains untouched.
+  const calendarCoachRows = options.calendarOnly
+    ? coachRows.map((coach) => coach.id === userId ? { ...coach, shiftsPublic: true } : coach)
+    : coachRows;
   const [allClassRows, missingFollowedSchedules] = await Promise.all([
-    coachRows.length ? publicFeedSchedules(coachRows, { start: from, end: through }) : Promise.resolve([]),
+    calendarCoachRows.length ? publicFeedSchedules(calendarCoachRows, { start: from, end: through }) : Promise.resolve([]),
     missingFollowedCoaches.length
       ? publicFeedSchedules(missingFollowedCoaches, { start: from, end: through })
       : Promise.resolve([]),
@@ -262,7 +268,9 @@ export async function buildDiscoverFeed(
       ? await db.select(studioListColumns).from(schema.studios).where(inArray(schema.studios.id, scheduleStudioIds))
       : []
     : studioDirectoryRows;
-  const classRows = allClassRows.filter((c) => c.isPublic);
+  const classRows = allClassRows.filter(
+    (c) => c.isPublic || (options.calendarOnly && c.shift && c.ownerUserId === userId),
+  );
   const coaches = coachRows.filter((c) => c.kind !== "gym" && !!c.handle);
   const coachById = new Map(coachRows.map((c) => [c.id, c]));
   const studioById = new Map(allStudios.map((s) => [s.id, s]));
@@ -324,6 +332,7 @@ export async function buildDiscoverFeed(
         lat: st?.lat ?? null,
         lng: st?.lng ?? null,
         saved: mineMarks.has(`${c.id}|${iso}`),
+        shift: c.shift && c.ownerUserId === userId,
       });
     }
   }
@@ -335,12 +344,18 @@ export async function buildDiscoverFeed(
   // pairing publicSchedules does covers gym-vs-coach per person; this is
   // the reader-side net for everything that slips past it.
   {
-    const seen = new Set<string>();
+    const seen = new Map<string, number>();
     let w = 0;
     for (const i of items) {
       const key = `${i.iso}|${i.name.trim().toLowerCase()}|${i.mins}|${(i.where ?? "").toLowerCase()}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
+      const prior = seen.get(key);
+      if (prior !== undefined) {
+        // The studio and coach can both contribute the same occurrence. Keep
+        // one row, but never lose that it is the viewer's assigned shift.
+        if (i.shift) items[prior].shift = true;
+        continue;
+      }
+      seen.set(key, w);
       items[w++] = i;
     }
     items.length = w;

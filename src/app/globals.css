@@ -8905,7 +8905,12 @@ select.editinput.placekind-select {
 .cash-class-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:1.2; font-weight:700; }
 .cash-class-copy > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
+.cash-class-meta { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:7px; }
 .cash-class-time { flex:0 0 auto; font-size:14px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-shift-tag {
+  padding:4px 10px; border-radius:var(--radius-pill); background:var(--color-shift);
+  color:var(--color-shift-text); font-size:11px; line-height:1.2; font-weight:700;
+}
 .cash-class-main > svg { flex:0 0 auto; color:var(--ink); }
 
 /* Desktop reads as an agenda, not a stretched phone list. Keep the date in a

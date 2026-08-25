@@ -114,6 +114,8 @@ export type FeedItem = {
   /** The viewer already saved this occurrence: the corner ribbon starts
    *  filled. */
   saved: boolean;
+  /** This occurrence is a studio-assigned shift for the signed-in viewer. */
+  shift: boolean;
 };
 
 const TIMES = [
@@ -851,7 +853,10 @@ export function FollowingScreen({
                             <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className={`cash-class-avatar${placeIsCoach ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={placeIsCoach ? 56 : 48} height={placeIsCoach ? 44 : 48} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
                               <span className="cash-class-copy"><strong>{item.name}</strong><span>{item.where || "Location to come"}</span>{!placeIsCoach && <small>{coach?.name || "Coach to come"}</small>}</span>
-                              <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
+                              <span className="cash-class-meta">
+                                <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
+                                {item.shift && <span className="cash-shift-tag">Shift</span>}
+                              </span>
                             </button>
                           </article>;
                         })}
