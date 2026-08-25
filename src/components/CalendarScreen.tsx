@@ -486,7 +486,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       <header className="calendar-page-header calendar-page-actions">
-        <h1>Calendar</h1>
+        <h1>My calendar</h1>
         <div className="calendar-desktop-controls">
           <label className="calendar-desktop-filter">
             <span className="sr-only">View calendar</span>
