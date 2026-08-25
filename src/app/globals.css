@@ -8897,6 +8897,45 @@ select.editinput.placekind-select {
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
 .cash-class-time { flex:0 0 auto; font-size:14px; line-height:1.2; font-weight:600; white-space:nowrap; }
 .cash-class-main > svg { flex:0 0 auto; color:var(--ink); }
+
+/* Desktop reads as an agenda, not a stretched phone list. Keep the date in a
+   quiet left gutter and the day's occurrences in one compact reading column.
+   Mobile retains the stacked date-and-rows treatment above. */
+@media (min-width: 1100px) {
+  .home-schedule {
+    width: min(100%, 748px);
+    margin-inline: auto;
+    padding-inline: 0;
+  }
+  .cash-day {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 26px;
+  }
+  .cash-day + .cash-day { margin-top: 46px; }
+  .cash-day > h2 {
+    margin: 10px 0 0;
+    font-size: 17px;
+    line-height: 1.2;
+    letter-spacing: -.015em;
+  }
+  .cash-class-main {
+    min-height: 70px;
+    padding: 7px 0;
+    gap: 14px;
+  }
+  .cash-class-avatar,
+  .cash-class-avatar.studio {
+    width: 54px;
+    height: 54px;
+    flex-basis: 54px;
+  }
+  .cash-class-copy strong { font-size: 16px; }
+  .cash-class-copy > span,
+  .cash-class-copy small,
+  .cash-class-time { font-size: 13.5px; }
+}
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
   border-radius: 0; border-bottom: 1px solid var(--line); background: transparent;
