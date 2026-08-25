@@ -70,17 +70,20 @@ const prefillFromTemplate = (template: TemplateDto): AdderPrefill => ({
  * then make both records eligible for the coach's calendar. They are two
  * records, but one real class occurrence, so prefer the studio-owned shift.
  */
-function uniqueCoachingOccurrences(rows: ClassDto[]) {
+function uniqueCoachingOccurrences(rows: ClassDto[], studioById: Map<string, StudioDto>) {
   const bySlot = new Map<string, ClassDto>();
   for (const row of rows) {
     // coachweek identifies the exact legacy pair when it can. Keeping that
     // copy out also covers dates where the canonical series is skipped.
     if (row.duplicateOf) continue;
-    const place = row.studioId
-      ? `studio:${row.studioId}`
-      : `place:${(row.location ?? "").trim().toLocaleLowerCase()}`;
+    // Old coach-owned copies can store the studio as free text while the
+    // managed copy stores its studio id. Resolve both to what the calendar
+    // actually displays so those records compare as the same place.
+    const place = (row.studioId ? studioById.get(row.studioId)?.name : row.location)
+      ?.trim()
+      .toLocaleLowerCase() ?? "";
     const name = row.name.trim().toLocaleLowerCase();
-    const slot = `${place}|${name}|${row.startTime}|${row.durationMin}`;
+    const slot = `${place}|${name}|${row.startTime}`;
     const current = bySlot.get(slot);
     if (!current || (row.shift && !current.shift)) bySlot.set(slot, row);
   }
@@ -285,6 +288,7 @@ export function CalendarScreen({
       const dow = (d.getUTCDay() + 6) % 7;
       const coachingRows = uniqueCoachingOccurrences(
         classes.filter((c) => runsOn(c, iso, dow)),
+        studioById,
       )
         // Been and gone is not on a schedule. Today keeps the ones still to
         // come and drops the six o'clock you already taught.
@@ -373,6 +377,7 @@ export function CalendarScreen({
       const dow = (d.getUTCDay() + 6) % 7;
       const coachingRows = uniqueCoachingOccurrences(
         classes.filter((c) => runsOn(c, iso, dow)),
+        studioById,
       )
         .map((c) => ({
           kind: "coaching" as const,
@@ -392,7 +397,7 @@ export function CalendarScreen({
       if (rows.length) m.set(iso, rows);
     }
     return m;
-  }, [classes, todayIso, visible.coaching, visible.personal, visible.saved, savedByIso, monthHorizon]);
+  }, [classes, todayIso, studioById, visible.coaching, visible.personal, visible.saved, savedByIso, monthHorizon]);
 
   useEffect(() => {
     if (view !== "list") return;
