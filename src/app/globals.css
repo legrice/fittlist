@@ -8982,7 +8982,7 @@ select.editinput.placekind-select {
     border-radius: 14px; color: var(--ink); text-decoration: none;
     font-size: 15px; font-weight: 600;
   }
-  .desktop-profile-row { margin-top: auto; display: flex; align-items: center; gap: 8px; }
+  .desktop-profile-row { margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
   .desktop-profile-row .desktop-profile-link { flex: 1; }
   .desktop-profile-activity {
     width: 42px; height: 42px; flex: 0 0 42px; position: relative;

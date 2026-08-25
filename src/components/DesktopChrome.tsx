@@ -55,6 +55,27 @@ export function DesktopChrome({
         <Link className="desktop-logo" href="/feed" aria-label="FittList calendar">
           <Wordmark variant="ink" />
         </Link>
+        <div className="desktop-profile-row">
+          <Link
+            className={`desktop-profile-link${here === "calendar" || pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
+            href={profileHref}
+            aria-current={here === "calendar" || pathname.startsWith(profileHref) ? "page" : undefined}
+          >
+            {person.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={person.photo} alt="" />
+            ) : (
+              <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>
+            )}
+            <span>Profile</span>
+          </Link>
+          {admin && (
+            <Link className="desktop-profile-activity" href="/admin?activity=1" aria-label={adminActivity > 0 ? "New product activity" : "Product activity"}>
+              <Icon name="activity" size={19} />
+              {adminActivity > 0 && <i aria-hidden="true" />}
+            </Link>
+          )}
+        </div>
         <nav className="desktop-nav" aria-label="Main">
           {links.map((item) => {
             const on = here === item.id;
@@ -90,27 +111,6 @@ export function DesktopChrome({
           )}
         </nav>
         <GlobalAdd triggerClassName="desktop-create" triggerLabel="Add" />
-        <div className="desktop-profile-row">
-          <Link
-            className={`desktop-profile-link${here === "calendar" || pathname.startsWith(profileHref) || pathname.startsWith("/settings") ? " on" : ""}`}
-            href={profileHref}
-            aria-current={here === "calendar" || pathname.startsWith(profileHref) ? "page" : undefined}
-          >
-            {person.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={person.photo} alt="" />
-            ) : (
-              <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>
-            )}
-            <span>Profile</span>
-          </Link>
-          {admin && (
-            <Link className="desktop-profile-activity" href="/admin?activity=1" aria-label={adminActivity > 0 ? "New product activity" : "Product activity"}>
-              <Icon name="activity" size={19} />
-              {adminActivity > 0 && <i aria-hidden="true" />}
-            </Link>
-          )}
-        </div>
       </aside>
 
       <aside className="desktop-right" aria-label="Explore FittList">
