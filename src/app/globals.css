@@ -8980,7 +8980,8 @@ select.editinput.placekind-select {
   .desktop-logo {
     width: 44px; height: 44px; margin: 0 12px 28px;
     display: inline-flex; align-items: center; justify-content: flex-start;
-    align-self: flex-start; text-decoration: none;
+    align-self: flex-start; text-decoration: none; color: var(--color-black);
+    --wm-ink: var(--color-black); --wm-mark: var(--color-black);
   }
   .desktop-logo .wm { font-size: 39px; }
   .desktop-logo .wm-text,
