@@ -114,7 +114,7 @@ export function DesktopChrome({
       </aside>
 
       <aside className="desktop-right" aria-label="Explore FittList">
-        <Link className="desktop-side-search" href="/discover">
+        <Link className="desktop-side-search" href="/search">
           <Icon name="search" size={20} />
           <span>Search FittList</span>
         </Link>

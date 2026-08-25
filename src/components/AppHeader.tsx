@@ -139,6 +139,9 @@ export function AppHeader({
         )}
         <div className="social-brandbar-side social-brandbar-right">
           {!calendarUtility && <>
+            <Link className="iconbtn" href="/search" aria-label="Search FittList">
+              <Icon name="search" size={23} />
+            </Link>
             <GlobalAdd />
             <Link
               className={`iconbtn social-notifications${pathname.startsWith("/notifications") ? " onroute" : ""}`}
