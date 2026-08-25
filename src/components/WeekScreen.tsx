@@ -528,7 +528,7 @@ export function WeekScreen({
             </ClassOpener>
             {namedCoach && (
               <button className="weekinvite" onClick={() => setInviteOpen(true)}>
-                Is {namedCoach.split(/\s+/)[0]} on fittlist? Send them your invite link
+                Share FittList with {namedCoach.split(/\s+/)[0]}
               </button>
             )}
           </>
@@ -782,7 +782,7 @@ export function WeekScreen({
       {inviteOpen && (
         <InviteSheet
           onClose={() => setInviteOpen(false)}
-          onCopied={() => toast("Link copied, ready to paste")}
+          onCopied={() => toast("FittList link copied")}
         />
       )}
       {confirm && (

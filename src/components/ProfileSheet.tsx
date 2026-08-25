@@ -380,8 +380,6 @@ export function ProfileSheet({
     }
   };
 
-  const initial = (name.trim().charAt(0) || "?").toUpperCase();
-  const firstName = name.trim().split(/\s+/)[0] || name;
   const AVAIL_LABEL: Record<string, string> = {
     accepting: "Accepting new clients",
     waitlist: "Waitlist only",
@@ -420,100 +418,8 @@ export function ProfileSheet({
           </div>
         )}
 
-        {/* Who this is, on the paper rather than in a card. It isn't a setting,
-            it's the label on the drawer, so boxing it made it read as the first
-            row of a list it doesn't belong to. */}
-        <div className="acctwho">
-          <button className="acctwho-id" onClick={goProfile} aria-label="Open your profile">
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="acctwho-av" src={photo} alt="" />
-            ) : (
-              <span
-                className="acctwho-av acctwho-av-empty"
-                style={{ background: avatarColor }}
-                aria-hidden="true"
-              >
-                {initial}
-              </span>
-            )}
-            <span className="acctwho-txt">
-              <span className="acctwho-nm">{firstName}</span>
-              {title ? <span className="acctwho-sub">{title}</span> : null}
-              {/* The address people are actually handed. It is the one thing
-                  this screen is about and it was nowhere on it. */}
-              <span className="acctwho-url">fittlist.co/{handle}</span>
-            </span>
-          </button>
-          {/* Editing shouldn't need a detour through the preview: this opens
-              the public page with the editor already up. */}
-          <button className="tertiary acctedit" onClick={() => router.push(`/${handle}?edit=1`)}>
-            Edit
-          </button>
-        </div>
-
-        {/* Two buttons where five tiles were. Four of those tiles were the
-            same act in different output formats and they took the whole
-            first screen of somebody's own page; they are rows in one sheet
-            now. Preview outlined, Share filled: the same pair, the same
-            weights and the same spot the visitor's Message and Follow take
-            on the public page. */}
-        <div className="acctacts">
-          <button className="btn ghost" onClick={goProfile}>
-            Preview profile
-          </button>
-          <button className="btn si" onClick={() => setShareMenu(true)}>
-            Share
-          </button>
-        </div>
-
-        {/* One list of four rows, each opening a sub-screen, each subtitle
-            saying where the setting stands so the top level answers most of
-            it without a tap. It was five headed groups and eighteen rows on
-            one scroll, and the calendar alone was in four different places. */}
-
-        {/* A place you run is not a setting, so it sits above them with the
-            other things that are yours. It was reachable only by navigating
-            to the studio's own page and finding the floating pill, which is
-            no way to find something you own. */}
-        {runs.length > 0 && (
-          <>
-            <h3 className="setgroup-h">Your studios</h3>
-            <div className="settingslist">
-              {runs.map((st) => (
-                <Link
-                  key={st.slug}
-                  className="setrow"
-                  href={`/s/${st.slug}/${st.admin ? "manage" : "shifts"}`}
-                  prefetch={false}
-                >
-                  <span className="setrow-ic"><Icon name="storefront" size={24} /></span>
-                  <span className="setrow-txt">
-                    <span className="t">
-                      {st.name}
-                      <span className="staffrole">{st.admin ? "Admin" : "Coach"}</span>
-                    </span>
-                    <span className="s">
-                      {st.admin ? "Calendar and staff" : "Your shifts and what's open"}
-                    </span>
-                  </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
-
         <h3 className="setgroup-h">Settings</h3>
         <div className="settingslist">
-          <button className="setrow" onClick={() => openView("page")}>
-            <span className="setrow-ic"><Icon name="account_circle" size={24} /></span>
-            <span className="setrow-txt">
-              <span className="t">Profile &amp; public page</span>
-              <span className="s">Handle, contact info, availability</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-          </button>
           <button className="setrow" onClick={() => openView("calendar")}>
             <span className="setrow-ic"><Icon name="event" size={24} /></span>
             <span className="setrow-txt">
@@ -547,29 +453,16 @@ export function ProfileSheet({
           </button>
         </div>
 
-        {/* It earns its place by naming the reason rather than asking a
-            favour: the people you train with being here is what makes the app
-            work. It led the page for a while, above everything somebody came
-            to this screen to do, which is where an ask reads as an ad. Down
-            here it is the last thing on the way out, after the work and
-            before the plain links. It is the beta's card and should not
-            become fixed ad space; when invites stop being the priority it
-            collapses to a row in the share sheet, which is already where the
-            same link lives. It carries no count yet: the spec's "65 have
-            joined from your link" is the line that does the real work, and a
-            number nobody has counted is worse than none. */}
-        <div className="acctinvite">
-          <div className="acctinvite-txt">
-            <h3>Share the love</h3>
-            <p>Fittlist works better when the people you train with are on it.</p>
-          </div>
-          <button className="acctinvite-btn" onClick={() => setInviteOpen(true)}>
-            Invite
-          </button>
-        </div>
-
         <h3 className="setgroup-h">FittList</h3>
         <div className="settingslist">
+          <button className="setrow" onClick={() => setInviteOpen(true)}>
+            <span className="setrow-ic"><Icon name="reply" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Share FittList</span>
+              <span className="s">Send the app to the people you train with</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+          </button>
           {isAdmin && (
             <Link className="setrow" href="/admin" prefetch={false}>
               <span className="setrow-ic"><Icon name="admin_panel_settings" size={24} /></span>
@@ -1024,8 +917,8 @@ export function ProfileSheet({
               >
                 <span className="setrow-ic"><Icon name="groups" size={24} /></span>
                 <span className="setrow-txt">
-                  <span className="t">Invite link</span>
-                  <span className="s">Anyone who opens it can join</span>
+                  <span className="t">Share FittList</span>
+                  <span className="s">Send the app to the people you train with</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
@@ -1056,7 +949,7 @@ export function ProfileSheet({
       {inviteOpen && (
         <InviteSheet
           onClose={() => setInviteOpen(false)}
-          onCopied={() => toast("Link copied, ready to paste")}
+          onCopied={() => toast("FittList link copied")}
         />
       )}
 
