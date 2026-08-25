@@ -30,8 +30,8 @@ export async function fansVisible(): Promise<boolean> {
   return !!(await currentAdmin());
 }
 
-// The canonical signed-in landing page. Account type no longer changes the
-// first screen: everyone builds and shares the same fitness calendar.
+// The canonical signed-in landing page. `/feed` is the Calendar tab; the
+// separate `/calendar` route is the viewer's calendar management page.
 export async function landingHref(): Promise<string> {
-  return "/calendar";
+  return "/feed";
 }

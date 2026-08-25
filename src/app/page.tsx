@@ -43,7 +43,7 @@ export default async function Home({
     const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
     // A handle is what "set up" means now, for both sides. Once claimed, use
     // the same canonical landing as every auth callback and the onboarding
-    // finish: Calendar. Keeping a separate root redirect was how established
+    // finish: the Calendar tab. Keeping a separate root redirect was how established
     // sessions and brand-new sessions ended up on different first screens.
     const pendingGroupToken=(await cookies()).get("fl_group_join")?.value;
     if(user?.handle&&pendingGroupToken&&/^[a-f0-9]{32,64}$/.test(pendingGroupToken))redirect(`/g/join/${pendingGroupToken}`);
