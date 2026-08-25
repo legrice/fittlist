@@ -8860,9 +8860,14 @@ select.editinput.placekind-select {
 }
 .cash-pin.on { background:var(--ink); color:var(--card); }
 .cash-pin:active { transform:scale(.92); }
-/* The header owns the single structural hairline. The calendar circles flow
-   directly into the activity list, like Cash App's shortcut rail. */
-.following-rail::after { display: none; }
+/* Close the calendar rail with one quiet hairline before the schedule begins. */
+.following-rail::after {
+  content: "";
+  display: block;
+  height: 1px;
+  margin: 12px 18px 0;
+  background: var(--line);
+}
 .following-rail .trayitem-more { opacity: 1; }
 .cash-activity-list { padding:0; }
 .calendar-stream-loading {
@@ -9084,10 +9089,6 @@ select.editinput.placekind-select {
     top: -56px; left: 0;
   }
   .pub .pubhero-media .ownertop { top: 16px; right: 16px; }
-
-  /* The calendar rail is already separated by whitespace. A divider turns
-     the desktop canvas back into a stack of boxed phone sections. */
-  .following-rail::after { display: none; }
 
   /* The old desktop header links are kept for the 940–1099px bridge where
      the bottom bar has already left but the full desktop frame has not begun. */
