@@ -26,8 +26,11 @@ export function StudioManageDashboard({
   const [answering, setAnswering] = useState<string | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const classSummary = hasAccount
-    ? `${classCount} ${classCount === 1 ? "class" : "classes"} this week${openShiftCount ? ` · ${openShiftCount} open` : ""}`
+    ? `${classCount} ${classCount === 1 ? "class" : "classes"} this week`
     : "Set up classes and coach coverage";
+  const openShiftSummary = openShiftCount === 0
+    ? "No open shifts this week"
+    : `${openShiftCount} open ${openShiftCount === 1 ? "shift" : "shifts"} this week`;
 
   const answer = async (requestId: string, approve: boolean) => {
     if (answering) return;
@@ -58,6 +61,7 @@ export function StudioManageDashboard({
 
       <div className="studio-dashboard-grid">
         <Link className="studio-dashboard-card" href={`${base}/calendar`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="calendar_month" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Calendar</strong><small>{classSummary}</small></span><Icon name="arrow_forward" size={22} /></Link>
+        <Link className="studio-dashboard-card" href={`${base}/calendar?show=open&view=week`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="event_available" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Open shifts</strong><small>{openShiftSummary}</small></span><Icon name="arrow_forward" size={22} /></Link>
         <Link className="studio-dashboard-card" href={`${base}/staff`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="groups" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Staff</strong><small>{staffCount} {staffCount === 1 ? "person" : "people"} on your coaching team</small></span><Icon name="arrow_forward" size={22} /></Link>
         <Link className="studio-dashboard-card" href={`${base}/counts`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="activity" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Class counts</strong><small>Review coaching totals by month</small></span><Icon name="arrow_forward" size={22} /></Link>
       </div>
