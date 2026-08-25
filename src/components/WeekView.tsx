@@ -49,7 +49,7 @@ export type WeekRow = {
    *  date a gym has you on. Which hat comes before what the class is. */
   tag?: string;
   /** Optional relationship color for compact ownership badges. */
-  tagTone?: "coaching" | "attending" | "personal" | "attention";
+  tagTone?: "coaching" | "shift" | "attending" | "personal" | "attention";
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;

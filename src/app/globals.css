@@ -84,6 +84,8 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-coaching: #AFCFEC;
   --color-coaching-soft: #E2EDF6;
   --color-coaching-text: #153A55;
+  --color-shift: #1F5B3A;
+  --color-shift-text: #FFFFFF;
   --color-attending: #C8C3DB;
   --color-attending-text: #211731;
   --color-personal: #D8C6B4;
@@ -2153,6 +2155,7 @@ button.bl-band { cursor: pointer; }
   border-radius: 999px; padding: 4px 9px; white-space: nowrap;
 }
 .ps-chip-coaching { background: var(--si-tint); color: var(--si-ink); }
+.ps-chip-shift { background: var(--color-shift); color: var(--color-shift-text); }
 .ps-chip-private { background: var(--rel-personal-bg); color: var(--rel-personal-ink); }
 .ps-chip-added, .ps-chip-plain { background: var(--cl); color: var(--ol); }
 /* A card with a chip needs the name clear of it. */
@@ -10787,6 +10790,7 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 11px; line-height: 1.2;
 }
 .clline-tag-coaching { background: var(--color-coaching); color: var(--color-coaching-text); }
+.clline-tag-shift { background: var(--color-shift); color: var(--color-shift-text); }
 .clline-tag-personal { background: var(--rel-personal-bg); color: var(--rel-personal-ink); }
 /* A tagged class that also names a coach puts the person one line below. */
 .clline-tag + .clline-by { grid-row: 4; }
@@ -11408,6 +11412,10 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clline-tag-coaching {
   background: var(--color-coaching);
   color: var(--color-coaching-text);
+}
+.calendar-cardlist .clline-tag-shift {
+  background: var(--color-shift);
+  color: var(--color-shift-text);
 }
 .calendar-cardlist .clline-tag-attending {
   background: var(--color-attending);

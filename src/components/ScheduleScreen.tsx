@@ -732,7 +732,7 @@ export function ScheduleScreen({
                           {/* Teaching, in the corner the ribbon takes on a row
                               you can save. You cannot save your own class, so
                               the slot is free to say what it is instead. */}
-                          <span className="ps-chip ps-chip-coaching">
+                          <span className={`ps-chip ${c.shift ? "ps-chip-shift" : "ps-chip-coaching"}`}>
                             {c.shift ? "Shift" : "Teaching"}
                           </span>
                         </button>
