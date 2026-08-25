@@ -305,7 +305,7 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             coach: viewer,
-            tag: "Coaching",
+            tag: c.shift ? "Shift" : "Coaching",
             tagTone: "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
