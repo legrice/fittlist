@@ -1159,8 +1159,9 @@ function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: nu
   return 3958.8 * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
-/** The tapped occurrence, as the sheet wants it. Somebody else's class, so it
- *  names the coach and offers their week rather than an edit. */
+/** The tapped occurrence, as the sheet wants it. Somebody else's class names
+ *  the coach and offers Save; a studio shift assigned to the viewer is theirs
+ *  to manage even though the studio owns the underlying class. */
 function peekOf(i: FeedItem, coach: FeedCoach | null, following?: boolean): PeekClass {
   const d = new Date(`${i.iso}T00:00:00Z`);
   // Title case, because it is a value in the facts list now and reads beside
@@ -1181,7 +1182,8 @@ function peekOf(i: FeedItem, coach: FeedCoach | null, following?: boolean): Peek
     // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's
     // class, which is why the row carries it rather than the coach doing.
     base: i.base,
-    mine: false,
+    shift: i.shift,
+    mine: i.shift,
     preview: {
       description: i.about,
       classType: i.classType,
