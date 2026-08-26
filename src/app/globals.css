@@ -9334,13 +9334,8 @@ select.editinput.placekind-select {
   margin: 18px 0 0;
   padding: 0 0 4px;
 }
-.shcolor-choice {
-  width: 44px; aspect-ratio: 1; flex: 0 0 44px;
-  border: 2px solid var(--card); border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--line);
-  background-position: center; background-size: cover;
-}
-.shbackground-photo-label { margin-top: 20px; }
+.shbackground-color-menu { padding: 0 2px 14px; }
+.shbackground-color-menu .typeselect { margin: 0; }
 @media (min-width: 940px) {
   .calendar-share-scrim { align-items: stretch; padding: 0; }
   .calendar-share-sheet { max-width: none; border-radius: 0; }

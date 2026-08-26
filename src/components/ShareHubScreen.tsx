@@ -852,47 +852,47 @@ export function ShareHubScreen({
             <p className="lead">
               {seg === "week" ? "Choose a color or use one of your photos." : "Choose a color for your profile card."}
             </p>
-            {seg === "week" && <p className="fsec-h">Color</p>}
-            <div className="settingslist shcolor-list">
-              {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
-                ([id, theme]) => {
-                  const on = id === themeId;
-                  return (
-                    <button
-                      key={id}
-                      className="setrow"
-                      aria-pressed={on && !background}
-                      disabled={backgroundBusy}
-                      onClick={() => void chooseColorBackground(id)}
-                    >
-                      <span
-                        className="shcolor-choice"
-                        style={{
-                          backgroundImage: theme.bg.includes("gradient")
-                            ? theme.bg
-                            : `linear-gradient(105deg, ${theme.bg} 50%, ${theme.accent} 50%)`,
-                        }}
-                        aria-hidden="true"
-                      />
-                      <span className="setrow-txt">
-                        <span className="t">{theme.label}</span>
-                      </span>
-                      {on && !background && (
-                        <span className="setrow-ic">
-                          <Icon name="check" size={20} />
-                        </span>
-                      )}
-                    </button>
-                  );
-                },
-              )}
-            </div>
-            {seg === "week" && (
-              <>
-                <p className="fsec-h shbackground-photo-label">Photo</p>
-                <div className="settingslist">
+            <div className="settingslist shbackground-options">
+              <button
+                className="setrow"
+                aria-pressed={seg !== "week" || !background}
+                disabled={backgroundBusy}
+                onClick={() => {
+                  if (seg === "week") void chooseColorBackground(themeId);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="palette" size={21} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Color</span>
+                  <span className="s">{STORY_THEMES[themeId].label}</span>
+                </span>
+                {(seg !== "week" || !background) && <span className="setrow-ic"><Icon name="check" size={20} /></span>}
+              </button>
+              <div className="shbackground-color-menu">
+                <select
+                  className="typeselect"
+                  aria-label="Background color"
+                  value={themeId}
+                  disabled={backgroundBusy}
+                  onChange={(event) => {
+                    const id = event.target.value as StoryThemeId;
+                    if (seg === "week") void chooseColorBackground(id);
+                    else {
+                      setThemeId(id);
+                      setPick(null);
+                    }
+                  }}
+                >
+                  {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(([id, theme]) => (
+                    <option key={id} value={id}>{theme.label}</option>
+                  ))}
+                </select>
+              </div>
+              {seg === "week" && (
+                <>
                   <button
                     className="setrow"
+                    aria-pressed={!!background}
                     disabled={backgroundBusy}
                     onClick={() => backgroundRef.current?.click()}
                   >
@@ -906,12 +906,15 @@ export function ShareHubScreen({
                   {background && (
                     <button className="setrow" disabled={backgroundBusy} onClick={() => void removeBackground()}>
                       <span className="setrow-ic"><Icon name="delete" size={20} /></span>
-                      <span className="setrow-txt"><span className="t">Remove photo</span></span>
+                      <span className="setrow-txt">
+                        <span className="t">Remove photo</span>
+                        <span className="s">Use {STORY_THEMES[themeId].label}</span>
+                      </span>
                     </button>
                   )}
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
