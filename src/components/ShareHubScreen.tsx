@@ -811,66 +811,44 @@ export function ShareHubScreen({
             <p className="lead">
               {seg === "week" ? "Choose a color or use one of your photos." : "Choose a color for your profile card."}
             </p>
-            <div className="settingslist shbackground-options">
+            <div className={`shbackground-choices${seg === "week" ? "" : " single"}`}>
               <button
-                className="setrow"
+                type="button"
+                className={`shbackground-choice${seg !== "week" || !background ? " on" : ""}`}
                 aria-pressed={seg !== "week" || !background}
+                aria-haspopup="dialog"
                 disabled={backgroundBusy}
-                onClick={() => {
-                  if (seg === "week") void chooseColorBackground(themeId);
-                }}
+                onClick={() => setColorMenuOpen(true)}
               >
-                <span className="setrow-ic"><Icon name="palette" size={21} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Color</span>
-                  <span className="s">{STORY_THEMES[themeId].label}</span>
+                <span className="shbackground-choice-top">
+                  <span className="shcolor-preview shbackground-preview" style={{ background: STORY_THEMES[themeId].bg }} />
+                  {(seg !== "week" || !background) && <Icon name="check" size={20} />}
                 </span>
-                {(seg !== "week" || !background) && <span className="setrow-ic"><Icon name="check" size={20} /></span>}
+                <strong>Color</strong>
+                <span>{STORY_THEMES[themeId].label}</span>
               </button>
-              <div className="shbackground-color-menu">
+              {seg === "week" && (
                 <button
                   type="button"
-                  className="typeselect shcolor-select"
-                  aria-haspopup="dialog"
-                  aria-expanded={colorMenuOpen}
+                  className={`shbackground-choice${background ? " on" : ""}`}
+                  aria-pressed={!!background}
                   disabled={backgroundBusy}
-                  onClick={() => setColorMenuOpen(true)}
+                  onClick={() => backgroundRef.current?.click()}
                 >
-                  <span
-                    className="shcolor-preview"
-                    style={{ background: STORY_THEMES[themeId].bg }}
-                  />
-                  <span>{STORY_THEMES[themeId].label}</span>
-                  <Icon name="expand_more" size={18} />
+                  <span className="shbackground-choice-top">
+                    <span className="shbackground-image-preview"><Icon name="image" size={24} /></span>
+                    {background && <Icon name="check" size={20} />}
+                  </span>
+                  <strong>Photo</strong>
+                  <span>{background ? "Photo selected" : "Choose from photos"}</span>
                 </button>
-              </div>
-              {seg === "week" && (
-                <>
-                  <button
-                    className="setrow"
-                    aria-pressed={!!background}
-                    disabled={backgroundBusy}
-                    onClick={() => backgroundRef.current?.click()}
-                  >
-                    <span className="setrow-ic"><Icon name="image" size={21} /></span>
-                    <span className="setrow-txt">
-                      <span className="t">{background ? "Choose another photo" : "Choose a photo"}</span>
-                      <span className="s">Keeps your selected color</span>
-                    </span>
-                    {background && <span className="setrow-ic"><Icon name="check" size={20} /></span>}
-                  </button>
-                  {background && (
-                    <button className="setrow" disabled={backgroundBusy} onClick={() => void removeBackground()}>
-                      <span className="setrow-ic"><Icon name="delete" size={20} /></span>
-                      <span className="setrow-txt">
-                        <span className="t">Remove photo</span>
-                        <span className="s">Use {STORY_THEMES[themeId].label}</span>
-                      </span>
-                    </button>
-                  )}
-                </>
               )}
             </div>
+            {seg === "week" && background && (
+              <button className="shbackground-remove" disabled={backgroundBusy} onClick={() => void removeBackground()}>
+                Remove photo
+              </button>
+            )}
           </div>
         </div>
       )}

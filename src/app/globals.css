@@ -9348,16 +9348,37 @@ select.editinput.placekind-select {
   margin: 18px 0 0;
   padding: 0 0 4px;
 }
-.shbackground-color-menu { padding: 0 2px 14px; }
-.shbackground-color-menu .typeselect { margin: 0; }
-.shcolor-select {
-  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+.shbackground-choices {
+  display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:18px;
 }
-.shcolor-select > span:nth-child(2) { flex:1; min-width:0; }
+.shbackground-choices.single { grid-template-columns:1fr; }
+.shbackground-choice {
+  min-width:0; min-height:142px; padding:16px; border:1px solid var(--color-border);
+  border-radius:20px; background:var(--color-white); color:var(--ink);
+  display:flex; flex-direction:column; align-items:flex-start; text-align:left; font:inherit;
+}
+.shbackground-choice.on { border:2px solid var(--ink); padding:15px; }
+.shbackground-choice:active { background:var(--color-surface-hover); }
+.shbackground-choice-top {
+  display:flex; align-items:flex-start; justify-content:space-between; width:100%; min-height:46px;
+}
+.shbackground-choice strong { margin-top:10px; font-size:17px; line-height:1.1; }
+.shbackground-choice > span:last-child {
+  margin-top:4px; color:var(--color-text-secondary); font-size:13px; line-height:1.25;
+}
+.shbackground-image-preview {
+  width:44px; height:44px; border-radius:12px; background:var(--color-surface-muted);
+  display:flex; align-items:center; justify-content:center;
+}
+.shbackground-remove {
+  display:block; margin:14px auto 0; padding:8px 12px; border:0; background:transparent;
+  color:var(--color-text-secondary); font:inherit; font-size:14px; text-decoration:underline;
+}
 .shcolor-preview {
   flex:0 0 auto; width:28px; height:28px; border-radius:8px;
   border:1px solid rgba(2,13,8,.18); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
 }
+.shcolor-preview.shbackground-preview { width:44px; height:44px; border-radius:12px; }
 .shcolor-sheet-scrim { z-index:48; }
 .shcolor-sheet { max-height:min(78dvh, 680px); }
 .shcolor-sheet-list {
