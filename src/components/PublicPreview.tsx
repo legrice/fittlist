@@ -1,64 +1,32 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import { initialOf } from "@/lib/avatar";
-import type { PublicPreviewData, PublicPreviewEntity } from "@/lib/public-preview";
+import type { PublicPreviewData } from "@/lib/public-preview";
 import styles from "./PublicPreview.module.css";
 
 type Intent = {
   title: string;
   body: string;
   next: string;
-  entity?: PublicPreviewEntity;
 };
 
-const intentFor = (kind: "save" | "follow" | "add", name?: string, entity?: PublicPreviewEntity): Intent => {
+const intentFor = (kind: "save" | "add", name?: string): Intent => {
   if (kind === "save") return { title: `Save ${name ?? "this class"}`, body: "Create your FittList to keep classes together and get back to them quickly.", next: "/calendar" };
-  if (kind === "follow") return { title: `Follow ${name ?? "this calendar"}`, body: "Create your FittList to keep this schedule close and see its updates.", next: "/calendar", entity };
   return { title: "Build your calendar", body: "Create your FittList to publish classes, manage a studio, or keep your own fitness schedule.", next: "/calendar" };
 };
-
-function Avatar({ entity, size = 48 }: { entity: Pick<PublicPreviewEntity, "name" | "photo" | "color" | "kind">; size?: number }) {
-  return (
-    <span className={`${styles.avatar} ${entity.kind === "studio" ? styles.studioAvatar : ""}`} style={{ width: size, height: size, background: entity.color }}>
-      {entity.photo ? <img src={entity.photo} alt="" width={size} height={size} loading="lazy" decoding="async" /> : initialOf(entity.name)}
-    </span>
-  );
-}
-
-function StudioCard({ entity, onIntent }: { entity: PublicPreviewEntity; onIntent: (intent: Intent) => void }) {
-  return (
-    <article className={styles.studioCard}>
-      <Link href={entity.href} className={styles.studioImage} aria-label={`View ${entity.name}`} style={{ background: entity.color }}>
-        {entity.photo ? <img src={entity.photo} alt="" width="64" height="48" loading="lazy" decoding="async" /> : initialOf(entity.name)}
-      </Link>
-      <div className={styles.placeCopy}>
-        <Link href={entity.href}>{entity.name}</Link>
-        <span>Studio</span>
-      </div>
-      <button type="button" onClick={() => onIntent(intentFor("follow", entity.name, entity))}>Follow</button>
-    </article>
-  );
-}
 
 export function PublicPreview({ data }: { data: PublicPreviewData }) {
   const router = useRouter();
   const [intent, setIntent] = useState<Intent | null>(null);
-  const [city, setCity] = useState(data.city);
-  const coaches = data.coaches.slice(0, 5);
-  const studios = data.studios.slice(0, 4);
-  const hasDirectory = !!(coaches.length || studios.length);
   const days = [...new Set(data.classes.map((item) => item.iso))];
   const authHref = (mode: "signup" | "login") => `/?join=${mode}&next=${encodeURIComponent(intent?.next ?? "/calendar")}`;
-  const updateCity = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextCity = city.trim();
-    if (!nextCity) return;
-    router.push(`/?city=${encodeURIComponent(nextCity)}`);
+  const updateCity = (event: ChangeEvent<HTMLSelectElement>) => {
+    router.push(`/?city=${encodeURIComponent(event.target.value)}`);
   };
 
   return (
@@ -72,51 +40,18 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
       </header>
 
       <section className={styles.hero}>
-        <div>
-          <h1>Find fitness near you.</h1>
-          <p className={styles.lede}>Follow local coaches and studios. Keep every schedule in one place.</p>
-        </div>
-        <form className={styles.location} onSubmit={updateCity}>
-          <Icon name="place" size={21} />
-          <label htmlFor="preview-city">Explore near</label>
-          <input id="preview-city" name="city" value={city} onChange={(event) => setCity(event.target.value)} aria-label="City" />
-          <button type="submit">Go</button>
-        </form>
+        <h1>All of your fitness in one calendar.</h1>
+        <button className={styles.heroCta} type="button" onClick={() => setIntent(intentFor("add"))}>Start your FittList</button>
       </section>
 
-      {hasDirectory && (
-        <div id="near" className={styles.directory} aria-label={`Fitness near ${data.city}`}>
-          {!!coaches.length && (
-            <section className={styles.railSection}>
-              <div className={styles.sectionHead}><h2>Local coaches</h2><Link href="/?join=signup">See more</Link></div>
-              <div className={styles.rail}>
-                {coaches.map((entity) => (
-                  <div className={styles.entity} key={entity.key}>
-                    <Link href={entity.href} aria-label={`View ${entity.name}`}><Avatar entity={entity} size={68} /></Link>
-                    <div className={styles.entityCopy}>
-                      <Link href={entity.href} className={styles.entityName}>{entity.name}</Link>
-                      <span>{entity.detail}</span>
-                    </div>
-                    <button type="button" onClick={() => setIntent(intentFor("follow", entity.name, entity))}>Follow</button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-          {!!studios.length && (
-            <section className={styles.railSection}>
-              <div className={styles.sectionHead}><h2>Local studios</h2><Link href="/?join=signup">See more</Link></div>
-              <div className={styles.placeRail}>{studios.map((entity) => <StudioCard key={entity.key} entity={entity} onIntent={setIntent} />)}</div>
-            </section>
-          )}
-        </div>
-      )}
-
-      <section id={hasDirectory ? undefined : "near"} className={styles.schedule}>
-        <div className={styles.sectionHead}>
-          <h2>Upcoming classes</h2>
-          <button type="button" className={styles.addButton} onClick={() => setIntent(intentFor("add"))}><Icon name="add" size={20} /> Add yours</button>
-        </div>
+      <section className={styles.schedule} aria-label={`Public calendar near ${data.city}`}>
+        <label className={styles.citySelect}>
+          <span className="sr-only">Calendar city</span>
+          <select value={data.city} onChange={updateCity}>
+            {data.cities.map((city) => <option value={city} key={city}>{city}</option>)}
+          </select>
+          <Icon name="expand_more" size={17} />
+        </label>
         {data.classes.length ? days.map((iso) => {
           const rows = data.classes.filter((item) => item.iso === iso);
           return (
@@ -140,16 +75,9 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
           <div className={styles.empty}>
             <Icon name="place" size={28} />
             <h3>No public schedules found in {data.city}</h3>
-            <p>Try a nearby city, or be the first to publish a calendar here.</p>
-            <button type="button" onClick={() => setIntent(intentFor("add"))}>Create a FittList</button>
+            <p>Try a nearby city from the menu above.</p>
           </div>
         )}
-      </section>
-
-      <section className={styles.closer}>
-        <h2>One link for your whole fitness world.</h2>
-        <p>Share a live schedule, manage studio shifts, or keep the calendars you care about close.</p>
-        <button className={styles.closerCta} type="button" onClick={() => setIntent(intentFor("add"))}>Get started</button>
       </section>
 
       {intent && (
@@ -157,7 +85,6 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
           <section className={styles.prompt} role="dialog" aria-modal="true" aria-labelledby="public-intent-title">
             <button className={styles.close} type="button" aria-label="Close" onClick={() => setIntent(null)}><Icon name="close" /></button>
             <span className={styles.promptMark}><Wordmark /></span>
-            {intent.entity && <span className={styles.promptEntity}><Avatar entity={intent.entity} size={78} /></span>}
             <h2 id="public-intent-title">{intent.title}</h2>
             <p>{intent.body}</p>
             <Link href={authHref("signup")} className={styles.primary}>Get started</Link>

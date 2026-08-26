@@ -21,27 +21,16 @@ export type PublicPreviewClass = {
   href: string;
 };
 
-export type PublicPreviewEntity = {
-  key: string;
-  name: string;
-  detail: string;
-  photo: string | null;
-  color: string;
-  href: string;
-  kind: "coach" | "studio" | "group";
-};
-
 export type PublicPreviewData = {
   city: string;
+  cities: string[];
   classes: PublicPreviewClass[];
-  coaches: PublicPreviewEntity[];
-  studios: PublicPreviewEntity[];
 };
 
 const { image: _image, ...classColumns } = getTableColumns(schema.classes);
 
 /**
- * A deliberately small anonymous directory. It never loads a viewer, follows,
+ * A deliberately small anonymous calendar preview. It never loads a viewer, follows,
  * saves, messages, or the full discover graph: the front door only needs to
  * prove that useful schedules exist nearby. Everything here is public data.
  */
@@ -50,13 +39,12 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
   const db = await getDb();
   const cityLike = `%${city.split(",")[0]?.trim() || city}%`;
 
-  const [coachRows, cityStudios] = await Promise.all([
+  const [coachRows, cityStudios, cityRows] = await Promise.all([
     db
       .select({
         id: schema.users.id,
         name: schema.users.name,
         handle: schema.users.handle,
-        title: schema.users.title,
         location: schema.users.location,
         photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
         avatarColor: schema.users.avatarColor,
@@ -77,12 +65,16 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
         name: schema.studios.name,
         address: schema.studios.address,
         photo: schema.studios.photo,
-        types: schema.studios.types,
         accountUserId: schema.studios.accountUserId,
       })
       .from(schema.studios)
       .where(and(isNotNull(schema.studios.slug), ilike(schema.studios.address, cityLike)))
       .limit(24),
+    db
+      .selectDistinct({ location: schema.users.location })
+      .from(schema.users)
+      .where(and(eq(schema.users.discoverable, true), isNotNull(schema.users.location)))
+      .limit(40),
   ]);
 
   const from = todayIso();
@@ -111,7 +103,6 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
           name: schema.studios.name,
           address: schema.studios.address,
           photo: schema.studios.photo,
-          types: schema.studios.types,
           accountUserId: schema.studios.accountUserId,
         })
         .from(schema.studios)
@@ -158,30 +149,18 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
   }
   occurrences.sort((a, b) => a.iso.localeCompare(b.iso) || a.at - b.at || a.name.localeCompare(b.name));
 
-  const activeCoachIds = new Set(personSchedules.map((row) => row.ownerUserId));
+  const cities = [...new Set([
+    city,
+    ...cityRows.flatMap((row) => {
+      const parts = row.location?.split(",").map((part) => part.trim()).filter(Boolean) ?? [];
+      if (!parts.length) return [];
+      return [parts.length > 1 ? `${parts[0]}, ${parts[1]}` : parts[0]];
+    }),
+  ])].sort((a, b) => a === city ? -1 : b === city ? 1 : a.localeCompare(b));
+
   return {
     city,
+    cities,
     classes: occurrences.slice(0, 18),
-    coaches: coachRows
-      .filter((row) => activeCoachIds.has(row.id))
-      .slice(0, 8)
-      .map((row) => ({
-        key: `coach:${row.id}`,
-        name: row.name,
-        detail: row.title?.trim() || "Coach",
-        photo: row.photo,
-        color: avatarColor(row),
-        href: `/${row.handle}`,
-        kind: "coach" as const,
-      })),
-    studios: cityStudios.slice(0, 8).map((row) => ({
-      key: `studio:${row.id}`,
-      name: row.name,
-      detail: row.types[0] || row.address,
-      photo: row.photo,
-      color: avatarColor({ id: row.id }),
-      href: `/s/${row.slug}`,
-      kind: "studio" as const,
-    })),
   };
 }

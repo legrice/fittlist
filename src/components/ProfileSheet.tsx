@@ -493,6 +493,14 @@ export function ProfileSheet({
           </Link>
           {isAdmin && (
             <>
+              <Link className="setrow" href="/admin/marketing" prefetch={false}>
+                <span className="setrow-ic"><Icon name="campaign" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Marketing site preview</span>
+                  <span className="s">Review the private landing-page draft</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </Link>
               <Link className="setrow" href="/brand">
                 <span className="setrow-ic"><Icon name="palette" size={24} /></span>
                 <span className="setrow-txt">
