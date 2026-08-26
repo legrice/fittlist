@@ -246,20 +246,18 @@ export function CoachPeek({
         {!self && !scheduleOnly && peek && visibleDays.length > 0 && (
           <p className="peekfoot">Add anything here to put it on your own week.</p>
         )}
-        {self && shareHref && (
-          <div className="peek-share-sticky">
-            <Link className="peek-share-cta" href={shareHref} onClick={() => {
-              // Hide native chrome during the route's loading boundary too;
-              // ShareHubScreen keeps the takeover active once it mounts.
-              window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
-              onShare?.();
-            }}>
-              <Icon name="reply" className="share-arrow-forward" size={21} />
-              <span>Share your week</span>
-            </Link>
-          </div>
-        )}
       </div>
+      {self && shareHref && (
+        <Link className="peek-share-float" href={shareHref} onClick={() => {
+          // Hide native chrome during the route's loading boundary too;
+          // ShareHubScreen keeps the takeover active once it mounts.
+          window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
+          onShare?.();
+        }}>
+          <Icon name="reply" className="share-arrow-forward" size={20} />
+          <span>Share your week</span>
+        </Link>
+      )}
       {messageOpen && peek?.handle && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMessageOpen(false); }}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label={`Message ${name}`}>
