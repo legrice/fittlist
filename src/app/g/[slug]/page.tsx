@@ -12,7 +12,7 @@ import { GroupAddClass, GroupMembers, GroupSettings } from "@/components/GroupSe
 import { Icon } from "@/components/Icon";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
-import { groupClassOptions, type GroupPurpose } from "@/app/actions/groups";
+import { type GroupPurpose } from "@/app/actions/groups";
 import { groupInvitePeople } from "@/app/actions/you";
 import { GroupHub, type GroupUpdate } from "@/components/GroupUpdates";
 
@@ -31,15 +31,8 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   ]) : [[], []];
   if (group.visibility === "private" && !membership && !invitation) notFound();
   const manager = group.ownerUserId === viewerId || membership?.role === "owner" || membership?.role === "admin";
-  type ManagerData = [
-    Awaited<ReturnType<typeof groupInvitePeople>>,
-    Awaited<ReturnType<typeof groupClassOptions>>,
-  ];
-  const managerDataPromise: Promise<ManagerData> = manager
-    ? Promise.all([groupInvitePeople(), groupClassOptions()])
-    : Promise.resolve([[], []]);
-  const [managerData, favoriteRows, memberRows, selections, postRows] = await Promise.all([
-    managerDataPromise,
+  const [invitePeople, favoriteRows, memberRows, selections, postRows] = await Promise.all([
+    manager ? groupInvitePeople() : Promise.resolve([]),
     viewerId ? db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, viewerId))) : Promise.resolve([]),
     db.select({
       id: schema.users.id,
@@ -51,7 +44,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     db.select().from(schema.groupClasses).where(eq(schema.groupClasses.groupId, group.id)),
     db.select().from(schema.groupPosts).where(eq(schema.groupPosts.groupId, group.id)).orderBy(desc(schema.groupPosts.createdAt)).limit(50),
   ]);
-  const [invitePeople, setupClasses] = managerData;
   const [favorite] = favoriteRows;
   const { image: _classImage, ...classColumns } = getTableColumns(schema.classes);
   const classRows = selections.length ? await db.select(classColumns).from(schema.classes).where(inArray(schema.classes.id, selections.map((item) => item.classId))) : [];
@@ -110,9 +102,9 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     return [{ id:post.id,kind:post.kind,body:post.body,createdAt:post.createdAt.toISOString(),author:{name:author.name,photo:author.photo,color:avatarColor(author)},cls:cls&&post.occurrenceDate&&time?{id:cls.id,iso:post.occurrenceDate,name:cls.name,detail:`${new Date(`${post.occurrenceDate}T00:00:00Z`).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"})} · ${time.hm} ${time.ap}`,where:studio?.name??cls.location??"Location to come",saved:savedSet.has(`${cls.id}|${post.occurrenceDate}`)}:null,comments:commentRows.filter((row)=>row.postId===post.id).flatMap((row)=>{const person=updateAuthorById.get(row.authorUserId);return person?[{id:row.id,body:row.body,author:{name:person.name,photo:person.photo,color:avatarColor(person)}}]:[]}),reactions:reactionKinds }];
   });
   const settingsMembers = memberRows.map((member) => ({ id:member.id, name:member.name, photo:member.photo, color:avatarColor(member), role:member.role }));
-  const schedule = <section className="group-section group-schedule-section"><div className="group-section-head"><h2>Upcoming</h2>{manager && <GroupAddClass slug={slug} classes={setupClasses} />}</div>{days.length ? <ClassOpener handle=""><CalendarList days={days} /></ClassOpener> : <div className="empty-block group-schedule-empty"><h2>Nothing planned yet</h2><p>{emptyCopy[purpose]}</p></div>}</section>;
+  const schedule = <section className="group-section group-schedule-section"><div className="group-section-head"><h2>Upcoming</h2>{manager && <GroupAddClass slug={slug} />}</div>{days.length ? <ClassOpener handle=""><CalendarList days={days} /></ClassOpener> : <div className="empty-block group-schedule-empty"><h2>Nothing planned yet</h2><p>{emptyCopy[purpose]}</p></div>}</section>;
   const members = <GroupMembers slug={slug} inviteToken={manager?group.inviteToken:null} members={settingsMembers} people={invitePeople} canManage={manager} viewerId={viewerId} viewerRole={membership?.role ?? (group.ownerUserId===viewerId?"owner":null)}/>;
   const initialTab = tab === "updates" ? "updates" : tab === "members" ? "members" : "schedule";
   const backHref=from==="discover-groups"?"/discover?half=groups":"/saved";
-  return <div className="pub pub-hero group-page hasnav"><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><div className="group-hero-media">{group.photo?<img src={group.photo} alt=""/>:<span style={{background:avatarColor({id:group.id})}}/>}<span className="group-hero-dim" aria-hidden="true"/><Link className="group-header-control group-hero-back" href={backHref} aria-label="Back to groups"><Icon name="arrow_back" size={23}/></Link></div><div className="group-hero-copy"><h1>{group.name}</h1>{group.description&&<p>{group.description}</p>}<GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} manager={manager} joined={!!membership||group.ownerUserId===viewerId} joinable={group.visibility!=="private"} invitationRole={invitation?.role}><GroupShareButton slug={slug} name={group.name} pill/>{manager&&<GroupSettings slug={slug} name={group.name} photo={group.photo} description={group.description??""} visibility={group.visibility as "public"|"unlisted"|"private"} people={invitePeople} classes={setupClasses} pill/>}</GroupActions></div></header><GroupHub slug={slug} canPost={!!membership||group.ownerUserId===viewerId} updates={updates} schedule={schedule} members={members} initialTab={initialTab}/></main></div></div>;
+  return <div className="pub pub-hero group-page hasnav"><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><div className="group-hero-media">{group.photo?<img src={group.photo} alt=""/>:<span style={{background:avatarColor({id:group.id})}}/>}<span className="group-hero-dim" aria-hidden="true"/><Link className="group-header-control group-hero-back" href={backHref} aria-label="Back to groups"><Icon name="arrow_back" size={23}/></Link></div><div className="group-hero-copy"><h1>{group.name}</h1>{group.description&&<p>{group.description}</p>}<GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} manager={manager} joined={!!membership||group.ownerUserId===viewerId} joinable={group.visibility!=="private"} invitationRole={invitation?.role}><GroupShareButton slug={slug} name={group.name} pill/>{manager&&<GroupSettings slug={slug} name={group.name} photo={group.photo} description={group.description??""} visibility={group.visibility as "public"|"unlisted"|"private"} people={invitePeople} pill/>}</GroupActions></div></header><GroupHub slug={slug} canPost={!!membership||group.ownerUserId===viewerId} updates={updates} schedule={schedule} members={members} initialTab={initialTab}/></main></div></div>;
 }

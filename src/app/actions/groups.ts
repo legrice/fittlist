@@ -1,16 +1,28 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { and, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, dowOfDate, occurrenceEnded, runsOn, todayIso, weekDates } from "@/lib/format";
+import { clockParts, dowOfDate, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { storeImage } from "@/lib/storage";
 import { hiddenFrom } from "@/lib/blocks";
 
-export type GroupClassChoice = { classId: string; iso: string; name: string; detail: string };
+export type GroupClassCatalogChoice = { classId: string; iso: string; name: string; detail: string } & {
+  classType: string | null;
+  place: string | null;
+  coach: string | null;
+  lat: number | null;
+  lng: number | null;
+};
+export type GroupClassCatalog = {
+  choices: GroupClassCatalogChoice[];
+  today: string;
+  myLat: number | null;
+  myLng: number | null;
+};
 export type GroupDestination = { id: string; name: string; slug: string };
 export type GroupPurpose = "plan" | "community" | "event";
 
@@ -44,38 +56,18 @@ export async function checkGroupHandle(value: string) {
   return existing ? { ok: false, slug, error: "That group link is already taken." } as const : { ok: true, slug } as const;
 }
 
-export async function groupClassOptions(): Promise<GroupClassChoice[]> {
+/** A lean, occurrence-level catalog for group admins. Unlike the old search
+ * action this loads once, then date/activity/place/distance filters stay
+ * instant in the sheet. It deliberately projects no class or profile images. */
+export async function groupClassCatalog(): Promise<GroupClassCatalog | null> {
   const userId = await getSessionUserId();
-  if (!userId) return [];
+  if (!userId) return null;
   const db = await getDb();
-  const [marks, coached] = await Promise.all([db
-    .select({ classId: schema.attendances.classId, iso: schema.attendances.occurrenceDate })
-    .from(schema.attendances)
-    .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()))), db.select().from(schema.classes).where(eq(schema.classes.userId, userId))]);
-  const coachedMarks = coached.flatMap((item) => weekDates(0).concat(weekDates(1)).filter((iso) => runsOn(item, iso, dowOfDate(iso))).slice(0, 1).map((iso) => ({ classId:item.id, iso })));
-  const allMarks = [...new Map([...marks, ...coachedMarks].map((mark) => [`${mark.classId}|${mark.iso}`, mark])).values()];
-  if (!allMarks.length) return [];
-  const classes = await db.select().from(schema.classes).where(inArray(schema.classes.id, [...new Set(allMarks.map((mark) => mark.classId))]));
-  const byId = new Map(classes.map((item) => [item.id, item]));
-  return allMarks.flatMap((mark) => {
-    const item = byId.get(mark.classId);
-    if (!item) return [];
-    const date = new Date(`${mark.iso}T00:00:00Z`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
-    const time = clockParts(item.startTime);
-    return [{ classId: mark.classId, iso: mark.iso, name: item.name, detail: `${date} · ${time.hm} ${time.ap}` }];
-  });
-}
-
-/** Search the public class directory for a group calendar. Group managers
- * can curate a useful calendar without first adding every class to their own
- * schedule. A match may come from the class, its coach, or its studio. */
-export async function searchGroupClassOptions(query: string): Promise<GroupClassChoice[]> {
-  const userId = await getSessionUserId();
-  const needle = query.trim();
-  if (!userId || needle.length < 2) return [];
-  const db = await getDb();
-  const pattern = `%${needle.replace(/[\\%_]/g, "\\$&")}%`;
-  const [rows, hidden] = await Promise.all([
+  const [me, rows, hidden] = await Promise.all([
+    db.select({ lat: schema.users.locationLat, lng: schema.users.locationLng })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .then((result) => result[0]),
     db.select({
       classId: schema.classes.id,
       userId: schema.classes.userId,
@@ -86,30 +78,28 @@ export async function searchGroupClassOptions(query: string): Promise<GroupClass
       startTime: schema.classes.startTime,
       durationMin: schema.classes.durationMin,
       name: schema.classes.name,
+      classType: schema.classes.classType,
+      location: schema.classes.location,
       ownerKind: schema.users.kind,
       ownerName: schema.users.name,
       ownerHandle: schema.users.handle,
       ownerDiscoverable: schema.users.discoverable,
+      ownerLat: schema.users.locationLat,
+      ownerLng: schema.users.locationLng,
       studioName: schema.studios.name,
       studioSlug: schema.studios.slug,
+      studioLat: schema.studios.lat,
+      studioLng: schema.studios.lng,
     })
       .from(schema.classes)
       .innerJoin(schema.users, eq(schema.users.id, schema.classes.userId))
       .leftJoin(schema.studios, eq(schema.studios.id, schema.classes.studioId))
-      .where(and(
-        eq(schema.classes.isPublic, true),
-        or(
-          ilike(schema.classes.name, pattern),
-          ilike(schema.users.name, pattern),
-          ilike(schema.studios.name, pattern),
-        ),
-      ))
-      .limit(80),
+      .where(eq(schema.classes.isPublic, true)),
     hiddenFrom(userId),
   ]);
   const today = todayIso();
   const start = new Date(`${today}T00:00:00Z`);
-  const choices: (GroupClassChoice & { at: number })[] = [];
+  const choices: (GroupClassCatalogChoice & { at: number })[] = [];
   for (let offset = 0; offset < 31; offset += 1) {
     const date = new Date(start);
     date.setUTCDate(start.getUTCDate() + offset);
@@ -120,20 +110,32 @@ export async function searchGroupClassOptions(query: string): Promise<GroupClass
       if (!runsOn(row, iso, dowOfDate(iso)) || occurrenceEnded(iso, row.startTime, row.durationMin)) continue;
       const dateLabel = date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
       const time = clockParts(row.startTime);
-      const context = [row.studioName, row.ownerKind === "gym" ? null : row.ownerName].filter(Boolean).join(" · ");
+      const coach = row.ownerKind === "gym" ? null : row.ownerName;
+      const place = row.studioName ?? row.location;
+      const context = [place, coach].filter(Boolean).join(" · ");
       choices.push({
         classId: row.classId,
         iso,
         name: row.name,
         detail: `${dateLabel} · ${time.hm} ${time.ap}${context ? ` · ${context}` : ""}`,
+        classType: row.classType,
+        place,
+        coach,
+        lat: row.studioLat ?? row.ownerLat,
+        lng: row.studioLng ?? row.ownerLng,
         at: Number(row.startTime.slice(0, 2)) * 60 + Number(row.startTime.slice(3, 5)),
       });
     }
   }
-  return choices
-    .sort((a, b) => a.iso.localeCompare(b.iso) || a.at - b.at || a.name.localeCompare(b.name))
-    .slice(0, 60)
-    .map(({ at: _at, ...choice }) => choice);
+  return {
+    choices: choices
+      .sort((a, b) => a.iso.localeCompare(b.iso) || a.at - b.at || a.name.localeCompare(b.name))
+      .slice(0, 600)
+      .map(({ at: _at, ...choice }) => choice),
+    today,
+    myLat: me?.lat ?? null,
+    myLng: me?.lng ?? null,
+  };
 }
 
 /** Groups whose calendar the current person is allowed to edit. */
