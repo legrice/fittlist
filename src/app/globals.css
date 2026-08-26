@@ -9433,20 +9433,6 @@ select.editinput.placekind-select {
 /* The footer that teaches the ribbon: quiet, because the rows are the
    content. */
 .peekfoot { margin: 14px 0 4px; font-size: 12.5px; color: var(--ol); }
-.peek-share-float {
-  position:fixed; right:18px; bottom:calc(18px + env(safe-area-inset-bottom)); z-index:10;
-  min-height:50px; display:flex; align-items:center; justify-content:center; gap:8px;
-  padding:0 20px; border-radius:var(--radius-pill);
-  background:var(--color-lime); color:var(--color-black); box-shadow:var(--soft-shadow-lg);
-  font-size:15px; font-weight:600; text-decoration:none;
-}
-.peek-share-float:active { transform:scale(.97); }
-@media (min-width:940px) {
-  .peek-share-float {
-    right:max(18px, calc((100vw - 620px) / 2 + 18px));
-    bottom:max(calc(9dvh + 18px), calc((100dvh - 760px) / 2 + 18px));
-  }
-}
 /* Which hat a row is, and the overlap marker: Coaching in the quiet gray,
    You saved this too in the brand's own ink, because the overlap is the
    point of the whole feature. */
@@ -9874,9 +9860,6 @@ select.editinput.placekind-select {
   width:100%; height:min(88dvh,780px); max-height:88dvh; padding-top:24px;
   border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
   animation:peek-sheet-up var(--motion-slow) var(--motion-ease-out);
-}
-.sheet.sheet-full.peeksheet:has(+ .peek-share-float) {
-  padding-bottom:calc(88px + env(safe-area-inset-bottom));
 }
 @keyframes peek-sheet-up {
   from { transform:translateY(100%); opacity:.92; }
@@ -11121,6 +11104,11 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-bottom-actions .calendar-bottom-add {
   box-shadow:0 4px 14px rgba(0,0,0,.14);
 }
+.calendar-bottom-actions .calendar-bottom-share {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:0 20px; background:var(--color-lime); color:var(--color-black);
+  box-shadow:0 4px 14px rgba(0,0,0,.14); white-space:nowrap;
+}
 .calendar-bottom-actions .calendar-bottom-add {
   flex:0 0 60px;
   width:60px;
@@ -11155,6 +11143,12 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-menu-button { position:relative; width:44px; border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); }
 .calendar-menu-button > .calendar-filter-count { position:absolute; top:-7px; right:-5px; min-width:20px; height:20px; padding:0 5px; display:grid; place-items:center; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font-size:11px; font-weight:700; }
 .calendar-header-share { width:auto; padding:0 14px; gap:7px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); box-shadow:none; font:inherit; font-weight:700; }
+@media (max-width:759px) {
+  .calendar-header-share { display:none; }
+}
+@media (min-width:760px) {
+  .calendar-bottom-actions .calendar-bottom-share { display:none; }
+}
 .calendar-desktop-view { height:44px; padding:3px; display:flex; align-items:center; gap:3px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); }
 .calendar-desktop-view button { min-width:72px; height:36px; padding:0 13px; border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; }
 .calendar-desktop-view button.on { background:var(--color-black); color:var(--color-white); }

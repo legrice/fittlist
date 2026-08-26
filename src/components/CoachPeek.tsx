@@ -35,8 +35,6 @@ export function CoachPeek({
   color,
   self = false,
   scheduleOnly = false,
-  shareHref,
-  onShare,
   onPinChange,
   onClose,
 }: {
@@ -46,13 +44,11 @@ export function CoachPeek({
   name: string;
   photo: string | null;
   color: string;
-  /** Your own face uses this same week sheet, but swaps Follow for Share. */
+  /** Your own face uses this same week sheet without follow controls. */
   self?: boolean;
   /** Following is about a coach's published schedule, not classes they have
    * privately added for themselves. */
   scheduleOnly?: boolean;
-  shareHref?: string;
-  onShare?: () => void;
   /** Lets a parent rail discard any old priority state after an unfollow. */
   onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
@@ -212,7 +208,7 @@ export function CoachPeek({
           </div>
           {peek?.handle && (
             <div className="peekacts">
-              {self && shareHref ? (
+              {self ? (
                 <Link className="peekfollow peekaction" href={`/${peek.handle}`}>
                   <Icon name="account_circle" size={18} />
                   <span>View profile</span>
@@ -247,17 +243,6 @@ export function CoachPeek({
           <p className="peekfoot">Add anything here to put it on your own week.</p>
         )}
       </div>
-      {self && shareHref && (
-        <Link className="peek-share-float" href={shareHref} onClick={() => {
-          // Hide native chrome during the route's loading boundary too;
-          // ShareHubScreen keeps the takeover active once it mounts.
-          window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
-          onShare?.();
-        }}>
-          <Icon name="reply" className="share-arrow-forward" size={20} />
-          <span>Share your week</span>
-        </Link>
-      )}
       {messageOpen && peek?.handle && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMessageOpen(false); }}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label={`Message ${name}`}>

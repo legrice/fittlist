@@ -618,6 +618,10 @@ export function CalendarScreen({
           <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
             <Icon name="add" size={28} />
           </button>
+          <button type="button" className="calendar-bottom-share" onClick={openShare} disabled={loadingTools && shareOpen}>
+            <Icon name="reply" className="share-arrow-forward" size={20} />
+            <span>Share your week</span>
+          </button>
         </div>}
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
