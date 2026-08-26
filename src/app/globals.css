@@ -211,9 +211,27 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --space-8: 64px;
   --page-gutter: var(--space-3);
   --control-height: 48px;
+  /* Motion system: quick feedback, calm state changes, and a soft deceleration
+     for surfaces entering the viewport. Components should consume these
+     rather than inventing one-off `ease` curves. */
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+  --motion-ease-standard: cubic-bezier(.2, .7, .2, 1);
+  --motion-ease-out: cubic-bezier(.22, 1, .36, 1);
+  --motion-ease-in: cubic-bezier(.4, 0, .7, 1);
+  --motion-ease-spring: cubic-bezier(.34, 1.36, .64, 1);
   /* Elevation is expressed with surface contrast and rules, not shadows. */
   --soft-shadow: none;
   --soft-shadow-lg: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-base: 1ms;
+    --motion-slow: 1ms;
+  }
 }
 
 .sr-only {
@@ -835,7 +853,12 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   width: var(--tap-size); height: var(--tap-size); border-radius: var(--radius-pill); border: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--ol);
   overflow: hidden; flex-shrink: 0;
+  transition: transform var(--motion-fast) var(--motion-ease-out),
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard);
 }
+.iconbtn:active { transform: scale(.94); }
 /* icons are decoration: never swallow the click, never blow out layout pre-font-load */
 /* Lucide renders inline SVG; the span just reserves the box and centres it. */
 .icon {
@@ -851,7 +874,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: var(--control-height); background: var(--color-action); color: var(--color-black); font-weight: 700; font-size: 16px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  padding: 14px 22px; border-radius: var(--radius-pill); width: 100%; transition: transform .08s;
+  padding: 14px 22px; border-radius: var(--radius-pill); width: 100%;
+  transition: transform var(--motion-fast) var(--motion-ease-out), opacity var(--motion-fast) var(--motion-ease-standard);
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
@@ -902,6 +926,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .sheet-scrim {
   position: fixed; inset: 0; background: rgba(23, 26, 31, .55); z-index: 46;
   display: flex; align-items: flex-end;
+  animation: scrim-in var(--motion-fast) var(--motion-ease-standard) both;
 }
 .sheet {
   /* One place to set the sheet's bottom padding. The sticky footer offsets
@@ -914,7 +939,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
      scrim behind it already says where you came from. */
   background: var(--card); color: var(--ink);
   width: 100%; border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-  padding: 18px var(--page-gutter) var(--pad-b); animation: up .22s ease; max-height: 94%; overflow-y: auto;
+  padding: 18px var(--page-gutter) var(--pad-b); animation: up var(--motion-slow) var(--motion-ease-out); max-height: 94%; overflow-y: auto;
   overscroll-behavior: contain; /* don't chain scroll to the page behind */
 }
 [data-mode="dark"] .sheet { background: var(--card); }
@@ -933,8 +958,9 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
    break sticky footers / form editing. */
 body.sheet-open { overflow: hidden; }
 body.sheet-open .appshell .stage { overflow: hidden; }
-@keyframes up { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
+@keyframes up { from { transform: translateY(24px); opacity: .72; } to { transform: none; opacity: 1; } }
+@keyframes scrim-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sheet, .sheet-scrim { animation: none; } }
 .sheet { position: relative; }
 .sheetclose {
   position: absolute; top: 16px; right: var(--page-gutter); z-index: 2;
@@ -1206,7 +1232,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   background: var(--si); color: var(--color-black);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   box-shadow: none;
-  transition: transform .08s;
+  transition: transform var(--motion-fast) var(--motion-ease-out);
   /* It's a Link on the You tab and a button on /app; the link one was
      shipping with a default underline. */
   text-decoration: none; border: none; cursor: pointer;
@@ -1718,7 +1744,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   display: flex; align-items: center; max-width: calc(100vw - 32px);
   background: var(--ink); color: #fff; font-size: 13px; font-weight: 600;
   padding: 11px 16px; border-radius: 16px; opacity: 0; pointer-events: none;
-  transition: opacity .2s, transform .2s; z-index: 60;
+  transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-out); z-index: 60;
 }
 .toast-msg { min-width: 0; line-height: 1.3; overflow-wrap: anywhere; }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1945,7 +1971,7 @@ button.bl-band { cursor: pointer; }
 .screen.hasnav .brandbar.social-brandbar {
   position: sticky; top: 0; z-index: 40; justify-content: center; min-height: 66px;
   border-bottom: 1px solid var(--line);
-  transition: transform .22s ease; will-change: transform;
+  transition: transform var(--motion-base) var(--motion-ease-out); will-change: transform;
 }
 .screen.hasnav .brandbar.social-brandbar.is-hidden { transform: translateY(calc(-100% - env(safe-area-inset-top))); pointer-events:none; }
 .social-brandbar-logo { position: static; margin-right: auto; transform: none; }
@@ -3223,7 +3249,7 @@ button.ps-card { cursor: pointer; }
 .avact-ic {
   width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
   background: var(--card); color: var(--ink); box-shadow: var(--soft-shadow);
-  transition: transform .08s;
+  transition: transform var(--motion-fast) var(--motion-ease-out);
 }
 .avact-ic.on { background: var(--go); color: #fff; }
 @keyframes fadeIn { from { opacity: 0; } }
@@ -3305,7 +3331,7 @@ button.ps-card { cursor: pointer; }
   padding: 15px 22px; border-radius: var(--button-radius); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   background: var(--card); color: var(--ink); border: 1px solid var(--ink);
-  transition: transform .08s;
+  transition: transform var(--motion-fast) var(--motion-ease-out);
 }
 .classsheet-add:active { transform: scale(.97); }
 .classsheet-add.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -3516,7 +3542,7 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; text-decoration: none; padding: 8px 16px; border-radius: 999px;
   background: var(--ink); color: var(--paper);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px;
-  transition: transform .08s;
+  transition: transform var(--motion-fast) var(--motion-ease-out);
 }
 .pub-hero .pubtop-login { background: #fff; color: var(--ink); }
 .pubtop-login:active { transform: scale(.97); }
@@ -3698,7 +3724,7 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   padding: 13px 22px; border-radius: 999px; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
-  transition: transform .08s;
+  transition: transform var(--motion-fast) var(--motion-ease-out);
   border: 1px solid var(--line); background: transparent; color: var(--ink);
 }
 .actpill-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -3716,7 +3742,7 @@ button.ps-card { cursor: pointer; }
   70% { transform: scale(.96); }
   100% { transform: scale(1); }
 }
-.followpill.pop { animation: folpop .42s cubic-bezier(.34, 1.56, .64, 1); }
+.followpill.pop { animation: folpop .42s var(--motion-ease-spring); }
 @media (prefers-reduced-motion: reduce) {
   .followpill.pop { animation: none; }
 }
@@ -3953,10 +3979,10 @@ select.editinput.placekind-select {
      that forgot to leave. Sub-sheets portal to the body and stay above. */
   position: fixed; inset: 0; z-index: 46; overflow-y: auto; background: var(--paper);
   padding: calc(10px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
-  animation: slideUpIn .32s cubic-bezier(.22, .8, .28, 1);
+  animation: slideUpIn var(--motion-slow) var(--motion-ease-out);
 }
 /* reached via a back tap: slide in from the left instead of up */
-.acctwrap.acct-from-left { animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
+.acctwrap.acct-from-left { animation: slideInLeft var(--motion-slow) var(--motion-ease-out); }
 /* returning from the public preview: the account is simply already there */
 .acctwrap.acct-noanim { animation: none; }
 .acctwrap > * { max-width: 660px; margin-left: auto; margin-right: auto; }
@@ -4808,7 +4834,7 @@ select.editinput.placekind-select {
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--cl); color: var(--ink);
   border: 0; box-shadow: none;
-  transition: transform .08s;
+  transition: transform var(--motion-fast) var(--motion-ease-out);
 }
 .evback:active { transform: scale(.93); }
 .evwrap {
@@ -4930,16 +4956,16 @@ select.editinput.placekind-select {
    and tapping your own tab is not a journey; the fade just says the content
    changed. Short on purpose: at .3s a fade reads as loading, at .16s it
    reads as response. */
-.page-slide { min-height: 100dvh; animation: pageFade .16s ease-out; }
+.page-slide { min-height: 100dvh; animation: pageFade var(--motion-fast) var(--motion-ease-out); }
 @keyframes pageFade { from { opacity: 0; } to { opacity: 1; } }
 /* Switching tabs within one profile: the header above is identical, so nothing
    moves at all. Even a fade there would flicker the parts that didn't change. */
 .page-slide.no-slide { animation: none; }
-.page-slide.from-left { animation: pageFade .16s ease-out; }
-.page-slide.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
+.page-slide.from-left { animation: pageFade var(--motion-fast) var(--motion-ease-out); }
+.page-slide.exit-right { animation: slideOutRight var(--motion-base) var(--motion-ease-in) forwards; }
 /* The tabbed screens' content, same fade. The chrome around it lives in the
    layout and never re-mounts, so only the list swaps. */
-.tab-fade { animation: pageFade .16s ease-out; }
+.tab-fade { animation: pageFade var(--motion-fast) var(--motion-ease-out); }
 
 @media (prefers-reduced-motion: reduce) {
   .acctwrap, .acctwrap.acct-from-left,
@@ -5250,7 +5276,7 @@ select.editinput.placekind-select {
 .confirm-modal {
   background: var(--card); color: var(--ink); width: 100%; max-width: 360px;
   border-radius: var(--radius-control); padding: 24px 22px calc(22px + env(safe-area-inset-bottom));
-  box-shadow: var(--soft-shadow-lg); text-align: center; animation: up .18s ease;
+  box-shadow: var(--soft-shadow-lg); text-align: center; animation: up var(--motion-base) var(--motion-ease-out);
 }
 .confirm-modal h3 {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 20px;
@@ -5310,13 +5336,13 @@ select.editinput.placekind-select {
 /* iOS-style switch (dark-mode row, and reusable) */
 .switch {
   flex-shrink: 0; width: 46px; height: 28px; border-radius: 999px; background: var(--sa);
-  position: relative; transition: background .18s ease;
+  position: relative; transition: background var(--motion-base) var(--motion-ease-standard);
 }
 .switch.on { background: var(--go); }
 .switch-knob {
   position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 999px;
   background: #fff; box-shadow: none; border: 1px solid var(--line);
-  transition: transform .18s ease, background .18s ease;
+  transition: transform var(--motion-base) var(--motion-ease-out), background var(--motion-base) var(--motion-ease-standard);
 }
 
 .switch.on .switch-knob { transform: translateX(18px); }
@@ -5930,8 +5956,8 @@ select.editinput.placekind-select {
    app no longer needs a look of its own: the browser adopted it, by Matt's
    call, when the card layout landed. What survives of the old standalone
    block is the two rules that were about behaviour rather than dress. */
-.navtab { transition: background .18s ease, opacity .18s ease; }
-.navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.navtab { transition: background var(--motion-fast) var(--motion-ease-standard), opacity var(--motion-fast) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-out); }
+.navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); transform: scale(.96); }
 [data-mode="dark"] .navbar {
   box-shadow: none;
 }
@@ -6919,7 +6945,7 @@ select.editinput.placekind-select {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 14px;
   opacity: 0; transform: translateX(-50%) translateY(-8px);
-  pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+  pointer-events: none; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-out);
 }
 .favtoast.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
 .favtoast-link { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
@@ -7711,7 +7737,7 @@ select.editinput.placekind-select {
   height: 42px; border-radius: 999px; padding: 0 8px;
   display: flex; align-items: center; justify-content: center; gap: 4px;
   background: none; color: var(--ink); border: none;
-  transition: transform .08s;
+  transition: transform var(--motion-fast) var(--motion-ease-out);
 }
 /* Quiet: the class name stays the loudest thing on the row, and a column of
    these down a long list has to read as a control rather than as copy. */
@@ -8737,7 +8763,9 @@ select.editinput.placekind-select {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
   width: 78px; background: none; border: 0; padding: 0; cursor: pointer;
   text-decoration: none;
+  transition: transform var(--motion-fast) var(--motion-ease-out), opacity var(--motion-fast) var(--motion-ease-standard);
 }
+.trayitem:active { transform: scale(.96); }
 /* 72: it went up to 80 for a build and came back down a step, by Matt's
    call, so the circles read as a rail over the list rather than the list.
    Four fit 390px with a fifth peeking, which still says the row scrolls. */
@@ -8807,7 +8835,7 @@ select.editinput.placekind-select {
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
 .following-head {
-  padding: 4px 0 6px;
+  padding: 4px 0 0;
 }
 .following-head .trayitem { border:0; padding:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
 .social-schedule-switch {
@@ -9789,7 +9817,7 @@ select.editinput.placekind-select {
 .sheet.sheet-full.peeksheet {
   width:100%; height:min(88dvh,780px); max-height:88dvh; padding-top:24px;
   border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
-  animation:peek-sheet-up .3s cubic-bezier(.22,.82,.28,1);
+  animation:peek-sheet-up var(--motion-slow) var(--motion-ease-out);
 }
 @keyframes peek-sheet-up {
   from { transform:translateY(100%); opacity:.92; }
@@ -10924,7 +10952,7 @@ a.clspeek-by:active { opacity: .6; }
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   backdrop-filter: blur(16px) saturate(160%);
   opacity: 0; transform: translateY(-8px); pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
+  transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-out);
 }
 .scrollhead.on { opacity: 1; transform: none; pointer-events: auto; }
 .scrollhead-row {
@@ -11065,7 +11093,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-drawer {
   width:min(84vw,360px); min-height:100%; padding:calc(18px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
   overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; background:var(--paper); color:var(--ink);
-  border-radius:28px 0 0 28px; box-shadow:-10px 0 28px rgba(0,0,0,.12); animation:calendar-drawer-in .24s ease-out both;
+  border-radius:28px 0 0 28px; box-shadow:-10px 0 28px rgba(0,0,0,.12); animation:calendar-drawer-in var(--motion-slow) var(--motion-ease-out) both;
 }
 @keyframes calendar-drawer-in { from { transform:translateX(100%); } to { transform:translateX(0); } }
 .calendar-drawer-head { min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:16px; }

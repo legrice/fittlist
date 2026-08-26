@@ -153,7 +153,7 @@ export function AuthFlow({
   inviter = null,
   claimAs = "coach",
   fans = false,
-  landing = "/calendar",
+  landing = "/feed",
 }: {
   startStage: "email" | "claim";
   via?: string | null;

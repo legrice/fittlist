@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "fittlist",
     description:
       "Coaches share one schedule. Members follow once and never miss a class.",
-    start_url: "/calendar",
+    start_url: "/feed",
     scope: "/",
     display: "standalone",
     orientation: "portrait",

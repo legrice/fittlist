@@ -124,7 +124,7 @@ export function OnboardingWizard({
       }
       await setTeaching(teach);
       await completeOnboarding();
-      router.push("/calendar");
+      router.push("/feed");
       router.refresh();
     });
   };

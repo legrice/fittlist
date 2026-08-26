@@ -17,7 +17,7 @@ export default async function WelcomePage() {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!user?.handle) redirect("/");
-  if (user.onboardedAt) redirect("/calendar");
+  if (user.onboardedAt) redirect("/feed");
 
   return (
     <OnboardingWizard
