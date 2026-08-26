@@ -140,7 +140,9 @@ export function ShareHubScreen({
     null | "dates" | "classes" | "message" | "layout" | "deco" | "color"
   >(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const [shareCapabilityKnown, setShareCapabilityKnown] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
+  const [nativeShareAvailable, setNativeShareAvailable] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [preparedShare, setPreparedShare] = useState<{ url: string; file: File } | null>(null);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -275,6 +277,12 @@ export function ShareHubScreen({
         typeof navigator.share === "function" &&
         typeof navigator.canShare === "function",
     );
+    setNativeShareAvailable(
+      !!(window as typeof window & {
+        webkit?: { messageHandlers?: { fittlistShareTarget?: unknown } };
+      }).webkit?.messageHandlers?.fittlistShareTarget,
+    );
+    setShareCapabilityKnown(true);
     setPageHost(window.location.host);
   }, []);
 
@@ -368,11 +376,12 @@ export function ShareHubScreen({
 
   // Safari requires navigator.share to begin in the tap's user-activation
   // window. Preparing the PNG after the tap can take long enough to lose that
-  // window, so warm the currently visible subject once the editor settles.
+  // window, so prepare the currently visible subject as soon as it changes.
   useEffect(() => {
     if (seg === "text") return;
     const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
+    setPreparedShare(null);
+    void (async () => {
       try {
         const response = await fetch(activeShareUrl, { signal: controller.signal });
         if (!response.ok) return;
@@ -384,11 +393,8 @@ export function ShareHubScreen({
       } catch (error) {
         if ((error as Error)?.name !== "AbortError") setPreparedShare(null);
       }
-    }, 400);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
+    })();
+    return () => controller.abort();
   }, [activeShareFile, activeShareUrl, seg]);
 
   const rangeLabel =
@@ -452,8 +458,20 @@ export function ShareHubScreen({
 
   const imageShareActions = (url: string, file: string, failWord: string) => (
     <div className="shcta">
-      <button className="btn si" disabled={sharing} onClick={() => shareImage(url, file, failWord)}>
-        {sharing ? "Opening share sheet..." : "Share"}
+      <button
+        className="btn si"
+        disabled={
+          sharing ||
+          !shareCapabilityKnown ||
+          (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url)
+        }
+        onClick={() => shareImage(url, file, failWord)}
+      >
+        {sharing
+          ? "Opening share sheet..."
+          : !shareCapabilityKnown || (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url)
+            ? "Preparing..."
+            : "Share"}
       </button>
     </div>
   );
