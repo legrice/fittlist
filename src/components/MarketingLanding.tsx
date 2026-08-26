@@ -172,7 +172,6 @@ export function MarketingLanding({
       </section>
 
       <section className={styles.finalCta}>
-        <span className={styles.finalMark} aria-hidden="true" />
         <h2>Ready when<br />you are.</h2>
         <Link href="/?join=signup" className={styles.primary}>Get started</Link>
       </section>
