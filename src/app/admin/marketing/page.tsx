@@ -55,18 +55,18 @@ export default async function MarketingPreviewPage() {
           <div className={styles.heroPhone} aria-hidden="true">
             <div className={styles.phoneStatus}><span>9:41</span><span>● ● ●</span></div>
             <div className={styles.phoneBrand}><span className={styles.phoneMark} /><strong>FittList</strong></div>
-            <div className={styles.phoneRail}>
-              <span className={styles.phoneAdd}><b>+</b><small>Add</small></span>
-              <span><b>MC</b><small>Maya</small></span>
-              <span><b>JL</b><small>Jordan</small></span>
-              <span><b>SR</b><small>Sam</small></span>
+            <div className={styles.phoneIdentity}>
+              <b>MC</b>
+              <span><strong>Maya Cole</strong><small>Coach · 4 studios</small></span>
+              <i>+</i>
             </div>
             <div className={styles.phoneSchedule}>
               <h3>Today</h3>
-              <div><i data-tone="mint">M</i><span><strong>Evening Flow</strong><small>Northline Yoga · Maya Cole</small></span><time>6:00pm</time></div>
-              <div><i data-tone="blue">J</i><span><strong>Strength Circuit</strong><small>Harbor Athletic Club · Jordan Lee</small></span><time>7:00pm</time></div>
+              <div><i data-tone="mint">N</i><span><strong>Evening Flow</strong><small>Northline Yoga</small></span><time>6:00pm</time></div>
+              <div><i data-tone="blue">H</i><span><strong>Strength Circuit</strong><small>Harbor Athletic Club</small></span><time>7:00pm</time></div>
               <h3>Tomorrow</h3>
-              <div><i data-tone="amber">S</i><span><strong>Mobility Lab</strong><small>Common Ground Studio · Sam Rivera</small></span><time>8:00am</time></div>
+              <div><i data-tone="amber">C</i><span><strong>Mobility Lab</strong><small>Common Ground Studio</small></span><time>8:00am</time></div>
+              <div><i data-tone="plum">M</i><span><strong>Power Hour</strong><small>Motive House</small></span><time>5:30pm</time></div>
             </div>
           </div>
         </div>
