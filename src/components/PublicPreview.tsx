@@ -16,12 +16,10 @@ type Intent = {
   entity?: PublicPreviewEntity;
 };
 
-const intentFor = (kind: "save" | "follow" | "join" | "add" | "notifications", name?: string, entity?: PublicPreviewEntity): Intent => {
+const intentFor = (kind: "save" | "follow" | "add", name?: string, entity?: PublicPreviewEntity): Intent => {
   if (kind === "save") return { title: `Save ${name ?? "this class"}`, body: "Create your FittList to keep classes together and get back to them quickly.", next: "/calendar" };
   if (kind === "follow") return { title: `Follow ${name ?? "this calendar"}`, body: "Create your FittList to keep this schedule close and see its updates.", next: "/calendar", entity };
-  if (kind === "join") return { title: `Join ${name ?? "this group"}`, body: "Create your FittList to join the community and receive its updates.", next: "/groups", entity };
-  if (kind === "add") return { title: "Build your calendar", body: "Create your FittList to publish classes, manage a studio, or keep your own fitness schedule.", next: "/calendar" };
-  return { title: "Stay in the loop", body: "Create your FittList to receive schedule, class, and community updates.", next: "/notifications" };
+  return { title: "Build your calendar", body: "Create your FittList to publish classes, manage a studio, or keep your own fitness schedule.", next: "/calendar" };
 };
 
 function Avatar({ entity, size = 48 }: { entity: Pick<PublicPreviewEntity, "name" | "photo" | "color" | "kind">; size?: number }) {
@@ -32,18 +30,17 @@ function Avatar({ entity, size = 48 }: { entity: Pick<PublicPreviewEntity, "name
   );
 }
 
-function EntityCard({ entity, onIntent }: { entity: PublicPreviewEntity; onIntent: (intent: Intent) => void }) {
-  const isGroup = entity.kind === "group";
+function StudioCard({ entity, onIntent }: { entity: PublicPreviewEntity; onIntent: (intent: Intent) => void }) {
   return (
-    <article className={`${styles.placeCard} ${isGroup ? styles.groupCard : styles.studioCard}`}>
-      <Link href={entity.href} aria-label={`View ${entity.name}`}><Avatar entity={entity} size={62} /></Link>
+    <article className={styles.studioCard}>
+      <Link href={entity.href} className={styles.studioImage} aria-label={`View ${entity.name}`} style={{ background: entity.color }}>
+        {entity.photo ? <img src={entity.photo} alt="" width="64" height="48" loading="lazy" decoding="async" /> : initialOf(entity.name)}
+      </Link>
       <div className={styles.placeCopy}>
         <Link href={entity.href}>{entity.name}</Link>
-        <span>{isGroup ? "Fitness group" : "Studio"}</span>
+        <span>Studio</span>
       </div>
-      <button type="button" onClick={() => onIntent(intentFor(isGroup ? "join" : "follow", entity.name, entity))}>
-        {isGroup ? "Join" : "Follow"}
-      </button>
+      <button type="button" onClick={() => onIntent(intentFor("follow", entity.name, entity))}>Follow</button>
     </article>
   );
 }
@@ -109,7 +106,7 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
           {!!studios.length && (
             <section className={styles.railSection}>
               <div className={styles.sectionHead}><h2>Local studios</h2><Link href="/?join=signup">See more</Link></div>
-              <div className={styles.placeRail}>{studios.map((entity) => <EntityCard key={entity.key} entity={entity} onIntent={setIntent} />)}</div>
+              <div className={styles.placeRail}>{studios.map((entity) => <StudioCard key={entity.key} entity={entity} onIntent={setIntent} />)}</div>
             </section>
           )}
         </div>
@@ -117,7 +114,7 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
 
       <section id={hasDirectory ? undefined : "near"} className={styles.schedule}>
         <div className={styles.sectionHead}>
-          <div><p className={styles.kicker}>Public schedules</p><h2>Coming up</h2></div>
+          <h2>Upcoming classes</h2>
           <button type="button" className={styles.addButton} onClick={() => setIntent(intentFor("add"))}><Icon name="add" size={20} /> Add yours</button>
         </div>
         {data.classes.length ? days.map((iso) => {
@@ -154,12 +151,6 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
         <p>Share a live schedule, manage studio shifts, or keep the calendars you care about close.</p>
         <button className={styles.closerCta} type="button" onClick={() => setIntent(intentFor("add"))}>Get started</button>
       </section>
-
-      <nav className={styles.mobileNav} aria-label="Preview navigation">
-        <a href="#top"><Icon name="calendar_month" /><span>Calendar</span></a>
-        <a href="#near"><Icon name="search" /><span>Discover</span></a>
-        <button type="button" onClick={() => setIntent(intentFor("notifications"))}><Icon name="notifications" /><span>Updates</span></button>
-      </nav>
 
       {intent && (
         <div className={styles.scrim} role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIntent(null)}>

@@ -1,11 +1,10 @@
-.page{min-height:100vh;background:var(--ground);color:var(--ink);padding-bottom:96px}
+.page{min-height:100vh;background:var(--ground);color:var(--ink);padding-bottom:40px}
 .header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1180px)/2));border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--ground) 92%,transparent);position:sticky;top:0;z-index:20;backdrop-filter:blur(18px)}
 .headerActions{display:flex;align-items:center;gap:10px}
 .signIn,.primary,.loginLink{text-decoration:none}
 .signIn{color:var(--ink);font-weight:700;padding:11px 15px}
 .primary{background:var(--color-action)!important;color:var(--color-black)!important;font-weight:800;border-radius:999px;padding:12px 20px;display:inline-flex;justify-content:center;align-items:center;border:0;white-space:nowrap}
 .hero{max-width:1180px;margin:0 auto;padding:72px 24px 52px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:72px;align-items:flex-end}
-.kicker{text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:800;color:var(--muted);margin:0 0 12px}
 .hero h1{font-size:clamp(44px,5.4vw,72px);line-height:1.02;letter-spacing:-.035em;max-width:760px;margin:0;text-wrap:balance}
 .lede{font-size:20px;line-height:1.45;color:var(--muted);max-width:650px;margin:24px 0 0}
 .location{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:14px;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:9px}
@@ -31,20 +30,17 @@
 .entity button{background:transparent;border:1px solid var(--line);padding:6px 11px;font-size:12px;color:var(--ink)}
 .placeRail{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}
 .placeRail::-webkit-scrollbar{display:none}
-.placeCard{flex:0 0 278px;display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
-.placeCard>a:first-child{display:block;height:62px}
-.placeCard .avatar{width:62px!important;height:62px!important}
-.studioCard .avatar{border-radius:14px}
-.groupCard .avatar{border-radius:50%}
-.placeCopy{display:flex;flex-direction:column;min-width:0}
-.placeCopy a{font-weight:800;color:var(--ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.placeCopy span{font-size:13px;color:var(--muted)}
-.placeCard button{background:transparent;border:1px solid var(--line);padding:7px 11px;font-size:12px;color:var(--ink)}
+.studioCard{flex:0 0 112px;text-align:center;display:grid;grid-template-rows:48px 44px 32px;justify-items:center;align-items:start;gap:8px}
+.studioImage{width:64px;height:48px;border-radius:10px;overflow:hidden;display:grid;place-items:center;color:#fff;font-weight:850;text-decoration:none}
+.studioImage img{width:100%;height:100%;object-fit:cover;display:block}
+.placeCopy{display:flex;flex-direction:column;align-items:center;min-width:0}
+.placeCopy a{width:112px;font-weight:800;color:var(--ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.placeCopy span{font-size:12px;color:var(--muted)}
+.studioCard button{border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:800;border-radius:999px;padding:6px 11px;font-size:12px;cursor:pointer}
 .schedule{padding-top:46px}
-.kicker{margin-bottom:5px}
 .addButton{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 15px;font:inherit;font-weight:800;cursor:pointer}
 .day{margin:0 0 38px}
-.day h3{font-size:26px;letter-spacing:-.035em;margin:0 0 14px}
+.day h3{font-size:22px;letter-spacing:-.025em;margin:0 0 14px}
 .classRow{display:grid;grid-template-columns:minmax(0,1fr) 86px 42px;align-items:center;gap:16px;padding:10px 0}
 .classMain{display:flex;align-items:center;gap:15px;color:var(--ink);text-decoration:none;min-width:0}
 .classCopy{display:flex;flex-direction:column;min-width:0}
@@ -60,7 +56,6 @@
 .closer h2{font-size:40px;letter-spacing:-.045em;margin:0}
 .closer p{color:rgba(255,255,255,.7);font-size:18px;margin:12px auto 24px;max-width:620px}
 .closerCta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:0;border-radius:999px;background:var(--color-action);color:var(--color-black);font:inherit;font-weight:800;cursor:pointer}
-.mobileNav{display:none}
 .scrim{position:fixed;inset:0;background:rgba(2,13,8,.58);z-index:100;display:grid;place-items:center;padding:20px}
 .prompt{width:min(440px,100%);background:var(--card);border-radius:28px;padding:26px;position:relative;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.26)}
 .promptMark{display:flex;justify-content:center;margin:18px 0 22px}
@@ -73,7 +68,7 @@
 .loginLink span{color:var(--muted);font-weight:500}
 .close{position:absolute;top:18px;right:18px}
 
-@media(max-width:760px){.page{padding-bottom:112px}
+@media(max-width:760px){.page{padding-bottom:32px}
 .header{height:72px;padding:0 20px}
 .hero{display:block;padding:42px 20px 34px}
 .hero h1{font-size:42px;line-height:1.03;letter-spacing:-.03em}
@@ -84,8 +79,8 @@
 .railSection{padding-top:14px}
 .sectionHead h2{font-size:22px}
 .rail{gap:18px}
-.placeCard{flex-basis:min(278px,82vw)}
 .schedule{padding-top:34px}
+.day h3{font-size:20px}
 .classRow{grid-template-columns:minmax(0,1fr) 65px 38px;gap:8px;padding:12px 0}
 .classMain{gap:12px}
 .classMain>.avatar{width:54px!important;height:54px!important}
@@ -95,8 +90,6 @@
 .save{width:38px;height:38px}
 .closer{margin:40px 20px 0;border-radius:24px;padding:44px 22px}
 .closer h2{font-size:32px}
-.mobileNav{position:fixed;display:flex;left:0;right:0;bottom:0;height:76px;background:color-mix(in srgb,var(--card) 94%,transparent);border-top:1px solid var(--line);z-index:30;backdrop-filter:blur(18px);justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}
-.mobileNav a,.mobileNav button{appearance:none;border:0;background:transparent;color:var(--ink);text-decoration:none;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;font:inherit;font-size:11px;font-weight:750}
 .prompt{align-self:end;border-radius:28px 28px 0 0;padding-bottom:max(30px,env(safe-area-inset-bottom))}
 .scrim{padding:0}
 }
