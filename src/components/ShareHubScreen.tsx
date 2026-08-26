@@ -142,6 +142,7 @@ export function ShareHubScreen({
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [preparedShare, setPreparedShare] = useState<{ url: string; file: File } | null>(null);
   const [pageHost, setPageHost] = useState("fittlist.co");
   // One buster per visit, bumped after an add: the week changes behind the
   // picture the moment a class lands, and a cached preview of the week
@@ -362,6 +363,33 @@ export function ShareHubScreen({
       : `fittlist-${handle}-card.png`;
   const qrUrl = `/api/qr/${handle}`;
   const qrFileName = `fittlist-${handle}-qr.png`;
+  const activeShareUrl = seg === "qr" ? qrUrl : imgUrl;
+  const activeShareFile = seg === "qr" ? qrFileName : fileName;
+
+  // Safari requires navigator.share to begin in the tap's user-activation
+  // window. Preparing the PNG after the tap can take long enough to lose that
+  // window, so warm the currently visible subject once the editor settles.
+  useEffect(() => {
+    if (seg === "text") return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(activeShareUrl, { signal: controller.signal });
+        if (!response.ok) return;
+        const blob = await response.blob();
+        setPreparedShare({
+          url: activeShareUrl,
+          file: new File([blob], activeShareFile, { type: blob.type || "image/png" }),
+        });
+      } catch (error) {
+        if ((error as Error)?.name !== "AbortError") setPreparedShare(null);
+      }
+    }, 400);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [activeShareFile, activeShareUrl, seg]);
 
   const rangeLabel =
     days === 1 ? `${wday(from)}, ${short(from)}` : `${short(from)} to ${short(plusDays(from, days - 1))}`;
@@ -373,7 +401,7 @@ export function ShareHubScreen({
     a.click();
   };
 
-  const nativeShare = async (url: string, file: string) => {
+  const nativeShare = (url: string, file: string) => {
     const handler = (window as typeof window & {
       webkit?: { messageHandlers?: { fittlistShareTarget?: { postMessage: (body: unknown) => void } } };
     }).webkit?.messageHandlers?.fittlistShareTarget;
@@ -389,7 +417,18 @@ export function ShareHubScreen({
     if (sharing) return;
     setSharing(true);
     try {
-      if (await nativeShare(url, file)) return;
+      if (nativeShare(url, file)) return;
+      if (
+        canShareFiles &&
+        preparedShare?.url === url &&
+        navigator.canShare({ files: [preparedShare.file] })
+      ) {
+        await navigator.share({
+          files: [preparedShare.file],
+          title: "Share your FittList",
+        });
+        return;
+      }
       if (canShareFiles) {
         const res = await fetch(url);
         if (res.ok) {
