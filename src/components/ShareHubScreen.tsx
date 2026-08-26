@@ -585,9 +585,9 @@ export function ShareHubScreen({
         {!building && seg === "qr" && imageShareActions(qrUrl, qrFileName, "QR code")}
 
         {!building && (seg === "week" || seg === "profile") && (
-          <>
-            {seg === "week" && (
-              <div className="shctrls">
+          <div className="shctrls">
+            {seg === "week" ? (
+              <>
                 {/* The rail of what the picture says: its range, its roster,
                     its words. Each chip is a small labelled door to a sheet.
                     A member's rail leads with the add in brand, by Matt's
@@ -659,10 +659,14 @@ export function ShareHubScreen({
                     {DECOS.find((d) => d.id === decoId)?.label ?? "Top bar"}
                   </span>
                 </button>
-              </div>
+              </>
+            ) : (
+              <button className="shctrl" onClick={() => setPick("color")}>
+                <span className="shctrl-k">Color</span>
+                <span className="shctrl-v">{STORY_THEMES[themeId].label}</span>
+              </button>
             )}
-
-          </>
+          </div>
         )}
 
         {seg === "text" && (
