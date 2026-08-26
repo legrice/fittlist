@@ -5,7 +5,8 @@ import { classAddress, publicFeedSchedules } from "@/lib/coachweek";
 import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 
 export const DEFAULT_PREVIEW_CITY = "Jersey City, NJ";
-const PREVIEW_DAYS = 14;
+const PREVIEW_DAYS = 31;
+const PREVIEW_CLASS_LIMIT = 48;
 
 export type PublicPreviewClass = {
   key: string;
@@ -26,6 +27,32 @@ export type PublicPreviewData = {
   cities: string[];
   classes: PublicPreviewClass[];
 };
+
+/** Keep the anonymous preview broad as well as busy. A straight slice lets a
+ * crowded first few days consume the entire payload, so take one class from
+ * each active day before taking a second, third, and so on. The result is then
+ * returned in calendar order for rendering. */
+function spreadAcrossDays(items: PublicPreviewClass[], limit: number) {
+  const byDay = new Map<string, PublicPreviewClass[]>();
+  for (const item of items) {
+    const day = byDay.get(item.iso);
+    if (day) day.push(item);
+    else byDay.set(item.iso, [item]);
+  }
+  const selected: PublicPreviewClass[] = [];
+  for (let depth = 0; selected.length < limit; depth += 1) {
+    let found = false;
+    for (const day of byDay.values()) {
+      const item = day[depth];
+      if (!item) continue;
+      found = true;
+      selected.push(item);
+      if (selected.length === limit) break;
+    }
+    if (!found) break;
+  }
+  return selected.sort((a, b) => a.iso.localeCompare(b.iso) || a.at - b.at || a.name.localeCompare(b.name));
+}
 
 const { image: _image, ...classColumns } = getTableColumns(schema.classes);
 
@@ -161,6 +188,6 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
   return {
     city,
     cities,
-    classes: occurrences.slice(0, 18),
+    classes: spreadAcrossDays(occurrences, PREVIEW_CLASS_LIMIT),
   };
 }
