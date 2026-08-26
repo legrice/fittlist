@@ -1,10 +1,11 @@
-import { and, eq, getTableColumns, ilike, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, getTableColumns, gte, ilike, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { classAddress, publicFeedSchedules } from "@/lib/coachweek";
 import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 
 export const DEFAULT_PREVIEW_CITY = "Jersey City, NJ";
+const DEFAULT_PREVIEW_POINT = { lat: 40.7178, lng: -74.0435 };
 const PREVIEW_DAYS = 31;
 const PREVIEW_CLASS_LIMIT = 48;
 
@@ -66,7 +67,7 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
   const db = await getDb();
   const cityLike = `%${city.split(",")[0]?.trim() || city}%`;
 
-  const [coachRows, cityStudios, cityRows] = await Promise.all([
+  const [coachRows, cityRows, selectedCityPoints] = await Promise.all([
     db
       .select({
         id: schema.users.id,
@@ -86,36 +87,69 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
       ))
       .limit(36),
     db
-      .select({
-        id: schema.studios.id,
-        slug: schema.studios.slug,
-        name: schema.studios.name,
-        address: schema.studios.address,
-        photo: schema.studios.photo,
-        accountUserId: schema.studios.accountUserId,
-      })
-      .from(schema.studios)
-      .where(and(isNotNull(schema.studios.slug), ilike(schema.studios.address, cityLike)))
-      .limit(24),
-    db
       .selectDistinct({ location: schema.users.location })
       .from(schema.users)
       .where(and(eq(schema.users.discoverable, true), isNotNull(schema.users.location)))
       .limit(40),
+    db
+      .select({ lat: schema.users.locationLat, lng: schema.users.locationLng })
+      .from(schema.users)
+      .where(and(
+        eq(schema.users.discoverable, true),
+        ilike(schema.users.location, cityLike),
+        isNotNull(schema.users.locationLat),
+        isNotNull(schema.users.locationLng),
+      ))
+      .limit(1),
   ]);
+
+  const selectedPoint = selectedCityPoints[0]?.lat != null && selectedCityPoints[0]?.lng != null
+    ? { lat: selectedCityPoints[0].lat, lng: selectedCityPoints[0].lng }
+    : city.toLowerCase() === DEFAULT_PREVIEW_CITY.toLowerCase()
+      ? DEFAULT_PREVIEW_POINT
+      : null;
+  const studioArea = selectedPoint
+    ? or(
+        ilike(schema.studios.address, cityLike),
+        and(
+          gte(schema.studios.lat, selectedPoint.lat - 0.08),
+          lte(schema.studios.lat, selectedPoint.lat + 0.08),
+          gte(schema.studios.lng, selectedPoint.lng - 0.1),
+          lte(schema.studios.lng, selectedPoint.lng + 0.1),
+        ),
+      )
+    : ilike(schema.studios.address, cityLike);
+  const cityStudios = await db
+    .select({
+      id: schema.studios.id,
+      slug: schema.studios.slug,
+      name: schema.studios.name,
+      address: schema.studios.address,
+      photo: schema.studios.photo,
+      accountUserId: schema.studios.accountUserId,
+    })
+    .from(schema.studios)
+    .where(and(isNotNull(schema.studios.slug), studioArea))
+    .limit(36);
 
   const from = todayIso();
   const endDate = new Date(`${from}T00:00:00Z`);
   endDate.setUTCDate(endDate.getUTCDate() + PREVIEW_DAYS - 1);
   const through = endDate.toISOString().slice(0, 10);
   const gymIds = cityStudios.flatMap((studio) => studio.accountUserId ? [studio.accountUserId] : []);
+  const cityStudioIds = cityStudios.map((studio) => studio.id);
+  const studioScheduleScope = gymIds.length && cityStudioIds.length
+    ? or(inArray(schema.classes.userId, gymIds), inArray(schema.classes.studioId, cityStudioIds))
+    : gymIds.length
+      ? inArray(schema.classes.userId, gymIds)
+      : inArray(schema.classes.studioId, cityStudioIds);
   const [personSchedules, gymSchedules] = await Promise.all([
     coachRows.length
       ? publicFeedSchedules(coachRows.map((row) => ({ id: row.id, shiftsPublic: row.shiftsPublic })), { start: from, end: through })
       : Promise.resolve([]),
-    gymIds.length
+    gymIds.length || cityStudioIds.length
       ? db.select(classColumns).from(schema.classes).where(and(
-          inArray(schema.classes.userId, gymIds),
+          studioScheduleScope,
           eq(schema.classes.isPublic, true),
         )).then((rows) => rows.map((row) => ({ ...row, image: null })))
       : Promise.resolve([]),

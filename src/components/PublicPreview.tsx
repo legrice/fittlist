@@ -46,11 +46,11 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
 
       <section className={styles.schedule} aria-label={`Public calendar near ${data.city}`}>
         <label className={styles.citySelect}>
-          <span className="sr-only">Calendar city</span>
-          <select value={data.city} onChange={updateCity}>
+          <span className={styles.cityValue}>{data.city}</span>
+          <Icon name="expand_more" size={17} />
+          <select aria-label="Calendar city" value={data.city} onChange={updateCity}>
             {data.cities.map((city) => <option value={city} key={city}>{city}</option>)}
           </select>
-          <Icon name="expand_more" size={17} />
         </label>
         {data.classes.length ? days.map((iso) => {
           const rows = data.classes.filter((item) => item.iso === iso);
