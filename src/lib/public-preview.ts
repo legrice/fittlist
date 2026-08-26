@@ -36,7 +36,6 @@ export type PublicPreviewData = {
   classes: PublicPreviewClass[];
   coaches: PublicPreviewEntity[];
   studios: PublicPreviewEntity[];
-  groups: PublicPreviewEntity[];
 };
 
 const { image: _image, ...classColumns } = getTableColumns(schema.classes);
@@ -51,7 +50,7 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
   const db = await getDb();
   const cityLike = `%${city.split(",")[0]?.trim() || city}%`;
 
-  const [coachRows, cityStudios, publicGroups] = await Promise.all([
+  const [coachRows, cityStudios] = await Promise.all([
     db
       .select({
         id: schema.users.id,
@@ -84,23 +83,6 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
       .from(schema.studios)
       .where(and(isNotNull(schema.studios.slug), ilike(schema.studios.address, cityLike)))
       .limit(24),
-    db
-      .select({
-        id: schema.groups.id,
-        slug: schema.groups.slug,
-        name: schema.groups.name,
-        description: schema.groups.description,
-        photo: schema.groups.photo,
-        ownerUserId: schema.groups.ownerUserId,
-        ownerLocation: schema.users.location,
-        members: sql<number>`count(${schema.groupMembers.id})::int`,
-      })
-      .from(schema.groups)
-      .innerJoin(schema.users, eq(schema.users.id, schema.groups.ownerUserId))
-      .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
-      .where(and(eq(schema.groups.visibility, "public"), ilike(schema.users.location, cityLike)))
-      .groupBy(schema.groups.id, schema.users.location)
-      .limit(8),
   ]);
 
   const from = todayIso();
@@ -200,15 +182,6 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
       color: avatarColor({ id: row.id }),
       href: `/s/${row.slug}`,
       kind: "studio" as const,
-    })),
-    groups: publicGroups.map((row) => ({
-      key: `group:${row.id}`,
-      name: row.name,
-      detail: `${row.members} ${row.members === 1 ? "member" : "members"}`,
-      photo: row.photo,
-      color: avatarColor({ id: row.id }),
-      href: `/g/${row.slug}`,
-      kind: "group" as const,
     })),
   };
 }

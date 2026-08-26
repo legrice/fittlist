@@ -54,8 +54,7 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
   const [city, setCity] = useState(data.city);
   const coaches = data.coaches.slice(0, 5);
   const studios = data.studios.slice(0, 4);
-  const groups = data.groups.slice(0, 3);
-  const hasDirectory = !!(coaches.length || studios.length || groups.length);
+  const hasDirectory = !!(coaches.length || studios.length);
   const days = [...new Set(data.classes.map((item) => item.iso))];
   const authHref = (mode: "signup" | "login") => `/?join=${mode}&next=${encodeURIComponent(intent?.next ?? "/calendar")}`;
   const updateCity = (event: FormEvent<HTMLFormElement>) => {
@@ -78,7 +77,7 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
       <section className={styles.hero}>
         <div>
           <h1>Find fitness near you.</h1>
-          <p className={styles.lede}>Follow local coaches, studios, and groups. Keep every schedule in one place.</p>
+          <p className={styles.lede}>Follow local coaches and studios. Keep every schedule in one place.</p>
         </div>
         <form className={styles.location} onSubmit={updateCity}>
           <Icon name="place" size={21} />
@@ -92,12 +91,15 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
         <div id="near" className={styles.directory} aria-label={`Fitness near ${data.city}`}>
           {!!coaches.length && (
             <section className={styles.railSection}>
-              <div className={styles.sectionHead}><h2>Coaches near {data.city.split(",")[0]}</h2><Link href="/?join=signup">See more</Link></div>
+              <div className={styles.sectionHead}><h2>Local coaches</h2><Link href="/?join=signup">See more</Link></div>
               <div className={styles.rail}>
                 {coaches.map((entity) => (
                   <div className={styles.entity} key={entity.key}>
                     <Link href={entity.href} aria-label={`View ${entity.name}`}><Avatar entity={entity} size={68} /></Link>
-                    <Link href={entity.href} className={styles.entityName}>{entity.name}</Link>
+                    <div className={styles.entityCopy}>
+                      <Link href={entity.href} className={styles.entityName}>{entity.name}</Link>
+                      <span>{entity.detail}</span>
+                    </div>
                     <button type="button" onClick={() => setIntent(intentFor("follow", entity.name, entity))}>Follow</button>
                   </div>
                 ))}
@@ -106,14 +108,8 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
           )}
           {!!studios.length && (
             <section className={styles.railSection}>
-              <div className={styles.sectionHead}><h2>Studios near {data.city.split(",")[0]}</h2><Link href="/?join=signup">See more</Link></div>
+              <div className={styles.sectionHead}><h2>Local studios</h2><Link href="/?join=signup">See more</Link></div>
               <div className={styles.placeRail}>{studios.map((entity) => <EntityCard key={entity.key} entity={entity} onIntent={setIntent} />)}</div>
-            </section>
-          )}
-          {!!groups.length && (
-            <section className={styles.railSection}>
-              <div className={styles.sectionHead}><h2>Groups near {data.city.split(",")[0]}</h2><Link href="/?join=signup">See more</Link></div>
-              <div className={styles.placeRail}>{groups.map((entity) => <EntityCard key={entity.key} entity={entity} onIntent={setIntent} />)}</div>
             </section>
           )}
         </div>
