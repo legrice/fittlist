@@ -43,19 +43,20 @@ export default async function MarketingPreviewPage() {
         <Wordmark />
         <div className={styles.headerActions}>
           <Link href="/?join=login" className={styles.signIn}>Sign in</Link>
-          <Link href="/?join=signup" className={styles.headerCta}>Start your FittList</Link>
+          <Link href="/?join=signup" className={styles.headerCta}>Get started</Link>
         </div>
       </header>
 
       <section className={styles.hero}>
         <h1>Fit all of your fitness<br />into one calendar.</h1>
-        <Link href="/?join=signup" className={styles.primary}>Start your FittList</Link>
+        <Link href="/?join=signup" className={styles.primary}>Get started</Link>
         <div className={styles.heroArt} aria-label="FittList calendar on a phone">
           <span className={styles.heroLogo} aria-hidden="true" />
           <div className={styles.heroPhone} aria-hidden="true">
             <div className={styles.phoneStatus}><span>9:41</span><span>● ● ●</span></div>
             <div className={styles.phoneBrand}><span className={styles.phoneMark} /><strong>FittList</strong></div>
             <div className={styles.phoneRail}>
+              <span className={styles.phoneAdd}><b>+</b><small>Add</small></span>
               <span><b>MC</b><small>Maya</small></span>
               <span><b>JL</b><small>Jordan</small></span>
               <span><b>SR</b><small>Sam</small></span>
@@ -144,12 +145,18 @@ export default async function MarketingPreviewPage() {
       </section>
 
       <section className={styles.finalCta}>
-        <div className={styles.brandBars} aria-hidden="true"><span /><span /><span /></div>
+        <span className={styles.finalMark} aria-hidden="true" />
         <h2>Put your week<br />in motion.</h2>
         <Link href="/?join=signup" className={styles.primary}>Get started</Link>
       </section>
 
-      <footer className={styles.footer}><Wordmark /><span>Fitness, organized.</span></footer>
+      <footer className={styles.footer}>
+        <Wordmark />
+        <div className={styles.footerMeta}>
+          <span>© 2026 FittList. All rights reserved.</span>
+          <a href="mailto:hello@fittlist.co">Contact</a>
+        </div>
+      </footer>
     </main>
   );
 }
