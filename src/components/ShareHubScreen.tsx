@@ -505,7 +505,7 @@ export function ShareHubScreen({
   // state without the segments is the start block, whose one job is the
   // first add.
   const segs: { id: Seg; label: string }[] = [
-    { id: "week", label: "Week" },
+    { id: "week", label: "Schedule" },
     { id: "profile", label: "Profile" },
     { id: "qr", label: "QR code" },
     // The week as words is a subject of its own, by Matt's call: it sat
