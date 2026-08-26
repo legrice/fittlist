@@ -543,18 +543,17 @@ export function ShareHubScreen({
           </div>
         )}
         {!building && (
-          <div className="shseg" role="tablist" aria-label="What to share">
-            {segs.map((s) => (
-              <button
-                key={s.id}
-                role="tab"
-                aria-selected={seg === s.id}
-                className={`shseg-pill${seg === s.id ? " on" : ""}`}
-                onClick={() => goSeg(s.id)}
-              >
-                {s.label}
-              </button>
-            ))}
+          <div className="shseg">
+            <select
+              className="shseg-select"
+              aria-label="What to share"
+              value={seg}
+              onChange={(event) => goSeg(event.target.value as Seg)}
+            >
+              {segs.map((subject) => (
+                <option key={subject.id} value={subject.id}>{subject.label}</option>
+              ))}
+            </select>
           </div>
         )}
 

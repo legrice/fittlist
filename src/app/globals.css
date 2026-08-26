@@ -9324,17 +9324,18 @@ select.editinput.placekind-select {
   top: max(16px, env(safe-area-inset-top)); left: var(--page-gutter); right: auto;
   z-index: 3;
 }
-.calendar-share-sheet .shseg { margin-top: var(--space-1); }
+.calendar-share-sheet .shseg {
+  position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%;
+  z-index:3; margin:0; transform:translateX(-50%);
+}
 .calendar-share-sheet .sheetclose {
   background:var(--color-white); border:1px solid var(--color-border);
 }
-.calendar-share-sheet .shseg-pill,
 .calendar-share-sheet .shctrl,
 .calendar-share-sheet .btn.ghost {
   border:1px solid var(--color-border);
   background:var(--color-white);
 }
-.calendar-share-sheet .shseg-pill.on,
 .calendar-share-sheet .shctrl.shctrl-add {
   border-color:var(--color-lime);
   background:var(--color-lime);
@@ -10366,35 +10367,25 @@ a.clspeek-by:active { opacity: .6; }
 @media (max-width: 939px) and (prefers-reduced-motion: reduce) {
   .screen.hasnav:has(.shpage) .cardwrap.shpage:not(.shpage-embedded) { animation:none; }
 }
-/* One left-aligned row that scrolls off the edge: four pills wrapped to a
-   second line at 390px, and a rail reads better than a stack. */
+/* One compact subject picker in the header saves the vertical space that a
+   rail of four tabs used to occupy. Swiping the preview keeps it in sync. */
 .shseg {
-  display: flex; gap: 8px; margin-top: 16px;
-  overflow-x: auto; scrollbar-width: none;
-  justify-content: flex-start;
-  margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
-  padding-left: 18px; padding-right: 18px;
+  display:flex; justify-content:center; margin:0 auto;
 }
-.shseg::-webkit-scrollbar { display: none; }
-@media (min-width: 1100px) {
-  /* The phone rail bleeds to the viewport edges. Inside the desktop shell,
-     those edges sit behind the fixed navigation columns, so keep the tabs
-     in the same centered content column as the page title and controls. */
-  .shseg {
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
+.shseg-select {
+  min-width:150px; max-width:calc(100vw - 148px); height:var(--tap-size);
+  padding:0 34px 0 14px; border:1px solid var(--color-border);
+  border-radius:var(--radius-pill); background:var(--color-white); color:var(--ink);
+  font-family:'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size:17px; font-weight:700; text-align:center; cursor:pointer;
+}
+.shseg-select:focus { outline:2px solid var(--si); outline-offset:2px; }
+@media (max-width:939px) {
+  .cardwrap.shpage:not(.shpage-embedded) .shseg {
+    position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%;
+    z-index:20; transform:translateX(-50%);
   }
 }
-.shseg-pill { flex: 0 0 auto; white-space: nowrap; }
-.shseg-pill {
-  padding: 11px 18px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--card); color: var(--ink);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 15.5px; font-weight: 600; cursor: pointer;
-}
-.shseg-pill.on { background: var(--si); border-color: var(--si); color: var(--color-black); }
 /* The rail under the colours: Dates, Classes, Message, each a small
    labelled door to its sheet. What the picture covers, what's on it,
    what it says. It scrolls rather than splitting the width three ways:
