@@ -7,16 +7,16 @@ import { Wordmark } from "@/components/Wordmark";
 import styles from "./marketing.module.css";
 
 const sampleClasses = [
-  { day: "Today", time: "6:00pm", name: "Soul Power Yoga", place: "Asana Soul Practice" },
-  { day: "Tomorrow", time: "7:00am", name: "Guns, Buns, and Lungs", place: "Ironbound Performance Athletics" },
-  { day: "Tomorrow", time: "6:00pm", name: "Strength & Mobility", place: "Studio Arc" },
+  { day: "Today", time: "6:00pm", name: "Soul Power Yoga", place: "Asana Soul Practice", tone: "mint" },
+  { day: "Tomorrow", time: "7:00am", name: "Guns, Buns, and Lungs", place: "Ironbound Performance", tone: "blue" },
+  { day: "Tomorrow", time: "6:00pm", name: "Strength & Mobility", place: "Studio Arc", tone: "amber" },
 ];
 
 const multiStudioWeek = [
-  { day: "Mon", date: "24", time: "7:00am", name: "Soul Flow Yoga", place: "Asana Soul Practice", tone: "mint" },
-  { day: "Tue", date: "25", time: "6:00pm", name: "Strength & Mobility", place: "Ironbound Performance", tone: "blue" },
-  { day: "Thu", date: "27", time: "12:00pm", name: "Sculpt Yoga", place: "Studio Arc", tone: "amber" },
-  { day: "Sat", date: "29", time: "9:00am", name: "Hot Power Hour", place: "Powerflow Yoga", tone: "rose" },
+  { day: "Mon", time: "7:00am", name: "Soul Flow Yoga", place: "Asana Soul Practice", tone: "mint" },
+  { day: "Tue", time: "6:00pm", name: "Strength & Mobility", place: "Ironbound Performance", tone: "blue" },
+  { day: "Thu", time: "12:00pm", name: "Sculpt Yoga", place: "Studio Arc", tone: "amber" },
+  { day: "Sat", time: "9:00am", name: "Hot Power Hour", place: "Powerflow Yoga", tone: "rose" },
 ];
 
 export const dynamic = "force-dynamic";
@@ -29,33 +29,34 @@ export default async function MarketingPreviewPage() {
     <main className={styles.page} data-mode={lookMode(admin.look)}>
       <div className={styles.previewBar}>
         <Link href="/settings"><Icon name="arrow_back" size={18} /> Settings</Link>
-        <span>Private marketing preview</span>
+        <span>Private preview</span>
       </div>
 
       <header className={styles.header}>
         <Wordmark />
-        <nav aria-label="Marketing preview">
-          <a href="#coaches">For coaches</a>
-          <a href="#studios">For studios</a>
-          <a href="#community">For communities</a>
-        </nav>
         <Link href="/?join=signup" className={styles.headerCta}>Start your FittList</Link>
       </header>
 
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Your week in motion</p>
-        <h1>One calendar for your whole fitness world.</h1>
-        <p className={styles.heroCopy}>Publish a schedule, follow the people and places you train with, and keep every class close without digging through social posts.</p>
-        <div className={styles.heroActions}>
-          <Link href="/?join=signup" className={styles.primary}>Start your FittList</Link>
-          <a href="#how" className={styles.secondary}>See how it works</a>
+        <h1>All your fitness.<br />One calendar.</h1>
+        <Link href="/?join=signup" className={styles.primary}>Start your FittList</Link>
+        <div className={styles.heroArt} aria-label="FittList calendar on a phone">
+          <img src="/landing-hero.webp" alt="A FittList calendar showing classes from multiple coaches" />
+          <span className={styles.photoBarOne} aria-hidden="true" />
+          <span className={styles.photoBarTwo} aria-hidden="true" />
+          <span className={styles.photoBarThree} aria-hidden="true" />
         </div>
+      </section>
+
+      <section className={styles.proof}>
+        <p className={styles.kicker}>Your week, live</p>
+        <h2>One link.<br />Every class.</h2>
         <div className={styles.calendarDemo} aria-label="Example FittList calendar">
-          <div className={styles.demoHead}><span>This week</span><span>Jersey City</span></div>
+          <div className={styles.demoHead}><strong>This week</strong><span>Jersey City</span></div>
           {sampleClasses.map((item, index) => (
             <article key={`${item.name}-${index}`}>
               <span className={styles.demoDay}>{item.day}</span>
-              <span className={styles.demoDot} aria-hidden="true" />
+              <span className={styles.demoMark} data-tone={item.tone} aria-hidden="true" />
               <span className={styles.demoClass}><strong>{item.name}</strong><small>{item.place}</small></span>
               <time>{item.time}</time>
             </article>
@@ -63,61 +64,53 @@ export default async function MarketingPreviewPage() {
         </div>
       </section>
 
-      <section id="how" className={styles.statement}>
-        <p>Fitness schedules should be easier to find than a story highlight.</p>
-        <h2>FittList turns the classes you teach, coach, and care about into one live calendar.</h2>
-      </section>
-
-      <section id="coaches" className={styles.feature}>
-        <div className={styles.featureCopy}>
-          <span>For coaches</span>
-          <h2>Four studios. One calendar.</h2>
-          <p>Bring every place you teach into one live week. Change a class once, share one link, and let clients see exactly where and when to find you.</p>
+      <section className={styles.coachSection}>
+        <div className={styles.sectionCopy}>
+          <p className={styles.kicker}>For coaches</p>
+          <h2>Four studios.<br />One calendar.</h2>
+          <p>Teach everywhere. Share once.</p>
         </div>
-        <div className={styles.shareCard}>
-          <div className={styles.coachCardHead}>
-            <span className={styles.coachAvatar}>E</span>
-            <div><small>Erin&apos;s teaching week</small><h3>One schedule, every studio</h3></div>
+        <div className={styles.weekCard}>
+          <div className={styles.weekIdentity}>
+            <span>E</span>
+            <div><strong>Erin&apos;s week</strong><small>4 studios</small></div>
           </div>
-          <div className={styles.studioSummary}>
-            {multiStudioWeek.map((item) => <span key={item.place} data-tone={item.tone}>{item.place}</span>)}
-          </div>
-          <div className={styles.weekList}>
-            {multiStudioWeek.map((item) => (
-              <div className={styles.weekRow} key={`${item.day}-${item.time}`}>
-                <span className={styles.weekDate}><strong>{item.day}</strong><small>{item.date}</small></span>
-                <span className={styles.placeMark} data-tone={item.tone} aria-hidden="true">{item.place.slice(0, 1)}</span>
-                <span className={styles.weekClass}><strong>{item.name}</strong><small>{item.place}</small></span>
-                <time>{item.time}</time>
-              </div>
-            ))}
-          </div>
-          <span className={styles.shareButton}>Share your week <Icon name="reply" size={18} /></span>
+          {multiStudioWeek.map((item) => (
+            <div className={styles.weekRow} key={`${item.day}-${item.time}`}>
+              <span className={styles.weekDay}>{item.day}</span>
+              <span className={styles.placeMark} data-tone={item.tone} aria-hidden="true">{item.place.slice(0, 1)}</span>
+              <span className={styles.weekClass}><strong>{item.name}</strong><small>{item.place}</small></span>
+              <time>{item.time}</time>
+            </div>
+          ))}
+          <span className={styles.cardAction}>Share your week <Icon name="reply" size={18} /></span>
         </div>
       </section>
 
-      <section id="studios" className={`${styles.feature} ${styles.reverse}`}>
-        <div className={styles.featureCopy}>
-          <span>For studios</span>
-          <h2>Build the schedule. Staff it without the spreadsheet.</h2>
-          <p>Set a standard week, assign coaches, catch conflicts, cover open shifts, and give your team one source of truth.</p>
-        </div>
+      <section className={styles.studioSection}>
         <div className={styles.studioCard}>
-          <div className={styles.studioTitle}><span className={styles.studioPhoto}>I</span><div><strong>Ironbound Performance</strong><small>Studio calendar</small></div></div>
-          <div className={styles.stat}><strong>38</strong><span>classes this week</span></div>
-          <div className={styles.stat}><strong>4</strong><span>open shifts</span></div>
-          <div className={styles.task}><Icon name="check_circle" size={20} /><span>Schedule conflict protection</span></div>
+          <div className={styles.studioIdentity}><span>I</span><strong>Ironbound Performance</strong></div>
+          <div className={styles.studioStats}>
+            <p><strong>38</strong><span>Classes</span></p>
+            <p><strong>12</strong><span>Coaches</span></p>
+            <p><strong>4</strong><span>Open</span></p>
+          </div>
+          <span className={styles.clearStatus}><Icon name="check_circle" size={20} /> No conflicts</span>
+        </div>
+        <div className={styles.sectionCopy}>
+          <p className={styles.kicker}>For studios</p>
+          <h2>Build it.<br />Staff it.<br />Share it.</h2>
+          <p>One source of truth.</p>
         </div>
       </section>
 
-      <section id="community" className={styles.community}>
-        <p className={styles.eyebrow}>Made for the way fitness really spreads</p>
-        <h2>Share the class. Keep the connection.</h2>
-        <p>Instagram can help people find you. FittList gives them a place to keep the schedule, follow updates, and come back next week.</p>
+      <section className={styles.finalCta}>
+        <div className={styles.brandBars} aria-hidden="true"><span /><span /><span /></div>
+        <h2>Put your week<br />in motion.</h2>
         <Link href="/?join=signup" className={styles.primary}>Start your FittList</Link>
       </section>
 
-      <footer className={styles.footer}><Wordmark /><span>Calendar infrastructure for fitness communities.</span></footer>
+      <footer className={styles.footer}><Wordmark /><span>Fitness, organized.</span></footer>
     </main>
   );
 }
