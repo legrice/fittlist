@@ -10559,28 +10559,6 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shslide .qrcard { width: min(100%, 340px); }
 .shslide .shtext { width: min(100%, 340px); max-height: 100%; margin-top: 0; overflow-y: auto; }
-/* Compact, explicit destinations under the picture. The first three say
-   what people are likely trying to do; More is the universal native share
-   sheet for every other destination. */
-.shdest {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
-  width: min(100%, 480px); margin: 12px auto 6px;
-}
-.shdest-btn {
-  min-width: 0; padding: 4px 2px; border: 0; background: transparent;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  color: var(--ink); cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 12.5px; line-height: 1.1; font-weight: 600;
-}
-.shdest-btn:disabled { opacity: .5; cursor: wait; }
-.shdest-icon {
-  width: 44px; height: 44px; border-radius: 14px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--ink); color: var(--card);
-}
-.shdest-icon.shdest-instagram { background: var(--ink); }
-.shdest-icon.shdest-instagram svg { width: 26px; height: 26px; }
 .calendar-share-sheet .shslides {
   height: min(60dvh, 620px);
   margin-top: 4px;

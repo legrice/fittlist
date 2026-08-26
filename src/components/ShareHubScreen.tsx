@@ -17,7 +17,6 @@ import { setGoing } from "@/app/actions/going";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { Toast, useToast } from "@/components/Toast";
 import { readPhoto } from "@/lib/photo";
 
@@ -31,7 +30,6 @@ import { readPhoto } from "@/lib/photo";
 // and the page link lives with the QR code.
 //
 type Seg = "week" | "profile" | "qr" | "text";
-type ShareTarget = "instagram" | "messages" | "photo" | "more";
 
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
@@ -375,7 +373,7 @@ export function ShareHubScreen({
     a.click();
   };
 
-  const nativeShare = async (url: string, file: string, target: ShareTarget) => {
+  const nativeShare = async (url: string, file: string) => {
     const handler = (window as typeof window & {
       webkit?: { messageHandlers?: { fittlistShareTarget?: { postMessage: (body: unknown) => void } } };
     }).webkit?.messageHandlers?.fittlistShareTarget;
@@ -383,28 +381,15 @@ export function ShareHubScreen({
     // Let the native side download the image with the web view's cookies.
     // Sending a 1080px PNG as base64 through WKScriptMessage was large enough
     // to fail before Instagram or Messages ever opened.
-    handler.postMessage({ target, url: new URL(url, window.location.href).href, file });
+    handler.postMessage({ target: "more", url: new URL(url, window.location.href).href, file });
     return true;
   };
 
-  const shareImage = async (
-    url: string,
-    file: string,
-    failWord: string,
-    target: ShareTarget = "more",
-  ) => {
+  const shareImage = async (url: string, file: string, failWord: string) => {
     if (sharing) return;
     setSharing(true);
     try {
-      if (await nativeShare(url, file, target)) return;
-      if (target === "instagram" || target === "messages") {
-        toast(`Direct ${target === "instagram" ? "Instagram" : "Messages"} sharing needs the latest iPhone app`);
-        return;
-      }
-      if (target === "photo") {
-        downloadImage(url, file);
-        return;
-      }
+      if (await nativeShare(url, file)) return;
       if (canShareFiles) {
         const res = await fetch(url);
         if (res.ok) {
@@ -427,34 +412,9 @@ export function ShareHubScreen({
   };
 
   const imageShareActions = (url: string, file: string, failWord: string) => (
-    <div className="shdest" aria-label="Share image">
-      <button
-        className="shdest-btn"
-        disabled={sharing}
-        onClick={() => shareImage(url, file, failWord, "instagram")}
-      >
-        <span className="shdest-icon shdest-instagram"><InstagramGlyph app size={44} /></span>
-        <span>Instagram</span>
-      </button>
-      <button
-        className="shdest-btn"
-        disabled={sharing}
-        onClick={() => shareImage(url, file, failWord, "messages")}
-      >
-        <span className="shdest-icon"><Icon name="chat_bubble" size={20} /></span>
-        <span>Messages</span>
-      </button>
-      <button className="shdest-btn" disabled={sharing} onClick={() => shareImage(url, file, failWord, "photo")}>
-        <span className="shdest-icon"><Icon name="image" size={21} /></span>
-        <span>Photo</span>
-      </button>
-      <button
-        className="shdest-btn"
-        disabled={sharing}
-        onClick={() => shareImage(url, file, failWord, "more")}
-      >
-        <span className="shdest-icon"><Icon name="more_horiz" size={22} /></span>
-        <span>More</span>
+    <div className="shcta">
+      <button className="btn si" disabled={sharing} onClick={() => shareImage(url, file, failWord)}>
+        {sharing ? "Opening share sheet..." : "Share"}
       </button>
     </div>
   );
