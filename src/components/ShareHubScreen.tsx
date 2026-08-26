@@ -345,6 +345,16 @@ export function ShareHubScreen({
     : inRange;
 
   const shown = inRange.filter((it) => !effHide.has(it.key)).length;
+  const shownStudios = [
+    ...new Set(
+      inRange
+        .filter((it) => !effHide.has(it.key))
+        .map((it) => it.where.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const studioSummary =
+    shownStudios.length === 0 ? "Add studio" : shownStudios.length === 1 ? shownStudios[0] : `${shownStudios.length} studios`;
 
   const hideParam = [...effHide].join(",");
   // Both pictures at once now, because both slides are on screen: the
@@ -637,6 +647,10 @@ export function ShareHubScreen({
                   <span className="shctrl-v">
                     {hatRows.length === 0 ? "None in range" : `${shown} of ${hatRows.length} showing`}
                   </span>
+                </button>
+                <button className="shctrl" onClick={() => setPick("classes")}>
+                  <span className="shctrl-k">Studio</span>
+                  <span className="shctrl-v">{studioSummary}</span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("dates")}>
                   <span className="shctrl-k">Dates</span>
@@ -1109,18 +1123,18 @@ export function ShareHubScreen({
                           </span>
                         </span>
                         <span className="s">
-                          {wday(it.iso)}, {short(it.iso)} · {it.time}
+                          {wday(it.iso)}, {short(it.iso)} · {it.time}{it.where ? ` · ${it.where}` : ""}
                         </span>
                       </span>
                     </button>
                     {it.own && (
                       <button
-                        className="shpick-editbtn"
-                        aria-label={`Edit ${it.name}`}
+                        className={`shpick-editbtn${it.where ? "" : " add-studio"}`}
+                        aria-label={it.where ? `Edit ${it.name}` : `Add a studio to ${it.name}`}
                         disabled={editBusy}
                         onClick={() => openEdit(it)}
                       >
-                        <Icon name="edit" size={18} />
+                        {it.where ? <Icon name="edit" size={18} /> : "Add studio"}
                       </button>
                     )}
                   </div>
