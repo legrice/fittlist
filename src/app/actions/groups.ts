@@ -391,6 +391,26 @@ export async function respondToGroupInvitation(slug: string, accept: boolean) {
   return { ok: true } as const;
 }
 
+/** Join a group that is open to visitors. Saving its calendar is deliberately
+ * separate: membership is what unlocks conversation and group notifications. */
+export async function joinOpenGroup(slug: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok:false, signedOut:true } as const;
+  const db = await getDb();
+  const [group] = await db.select({ id:schema.groups.id, ownerUserId:schema.groups.ownerUserId, visibility:schema.groups.visibility }).from(schema.groups).where(eq(schema.groups.slug, slug));
+  if (!group) return { ok:false, error:"That group is no longer available." } as const;
+  if (group.visibility === "private") return { ok:false, error:"This group is invite only." } as const;
+  if (group.ownerUserId === userId) return { ok:true, joined:true } as const;
+  const [membership] = await db.insert(schema.groupMembers).values({ groupId:group.id, userId, role:"member" }).onConflictDoNothing().returning({ id:schema.groupMembers.id });
+  revalidatePath(`/g/${slug}`);
+  revalidatePath("/saved");
+  if (membership) {
+    const { recordProductActivity } = await import("@/lib/product-activity");
+    await recordProductActivity(userId, "group_joined");
+  }
+  return { ok:true, joined:true } as const;
+}
+
 export async function leaveGroup(slug: string) {
   const userId = await getSessionUserId();
   if (!userId) return { ok:false, error:"Sign in to leave this group." } as const;
