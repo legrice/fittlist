@@ -102,7 +102,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --radius-pill: 999px;
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
-  --headline-tracking: .006em;
+  --headline-tracking: .012em;
   /* Delight typeface. Black ink, cool neutral ground, and bright lime CTA.
 
      Product typography stays at 400/500/600. The 700 face is available for
@@ -11797,4 +11797,48 @@ a.clspeek-by:active { opacity: .6; }
     width: 54px;
     height: 54px;
   }
+}
+
+/* Headline rhythm
+   Delight reads best here when its display sizes have a little daylight.
+   These are page and section headlines only: schedules, buttons, labels and
+   other dense utility copy keep their compact spacing. This final override
+   retires older negative-tracking treatments consistently. */
+:is(
+  h1.screen-title,
+  .obshare-headline,
+  .ob .oblanding-slide h1,
+  .wiz h1,
+  .pub .pubhero .big,
+  .acct-h,
+  .pubidentity-paper .profname,
+  .admin h1,
+  .discover-page-title,
+  .discover-title-row h1,
+  .group-hero h1,
+  .savedhead h1,
+  .youaccount-head h1,
+  .profile-following h2,
+  .yougroup-title,
+  .yousection h2,
+  .saved-block > h2,
+  .saved-block-head h2,
+  .saved-group-large h3,
+  .studio-dashboard-hero h1,
+  .following-head h1,
+  .cash-day > h2,
+  .tab-page-title,
+  .upcoming-head h1,
+  .abouthome h2,
+  .aboutpage h1,
+  .aboutpage h2,
+  .about-one,
+  .calbar-t,
+  .calendar-page-header h1,
+  .calendar-drawer-head h2,
+  .cityhero h1,
+  .citysection-head h2,
+  .embed-calendar h1
+) {
+  letter-spacing: var(--headline-tracking);
 }
