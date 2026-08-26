@@ -34,12 +34,12 @@ export default async function MarketingPreviewPage() {
 
       <header className={styles.header}>
         <Wordmark />
-        <Link href="/?join=signup" className={styles.headerCta}>Start your FittList</Link>
+        <Link href="/?join=signup" className={styles.headerCta}>Get started</Link>
       </header>
 
       <section className={styles.hero}>
-        <h1>All your fitness.<br />One calendar.</h1>
-        <Link href="/?join=signup" className={styles.primary}>Start your FittList</Link>
+        <h1>Fit all of your fitness<br />into one calendar.</h1>
+        <Link href="/?join=signup" className={styles.primary}>Get started</Link>
         <div className={styles.heroArt} aria-label="FittList calendar on a phone">
           <img src="/landing-hero.webp" alt="A FittList calendar showing classes from multiple coaches" />
           <span className={styles.photoBarOne} aria-hidden="true" />
@@ -107,7 +107,7 @@ export default async function MarketingPreviewPage() {
       <section className={styles.finalCta}>
         <div className={styles.brandBars} aria-hidden="true"><span /><span /><span /></div>
         <h2>Put your week<br />in motion.</h2>
-        <Link href="/?join=signup" className={styles.primary}>Start your FittList</Link>
+        <Link href="/?join=signup" className={styles.primary}>Get started</Link>
       </section>
 
       <footer className={styles.footer}><Wordmark /><span>Fitness, organized.</span></footer>

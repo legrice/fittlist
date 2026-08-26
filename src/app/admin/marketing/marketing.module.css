@@ -1,7 +1,7 @@
 .page{--marketing-dark:#00140c;--marketing-paper:#f7f9f6;min-height:100vh;background:var(--marketing-paper);color:var(--marketing-dark)}
 .previewBar{height:38px;background:var(--marketing-dark);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 max(20px,calc((100vw - 1180px)/2));font-size:12px;font-weight:700;letter-spacing:.03em}
 .previewBar a{color:#fff;text-decoration:none;display:flex;align-items:center;gap:6px}
-.header{height:76px;display:flex;align-items:center;justify-content:space-between;max-width:1180px;margin:0 auto;padding:0 24px}
+.header{--wm-ink:#fff;--wm-mark:var(--color-action);height:76px;display:flex;align-items:center;justify-content:space-between;margin:0;padding:0 max(24px,calc((100vw - 1180px)/2));background:var(--marketing-dark)}
 .headerCta,.primary{min-height:48px;padding:0 22px;border-radius:999px;background:var(--color-action);color:var(--marketing-dark);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .headerCta{min-height:42px;padding-inline:18px;font-size:14px}
 .hero{max-width:1180px;margin:0 auto;padding:96px 24px 0;text-align:center;overflow:hidden}
