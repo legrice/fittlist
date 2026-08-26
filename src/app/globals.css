@@ -10433,7 +10433,8 @@ a.clspeek-by:active { opacity: .6; }
 .shprev {
   display: block; margin: 18px auto 0; max-width: 100%;
   height: min(46vh, 440px); width: auto;
-  border-radius: 16px; box-shadow: none; border: 1px solid var(--line);
+  border-radius: 16px; border: 0;
+  box-shadow:0 24px 52px -18px rgba(2,13,8,.32), 0 8px 20px -12px rgba(2,13,8,.2);
   background: var(--cl);
 }
 .shprev-sq { height: auto; width: min(100%, 440px); aspect-ratio: 1; }
@@ -10455,8 +10456,9 @@ a.clspeek-by:active { opacity: .6; }
 /* The QR as the card the concept drew: whose it is, the ask, the code on
    white, the address. It reuses the frame the QR sheet already had. */
 .qrcard {
-  margin-top: 20px; padding: 26px 22px 18px; border: 1px solid var(--line); border-radius: 24px;
-  background: var(--card); text-align: center;
+  margin-top: 20px; padding: 26px 22px 18px; border:0; border-radius:24px;
+  background:var(--card); text-align:center;
+  box-shadow:0 24px 52px -18px rgba(2,13,8,.32), 0 8px 20px -12px rgba(2,13,8,.2);
 }
 .qrcard-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
