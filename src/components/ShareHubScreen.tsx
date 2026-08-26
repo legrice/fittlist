@@ -379,16 +379,10 @@ export function ShareHubScreen({
       webkit?: { messageHandlers?: { fittlistShareTarget?: { postMessage: (body: unknown) => void } } };
     }).webkit?.messageHandlers?.fittlistShareTarget;
     if (!handler) return false;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("image");
-    const blob = await res.blob();
-    const data = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
-    handler.postMessage({ target, data, file });
+    // Let the native side download the image with the web view's cookies.
+    // Sending a 1080px PNG as base64 through WKScriptMessage was large enough
+    // to fail before Instagram or Messages ever opened.
+    handler.postMessage({ target, url: new URL(url, window.location.href).href, file });
     return true;
   };
 

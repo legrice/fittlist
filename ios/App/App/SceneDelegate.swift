@@ -286,13 +286,31 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
     private func shareImage(_ payload: [String: Any]) {
         guard let target = payload["target"] as? String,
-              let encoded = payload["data"] as? String,
-              let comma = encoded.firstIndex(of: ","),
-              let data = Data(base64Encoded: String(encoded[encoded.index(after: comma)...])),
-              let image = UIImage(data: data) else {
+              let rawURL = payload["url"] as? String,
+              let url = URL(string: rawURL) else {
             shareResult("Couldn't prepare that image")
             return
         }
+        let file = payload["file"] as? String
+        bridge.webView?.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
+            var request = URLRequest(url: url)
+            HTTPCookie.requestHeaderFields(with: cookies).forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
+            URLSession.shared.dataTask(with: request) { data, response, _ in
+                guard let data,
+                      let http = response as? HTTPURLResponse,
+                      (200..<300).contains(http.statusCode),
+                      let image = UIImage(data: data) else {
+                    self.shareResult("Couldn't prepare that image")
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.deliverShareImage(image, data: data, target: target, file: file)
+                }
+            }.resume()
+        }
+    }
+
+    private func deliverShareImage(_ image: UIImage, data: Data, target: String, file: String?) {
         switch target {
         case "instagram":
             UIPasteboard.general.setItems(
@@ -310,7 +328,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             }
             let composer = MFMessageComposeViewController()
             composer.messageComposeDelegate = self
-            composer.addAttachmentData(data, typeIdentifier: "public.png", filename: payload["file"] as? String ?? "fittlist.png")
+            composer.addAttachmentData(data, typeIdentifier: "public.png", filename: file ?? "fittlist.png")
             present(composer, animated: true)
         case "photo":
             PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
