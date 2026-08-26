@@ -156,7 +156,7 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
       <section className={styles.closer}>
         <h2>One link for your whole fitness world.</h2>
         <p>Share a live schedule, manage studio shifts, or keep the calendars you care about close.</p>
-        <button type="button" onClick={() => setIntent(intentFor("add"))}>Start your FittList</button>
+        <button className={styles.closerCta} type="button" onClick={() => setIntent(intentFor("add"))}>Get started</button>
       </section>
 
       <nav className={styles.mobileNav} aria-label="Preview navigation">

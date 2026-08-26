@@ -57,6 +57,7 @@
 .closer{margin-top:60px;margin-bottom:30px;text-align:center;background:var(--dark,#020d08);color:#fff;padding-top:62px;padding-bottom:62px;border-radius:30px}
 .closer h2{font-size:40px;letter-spacing:-.045em;margin:0}
 .closer p{color:rgba(255,255,255,.7);font-size:18px;margin:12px auto 24px;max-width:620px}
+.closerCta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:0;border-radius:999px;background:var(--color-action);color:var(--color-black);font:inherit;font-weight:800;cursor:pointer}
 .mobileNav{display:none}
 .scrim{position:fixed;inset:0;background:rgba(2,13,8,.58);z-index:100;display:grid;place-items:center;padding:20px}
 .prompt{width:min(440px,100%);background:var(--card);border-radius:28px;padding:26px;position:relative;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.26)}
