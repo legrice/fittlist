@@ -4,6 +4,7 @@ import { ChangeEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { ClassOpener } from "@/components/ClassOpener";
 import { Wordmark } from "@/components/Wordmark";
 import { initialOf } from "@/lib/avatar";
 import type { PublicPreviewData } from "@/lib/public-preview";
@@ -52,14 +53,20 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
             {data.cities.map((city) => <option value={city} key={city}>{city}</option>)}
           </select>
         </label>
-        {data.classes.length ? days.map((iso) => {
+        {data.classes.length ? <ClassOpener handle="" allowWeekAdd={false}>{days.map((iso) => {
           const rows = data.classes.filter((item) => item.iso === iso);
           return (
             <section className={styles.day} key={iso}>
               <h3>{rows[0]?.day}</h3>
               {rows.map((item) => (
                 <article className={styles.classRow} key={item.key}>
-                  <Link href={item.href} className={styles.classMain}>
+                  <Link
+                    href={item.href}
+                    className={styles.classMain}
+                    data-cid={item.id}
+                    data-d={item.iso}
+                    data-base={item.base}
+                  >
                     <span className={styles.avatar} style={{ background: item.color }}>
                       {item.photo ? <img src={item.photo} alt="" width="52" height="52" loading="lazy" decoding="async" /> : initialOf(item.coach ?? item.place)}
                     </span>
@@ -71,7 +78,7 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
               ))}
             </section>
           );
-        }) : (
+        })}</ClassOpener> : (
           <div className={styles.empty}>
             <Icon name="place" size={28} />
             <h3>No public schedules found in {data.city}</h3>

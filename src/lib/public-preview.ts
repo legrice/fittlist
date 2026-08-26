@@ -11,6 +11,8 @@ const PREVIEW_CLASS_LIMIT = 48;
 
 export type PublicPreviewClass = {
   key: string;
+  id: string;
+  base: string;
   iso: string;
   day: string;
   name: string;
@@ -71,6 +73,7 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
     db
       .select({
         id: schema.users.id,
+        kind: schema.users.kind,
         name: schema.users.name,
         handle: schema.users.handle,
         location: schema.users.location,
@@ -156,8 +159,10 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
   ]);
 
   const referencedStudioIds = [...new Set(personSchedules.flatMap((row) => row.studioId ? [row.studioId] : []))];
-  const extraStudios = referencedStudioIds.length
-    ? await db
+  const referencedUserIds = [...new Set(gymSchedules.flatMap((row) => [row.userId, ...(row.coachUserId ? [row.coachUserId] : [])]))];
+  const [extraStudios, referencedUsers] = await Promise.all([
+    referencedStudioIds.length
+      ? db
         .select({
           id: schema.studios.id,
           slug: schema.studios.slug,
@@ -168,10 +173,24 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
         })
         .from(schema.studios)
         .where(inArray(schema.studios.id, referencedStudioIds))
-    : [];
+      : Promise.resolve([]),
+    referencedUserIds.length
+      ? db
+          .select({
+            id: schema.users.id,
+            kind: schema.users.kind,
+            name: schema.users.name,
+            handle: schema.users.handle,
+            photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+            avatarColor: schema.users.avatarColor,
+          })
+          .from(schema.users)
+          .where(inArray(schema.users.id, referencedUserIds))
+      : Promise.resolve([]),
+  ]);
   const studios = [...new Map([...cityStudios, ...extraStudios].map((row) => [row.id, row])).values()];
   const studioById = new Map(studios.map((row) => [row.id, row]));
-  const coachById = new Map(coachRows.map((row) => [row.id, row]));
+  const coachById = new Map([...coachRows, ...referencedUsers].map((row) => [row.id, row]));
   const gymStudioByUser = new Map(cityStudios.flatMap((row) => row.accountUserId ? [[row.accountUserId, row] as const] : []));
 
   const occurrences: PublicPreviewClass[] = [];
@@ -186,15 +205,18 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
       if (!row.isPublic || !runsOn(row, iso, dow) || occurrenceEnded(iso, row.startTime, row.durationMin)) continue;
       const occurrenceKey = `${row.id}|${iso}`;
       if (seen.has(occurrenceKey)) continue;
-      const coach = coachById.get("ownerUserId" in row ? row.ownerUserId : row.userId);
+      const owner = coachById.get("ownerUserId" in row ? row.ownerUserId : row.userId);
       const studio = row.studioId ? studioById.get(row.studioId) : gymStudioByUser.get(row.userId);
-      const shift = "shift" in row ? row.shift : true;
+      const shift = "shift" in row ? row.shift : owner?.kind === "gym";
+      const coach = owner?.kind === "gym" ? null : owner;
       const address = classAddress({ shift }, coach?.handle ?? null, studio?.slug);
       if (!address) continue;
       seen.add(occurrenceKey);
       const clock = clockParts(row.startTime);
       occurrences.push({
         key: occurrenceKey,
+        id: row.id,
+        base: address.base,
         iso,
         day: fmtDayHeaderRel(iso, from),
         name: row.name,
