@@ -1,10 +1,12 @@
 import UIKit
 import Capacitor
 import WebKit
+import MessageUI
+import Photos
 
 /// One native navigation shell around the existing Capacitor bridge. FittList
 /// keeps one web product while the highest-value app surfaces become native.
-final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler {
+final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler, MFMessageComposeViewControllerDelegate {
     private let bridge = CAPBridgeViewController()
     private let headerView = UIView()
     private let tabBar = UITabBar()
@@ -168,6 +170,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         controller.add(self, name: "fittlistRoute")
         controller.add(self, name: "fittlistExternal")
         controller.add(self, name: "fittlistTakeover")
+        controller.add(self, name: "fittlistShareTarget")
         bridge.webView?.allowsBackForwardNavigationGestures = true
 
         // Mark the document before it paints so the web header does not flash
@@ -240,6 +243,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "fittlistShareTarget", let payload = message.body as? [String: Any] {
+            shareImage(payload)
+            return
+        }
         if message.name == "fittlistTakeover", let active = message.body as? Bool {
             setTakeover(active)
             return
@@ -274,6 +281,67 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         headerView.isHidden = active
         tabBar.isHidden = active
         view.layoutIfNeeded()
+    }
+
+    private func shareImage(_ payload: [String: Any]) {
+        guard let target = payload["target"] as? String,
+              let encoded = payload["data"] as? String,
+              let comma = encoded.firstIndex(of: ","),
+              let data = Data(base64Encoded: String(encoded[encoded.index(after: comma)...])),
+              let image = UIImage(data: data) else {
+            shareResult("Couldn't prepare that image")
+            return
+        }
+        switch target {
+        case "instagram":
+            UIPasteboard.general.setItems(
+                [["com.instagram.sharedSticker.backgroundImage": data]],
+                options: [.expirationDate: Date().addingTimeInterval(300)]
+            )
+            guard let url = URL(string: "instagram-stories://share") else { return }
+            UIApplication.shared.open(url, options: [:]) { opened in
+                if !opened { self.shareResult("Instagram isn't installed") }
+            }
+        case "messages":
+            guard MFMessageComposeViewController.canSendAttachments() else {
+                shareResult("Messages isn't available")
+                return
+            }
+            let composer = MFMessageComposeViewController()
+            composer.messageComposeDelegate = self
+            composer.addAttachmentData(data, typeIdentifier: "public.png", filename: payload["file"] as? String ?? "fittlist.png")
+            present(composer, animated: true)
+        case "photo":
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+                guard status == .authorized || status == .limited else {
+                    self.shareResult("Allow photo access to save your image")
+                    return
+                }
+                PHPhotoLibrary.shared().performChanges({
+                    PHAssetChangeRequest.creationRequestForAsset(from: image)
+                }) { saved, _ in
+                    self.shareResult(saved ? "Photo saved" : "Couldn't save the photo")
+                }
+            }
+        default:
+            DispatchQueue.main.async {
+                let sheet = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+                sheet.popoverPresentationController?.sourceView = self.view
+                sheet.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.maxY - 1, width: 1, height: 1)
+                self.present(sheet, animated: true)
+            }
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        controller.dismiss(animated: true)
+    }
+
+    private func shareResult(_ message: String) {
+        DispatchQueue.main.async {
+            let safe = message.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
+            self.bridge.webView?.evaluateJavaScript("window.dispatchEvent(new CustomEvent('fittlist:native-share-result',{detail:{message:'\(safe)'}}))")
+        }
     }
 }
 

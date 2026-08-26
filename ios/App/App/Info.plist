@@ -10,6 +10,8 @@
 	<string>FittList uses your location to show coaches, classes, and studios near you.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FittList uses photos you select for profiles, classes, studios, and share images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>FittList saves the share images you create to your photo library.</string>
   <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>

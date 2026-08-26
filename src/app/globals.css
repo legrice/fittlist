@@ -10555,6 +10555,7 @@ a.clspeek-by:active { opacity: .6; }
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--ink); color: var(--card);
 }
+.shdest-icon.shdest-instagram { background: transparent; }
 .calendar-share-sheet .shslides {
   height: min(60dvh, 620px);
   margin-top: 4px;

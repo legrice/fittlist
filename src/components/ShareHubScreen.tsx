@@ -17,6 +17,7 @@ import { setGoing } from "@/app/actions/going";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { Toast, useToast } from "@/components/Toast";
 import { readPhoto } from "@/lib/photo";
 
@@ -30,7 +31,7 @@ import { readPhoto } from "@/lib/photo";
 // and the page link lives with the QR code.
 //
 type Seg = "week" | "profile" | "qr" | "text";
-type ShareTarget = "stories" | "messages" | "more";
+type ShareTarget = "instagram" | "messages" | "photo" | "more";
 
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
@@ -258,6 +259,15 @@ export function ShareHubScreen({
     setPageHost(window.location.host);
   }, []);
 
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      if (detail?.message) toast(detail.message);
+    };
+    window.addEventListener("fittlist:native-share-result", receive);
+    return () => window.removeEventListener("fittlist:native-share-result", receive);
+  }, [toast]);
+
   // A member with nothing anywhere yet is building, not sharing: the screen
   // becomes the start block alone, because an empty poster pushed the one
   // button that fixes it below the fold. The first add flips this off and
@@ -334,6 +344,24 @@ export function ShareHubScreen({
     a.click();
   };
 
+  const nativeShare = async (url: string, file: string, target: ShareTarget) => {
+    const handler = (window as typeof window & {
+      webkit?: { messageHandlers?: { fittlistShareTarget?: { postMessage: (body: unknown) => void } } };
+    }).webkit?.messageHandlers?.fittlistShareTarget;
+    if (!handler) return false;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("image");
+    const blob = await res.blob();
+    const data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    handler.postMessage({ target, data, file });
+    return true;
+  };
+
   const shareImage = async (
     url: string,
     file: string,
@@ -343,6 +371,11 @@ export function ShareHubScreen({
     if (sharing) return;
     setSharing(true);
     try {
+      if (await nativeShare(url, file, target)) return;
+      if (target === "photo") {
+        downloadImage(url, file);
+        return;
+      }
       if (canShareFiles) {
         const res = await fetch(url);
         if (res.ok) {
@@ -351,8 +384,8 @@ export function ShareHubScreen({
             await navigator.share({
               files: [f],
               title:
-                target === "stories"
-                  ? "Share to Instagram Stories"
+                target === "instagram"
+                  ? "Share to Instagram"
                   : target === "messages"
                     ? "Send your FittList"
                     : "Share your FittList",
@@ -374,10 +407,10 @@ export function ShareHubScreen({
       <button
         className="shdest-btn"
         disabled={sharing}
-        onClick={() => shareImage(url, file, failWord, "stories")}
+        onClick={() => shareImage(url, file, failWord, "instagram")}
       >
-        <span className="shdest-icon"><Icon name="ios_share" size={21} /></span>
-        <span>IG Stories</span>
+        <span className="shdest-icon shdest-instagram"><InstagramGlyph app size={44} /></span>
+        <span>Instagram</span>
       </button>
       <button
         className="shdest-btn"
@@ -387,9 +420,9 @@ export function ShareHubScreen({
         <span className="shdest-icon"><Icon name="chat_bubble" size={20} /></span>
         <span>Messages</span>
       </button>
-      <button className="shdest-btn" disabled={sharing} onClick={() => downloadImage(url, file)}>
+      <button className="shdest-btn" disabled={sharing} onClick={() => shareImage(url, file, failWord, "photo")}>
         <span className="shdest-icon"><Icon name="image" size={21} /></span>
-        <span>Photos</span>
+        <span>Photo</span>
       </button>
       <button
         className="shdest-btn"
@@ -579,11 +612,6 @@ export function ShareHubScreen({
         </div>
         )}
 
-        {!building && (seg === "week" || seg === "profile") &&
-          imageShareActions(imgUrl, fileName, seg === "week" ? "picture" : "card")}
-
-        {!building && seg === "qr" && imageShareActions(qrUrl, qrFileName, "QR code")}
-
         {!building && (seg === "week" || seg === "profile") && (
           <div className="shctrls">
             {seg === "week" ? (
@@ -668,6 +696,11 @@ export function ShareHubScreen({
             )}
           </div>
         )}
+
+        {!building && (seg === "week" || seg === "profile") &&
+          imageShareActions(imgUrl, fileName, seg === "week" ? "picture" : "card")}
+
+        {!building && seg === "qr" && imageShareActions(qrUrl, qrFileName, "QR code")}
 
         {seg === "text" && (
           <>
