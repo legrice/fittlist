@@ -396,6 +396,10 @@ export function ShareHubScreen({
     setSharing(true);
     try {
       if (await nativeShare(url, file, target)) return;
+      if (target === "instagram" || target === "messages") {
+        toast(`Direct ${target === "instagram" ? "Instagram" : "Messages"} sharing needs the latest iPhone app`);
+        return;
+      }
       if (target === "photo") {
         downloadImage(url, file);
         return;
@@ -407,12 +411,7 @@ export function ShareHubScreen({
           if (navigator.canShare({ files: [f] })) {
             await navigator.share({
               files: [f],
-              title:
-                target === "instagram"
-                  ? "Share to Instagram"
-                  : target === "messages"
-                    ? "Send your FittList"
-                    : "Share your FittList",
+              title: "Share your FittList",
             });
             return;
           }
