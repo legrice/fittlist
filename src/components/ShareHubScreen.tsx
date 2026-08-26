@@ -141,6 +141,7 @@ export function ShareHubScreen({
   const [pick, setPick] = useState<
     null | "dates" | "classes" | "message" | "layout" | "deco" | "color"
   >(null);
+  const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -651,7 +652,7 @@ export function ShareHubScreen({
                     + Add another class
                   </button>
                 )}
-                <button className="shctrl" onClick={() => setPick("color")}>
+                <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
                   <span className="shctrl-k">Background</span>
                   <span className="shctrl-v">{background ? "Photo" : STORY_THEMES[themeId].label}</span>
                 </button>
@@ -696,7 +697,7 @@ export function ShareHubScreen({
                 </button>
               </>
             ) : (
-              <button className="shctrl" onClick={() => setPick("color")}>
+              <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
                 <span className="shctrl-k">Color</span>
                 <span className="shctrl-v">{STORY_THEMES[themeId].label}</span>
               </button>
@@ -868,24 +869,45 @@ export function ShareHubScreen({
                 {(seg !== "week" || !background) && <span className="setrow-ic"><Icon name="check" size={20} /></span>}
               </button>
               <div className="shbackground-color-menu">
-                <select
-                  className="typeselect"
-                  aria-label="Background color"
-                  value={themeId}
+                <button
+                  type="button"
+                  className="typeselect shcolor-select"
+                  aria-haspopup="listbox"
+                  aria-expanded={colorMenuOpen}
                   disabled={backgroundBusy}
-                  onChange={(event) => {
-                    const id = event.target.value as StoryThemeId;
-                    if (seg === "week") void chooseColorBackground(id);
-                    else {
-                      setThemeId(id);
-                      setPick(null);
-                    }
-                  }}
+                  onClick={() => setColorMenuOpen((open) => !open)}
                 >
-                  {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(([id, theme]) => (
-                    <option key={id} value={id}>{theme.label}</option>
-                  ))}
-                </select>
+                  <span
+                    className="shcolor-preview"
+                    style={{ background: STORY_THEMES[themeId].bg }}
+                  />
+                  <span>{STORY_THEMES[themeId].label}</span>
+                  <Icon name="expand_more" size={18} />
+                </button>
+                {colorMenuOpen && (
+                  <div className="shcolor-dropdown" role="listbox" aria-label="Background color">
+                    {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(([id, theme]) => (
+                      <button
+                        key={id}
+                        type="button"
+                        role="option"
+                        aria-selected={id === themeId}
+                        onClick={() => {
+                          setColorMenuOpen(false);
+                          if (seg === "week") void chooseColorBackground(id);
+                          else {
+                            setThemeId(id);
+                            setPick(null);
+                          }
+                        }}
+                      >
+                        <span className="shcolor-preview" style={{ background: theme.bg }} />
+                        <span>{theme.label}</span>
+                        {id === themeId && <Icon name="check" size={18} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               {seg === "week" && (
                 <>
