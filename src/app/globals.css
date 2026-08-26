@@ -9283,6 +9283,10 @@ select.editinput.placekind-select {
 }
 .shpage-title { padding: 2px 0 10px; }
 .shpage-back { margin-bottom: 16px; }
+.share-page-close {
+  border:1px solid var(--color-border-strong);
+  background:var(--color-white);
+}
 .shpage-heading {
   padding: 0 58px 4px; text-align: center;
 }

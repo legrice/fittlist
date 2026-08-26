@@ -521,8 +521,8 @@ export function ShareHubScreen({
       <div className={`cardwrap shpage${embedded ? " shpage-embedded" : ""}`}>
         {!embedded && (
           <div className="shpage-back">
-            <BackLink className="evback" href="/calendar" anywhere label="Back to calendar">
-              <Icon name="arrow_back" size={23} />
+            <BackLink className="evback share-page-close" href="/calendar" anywhere label="Close share screen">
+              <Icon name="close" size={24} />
             </BackLink>
           </div>
         )}
