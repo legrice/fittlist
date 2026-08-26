@@ -227,7 +227,7 @@ export function renderStory(model: StoryModel) {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: compact ? 12 : 18,
+              gap: compact ? 22 : 30,
               width: "100%",
             }}
           >
@@ -274,7 +274,7 @@ export function renderStory(model: StoryModel) {
                   >
                     {day}
                   </span>
-                  <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: compact ? 6 : 8 }}>
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: compact ? 16 : 22 }}>
                     {rows.map((row, index) => (
                       <div key={`${row.time}-${row.name}-${index}`} style={{ display: "flex", gap: 16 }}>
                         <span style={{ width: 150, flexShrink: 0, fontSize: compact ? 25 : 29, fontWeight: 700 }}>
