@@ -9283,17 +9283,26 @@ select.editinput.placekind-select {
 }
 .shpage-title { padding: 2px 0 10px; }
 .shpage-back { margin-bottom: 16px; }
+.shpage-heading {
+  padding: 0 58px 4px; text-align: center;
+}
+.shpage-heading .shpage-title { padding: 0; }
+.shpage-heading p {
+  margin: 4px 0 0; color: var(--muted);
+  font-size: 14px; line-height: 1.2; font-weight: 600;
+}
+.calendar-share-scrim { align-items: stretch; padding: 0; }
 .calendar-share-sheet {
-  width: 100%; max-width: 1120px; max-height: 94dvh; padding: 0;
-  overflow: hidden; background:var(--color-surface-muted);
+  width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0;
+  overflow: hidden; border-radius: 0; background:var(--color-surface-muted);
 }
 .calendar-share-sheet .shpage-embedded {
-  width: 100%; max-width: none; max-height: 94dvh; overflow-y: auto;
+  width: 100%; max-width: none; height: 100%; max-height: none; overflow-y: auto;
   margin: 0;
-  padding: 24px var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
+  padding: max(22px, env(safe-area-inset-top)) var(--page-gutter)
+    calc(30px + env(safe-area-inset-bottom));
   background:var(--color-surface-muted);
 }
-.calendar-share-sheet .shpage-title { padding-right: 58px; }
 .calendar-share-sheet .shseg { margin-top: var(--space-1); }
 .calendar-share-sheet .sheetclose {
   background:var(--color-white); border:1px solid var(--color-border);
@@ -9310,10 +9319,10 @@ select.editinput.placekind-select {
   background:var(--color-lime);
 }
 @media (min-width: 940px) {
-  .calendar-share-scrim { align-items: flex-end; padding: 24px 24px 0; }
-  .calendar-share-sheet {
-    max-width: 1120px;
-    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  .calendar-share-scrim { align-items: stretch; padding: 0; }
+  .calendar-share-sheet { max-width: none; border-radius: 0; }
+  .calendar-share-sheet .shpage-embedded {
+    padding-inline: max(32px, calc((100vw - 920px) / 2));
   }
 }
 .following-days { display: flex; flex-direction: column; gap: 24px; }
@@ -10531,6 +10540,38 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shslide .qrcard { width: min(100%, 340px); }
 .shslide .shtext { width: min(100%, 340px); max-height: 100%; margin-top: 0; overflow-y: auto; }
+/* Compact, explicit destinations under the picture. The first three say
+   what people are likely trying to do; More is the universal native share
+   sheet for every other destination. */
+.shdest {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+  width: min(100%, 480px); margin: 12px auto 6px;
+}
+.shdest-btn {
+  min-width: 0; padding: 4px 2px; border: 0; background: transparent;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  color: var(--ink); cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12.5px; line-height: 1.1; font-weight: 600;
+}
+.shdest-btn:disabled { opacity: .5; cursor: wait; }
+.shdest-icon {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink); color: var(--card);
+}
+.calendar-share-sheet .shslides {
+  height: min(60dvh, 620px);
+  margin-top: 4px;
+}
+.calendar-share-sheet .shprev { height: min(54dvh, 570px); }
+.calendar-share-sheet .shprev-sq {
+  width: min(100%, 520px); height: auto;
+}
+@media (max-width: 480px) {
+  .calendar-share-sheet .shslides { height: min(57dvh, 540px); }
+  .calendar-share-sheet .shprev { height: min(50dvh, 500px); }
+}
 /* The headline's loudness slider: the platform's own control in the brand
    colour, full width under its label. */
 .shslider { width: 100%; margin: 8px 0 4px; accent-color: var(--si); }

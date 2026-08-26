@@ -30,6 +30,7 @@ import { readPhoto } from "@/lib/photo";
 // and the page link lives with the QR code.
 //
 type Seg = "week" | "profile" | "qr" | "text";
+type ShareTarget = "stories" | "messages" | "more";
 
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
@@ -326,7 +327,19 @@ export function ShareHubScreen({
   const rangeLabel =
     days === 1 ? `${wday(from)}, ${short(from)}` : `${short(from)} to ${short(plusDays(from, days - 1))}`;
 
-  const shareImage = async (url: string, file: string, failWord: string) => {
+  const downloadImage = (url: string, file: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file;
+    a.click();
+  };
+
+  const shareImage = async (
+    url: string,
+    file: string,
+    failWord: string,
+    target: ShareTarget = "more",
+  ) => {
     if (sharing) return;
     setSharing(true);
     try {
@@ -335,21 +348,59 @@ export function ShareHubScreen({
         if (res.ok) {
           const f = new File([await res.blob()], file, { type: "image/png" });
           if (navigator.canShare({ files: [f] })) {
-            await navigator.share({ files: [f] });
+            await navigator.share({
+              files: [f],
+              title:
+                target === "stories"
+                  ? "Share to Instagram Stories"
+                  : target === "messages"
+                    ? "Send your FittList"
+                    : "Share your FittList",
+            });
             return;
           }
         }
       }
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file;
-      a.click();
+      downloadImage(url, file);
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") toast(`Couldn't share the ${failWord}`);
     } finally {
       setSharing(false);
     }
   };
+
+  const imageShareActions = (url: string, file: string, failWord: string) => (
+    <div className="shdest" aria-label="Share image">
+      <button
+        className="shdest-btn"
+        disabled={sharing}
+        onClick={() => shareImage(url, file, failWord, "stories")}
+      >
+        <span className="shdest-icon"><Icon name="ios_share" size={21} /></span>
+        <span>IG Stories</span>
+      </button>
+      <button
+        className="shdest-btn"
+        disabled={sharing}
+        onClick={() => shareImage(url, file, failWord, "messages")}
+      >
+        <span className="shdest-icon"><Icon name="chat_bubble" size={20} /></span>
+        <span>Messages</span>
+      </button>
+      <button className="shdest-btn" disabled={sharing} onClick={() => downloadImage(url, file)}>
+        <span className="shdest-icon"><Icon name="image" size={21} /></span>
+        <span>Photos</span>
+      </button>
+      <button
+        className="shdest-btn"
+        disabled={sharing}
+        onClick={() => shareImage(url, file, failWord, "more")}
+      >
+        <span className="shdest-icon"><Icon name="more_horiz" size={22} /></span>
+        <span>More</span>
+      </button>
+    </div>
+  );
 
   // The week as words, matching the picture exactly: same range, same hide
   // set, same studio names. Ends on the page link, because the text is a
@@ -458,7 +509,12 @@ export function ShareHubScreen({
             </BackLink>
           </div>
         )}
-        <h1 className="tab-page-title shpage-title">Share</h1>
+        <div className="shpage-heading">
+          <h1 className="tab-page-title shpage-title">
+            {seg === "week" ? "Your week" : seg === "profile" ? "Your profile card" : seg === "qr" ? "Your QR code" : "Your week as text"}
+          </h1>
+          <p>View and share</p>
+        </div>
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
             below the fold. Two lines and the button; the experiment talk
@@ -528,6 +584,11 @@ export function ShareHubScreen({
           </div>
         </div>
         )}
+
+        {!building && (seg === "week" || seg === "profile") &&
+          imageShareActions(imgUrl, fileName, seg === "week" ? "picture" : "card")}
+
+        {!building && seg === "qr" && imageShareActions(qrUrl, qrFileName, "QR code")}
 
         {!building && (seg === "week" || seg === "profile") && (
           <>
@@ -631,31 +692,6 @@ export function ShareHubScreen({
               </div>
             )}
 
-            {/* One call now that the rail carries the add: the button under
-                the picture shares the thing on screen. */}
-            <div className="shcta">
-              {canShareFiles ? (
-                <button
-                  className="btn si"
-                  disabled={sharing}
-                  onClick={() =>
-                    shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
-                  }
-                >
-                  {sharing ? (
-                    "Opening…"
-                  ) : (
-                    <>
-                      Share <Icon name="reply" className="share-arrow-forward" size={18} />
-                    </>
-                  )}
-                </button>
-              ) : (
-                <a className="btn si" href={imgUrl} download={fileName}>
-                  Save
-                </a>
-              )}
-            </div>
           </>
         )}
 
@@ -672,19 +708,6 @@ export function ShareHubScreen({
         {seg === "qr" && (
           <>
             <div className="shcta">
-              {canShareFiles ? (
-                <button
-                  className="btn si"
-                  disabled={sharing}
-                  onClick={() => shareImage(qrUrl, qrFileName, "QR code")}
-                >
-                  {sharing ? "Opening…" : "Share QR code"}
-                </button>
-              ) : (
-                <a className="btn si" href={qrUrl} download={qrFileName}>
-                  Save QR code
-                </a>
-              )}
               <button className="btn ghost" onClick={copyLink}>
                 Copy link
               </button>
