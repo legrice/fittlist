@@ -6720,11 +6720,6 @@ select.editinput.placekind-select {
   border: none; background: none; color: var(--ol); cursor: pointer;
 }
 .shpick-editbtn:active { background: var(--shell); }
-.shpick-editbtn.add-studio {
-  width:auto; padding:0 10px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
-  background:var(--color-white); color:var(--ink); font-family:inherit; font-size:12px; font-weight:600;
-  white-space:nowrap;
-}
 /* The Classes sheet's hat segment, coach hub only: Coaching or Saved,
    never both on one picture, by Matt's call, so the row is a two-way
    pick reusing the day pills' drawing a size down. A member's rows are

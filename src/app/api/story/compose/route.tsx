@@ -107,6 +107,8 @@ export async function GET(req: Request) {
       })),
     })),
     listBudget(headH, format) / y.rowScale,
+    764,
+    { keepPlacesWithClasses: flat.some((c) => c.coaching) },
   );
 
   return renderStory({

@@ -181,15 +181,16 @@ function heightOf(days: StoryDay[], showPlace: boolean, m: typeof T1) {
 }
 
 /** The same class twice in a day is one entry with two times on it. */
-function entriesFor(items: StoryItem[]): PlanEntry[] {
+function entriesFor(items: StoryItem[], keepPlacesWithClasses: boolean): PlanEntry[] {
   const order: string[] = [];
   const times = new Map<string, string[]>();
   for (const i of items) {
-    if (!times.has(i.name)) {
-      order.push(i.name);
-      times.set(i.name, []);
+    const label = keepPlacesWithClasses && i.where ? `${i.name} · ${i.where}` : i.name;
+    if (!times.has(label)) {
+      order.push(label);
+      times.set(label, []);
     }
-    times.get(i.name)!.push(i.time);
+    times.get(label)!.push(i.time);
   }
   return order.map((name) => ({ name, times: times.get(name)!.join(", ") }));
 }
@@ -207,7 +208,13 @@ function summaryHeight(entries: PlanEntry[], fs: number, width: number): number 
  * Pick the most detailed layout that fits in `budget` pixels of list space.
  * `summaryWidth` is how wide the per-day lines get to be at tier 3.
  */
-export function planStory(days: StoryDay[], budget: number, summaryWidth = 764): StoryPlan {
+export function planStory(
+  days: StoryDay[],
+  budget: number,
+  summaryWidth = 764,
+  options: { keepPlacesWithClasses?: boolean } = {},
+): StoryPlan {
+  const keepPlacesWithClasses = options.keepPlacesWithClasses === true;
   const all = days.flatMap((d) => d.items);
   const places = [...new Set(all.map((i) => i.where).filter(Boolean))];
   const people = [...new Set(all.map((i) => i.who).filter(Boolean))] as string[];
@@ -217,10 +224,10 @@ export function planStory(days: StoryDay[], budget: number, summaryWidth = 764):
   if (heightOf(days, true, T1) <= budget)
     return { tier: 1, days: toRows(days, true), summary: [], summaryFs: 0, lifted: null, moreDays: 0 };
 
-  // 2. The same rows, tighter, and if every class is at the same place then
-  //    that place stops being eight identical grey lines and becomes one.
-  const showPlace = !onePlace;
-  const lifted = onePlace ? `All at ${onePlace}` : null;
+  // 2. The same rows, tighter. A general schedule can lift one repeated place,
+  //    but a teaching schedule keeps the studio attached to every class.
+  const showPlace = keepPlacesWithClasses || !onePlace;
+  const lifted = !keepPlacesWithClasses && onePlace ? `All at ${onePlace}` : null;
   if (heightOf(days, showPlace, T2) + (lifted ? LIFTED_H : 0) <= budget)
     return {
       tier: 2,
@@ -233,13 +240,15 @@ export function planStory(days: StoryDay[], budget: number, summaryWidth = 764):
 
   // 3. A line a day. Where it is moves to the top when there are few enough
   //    places to name; past that the link carries it, which is the link's job.
-  const summary = days.map((d) => ({ day: d.day, entries: entriesFor(d.items) }));
+  const summary = days.map((d) => ({ day: d.day, entries: entriesFor(d.items, keepPlacesWithClasses) }));
   const t3Lifted =
-    places.length > 0 && places.length <= 3
-      ? `${places.length === 1 ? "All at" : "At"} ${spoken(places)}`
-      : people.length > 0 && people.length <= 3
-        ? `With ${spoken(people)}`
-        : null;
+    keepPlacesWithClasses
+      ? null
+      : places.length > 0 && places.length <= 3
+        ? `${places.length === 1 ? "All at" : "At"} ${spoken(places)}`
+        : people.length > 0 && people.length <= 3
+          ? `With ${spoken(people)}`
+          : null;
 
   const room = budget - (t3Lifted ? LIFTED_H : 0);
   // The biggest type the whole week fits in. A busy coach's poster should fill

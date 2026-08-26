@@ -45,6 +45,8 @@ export async function GET(req: Request) {
       items: items.map((c) => ({ time: c.time, name: c.name, where: c.where, who: c.who })),
     })),
     listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78) / y.rowScale,
+    764,
+    { keepPlacesWithClasses: byDay.some(({ items }) => items.some((c) => c.coaching)) },
   );
 
   return renderStory({
