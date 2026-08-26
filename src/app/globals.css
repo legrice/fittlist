@@ -9431,6 +9431,7 @@ select.editinput.placekind-select {
   text-decoration: none;
 }
 .peekaction .icon { flex: 0 0 auto; }
+.peekaction-share { background:var(--color-lime); border-color:var(--color-lime); color:var(--color-black); }
 /* The footer that teaches the ribbon: quiet, because the rows are the
    content. */
 .peekfoot { margin: 14px 0 4px; font-size: 12.5px; color: var(--ol); }

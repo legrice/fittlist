@@ -35,6 +35,7 @@ export function CoachPeek({
   color,
   self = false,
   scheduleOnly = false,
+  shareHref,
   onPinChange,
   onClose,
 }: {
@@ -49,6 +50,7 @@ export function CoachPeek({
   /** Following is about a coach's published schedule, not classes they have
    * privately added for themselves. */
   scheduleOnly?: boolean;
+  shareHref?: string;
   /** Lets a parent rail discard any old priority state after an unfollow. */
   onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
@@ -209,10 +211,22 @@ export function CoachPeek({
           {peek?.handle && (
             <div className="peekacts">
               {self ? (
-                <Link className="peekfollow peekaction" href={`/${peek.handle}`}>
-                  <Icon name="account_circle" size={18} />
-                  <span>View profile</span>
-                </Link>
+                <>
+                  <Link className="peekfollow peekaction" href={`/${peek.handle}`}>
+                    <Icon name="account_circle" size={18} />
+                    <span>View profile</span>
+                  </Link>
+                  {shareHref && (
+                    <Link
+                      className="peekfollow peekaction peekaction-share"
+                      href={shareHref}
+                      onClick={() => window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }))}
+                    >
+                      <Icon name="reply" className="share-arrow-forward" size={18} />
+                      <span>Share your week</span>
+                    </Link>
+                  )}
+                </>
               ) : (
                 <>
                   {peek.messagesOpen && <button className="peekfollow peekaction" type="button" onClick={() => setMessageOpen(true)}><Icon name="chat" size={18} /><span>Message</span></button>}
