@@ -224,6 +224,7 @@ export function CalendarScreen({
   useEffect(() => {
     if (!shareOpen) return;
     document.body.classList.add("sheet-open");
+    window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setShareOpen(false);
@@ -231,6 +232,7 @@ export function CalendarScreen({
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.classList.remove("sheet-open");
+      window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: false }));
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [shareOpen]);

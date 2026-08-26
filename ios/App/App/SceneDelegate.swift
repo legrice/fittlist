@@ -9,6 +9,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let headerView = UIView()
     private let tabBar = UITabBar()
     private var settingsButton: UIButton?
+    private var bridgeTopToHeader: NSLayoutConstraint?
+    private var bridgeTopToView: NSLayoutConstraint?
     private let tabIDs = ["calendar", "discover", "saved"]
     private let fallbackRoutes = ["/calendar", "/discover", "/saved"]
 
@@ -27,12 +29,16 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
         configureTabBar()
 
+        let topToHeader = bridge.view.topAnchor.constraint(equalTo: headerView.bottomAnchor)
+        let topToView = bridge.view.topAnchor.constraint(equalTo: view.topAnchor)
+        bridgeTopToHeader = topToHeader
+        bridgeTopToView = topToView
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 62),
-            bridge.view.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            topToHeader,
             bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bridge.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -161,6 +167,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         guard let controller = bridge.webView?.configuration.userContentController else { return }
         controller.add(self, name: "fittlistRoute")
         controller.add(self, name: "fittlistExternal")
+        controller.add(self, name: "fittlistTakeover")
         bridge.webView?.allowsBackForwardNavigationGestures = true
 
         // Mark the document before it paints so the web header does not flash
@@ -191,6 +198,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
               history.replaceState = (...args) => { replace(...args); sendAfterRender(); };
               addEventListener('popstate', sendAfterRender);
               addEventListener('hashchange', sendAfterRender);
+              addEventListener('fittlist:takeover', event => {
+                window.webkit.messageHandlers.fittlistTakeover.postMessage(!!event.detail);
+              });
               document.addEventListener('click', event => {
                 const link = event.target.closest?.('a[href]');
                 if (!link) return;
@@ -230,6 +240,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "fittlistTakeover", let active = message.body as? Bool {
+            setTakeover(active)
+            return
+        }
         if message.name == "fittlistExternal", let rawURL = message.body as? String,
            let url = URL(string: rawURL),
            let scheme = url.scheme?.lowercased(),
@@ -252,6 +266,14 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
             tabBar.selectedItem = next
         }
+    }
+
+    private func setTakeover(_ active: Bool) {
+        bridgeTopToHeader?.isActive = !active
+        bridgeTopToView?.isActive = active
+        headerView.isHidden = active
+        tabBar.isHidden = active
+        view.layoutIfNeeded()
     }
 }
 
