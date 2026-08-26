@@ -3,7 +3,7 @@
 .headerActions{display:flex;align-items:center;gap:10px}
 .signIn,.primary,.loginLink{text-decoration:none}
 .signIn{color:var(--ink);font-weight:700;padding:11px 15px}
-.primary{background:var(--color-action);color:var(--color-black);font-weight:800;border-radius:999px;padding:12px 20px;display:inline-flex;justify-content:center;align-items:center;border:0;white-space:nowrap}
+.primary{background:var(--color-action)!important;color:var(--color-black)!important;font-weight:800;border-radius:999px;padding:12px 20px;display:inline-flex;justify-content:center;align-items:center;border:0;white-space:nowrap}
 .hero{max-width:1180px;margin:0 auto;padding:72px 24px 52px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:72px;align-items:flex-end}
 .kicker{text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:800;color:var(--muted);margin:0 0 12px}
 .hero h1{font-size:clamp(44px,5.4vw,72px);line-height:1.02;letter-spacing:-.035em;max-width:760px;margin:0;text-wrap:balance}
@@ -60,11 +60,14 @@
 .mobileNav{display:none}
 .scrim{position:fixed;inset:0;background:rgba(2,13,8,.58);z-index:100;display:grid;place-items:center;padding:20px}
 .prompt{width:min(440px,100%);background:var(--card);border-radius:28px;padding:26px;position:relative;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.26)}
-.promptMark{display:flex;justify-content:center;margin:18px 0 30px}
+.promptMark{display:flex;justify-content:center;margin:18px 0 22px}
+.promptEntity{display:flex;justify-content:center;margin:0 0 20px}
+.promptEntity .studioAvatar{border-radius:18px}
 .prompt h2{font-size:30px;letter-spacing:-.04em;margin:0}
 .prompt p{color:var(--muted);font-size:17px;line-height:1.45;margin:10px 0 24px}
 .prompt>.primary{width:100%;min-height:50px}
-.loginLink{display:block;color:var(--ink);font-weight:700;margin-top:18px}
+.loginLink{display:block;color:var(--ink);font-size:14px;font-weight:700;margin-top:16px}
+.loginLink span{color:var(--muted);font-weight:500}
 .close{position:absolute;top:18px;right:18px}
 
 @media(max-width:760px){.page{padding-bottom:112px}
