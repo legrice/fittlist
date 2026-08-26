@@ -614,15 +614,19 @@ export function CalendarScreen({
         />
       )}
 
-      <div className="calendar-bottom-actions" aria-label="Schedule actions">
-          {!bare && <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
-            <Icon name="add" size={28} />
-          </button>}
-          <button type="button" className="calendar-bottom-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}>
+      <BodyPortal>
+        <div className="calendar-bottom-actions" aria-label="Schedule actions">
+          {!bare && (
+            <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
+              <Icon name="add" size={28} />
+            </button>
+          )}
+          <button type="button" className="calendar-bottom-share" aria-label="Share your schedule" onClick={openShare} disabled={loadingTools && shareOpen}>
             <Icon name="reply" className="share-arrow-forward" size={20} />
             <span>Share</span>
           </button>
         </div>
+      </BodyPortal>
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
