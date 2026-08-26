@@ -280,9 +280,24 @@ export function renderStory(model: StoryModel) {
                         <span style={{ width: 150, flexShrink: 0, fontSize: compact ? 25 : 29, fontWeight: 700 }}>
                           {row.time}
                         </span>
-                        <span style={{ fontSize: compact ? 25 : 29, fontWeight: 600, lineHeight: 1.12 }}>
-                          {row.name}
-                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                          <span style={{ fontSize: compact ? 25 : 29, fontWeight: 600, lineHeight: 1.12 }}>
+                            {row.name}
+                          </span>
+                          {row.sub && (
+                            <span
+                              style={{
+                                marginTop: 3,
+                                fontSize: compact ? 20 : 23,
+                                fontWeight: 600,
+                                lineHeight: 1.1,
+                                color: t.muted,
+                              }}
+                            >
+                              {row.sub}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
