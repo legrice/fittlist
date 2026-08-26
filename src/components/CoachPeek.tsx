@@ -223,7 +223,7 @@ export function CoachPeek({
                       onClick={() => window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }))}
                     >
                       <Icon name="reply" className="share-arrow-forward" size={18} />
-                      <span>Share your week</span>
+                      <span>Share schedule</span>
                     </Link>
                   )}
                 </>
