@@ -12,6 +12,13 @@ const sampleClasses = [
   { day: "Tomorrow", time: "6:00pm", name: "Strength & Mobility", place: "Studio Arc" },
 ];
 
+const multiStudioWeek = [
+  { day: "Mon", date: "24", time: "7:00am", name: "Soul Flow Yoga", place: "Asana Soul Practice", tone: "mint" },
+  { day: "Tue", date: "25", time: "6:00pm", name: "Strength & Mobility", place: "Ironbound Performance", tone: "blue" },
+  { day: "Thu", date: "27", time: "12:00pm", name: "Sculpt Yoga", place: "Studio Arc", tone: "amber" },
+  { day: "Sat", date: "29", time: "9:00am", name: "Hot Power Hour", place: "Powerflow Yoga", tone: "rose" },
+];
+
 export const dynamic = "force-dynamic";
 
 export default async function MarketingPreviewPage() {
@@ -64,15 +71,27 @@ export default async function MarketingPreviewPage() {
       <section id="coaches" className={styles.feature}>
         <div className={styles.featureCopy}>
           <span>For coaches</span>
-          <h2>Your schedule becomes your link in bio.</h2>
-          <p>Change a class once and the live schedule updates everywhere you share it. Clients always know where and when to find you.</p>
+          <h2>Four studios. One calendar.</h2>
+          <p>Bring every place you teach into one live week. Change a class once, share one link, and let clients see exactly where and when to find you.</p>
         </div>
         <div className={styles.shareCard}>
-          <div className={styles.shareMark}><Wordmark /></div>
-          <h3>This week with Erin</h3>
-          <p>3 places · 7 classes</p>
-          <div><span>Mon</span><strong>Soul Flow Yoga</strong><time>7:00am</time></div>
-          <div><span>Thu</span><strong>Yin Yoga</strong><time>6:00pm</time></div>
+          <div className={styles.coachCardHead}>
+            <span className={styles.coachAvatar}>E</span>
+            <div><small>Erin&apos;s teaching week</small><h3>One schedule, every studio</h3></div>
+          </div>
+          <div className={styles.studioSummary}>
+            {multiStudioWeek.map((item) => <span key={item.place} data-tone={item.tone}>{item.place}</span>)}
+          </div>
+          <div className={styles.weekList}>
+            {multiStudioWeek.map((item) => (
+              <div className={styles.weekRow} key={`${item.day}-${item.time}`}>
+                <span className={styles.weekDate}><strong>{item.day}</strong><small>{item.date}</small></span>
+                <span className={styles.placeMark} data-tone={item.tone} aria-hidden="true">{item.place.slice(0, 1)}</span>
+                <span className={styles.weekClass}><strong>{item.name}</strong><small>{item.place}</small></span>
+                <time>{item.time}</time>
+              </div>
+            ))}
+          </div>
           <span className={styles.shareButton}>Share your week <Icon name="reply" size={18} /></span>
         </div>
       </section>
