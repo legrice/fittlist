@@ -51,14 +51,26 @@ export default async function MarketingPreviewPage() {
         <h1>Fit all of your fitness<br />into one calendar.</h1>
         <Link href="/?join=signup" className={styles.primary}>Get started</Link>
         <div className={styles.heroArt} aria-label="FittList calendar on a phone">
-          <span className={styles.heroLogo} aria-hidden="true" />
           <div className={styles.heroPhone} aria-hidden="true">
             <div className={styles.phoneStatus}><span>9:41</span><span>● ● ●</span></div>
-            <div className={styles.phoneBrand}><span className={styles.phoneMark} /><strong>FittList</strong></div>
+            <div className={styles.phoneBrand}>
+              <span className={styles.phoneBrandName}><span className={styles.phoneMark} /><strong>FittList</strong></span>
+              <span className={styles.phoneTools}>
+                <i><Icon name="search" size={16} /></i>
+                <i><Icon name="add" size={16} /></i>
+                <i><Icon name="notifications" size={16} /></i>
+              </span>
+            </div>
             <div className={styles.phoneIdentity}>
               <b>MC</b>
               <span><strong>Maya Cole</strong><small>Coach · 4 studios</small></span>
-              <i>+</i>
+            </div>
+            <div className={styles.phoneFilters}>
+              <span data-selected="true">All</span>
+              <span>Northline Yoga</span>
+              <span>Harbor Athletic Club</span>
+              <span>Common Ground Studio</span>
+              <span>Motive House</span>
             </div>
             <div className={styles.phoneSchedule}>
               <h3>Today</h3>
