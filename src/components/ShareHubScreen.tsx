@@ -509,12 +509,6 @@ export function ShareHubScreen({
             </BackLink>
           </div>
         )}
-        <div className="shpage-heading">
-          <h1 className="tab-page-title shpage-title">
-            {seg === "week" ? "Your week" : seg === "profile" ? "Your profile card" : seg === "qr" ? "Your QR code" : "Your week as text"}
-          </h1>
-          <p>View and share</p>
-        </div>
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
             below the fold. Two lines and the button; the experiment talk
