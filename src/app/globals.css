@@ -9294,12 +9294,21 @@ select.editinput.placekind-select {
 .calendar-share-scrim {
   position: fixed; inset: 0; z-index: 1200;
   align-items: stretch; padding: 0;
-  background: var(--color-surface-muted);
+  background: rgba(2,13,8,.34);
 }
 .calendar-share-sheet {
   position: relative; display: flex;
   width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0;
   overflow: hidden; border: 0; border-radius: 0; background:var(--color-surface-muted);
+  animation:calendar-share-up 360ms var(--motion-ease-out) both;
+  will-change:transform;
+}
+@keyframes calendar-share-up {
+  from { transform:translateY(100dvh); }
+  to { transform:translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-share-sheet { animation:none; }
 }
 .calendar-share-sheet .shpage-embedded {
   flex: 1 1 auto; min-height: 0;
@@ -10350,6 +10359,12 @@ a.clspeek-by:active { opacity: .6; }
     padding: max(16px, env(safe-area-inset-top)) var(--page-gutter)
       calc(32px + env(safe-area-inset-bottom));
   }
+  .screen.hasnav:has(.shpage) .cardwrap.shpage:not(.shpage-embedded) {
+    animation:calendar-share-up 360ms var(--motion-ease-out) both;
+  }
+}
+@media (max-width: 939px) and (prefers-reduced-motion: reduce) {
+  .screen.hasnav:has(.shpage) .cardwrap.shpage:not(.shpage-embedded) { animation:none; }
 }
 /* One left-aligned row that scrolls off the edge: four pills wrapped to a
    second line at 390px, and a rail reads better than a stack. */
