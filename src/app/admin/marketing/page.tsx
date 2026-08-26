@@ -7,16 +7,23 @@ import { Wordmark } from "@/components/Wordmark";
 import styles from "./marketing.module.css";
 
 const sampleClasses = [
-  { day: "Today", time: "6:00pm", name: "Soul Power Yoga", place: "Asana Soul Practice", tone: "mint" },
-  { day: "Tomorrow", time: "7:00am", name: "Guns, Buns, and Lungs", place: "Ironbound Performance", tone: "blue" },
-  { day: "Tomorrow", time: "6:00pm", name: "Strength & Mobility", place: "Studio Arc", tone: "amber" },
+  { day: "Today", time: "6:00pm", name: "Evening Flow", place: "Northline Yoga", tone: "mint" },
+  { day: "Tomorrow", time: "7:00am", name: "Strength Circuit", place: "Harbor Athletic Club", tone: "blue" },
+  { day: "Tomorrow", time: "6:00pm", name: "Mobility Lab", place: "Common Ground Studio", tone: "amber" },
 ];
 
 const multiStudioWeek = [
-  { day: "Mon", time: "7:00am", name: "Soul Flow Yoga", place: "Asana Soul Practice", tone: "mint" },
-  { day: "Tue", time: "6:00pm", name: "Strength & Mobility", place: "Ironbound Performance", tone: "blue" },
-  { day: "Thu", time: "12:00pm", name: "Sculpt Yoga", place: "Studio Arc", tone: "amber" },
-  { day: "Sat", time: "9:00am", name: "Hot Power Hour", place: "Powerflow Yoga", tone: "rose" },
+  { day: "Mon", time: "7:00am", name: "Morning Flow", place: "Northline Yoga", tone: "mint" },
+  { day: "Tue", time: "6:00pm", name: "Strength & Mobility", place: "Harbor Athletic Club", tone: "blue" },
+  { day: "Thu", time: "12:00pm", name: "Sculpt", place: "Common Ground Studio", tone: "amber" },
+  { day: "Sat", time: "9:00am", name: "Power Hour", place: "Atlas Movement", tone: "rose" },
+];
+
+const shareMethods = [
+  { icon: "link", title: "Live link", copy: "One link that always stays current." },
+  { icon: "image", title: "Story image", copy: "A polished weekly schedule ready to post." },
+  { icon: "code", title: "Website embed", copy: "Put your live calendar on your own site." },
+  { icon: "qr_code_2", title: "QR code", copy: "Bring people from a flyer straight to your week." },
 ];
 
 export const dynamic = "force-dynamic";
@@ -34,17 +41,33 @@ export default async function MarketingPreviewPage() {
 
       <header className={styles.header}>
         <Wordmark />
-        <Link href="/?join=signup" className={styles.headerCta}>Get started</Link>
+        <div className={styles.headerActions}>
+          <Link href="/?join=login" className={styles.signIn}>Sign in</Link>
+          <Link href="/?join=signup" className={styles.headerCta}>Start your FittList</Link>
+        </div>
       </header>
 
       <section className={styles.hero}>
         <h1>Fit all of your fitness<br />into one calendar.</h1>
-        <Link href="/?join=signup" className={styles.primary}>Get started</Link>
+        <Link href="/?join=signup" className={styles.primary}>Start your FittList</Link>
         <div className={styles.heroArt} aria-label="FittList calendar on a phone">
-          <img src="/landing-hero.webp" alt="A FittList calendar showing classes from multiple coaches" />
-          <span className={styles.photoBarOne} aria-hidden="true" />
-          <span className={styles.photoBarTwo} aria-hidden="true" />
-          <span className={styles.photoBarThree} aria-hidden="true" />
+          <span className={styles.heroLogo} aria-hidden="true" />
+          <div className={styles.heroPhone} aria-hidden="true">
+            <div className={styles.phoneStatus}><span>9:41</span><span>● ● ●</span></div>
+            <div className={styles.phoneBrand}><span className={styles.phoneMark} /><strong>FittList</strong></div>
+            <div className={styles.phoneRail}>
+              <span><b>MC</b><small>Maya</small></span>
+              <span><b>JL</b><small>Jordan</small></span>
+              <span><b>SR</b><small>Sam</small></span>
+            </div>
+            <div className={styles.phoneSchedule}>
+              <h3>Today</h3>
+              <div><i data-tone="mint">M</i><span><strong>Evening Flow</strong><small>Northline Yoga · Maya Cole</small></span><time>6:00pm</time></div>
+              <div><i data-tone="blue">J</i><span><strong>Strength Circuit</strong><small>Harbor Athletic Club · Jordan Lee</small></span><time>7:00pm</time></div>
+              <h3>Tomorrow</h3>
+              <div><i data-tone="amber">S</i><span><strong>Mobility Lab</strong><small>Common Ground Studio · Sam Rivera</small></span><time>8:00am</time></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -72,8 +95,8 @@ export default async function MarketingPreviewPage() {
         </div>
         <div className={styles.weekCard}>
           <div className={styles.weekIdentity}>
-            <span>E</span>
-            <div><strong>Erin&apos;s week</strong><small>4 studios</small></div>
+            <span>M</span>
+            <div><strong>Maya&apos;s week</strong><small>4 studios</small></div>
           </div>
           {multiStudioWeek.map((item) => (
             <div className={styles.weekRow} key={`${item.day}-${item.time}`}>
@@ -83,13 +106,29 @@ export default async function MarketingPreviewPage() {
               <time>{item.time}</time>
             </div>
           ))}
-          <span className={styles.cardAction}>Share your week <Icon name="reply" size={18} /></span>
+        </div>
+      </section>
+
+      <section className={styles.shareSection}>
+        <div className={styles.shareHeading}>
+          <p className={styles.kicker}>Share it your way</p>
+          <h2>One calendar.<br />Everywhere.</h2>
+          <p>Make it easy to find wherever your people already are.</p>
+        </div>
+        <div className={styles.shareGrid}>
+          {shareMethods.map((method) => (
+            <article key={method.title}>
+              <span><Icon name={method.icon} size={24} /></span>
+              <h3>{method.title}</h3>
+              <p>{method.copy}</p>
+            </article>
+          ))}
         </div>
       </section>
 
       <section className={styles.studioSection}>
         <div className={styles.studioCard}>
-          <div className={styles.studioIdentity}><span>I</span><strong>Ironbound Performance</strong></div>
+          <div className={styles.studioIdentity}><span>H</span><strong>Harbor Athletic Club</strong></div>
           <div className={styles.studioStats}>
             <p><strong>38</strong><span>Classes</span></p>
             <p><strong>12</strong><span>Coaches</span></p>
