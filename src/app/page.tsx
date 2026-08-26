@@ -10,13 +10,15 @@ import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
 import { pendingInviter } from "@/lib/joinlink";
 import { AuthFlow } from "@/components/AuthFlow";
+import { PublicPreview } from "@/components/PublicPreview";
+import { publicPreview } from "@/lib/public-preview";
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ via?: string; invited?: string }>;
+  searchParams: Promise<{ via?: string; invited?: string; join?: string; city?: string }>;
 }) {
-  const { via, invited } = await searchParams;
+  const { via, invited, join, city } = await searchParams;
   const viaHandle = via?.trim() || null;
   // Arrived from a beta invite email rather than stumbling on the site.
   const wasInvited = invited === "1";
@@ -72,6 +74,13 @@ export default async function Home({
           landing={await landingHref()}
         />
       );
+  }
+  // The ordinary logged-out front door is the product, not an explanation of
+  // it. Authentication appears only when somebody asks to save, follow, join,
+  // publish, or explicitly signs in. Invite arrivals keep the focused auth
+  // door they were sent to, and action links return here with `join` set.
+  if (!join && !wasInvited && !via_ && !viaHandle) {
+    return <PublicPreview data={await publicPreview(city)} />;
   }
   return (
     <AuthFlow
