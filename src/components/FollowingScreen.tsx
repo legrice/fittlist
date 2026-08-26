@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { PeekClass } from "@/components/ClassPeek";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
 import { Toast, useToast } from "@/components/Toast";
@@ -984,6 +985,19 @@ export function FollowingScreen({
         />
       )}
       {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} coaches={coachById} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
+      {isHome && (
+        <BodyPortal>
+          <Link
+            className="calendar-tab-share"
+            href={meKind === "coach" ? "/coachshare" : "/membershare"}
+            aria-label="Share your schedule"
+            onClick={() => window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }))}
+          >
+            <Icon name="reply" className="share-arrow-forward" size={20} />
+            <span>Share</span>
+          </Link>
+        </BodyPortal>
+      )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
   );

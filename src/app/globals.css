@@ -11107,11 +11107,6 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-bottom-actions .calendar-bottom-add {
   box-shadow:0 4px 14px rgba(0,0,0,.14);
 }
-.calendar-bottom-actions .calendar-bottom-share {
-  display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:0 20px; background:var(--color-lime); color:var(--color-black);
-  box-shadow:0 4px 14px rgba(0,0,0,.14); white-space:nowrap;
-}
 .calendar-bottom-actions .calendar-bottom-add {
   flex:0 0 60px;
   width:60px;
@@ -11130,6 +11125,15 @@ a.clspeek-by:active { opacity: .6; }
   stroke-linejoin: round;
 }
 .calendar-bottom-actions button:active { transform: scale(.96); }
+.calendar-tab-share {
+  position:fixed; right:18px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:44;
+  min-height:60px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:0 20px; border-radius:var(--radius-pill);
+  background:var(--color-lime); color:var(--color-black); box-shadow:0 4px 14px rgba(0,0,0,.14);
+  font-size:15px; font-weight:600; text-decoration:none; white-space:nowrap;
+}
+.calendar-tab-share:active { transform:scale(.96); }
+@media (min-width:940px) { .calendar-tab-share { display:none; } }
 .calendar-tool-loading { min-height:180px; display:grid; place-items:center; color:var(--color-text-secondary); font-weight:700; }
 .calendar-page-header {
   min-height:64px; display:grid; grid-template-columns:minmax(0,1fr) auto 44px; align-items:center; gap:8px;
@@ -11148,9 +11152,6 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-header-share { width:auto; padding:0 14px; gap:7px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); box-shadow:none; font:inherit; font-weight:700; }
 @media (max-width:939px) {
   .calendar-header-share { display:none; }
-}
-@media (min-width:940px) {
-  .calendar-bottom-actions .calendar-bottom-share { display:none; }
 }
 .calendar-desktop-view { height:44px; padding:3px; display:flex; align-items:center; gap:3px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); }
 .calendar-desktop-view button { min-width:72px; height:36px; padding:0 13px; border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; }

@@ -621,10 +621,6 @@ export function CalendarScreen({
               <Icon name="add" size={28} />
             </button>
           )}
-          <button type="button" className="calendar-bottom-share" aria-label="Share your schedule" onClick={openShare} disabled={loadingTools && shareOpen}>
-            <Icon name="reply" className="share-arrow-forward" size={20} />
-            <span>Share</span>
-          </button>
         </div>
       </BodyPortal>
       {addChoice && (
