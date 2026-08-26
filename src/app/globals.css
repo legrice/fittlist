@@ -100,6 +100,9 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --radius-control: 18px;
   --radius-card: 20px;
   --radius-pill: 999px;
+  /* Display type should feel confident without squeezing the letters together.
+     Keep body and utility copy untouched; headline surfaces opt into this. */
+  --headline-tracking: .006em;
   /* Delight typeface. Black ink, cool neutral ground, and bright lime CTA.
 
      Product typography stays at 400/500/600. The 700 face is available for
@@ -341,7 +344,7 @@ a { color: inherit; }
 }
 @media (min-width: 940px) { .topnav { display: none; } }
 
-h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.018em; line-height: 1.05; }
+h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: var(--headline-tracking); line-height: 1.05; }
 .daylabel {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase; padding: 16px 0 8px;
@@ -382,9 +385,9 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   letter-spacing: .06em; text-transform: uppercase;
 }
 /* Setup uses the confident display weight; supporting copy stays quiet. */
-.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 31px; letter-spacing: -.02em; line-height: 1.04; margin-bottom: 12px; color: var(--ink); }
+.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 31px; letter-spacing: var(--headline-tracking); line-height: 1.04; margin-bottom: 12px; color: var(--ink); }
 /* The one line the landing is built around, so it gets the room. */
-.ob h1.ob-hero { font-size: 46px; letter-spacing: -.006em; margin-bottom: 14px; }
+.ob h1.ob-hero { font-size: 46px; letter-spacing: var(--headline-tracking); margin-bottom: 14px; }
 .ob p { font-size: 15px; color: var(--ol); line-height: 1.55; margin-bottom: 22px; }
 .ob p b { color: var(--ink); font-weight: 600; }
 .ob input {
@@ -11603,12 +11606,12 @@ a.clspeek-by:active { opacity: .6; }
 .cityhero { padding:48px 0 44px; }
 .citybrand { display:inline-block; margin-bottom:68px; color:var(--si); font-size:24px; font-weight:600; text-decoration:none; }
 .cityhero>p:first-of-type { margin:0 0 10px; color:var(--si); font-size:15px; font-weight:600; }
-.cityhero h1 { max-width:820px; margin:0; font-size:clamp(42px,8vw,78px); line-height:.96; letter-spacing:-.055em; }
+.cityhero h1 { max-width:820px; margin:0; font-size:clamp(42px,8vw,78px); line-height:.96; letter-spacing:var(--headline-tracking); }
 .citylede { max-width:650px; margin:24px 0 30px; color:var(--muted); font-size:clamp(19px,3vw,24px); line-height:1.35; }
 .citycta { display:inline-flex; min-height:50px; align-items:center; padding:0 24px; border-radius:16px; background:var(--si); color:var(--color-black); font-weight:600; text-decoration:none; }
 .citysection { padding:34px 0; border-top:1px solid var(--div); }
 .citysection-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:22px; }
-.citysection-head h2 { margin:0; font-size:30px; letter-spacing:-.035em; }
+.citysection-head h2 { margin:0; font-size:30px; letter-spacing:var(--headline-tracking); }
 .citysection-head span { color:var(--muted); }
 .citygrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
 .cityperson { display:flex; min-width:0; gap:15px; align-items:center; padding:18px; border-radius:20px; background:var(--wash); color:inherit; text-decoration:none; }

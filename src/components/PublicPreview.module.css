@@ -1,18 +1,18 @@
-.page{min-height:100vh;background:var(--ground);color:var(--ink);padding-bottom:56px}
-.header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1180px)/2));border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--ground) 92%,transparent);position:sticky;top:0;z-index:20;backdrop-filter:blur(18px)}
+.page{min-height:100vh;background:var(--color-black);color:var(--color-lime);padding-bottom:56px}
+.header{--wm-ink:var(--color-lime);--wm-mark:var(--color-lime);height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1180px)/2));border-bottom:1px solid color-mix(in srgb,var(--color-lime) 18%,transparent);background:color-mix(in srgb,var(--color-black) 92%,transparent);position:sticky;top:0;z-index:20;backdrop-filter:blur(18px)}
 .headerActions{display:flex;align-items:center;gap:10px}
 .signIn,.primary,.loginLink{text-decoration:none}
-.signIn{color:var(--ink);font-weight:700;padding:11px 15px}
+.signIn{color:var(--color-lime);font-weight:700;padding:11px 15px}
 .primary{background:var(--color-action)!important;color:var(--color-black)!important;font-weight:800;border-radius:999px;padding:12px 20px;display:inline-flex;justify-content:center;align-items:center;border:0;white-space:nowrap}
 .hero{max-width:900px;margin:0 auto;padding:86px 24px 70px;text-align:center}
-.hero h1{font-size:clamp(48px,6.2vw,78px);line-height:.98;letter-spacing:-.045em;max-width:860px;margin:0 auto;text-wrap:balance}
+.hero h1{font-size:clamp(48px,6.2vw,78px);line-height:1.02;letter-spacing:var(--headline-tracking);max-width:860px;margin:0 auto;color:var(--color-lime);text-wrap:balance}
 .heroCta{margin-top:30px;min-height:52px;border:0;border-radius:999px;padding:0 25px;background:var(--color-action);color:var(--color-black);font:inherit;font-weight:850;cursor:pointer}
-.schedule{max-width:780px;margin:0 auto;padding:0 24px}
+.schedule{box-sizing:border-box;width:min(840px,calc(100% - 40px));margin:0 auto;padding:34px 32px 52px;border-radius:32px;background:var(--color-background);color:var(--color-text-primary);box-shadow:0 24px 70px rgba(0,0,0,.18)}
 .citySelect{position:relative;display:inline-flex;align-items:center;margin:0 0 30px;color:var(--muted);font-size:14px;font-weight:750}
 .citySelect select{appearance:none;border:0;background:transparent;color:inherit;font:inherit;padding:7px 23px 7px 0;cursor:pointer;outline:0}
 .citySelect>span:last-child{position:absolute;right:0;pointer-events:none}
 .day{margin:0 0 42px}
-.day h3{font-size:21px;letter-spacing:-.025em;margin:0 0 14px}
+.day h3{font-size:21px;letter-spacing:var(--headline-tracking);margin:0 0 14px}
 .classRow{display:grid;grid-template-columns:minmax(0,1fr) 82px 42px;align-items:center;gap:15px;padding:12px 0}
 .classMain{display:flex;align-items:center;gap:15px;color:var(--ink);text-decoration:none;min-width:0}
 .avatar{display:inline-grid;place-items:center;width:54px;height:54px;border-radius:50%;overflow:hidden;color:#fff;font-weight:850;flex:0 0 auto}
@@ -29,7 +29,7 @@
 .scrim{position:fixed;inset:0;background:rgba(2,13,8,.58);z-index:100;display:grid;place-items:center;padding:20px}
 .prompt{width:min(440px,100%);background:var(--card);border-radius:28px;padding:26px;position:relative;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.26)}
 .promptMark{display:flex;justify-content:center;margin:18px 0 22px}
-.prompt h2{font-size:30px;letter-spacing:-.04em;margin:0}
+.prompt h2{font-size:30px;letter-spacing:var(--headline-tracking);margin:0}
 .prompt p{color:var(--muted);font-size:17px;line-height:1.45;margin:10px 0 24px}
 .prompt>.primary{width:100%;min-height:50px}
 .loginLink{display:block;color:var(--ink);font-size:14px;font-weight:700;margin-top:16px}
@@ -40,9 +40,9 @@
   .page{padding-bottom:36px}
   .header{height:72px;padding:0 20px}
   .hero{padding:58px 20px 50px}
-  .hero h1{font-size:46px;line-height:1;letter-spacing:-.04em}
+  .hero h1{font-size:46px;line-height:1.04;letter-spacing:var(--headline-tracking)}
   .heroCta{margin-top:24px;min-height:49px}
-  .schedule{padding:0 20px}
+  .schedule{width:calc(100% - 24px);padding:26px 18px 38px;border-radius:28px}
   .citySelect{margin-bottom:22px;font-size:13px}
   .day{margin-bottom:36px}
   .day h3{font-size:19px}
