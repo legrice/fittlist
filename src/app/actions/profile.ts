@@ -268,7 +268,7 @@ export async function updateProfile(input: {
     .where(eq(schema.users.id, userId))
     .returning({ handle: schema.users.handle });
 
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   if (user?.handle) revalidatePath(`/${user.handle}`);
   return { ok: true };
 }
@@ -336,7 +336,7 @@ export async function setDiscoverable(on: boolean): Promise<{ ok: boolean }> {
   if (!userId) return { ok: false };
   const db = await getDb();
   await db.update(schema.users).set({ discoverable: on }).where(eq(schema.users.id, userId));
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath("/discover");
   return { ok: true };
 }
@@ -349,7 +349,7 @@ export async function setMessagesOpen(on: boolean): Promise<{ ok: boolean }> {
   if (!userId) return { ok: false };
   const db = await getDb();
   await db.update(schema.users).set({ messagesOpen: on }).where(eq(schema.users.id, userId));
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   return { ok: true };
 }
 
@@ -363,7 +363,7 @@ export async function setLook(look: string): Promise<{ ok: boolean }> {
     .set({ look: v })
     .where(eq(schema.users.id, userId))
     .returning({ handle: schema.users.handle });
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   if (user?.handle) revalidatePath(`/${user.handle}`);
   return { ok: true };
 }

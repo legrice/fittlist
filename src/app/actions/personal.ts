@@ -289,7 +289,7 @@ export async function addPersonalClass(input: {
     console.error("personal template upsert failed", err);
   }
 
-  revalidatePath("/week");
+  revalidatePath("/calendar");
   revalidatePath("/membershare");
   return { ok: true, id: written.length === 1 ? written[0].id : undefined };
 }
@@ -484,7 +484,7 @@ export async function updatePersonalClass(
     console.error("personal template upsert failed", err);
   }
 
-  revalidatePath("/week");
+  revalidatePath("/calendar");
   revalidatePath("/membershare");
   return { ok: true };
 }
@@ -496,10 +496,8 @@ export async function removePersonalClass(id: string): Promise<{ ok: boolean; er
   await db
     .delete(schema.personalClasses)
     .where(and(eq(schema.personalClasses.id, id), eq(schema.personalClasses.userId, userId)));
-  // Both calendars carry these rows, so both have to be told. A coach's own
-  // entries lived only on /app and survived every removal for want of this.
-  revalidatePath("/week");
-  revalidatePath("/app");
+  // The canonical calendar carries both personal entries and assigned shifts.
+  revalidatePath("/calendar");
   revalidatePath("/membershare");
   return { ok: true };
 }

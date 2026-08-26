@@ -56,7 +56,7 @@ export function NewMessage({ people, empty = false }: { people: MessagePerson[];
               <>
                 <button className="newmessage-to" onClick={() => { setPerson(null); setSent(false); }}>
                   <span className="inboxrow-av" style={{ background: person.color }}>
-                    {person.photo ? <img src={person.photo} alt="" /> : (person.name.charAt(0) || "?").toUpperCase()}
+                    {person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : (person.name.charAt(0) || "?").toUpperCase()}
                   </span>
                   <span><strong>{person.name}</strong><small>@{person.handle}</small></span>
                   <Icon name="chevron_left" size={20} />
@@ -79,7 +79,7 @@ export function NewMessage({ people, empty = false }: { people: MessagePerson[];
                   {shown.map((p) => (
                     <button key={p.id} className="inboxrow" onClick={() => setPerson(p)}>
                       <span className="inboxrow-av" style={{ background: p.color }}>
-                        {p.photo ? <img src={p.photo} alt="" /> : (p.name.charAt(0) || "?").toUpperCase()}
+                        {p.photo ? <img src={p.photo} alt="" loading="lazy" decoding="async" /> : (p.name.charAt(0) || "?").toUpperCase()}
                       </span>
                       <span className="inboxrow-main"><span className="inboxrow-top"><span className="nm">{p.name}</span></span><span className="inboxrow-preview">@{p.handle}</span></span>
                       <Icon name="chevron_right" size={20} />

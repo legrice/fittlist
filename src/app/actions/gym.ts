@@ -897,7 +897,7 @@ async function tellCoach(
     type: on ? "shift_assigned" : "shift_dropped",
     title: on ? `You're coaching ${className}` : `You're off ${className}`,
     body: `${when} at ${studioName}.`,
-    href: "/week",
+    href: "/calendar",
   });
 }
 
@@ -1250,7 +1250,7 @@ export async function deleteGymClass(
         type: "class_cancelled",
         title: `${existing.name} is off`,
         body: `${when} at ${studio.name} is no longer on the schedule.`,
-        href: "/week",
+        href: "/calendar",
       });
     }
   };
@@ -1385,7 +1385,7 @@ export async function closeGymDay(
       type: "class_cancelled",
       title: `${cls.name} is off`,
       body: `${when} at ${studio.name} is no longer on the schedule.`,
-      href: "/week",
+      href: "/calendar",
     });
   }
   for (const row of rows) {
@@ -1473,7 +1473,7 @@ export async function openGymDay(
       type: "class_updated",
       title: `${cls.name} is back on`,
       body: `${when} at ${studio.name} has reopened.`,
-      href: "/week",
+      href: "/calendar",
     });
   }
   for (const row of rows) {
@@ -1591,23 +1591,21 @@ export async function setShiftCover(
         body: coachUserId
           ? `${when} at ${studio.name}. Somebody else is on it.`
           : `${when} at ${studio.name}. The slot is open.`,
-        href: "/week",
+        href: "/calendar",
       });
     if (coachUserId)
       await addNotification(coachUserId, {
         type: "shift_assigned",
         title: `You're covering ${cls.name}`,
         body: `${when} at ${studio.name}.`,
-        href: "/week",
+        href: "/calendar",
       });
   }
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -1736,7 +1734,7 @@ export async function giveUpShift(
     },
     true,
   );
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1814,7 +1812,7 @@ export async function claimShift(
     },
     false,
   );
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1935,7 +1933,7 @@ export async function sendShiftTo(
       },
       false,
     );
-    revalidatePath("/app");
+    revalidatePath("/calendar");
     revalidatePath(`/s/${studio.slug ?? studio.id}`);
     revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
     return { ok: true };
@@ -1980,7 +1978,7 @@ export async function sendShiftTo(
     },
     false,
   );
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -2062,7 +2060,7 @@ export async function mergeIntoGym(
   await db.delete(schema.attendances).where(eq(schema.attendances.classId, classId));
   await db.delete(schema.classes).where(eq(schema.classes.id, classId));
 
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath("/feed");
   return { ok: true, moved: ahead.length };
 }
@@ -2107,7 +2105,7 @@ async function tellAboutDuplicate(
     type: "class_overlap",
     title: `${studio.name} lists ${row.name} too`,
     body,
-    href: "/app",
+    href: "/calendar",
   });
 }
 
@@ -2623,9 +2621,7 @@ export async function setStudioCoachScheduled(
   revalidatePath(`/s/${slug}/manage/staff`);
   revalidatePath(`/s/${slug}/manage/staff/${userId}`);
   revalidatePath(`/s/${slug}/shifts`);
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -2656,9 +2652,7 @@ export async function removeStudioCoach(
   revalidatePath(`/s/${slug}/manage/staff`);
   revalidatePath(`/s/${slug}/manage/staff/${userId}`);
   revalidatePath(`/s/${slug}/shifts`);
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -3576,7 +3570,7 @@ export async function answerShiftRequest(
       actorUserId: userId,
     });
   }
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);

@@ -64,7 +64,7 @@ export function CircleTray({ circles }: { circles: Circle[] }) {
               <span className={`trayav${c.fresh && !seen[c.id] ? " fresh" : ""}`}>
                 {c.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.photo} alt="" />
+                  <img src={c.photo} alt="" loading="lazy" decoding="async" />
                 ) : (
                   <span className="trayav-ini" style={{ background: c.color }}>
                     {initialOf(c.name)}

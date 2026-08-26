@@ -165,7 +165,7 @@ export function ClassLine({ row }: { row: WeekRow }) {
             <span className="clline-av" style={{ background: row.coach.color }}>
               {row.coach.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={row.coach.photo} alt="" />
+                <img src={row.coach.photo} alt="" loading="lazy" decoding="async" />
               ) : (
                 initials(row.coach.name)
               )}
@@ -255,6 +255,8 @@ export function WeekEmpty({
         alt=""
         width={356}
         height={600}
+        loading="lazy"
+        decoding="async"
       />
       <h2 className="wkempty-t">{first ? title : "Nothing coming up"}</h2>
       <p className="wkempty-b">{first ? body : "Nothing on the days ahead."}</p>

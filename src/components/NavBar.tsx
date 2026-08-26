@@ -13,8 +13,8 @@ export type { NavTab };
 // else. The Slack-style dock (the pill plus a search circle beside it) was
 // tried twice now and reverted twice, the second time by Matt after living
 // with it. Discover is a normal tab pointing at the same search as the header
-// magnifier, and this stays one plain pill. Above 940px this hides and HeaderNav takes over,
-// off the same list.
+// magnifier, and this stays one plain pill. The desktop chrome takes over at
+// larger widths from the same shared list.
 export function NavBar({
   active,
   coach = true,

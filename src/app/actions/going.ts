@@ -63,9 +63,7 @@ export async function setGoing(
   }
   await recordProductActivity(userId, on ? "class_saved" : "class_removed");
   revalidatePath("/feed");
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -92,6 +90,5 @@ export async function setGoingVisibility(
         eq(schema.attendances.occurrenceDate, occurrenceDate),
       ),
     );
-  revalidatePath("/activity");
   return { ok: true };
 }

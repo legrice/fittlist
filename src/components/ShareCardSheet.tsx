@@ -160,8 +160,7 @@ export function ShareCardSheet({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="cardimg" src={cardUrl} alt={alt} />
         {linkUrl && <InAppShare title={linkTitle ?? title} url={linkUrl} onToast={onToast} />}
-        {/* Share leads, save is the quiet one. See ShareComposer: the filled
-            button used to say Save and open the share sheet. */}
+        {/* Share leads; downloading the rendered image stays the quiet action. */}
         <div className="publishwrap">
           <button className="btn" disabled={sharing} onClick={shareCard}>
             {sharing ? "Opening…" : "Share image"}

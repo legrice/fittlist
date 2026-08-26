@@ -65,11 +65,11 @@ export async function sendShiftReminders(now = new Date()): Promise<{ sent: numb
       type: "shift_reminder",
       title,
       body,
-      href: studio ? `/s/${studio.slug ?? studio.id}/shifts` : "/week",
+      href: studio ? `/s/${studio.slug ?? studio.id}/shifts` : "/calendar",
     });
     const person = personById.get(coachUserId);
     if (person) {
-      const url = `${siteOrigin()}${studio ? `/s/${studio.slug ?? studio.id}/shifts` : "/week"}`;
+      const url = `${siteOrigin()}${studio ? `/s/${studio.slug ?? studio.id}/shifts` : "/calendar"}`;
       try {
         await sendMessage({
           to: person.email,

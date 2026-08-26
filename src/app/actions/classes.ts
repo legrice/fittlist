@@ -427,7 +427,6 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // Subscribers get the schedule as one weekly digest (see sendWeeklyDigests),
   // not a per-change email, so publishing just updates the page + Google sync.
   syncGoogleAfter(userId);
-  revalidatePath("/app");
   revalidatePath("/calendar");
 
   const first = inserted[0];
@@ -594,7 +593,7 @@ export async function deleteClass(
       }
     }
     syncGoogleAfter(ownerId);
-    revalidatePath("/app");
+    revalidatePath("/calendar");
     return { ok: true, count: 1 };
   }
 
@@ -630,6 +629,6 @@ export async function deleteClass(
   }
 
   syncGoogleAfter(ownerId);
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   return { ok: true, count };
 }

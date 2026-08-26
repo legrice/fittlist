@@ -32,7 +32,7 @@ export async function blockPerson(blockedId: string): Promise<{ ok: boolean; err
   // getting your week by email every Sunday.
   await dropFollow(userId, blockedId);
   revalidatePath("/followers");
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   return { ok: true };
 }
 

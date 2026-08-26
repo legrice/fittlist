@@ -171,7 +171,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
                     {groups.map((group) => (
                       <Link className="disrow disrow-studio" href={`/g/${group.slug}?from=following`} key={group.id}>
                         <span className="disrow-avwrap">
-                          {group.photo ? <img className="disrow-av" src={group.photo} alt="" /> : (
+                          {group.photo ? <img className="disrow-av" src={group.photo} alt="" loading="lazy" decoding="async" /> : (
                             <span className="disrow-av disrow-av-empty" aria-hidden="true">
                               {initials(group.name)}
                             </span>
@@ -246,7 +246,7 @@ function PeopleRow({ p }: { p: DirPerson }) {
         <span className="nearrow-av">
           {p.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.photo} alt="" />
+            <img src={p.photo} alt="" loading="lazy" decoding="async" />
           ) : (
             <span className="nearrow-ini" style={{ background: p.color }}>
               {initials(p.name)}

@@ -359,7 +359,7 @@ export function StudioAdminSheet({
                     <div className="studio-manager-results" aria-live="polite">
                       {managerSearchPending ? <p>Searching…</p> : managerCandidates.length ? managerCandidates.map((person) => (
                         <button key={person.id} disabled={addingAdmin} onClick={() => void addExistingAdmin(person)}>
-                          {person.photo ? <img src={person.photo} alt="" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}
+                          {person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}
                           <span><strong>{person.name}</strong><small>{person.handle ? `@${person.handle}` : person.email}</small></span>
                           <Icon name="add_circle" size={22} />
                         </button>

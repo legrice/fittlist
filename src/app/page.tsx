@@ -40,7 +40,12 @@ export default async function Home({
   const userId = await getSessionUserId();
   if (userId) {
     const db = await getDb();
-    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+    // The front door only decides where to send an existing session. Avoid
+    // pulling profile photos and every settings field before that redirect.
+    const [user] = await db
+      .select({ handle: schema.users.handle, kind: schema.users.kind })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
     // A handle is what "set up" means now, for both sides. Once claimed, use
     // the same canonical landing as every auth callback and the onboarding
     // finish: the Calendar tab. Keeping a separate root redirect was how established

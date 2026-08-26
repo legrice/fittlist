@@ -35,7 +35,7 @@ export async function setCoachStudios(
     .select({ handle: schema.users.handle })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   if (u?.handle) revalidatePath(`/${u.handle}`);
   return { ok: true };
 }

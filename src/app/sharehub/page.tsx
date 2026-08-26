@@ -4,5 +4,5 @@ import { redirect } from "next/navigation";
 // old address has to land: it is in histories and maybe a bookmark or two.
 // The name changed by Matt's call; the screen did not.
 export default function OldShareHub() {
-  redirect("/membershare");
+  redirect("/share");
 }
