@@ -248,7 +248,12 @@ export function CoachPeek({
         )}
         {self && shareHref && (
           <div className="peek-share-sticky">
-            <Link className="peek-share-cta" href={shareHref} onClick={onShare}>
+            <Link className="peek-share-cta" href={shareHref} onClick={() => {
+              // Hide native chrome during the route's loading boundary too;
+              // ShareHubScreen keeps the takeover active once it mounts.
+              window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
+              onShare?.();
+            }}>
               <Icon name="reply" className="share-arrow-forward" size={21} />
               <span>Share your week</span>
             </Link>

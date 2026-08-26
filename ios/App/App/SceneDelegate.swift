@@ -261,6 +261,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         guard message.name == "fittlistRoute",
               let route = message.body as? [String: Any],
               let path = route["path"] as? String else { return }
+        setTakeover(path == "/coachshare" || path == "/membershare")
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
         let active = route["active"] as? String
         let activeTags = ["calendar": 0, "discover": 1, "saved": 2]

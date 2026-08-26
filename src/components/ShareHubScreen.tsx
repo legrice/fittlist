@@ -259,6 +259,17 @@ export function ShareHubScreen({
     setPageHost(window.location.host);
   }, []);
 
+  // The route version is opened from your circle and owns the whole mobile
+  // screen just like the calendar's embedded editor. The native header and
+  // tab bar live outside the web view, so they need the same explicit signal.
+  useEffect(() => {
+    if (embedded) return;
+    window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: false }));
+    };
+  }, [embedded]);
+
   useEffect(() => {
     const receive = (event: Event) => {
       const detail = (event as CustomEvent<{ message?: string }>).detail;
