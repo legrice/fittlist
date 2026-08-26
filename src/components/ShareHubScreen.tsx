@@ -205,6 +205,7 @@ export function ShareHubScreen({
         }
         setBackground(result.background);
         setBust(Date.now());
+        setPick(null);
         toast("Photo background added");
       },
       () => toast("That photo format isn't supported"),
@@ -222,7 +223,25 @@ export function ShareHubScreen({
     }
     setBackground(null);
     setBust(Date.now());
+    setPick(null);
     toast("Photo background removed");
+  };
+
+  const chooseColorBackground = async (id: StoryThemeId) => {
+    if (backgroundBusy) return;
+    if (background) {
+      setBackgroundBusy(true);
+      const result = await setStoryBackground(null);
+      setBackgroundBusy(false);
+      if (!result.ok) {
+        toast(result.error ?? "Couldn't change the background");
+        return;
+      }
+      setBackground(null);
+      setBust(Date.now());
+    }
+    setThemeId(id);
+    setPick(null);
   };
 
   // A server change (an add, a mark) has to reach both the list and the
@@ -639,32 +658,16 @@ export function ShareHubScreen({
                     + Add another class
                   </button>
                 )}
-                {/* A complete visual style is the fastest way to make the
-                    picture feel yours, so it leads the editing controls. */}
+                <button className="shctrl" onClick={() => setPick("color")}>
+                  <span className="shctrl-k">Background</span>
+                  <span className="shctrl-v">{background ? "Photo" : STORY_THEMES[themeId].label}</span>
+                </button>
+                {/* A complete visual style follows the background: the
+                    picture's surface is the first decision people see. */}
                 <button className="shctrl" onClick={() => setPick("layout")}>
                   <span className="shctrl-k">Style</span>
                   <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
                 </button>
-                <button className="shctrl" onClick={() => setPick("color")}>
-                  <span className="shctrl-k">Color</span>
-                  <span className="shctrl-v">{STORY_THEMES[themeId].label}</span>
-                </button>
-                <button
-                  className="shctrl"
-                  disabled={backgroundBusy}
-                  onClick={() => backgroundRef.current?.click()}
-                >
-                  <span className="shctrl-k">Background</span>
-                  <span className="shctrl-v">
-                    {backgroundBusy ? "Preparing…" : background ? "Change photo" : "Add photo"}
-                  </span>
-                </button>
-                {background && (
-                  <button className="shctrl" disabled={backgroundBusy} onClick={removeBackground}>
-                    <span className="shctrl-k">Background</span>
-                    <span className="shctrl-v">Remove photo</span>
-                  </button>
-                )}
                 <input
                   ref={backgroundRef}
                   type="file"
@@ -851,8 +854,11 @@ export function ShareHubScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Color</h2>
-            <p className="lead">Choose a color for your share image.</p>
+            <h2>{seg === "week" ? "Background" : "Color"}</h2>
+            <p className="lead">
+              {seg === "week" ? "Choose a color or use one of your photos." : "Choose a color for your profile card."}
+            </p>
+            {seg === "week" && <p className="fsec-h">Color</p>}
             <div className="settingslist shcolor-list">
               {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
                 ([id, theme]) => {
@@ -861,11 +867,9 @@ export function ShareHubScreen({
                     <button
                       key={id}
                       className="setrow"
-                      aria-pressed={on}
-                      onClick={() => {
-                        setThemeId(id);
-                        setPick(null);
-                      }}
+                      aria-pressed={on && !background}
+                      disabled={backgroundBusy}
+                      onClick={() => void chooseColorBackground(id)}
                     >
                       <span
                         className="shcolor-choice"
@@ -879,7 +883,7 @@ export function ShareHubScreen({
                       <span className="setrow-txt">
                         <span className="t">{theme.label}</span>
                       </span>
-                      {on && (
+                      {on && !background && (
                         <span className="setrow-ic">
                           <Icon name="check" size={20} />
                         </span>
@@ -889,6 +893,31 @@ export function ShareHubScreen({
                 },
               )}
             </div>
+            {seg === "week" && (
+              <>
+                <p className="fsec-h shbackground-photo-label">Photo</p>
+                <div className="settingslist">
+                  <button
+                    className="setrow"
+                    disabled={backgroundBusy}
+                    onClick={() => backgroundRef.current?.click()}
+                  >
+                    <span className="setrow-ic"><Icon name="image" size={21} /></span>
+                    <span className="setrow-txt">
+                      <span className="t">{background ? "Choose another photo" : "Choose a photo"}</span>
+                      <span className="s">Keeps your selected color</span>
+                    </span>
+                    {background && <span className="setrow-ic"><Icon name="check" size={20} /></span>}
+                  </button>
+                  {background && (
+                    <button className="setrow" disabled={backgroundBusy} onClick={() => void removeBackground()}>
+                      <span className="setrow-ic"><Icon name="delete" size={20} /></span>
+                      <span className="setrow-txt"><span className="t">Remove photo</span></span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

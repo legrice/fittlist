@@ -9340,6 +9340,7 @@ select.editinput.placekind-select {
   box-shadow: 0 0 0 1px var(--line);
   background-position: center; background-size: cover;
 }
+.shbackground-photo-label { margin-top: 20px; }
 @media (min-width: 940px) {
   .calendar-share-scrim { align-items: stretch; padding: 0; }
   .calendar-share-sheet { max-width: none; border-radius: 0; }
