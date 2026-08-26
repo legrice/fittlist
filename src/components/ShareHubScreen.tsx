@@ -138,7 +138,7 @@ export function ShareHubScreen({
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>("top");
   const [pick, setPick] = useState<
-    null | "dates" | "classes" | "message" | "layout" | "deco"
+    null | "dates" | "classes" | "message" | "layout" | "deco" | "color"
   >(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -592,34 +592,6 @@ export function ShareHubScreen({
 
         {!building && (seg === "week" || seg === "profile") && (
           <>
-            {/* The colours right under the picture, bare circles, centred:
-                tapping one redraws the picture above it, and the picture is
-                the label, so the word "Colors" said nothing. */}
-            <div className="shcolors">
-              <div className="shcolors-row" role="listbox" aria-label="Colors">
-                {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
-                  ([id, t]) => (
-                    <button
-                      key={id}
-                      role="option"
-                      aria-selected={id === themeId}
-                      aria-label={t.label}
-                      className={`shswatch${id === themeId ? " sel" : ""}`}
-                      // backgroundImage, never the shorthand: the CSS clips
-                      // the colour to the content circle so the ring can be
-                      // the border, and the shorthand would reset that clip.
-                      style={{
-                        backgroundImage: t.bg.includes("gradient")
-                          ? t.bg
-                          : `linear-gradient(105deg, ${t.bg} 50%, ${t.accent} 50%)`,
-                      }}
-                      onClick={() => setThemeId(id)}
-                    />
-                  ),
-                )}
-              </div>
-            </div>
-
             {seg === "week" && (
               <div className="shctrls">
                 {/* The rail of what the picture says: its range, its roster,
@@ -639,6 +611,10 @@ export function ShareHubScreen({
                 <button className="shctrl" onClick={() => setPick("layout")}>
                   <span className="shctrl-k">Style</span>
                   <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
+                </button>
+                <button className="shctrl" onClick={() => setPick("color")}>
+                  <span className="shctrl-k">Color</span>
+                  <span className="shctrl-v">{STORY_THEMES[themeId].label}</span>
                 </button>
                 <button
                   className="shctrl"
@@ -817,6 +793,59 @@ export function ShareHubScreen({
                   </button>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "color" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPick(null);
+          }}
+        >
+          <div className="sheet shpick">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Color</h2>
+            <p className="lead">Choose a color for your share image.</p>
+            <div className="settingslist shcolor-list">
+              {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
+                ([id, theme]) => {
+                  const on = id === themeId;
+                  return (
+                    <button
+                      key={id}
+                      className="setrow"
+                      aria-pressed={on}
+                      onClick={() => {
+                        setThemeId(id);
+                        setPick(null);
+                      }}
+                    >
+                      <span
+                        className="shcolor-choice"
+                        style={{
+                          backgroundImage: theme.bg.includes("gradient")
+                            ? theme.bg
+                            : `linear-gradient(105deg, ${theme.bg} 50%, ${theme.accent} 50%)`,
+                        }}
+                        aria-hidden="true"
+                      />
+                      <span className="setrow-txt">
+                        <span className="t">{theme.label}</span>
+                      </span>
+                      {on && (
+                        <span className="setrow-ic">
+                          <Icon name="check" size={20} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                },
+              )}
             </div>
           </div>
         </div>

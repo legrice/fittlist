@@ -15,6 +15,7 @@ import {
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import type { PeekClass } from "@/components/ClassPeek";
+import { BodyPortal } from "@/components/BodyPortal";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
@@ -558,44 +559,46 @@ export function CalendarScreen({
       </div>
 
       {shareOpen && (
-        <div
-          className="sheet-scrim calendar-share-scrim"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setShareOpen(false);
-          }}
-        >
-          <section
-            className="sheet calendar-share-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Share your week"
+        <BodyPortal>
+          <div
+            className="sheet-scrim calendar-share-scrim"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setShareOpen(false);
+            }}
           >
-            <button
-              type="button"
-              className="sheetclose calendar-share-close"
-              aria-label="Close share editor"
-              onClick={() => setShareOpen(false)}
+            <section
+              className="sheet calendar-share-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Share your week"
             >
-              <Icon name="close" size={24} />
-            </button>
-            {shareData ? <ShareHubScreen
-              embedded
-              coach={!member}
-              handle={handle ?? ""}
-              name={viewer.name}
-              items={shareData.items}
-              defaultFrom={shareData.defaultFrom}
-              today={todayIso}
-              savedHeadline={shareData.savedHeadline}
-              savedBackground={shareData.savedBackground}
-              studios={studios}
-              templates={composerData?.templates ?? []}
-              customTypes={composerData?.customTypes ?? []}
-              lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
-            /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
-          </section>
-        </div>
+              <button
+                type="button"
+                className="sheetclose calendar-share-close"
+                aria-label="Close share editor"
+                onClick={() => setShareOpen(false)}
+              >
+                <Icon name="close" size={24} />
+              </button>
+              {shareData ? <ShareHubScreen
+                embedded
+                coach={!member}
+                handle={handle ?? ""}
+                name={viewer.name}
+                items={shareData.items}
+                defaultFrom={shareData.defaultFrom}
+                today={todayIso}
+                savedHeadline={shareData.savedHeadline}
+                savedBackground={shareData.savedBackground}
+                studios={studios}
+                templates={composerData?.templates ?? []}
+                customTypes={composerData?.customTypes ?? []}
+                lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
+              /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
+            </section>
+          </div>
+        </BodyPortal>
       )}
 
       {/* Month view needs its weekday rail fixed above the grid. Day view

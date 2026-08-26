@@ -9291,17 +9291,29 @@ select.editinput.placekind-select {
   margin: 4px 0 0; color: var(--muted);
   font-size: 14px; line-height: 1.2; font-weight: 600;
 }
-.calendar-share-scrim { align-items: stretch; padding: 0; }
+.calendar-share-scrim {
+  position: fixed; inset: 0; z-index: 1200;
+  align-items: stretch; padding: 0;
+  background: var(--color-surface-muted);
+}
 .calendar-share-sheet {
+  position: relative; display: flex;
   width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0;
-  overflow: hidden; border-radius: 0; background:var(--color-surface-muted);
+  overflow: hidden; border: 0; border-radius: 0; background:var(--color-surface-muted);
 }
 .calendar-share-sheet .shpage-embedded {
-  width: 100%; max-width: none; height: 100%; max-height: none; overflow-y: auto;
+  flex: 1 1 auto; min-height: 0;
+  width: 100%; max-width: none; height: 100dvh; max-height: none; overflow-y: auto;
+  overscroll-behavior: contain;
   margin: 0;
-  padding: max(22px, env(safe-area-inset-top)) var(--page-gutter)
-    calc(30px + env(safe-area-inset-bottom));
+  padding: max(76px, calc(22px + env(safe-area-inset-top))) var(--page-gutter)
+    calc(32px + env(safe-area-inset-bottom));
   background:var(--color-surface-muted);
+}
+.calendar-share-sheet > .calendar-share-close {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top)); left: var(--page-gutter); right: auto;
+  z-index: 3;
 }
 .calendar-share-sheet .shseg { margin-top: var(--space-1); }
 .calendar-share-sheet .sheetclose {
@@ -9317,6 +9329,16 @@ select.editinput.placekind-select {
 .calendar-share-sheet .shctrl.shctrl-add {
   border-color:var(--color-lime);
   background:var(--color-lime);
+}
+.calendar-share-sheet .shctrls {
+  margin: 18px 0 0;
+  padding: 0 0 4px;
+}
+.shcolor-choice {
+  width: 44px; aspect-ratio: 1; flex: 0 0 44px;
+  border: 2px solid var(--card); border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--line);
+  background-position: center; background-size: cover;
 }
 @media (min-width: 940px) {
   .calendar-share-scrim { align-items: stretch; padding: 0; }
@@ -10371,33 +10393,6 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15.5px; font-weight: 600; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
-/* Bare circles centred under the picture, the Spotify grammar, by Matt's
-   call: the picture is the label, so the word "Colors" came off. `safe
-   center` keeps the row scrollable when sixteen swatches overflow; plain
-   center would clip the left end off the scroller. */
-.shcolors {
-  position: relative; z-index: 2;
-  display: flex; align-items: center; margin-top: -28px; min-width: 0;
-}
-.shcolors-row {
-  flex: 1; display: flex; gap: 8px; overflow-x: auto; padding: 2px;
-  margin: -2px 0; scrollbar-width: none;
-  justify-content: safe center;
-}
-.shcolors-row::-webkit-scrollbar { display: none; }
-/* The ring lives inside the swatch's own box: the colour paints the content
-   circle, the padding is the gap, and the border is the ring. Box-shadow
-   rings drew outside the box, so the scroller clipped them into crescents
-   on whichever side had least room; nothing here can be clipped, because
-   nothing reaches past the box. The colour is set as backgroundImage at the
-   call site, since the background shorthand would reset this clip. */
-.shswatch {
-  flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px;
-  border: 2.5px solid transparent; padding: 3px;
-  background-clip: content-box; background-origin: content-box;
-  cursor: pointer;
-}
-.shswatch.sel { border-color: var(--ink); }
 /* The picture, sized by height the way the composer's poster is: what it has
    to fit inside is the room the controls above and the button below leave. */
 .shprev {
