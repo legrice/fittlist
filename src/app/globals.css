@@ -9344,20 +9344,21 @@ select.editinput.placekind-select {
   flex:0 0 auto; width:28px; height:28px; border-radius:8px;
   border:1px solid rgba(2,13,8,.18); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
 }
-.shcolor-dropdown {
-  max-height:min(42dvh, 320px); margin-top:6px; overflow-y:auto;
+.shcolor-sheet-scrim { z-index:48; }
+.shcolor-sheet { max-height:min(78dvh, 680px); }
+.shcolor-sheet-list {
+  margin-top:8px; overflow:hidden;
   border:1px solid var(--color-border); border-radius:14px;
-  background:var(--color-surface); box-shadow:0 12px 30px rgba(2,13,8,.12);
 }
-.shcolor-dropdown > button {
+.shcolor-sheet-list > button {
   display:flex; align-items:center; gap:10px; width:100%; min-height:48px;
   padding:9px 12px; border:0; border-bottom:1px solid var(--color-border);
   background:transparent; color:var(--color-text-primary); font:inherit; text-align:left;
 }
-.shcolor-dropdown > button:last-child { border-bottom:0; }
-.shcolor-dropdown > button > span:nth-child(2) { flex:1; }
-.shcolor-dropdown > button[aria-selected="true"] { font-weight:700; }
-.shcolor-dropdown > button:active { background:var(--color-surface-hover); }
+.shcolor-sheet-list > button:last-child { border-bottom:0; }
+.shcolor-sheet-list > button > span:nth-child(2) { flex:1; }
+.shcolor-sheet-list > button[aria-selected="true"] { font-weight:700; }
+.shcolor-sheet-list > button:active { background:var(--color-surface-hover); }
 @media (min-width: 940px) {
   .calendar-share-scrim { align-items: stretch; padding: 0; }
   .calendar-share-sheet { max-width: none; border-radius: 0; }

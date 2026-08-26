@@ -832,10 +832,10 @@ export function ShareHubScreen({
                 <button
                   type="button"
                   className="typeselect shcolor-select"
-                  aria-haspopup="listbox"
+                  aria-haspopup="dialog"
                   aria-expanded={colorMenuOpen}
                   disabled={backgroundBusy}
-                  onClick={() => setColorMenuOpen((open) => !open)}
+                  onClick={() => setColorMenuOpen(true)}
                 >
                   <span
                     className="shcolor-preview"
@@ -844,30 +844,6 @@ export function ShareHubScreen({
                   <span>{STORY_THEMES[themeId].label}</span>
                   <Icon name="expand_more" size={18} />
                 </button>
-                {colorMenuOpen && (
-                  <div className="shcolor-dropdown" role="listbox" aria-label="Background color">
-                    {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(([id, theme]) => (
-                      <button
-                        key={id}
-                        type="button"
-                        role="option"
-                        aria-selected={id === themeId}
-                        onClick={() => {
-                          setColorMenuOpen(false);
-                          if (seg === "week") void chooseColorBackground(id);
-                          else {
-                            setThemeId(id);
-                            setPick(null);
-                          }
-                        }}
-                      >
-                        <span className="shcolor-preview" style={{ background: theme.bg }} />
-                        <span>{theme.label}</span>
-                        {id === themeId && <Icon name="check" size={18} />}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
               {seg === "week" && (
                 <>
@@ -895,6 +871,44 @@ export function ShareHubScreen({
                   )}
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "color" && colorMenuOpen && (
+        <div
+          className="sheet-scrim shcolor-sheet-scrim"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setColorMenuOpen(false);
+          }}
+        >
+          <div className="sheet shcolor-sheet" role="dialog" aria-modal="true" aria-labelledby="shcolor-title">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setColorMenuOpen(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2 id="shcolor-title">Choose a color</h2>
+            <div className="shcolor-sheet-list" role="listbox" aria-label="Background color">
+              {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(([id, theme]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="option"
+                  aria-selected={id === themeId}
+                  onClick={() => {
+                    setColorMenuOpen(false);
+                    if (seg === "week") void chooseColorBackground(id);
+                    else {
+                      setThemeId(id);
+                      setPick(null);
+                    }
+                  }}
+                >
+                  <span className="shcolor-preview" style={{ background: theme.bg }} />
+                  <span>{theme.label}</span>
+                  {id === themeId && <Icon name="check" size={18} />}
+                </button>
+              ))}
             </div>
           </div>
         </div>
