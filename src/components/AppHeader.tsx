@@ -139,9 +139,6 @@ export function AppHeader({
         )}
         <div className="social-brandbar-side social-brandbar-right">
           {!calendarUtility && <>
-            <Link className="iconbtn" href="/search" aria-label="Search FittList">
-              <Icon name="search" size={23} />
-            </Link>
             <GlobalAdd />
             <Link
               className={`iconbtn social-notifications${pathname.startsWith("/notifications") ? " onroute" : ""}`}
@@ -150,6 +147,9 @@ export function AppHeader({
             >
               <Icon name="notifications" size={23} />
               {notificationUnread > 0 && <i aria-hidden="true" />}
+            </Link>
+            <Link className="iconbtn" href="/search" aria-label="Search FittList">
+              <Icon name="search" size={23} />
             </Link>
           </>}
         </div>
