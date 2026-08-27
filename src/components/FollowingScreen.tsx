@@ -981,7 +981,6 @@ export function FollowingScreen({
           photo={personPeekOpen.photo}
           color={personPeekOpen.color}
           self={personPeekOpen.self}
-          shareHref={personPeekOpen.self ? (meKind === "coach" ? "/coachshare" : "/membershare") : undefined}
           pinned={!personPeekOpen.self && pins.has(`person:${personPeekOpen.id}`)}
           onPinChange={!personPeekOpen.self ? (pinned) => setPins((current) => { const next=new Set(current); const key=`person:${personPeekOpen.id}`; if(pinned)next.add(key);else next.delete(key); return next; }) : undefined}
           onClose={() => setPersonPeekOpen(null)}

@@ -36,7 +36,6 @@ export function CoachPeek({
   color,
   self = false,
   scheduleOnly = false,
-  shareHref,
   pinned: initialPinned = false,
   onPinChange,
   onClose,
@@ -52,7 +51,6 @@ export function CoachPeek({
   /** Following is about a coach's published schedule, not classes they have
    * privately added for themselves. */
   scheduleOnly?: boolean;
-  shareHref?: string;
   /** Explicit favorite state, separate from following. */
   pinned?: boolean;
   onPinChange?: (pinned: boolean) => void;
@@ -328,16 +326,10 @@ export function CoachPeek({
                     <Icon name="account_circle" size={18} />
                     <span>View profile</span>
                   </Link>
-                  {shareHref && (
-                    <Link
-                      className="peekfollow peekaction peekaction-share"
-                      href={shareHref}
-                      onClick={() => window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }))}
-                    >
-                      <Icon name="reply" className="share-arrow-forward" size={18} />
-                      <span>Share schedule</span>
-                    </Link>
-                  )}
+                  <Link className="peekfollow peekaction peekaction-manage" href="/calendar">
+                    <Icon name="calendar_month" size={18} />
+                    <span>Manage calendar</span>
+                  </Link>
                 </>
               ) : (
                 <>
