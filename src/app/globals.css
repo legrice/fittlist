@@ -342,7 +342,7 @@ a { color: inherit; }
 }
 .tabbar a.active { color: var(--ink); }
 .tabbar a .ico { font-size: 16px; line-height: 1; }
-.tabbar a.active .ico { color: var(--si); }
+.tabbar a.active .ico { color: var(--ink); }
 
 /* top header: wordmark + Schedule/My page toggle, in place of page titles */
 .topnav {
@@ -5904,7 +5904,7 @@ select.editinput.placekind-select {
    word together, and nothing else, by Matt's call: the filled circle and
    the tab-wide wash were both tried and came off. The You tab's face is a
    photo and marks itself by opacity instead. */
-.navtab.on { background: none; color: var(--si); }
+.navtab.on { background: none; color: var(--ink); }
 /* Your face is the Profile tab and stays fully visible in every tab state.
    Exactly the icons' 26px box: a hair smaller and the whole tab reads as
    sitting low. */
@@ -11890,11 +11890,11 @@ a.clspeek-by:active { opacity: .6; }
 }
 .navtab.on {
   background: transparent;
-  color: var(--si-ink);
+  color: var(--ink);
 }
 .navtab.on .navglyph {
   background:transparent;
-  color: var(--si-ink);
+  color: var(--ink);
 }
 .navglyph {
   width: 48px;
