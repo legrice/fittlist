@@ -8954,16 +8954,16 @@ select.editinput.placekind-select {
 .cash-class-main.own-coaching { border-left-color:var(--color-lime); }
 .cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:3px; }
 .cash-class-coachline { min-width:0; display:flex; align-items:center; gap:8px; }
-.cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
+.cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:15px; }
 .cash-class-title-row,
 .cash-class-studio-row { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:14px; }
 .cash-class-title-row > strong:first-child {
   min-width:0; overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
-  font-size:17px; line-height:1.18; font-weight:700;
+  font-size:19px; line-height:1.16; font-weight:700;
 }
-.cash-class-time { align-self:end; font-size:14px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-class-time { align-self:end; font-size:15px; line-height:1.2; font-weight:600; white-space:nowrap; }
 .cash-class-studio,
-.cash-class-duration { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
+.cash-class-duration { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:15px; }
 .cash-class-duration { text-align:right; }
 .cash-shift-tag {
   padding:4px 10px; border-radius:var(--radius-pill); background:var(--color-shift);
@@ -9004,10 +9004,11 @@ select.editinput.placekind-select {
     height: 54px;
     flex-basis: 54px;
   }
-  .cash-class-title-row > strong:first-child { font-size: 16px; }
-  .cash-class-copy > span,
+  .cash-class-title-row > strong:first-child { font-size: 18px; }
   .cash-class-copy small,
-  .cash-class-time { font-size: 13.5px; }
+  .cash-class-time,
+  .cash-class-studio,
+  .cash-class-duration { font-size: 14.5px; }
 }
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
@@ -11164,9 +11165,9 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-bottom-actions button:active { transform: scale(.96); }
 .calendar-tab-share {
   position:fixed; right:18px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:44;
-  min-height:60px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:0 20px; border-radius:var(--radius-pill);
-  background:var(--color-lime); color:var(--color-black); box-shadow:0 4px 14px rgba(0,0,0,.14);
+  min-height:50px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:0 18px; border-radius:var(--radius-pill);
+  background:var(--color-olive); color:var(--color-lime); box-shadow:0 4px 14px rgba(0,0,0,.14);
   font-size:15px; font-weight:600; text-decoration:none; white-space:nowrap;
 }
 .calendar-tab-share:active { transform:scale(.96); }
