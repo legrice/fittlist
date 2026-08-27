@@ -9016,6 +9016,34 @@ select.editinput.placekind-select {
   background: var(--ground); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--ink);
   border-bottom: 0;
 }
+/* Early-calendar design branch: a true dark-green canvas rather than the
+   warm charcoal used by the account preference. Keeping every app surface in
+   one green family lets portraits, lime actions and schedule type do the work. */
+.screen.hasnav.early-calendar-dark {
+  --color-background: #062c24;
+  --color-surface: #08372d;
+  --color-surface-muted: #10483c;
+  --color-surface-hover: #185548;
+  --color-border: #286659;
+  --color-border-strong: #3a7a6c;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b8d3ca;
+  --color-text-muted: #8eb4a8;
+  --paper: var(--color-background);
+  --shell: var(--color-background);
+  --ground: var(--color-background);
+  --card: var(--color-surface);
+  --ink: var(--color-text-primary);
+  --ol: var(--color-text-secondary);
+  --line: var(--color-border);
+  --div: var(--color-border);
+  --cl: var(--color-surface-muted);
+  --cl-d: var(--color-surface-hover);
+  --band: var(--color-background);
+  --si-tint: #174b36;
+  --si-ink: var(--color-lime);
+  background: var(--color-background);
+}
 .screen.hasnav .brandbar.social-brandbar { border-bottom: 1px solid var(--line); }
 .screen.hasnav .brandbar .iconbtn {
   width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: transparent;
