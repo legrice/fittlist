@@ -380,6 +380,7 @@ export async function PublicProfileView({
                       where: where ?? null,
                       hm: start.hm,
                       ap: start.ap,
+                      dur: `${c.durationMin} min`,
                       coach: {
                         id: user.id,
                         name: user.name,

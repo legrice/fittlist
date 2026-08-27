@@ -11662,6 +11662,15 @@ a.clspeek-by:active { opacity: .6; }
   display: flex; flex-direction: column; align-items: stretch; gap: 4px;
   border: 0; border-left: 4px solid var(--color-olive); border-bottom: 1px solid var(--color-border);
 }
+/* These elements used to sit directly in a three-column occurrence grid.
+   They now live inside title and studio sub-grids, so their old coordinates
+   would create implicit columns and push profile copy halfway across a row. */
+.calendar-cardlist .clline > *,
+.calendar-cardlist .clline :is(.clline-by-name, .clline-nm, .clline-t, .clline-w, .clline-dur, .clline-tag) {
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: auto;
+}
 .calendar-cardlist .clline-own-coaching { border-left-color: var(--color-lime); }
 .calendar-cardlist .clline-by {
   display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0;
@@ -11771,22 +11780,6 @@ a.clspeek-by:active { opacity: .6; }
   }
   .calendar-cardlist .clline-tag { padding-inline: 10px; }
   .schedule-kind-tabs button { padding-inline: 20px; }
-}
-
-/* My calendar used to retain grid placement from its management-era rows,
-   which indented the class and place even after CalendarList became text-led.
-   Reset those coordinates on this surface so it reads exactly like Schedule. */
-.calendar-cardwrap .personal-calendar-list .clline > *,
-.calendar-cardwrap .personal-calendar-list .clline :is(.clline-by-name, .clline-nm, .clline-t, .clline-w, .clline-dur, .clline-tag) {
-  grid-column: auto;
-  grid-row: auto;
-  justify-self: auto;
-}
-.calendar-cardwrap .personal-calendar-list .clline-title-row,
-.calendar-cardwrap .personal-calendar-list .clline-studio-row {
-  width: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 /* The rail's answer, in words. A filtered list is otherwise indistinguishable
