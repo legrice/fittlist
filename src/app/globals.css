@@ -8913,8 +8913,10 @@ select.editinput.placekind-select {
   margin: 0; font-size: 30px; line-height: 1.05; letter-spacing: -.02em;
 }
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
-.following-rail { margin: 4px -18px 0; }
-.following-rail .tray-scroll { gap:8px; padding-top:6px; padding-bottom:6px; }
+.following-rail { margin: 4px calc(-1 * var(--page-gutter)) 0; }
+.following-rail .tray-scroll {
+  gap:8px; padding:6px var(--page-gutter);
+}
 .following-rail .trayitem { width:92px; gap:8px; }
 .following-rail .trayav { width:86px; height:86px; }
 .following-rail .trayitem-nm { max-width:90px; font-size:13px; }
@@ -9039,6 +9041,12 @@ select.editinput.placekind-select {
 .screen.hasnav .brandbar {
   background: var(--ground); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--ink);
   border-bottom: 0;
+}
+@media (max-width: 939px) {
+  .screen.hasnav .brandbar {
+    margin-left: calc(-1 * var(--page-gutter)); margin-right: calc(-1 * var(--page-gutter));
+    padding-left: var(--page-gutter); padding-right: var(--page-gutter);
+  }
 }
 .screen.hasnav .brandbar.social-brandbar { border-bottom: 1px solid var(--line); }
 .screen.hasnav .brandbar .iconbtn {
