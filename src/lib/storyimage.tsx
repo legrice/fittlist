@@ -212,7 +212,11 @@ export function renderStory(model: StoryModel) {
                 fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
                 fontStyle: guest?.italic ? "italic" : "normal",
                 fontWeight: 800,
-                fontSize: Math.min(hSize, compact ? 74 : 92),
+                // The photo composition used to cap this below the default
+                // computed headline size, so nearly the whole 60–180% slider
+                // produced the same 74/92px text. Keep a canvas-aware safety
+                // ceiling, but let the control make a visibly real change.
+                fontSize: Math.min(hSize, square ? 160 : 200),
                 lineHeight: 0.98,
                 letterSpacing: guest ? Math.round((guest.track ?? 0) * hSize) : -2,
                 marginBottom: compact ? 24 : 34,

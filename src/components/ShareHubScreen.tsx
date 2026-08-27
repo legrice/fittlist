@@ -1011,9 +1011,10 @@ export function ShareHubScreen({
                   step={5}
                   value={slider}
                   onChange={(e) => setSlider(Number(e.target.value))}
-                  onPointerUp={() => setHsize(slider)}
-                  onKeyUp={() => setHsize(slider)}
-                  onTouchEnd={() => setHsize(slider)}
+                  onPointerUp={(e) => setHsize(Number(e.currentTarget.value))}
+                  onKeyUp={(e) => setHsize(Number(e.currentTarget.value))}
+                  onTouchEnd={(e) => setHsize(Number(e.currentTarget.value))}
+                  onBlur={(e) => setHsize(Number(e.currentTarget.value))}
                 />
                 {/* The voice, as a plain dropdown, by Matt's call: the sheet
                     of sample rows folded in here with the words it dresses. */}
