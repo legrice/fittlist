@@ -154,7 +154,7 @@ export function CalendarList({
 }
 
 export function ClassLine({ row }: { row: WeekRow }) {
-  const cls = `clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}${row.tagTone === "coaching" ? " clline-own-coaching" : ""}`;
+  const cls = `clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}${row.tagTone ? ` clline-tone-${row.tagTone}` : ""}`;
   const inner = (
     <>
       {(row.coach || row.tag) && (

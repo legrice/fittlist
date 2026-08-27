@@ -9005,7 +9005,9 @@ select.editinput.placekind-select {
   border:1px solid var(--line); background:var(--card);
 }
 .cash-class-avatar img { width:100%; height:100%; object-fit:cover; }
-.cash-class-main.own-coaching { border-left-color:var(--color-lime); }
+.cash-class-main.coaching { border-left-color:var(--color-coaching); }
+.cash-class-main.shift { border-left-color:var(--color-shift); }
+.cash-class-main.saved { border-left-color:var(--color-attending); }
 .cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:3px; }
 .cash-class-coachline { min-width:0; display:flex; align-items:center; gap:8px; }
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:16px; }
@@ -11684,7 +11686,11 @@ a.clspeek-by:active { opacity: .6; }
   grid-row: auto;
   justify-self: auto;
 }
-.calendar-cardlist .clline-own-coaching { border-left-color: var(--color-lime); }
+.calendar-cardlist .clline-tone-coaching { border-left-color: var(--color-coaching); }
+.calendar-cardlist .clline-tone-shift { border-left-color: var(--color-shift); }
+.calendar-cardlist .clline-tone-attending { border-left-color: var(--color-attending); }
+.calendar-cardlist .clline-tone-personal { border-left-color: var(--color-personal); }
+.calendar-cardlist .clline-tone-attention { border-left-color: var(--color-lime); }
 .calendar-cardlist .clline-by {
   display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0;
 }

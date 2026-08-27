@@ -849,7 +849,7 @@ export function FollowingScreen({
                           const coach = coachById.get(item.coachId);
                           const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
                           return <article className="cash-class-row" key={item.key}>
-                            <button type="button" className={`cash-class-main${item.coachId === meId ? " own-coaching" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                            <button type="button" className={`cash-class-main${item.shift ? " shift" : item.coachId === meId ? " coaching" : item.saved ? " saved" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy">
                                 {(coachName || item.shift) && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
                                 <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
@@ -1051,7 +1051,7 @@ function EntityCalendarPeek({ entity, coaches, meId, pinned, onPinned, onClose }
             {sorted.map((item) => {
               const coach = coaches.get(item.coachId);
               const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
-              return <Link className={`cash-class-main${item.coachId === meId ? " own-coaching" : ""}`} href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
+              return <Link className={`cash-class-main${item.shift ? " shift" : item.coachId === meId ? " coaching" : item.saved ? " saved" : ""}`} href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
                 <span className="cash-class-copy">
                   {(coachName || item.shift) && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
                   <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
