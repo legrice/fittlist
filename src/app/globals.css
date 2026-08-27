@@ -11739,10 +11739,17 @@ a.clspeek-by:active { opacity: .6; }
   gap: 14px;
 }
 .profile-calendar-list .clline :is(.clline-by-name, .clline-nm, .clline-t, .clline-w, .clline-dur) {
-  grid-column: auto;
   grid-row: auto;
   justify-self: auto;
   margin-left: 0;
+}
+.profile-calendar-list .clline-title-row .clline-nm,
+.profile-calendar-list .clline-studio-row .clline-w {
+  grid-column: 1;
+}
+.profile-calendar-list .clline-title-row .clline-t,
+.profile-calendar-list .clline-studio-row .clline-dur {
+  grid-column: 2;
 }
 
 .wkfab {

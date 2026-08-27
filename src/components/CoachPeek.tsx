@@ -353,7 +353,7 @@ export function CoachPeek({
 
         {listDays.length > 0 && (
           <ClassOpener handle="">
-            <CalendarList days={listDays} />
+            <CalendarList days={listDays} className="profile-calendar-list" />
           </ClassOpener>
         )}
 
