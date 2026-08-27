@@ -8596,7 +8596,7 @@ select.editinput.placekind-select {
 }
 .staffpend { display: block; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--si-ink); }
 .staffreq-acts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.staffreq-yes { width: auto; margin: 0; padding: 9px 16px; font-size: 13px; flex-shrink: 0; }
+.staffreq-yes { width: auto; min-height:40px; margin: 0; padding:6px 16px; font-size:13px; flex-shrink:0; }
 
 /* ---- The Share tab's editor ---------------------------------------------
    The coach's old "Share your schedule" sheet, promoted to a full screen. It
