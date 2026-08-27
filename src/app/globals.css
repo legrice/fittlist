@@ -8928,6 +8928,15 @@ select.editinput.placekind-select {
 }
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
 .following-rail { margin: 4px calc(-1 * var(--page-gutter)) 0; }
+@media (max-width: 939px) {
+  /* Resolve the bleed from the visual viewport, not from the padded column.
+     Mobile Safari can make that column a few pixels narrower than 100dvw;
+     subtracting its nominal gutter then leaves a clipped-looking sliver. */
+  .following-rail {
+    margin-left: calc(50% - 50dvw);
+    margin-right: calc(50% - 50dvw);
+  }
+}
 .following-rail .tray-scroll {
   gap:8px; padding:6px var(--page-gutter);
 }
@@ -9068,7 +9077,7 @@ select.editinput.placekind-select {
 }
 @media (max-width: 939px) {
   .screen.hasnav .brandbar {
-    margin-left: calc(-1 * var(--page-gutter)); margin-right: calc(-1 * var(--page-gutter));
+    margin-left: calc(50% - 50dvw); margin-right: calc(50% - 50dvw);
     padding-left: var(--page-gutter); padding-right: var(--page-gutter);
   }
 }
