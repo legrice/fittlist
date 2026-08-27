@@ -841,7 +841,7 @@ export function FollowingScreen({
                           const coach = coachById.get(item.coachId);
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
-                              <span className="cash-class-copy"><small><span className="cash-class-coach-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={24} height={24} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>{coach?.name || "Coach to come"}</small><strong>{item.name}</strong><span>{item.where || "Location to come"}</span></span>
+                              <span className="cash-class-copy"><small>{coach?.name || "Coach to come"}</small><strong>{item.name}</strong><span>{item.where || "Location to come"}</span></span>
                               <span className="cash-class-meta">
                                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
                                 {item.shift && <span className="cash-shift-tag">Shift</span>}
@@ -1040,9 +1040,8 @@ function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
           <div className="cash-activity-list entity-peek-list">
             {sorted.map((item) => {
               const coach = coaches.get(item.coachId);
-              const coachPhoto = coach?.photo ?? entity.photo;
               return <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
-                <span className="cash-class-copy"><small><span className="cash-class-coach-avatar" style={{ background:coach?.color ?? entity.color }}>{coachPhoto ? <img src={coachPhoto} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>{coach?.name || entity.name}</small><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span></span>
+                <span className="cash-class-copy"><small>{coach?.name || entity.name}</small><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span></span>
                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
               </Link>;
             })}
