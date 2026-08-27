@@ -42,7 +42,7 @@ export async function GET(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon("#000000")).toString("base64")}`;
+  const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon("#020D08")).toString("base64")}`;
   const colour = avatarColor({ id: user.id, avatarColor: user.avatarColor });
   const initial = (user.name.trim().charAt(0) || "?").toUpperCase();
 
@@ -65,7 +65,7 @@ export async function GET(
           flexDirection: "column",
           justifyContent: "space-between",
           background: "#9FE870",
-          color: "#000000",
+          color: "#020D08",
           padding: "76px 84px",
           fontFamily: "Delight",
         }}
@@ -118,7 +118,7 @@ export async function GET(
             >
               {user.name}
             </span>
-            <span style={{ fontSize: 40, fontWeight: 600, color: "#000000", marginTop: 18 }}>
+            <span style={{ fontSize: 40, fontWeight: 600, color: "#020D08", marginTop: 18 }}>
               {line || fallback}
             </span>
           </div>
@@ -133,7 +133,7 @@ export async function GET(
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
             {isCoach && (
-              <span style={{ fontSize: 34, fontWeight: 600, color: "#000000", marginBottom: 10 }}>
+              <span style={{ fontSize: 34, fontWeight: 600, color: "#020D08", marginBottom: 10 }}>
                 Every studio, one schedule
               </span>
             )}

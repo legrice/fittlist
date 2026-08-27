@@ -6,10 +6,10 @@ export default function NotFound() {
     <section className="screen ob" style={{ justifyContent: "center" }}>
       <Wordmark variant="cloud" className="mark" />
       <div className="pad" style={{ maxWidth: 440, width: "100%", margin: "0 auto" }}>
-        <h1>Nobody&rsquo;s here yet.</h1>
-        <p>This page hasn&rsquo;t been claimed. Coach classes? It could be yours.</p>
+        <h1>That page isn&rsquo;t here.</h1>
+        <p>The link may be old, the page may have moved, or you may not have access.</p>
         <Link className="btn" href="/">
-          Claim your page
+          Go to FittList
         </Link>
       </div>
     </section>

@@ -120,7 +120,7 @@ export function FittlistShareSheet({
             </button>
           )}
           <button onClick={copy}><Icon name="link" size={21} /><span>Copy link</span></button>
-          <button onClick={more}><Icon name="ios_share" size={21} /><span>Share elsewhere</span></button>
+          <button onClick={more}><Icon name="reply" className="share-arrow-forward" size={21} /><span>Share elsewhere</span></button>
         </div>
       </div>
     </div>

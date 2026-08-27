@@ -28,6 +28,7 @@ export async function sendInviteLink({
     email,
     tokenHash: sha256(token),
     ip: "admin",
+    purpose: invite ? "signup" : "login",
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   });
   const url = `${siteOrigin()}/auth/magic?token=${token}&invited=1`;

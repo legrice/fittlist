@@ -1,5 +1,3 @@
-import { eq } from "drizzle-orm";
-import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { unreadHeaderCounts } from "@/lib/notify";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
@@ -7,7 +5,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
 import { DesktopChrome } from "@/components/DesktopChrome";
-import { adminNewActivityCount } from "@/lib/adminactivity";
+import { adminActivityFreshSince } from "@/lib/adminactivity";
+import { currentUser } from "@/lib/current-user";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
@@ -22,6 +21,7 @@ export async function AppChrome({
   bar = false,
   headerNav,
   active,
+  social = false,
 }: {
   userId: string;
   bar?: boolean;
@@ -34,32 +34,23 @@ export async function AppChrome({
   headerNav?: boolean;
   /** Light a tab the pathname alone can't name: your own profile is You. */
   active?: NavTab;
+  /** Use the current calendar shell: create left, wordmark centered, alerts right. */
+  social?: boolean;
 }) {
-  const db = await getDb();
-  const [me] = await db
-    .select({
-      kind: schema.users.kind,
-      handle: schema.users.handle,
-      name: schema.users.name,
-      title: schema.users.title,
-      email: schema.users.email,
-      photo: schema.users.photo,
-      photoThumb: schema.users.photoThumb,
-      avatarColor: schema.users.avatarColor,
-      location: schema.users.location,
-      id: schema.users.id,
-    })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId));
-  if (!me) return null;
+  // AppChrome and an enclosing route layout often need the same viewer. The
+  // cached identity loader keeps that to one small projection instead of two
+  // full users queries before any page content can stream.
+  const me = await currentUser();
+  if (!me || me.id !== userId) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, adminAttention, adminActivity] = await Promise.all([
+  const [unread, adminAttention, adminActivityFresh] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
     isAdmin ? adminAttentionCount() : Promise.resolve(0),
-    isAdmin ? adminNewActivityCount(me.id) : Promise.resolve(0),
+    isAdmin ? adminActivityFreshSince(me.adminActivityAt) : Promise.resolve(false),
   ]);
+  const adminActivity = adminActivityFresh ? 1 : 0;
   // One calendar, at one address. This forked by kind for months, back when a
   // coach's was /app and a member had their own at /week; a member has no
   // calendar at all now, and the tab is not drawn for them. Left as it was, it
@@ -113,15 +104,16 @@ export async function AppChrome({
       <AppHeader
         notificationUnread={unread.notifications}
         messageUnread={unread.messages}
-        // Calendar is the signed-in front door. Keeping this explicit makes
-        // screens outside the tab layout (including Search) agree with it.
-        home="/calendar"
+        // The shared calendar feed is the signed-in front door. Keeping this
+        // explicit makes screens outside the tabs agree with the main shell.
+        home="/feed"
         admin={isAdmin}
         adminAttention={adminAttention}
         adminActivity={adminActivity}
         face={face}
         profileHref={profileHref}
         accountData={accountData}
+        social={social}
       />
     </>
   );
@@ -134,6 +126,7 @@ export async function AppChrome({
         scheduleHref={scheduleHref}
         profileHref={profileHref}
         active={active}
+        face={face}
       />
     </>
   );

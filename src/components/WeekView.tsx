@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, type CSSProperties, type ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { ClassRowMenu, type ClassRowMenuProps } from "@/components/ClassRowMenu";
 
 /**
@@ -42,13 +42,14 @@ export type WeekRow = {
   dur?: string;
   /** Following only: whose class this is. */
   coach?: { id: string; name: string; color: string; photo: string | null } | null;
+  /** A profile peek already establishes whose schedule this is in its
+   *  header, so its rows keep the coach name but do not repeat the face. */
+  hideCoachAvatar?: boolean;
   /** A word above the name saying which kind of yours this is: "Shift" on a
    *  date a gym has you on. Which hat comes before what the class is. */
   tag?: string;
   /** Optional relationship color for compact ownership badges. */
-  tagTone?: "coaching" | "attending" | "personal" | "attention";
-  /** A temporary favorite-calendar overlay, distinct from your own statuses. */
-  overlayColor?: string;
+  tagTone?: "coaching" | "shift" | "attending" | "personal" | "attention";
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
@@ -133,8 +134,8 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
   );
 }
 
-/** The only public shell for a calendar list. It owns the density and card
- * treatment so every schedule changes together when these rules change. */
+/** The only public shell for a calendar list. It owns the homepage's compact
+ * row treatment so every schedule changes together when these rules change. */
 export function CalendarList({
   days,
   className = "",
@@ -153,47 +154,31 @@ export function CalendarList({
 }
 
 export function ClassLine({ row }: { row: WeekRow }) {
+  const cls = `clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}${row.tagTone ? ` clline-tone-${row.tagTone}` : ""}`;
   const inner = (
     <>
-      {/* Whose row this is leads, full width over both columns: the by-line
-          and the shift tag sat inside the class column for a while, which
-          pushed the name down while the time stayed pinned at the top, so
-          the two things meant to read as one line never lined up.
-
-          The row itself is the grid, and every cell names its column: the
-          time shares a baseline with the name and the length shares one
-          with the studio. Every row says its own time, even beside another
-          at the same hour, by Matt's call: each is its own box now, and a
-          box with a blank time column read as a box missing something
-          rather than as a second thing at six. */}
-      {row.coach && (
+      {(row.coach || row.tag) && (
         <span className="clline-by">
-          <span className="clline-av" style={{ background: row.coach.color }}>
-            {row.coach.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={row.coach.photo} alt="" />
-            ) : (
-              initials(row.coach.name)
-            )}
-          </span>
-          <span className="clline-by-name">{row.coach.name}</span>
+          {row.coach && <span className="clline-by-name">{row.coach.name}</span>}
+          {row.tag && (
+            <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
+              {row.tag}
+            </span>
+          )}
         </span>
       )}
-      <span className="clline-head">
+      <span className="clline-title-row">
+        <span className="clline-nm">{row.name}</span>
         <span className="clline-t">
           {row.hm}
           <span className="clline-ap">{row.ap.toUpperCase()}</span>
         </span>
-        {row.tag && (
-          <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
-            {row.tag}
-          </span>
-        )}
       </span>
-      <span className="clline-nm">{row.name}</span>
-      {row.dur && <span className="clline-dur">{row.dur}</span>}
-      {row.where && (
-        <span className="clline-w">{row.where}</span>
+      {(row.where || row.dur) && (
+        <span className={`clline-studio-row${row.where ? "" : " no-location"}`}>
+          {row.where && <span className="clline-w">{row.where}</span>}
+          {row.dur && <span className="clline-dur">{row.dur}</span>}
+        </span>
       )}
       {row.extra && <span className="clline-extra">{row.extra}</span>}
     </>
@@ -201,8 +186,7 @@ export function ClassLine({ row }: { row: WeekRow }) {
   if (row.href)
     return (
       <a
-        className={`clline${row.overlayColor ? " clline-overlay" : ""}`}
-        style={row.overlayColor ? ({ "--overlay-color":row.overlayColor } as CSSProperties) : undefined}
+        className={cls}
         href={row.href}
         data-cid={row.classId}
         data-d={row.iso}
@@ -212,12 +196,12 @@ export function ClassLine({ row }: { row: WeekRow }) {
         {inner}
       </a>
     );
-  if (!row.onTap) return <div className={`clline${row.overlayColor ? " clline-overlay" : ""}`} style={row.overlayColor ? ({ "--overlay-color":row.overlayColor } as CSSProperties) : undefined}>{inner}</div>;
+  if (!row.onTap) return <div className={cls}>{inner}</div>;
   return (
     // The data keys ride the button too, when the row has them: the landing
     // highlight (?hl) finds a row by them, and a row that opens a sheet
     // instead of navigating is still the row the highlight means.
-    <button className={`clline${row.overlayColor ? " clline-overlay" : ""}`} style={row.overlayColor ? ({ "--overlay-color":row.overlayColor } as CSSProperties) : undefined} onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
+    <button className={cls} onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
       {inner}
     </button>
   );
@@ -261,6 +245,8 @@ export function WeekEmpty({
         alt=""
         width={356}
         height={600}
+        loading="lazy"
+        decoding="async"
       />
       <h2 className="wkempty-t">{first ? title : "Nothing coming up"}</h2>
       <p className="wkempty-b">{first ? body : "Nothing on the days ahead."}</p>

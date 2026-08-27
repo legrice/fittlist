@@ -4,13 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { discoverPeople, type DiscoverData } from "@/app/actions/discover";
-import { searchAll } from "@/app/actions/search";
-import { ClassResults } from "@/components/ClassResults";
+import { searchDirectory, type SearchGroup } from "@/app/actions/search";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
 import { initials } from "@/components/WeekView";
-import type { DirClass } from "@/lib/discoverclasses";
-import { todayIso } from "@/lib/format";
 
 // The same floor /search holds; it lives in three files because a
 // "use server" module can only export async functions.
@@ -42,13 +39,12 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
-  const [classes, setClasses] = useState<DirClass[]>([]);
+  const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState("");
   // Only the newest request may paint, or a slow "st" lands after "stacey"
   // and the results go backwards while you type.
   const run = useRef(0);
-  const today = todayIso();
   // Portaled to the body (see InviteFriends): the header's magnifier renders
   // this from inside the sticky brandbar, and sticky makes a stacking
   // context in every mobile browser, so left in place the sheet's z-46
@@ -69,7 +65,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
     if (needle.length < MIN) {
       setPeople([]);
       setStudios([]);
-      setClasses([]);
+      setGroups([]);
       setBusy(false);
       setAsked("");
       run.current++;
@@ -78,11 +74,11 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
     const mine = ++run.current;
     setBusy(true);
     const t = setTimeout(async () => {
-      const res = await searchAll(needle, "");
+      const res = await searchDirectory(needle);
       if (run.current !== mine) return;
       setPeople(res.people);
       setStudios(res.studios);
-      setClasses(res.classes);
+      setGroups(res.groups);
       setAsked(needle);
       setBusy(false);
     }, 220);
@@ -92,7 +88,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
   if (!mounted) return null;
   const searching = q.trim().length >= MIN;
   const nothing =
-    searching && !busy && asked === q.trim() && !people.length && !studios.length && !classes.length;
+    searching && !busy && asked === q.trim() && !people.length && !studios.length && !groups.length;
 
   return createPortal(
     <div
@@ -103,7 +99,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
     >
       <div className="sheet sheet-full dissheet">
         <div className="adderhead">
-          <h2>Coaches near you</h2>
+          <h2>Find profiles</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
@@ -115,7 +111,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
               className="dissearch-in"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search coaches, studios, or classes"
+              placeholder="Search people, studios, or groups"
               aria-label="Search fittlist"
               autoComplete="off"
             />
@@ -149,7 +145,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
                   </h2>
                   <div className="dislist dislist-bare">
                     {people.map((p) => (
-                      <PersonRow key={p.id} person={p} from="following" />
+                      <PersonRow key={p.id} person={p} from="following" follow calendarLanguage />
                     ))}
                   </div>
                 </div>
@@ -166,23 +162,37 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
               )}
-              {classes.length > 0 && (
+              {groups.length > 0 && (
                 <div className="srchsec">
                   <h2 className="srchhead">
-                    Classes <span>{classes.length}</span>
+                    Groups <span>{groups.length}</span>
                   </h2>
-                  <ClassResults classes={classes} todayIso={today} from="discover" />
+                  <div className="dislist dislist-bare">
+                    {groups.map((group) => (
+                      <Link className="disrow disrow-studio" href={`/g/${group.slug}?from=following`} key={group.id}>
+                        <span className="disrow-avwrap">
+                          {group.photo ? <img className="disrow-av" src={group.photo} alt="" loading="lazy" decoding="async" /> : (
+                            <span className="disrow-av disrow-av-empty" aria-hidden="true">
+                              {initials(group.name)}
+                            </span>
+                          )}
+                        </span>
+                        <span className="disrow-txt">
+                          <span className="disrow-nmline"><span className="nm">{group.name}</span></span>
+                          <span className="disrow-sub">{group.description || "Fitness group"}</span>
+                        </span>
+                        <span className="disrow-chev"><Icon name="chevron_right" size={20} /></span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           )
         ) : data ? (
           <>
-            {/* The one place coach and member rows differ: a Coach tag and
-                a next-class line on theirs, nothing on a member's. Follow
-                on every row, unlimited. */}
             <p className="whoseg-sub">
-              Follow as many as you like. Their classes show up first on Home.
+              Save useful calendars here. You can also save individual classes to your schedule.
             </p>
             <div className="nearlist">
               {data.people.map((p) => (
@@ -223,7 +233,10 @@ function PeopleRow({ p }: { p: DirPerson }) {
     } else {
       // Unfollow also withdraws a pending ask, so Requested is the cancel.
       const res = await unfollowTrainer(p.handle);
-      if (res.ok) setState("off");
+      if (res.ok) {
+        setState("off");
+        window.dispatchEvent(new Event("calendar-pins-changed"));
+      }
     }
     setBusy(false);
   };
@@ -233,7 +246,7 @@ function PeopleRow({ p }: { p: DirPerson }) {
         <span className="nearrow-av">
           {p.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.photo} alt="" />
+            <img src={p.photo} alt="" loading="lazy" decoding="async" />
           ) : (
             <span className="nearrow-ini" style={{ background: p.color }}>
               {initials(p.name)}
@@ -256,12 +269,13 @@ function PeopleRow({ p }: { p: DirPerson }) {
         </span>
       </Link>
       <button
-        className={`peekfollow${state !== "off" ? " on" : ""}`}
+        className={`peekfollow save-ribbon-only${state !== "off" ? " on" : ""}`}
         aria-pressed={state !== "off"}
+        aria-label={state === "following" ? "Remove saved calendar" : state === "requested" ? "Cancel calendar request" : "Save calendar"}
         disabled={busy}
         onClick={toggle}
       >
-        {state === "following" ? "Following" : state === "requested" ? "Requested" : "Follow"}
+        <Icon name={state === "following" ? "bookmark_added" : state === "requested" ? "schedule" : "bookmark"} size={20} />
       </button>
     </div>
   );

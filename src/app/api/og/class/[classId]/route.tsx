@@ -33,9 +33,9 @@ function loadFonts() {
 const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const PAPER = "#9FE870";
-const INK = "#000000";
-const MUTED = "#000000";
-const SI = "#000000";
+const INK = "#020D08";
+const MUTED = "#020D08";
+const SI = "#020D08";
 
 export async function GET(
   req: Request,

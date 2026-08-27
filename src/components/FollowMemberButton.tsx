@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
-import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
 // Following a member. Same verb and same table as following a coach; what it
@@ -20,11 +19,13 @@ export function FollowMemberButton({
   name,
   initialFollowing,
   initialRequested = false,
+  followsYou = false,
 }: {
   handle: string;
   name: string;
   initialFollowing: boolean;
   initialRequested?: boolean;
+  followsYou?: boolean;
 }) {
   const [state, setState] = useState<FollowState>(
     initialFollowing ? "following" : initialRequested ? "requested" : "off",
@@ -44,11 +45,12 @@ export function FollowMemberButton({
         }
         if (res.requested) {
           setState("requested");
-          toast(`Asked to follow ${first}`);
+          toast(`Follow request sent to ${first}`);
         } else {
           setState("following");
           toast(`Following ${first}`);
         }
+        window.dispatchEvent(new Event("follows-changed"));
       } else {
         const res = await unfollowTrainer(handle);
         if (!res.ok) {
@@ -57,7 +59,8 @@ export function FollowMemberButton({
         }
         const wasRequest = state === "requested";
         setState("off");
-        toast(wasRequest ? "Request withdrawn" : "Unfollowed");
+        window.dispatchEvent(new Event("calendar-pins-changed"));
+        toast(wasRequest ? "Follow request withdrawn" : `Unfollowed ${first}`);
       }
     });
   };
@@ -67,17 +70,10 @@ export function FollowMemberButton({
       <button
         className={`followpill${state === "following" ? " on" : ""}`}
         disabled={pending}
+        aria-pressed={state === "following"}
         onClick={toggle}
       >
-        {state === "following" ? (
-          <>
-            <Icon name="check" size={19} /> Following
-          </>
-        ) : state === "requested" ? (
-          "Requested"
-        ) : (
-          "Follow"
-        )}
+        {state === "following" ? "Following" : state === "requested" ? "Requested" : followsYou ? "Follow back" : "Follow"}
       </button>
       <Toast msg={toastMsg} on={toastOn} />
     </>

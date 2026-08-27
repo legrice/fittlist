@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { FollowHint, followHintOff } from "@/components/FollowHint";
+import { Icon } from "@/components/Icon";
 
 // The directory row's Follow pill.
 //
@@ -21,6 +22,7 @@ export function RowFollow({
   isCoach,
   following: initialFollowing,
   requested: initialRequested,
+  calendarLanguage = false,
 }: {
   handle: string;
   name: string;
@@ -28,6 +30,8 @@ export function RowFollow({
   isCoach: boolean;
   following: boolean;
   requested: boolean;
+  /** Use calendar-first language in discovery without changing relationship data. */
+  calendarLanguage?: boolean;
 }) {
   const router = useRouter();
   const [following, setFollowing] = useState(initialFollowing);
@@ -48,6 +52,7 @@ export function RowFollow({
         if (!res.ok) return;
         setFollowing(false);
         setRequested(false);
+        window.dispatchEvent(new Event("calendar-pins-changed"));
       } else {
         const res = await followTrainer(handle);
         if (!res.ok) return;
@@ -68,11 +73,23 @@ export function RowFollow({
         className={`disfollow${following || requested ? " on" : ""}`}
         disabled={pending}
         aria-label={
-          following ? `Unfollow ${name}` : requested ? `Cancel your follow request to ${name}` : `Follow ${name}`
+          calendarLanguage
+            ? following
+              ? `Remove ${name}'s saved calendar`
+              : requested
+                ? `Cancel your request to save ${name}'s calendar`
+                : `Save ${name}'s calendar`
+            : following
+              ? `Unfollow ${name}`
+              : requested
+                ? `Cancel your follow request to ${name}`
+                : `Follow ${name}`
         }
         onClick={toggle}
       >
-        {following ? "Following" : requested ? "Requested" : "Follow"}
+        {calendarLanguage
+          ? <Icon name={following ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={19} />
+          : following ? "Following" : requested ? "Requested" : "Follow"}
       </button>
       <FollowHint name={first} handle={handle} on={hint} onClose={() => setHint(false)} />
     </>

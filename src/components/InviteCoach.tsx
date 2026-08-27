@@ -70,7 +70,7 @@ export function InviteCoach({ studioName }: { studioName: string }) {
             </p>
             <div className="settingslist ownermenu">
               <button className="setrow" disabled={!url} onClick={share}>
-                <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
+                <span className="setrow-ic"><Icon name="reply" className="share-arrow-forward" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Share the invite</span>
                   <span className="s">Send it anywhere you message</span>

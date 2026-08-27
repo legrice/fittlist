@@ -80,6 +80,7 @@ export function AvatarZoom({
         }
         setFollowing(false);
         setRequested(false);
+        window.dispatchEvent(new Event("calendar-pins-changed"));
       } else {
         const res = await followTrainer(handle);
         if (!res.ok) {
@@ -186,16 +187,15 @@ export function AvatarZoom({
             <div className="avoverlay-bottom">
             <div className="avoverlay-acts">
               {follow && (
-                <button className="avact" disabled={pending} onClick={toggleFollow}>
+                <button className="avact save-ribbon-only" disabled={pending} onClick={toggleFollow} aria-label={following ? "Remove saved calendar" : requested ? "Cancel calendar request" : "Save calendar"}>
                   <span className={`avact-ic${following ? " on" : ""}`}>
-                    <Icon name={following ? "check" : requested ? "schedule" : "person_add"} size={24} />
+                    <Icon name={following ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={24} />
                   </span>
-                  {following ? "Following" : requested ? "Requested" : "Follow"}
                 </button>
               )}
               <button className="avact" onClick={share}>
                 <span className="avact-ic">
-                  <Icon name="ios_share" size={24} />
+                  <Icon name="reply" className="share-arrow-forward" size={24} />
                 </span>
                 Share
               </button>

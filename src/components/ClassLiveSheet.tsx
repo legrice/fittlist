@@ -65,7 +65,7 @@ export function ClassLiveSheet({
         </p>
         <div className="settingslist ownermenu">
           <button className="setrow" onClick={() => setShareOpen(true)}>
-            <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
+            <span className="setrow-ic"><Icon name="reply" className="share-arrow-forward" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Share the link</span>
               <span className="s">Send the class to someone, anywhere you message</span>

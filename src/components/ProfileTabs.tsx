@@ -41,6 +41,7 @@ export function ProfileTabs({
   tab,
   tabs,
   name,
+  handle,
   title,
   location,
   trackSchedule = false,
@@ -71,6 +72,8 @@ export function ProfileTabs({
    *  only one section: two tabs over two short lists is worse than neither. */
   tabs: TabDef[];
   name: string;
+  /** Public identity shown beneath the display name. */
+  handle?: string;
   title: string;
   location: string;
   /** Count one "schedule open" per visit, for a coach's own stats. */
@@ -297,6 +300,7 @@ export function ProfileTabs({
             )}
             {badges && <div className="profbadges-top">{badges}</div>}
             <div className="profname-row"><h1 className="profname">{name}</h1></div>
+            {handle ? <p className="profhandle">@{handle}</p> : null}
         </div>
         <div className="pubbelow">
         {actions}

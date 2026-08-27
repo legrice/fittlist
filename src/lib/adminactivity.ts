@@ -1,4 +1,4 @@
-import { and, count, countDistinct, desc, eq, gt, inArray, notInArray } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 
@@ -158,21 +158,40 @@ export async function adminActivityFreshSince(seenAt: Date | null): Promise<bool
   const db = await getDb();
   const since = seenAt ?? new Date(0);
   const adminList = adminEmails();
-  const [u, c, st, edit, ev, product] = await Promise.all([
+  // These five checks used to be five independent round trips. PostgreSQL can
+  // answer the same yes/no question in one statement and short-circuit as
+  // soon as an EXISTS succeeds. Product activity remains separate so a
+  // rolling deploy whose migration has not landed yet cannot break the shell.
+  const [core, product] = await Promise.all([
     db
-      .select({ id: schema.users.id })
+      .select({
+        fresh: sql<boolean>`
+          exists (
+            select 1 from ${schema.users}
+            where ${and(gt(schema.users.createdAt, since), notInArray(schema.users.email, adminList))}
+          ) or exists (
+            select 1 from ${schema.classes}
+            where ${and(gt(schema.classes.createdAt, since), eq(schema.classes.isPublic, true))}
+          ) or exists (
+            select 1 from ${schema.studios}
+            where ${gt(schema.studios.createdAt, since)}
+          ) or exists (
+            select 1 from ${schema.studioEdits}
+            where ${gt(schema.studioEdits.createdAt, since)}
+          ) or exists (
+            select 1 from ${schema.events}
+            where ${gt(schema.events.createdAt, since)}
+          )
+        `,
+      })
       .from(schema.users)
-      .where(and(gt(schema.users.createdAt, since), notInArray(schema.users.email, adminList)))
       .limit(1),
     db
-      .select({ id: schema.classes.id })
-      .from(schema.classes)
-      .where(and(gt(schema.classes.createdAt, since), eq(schema.classes.isPublic, true)))
-      .limit(1),
-    db.select({ id: schema.studios.id }).from(schema.studios).where(gt(schema.studios.createdAt, since)).limit(1),
-    db.select({ id: schema.studioEdits.id }).from(schema.studioEdits).where(gt(schema.studioEdits.createdAt, since)).limit(1),
-    db.select({ id: schema.events.id }).from(schema.events).where(gt(schema.events.createdAt, since)).limit(1),
-    db.select({ id: schema.productActivity.id }).from(schema.productActivity).where(gt(schema.productActivity.createdAt, since)).limit(1).catch(() => []),
+      .select({ id: schema.productActivity.id })
+      .from(schema.productActivity)
+      .where(gt(schema.productActivity.createdAt, since))
+      .limit(1)
+      .catch(() => []),
   ]);
-  return u.length > 0 || c.length > 0 || st.length > 0 || edit.length > 0 || ev.length > 0 || product.length > 0;
+  return !!core[0]?.fresh || product.length > 0;
 }

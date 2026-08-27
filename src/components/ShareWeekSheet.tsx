@@ -44,7 +44,11 @@ export function ShareWeekSheet({
   }, [open]);
 
   const applyHeadline = async () => {
-    await setStoryPrefs({ headline });
+    const result = await setStoryPrefs({ headline });
+    if (!result.ok) {
+      onToast(result.error ?? "Couldn't save that headline");
+      return;
+    }
     setBust(Date.now()); // re-render the preview with the new text
   };
   if (!open) return null;

@@ -75,6 +75,8 @@ export async function GET(
       })),
     })),
     listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78) / y.rowScale,
+    764,
+    { keepPlacesWithClasses: true },
   );
 
   return renderStory({

@@ -33,6 +33,11 @@ export async function POST(_req: Request, { params }: { params: Promise<{ token:
 
 export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  await unsubscribe(token);
-  return NextResponse.redirect(new URL(`/u/${token}`, req.url));
+  // GET is intentionally read-only. Mail security scanners open links from
+  // message bodies; only RFC 8058's POST above or the page's explicit confirm
+  // action may unsubscribe somebody.
+  const response = NextResponse.redirect(new URL(`/u/${token}`, req.url));
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("Referrer-Policy", "no-referrer");
+  return response;
 }

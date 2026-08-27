@@ -12,9 +12,6 @@ import type { StudioTeamRole } from "@/app/actions/gym";
 import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { StudioAdminSheet } from "@/components/StudioAdminSheet";
-import { StudioManageNav } from "@/components/StudioManageNav";
-import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 
 // The studio's invited people. Scheduling access is part of each coach rather
@@ -26,20 +23,12 @@ import { Toast, useToast } from "@/components/Toast";
 // has more than one person running it.
 export function StudioStaffView({
   studioId,
-  studioName,
   studioSlug,
   staff,
-  admin,
 }: {
   studioId: string;
-  studioName: string;
   studioSlug: string;
   staff: StudioStaffDto;
-  admin: {
-    studio: StudioEditProps;
-    showCoaches?: boolean;
-    approvalOn?: boolean;
-  };
 }) {
   const people = staff.people;
   const [staffRole, setStaffRole] = useState<StudioTeamRole>("coach");
@@ -107,37 +96,28 @@ export function StudioStaffView({
   return (
     <div className="pad studio-staff-pad">
       <div className="studio-manage-top pagetop">
-        <div className="studio-manage-topbar">
+        <div className="studio-manage-topbar studio-staff-topbar">
           <BackLink
             className="evback studio-manage-back"
-            href="/settings"
-            anywhere
-            notUnder={`/s/${studioSlug}`}
-            label="Back to your account"
+            href={`/s/${studioSlug}/manage`}
+            label="Back to studio dashboard"
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
-          <StudioAdminSheet
-            slug={studioSlug}
-            canSchedule={staff.hasSchedule}
-            studio={admin.studio}
-            showCoaches={admin.showCoaches}
-            approvalOn={admin.approvalOn}
-            settingsTrigger
-          />
-        </div>
-        <div>
-          <h1>{studioName}</h1>
-          <p className="adminsub">Manage your team</p>
+          <h1 className="studio-calendar-title">Staff</h1>
+          <div className="studio-staff-header-actions">
+            <button
+              type="button"
+              className="studio-staff-add"
+              aria-label="Add staff"
+              onClick={() => setCoachSheetOpen(true)}
+            >
+              <Icon name="add" size={23} />
+            </button>
+          </div>
         </div>
       </div>
 
-      <StudioManageNav slug={studioSlug} active="staff" />
-
-      <h3 className="setgroup-h">Staff</h3>
-      <p className="staffnote">
-        Everyone who works with this studio, including its owner, managers, coaches, and front desk.
-      </p>
       {people.length > 0 ? (
         <div className="settingslist">
           {people.map((person) => {
@@ -186,11 +166,6 @@ export function StudioStaffView({
       ) : (
         <p className="adminempty">No staff have been added yet.</p>
       )}
-      <button className="btn si staff-add-coach-button" onClick={() => setCoachSheetOpen(true)}>
-        <Icon name="add" size={21} />
-        Add staff
-      </button>
-
       {coachSheetOpen && (
         <div className="sheet-scrim" onClick={(event) => {
           if (event.target === event.currentTarget) setCoachSheetOpen(false);

@@ -3,8 +3,8 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
-import { isBlocked } from "@/lib/blocks";
-import { occurrenceEnded } from "@/lib/format";
+import { hiddenFrom } from "@/lib/blocks";
+import { dowOfDate, occurrenceEnded, runsOn } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { recordProductActivity } from "@/lib/product-activity";
 
@@ -19,6 +19,9 @@ export async function setGoing(
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in first." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
+  const parsedDate = new Date(`${occurrenceDate}T00:00:00Z`);
+  if (Number.isNaN(parsedDate.valueOf()) || parsedDate.toISOString().slice(0, 10) !== occurrenceDate)
+    return { ok: false, error: "Bad date." };
   const db = await getDb();
   const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
   if (!cls || !cls.isPublic) return { ok: false, error: "Class not found." };
@@ -31,11 +34,14 @@ export async function setGoing(
     return { ok: false, error: "You aren’t able to attend your own class." };
   // A coach who blocked you has no schedule as far as you're concerned, so
   // there's nothing here to add. Same wording as a class that isn't there.
-  if (await isBlocked(cls.userId, userId)) return { ok: false, error: "Class not found." };
+  if ((await hiddenFrom(userId)).has(cls.userId)) return { ok: false, error: "Class not found." };
+  if (on && !runsOn(cls, occurrenceDate, dowOfDate(occurrenceDate))) {
+    return { ok: false, error: "That class isn’t running on this date." };
+  }
   // Adding is only ever forward. Taking one back out stays allowed whatever the
   // date: removing something you didn't get to isn't a thing to be stopped from
   // doing, and the list clears itself as the week passes anyway.
-  if (on && occurrenceEnded(occurrenceDate, cls.startTime, cls.durationMin)) {
+  if (on && occurrenceEnded(occurrenceDate, cls.startTime, cls.durationMin, cls.timeZone)) {
     return { ok: false, error: "That class has already started." };
   }
 
@@ -63,9 +69,7 @@ export async function setGoing(
   }
   await recordProductActivity(userId, on ? "class_saved" : "class_removed");
   revalidatePath("/feed");
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -92,6 +96,5 @@ export async function setGoingVisibility(
         eq(schema.attendances.occurrenceDate, occurrenceDate),
       ),
     );
-  revalidatePath("/activity");
   return { ok: true };
 }

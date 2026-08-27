@@ -5,6 +5,7 @@ import { NON_PERSON_KINDS } from "@/lib/roster";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { listDuplicateSlots, listReports } from "@/app/actions/reports";
 import { listStudioReports, listStudioSuggestions } from "@/app/actions/studios";
+import { listContentReports } from "@/app/actions/content-reports";
 import { adminActivity } from "@/lib/adminactivity";
 import { vapidPublicKey } from "@/lib/push";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -229,11 +230,12 @@ export default async function AdminPage({
     requests: requests.length,
   };
 
-  const [reports, duplicates, studioReports, studioSuggestions] = await Promise.all([
+  const [reports, duplicates, studioReports, studioSuggestions, contentReports] = await Promise.all([
     listReports(),
     listDuplicateSlots(),
     listStudioReports(),
     listStudioSuggestions(),
+    listContentReports(),
   ]);
   const coachAskRows = await db
     .select({
@@ -277,6 +279,7 @@ export default async function AdminPage({
       reports={reports}
       studioReports={studioReports}
       studioSuggestions={studioSuggestions}
+      contentReports={contentReports}
       coachAsks={coachAsks}
       duplicates={duplicates}
       people={people}

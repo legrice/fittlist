@@ -1,0 +1,2 @@
+ALTER TABLE "content_reports" ADD CONSTRAINT "content_reports_type_check" CHECK ("content_reports"."content_type" IN ('group_post', 'group_comment', 'shoutout', 'profile', 'inquiry_message'));--> statement-breakpoint
+ALTER TABLE "content_reports" ADD CONSTRAINT "content_reports_status_check" CHECK ("content_reports"."status" IN ('open', 'dismissed', 'removed'));

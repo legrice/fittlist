@@ -1,9 +1,9 @@
-import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, lte, max, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
-import { classAddress, publicSchedules } from "@/lib/coachweek";
-import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso, WEEKS_AHEAD, weekDates } from "@/lib/format";
+import { classAddress, publicFeedSchedules, shiftCoach, shiftNaming } from "@/lib/coachweek";
+import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import type {
   FeedCoach,
   FeedItem,
@@ -34,6 +34,18 @@ export type DiscoverFeed = {
   nearStudios: NearStudio[];
 };
 
+export type DiscoverFeedOptions = {
+  /** Inclusive offsets from today. Home uses 0–1 for first paint, then asks
+   * for 2–30 after hydration; discovery keeps the complete rolling month. */
+  startDay?: number;
+  endDay?: number;
+  /** Home is a calendar of relationships the viewer chose. It must not pay
+   * to load every discoverable coach merely to discard most of them later. */
+  calendarOnly?: boolean;
+  /** Keep first-paint identity data to the faces that can actually be seen. */
+  initialRailLimit?: number;
+};
+
 /** How far ahead a face has to have something for the rail to carry it:
  *  the peek's own fortnight, so a circle never opens onto nothing. */
 const RAIL_AHEAD_DAYS = 14;
@@ -41,6 +53,7 @@ const RAIL_AHEAD_DAYS = 14;
 export async function buildDiscoverFeed(
   userId: string,
   me: { email: string; kind: string; handle: string | null; location?: string | null },
+  options: DiscoverFeedOptions = {},
 ): Promise<DiscoverFeed> {
   const db = await getDb();
   // By email, the way every other follow lookup does it: somebody who followed
@@ -58,92 +71,282 @@ export async function buildDiscoverFeed(
   const followed = followRows
     .map((r) => r.trainerUserId)
     .filter((id) => id !== userId && !hidden.has(id));
+  const followedSet = new Set(followed);
+  const today = todayIso();
+  const startDay = Math.max(0, options.startDay ?? 0);
+  const endDay = Math.max(startDay, Math.min(30, options.endDay ?? 30));
+  const startDate = new Date(`${today}T00:00:00Z`);
+  startDate.setUTCDate(startDate.getUTCDate() + startDay);
+  const from = startDate.toISOString().slice(0, 10);
+  const throughDate = new Date(`${today}T00:00:00Z`);
+  throughDate.setUTCDate(throughDate.getUTCDate() + endDay);
+  const through = throughDate.toISOString().slice(0, 10);
+
+  // Home is not the directory. Resolve the small graph that can contribute
+  // to the viewer's calendar before selecting users or schedules: their own
+  // account, follows, saved occurrences, saved studios and group calendars.
+  // This is the important boundary for people following 90 accounts: it
+  // prevents one calendar visit from loading every public coach in FittList.
+  const calendarOwnerIds = new Set<string>([userId, ...followed]);
+  const followedStudioIds = new Set<string>();
+  if (options.calendarOnly) {
+    const [savedStudioOwners, groupRows, savedClassOwners] = await Promise.all([
+      db
+        .select({ studioId: schema.studios.id, ownerId: schema.studios.accountUserId })
+        .from(schema.studioEndorsements)
+        .innerJoin(schema.studios, eq(schema.studios.id, schema.studioEndorsements.targetStudioId))
+        .where(and(
+          eq(schema.studioEndorsements.endorserUserId, userId),
+          eq(schema.studioEndorsements.trait, "been_here"),
+        )),
+      db
+        .selectDistinct({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId })
+        .from(schema.groups)
+        .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
+        .leftJoin(schema.groupFavorites, eq(schema.groupFavorites.groupId, schema.groups.id))
+        .where(sql`${schema.groups.ownerUserId} = ${userId} OR ${schema.groupMembers.userId} = ${userId} OR ${schema.groupFavorites.userId} = ${userId}`),
+      db
+        .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
+        .from(schema.attendances)
+        .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
+        .where(and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, from),
+          lte(schema.attendances.occurrenceDate, through),
+        )),
+    ]);
+    for (const row of savedStudioOwners) {
+      followedStudioIds.add(row.studioId);
+      if (row.ownerId) calendarOwnerIds.add(row.ownerId);
+    }
+    for (const row of savedClassOwners) {
+      calendarOwnerIds.add(row.ownerId);
+      if (row.coachId) calendarOwnerIds.add(row.coachId);
+    }
+    const visibleGroupRows = groupRows.filter((row) => !hidden.has(row.ownerUserId));
+    const [groupClassOwners, studioClassPeople] = await Promise.all([
+      visibleGroupRows.length
+        ? db
+        .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
+        .from(schema.groupClasses)
+        .innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId))
+        .where(and(
+          inArray(schema.groupClasses.groupId, visibleGroupRows.map((row) => row.id)),
+          gte(schema.groupClasses.occurrenceDate, from),
+          lte(schema.groupClasses.occurrenceDate, through),
+        ))
+        : Promise.resolve([]),
+      savedStudioOwners.length
+        ? db
+          .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
+          .from(schema.classes)
+          .where(inArray(schema.classes.studioId, savedStudioOwners.map((row) => row.studioId)))
+        : Promise.resolve([]),
+    ]);
+    for (const row of [...groupClassOwners, ...studioClassPeople]) {
+      calendarOwnerIds.add(row.ownerId);
+      if (row.coachId) calendarOwnerIds.add(row.coachId);
+    }
+  }
   // Discover, per the brief: the list is classes near you, from every
   // listable coach, whether or not anybody favorited them. A favorite is a
   // shortcut to a person (the rail on top), not a subscription that fills
   // this feed; the feed is full on day one because it never waited on one.
   // Delisted (discoverable off) and blocked stay out; your own classes ride
   // along because they are also near you, and true.
-  const everyoneRows = await db
-    .select()
-    .from(schema.users)
-    .where(and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true)));
+  // These reads do not depend on one another. With a broad follow graph they
+  // used to form a long waterfall around schedule loading; start them as one
+  // batch and project only the fields this list actually serializes.
+  const userListColumns = {
+    id: schema.users.id,
+    kind: schema.users.kind,
+    email: schema.users.email,
+    name: schema.users.name,
+    handle: schema.users.handle,
+    location: schema.users.location,
+    // Return exactly one image value. Selecting both the original data URL
+    // and its thumbnail made the DB ship the large original even though the
+    // list immediately discarded it whenever a thumbnail existed.
+    photo: sql<null>`null`,
+    // The first Home response enriches only the visible rail + coaches with
+    // rows today/tomorrow below. Do not pull 90 image values merely because
+    // the schedule graph needs 90 ids.
+    photoThumb: options.initialRailLimit
+      ? sql<null>`null`
+      : sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+    shiftsPublic: schema.users.shiftsPublic,
+    avatarColor: schema.users.avatarColor,
+  };
+  const studioListColumns = {
+    id: schema.studios.id,
+    accountUserId: schema.studios.accountUserId,
+    slug: schema.studios.slug,
+    name: schema.studios.name,
+    address: schema.studios.address,
+    // A gym-owned class is attributed to the studio, not to a pretend person.
+    // Keep this on the unique studio identity below rather than copying the
+    // same image into every occurrence row in the rolling calendar payload.
+    photo: schema.studios.photo,
+    types: schema.studios.types,
+    lat: schema.studios.lat,
+    lng: schema.studios.lng,
+  };
+  const [everyoneRows, followedUserRows, mineMarkRows, activityRows, studioDirectoryRows] = await Promise.all([
+    db
+      .select(userListColumns)
+      .from(schema.users)
+      .where(options.calendarOnly
+        ? inArray(schema.users.id, [...calendarOwnerIds])
+        : and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true))),
+    followed.length && !options.calendarOnly
+      ? db.select(userListColumns).from(schema.users).where(inArray(schema.users.id, followed))
+      : Promise.resolve([]),
+    // Only marks inside the rendered rolling range can affect this payload.
+    // Avoid carrying years of a frequent user's attendance history on every
+    // calendar visit.
+    db
+      .select({
+        classId: schema.attendances.classId,
+        occurrenceDate: schema.attendances.occurrenceDate,
+      })
+      .from(schema.attendances)
+      .where(and(
+        eq(schema.attendances.userId, userId),
+        gte(schema.attendances.occurrenceDate, from),
+        lte(schema.attendances.occurrenceDate, through),
+      )),
+    followed.length
+      ? db
+          .select({
+            userId: schema.classes.userId,
+            createdAt: max(schema.classes.createdAt),
+          })
+          .from(schema.classes)
+          .where(and(inArray(schema.classes.userId, followed), eq(schema.classes.isPublic, true)))
+          .groupBy(schema.classes.userId)
+      : Promise.resolve([]),
+    options.calendarOnly
+      ? Promise.resolve([])
+      : db.select(studioListColumns).from(schema.studios).orderBy(schema.studios.name),
+  ]);
+  const followedUsers = options.calendarOnly
+    ? everyoneRows.filter((user) => followedSet.has(user.id))
+    : followedUserRows;
   const coachRows = everyoneRows.filter(
-    (u) => u.kind !== "fan" && u.kind !== "gym" && (u.id === userId || !hidden.has(u.id)),
+    (u) =>
+      u.kind !== "fan" &&
+      (options.calendarOnly || u.kind !== "gym") &&
+      (u.id === userId || !hidden.has(u.id)),
   );
+  const followedCoaches = followedUsers.filter(
+    (u) => u.kind !== "fan" && u.kind !== "gym" && !!u.handle,
+  );
+  const directoryCoachIds = new Set(coachRows.map((coach) => coach.id));
+  const missingFollowedCoaches = followedCoaches.filter((coach) => !directoryCoachIds.has(coach.id));
   // The same loader the coach's own page and the digests ask, so following
   // somebody shows the week their page shows and not a shorter one.
-  const allClassRows = coachRows.length ? await publicSchedules(coachRows) : [];
-  const classRows = allClassRows.filter((c) => c.isPublic);
-  const coaches = coachRows.filter((c) => !!c.handle);
-  const coachById = new Map(coaches.map((c) => [c.id, c]));
-
-  const studioIds = [...new Set(classRows.map((c) => c.studioId))].filter(
-    (id): id is string => !!id,
-  );
-  const studioRows = studioIds.length
-    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
+  // Followed, discoverable coaches are already in the directory schedule
+  // result. Reusing those rows avoids loading the same classes, shifts and
+  // cover exceptions twice (the old path did exactly that for all 90 follows).
+  // The combined calendar is private to its viewer. Their assigned shifts
+  // must be present even when they keep shifts off their public profile;
+  // everyone else's own visibility choice remains untouched.
+  const calendarCoachRows = options.calendarOnly
+    ? coachRows.map((coach) => coach.id === userId ? { ...coach, shiftsPublic: true } : coach)
+    : coachRows;
+  const [allClassRows, missingFollowedSchedules] = await Promise.all([
+    calendarCoachRows.length ? publicFeedSchedules(calendarCoachRows, { start: from, end: through }) : Promise.resolve([]),
+    missingFollowedCoaches.length
+      ? publicFeedSchedules(missingFollowedCoaches, { start: from, end: through })
+      : Promise.resolve([]),
+  ]);
+  // Discovery needs the whole place directory. Home needs only the places
+  // named by its relevant schedules; selecting every studio photo for two
+  // days of calendar rows was another avoidable chunk of first-paint work.
+  const scheduleStudioIds = options.calendarOnly
+    ? [...new Set([...allClassRows, ...missingFollowedSchedules]
+      .map((row) => row.studioId)
+      .filter((id): id is string => !!id))]
     : [];
-  const studioById = new Map(studioRows.map((s) => [s.id, s]));
+  const allStudios = options.calendarOnly
+    ? scheduleStudioIds.length
+      ? await db.select(studioListColumns).from(schema.studios).where(inArray(schema.studios.id, scheduleStudioIds))
+      : []
+    : studioDirectoryRows;
+  const classRows = allClassRows.filter(
+    (c) => c.isPublic || (options.calendarOnly && c.shift && c.ownerUserId === userId),
+  );
+  const followedStudioClassIds = classRows
+    .filter((row) => !!row.studioId && followedStudioIds.has(row.studioId!))
+    .map((row) => row.id);
+  const followedStudioNaming = await shiftNaming(followedStudioClassIds, { includePrivate: true });
+  const coaches = coachRows.filter((c) => c.kind !== "gym" && !!c.handle);
+  const coachById = new Map(coachRows.map((c) => [c.id, c]));
+  const studioById = new Map(allStudios.map((s) => [s.id, s]));
 
-  const today = todayIso();
   // What the viewer already saved, so the row ribbons start right.
   const mineMarks = new Set(
-    (
-      await db
-        .select({
-          classId: schema.attendances.classId,
-          occurrenceDate: schema.attendances.occurrenceDate,
-        })
-        .from(schema.attendances)
-        .where(eq(schema.attendances.userId, userId))
-    ).map((m) => `${m.classId}|${m.occurrenceDate}`),
+    mineMarkRows.map((m) => `${m.classId}|${m.occurrenceDate}`),
   );
   const items: FeedItem[] = [];
-  for (let w = 0; w <= WEEKS_AHEAD; w++) {
-    for (const iso of weekDates(w, today)) {
-      const d = new Date(`${iso}T00:00:00Z`);
-      const dow = (d.getUTCDay() + 6) % 7;
-      for (const c of classRows) {
-        if (!runsOn(c, iso, dow)) continue;
-        // Been and gone is not an answer to "when can I train next".
-        if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
-        // A shift is owned by the gym and shown under the coach, so the person
-        // this row is about is ownerUserId, never userId.
-        const coach = coachById.get(c.ownerUserId);
-        if (!coach?.handle) continue;
-        const st = c.studioId ? studioById.get(c.studioId) : undefined;
-        const at = classAddress(c, coach.handle, st?.slug);
-        if (!at) continue;
-        const t = clockParts(c.startTime);
-        items.push({
-          key: `${c.id}|${iso}`,
-          week: w,
-          iso,
-          classId: c.id,
-          base: at.key,
-          coachId: coach.id,
-          name: c.name,
-          where: st?.name ?? c.location ?? null,
-          // A studio has a page; a class's own free-text location names a
-          // room, which has nothing to open.
-          whereHref: st ? `/s/${st.slug}` : null,
-          hm: t.hm,
-          ap: t.ap,
-          durationMin: c.durationMin,
-          mins: timeToMinutes(c.startTime),
-          about: c.description ?? null,
-          classType: c.classType ?? null,
-          links: c.links,
-          studioAddress: st?.address ?? null,
-          // The studio's coordinates, for the distance filter: geocoded at
-          // save, best-effort, null when the lookup missed. A class with no
-          // coordinates passes any distance rather than vanishing.
-          lat: st?.lat ?? null,
-          lng: st?.lng ?? null,
-          saved: mineMarks.has(`${c.id}|${iso}`),
-        });
-      }
+  for (let n = startDay; n <= endDay; n++) {
+    const occurrenceDate = new Date(`${today}T00:00:00Z`);
+    occurrenceDate.setUTCDate(occurrenceDate.getUTCDate() + n);
+    const iso = occurrenceDate.toISOString().slice(0, 10);
+    const w = Math.floor(n / 7);
+    const d = new Date(`${iso}T00:00:00Z`);
+    const dow = (d.getUTCDay() + 6) % 7;
+    for (const c of classRows) {
+      if (!runsOn(c, iso, dow)) continue;
+      // Been and gone is not an answer to "when can I train next".
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
+      // A shift is owned by the gym and shown under the coach, so the person
+      // this row is about is ownerUserId, never userId.
+      const coach = coachById.get(c.ownerUserId);
+      if (!coach) continue;
+      const st = c.studioId ? studioById.get(c.studioId) : undefined;
+      const studioSlug = st ? st.slug ?? st.id : null;
+      // A saved/group studio calendar is itself a public source of truth.
+      // Its open shifts and coaches who keep shifts private still belong on
+      // that studio calendar; keep the attribution at the studio rather than
+      // leaking a private coach name or dropping the class completely.
+      const at = coach.kind === "gym" && studioSlug
+        ? { key: studioSlug, base: `s/${studioSlug}` }
+        : classAddress(c, coach.handle, studioSlug);
+      if (!at) continue;
+      const t = clockParts(c.startTime);
+      const assignedCoach = c.studioId && followedStudioIds.has(c.studioId)
+        ? shiftCoach(followedStudioNaming, c.id, iso)
+        : null;
+      items.push({
+        key: `${c.id}|${iso}`,
+        week: w,
+        iso,
+        classId: c.id,
+        base: at.key,
+        coachId: coach.id,
+        assignedCoachName: assignedCoach?.name ?? null,
+        name: c.name,
+        where: st?.name ?? c.location ?? null,
+        // A studio has a page; a class's own free-text location names a
+        // room, which has nothing to open.
+        whereHref: studioSlug ? `/s/${studioSlug}` : null,
+        hm: t.hm,
+        ap: t.ap,
+        durationMin: c.durationMin,
+        mins: timeToMinutes(c.startTime),
+        about: c.description ?? null,
+        classType: c.classType ?? null,
+        links: c.links,
+        studioAddress: st?.address ?? null,
+        // The studio's coordinates, for the distance filter: geocoded at
+        // save, best-effort, null when the lookup missed. A class with no
+        // coordinates passes any distance rather than vanishing.
+        lat: st?.lat ?? null,
+        lng: st?.lng ?? null,
+        saved: mineMarks.has(`${c.id}|${iso}`),
+        shift: c.shift && c.ownerUserId === userId,
+      });
     }
   }
   // One class, one row, however many accounts list it. A studio's listing
@@ -154,12 +357,18 @@ export async function buildDiscoverFeed(
   // pairing publicSchedules does covers gym-vs-coach per person; this is
   // the reader-side net for everything that slips past it.
   {
-    const seen = new Set<string>();
+    const seen = new Map<string, number>();
     let w = 0;
     for (const i of items) {
       const key = `${i.iso}|${i.name.trim().toLowerCase()}|${i.mins}|${(i.where ?? "").toLowerCase()}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
+      const prior = seen.get(key);
+      if (prior !== undefined) {
+        // The studio and coach can both contribute the same occurrence. Keep
+        // one row, but never lose that it is the viewer's assigned shift.
+        if (i.shift) items[prior].shift = true;
+        continue;
+      }
+      seen.set(key, w);
       items[w++] = i;
     }
     items.length = w;
@@ -177,21 +386,23 @@ export async function buildDiscoverFeed(
   // three weeks sorts last and is dropped by the rail anyway; they keep the
   // alphabet among themselves so the tail is at least stable.
   const soonest = new Map<string, string>();
+  const soonestItem = new Map<string, FeedItem>();
   for (const i of items) {
     const at = `${i.iso}T${String(i.mins).padStart(4, "0")}`;
     const had = soonest.get(i.coachId);
-    if (!had || at < had) soonest.set(i.coachId, at);
+    if (!had || at < had) {
+      soonest.set(i.coachId, at);
+      soonestItem.set(i.coachId, i);
+    }
   }
   // The rail is the favorites alone, soonest class first, each face
   // carrying when that class is: the rail answers "who can I train with
   // next" before a single tap.
   const favSet = new Set(followed);
   const nextLabel = (id: string): string | null => {
-    const at = soonest.get(id);
-    if (!at) return null;
-    const iso = at.slice(0, 10);
-    const item = items.find((i) => i.coachId === id && i.iso === iso);
+    const item = soonestItem.get(id);
     if (!item) return null;
+    const iso = item.iso;
     const day =
       iso === today
         ? "Today"
@@ -219,7 +430,7 @@ export async function buildDiscoverFeed(
       return a.name.localeCompare(b.name);
     });
 
-  // The category pills, from what the fortnight actually holds: a filter is
+  // The category pills, from what the rolling month actually holds: a filter is
   // only offered where it can narrow something.
   const catCount = new Map<string, number>();
   for (const i of items) if (i.classType) catCount.set(i.classType, (catCount.get(i.classType) ?? 0) + 1);
@@ -231,25 +442,13 @@ export async function buildDiscoverFeed(
   // disappear. Members stay out: a large personal follow graph overwhelms
   // the useful shortcut to coaching calendars.
   const peekedByTrainer = new Map(followRows.map((r) => [r.trainerUserId, r.peekedAt]));
-  const followedUsers = followed.length
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, followed))
-    : [];
-  const followedCoaches = followedUsers.filter(
-    (u) => u.kind !== "fan" && u.kind !== "gym" && !!u.handle,
-  );
-  const [theirClasses, theirSchedules] = await Promise.all([
-    followed.length
-      ? db
-          .select({ userId: schema.classes.userId, createdAt: schema.classes.createdAt })
-          .from(schema.classes)
-          .where(and(inArray(schema.classes.userId, followed), eq(schema.classes.isPublic, true)))
-          .orderBy(desc(schema.classes.createdAt))
-      : Promise.resolve([]),
-    followedCoaches.length ? publicSchedules(followedCoaches) : Promise.resolve([]),
-  ]);
+  const theirSchedules = [
+    ...allClassRows.filter((row) => followedSet.has(row.ownerUserId)),
+    ...missingFollowedSchedules,
+  ];
   const activityAt = new Map<string, number>();
-  for (const r of theirClasses) {
-    const at = r.createdAt?.getTime() ?? 0;
+  for (const r of activityRows) {
+    const at = r.createdAt ? new Date(r.createdAt).getTime() : 0;
     if (at > (activityAt.get(r.userId) ?? 0)) activityAt.set(r.userId, at);
   }
   // When their next teaching occurrence is. No entry means they sort after
@@ -267,7 +466,7 @@ export async function buildDiscoverFeed(
     for (const c of publicTheirs) {
       if (nextAt.has(c.ownerUserId)) continue;
       if (!runsOn(c, iso, dow)) continue;
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       consider(c.ownerUserId, `${iso}T${String(timeToMinutes(c.startTime)).padStart(4, "0")}`);
     }
   }
@@ -295,7 +494,6 @@ export async function buildDiscoverFeed(
   // leading. "Closest" without asking for a pin on arrival: the city on
   // their account is the honest first cut, and the screen re-sorts by real
   // distance once the distance filter has already earned geolocation.
-  const allStudios = await db.select().from(schema.studios).orderBy(schema.studios.name);
   const myCity = (me.location ?? "").split(",")[0].trim().toLowerCase();
   // Closest first without asking anybody for a pin, by Matt's call: the
   // viewer's city has a centre we can honestly guess (the average of its
@@ -356,14 +554,59 @@ export async function buildDiscoverFeed(
   // Coaches near you: every listable coach, your city first, then whoever
   // teaches soonest, with the viewer's follow state riding along so the
   // pill under each face starts right.
+  let initialRail = options.initialRailLimit
+    ? myRail.slice(0, options.initialRailLimit)
+    : myRail;
+  const initialCoachIds = options.initialRailLimit
+    ? new Set([...items.map((item) => item.coachId), ...initialRail.map((person) => person.id)])
+    : null;
+  const studioByAccountId = new Map(
+    allStudios.filter((studio) => !!studio.accountUserId).map((studio) => [studio.accountUserId!, studio]),
+  );
+  const studioIdentities: FeedCoach[] = options.calendarOnly
+    ? coachRows
+      .filter((coach) => coach.kind === "gym")
+      .map((coach) => {
+        const studio = studioByAccountId.get(coach.id);
+        return {
+          id: coach.id,
+          name: studio?.name ?? coach.name,
+          handle: studio ? `s/${studio.slug ?? studio.id}` : "",
+          photo: studio?.photo ?? null,
+          color: avatarColor({ id: studio?.id ?? coach.id }),
+          next: nextLabel(coach.id),
+        };
+      })
+    : [];
+  const calendarIdentities = [...rail, ...studioIdentities];
+  let returnedRail = initialCoachIds
+    ? calendarIdentities.filter((coach) => initialCoachIds.has(coach.id))
+    : calendarIdentities;
+  if (initialCoachIds?.size) {
+    const visiblePhotos = await db
+      .select({
+        id: schema.users.id,
+        photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+      })
+      .from(schema.users)
+      .where(inArray(schema.users.id, [...initialCoachIds]));
+    const photoById = new Map(visiblePhotos.map((row) => [row.id, row.photo]));
+    returnedRail = returnedRail.map((coach) => ({
+      ...coach,
+      // Gym identities intentionally use the studio's artwork. They have no
+      // user avatar, so do not erase that image while enriching person rows.
+      photo: photoById.get(coach.id) ?? coach.photo ?? null,
+    }));
+    initialRail = initialRail.map((person) => ({ ...person, photo: photoById.get(person.id) ?? null }));
+  }
   return {
     items,
-    rail,
+    rail: returnedRail,
     favIds: [...favSet],
     cats,
     follows: followedCoaches.length,
     today,
-    myRail,
-    nearStudios,
+    myRail: initialRail,
+    nearStudios: options.calendarOnly ? [] : nearStudios,
   };
 }

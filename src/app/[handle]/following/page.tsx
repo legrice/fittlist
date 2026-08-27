@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { siteOrigin } from "@/lib/format";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { MemberProfileView } from "@/components/MemberProfileView";
 import { PublicProfileView } from "@/components/PublicProfileView";
@@ -44,7 +44,7 @@ export default async function FollowingPage({ params, searchParams }: Props) {
   const viewerId = await getSessionUserId();
   // Blocked: the page simply isn't there. Same shape as a deleted account, so
   // it says nothing about why.
-  if (await isBlocked(user.id, viewerId)) notFound();
+  if ((await hiddenFrom(viewerId)).has(user.id)) notFound();
   if (user.kind === "fan") {
     return (
       <MemberProfileView

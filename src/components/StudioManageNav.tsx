@@ -4,7 +4,7 @@ import { Icon } from "@/components/Icon";
 type StudioManageSection = "calendar" | "staff";
 
 const sections: { key: StudioManageSection; label: string; suffix: string; icon: "calendar_month" | "groups" }[] = [
-  { key: "calendar", label: "Calendar", suffix: "/manage", icon: "calendar_month" },
+  { key: "calendar", label: "Calendar", suffix: "/manage/calendar", icon: "calendar_month" },
   { key: "staff", label: "Staff", suffix: "/manage/staff", icon: "groups" },
 ];
 

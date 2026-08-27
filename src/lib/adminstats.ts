@@ -30,6 +30,7 @@ export async function sendDailyAdminStats(): Promise<{ sent: number }> {
     asks,
     classReports,
     studioReports,
+    contentReports,
     suggestions,
     visits,
   ] = await Promise.all([
@@ -45,6 +46,7 @@ export async function sendDailyAdminStats(): Promise<{ sent: number }> {
     db.select().from(schema.coachRequests).where(isNull(schema.coachRequests.handledAt)),
     db.select().from(schema.classReports),
     db.select().from(schema.studioReports),
+    db.select().from(schema.contentReports).where(eq(schema.contentReports.status, "open")),
     db.select().from(schema.studioSuggestions),
     db.select().from(schema.pageVisits).where(eq(schema.pageVisits.date, todayIso())),
   ]);
@@ -113,6 +115,7 @@ export async function sendDailyAdminStats(): Promise<{ sent: number }> {
     "Moderation",
     line("  Class reports open", classReports.length),
     line("  Studio reports open", studioReports.length),
+    line("  Content reports open", contentReports.length),
     line("  Studio edit suggestions", suggestions.length),
   ].join("\n");
 

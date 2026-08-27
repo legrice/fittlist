@@ -2,7 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { publicSchedule } from "@/lib/coachweek";
 import { mondayOfCurrentWeek } from "@/lib/format";
-import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, recurrenceLines } from "@/lib/ics";
+import { calendarTimeZoneLines, icsEsc as esc, icsFold as fold, recurrenceLines, zonedDateLine, zonedEndLine } from "@/lib/ics";
 
 // Per-coach iCalendar feed. A trainer (or anyone) subscribes to this URL in
 // Google/Apple/Outlook and their fittlist classes appear alongside everything
@@ -19,12 +19,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
   // Their own classes, and the gym shifts they've chosen to show. Same
   // loader as the page, so the feed can't say something the page doesn't.
   const classRows = await publicSchedule(user);
-  const monday = mondayOfCurrentWeek();
+  const generatedAt = new Date();
   // Public classes only (this feed is reachable by handle, like the page);
   // weekly always, one-offs only if they haven't already passed. Private client
   // sessions stay out of the shared feed (they still sync to the coach's own
   // connected Google Calendar).
-  const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= monday));
+  const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= mondayOfCurrentWeek(generatedAt, c.timeZone)));
 
   const studioIds = [...new Set(rows.map((c) => c.studioId).filter((id): id is string => !!id))];
   const studios = studioIds.length
@@ -42,9 +42,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${esc(user.name || handle)} · fittlist`,
+    `X-WR-TIMEZONE:${user.timeZone}`,
     "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
     "X-PUBLISHED-TTL:PT1H",
   ];
+  lines.push(...calendarTimeZoneLines(rows.map((row) => row.timeZone)));
 
   for (const c of rows) {
     const studio = c.studioId ? studioById.get(c.studioId) : undefined;
@@ -52,25 +54,25 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
     const date =
       c.specificDate ??
       (() => {
-        const d = new Date(`${monday}T00:00:00Z`);
+        const d = new Date(`${mondayOfCurrentWeek(generatedAt, c.timeZone)}T00:00:00Z`);
         d.setUTCDate(d.getUTCDate() + c.dayOfWeek);
         return d.toISOString().slice(0, 10);
       })();
     const desc = c.links.length
-      ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\\n") +
-        `\\n\\nfittlist.co/${handle}`
+      ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\n") +
+        `\n\nfittlist.co/${handle}`
       : `fittlist.co/${handle}`;
 
     lines.push("BEGIN:VEVENT");
     lines.push(`UID:${c.id}@fittlist.co`);
     lines.push(`DTSTAMP:${stamp}`);
-    lines.push(`DTSTART:${floatingStart(date, c.startTime)}`);
-    lines.push(`DTEND:${floatingEnd(date, c.startTime, c.durationMin)}`);
+    lines.push(zonedDateLine("DTSTART", date, c.startTime, c.timeZone));
+    lines.push(zonedEndLine(date, c.startTime, c.durationMin, c.timeZone));
     if (!c.specificDate)
-    lines.push(...recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime));
+      lines.push(...recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime, c.timeZone).map(fold));
     lines.push(fold(`SUMMARY:${esc(c.name)}`));
     if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));
-    lines.push(fold(`DESCRIPTION:${desc}`));
+    lines.push(fold(`DESCRIPTION:${esc(desc)}`));
     lines.push("END:VEVENT");
   }
 

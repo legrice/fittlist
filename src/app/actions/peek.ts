@@ -3,7 +3,7 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { publicSchedules, shiftNaming } from "@/lib/coachweek";
 import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
@@ -35,6 +35,8 @@ export type Peek = {
   handle: string | null;
   photo: string | null;
   color: string;
+  personType: "Trainer" | "Person";
+  location: string | null;
   /** "Week of Aug 9": the header's second line. */
   weekOf: string;
   /** For the header's Follow / Following pill. */
@@ -45,6 +47,7 @@ export type Peek = {
    *  same words whatever the week holds. A coach's teaching half is never
    *  gated, because their page is the product. */
   gated: boolean;
+  messagesOpen: boolean;
   days: PeekDay[];
 };
 
@@ -81,7 +84,7 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
   const [person] = await db.select().from(schema.users).where(eq(schema.users.id, personUserId));
   if (!person) return null;
   // Blocked in either direction: as far as they are concerned, no such week.
-  if (await isBlocked(personUserId, viewerId)) return null;
+  if ((await hiddenFrom(viewerId)).has(personUserId)) return null;
 
   const [viewer] = await db
     .select({ email: schema.users.email })
@@ -199,7 +202,7 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
     };
     for (const c of coachRows) {
       if (!runsOn(c, iso, dow)) continue;
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       const st = c.studioId ? studioById.get(c.studioId) : null;
       // A shift lives under the studio, because the gym owns the class.
       const base = c.shift ? (st?.slug ? `s/${st.slug}` : null) : person.handle;
@@ -222,7 +225,7 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
       if (m.occurrenceDate !== iso) continue;
       const c = markedById.get(m.classId);
       if (!c) continue;
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       const st = c.studioId ? studioById.get(c.studioId) : null;
       // A gym's class lives under the studio, because its account has no
       // handle; anyone else's under their own.
@@ -264,10 +267,13 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
     handle: person.handle,
     photo: person.photo,
     color: avatarColor(person),
+    personType: person.kind === "fan" ? "Person" : "Trainer",
+    location: person.location?.trim() || null,
     weekOf: `Week of ${new Date(`${today}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`,
     following,
     shared,
     gated,
+    messagesOpen: person.messagesOpen,
     days,
   };
 }

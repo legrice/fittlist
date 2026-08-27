@@ -104,7 +104,7 @@ export function SwipeGoing({
         className="swipefront"
         style={{
           transform: `translateX(${dx}px)`,
-          transition: dragging ? "none" : "transform .22s cubic-bezier(.2,.8,.3,1)",
+          transition: dragging ? "none" : "transform var(--motion-base) var(--motion-ease-out)",
         }}
       >
         {children}

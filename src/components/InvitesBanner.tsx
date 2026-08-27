@@ -37,8 +37,8 @@ export function InvitesBanner() {
             <Icon name="groups" size={20} />
           </span>
           <span className="invbanner-txt">
-            <b>Bring people in</b>
-            <span>Know a coach who should be in here? Send them your link.</span>
+            <b>Share FittList</b>
+            <span>Send FittList to the people you train with.</span>
           </span>
         </button>
         <button className="invbanner-x" aria-label="Dismiss" onClick={close}>
@@ -48,7 +48,7 @@ export function InvitesBanner() {
       {open && (
         <InviteSheet
           onClose={() => setOpen(false)}
-          onCopied={() => toast("Link copied, ready to paste")}
+          onCopied={() => toast("FittList link copied")}
         />
       )}
       <Toast msg={toastMsg} on={toastOn} />

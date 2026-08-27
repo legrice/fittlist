@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { notFound, permanentRedirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +23,6 @@ export default async function ContactPage({ params }: Props) {
   if (user.kind === "fan") notFound();
 
   const viewerId = await getSessionUserId();
-  if (await isBlocked(user.id, viewerId)) notFound();
+  if ((await hiddenFrom(viewerId)).has(user.id)) notFound();
   permanentRedirect(`/${handle}`);
 }

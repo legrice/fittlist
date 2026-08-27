@@ -77,7 +77,7 @@ export default async function TrainersByCity({ params }: Props) {
         <p>Fitness near you</p>
         <h1>Personal trainers and fitness coaches in {place}</h1>
         <p className="citylede">See who’s teaching nearby, explore their upcoming classes, and follow the schedules that fit your week.</p>
-        <Link className="citycta" href="/signup">Build your week</Link>
+        <Link className="citycta" href="/">Build your week</Link>
       </header>
 
       <section className="citysection" aria-labelledby="local-coaches">
@@ -88,7 +88,7 @@ export default async function TrainersByCity({ params }: Props) {
         <div className="citygrid">
           {coaches.map((coach) => (
             <Link className="cityperson" href={`/${coach.handle}`} key={coach.id}>
-              {coach.photo ? <img src={coach.photo} alt="" /> : <span aria-hidden>{coach.name.slice(0, 1).toUpperCase()}</span>}
+              {coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span aria-hidden>{coach.name.slice(0, 1).toUpperCase()}</span>}
               <div>
                 <h3>{coach.name}</h3>
                 <p>{coach.title || coach.disciplines[0] || "Fitness coach"}</p>

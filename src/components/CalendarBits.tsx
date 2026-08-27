@@ -825,7 +825,7 @@ export function useListMonthSpy(
 }
 
 /** One row of the month: what to draw in a day's cell. */
-export type MonthCellItem = { kind: CalKind | "overlay"; name: string; at: number; color?: string };
+export type MonthCellItem = { kind: CalKind; name: string; at: number };
 
 /** How far the month scroll reaches: back to where the list's past window
  *  ends, forward a year. */
@@ -902,7 +902,7 @@ function MonthBlock({
             >
               {c.inMonth && <span className="monthday-n">{c.day}</span>}
               {rows.slice(0, MAX).map((r, i) => (
-                <span key={i} className={`monthpill ev-${r.kind}`} style={r.kind === "overlay" ? { borderColor:r.color, color:r.color } : undefined}>
+                <span key={i} className={`monthpill ev-${r.kind}`}>
                   {r.name}
                 </span>
               ))}
@@ -924,14 +924,19 @@ export function MonthScroll({
   items,
   onDay,
   onMonthInView,
+  monthsAhead = MONTHS_AHEAD,
+  onNeedMore,
 }: {
   todayIso: string;
   /** iso -> that day's rows, spanning the whole range, filtered and sorted. */
   items: Map<string, MonthCellItem[]>;
   onDay: (iso: string) => void;
   onMonthInView: (ym: string) => void;
+  monthsAhead?: number;
+  onNeedMore?: () => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLButtonElement>(null);
   const thisYm = todayIso.slice(0, 7);
   const [y0, m0] = thisYm.split("-").map(Number);
   const yms: string[] = [];
@@ -940,7 +945,7 @@ export function MonthScroll({
   // the app header: tapping the toggle read as the calendar going full
   // screen. A view switch swaps what is in front of you and moves nothing;
   // the current month's own dimmed past days are still the record.
-  for (let i = 0; i <= MONTHS_AHEAD; i++) {
+  for (let i = 0; i <= monthsAhead; i++) {
     const d = new Date(Date.UTC(y0, m0 - 1 + i, 1));
     yms.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
   }
@@ -960,11 +965,25 @@ export function MonthScroll({
     blocks.forEach((b) => io.observe(b));
     return () => io.disconnect();
   }, [onMonthInView]);
+  useEffect(() => {
+    const target = moreRef.current;
+    if (!target || !onNeedMore || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) onNeedMore();
+    }, { rootMargin: "800px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [monthsAhead, onNeedMore]);
   return (
     <div ref={wrapRef} className="monthscroll">
       {yms.map((ym) => (
         <MonthBlock key={ym} ym={ym} todayIso={todayIso} items={items} onDay={onDay} />
       ))}
+      {onNeedMore && (
+        <button ref={moreRef} className="calendar-load-more" type="button" onClick={onNeedMore}>
+          Show more months
+        </button>
+      )}
     </div>
   );
 }

@@ -153,7 +153,12 @@ export function Adder({
    *  offers to share it, and a picture needs to know which one. */
   /** `live` arrives for a brand new public class: the just-published thing,
    *  so the host can offer sharing it while the moment is warm. */
-  onPublished: (msg: string, planId?: string, live?: { id: string; name: string }) => void;
+  onPublished: (
+    msg: string,
+    planId?: string,
+    live?: { id: string; name: string },
+    focus?: { id: string; iso: string },
+  ) => void;
   onDeleted: (msg: string) => void;
   /** Personal mode only: the class they're describing is already on fittlist,
    *  under somebody who keeps it up to date. The caller offers the real one,
@@ -554,7 +559,7 @@ export function Adder({
     );
   };
 
-  const publish = () => {
+  const publish = (allowCoachConflict = false) => {
     if (!whenChosen || !durValid || (!isEvent && !isGym && !studioId)) return;
     startTransition(async () => {
       const input = {
@@ -589,17 +594,24 @@ export function Adder({
               coachUserId: coachUserId || null,
               plannerColor,
               catalogKey,
+              allowCoachConflict,
             })
           : await addGymClass(gym.studioId, {
               ...input,
               coachUserId: coachUserId || null,
               plannerColor,
               catalogKey,
+              allowCoachConflict,
             })
         : isEdit
           ? await updateClass(prefill!.classId!, input)
           : await publishClasses(input);
       if (!res.ok) {
+        if (gym && res.error?.startsWith("Schedule conflict:")) {
+          const detail = res.error.replace(/^Schedule conflict:\s*/, "");
+          if (window.confirm(`${detail}\n\nAssign this coach anyway?`)) publish(true);
+          return;
+        }
         onToast(res.error ?? "Something went wrong");
         return;
       }
@@ -634,6 +646,9 @@ export function Adder({
               : undefined;
           return id ? { id, name } : undefined;
         })(),
+        !gym && !isEdit && !isPersonal && "focus" in res
+          ? (res as { focus?: { id: string; iso: string } }).focus
+          : undefined,
       );
     });
   };
@@ -1379,7 +1394,7 @@ export function Adder({
               <button
                 className="btn si"
                 disabled={!whenChosen || pending || (!isEvent && !isGym && !studioId)}
-                onClick={publish}
+                onClick={() => publish()}
               >
                 {pending ? (isEdit || isPersonalEdit ? "Saving…" : "Publishing…") : publishLabel}
               </button>

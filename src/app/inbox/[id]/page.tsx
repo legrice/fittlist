@@ -9,6 +9,7 @@ import { MarkSeen } from "@/components/MarkSeen";
 import { Icon } from "@/components/Icon";
 import { InquiryReply } from "@/components/InquiryReply";
 import { lookMode } from "@/lib/darkmode";
+import { hiddenFrom } from "@/lib/blocks";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,11 @@ export default async function InboxThreadPage({
   const isCoach = thread.coachUserId === userId;
   const isRequester = !isCoach && !!me && me.email === thread.requesterEmail;
   if (!isCoach && !isRequester) notFound();
+  const [requesterAccount] = isCoach
+    ? await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, thread.requesterEmail))
+    : [undefined];
+  const otherUserId = isCoach ? requesterAccount?.id : thread.coachUserId;
+  const conversationBlocked = !!otherUserId && (await hiddenFrom(userId)).has(otherUserId);
   const [coach] = isRequester
     ? await db
         .select({ name: schema.users.name, handle: schema.users.handle })
@@ -99,9 +105,9 @@ export default async function InboxThreadPage({
         )}
       </div>
       <div className="chatbody">
-        <ChatMessages messages={messages} mineIsCoach={isCoach} />
+        <ChatMessages messages={messages} mineIsCoach={isCoach} allowReports allowBlocking={!conversationBlocked && (isCoach || isRequester)} />
       </div>
-      <InquiryReply threadId={id} requester={isRequester} />
+      {thread.requesterClosedAt || thread.coachClosedAt || conversationBlocked ? <div className="chatreply"><p className="adminsub" role="status">{thread.requesterClosedAt ? "This conversation was stopped by the requester." : "This conversation is blocked."}</p></div> : <InquiryReply threadId={id} requester={isRequester} />}
     </section>
   );
 }

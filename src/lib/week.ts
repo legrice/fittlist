@@ -1,8 +1,18 @@
-import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, gte, inArray, isNull, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
+
+const displayedTimeMinutes = ({ hm, ap }: { hm: string; ap: string }): number => {
+  const [hourRaw, minuteRaw] = hm.split(":").map(Number);
+  const hour = (Number.isFinite(hourRaw) ? hourRaw : 0) % 12;
+  const minute = Number.isFinite(minuteRaw) ? minuteRaw : 0;
+  return hour * 60 + minute + (ap.toUpperCase() === "PM" ? 12 * 60 : 0);
+};
+
+const { image: _classImage, ...weekClassColumns } = getTableColumns(schema.classes);
+const { image: _personalImage, ...weekPersonalColumns } = getTableColumns(schema.personalClasses);
 
 // The classes someone has added, from today forward.
 //
@@ -28,6 +38,11 @@ export type WeekItem = {
   /** A personal entry: theirs alone, with no class page behind it. The id is
    *  the personal_classes row, and removing it is removePersonalClass. */
   personal?: boolean;
+  /** Recurrence metadata lets the client extend a personal calendar lazily
+   *  without asking the server to serialize years of weekly copies. */
+  repeatDay?: number;
+  specificDate?: string | null;
+  endsOn?: string | null;
   /** Mutual follows who added this same occurrence. Empty for everyone else:
    *  one-way follows see nothing, which is what makes following safe. */
   alsoGoing?: { name: string; photo: string | null; color: string; handle: string | null }[];
@@ -36,8 +51,8 @@ export type WeekItem = {
 export type WeekDay = { iso: string; label: string; items: WeekItem[] };
 
 /** The next date on or after today falling on this weekday (0 = Monday). */
-function nextOccurrence(dayOfWeek: number): string {
-  const d = new Date(`${todayIso()}T00:00:00Z`);
+function nextOccurrence(dayOfWeek: number, timeZone?: string): string {
+  const d = new Date(`${todayIso(new Date(), timeZone)}T00:00:00Z`);
   const today = (d.getUTCDay() + 6) % 7;
   d.setUTCDate(d.getUTCDate() + ((dayOfWeek - today + 7) % 7));
   return d.toISOString().slice(0, 10);
@@ -53,13 +68,14 @@ export function personalNext(p: {
   dayOfWeek: number;
   startTime: string;
   durationMin: number;
+  timeZone?: string;
   specificDate?: string | null;
   endsOn?: string | null;
 }): string | null {
   if (p.specificDate)
-    return occurrenceEnded(p.specificDate, p.startTime, p.durationMin) ? null : p.specificDate;
-  let iso = nextOccurrence(p.dayOfWeek);
-  if (occurrenceEnded(iso, p.startTime, p.durationMin)) {
+    return occurrenceEnded(p.specificDate, p.startTime, p.durationMin, p.timeZone) ? null : p.specificDate;
+  let iso = nextOccurrence(p.dayOfWeek, p.timeZone);
+  if (occurrenceEnded(iso, p.startTime, p.durationMin, p.timeZone)) {
     const d = new Date(`${iso}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + 7);
     iso = d.toISOString().slice(0, 10);
@@ -120,6 +136,7 @@ export type SharedWeekItem = {
   ap: string;
   /** Raw HH:MM, so a caller can ask `occurrenceEnded` about it. */
   startTime: string;
+  timeZone: string;
   durationMin: number;
   where: string | null;
   /** The base its class page lives under, or null for one of their own: a
@@ -209,6 +226,7 @@ export async function sharedWeek(
       hm: t.hm,
       ap: t.ap,
       startTime: c.startTime,
+      timeZone: c.timeZone,
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
       handle: base,
@@ -252,6 +270,7 @@ export async function sharedWeek(
         hm: t.hm,
         ap: t.ap,
         startTime: p.startTime,
+        timeZone: p.timeZone,
         durationMin: p.durationMin,
         where: p.studioId ? (ownStudioById.get(p.studioId)?.name ?? null) : p.location,
         // No page and nobody else's name: one of their own is a plain row.
@@ -268,7 +287,7 @@ export async function sharedWeek(
     .map(([iso, items]) => ({
       iso,
       label: fmtDayHeader(iso),
-      items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
+      items: items.sort((a, b) => displayedTimeMinutes(a) - displayedTimeMinutes(b)),
     }));
 }
 
@@ -296,7 +315,7 @@ export async function memberWeek(
       items: day.items.filter(
         (it) =>
           (it.handle !== null || it.oneOff) &&
-          !occurrenceEnded(it.iso, it.startTime, it.durationMin),
+          !occurrenceEnded(it.iso, it.startTime, it.durationMin, it.timeZone),
       ),
     }))
     .filter((day) => day.items.length > 0);
@@ -308,7 +327,7 @@ export async function memberWeek(
  *  today forward, exactly as before. */
 export async function myWeek(
   userId: string,
-  opts?: { pastDays?: number },
+  opts?: { pastDays?: number; email?: string },
 ): Promise<WeekDay[]> {
   const db = await getDb();
   const pastDays = opts?.pastDays ?? 0;
@@ -317,32 +336,48 @@ export async function myWeek(
     d.setUTCDate(d.getUTCDate() - pastDays);
     return d.toISOString().slice(0, 10);
   })();
-  const marks = await db
-    .select()
-    .from(schema.attendances)
-    .where(
-      and(
-        eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, sinceIso),
-      ),
-    )
-    .orderBy(asc(schema.attendances.occurrenceDate));
-  const own = await db
-    .select()
-    .from(schema.personalClasses)
-    .where(eq(schema.personalClasses.userId, userId));
+  const [marks, own] = await Promise.all([
+    db
+      .select()
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, sinceIso),
+        ),
+      )
+      .orderBy(asc(schema.attendances.occurrenceDate)),
+    // Calendar rows never display the personal entry's artwork. Fetching it
+    // here made every repeat carry a potentially large data URL.
+    db
+      .select(weekPersonalColumns)
+      .from(schema.personalClasses)
+      .where(eq(schema.personalClasses.userId, userId)),
+  ]);
   if (marks.length === 0 && own.length === 0) return [];
 
   const classIds = [...new Set(marks.map((m) => m.classId))];
   const classRows = await db
-    .select()
+    .select(weekClassColumns)
     .from(schema.classes)
     .where(inArray(schema.classes.id, classIds));
   const classById = new Map(classRows.map((c) => [c.id, c]));
 
   const coachIds = [...new Set(classRows.map((c) => c.userId))];
   const coaches = coachIds.length
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
+    ? await db
+        .select({
+          id: schema.users.id,
+          kind: schema.users.kind,
+          email: schema.users.email,
+          name: schema.users.name,
+          handle: schema.users.handle,
+          photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+          photoThumb: schema.users.photoThumb,
+          avatarColor: schema.users.avatarColor,
+        })
+        .from(schema.users)
+        .where(inArray(schema.users.id, coachIds))
     : [];
   const coachById = new Map(coaches.map((u) => [u.id, u]));
   // A gym owns its classes, so the row's owner is the place. Who is actually
@@ -361,7 +396,14 @@ export async function myWeek(
     ),
   ];
   const studios = studioIds.length
-    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
+    ? await db
+        .select({
+          id: schema.studios.id,
+          slug: schema.studios.slug,
+          name: schema.studios.name,
+        })
+        .from(schema.studios)
+        .where(inArray(schema.studios.id, studioIds))
     : [];
   const studioById = new Map(studios.map((s) => [s.id, s]));
   const ownStudioById = studioById;
@@ -371,16 +413,16 @@ export async function myWeek(
   // following someone never shows them your week; agreeing to each other does.
   const alsoByKey = new Map<string, { name: string; photo: string | null; color: string; handle: string | null }[]>();
   if (marks.length) {
-    const [me] = await db
+    const email = opts?.email ?? (await db
       .select({ email: schema.users.email })
       .from(schema.users)
-      .where(eq(schema.users.id, userId));
-    if (me) {
+      .where(eq(schema.users.id, userId)))[0]?.email;
+    if (email) {
       const [iFollowRows, followMeRows] = await Promise.all([
         db
           .select({ trainerUserId: schema.subscribers.trainerUserId })
           .from(schema.subscribers)
-          .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+          .where(and(eq(schema.subscribers.email, email), isNull(schema.subscribers.optedOutAt))),
         db
           .select({ userId: schema.subscribers.userId, email: schema.subscribers.email })
           .from(schema.subscribers)
@@ -421,7 +463,14 @@ export async function myWeek(
         if (overlapping.length) {
           const peopleIds = [...new Set(overlapping.map((t) => t.userId))];
           const people = await db
-            .select()
+            .select({
+              id: schema.users.id,
+              email: schema.users.email,
+              name: schema.users.name,
+              handle: schema.users.handle,
+              photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+              avatarColor: schema.users.avatarColor,
+            })
             .from(schema.users)
             .where(inArray(schema.users.id, peopleIds));
           const personById = new Map(people.map((p) => [p.id, p]));
@@ -544,6 +593,9 @@ export async function myWeek(
         // when there is no photo, and sand under white text was unreadable.
         coachColor: "#77705a",
         personal: true,
+        repeatDay: p.dayOfWeek,
+        specificDate: p.specificDate,
+        endsOn: p.endsOn,
       });
       byDay.set(iso, list);
     }
@@ -554,6 +606,6 @@ export async function myWeek(
     .map(([iso, items]) => ({
       iso,
       label: fmtDayHeader(iso),
-      items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
+      items: items.sort((a, b) => displayedTimeMinutes(a) - displayedTimeMinutes(b)),
     }));
 }

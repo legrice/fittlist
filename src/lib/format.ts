@@ -1,3 +1,10 @@
+import {
+  DEFAULT_TIME_ZONE,
+  isoDateInTimeZone,
+  minutesInTimeZone,
+  normalizeTimeZone,
+} from "@/lib/timezone";
+
 // Shared display logic - mirrors the prototype's helpers exactly.
 
 export const DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] as const;
@@ -148,26 +155,26 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   // The base card is the brand at its quietest: an open off-white canvas,
   // black type, and one lime edge. Olive carries small copy and the mark so
   // neither has to rely on lime for contrast at share-image scale.
-  paper: { label: "FittList", bg: "#FAFAF8", fg: "#000000", accent: "#9FE870", muted: "#405D16", faint: "#6B6B68", time: "#000000", lockup: "ink", lockupAccent: "#405D16" },
-  iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#C2410C", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
-  moss: { label: "Moss", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
-  pop: { label: "Pop", bg: "#C2410C", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
-  midnight: { label: "Midnight", bg: "#161e33", fg: "#f2efe4", accent: "#e5b558", muted: "#9aa3ba", faint: "#77809a", time: "#d5d9e6", lockup: "cloud", lockupAccent: "#e5b558" },
-  sunset: { label: "Sunset", bg: "linear-gradient(170deg, #3b1c53 0%, #8f3a5f 55%, #d96b4a 100%)", fg: "#fdf3e6", accent: "#ffc46b", muted: "#e5c3bc", faint: "#d3a9a6", time: "#ffe6cf", lockup: "cloud", lockupAccent: "#ffc46b" },
-  blush: { label: "Blush", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },
-  slate: { label: "Slate", bg: "#2b2e33", fg: "#eef0ee", accent: "#c9e265", muted: "#a3a8ad", faint: "#7f858c", time: "#d8dcd8", lockup: "cloud", lockupAccent: "#c9e265" },
+  paper: { label: "White and green", bg: "#FAFAF8", fg: "#000000", accent: "#9FE870", muted: "#405D16", faint: "#6B6B68", time: "#000000", lockup: "ink", lockupAccent: "#405D16" },
+  iron: { label: "Brown and orange", bg: "#191502", fg: "#f4efe1", accent: "#C2410C", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
+  moss: { label: "Olive and green", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
+  pop: { label: "Orange and black", bg: "#C2410C", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
+  midnight: { label: "Navy and gold", bg: "#161e33", fg: "#f2efe4", accent: "#e5b558", muted: "#9aa3ba", faint: "#77809a", time: "#d5d9e6", lockup: "cloud", lockupAccent: "#e5b558" },
+  sunset: { label: "Purple to orange", bg: "linear-gradient(170deg, #3b1c53 0%, #8f3a5f 55%, #d96b4a 100%)", fg: "#fdf3e6", accent: "#ffc46b", muted: "#e5c3bc", faint: "#d3a9a6", time: "#ffe6cf", lockup: "cloud", lockupAccent: "#ffc46b" },
+  blush: { label: "Pink and red", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },
+  slate: { label: "Charcoal and green", bg: "#2b2e33", fg: "#eef0ee", accent: "#c9e265", muted: "#a3a8ad", faint: "#7f858c", time: "#d8dcd8", lockup: "cloud", lockupAccent: "#c9e265" },
   // The eight added when the first style axis came out. Four grounds that are new
   // families rather than shades of the eight above (a yellow, a deep green, a
   // blue, a true black and white), and four that are the quiet end, because
   // the quiet ones are what most people settle on and there was only one.
-  citrus: { label: "Citrus", bg: "#f2c14e", fg: "#241d05", accent: "#7a2e0e", muted: "#6d5a24", faint: "#8a7333", time: "#3a2f0c", lockup: "ink", lockupAccent: "#7a2e0e" },
-  forest: { label: "Forest", bg: "#14312a", fg: "#eaf3ec", accent: "#8fd6a8", muted: "#9db8a9", faint: "#7d9a8c", time: "#d3e6d8", lockup: "cloud", lockupAccent: "#8fd6a8" },
-  cobalt: { label: "Cobalt", bg: "#2438d6", fg: "#f2f3ff", accent: "#ffd447", muted: "#b3bbf5", faint: "#96a0ee", time: "#e2e5ff", lockup: "cloud", lockupAccent: "#ffd447" },
-  mono: { label: "Mono", bg: "#0d0d0d", fg: "#fafafa", accent: "#fafafa", muted: "#9a9a9a", faint: "#7a7a7a", time: "#e4e4e4", lockup: "cloud", lockupAccent: "#fafafa" },
-  sand: { label: "Sand", bg: "#e3d7c2", fg: "#2b2413", accent: "#a1522b", muted: "#6f6350", faint: "#8b7d67", time: "#3f3524", lockup: "ink", lockupAccent: "#a1522b" },
-  plum: { label: "Plum", bg: "#3b1c3f", fg: "#f6ecf5", accent: "#f0a3c8", muted: "#b79ab6", faint: "#9a7d9a", time: "#e6d6e5", lockup: "cloud", lockupAccent: "#f0a3c8" },
-  surf: { label: "Surf", bg: "#cfe9e4", fg: "#10322e", accent: "#0f6b5c", muted: "#5c7f7a", faint: "#7c9b96", time: "#1d423d", lockup: "ink", lockupAccent: "#0f6b5c" },
-  ember: { label: "Ember", bg: "linear-gradient(165deg, #1a1005 0%, #6b2a0f 60%, #c2410c 100%)", fg: "#fdeee2", accent: "#ffb066", muted: "#d9b49c", faint: "#bd9a80", time: "#ffe0c6", lockup: "cloud", lockupAccent: "#ffb066" },
+  citrus: { label: "Yellow and brown", bg: "#f2c14e", fg: "#241d05", accent: "#7a2e0e", muted: "#6d5a24", faint: "#8a7333", time: "#3a2f0c", lockup: "ink", lockupAccent: "#7a2e0e" },
+  forest: { label: "Green and mint", bg: "#14312a", fg: "#eaf3ec", accent: "#8fd6a8", muted: "#9db8a9", faint: "#7d9a8c", time: "#d3e6d8", lockup: "cloud", lockupAccent: "#8fd6a8" },
+  cobalt: { label: "Blue and yellow", bg: "#2438d6", fg: "#f2f3ff", accent: "#ffd447", muted: "#b3bbf5", faint: "#96a0ee", time: "#e2e5ff", lockup: "cloud", lockupAccent: "#ffd447" },
+  mono: { label: "Black and white", bg: "#0d0d0d", fg: "#fafafa", accent: "#fafafa", muted: "#9a9a9a", faint: "#7a7a7a", time: "#e4e4e4", lockup: "cloud", lockupAccent: "#fafafa" },
+  sand: { label: "Beige and brown", bg: "#e3d7c2", fg: "#2b2413", accent: "#a1522b", muted: "#6f6350", faint: "#8b7d67", time: "#3f3524", lockup: "ink", lockupAccent: "#a1522b" },
+  plum: { label: "Purple and pink", bg: "#3b1c3f", fg: "#f6ecf5", accent: "#f0a3c8", muted: "#b79ab6", faint: "#9a7d9a", time: "#e6d6e5", lockup: "cloud", lockupAccent: "#f0a3c8" },
+  surf: { label: "Teal", bg: "#cfe9e4", fg: "#10322e", accent: "#0f6b5c", muted: "#5c7f7a", faint: "#7c9b96", time: "#1d423d", lockup: "ink", lockupAccent: "#0f6b5c" },
+  ember: { label: "Brown to orange", bg: "linear-gradient(165deg, #1a1005 0%, #6b2a0f 60%, #c2410c 100%)", fg: "#fdeee2", accent: "#ffb066", muted: "#d9b49c", faint: "#bd9a80", time: "#ffe0c6", lockup: "cloud", lockupAccent: "#ffb066" },
 };
 /** Complete starting art directions for the picture. Each style coordinates
  * structure, palette, headline face and decoration; the editor's individual
@@ -455,14 +462,9 @@ export function fmtDays(days: number[]): string {
   return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
 }
 
-// The app's clock. Classes store floating local times ("06:00", no zone), and
-// every screen agrees on what "today" means by asking here. It used to be the
-// server's day, which on Vercel is UTC: from 8pm Eastern the whole app lived a
-// day ahead, showing Thursday as today on Wednesday night. Everyone in the
-// beta trains in US Eastern, so that's the clock, overridable per deployment.
-// A timezone per coach (or per viewer) is the real fix, and it would land in
-// these three functions.
-const APP_TZ = process.env.NEXT_PUBLIC_APP_TZ || "America/New_York";
+// The fallback clock for legacy rows. New schedules persist their own IANA
+// timezone; callers dealing with a specific class pass that value through.
+const APP_TZ = DEFAULT_TIME_ZONE;
 
 /** The app's timezone, for anything that writes a wall-clock time somewhere
  *  else (the Google Calendar sync): a class's "6:00" means 6:00 here. */
@@ -489,19 +491,13 @@ export function fmtDayHeaderRel(iso: string, today = todayIso()): string {
 
 /** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
  *  now on" starts. Pass a Date to ask what day some other instant falls on. */
-export function todayIso(now = new Date()): string {
-  // en-CA is the locale whose short date is already YYYY-MM-DD.
-  return now.toLocaleDateString("en-CA", { timeZone: APP_TZ });
+export function todayIso(now = new Date(), timeZone = APP_TZ): string {
+  return isoDateInTimeZone(now, normalizeTimeZone(timeZone, APP_TZ));
 }
 
 /** Minutes past midnight of this instant, in the app's timezone. */
-function minutesNow(now = new Date()): number {
-  const [h, m] = now
-    .toLocaleTimeString("en-GB", { timeZone: APP_TZ, hour12: false, hour: "2-digit", minute: "2-digit" })
-    .split(":")
-    .map(Number);
-  // en-GB says "24:00" for midnight in some ICU versions; fold it back.
-  return ((h % 24) * 60 + m);
+function minutesNow(now = new Date(), timeZone = APP_TZ): number {
+  return minutesInTimeZone(now, normalizeTimeZone(timeZone, APP_TZ));
 }
 
 /**
@@ -512,19 +508,24 @@ function minutesNow(now = new Date()): number {
  * minutes, both in the app's timezone. A class only counts as gone once its
  * end time has passed, not at midnight.
  */
-export function occurrenceEnded(iso: string, startTime: string, durationMin: number): boolean {
+export function occurrenceEnded(
+  iso: string,
+  startTime: string,
+  durationMin: number,
+  timeZone = APP_TZ,
+): boolean {
   const [h, m] = startTime.split(":").map(Number);
   const end = new Date(`${iso}T00:00:00Z`);
   end.setUTCMinutes(end.getUTCMinutes() + h * 60 + m + durationMin);
   const now = new Date();
-  const ref = new Date(`${todayIso(now)}T00:00:00Z`);
-  ref.setUTCMinutes(ref.getUTCMinutes() + minutesNow(now));
+  const ref = new Date(`${todayIso(now, timeZone)}T00:00:00Z`);
+  ref.setUTCMinutes(ref.getUTCMinutes() + minutesNow(now, timeZone));
   return end.getTime() < ref.getTime();
 }
 
 /** ISO date (YYYY-MM-DD) of the current week's Monday, in the app's timezone. */
-export function mondayOfCurrentWeek(now = new Date()): string {
-  const m = new Date(`${todayIso(now)}T00:00:00Z`);
+export function mondayOfCurrentWeek(now = new Date(), timeZone = APP_TZ): string {
+  const m = new Date(`${todayIso(now, timeZone)}T00:00:00Z`);
   m.setUTCDate(m.getUTCDate() - ((m.getUTCDay() + 6) % 7));
   return m.toISOString().slice(0, 10);
 }
@@ -541,8 +542,6 @@ export function mondayOfCurrentWeek(now = new Date()): string {
  * Sunday-led, like every other week this app draws. `mondayOfCurrentWeek` is
  * still here for the digests, which think in working weeks.
  */
-export const WEEKS_AHEAD = 2;
-
 export function sundayOfWeek(offset = 0, today = todayIso()): string {
   const d = new Date(`${today}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() - d.getUTCDay() + offset * 7);

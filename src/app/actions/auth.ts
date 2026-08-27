@@ -22,16 +22,27 @@ import { adminEmails } from "@/lib/admin";
 import { nextAvatarColor } from "@/lib/avatar-server";
 import { purgeUser } from "@/lib/purge";
 import { sendMessage } from "@/lib/mailer";
-import { createSession, destroySession, getSessionUserId } from "@/lib/session";
+import {
+  clearPasswordPrompt,
+  clearPendingMagicToken,
+  createSession,
+  destroySession,
+  getSessionUserId,
+  markPasswordPrompt,
+  passwordResetGrantId,
+  pendingMagicToken,
+} from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
 import { pubKeyFromStore, pubKeyToStore, rpInfo, setChallenge, takeChallenge } from "@/lib/webauthn";
 import { acceptInvite, INVITE_MSG, signupAllowed } from "@/lib/invites";
 import { emailHtml } from "@/lib/email-html";
-import { fansEnabled } from "@/lib/flags";
+import { fansEnabled, landingHref } from "@/lib/flags";
 import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
 import { signupSource } from "@/lib/attribution";
 import { pushSignupPing } from "@/lib/push";
 import { claimRosterPlaceholders } from "@/lib/roster";
+import { objectionableContentError } from "@/lib/content-safety";
+import { PROFILE_REMOVED_MESSAGE, profileRemovedByModeration } from "@/lib/moderation";
 
 const MAGIC_TTL_MS = 15 * 60 * 1000;
 const MAX_LINKS_PER_EMAIL = 3; // per TTL window
@@ -69,23 +80,15 @@ export async function passwordAuth(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
 
   if (!user) {
-    // No account yet: treat this as sign-up. The beta gate covers everyone —
-    // members as much as coaches. Everything is in beta until it isn't, and a
-    // member who joins now is exactly the feedback the beta is for.
-    const fan = asFan && fansEnabled();
-    if (!(await signupAllowed(email))) return { ok: false, needsInvite: true, error: INVITE_MSG };
-    const problem = passwordProblem(password);
-    if (problem) return { ok: false, error: problem };
-    const passwordHash = await hashPassword(password);
-    const [created] = await db
-      .insert(schema.users)
-      .values({ email, passwordHash, kind: fan ? "fan" : "coach", avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
-      .returning();
-    pushSignupPing(email); // fire and forget; signup never waits on a ping
-    await acceptInvite(email, created.id);
-    const claimedRoster = await claimRosterPlaceholders(email, created.id);
-    await createSession(created.id);
-    return { ok: true, needsProfile: true, hasPasskey: false, fan: claimedRoster ? false : fan };
+    // New accounts are created only after the owner opens an emailed,
+    // single-use link. A public server action must not let somebody claim an
+    // unregistered address (and any email-keyed guest history) with a password
+    // they chose themselves.
+    void asFan;
+    return {
+      ok: false,
+      error: "Create your account with the email sign-up link first.",
+    };
   }
   if (!user.passwordHash) {
     return {
@@ -124,38 +127,102 @@ export async function setPassword(
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!user) return { ok: false, error: "Session expired. Sign in again." };
-  if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
-    return { ok: false, error: "Current password is incorrect." };
+  const currentPasswordMatches = user.passwordHash
+    ? await verifyPassword(currentPassword, user.passwordHash)
+    : true;
+  const passwordHash = await hashPassword(newPassword);
+  const resetGrantId = await passwordResetGrantId();
+
+  if (user.passwordHash && !currentPasswordMatches) {
+    // A forgotten-password change is allowed only in the same browser that
+    // explicitly confirmed a reset-purpose email link. Deleting the grant and
+    // changing the password in one transaction makes it single-use even if
+    // two submissions race.
+    if (!resetGrantId) return { ok: false, error: "Current password is incorrect." };
+    const cutoff = new Date(Date.now() - MAGIC_TTL_MS);
+    const applied = await db.transaction(async (tx) => {
+      const claimed = await tx
+        .delete(schema.magicLinks)
+        .where(
+          and(
+            eq(schema.magicLinks.id, resetGrantId),
+            eq(schema.magicLinks.email, user.email),
+            eq(schema.magicLinks.purpose, "reset"),
+            gt(schema.magicLinks.consumedAt, cutoff),
+          ),
+        )
+        .returning({ id: schema.magicLinks.id });
+      if (!claimed.length) return false;
+      await tx
+        .update(schema.users)
+        .set({ passwordHash })
+        .where(eq(schema.users.id, userId));
+      return true;
+    });
+    if (!applied) {
+      await clearPasswordPrompt();
+      return { ok: false, error: "That reset link expired. Request a new one." };
+    }
+  } else {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(schema.users)
+        .set({ passwordHash })
+        .where(eq(schema.users.id, userId));
+      // A successful current-password change or first password setup makes any
+      // pending reset for this browser unnecessary. Remove it rather than
+      // leaving reusable authority behind until expiry.
+      if (resetGrantId) {
+        await tx
+          .delete(schema.magicLinks)
+          .where(
+            and(
+              eq(schema.magicLinks.id, resetGrantId),
+              eq(schema.magicLinks.email, user.email),
+              eq(schema.magicLinks.purpose, "reset"),
+            ),
+          );
+      }
+    });
   }
-  await db
-    .update(schema.users)
-    .set({ passwordHash: await hashPassword(newPassword) })
-    .where(eq(schema.users.id, userId));
+  await clearPasswordPrompt();
   return { ok: true };
 }
 
+export async function dismissPasswordPrompt(): Promise<void> {
+  const grantId = await passwordResetGrantId();
+  const userId = grantId ? await getSessionUserId() : null;
+  if (grantId && userId) {
+    const db = await getDb();
+    const [user] = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
+    if (user) {
+      await db
+        .delete(schema.magicLinks)
+        .where(
+          and(
+            eq(schema.magicLinks.id, grantId),
+            eq(schema.magicLinks.email, user.email),
+            eq(schema.magicLinks.purpose, "reset"),
+          ),
+        );
+    }
+  }
+  await clearPasswordPrompt();
+}
+
 export async function changeEmail(
-  newEmailRaw: string,
-  currentPassword: string = "",
+  _newEmailRaw: string,
+  _currentPassword: string = "",
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired. Sign in again." };
-  const email = newEmailRaw.trim().toLowerCase();
-  if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!user) return { ok: false, error: "Session expired. Sign in again." };
-  if (email === user.email) return { ok: true };
-  if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
-    return { ok: false, error: "Enter your current password to change your email." };
-  }
-  const [taken] = await db
-    .select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.email, email));
-  if (taken && taken.id !== userId) return { ok: false, error: "That email is already in use." };
-  await db.update(schema.users).set({ email }).where(eq(schema.users.id, userId));
-  return { ok: true };
+  // Changing the identity key without proving control of the new mailbox can
+  // transfer email-keyed conversations and subscriptions. Keep this closed
+  // until the confirmation-token workflow is implemented.
+  return { ok: false, error: "Contact support to change your sign-in email." };
 }
 
 export async function removePasskeys(): Promise<{ ok: boolean; error?: string }> {
@@ -170,9 +237,13 @@ export async function removePasskeys(): Promise<{ ok: boolean; error?: string }>
 export async function requestMagicLink(
   emailRaw: string,
   via: string | null = null,
+  intent: "login" | "signup" | "reset" = "login",
 ): Promise<{ ok: boolean; error?: string }> {
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
+  // Server actions are public endpoints; TypeScript does not validate a
+  // remotely supplied string at runtime.
+  const requestedIntent = intent === "reset" || intent === "signup" ? intent : "login";
 
   const db = await getDb();
 
@@ -182,7 +253,16 @@ export async function requestMagicLink(
     .select({ id: schema.users.id })
     .from(schema.users)
     .where(eq(schema.users.email, email));
+  // Password recovery must neither disclose that an account is absent nor
+  // turn a typo into a new account. The UI still shows the same generic "sent"
+  // state as it does for an existing address.
+  if (!existing && requestedIntent === "reset") return { ok: true };
   if (!existing && !(await signupAllowed(email))) return { ok: false, error: INVITE_MSG };
+  // An existing signup request is simply a login; only a known account can
+  // receive reset authority.
+  const purpose: "login" | "signup" | "reset" = existing
+    ? requestedIntent === "reset" ? "reset" : "login"
+    : "signup";
 
   const since = new Date(Date.now() - MAGIC_TTL_MS);
   const ip = await clientIp();
@@ -203,47 +283,69 @@ export async function requestMagicLink(
   }
 
   const token = randomBytes(32).toString("hex");
-  await db.insert(schema.magicLinks).values({
+  const [createdLink] = await db.insert(schema.magicLinks).values({
     email,
     tokenHash: sha256(token),
     ip,
     via: via ? slug(via).slice(0, 64) : null,
+    purpose,
     expiresAt: new Date(Date.now() + MAGIC_TTL_MS),
-  });
+  }).returning({ id: schema.magicLinks.id });
   const url = `${siteOrigin()}/auth/magic?token=${token}`;
-  const lines = [
-    `You asked to sign in to fittlist as ${email}. Use the button below and you're in, no password needed.`,
-    "The link works once and expires in 15 minutes. Once you're in you can set a password, so next time you can sign in on any browser without waiting on an email.",
-  ];
-  await sendMessage({
+  const firstTime = !existing;
+  const resetting = purpose === "reset";
+  const lines = firstTime
+    ? [
+        `You asked to create a fittlist account for ${email}. Use the button below to verify the address and continue.`,
+        "The link works once and expires in 15 minutes. You'll choose your profile, then you can set a password for next time.",
+      ]
+    : resetting
+      ? [
+          `You asked to reset the password for ${email}. Use the button below to confirm this browser and choose a new password.`,
+          "The link works once and expires in 15 minutes. Your password will not change until you continue and save a new one.",
+        ]
+    : [
+        `You asked to sign in to fittlist as ${email}. Use the button below and you're in, no password needed.`,
+        "The link works once and expires in 15 minutes. Once you're in you can set a password, so next time you can sign in on any browser without waiting on an email.",
+      ];
+  const delivery = await sendMessage({
     to: email,
     kind: "magic_link",
-    subject: "Sign in to fittlist",
+    subject: firstTime
+      ? "Finish creating your fittlist account"
+      : resetting
+        ? "Reset your fittlist password"
+        : "Sign in to fittlist",
     text: `${lines.join("\n\n")}\n\n${url}\n\nIf you didn't ask for this, you can ignore this email. Nothing has changed on your account.`,
     html: emailHtml({
-      heading: "Sign in to fittlist",
+      heading: firstTime ? "Verify your email" : resetting ? "Reset your password" : "Sign in to fittlist",
       body: lines,
-      cta: { label: "Sign in", url },
+      cta: { label: firstTime ? "Verify and continue" : resetting ? "Continue password reset" : "Sign in", url },
       footer: `This was sent to ${email} because someone asked to sign in to fittlist with that address. If it wasn't you, ignore it. Nothing has changed on the account.`,
     }),
   });
+  if (!delivery.ok) {
+    if (createdLink) await db.delete(schema.magicLinks).where(eq(schema.magicLinks.id, createdLink.id));
+    return { ok: false, error: "We couldn't send that email. Please try again in a moment." };
+  }
   return { ok: true };
 }
 
-// Consumed by the /auth/magic route handler. Returns null on a bad/expired
-// token; otherwise creates the session and reports what to do next.
+// Consumed only by the explicit confirmation POST. The email's GET parks the
+// token in an HttpOnly cookie but performs no mutation, so security scanners
+// and link previews cannot burn a user's one-time login.
 export async function consumeMagicToken(
   token: string,
 ): Promise<{
   needsProfile: boolean;
   fan: boolean;
   via: string | null;
-  /** They can only get in by email right now — offer to fix that on arrival. */
-  noPassword: boolean;
+  passwordPrompt: "set" | "reset" | null;
+  resetGrantId: string | null;
 } | null> {
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const db = await getDb();
-  const [row] = await db
+  const [candidate] = await db
     .select()
     .from(schema.magicLinks)
     .where(
@@ -255,24 +357,45 @@ export async function consumeMagicToken(
     )
     .orderBy(sql`${schema.magicLinks.createdAt} desc`)
     .limit(1);
-  if (!row) return null;
-  await db
+  if (!candidate) return null;
+  const [row] = await db
     .update(schema.magicLinks)
     .set({ consumedAt: new Date() })
-    .where(eq(schema.magicLinks.id, row.id));
+    .where(
+      and(
+        eq(schema.magicLinks.id, candidate.id),
+        isNull(schema.magicLinks.consumedAt),
+        gt(schema.magicLinks.expiresAt, new Date()),
+      ),
+    )
+    .returning();
+  // A second POST that raced this one loses the conditional update and cannot
+  // mint another session or reset grant.
+  if (!row) return null;
 
   let [user] = await db.select().from(schema.users).where(eq(schema.users.email, row.email));
   if (!user) {
+    if (row.purpose === "reset") return null;
     // Defense in depth: requestMagicLink already gates, but never create an
     // account here for an email that isn't invited.
     if (!(await signupAllowed(row.email))) return null;
     [user] = await db
       .insert(schema.users)
-      .values({ email: row.email, avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
+      .values({
+        email: row.email,
+        kind: fansEnabled() ? "fan" : "coach",
+        discoverable: false,
+        avatarColor: await nextAvatarColor(),
+        signupSource: await signupSource(),
+      })
       .returning();
     pushSignupPing(row.email);
     await acceptInvite(row.email, user.id);
     await claimRosterPlaceholders(row.email, user.id);
+    // A matching coach-roster invitation intentionally promotes the account.
+    // Reload so the claim screen and returned role reflect that server-side
+    // exception, while discoverable remains false until setup is complete.
+    [user] = await db.select().from(schema.users).where(eq(schema.users.id, user.id));
   }
   await createSession(user.id);
   const [pk] = await db
@@ -286,8 +409,26 @@ export async function consumeMagicToken(
     // An account with neither a password nor a passkey can only ever be reached
     // through this inbox. That's how someone ends up locked out of their own
     // page in a different browser, so offer the fix the moment they land.
-    noPassword: !user.passwordHash && !pk,
+    passwordPrompt: row.purpose === "reset" ? "reset" : !user.passwordHash && !pk ? "set" : null,
+    resetGrantId: row.purpose === "reset" ? row.id : null,
   };
+}
+
+/** User-initiated POST from /auth/continue. This is deliberately separate
+ * from the emailed GET so opening the URL is always safe and reversible. */
+export async function confirmMagicLink(formData: FormData): Promise<void> {
+  const invited = formData.get("invited") === "1";
+  const token = await pendingMagicToken();
+  const result = token ? await consumeMagicToken(token) : null;
+  await clearPendingMagicToken();
+  if (!result) redirect(`/?expired=1${invited ? "&invited=1" : ""}`);
+  if (result.passwordPrompt) {
+    await markPasswordPrompt(result.passwordPrompt, result.resetGrantId);
+  }
+  if (result.needsProfile) {
+    redirect(result.via ? `/?via=${encodeURIComponent(result.via)}` : "/");
+  }
+  redirect(await landingHref());
 }
 
 // ---- passkeys (WebAuthn): enroll while logged in, then sign in with biometrics
@@ -459,12 +600,21 @@ export async function setTeaching(on: boolean): Promise<{ ok: boolean; error?: s
   if (!me) return { ok: false, error: "Session expired. Sign in again." };
   // A gym account is not a person and must never be flipped by one.
   if (me.kind === "gym") return { ok: false, error: "That is a studio account." };
+  if (on && await profileRemovedByModeration(userId, db)) {
+    return { ok: false, error: PROFILE_REMOVED_MESSAGE };
+  }
   if (on && !me.handle) {
     return { ok: false, error: "Pick your link first, so your page has somewhere to live." };
   }
   await db
     .update(schema.users)
-    .set({ kind: on ? "coach" : "fan", discoverable: on ? true : me.discoverable })
+    // During first-run setup, keep the just-claimed handle out of Discover
+    // until completeOnboarding commits the whole profile. Established members
+    // who turn coaching on are already onboarded and become listable at once.
+    .set({
+      kind: on ? "coach" : "fan",
+      discoverable: on ? !!me.onboardedAt : me.discoverable,
+    })
     .where(eq(schema.users.id, userId));
   revalidatePath("/settings");
   revalidatePath("/you");
@@ -539,10 +689,15 @@ export async function claimProfile(
   if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const name = nameRaw.trim();
   if (!name) return { ok: false, error: "Enter your name." };
+  const safetyError = objectionableContentError(name, handleRaw);
+  if (safetyError) return { ok: false, error: safetyError };
   // Growth-loop attribution: signup arrived through a public page's footer.
   const signupSource = via ? `footer:${slug(via)}`.slice(0, 64) : null;
 
   const db = await getDb();
+  if (await profileRemovedByModeration(userId, db)) {
+    return { ok: false, error: PROFILE_REMOVED_MESSAGE };
+  }
   // The coach picks their URL; fall back to a slug of their name if left blank.
   const chosen = slug(handleRaw.trim() || name);
   if (!chosen) return { ok: false, error: "Pick a URL for your page." };
@@ -617,7 +772,12 @@ export async function deleteMyAccount(): Promise<{ ok: boolean; error?: string }
     return { ok: false, error: "An admin account can't be deleted from here." };
   if (me.kind === "gym")
     return { ok: false, error: "That's a studio's account. Remove the studio instead." };
-  await purgeUser(db, userId);
+  try {
+    await purgeUser(db, userId);
+  } catch (error) {
+    console.error("deleteMyAccount failed", { userId, error });
+    return { ok: false, error: "Your account couldn't be deleted. Nothing was changed. Please try again." };
+  }
   await destroySession();
   return { ok: true };
 }

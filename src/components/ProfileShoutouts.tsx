@@ -5,14 +5,16 @@ import { moderateShoutout, submitShoutout } from "@/app/actions/shoutouts";
 import { SignupPrompt } from "@/components/SignupPrompt";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
+import { ReportContentButton } from "@/components/ReportContentButton";
 
-export type ProfileShoutout = { id: string; body: string; featured: boolean; authorName: string };
+export type ProfileShoutout = { id: string; body: string; featured: boolean; authorName: string; authorUserId: string };
 
-export function ProfileShoutouts({ handle, studioSlug, name, signedIn, owner, initial }: {
+export function ProfileShoutouts({ handle, studioSlug, name, signedIn, viewerId, owner, initial }: {
   handle?: string;
   studioSlug?: string;
   name: string;
   signedIn: boolean;
+  viewerId?: string | null;
   owner: boolean;
   initial: ProfileShoutout[];
 }) {
@@ -49,6 +51,7 @@ export function ProfileShoutouts({ handle, studioSlug, name, signedIn, owner, in
             {shown.map((row) => (
               <article className="shoutout-card" key={row.id}>
                 <p>“{row.body}”</p><span>From {row.authorName}</span>
+                {viewerId && viewerId !== row.authorUserId && <ReportContentButton contentType="shoutout" contentId={row.id} label="Report shoutout" canBlock />}
                 {owner && <div className="shoutout-actions">
                   <button disabled={pending} onClick={() => moderate(row.id, row.featured ? "hide" : "feature")}>{row.featured ? "Remove from profile" : "Feature on profile"}</button>
                   <button disabled={pending} onClick={() => moderate(row.id, "delete")}>Delete</button>

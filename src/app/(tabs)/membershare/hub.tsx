@@ -98,6 +98,7 @@ export async function hubPage(address: "member" | "coach") {
       defaultFrom={defaultFrom}
       today={today}
       savedHeadline={me.storyPrefs?.headline ?? ""}
+      savedBackground={me.storyPrefs?.background ?? null}
       studios={studios}
       templates={templates}
       customTypes={customTypes}

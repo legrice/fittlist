@@ -2,6 +2,14 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 
+type FeedbackViewer = {
+  id: string;
+  email: string;
+  onboardedAt: Date | null;
+  createdAt: Date;
+  feedbackPromptedAt: Date | null;
+};
+
 /** How long someone uses the app before we ask what they think. Long enough to
  *  have an opinion, short enough that they still remember what annoyed them.
  *  Overridable so a test doesn't have to wait three days. */
@@ -59,16 +67,33 @@ export async function feedbackPromptDue(userId: string): Promise<boolean> {
     })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
-  // Still in the setup wizard: they haven't seen the app yet.
-  if (!me || !me.onboardedAt) return false;
+  if (!me) return false;
+  return feedbackPromptDueFor(
+    {
+      id: userId,
+      email: me.email,
+      onboardedAt: me.onboardedAt,
+      createdAt: me.createdAt,
+      feedbackPromptedAt: me.promptedAt,
+    },
+    host,
+  );
+}
+
+/** The shell already has this stable slice of the viewer. Reusing it avoids a
+ * second users lookup; accepting the resolved host also avoids looking it up
+ * twice when the prompt is actually rendered. */
+export async function feedbackPromptDueFor(me: FeedbackViewer, host: FeedbackHost): Promise<boolean> {
+  if (host.id === me.id || !me.onboardedAt) return false;
 
   const now = Date.now();
   const day = 86_400_000;
-  const since = me.onboardedAt ?? me.createdAt;
+  const since = me.onboardedAt;
   if (now - since.getTime() < promptAfterDays() * day) return false;
-  if (me.promptedAt && now - me.promptedAt.getTime() < ASK_AGAIN_DAYS * day) return false;
+  if (me.feedbackPromptedAt && now - me.feedbackPromptedAt.getTime() < ASK_AGAIN_DAYS * day) return false;
 
   // Already told us something: they know where the door is.
+  const db = await getDb();
   const [thread] = await db
     .select({ id: schema.inquiryThreads.id })
     .from(schema.inquiryThreads)

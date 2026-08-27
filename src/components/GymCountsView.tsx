@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { GymCounts } from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
@@ -32,14 +33,19 @@ export function GymCountsView({
   counts: GymCounts | null;
 }) {
   const [toastMsg, toastOn, toast] = useToast();
+  const [menuOpen, setMenuOpen] = useState(false);
   if (!counts) return null;
 
+  const tableRows: (string | number)[][] = [
+    ["Coach", counts.firstLabel, counts.secondLabel, "Total"],
+    ...counts.rows.map((row) => [row.name, row.first, row.second, row.total]),
+  ];
   const copy = async () => {
     const lines = [
       `${studioName} · ${counts.label}`,
-      ["Coach", counts.firstLabel, counts.secondLabel, "Total"].join("\t"),
-      ...counts.rows.map((r) => [r.name, r.first, r.second, r.total].join("\t")),
+      ...tableRows.map((row) => row.join("\t")),
     ].join("\n");
+    setMenuOpen(false);
     try {
       await navigator.clipboard.writeText(lines);
       toast("Copied, ready to paste");
@@ -48,17 +54,59 @@ export function GymCountsView({
     }
   };
 
+  const downloadCsv = () => {
+    const csvCell = (value: string | number) => {
+      let text = String(value);
+      if (/^[=+\-@]/.test(text)) text = `'${text}`;
+      return `"${text.replaceAll('"', '""')}"`;
+    };
+    const csv = [
+      [studioName, counts.label],
+      ...tableRows,
+    ].map((row) => row.map(csvCell).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${studioName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "studio"}-${counts.month}-shift-counts.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setMenuOpen(false);
+    toast("CSV downloaded");
+  };
+
   return (
     <div className="pad">
       <div className="studio-manage-top pagetop">
-        <BackLink className="evback studio-manage-back" href={backHref} label="Back to the schedule">
-          <Icon name="arrow_back" size={23} />
-        </BackLink>
-        <div>
-          <h1>Shift counter</h1>
-          <p className="adminsub">{studioName}</p>
+        <div className="studio-manage-topbar">
+        <BackLink className="evback studio-manage-back" href={backHref} label="Back to studio dashboard">
+            <Icon name="arrow_back" size={23} />
+          </BackLink>
+          <h1 className="studio-calendar-title">Shift counter</h1>
+          <div className="counts-menu-wrap">
+            <button
+              type="button"
+              className="counts-menu-trigger"
+              aria-label="Shift counter actions"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <Icon name="more_horiz" size={22} />
+            </button>
+            {menuOpen && (
+              <div className="counts-menu">
+                <button type="button" onClick={() => void copy()}><Icon name="content_copy" size={18} />Copy table</button>
+                <button type="button" onClick={downloadCsv}><Icon name="ios_share" size={18} />Download CSV</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <form className="counts-range" action={countsBase} method="get">
+        <label>From<input type="date" name="from" defaultValue={counts.startDate} /></label>
+        <label>To<input type="date" name="to" defaultValue={counts.endDate} /></label>
+        <button className="btn si" type="submit">Apply range</button>
+      </form>
 
       <div className="rotaweek">
         <Link className="rotanav" href={`${countsBase}?m=${shift(counts.month, -1)}`}>
@@ -102,11 +150,6 @@ export function GymCountsView({
               Open classes stay on the schedule but do not count toward a coach&rsquo;s total.
             </p>
           )}
-          <div className="publishwrap nostick">
-            <button className="btn ghost" onClick={copy}>
-              <Icon name="ios_share" size={19} /> Copy the table
-            </button>
-          </div>
         </>
       )}
       <Toast msg={toastMsg} on={toastOn} />

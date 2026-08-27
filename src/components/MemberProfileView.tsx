@@ -23,6 +23,8 @@ import { ProfileAbout } from "@/components/ProfileAbout";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ScheduleNudge } from "@/components/ScheduleNudge";
+import { ReportContentButton } from "@/components/ReportContentButton";
+import { hiddenFrom } from "@/lib/blocks";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -58,27 +60,33 @@ export async function MemberProfileView({
   // less on purpose: nothing lands in your week, nothing public changes. Its
   // one payoff is mutual: you both follow each other and both add a class,
   // and Your week says they're going too.
-  let follow: { following: boolean; requested: boolean } | null = null;
+  let follow: { following: boolean; requested: boolean; followsYou: boolean } | null = null;
   if (viewerId && !isOwner && user.handle && (await fansVisible())) {
     const [viewer] = await db
       .select({ email: schema.users.email })
       .from(schema.users)
       .where(eq(schema.users.id, viewerId));
     if (viewer) {
-      const [row] = await db
-        .select({ optedOutAt: schema.subscribers.optedOutAt })
-        .from(schema.subscribers)
-        .where(
-          and(
-            eq(schema.subscribers.trainerUserId, user.id),
-            eq(schema.subscribers.email, viewer.email),
+      const [[row], [reverse], [req]] = await Promise.all([
+        db
+          .select({ optedOutAt: schema.subscribers.optedOutAt })
+          .from(schema.subscribers)
+          .where(
+            and(
+              eq(schema.subscribers.trainerUserId, user.id),
+              eq(schema.subscribers.email, viewer.email),
+            ),
           ),
-        );
-      const following = !!row && !row.optedOutAt;
-      // A pending ask renders as "Requested", so a tap can withdraw it.
-      let requested = false;
-      if (!following) {
-        const [req] = await db
+        db
+          .select({ optedOutAt: schema.subscribers.optedOutAt })
+          .from(schema.subscribers)
+          .where(
+            and(
+              eq(schema.subscribers.trainerUserId, viewerId),
+              eq(schema.subscribers.email, user.email),
+            ),
+          ),
+        db
           .select({ id: schema.followRequests.id })
           .from(schema.followRequests)
           .where(
@@ -86,10 +94,12 @@ export async function MemberProfileView({
               eq(schema.followRequests.trainerUserId, user.id),
               eq(schema.followRequests.requesterUserId, viewerId),
             ),
-          );
-        requested = !!req;
-      }
-      follow = { following, requested };
+          ),
+      ]);
+      const following = !!row && !row.optedOutAt;
+      // A pending ask renders as "Requested", so a tap can withdraw it.
+      const requested = !following && !!req;
+      follow = { following, requested, followsYou: !!reverse && !reverse.optedOutAt };
     }
   }
 
@@ -119,16 +129,15 @@ export async function MemberProfileView({
   const week =
     user.handle && (await canSeeWeek(viewerId, user)) ? await memberWeek(user.id) : [];
 
-  // No arrow on your own page. It is what the Profile tab opens now, so
-  // there is nothing behind it to go back to: the bar underneath is the way
-  // on, and an arrow pointing at Following on a screen you reached from a tab
-  // is a control offering to undo a tap you did not make.
-  const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
+  const backTo = isOwner
+    ? from === "profile" ? { href: "/you", label: "Back to your profile" } : undefined
+    : backToFor(from, !!viewerId);
   const shoutoutRows = await db
-    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name, authorUserId: schema.shoutouts.authorUserId })
     .from(schema.shoutouts)
     .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
     .where(eq(schema.shoutouts.targetUserId, user.id));
+  const hiddenShoutoutAuthors = await hiddenFrom(viewerId);
 
   // The same ways in a coach's page offers, minus the one that needs a
   // published week. A member with nothing filled in gets no pill at all.
@@ -169,6 +178,7 @@ export async function MemberProfileView({
             userId={viewerId}
             bar={isOwner}
             headerNav={false}
+            social
           />
         ) : (
           <PublicTopBar handle={user.handle ?? ""} next={`/${user.handle ?? ""}`} />
@@ -229,6 +239,7 @@ export async function MemberProfileView({
                     name={name}
                     initialFollowing={follow.following}
                     initialRequested={follow.requested}
+                    followsYou={follow.followsYou}
                   />
                 )}
                 {showContact && (
@@ -241,6 +252,7 @@ export async function MemberProfileView({
                   />
                 )}
                 <ProfileShare path={`/${user.handle!}`} name={name} pill />
+                {viewerId && <ReportContentButton contentType="profile" contentId={user.id} label="Report profile" canBlock className="btn ghost profile-report-button" />}
               </div>
             )
           }
@@ -249,7 +261,7 @@ export async function MemberProfileView({
         <section id="profile-schedule" className="profile-anchor-section">
         {week.length > 0 ? (
           <ClassOpener handle="">
-            <CalendarList days={memberCalendarDays(week)} />
+            <CalendarList days={memberCalendarDays(week, name)} className="profile-calendar-list" />
           </ClassOpener>
         ) : (
           <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p>{canMessage && user.handle && <ScheduleNudge handle={user.handle} name={name} signedIn={!!viewerId} />}</div>
@@ -283,8 +295,9 @@ export async function MemberProfileView({
             handle={user.handle ?? undefined}
             name={name}
             signedIn={!!viewerId}
+            viewerId={viewerId}
             owner={isOwner}
-            initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+            initial={shoutoutRows.filter((row) => !hiddenShoutoutAuthors.has(row.authorUserId)).map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone", authorUserId: row.authorUserId }))}
           />
         </section>
         </ProfileTabs>
@@ -295,7 +308,11 @@ export async function MemberProfileView({
 
 /** One row of the member's week. A mark at a real class links to its page;
  *  one of their own is plain text, because there is no page behind it. */
-function memberCalendarDays(week: { iso: string; label: string; items: SharedWeekItem[] }[]): WeekDayRows[] {
+function memberCalendarDays(
+  week: { iso: string; label: string; items: SharedWeekItem[] }[],
+  profileName: string,
+): WeekDayRows[] {
+  const ownerName = profileName.trim().toLocaleLowerCase();
   return week.map((day) => ({
     iso: day.iso,
     label: day.label,
@@ -306,7 +323,7 @@ function memberCalendarDays(week: { iso: string; label: string; items: SharedWee
       hm: it.hm,
       ap: it.ap,
       dur: `${it.durationMin} min`,
-      coach: it.coachName
+      coach: it.coachName && it.coachName.trim().toLocaleLowerCase() !== ownerName
         ? { id: it.handle ?? it.coachName, name: it.coachName, color: "var(--color-coaching)", photo: null }
         : null,
       href: it.handle ? `/${it.handle}/${it.classId}?d=${it.iso}` : null,

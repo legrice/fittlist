@@ -722,6 +722,76 @@
       "when": 1787274251266,
       "tag": "0102_eminent_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1787353027452,
+      "tag": "0103_standard_week",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1787490531410,
+      "tag": "0104_blushing_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1787851994220,
+      "tag": "0105_redact_message_log_bodies",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1787852549536,
+      "tag": "0106_magic_link_purpose_and_private_signup",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1787854750201,
+      "tag": "0107_app_store_readiness",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1787854780527,
+      "tag": "0108_content_report_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1787854999232,
+      "tag": "0109_coach_close_inquiry",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1787855719418,
+      "tag": "0110_group_content_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1787856884945,
+      "tag": "0111_inquiry_rate_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1787857191687,
+      "tag": "0112_email_follow_confirmation",
+      "breakpoints": true
     }
   ]
 }

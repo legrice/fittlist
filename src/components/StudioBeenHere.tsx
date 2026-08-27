@@ -24,6 +24,7 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
     if (!result.ok || result.selected === undefined) return;
     setSelected(result.selected);
     setCount((current) => Math.max(0, current + (result.selected ? 1 : -1)));
+    if (!result.selected) window.dispatchEvent(new Event("calendar-pins-changed"));
   });
 
   return (
@@ -32,19 +33,18 @@ export function StudioBeenHere({ slug, initial, initialCount }: {
       type="button"
       className={`actpill studio-been-here${selected ? " on" : ""}`}
       aria-pressed={selected}
+      aria-label={`${selected ? "Remove saved calendar" : "Save calendar"}. ${count} ${count === 1 ? "save" : "saves"}`}
       disabled={pending}
       onClick={toggle}
     >
-      <Icon name={selected ? "favorite_filled" : "favorite"} size={18} />
-      {selected ? "Favorited" : "Favorite"}
-      {count > 0 && <span className="studio-been-count">{count}</span>}
+      <Icon name={selected ? "bookmark_added" : "bookmark"} size={20} />
     </button>
     <SignupPrompt
       open={signup}
       onClose={() => setSignup(false)}
       next={`/s/${slug}`}
-      title="Save the places you love"
-      body="Sign up to add this gym or studio to your profile and share your favorite places with people you know."
+      title="Save this calendar"
+      body="Sign up to save this gym or studio schedule and find it anytime."
     />
     </>
   );

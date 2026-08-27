@@ -1,11 +1,13 @@
-import { countDistinct, eq } from "drizzle-orm";
+import { countDistinct, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 
-// Who can reach /admin. Set ADMIN_EMAILS (comma-separated) to override; defaults
-// to the founder's address so the beta admin works with zero config.
+// Who can reach /admin. Set ADMIN_EMAILS (comma-separated) explicitly in every
+// hosted environment; local development retains the founder fallback.
 export function adminEmails(): string[] {
-  const raw = process.env.ADMIN_EMAILS || "mattlegrice@gmail.com";
+  // A missing production allowlist grants nobody access. A compiled-in founder
+  // address turns a configuration mistake into an authorization decision.
+  const raw = process.env.ADMIN_EMAILS ?? (process.env.NODE_ENV === "production" ? "" : "mattlegrice@gmail.com");
   return raw
     .split(",")
     .map((e) => e.trim().toLowerCase())
@@ -36,10 +38,16 @@ export async function currentAdmin(): Promise<{ id: string; email: string; look:
  */
 export async function adminAttentionCount(): Promise<number> {
   const db = await getDb();
-  const [classReports, studioReports] = await Promise.all([
-    db.select({ n: countDistinct(schema.classReports.seriesId) }).from(schema.classReports),
-    db.select({ n: countDistinct(schema.studioReports.studioId) }).from(schema.studioReports),
-  ]);
+  // Both badge sources are aggregates over tiny scalar answers. Keeping them
+  // in one statement avoids a second database/network round trip on every
+  // admin page render.
+  const [row] = await db
+    .select({
+      classes: countDistinct(schema.classReports.seriesId),
+      studios: sql<number>`(select count(distinct ${schema.studioReports.studioId}) from ${schema.studioReports})`,
+      content: sql<number>`(select count(distinct (${schema.contentReports.contentType}, ${schema.contentReports.contentId})) from ${schema.contentReports} where ${schema.contentReports.status} = 'open')`,
+    })
+    .from(schema.classReports);
 
-  return Number(classReports[0]?.n ?? 0) + Number(studioReports[0]?.n ?? 0);
+  return Number(row?.classes ?? 0) + Number(row?.studios ?? 0) + Number(row?.content ?? 0);
 }

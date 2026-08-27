@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getDb, schema } from "@/db";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import {
@@ -14,8 +14,74 @@ import {
   inquiryToken,
   verifyInquiryToken,
 } from "@/lib/inquiry";
+import { objectionableContentError } from "@/lib/content-safety";
+import {
+  ANONYMOUS_ACTION_RETRY_ERROR,
+  takeAnonymousActionRateLimit,
+  type AnonymousActionRateLimitInput,
+  type AnonymousActionRateLimits,
+} from "@/lib/anonymous-rate-limit";
+import { requestIpAddress } from "@/lib/request-ip";
 
 type Result = { ok: boolean; error?: string };
+
+type Database = Awaited<ReturnType<typeof getDb>>;
+
+// Initial messages need both distributed and single-sender brakes. A target
+// is a coach; subject is the normalized anonymous email or stable account id.
+// These are deliberately independent so changing an IP does not reset the
+// subject+coach counter, and changing an email does not reset IP or coach.
+const INITIAL_INQUIRY_LIMITS: AnonymousActionRateLimits = {
+  ip: { max: 10, windowMs: 60 * 60 * 1000 },
+  ipTarget: { max: 4, windowMs: 60 * 60 * 1000 },
+  subjectTarget: { max: 3, windowMs: 60 * 60 * 1000 },
+  target: { max: 30, windowMs: 60 * 60 * 1000 },
+};
+
+// A signed thread URL proves access to that conversation, but it is long-lived
+// and can be replayed. Subject is the thread id and target is the coach, giving
+// us per-IP, IP+coach, thread+coach and aggregate-coach limits without storing
+// the token or either participant's email.
+const TOKEN_REPLY_LIMITS: AnonymousActionRateLimits = {
+  ip: { max: 20, windowMs: 60 * 60 * 1000 },
+  ipTarget: { max: 8, windowMs: 60 * 60 * 1000 },
+  subjectTarget: { max: 6, windowMs: 60 * 60 * 1000 },
+  target: { max: 40, windowMs: 60 * 60 * 1000 },
+};
+
+// Signed-in conversations are allowed a much more generous cadence than a
+// public form, but still cannot become an unbounded notification/email relay.
+const REQUESTER_REPLY_LIMITS: AnonymousActionRateLimits = {
+  ip: { max: 60, windowMs: 60 * 60 * 1000 },
+  ipTarget: { max: 30, windowMs: 60 * 60 * 1000 },
+  subjectTarget: { max: 20, windowMs: 60 * 60 * 1000 },
+  target: { max: 200, windowMs: 60 * 60 * 1000 },
+};
+
+const COACH_REPLY_LIMITS: AnonymousActionRateLimits = {
+  ip: { max: 120, windowMs: 60 * 60 * 1000 },
+  ipTarget: { max: 60, windowMs: 60 * 60 * 1000 },
+  subjectTarget: { max: 30, windowMs: 60 * 60 * 1000 },
+  target: { max: 200, windowMs: 60 * 60 * 1000 },
+};
+
+async function inquiryActionAllowed(
+  db: Database,
+  input: Omit<AnonymousActionRateLimitInput, "ip">,
+  logLabel: string,
+): Promise<boolean> {
+  try {
+    return await takeAnonymousActionRateLimit(db, {
+      ...input,
+      ip: await requestIpAddress(),
+    });
+  } catch (error) {
+    // Fail closed. A missing/contended limiter must never turn into an email
+    // amplification path, and the response deliberately reveals no scope.
+    console.error(`${logLabel} rate limit failed`, error);
+    return false;
+  }
+}
 
 // PUBLIC — a visitor's "Request private session". Upserts one thread per
 // (coach, email) so repeat messages continue the same conversation.
@@ -29,6 +95,11 @@ export async function sendInquiry(
   const message = messageRaw.trim().slice(0, 2000);
   const phone = phoneRaw.trim().slice(0, 40);
   if (message.length < 2) return { ok: false, error: "Write a short message." };
+  if (phone && (!/^[+\d().\-\s]+$/.test(phone) || phone.replace(/\D/g, "").length < 7)) {
+    return { ok: false, error: "Enter a valid phone number or leave it blank." };
+  }
+  const safetyError = objectionableContentError(message);
+  if (safetyError) return { ok: false, error: safetyError };
 
   const db = await getDb();
   // Somebody signed in is not a stranger, so the composer asks them for the
@@ -43,15 +114,36 @@ export async function sendInquiry(
     : undefined;
   const email = (viewer?.email ?? emailRaw).trim().toLowerCase();
   const name = (viewer?.name ?? nameRaw).trim().slice(0, 80);
+  const identitySafetyError = objectionableContentError(name);
+  if (identitySafetyError) return { ok: false, error: identitySafetyError };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Enter a valid email." };
 
   const [coach] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!coach) return { ok: false, error: "Page not found." };
+  if (!coach.messagesOpen) return { ok: false, error: "Page not found." };
   // Blocking has to close the message door as well as the page, or it only
   // stops the reading and not the writing.
-  if (await isBlocked(coach.id, await getSessionUserId())) {
+  if (viewerId && (await hiddenFrom(viewerId)).has(coach.id)) {
     return { ok: false, error: "Page not found." };
   }
+
+  const [closedThread] = await db
+    .select({ coachClosedAt: schema.inquiryThreads.coachClosedAt })
+    .from(schema.inquiryThreads)
+    .where(and(
+      eq(schema.inquiryThreads.coachUserId, coach.id),
+      eq(schema.inquiryThreads.requesterEmail, email),
+      eq(schema.inquiryThreads.kind, "inquiry"),
+    ));
+  if (closedThread?.coachClosedAt) return { ok: false, error: "Page not found." };
+
+  const allowed = await inquiryActionAllowed(db, {
+    action: "inquiry_message",
+    target: { kind: "coach", id: coach.id },
+    subject: viewerId ? `user:${viewerId}` : email,
+    limits: INITIAL_INQUIRY_LIMITS,
+  }, "inquiry message");
+  if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   const [thread] = await db
     .insert(schema.inquiryThreads)
@@ -80,6 +172,7 @@ export async function sendInquiry(
         requesterPhone: phone || sql`${schema.inquiryThreads.requesterPhone}`,
         coachUnread: sql`${schema.inquiryThreads.coachUnread} + 1`,
         lastMessageAt: new Date(),
+        requesterClosedAt: null,
       },
     })
     .returning();
@@ -164,6 +257,8 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
   if (!userId) return { ok: false, error: "Session expired." };
   const body = bodyRaw.trim().slice(0, 2000);
   if (body.length < 1) return { ok: false, error: "Write a message." };
+  const safetyError = objectionableContentError(body);
+  if (safetyError) return { ok: false, error: safetyError };
 
   const db = await getDb();
   const [thread] = await db
@@ -171,6 +266,22 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
     .from(schema.inquiryThreads)
     .where(and(eq(schema.inquiryThreads.id, threadId), eq(schema.inquiryThreads.coachUserId, userId)));
   if (!thread) return { ok: false, error: "Conversation not found." };
+  if (thread.requesterClosedAt) return { ok: false, error: "This conversation was closed by the requester." };
+  if (thread.coachClosedAt) return { ok: false, error: "This conversation is closed." };
+
+  const [them] = await db
+    .select({ id: schema.users.id, emailMessages: schema.users.emailMessages })
+    .from(schema.users)
+    .where(eq(schema.users.email, thread.requesterEmail));
+  if (them && (await hiddenFrom(userId)).has(them.id)) return { ok: false, error: "Conversation not found." };
+
+  const allowed = await inquiryActionAllowed(db, {
+    action: "inquiry_coach_reply",
+    target: { kind: "coach", id: userId },
+    subject: `user:${userId}:thread:${thread.id}`,
+    limits: COACH_REPLY_LIMITS,
+  }, "coach inquiry reply");
+  if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   await db.insert(schema.inquiryMessages).values({ threadId, fromCoach: true, body });
   await db
@@ -187,11 +298,6 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
   // leaving, plus notification history. The email still goes out (unless they turned
   // message emails off in settings); for a visitor with no account it's the
   // only door there is.
-  const [them] = await db
-    .select({ id: schema.users.id, emailMessages: schema.users.emailMessages })
-    .from(schema.users)
-    .where(eq(schema.users.email, thread.requesterEmail));
-
   if (thread.kind === "feedback") {
     const from = coach?.name?.trim() || "fittlist";
     if (them) {
@@ -255,6 +361,8 @@ export async function replyAsRequester(threadId: string, bodyRaw: string): Promi
   if (!userId) return { ok: false, error: "Session expired." };
   const body = bodyRaw.trim().slice(0, 2000);
   if (body.length < 1) return { ok: false, error: "Write a message." };
+  const safetyError = objectionableContentError(body);
+  if (safetyError) return { ok: false, error: safetyError };
 
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
@@ -266,6 +374,16 @@ export async function replyAsRequester(threadId: string, bodyRaw: string): Promi
       and(eq(schema.inquiryThreads.id, threadId), eq(schema.inquiryThreads.requesterEmail, me.email)),
     );
   if (!thread) return { ok: false, error: "Conversation not found." };
+  if (thread.requesterClosedAt || thread.coachClosedAt) return { ok: false, error: "This conversation is closed." };
+  if ((await hiddenFrom(userId)).has(thread.coachUserId)) return { ok: false, error: "Conversation not found." };
+
+  const allowed = await inquiryActionAllowed(db, {
+    action: "inquiry_requester_reply",
+    target: { kind: "coach", id: thread.coachUserId },
+    subject: `user:${userId}:thread:${thread.id}`,
+    limits: REQUESTER_REPLY_LIMITS,
+  }, "requester inquiry reply");
+  if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   await db.insert(schema.inquiryMessages).values({ threadId, fromCoach: false, body });
   await db
@@ -310,6 +428,8 @@ export async function replyByToken(token: string, bodyRaw: string): Promise<Resu
   if (!threadId) return { ok: false, error: "This link is no longer valid." };
   const body = bodyRaw.trim().slice(0, 2000);
   if (body.length < 1) return { ok: false, error: "Write a message." };
+  const safetyError = objectionableContentError(body);
+  if (safetyError) return { ok: false, error: safetyError };
 
   const db = await getDb();
   const [thread] = await db
@@ -317,6 +437,18 @@ export async function replyByToken(token: string, bodyRaw: string): Promise<Resu
     .from(schema.inquiryThreads)
     .where(eq(schema.inquiryThreads.id, threadId));
   if (!thread) return { ok: false, error: "Conversation not found." };
+  if (thread.requesterClosedAt || thread.coachClosedAt) return { ok: false, error: "This conversation is closed." };
+
+  const [requesterAccount] = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, thread.requesterEmail));
+  if (requesterAccount && (await hiddenFrom(requesterAccount.id)).has(thread.coachUserId)) return { ok: false, error: "Conversation not found." };
+
+  const allowed = await inquiryActionAllowed(db, {
+    action: "inquiry_token_reply",
+    target: { kind: "coach", id: thread.coachUserId },
+    subject: thread.id,
+    limits: TOKEN_REPLY_LIMITS,
+  }, "anonymous inquiry reply");
+  if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   await db.insert(schema.inquiryMessages).values({ threadId, fromCoach: false, body });
   await db
@@ -329,16 +461,12 @@ export async function replyByToken(token: string, bodyRaw: string): Promise<Resu
     .from(schema.users)
     .where(eq(schema.users.id, thread.coachUserId));
   try {
-    const [account] = await db
-      .select({ id: schema.users.id })
-      .from(schema.users)
-      .where(eq(schema.users.email, thread.requesterEmail));
     await addNotification(thread.coachUserId, {
       type: "message",
       title: `${thread.requesterName || thread.requesterEmail} sent you a message`,
       body,
       href: `/inbox/${threadId}`,
-      actorUserId: account?.id ?? null,
+      actorUserId: requesterAccount?.id ?? null,
     });
   } catch (err) {
     console.error("inquiry notification failed", err);

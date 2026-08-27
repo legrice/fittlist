@@ -41,7 +41,7 @@ const HOLDS: { t: string; s: string }[] = [
   },
   {
     t: "Who you follow",
-    s: "The coaches and members you follow, and who follows you. Follow requests, if the person you asked has approval turned on.",
+    s: "The coaches and members you follow, and who follows you. Follow requests, if the person you asked has approval turned on, plus short-lived email confirmation requests before an email-only follow becomes active.",
   },
   {
     t: "Messages",
@@ -60,6 +60,14 @@ const HOLDS: { t: string; s: string }[] = [
     s: "A short first-party record of broad actions, such as saving a class, adding a favorite, creating or joining a group, inviting people, or exporting a share image. It includes the account and time, but never message contents, searches, private notes, invitees, or the person, class, studio, or group involved.",
   },
   {
+    t: "Service performance",
+    s: "Technical timing and reliability information used to find slow or broken pages. Our hosting provider processes this performance data; it is not used for advertising or to follow you across other services.",
+  },
+  {
+    t: "Abuse prevention",
+    s: "Short-lived counters slow automated messages, suggestions, and email requests. They keep purpose-bound one-way codes derived from the network address, sender, and destination, not those raw values, and expire about a day after their limit window ends.",
+  },
+  {
     t: "Connections you make",
     s: "If you connect Google Calendar, the token that lets us write your classes to it, and which events we created. Nothing else in your calendar is read.",
   },
@@ -67,7 +75,7 @@ const HOLDS: { t: string; s: string }[] = [
 
 const NEVER: string[] = [
   "There are no ads, and there is no advertising network in the app.",
-  "There are no third-party analytics, no tracking pixels, and no scripts from other companies. Nothing follows you to other sites.",
+  "There is no advertising analytics, no tracking pixel, and no cross-site behavioral profile. Performance measurement is used only to operate FittList.",
   "Your personal information is never sold, rented, shared or brokered.",
   "We do not build a profile of you to sell to anyone, because nobody here is the product.",
 ];
@@ -164,8 +172,8 @@ export default async function PrivacyPage() {
         <h2 className="brandh" style={{ marginTop: 26 }}>Email</h2>
         <p className="ethos-lead">
           We send you the things you asked for: sign-in links, a note when somebody follows you or
-          writes to you, and a weekly summary of your week. Every one of them carries a way to stop
-          it, and stopping it works. There is no marketing list.
+          writes to you, and a weekly summary of your week. Schedule and notification email carries
+          a way to stop it; essential account and security email does not. There is no marketing list.
         </p>
 
         <h2 className="brandh" style={{ marginTop: 26 }}>Your data is yours</h2>
@@ -186,18 +194,23 @@ export default async function PrivacyPage() {
           <div className="ethos-line">
             <span className="ethos-line-t">Delete it</span>
             <span className="ethos-line-s">
-              Delete account is in your settings, and it is immediate and complete: your profile,
-              your classes, your calendar, your follows and your messages all go at once. Shifts a
-              studio had you on open back up for somebody else rather than vanishing from their
-              schedule. Nothing is kept in the background for later.
+              Delete account is in your settings. It removes your account, profile, classes,
+              personal calendar, follows, conversations on either side of the account, sign-in
+              records, delivery logs tied to your email, uploaded account images, and group posts,
+              comments, reactions, and invitations you authored. A group with other active members
+              is handed to an existing admin or member, so its name, photo, and shared calendar
+              remain. A group with nobody else in it is deleted. Shifts a studio had you on open
+              back up rather than vanishing from its schedule. Shared studio and event facts may
+              remain without your account attached so other people&rsquo;s schedules are not corrupted.
             </span>
           </div>
         </div>
 
         <h2 className="brandh" style={{ marginTop: 26 }}>Who else touches it</h2>
         <p className="ethos-lead">
-          The app runs on hosting and database services, and email is sent through a delivery
-          provider. They process data so the app can work and for nothing else. If you connect
+          The app runs on Vercel hosting and performance measurement, a database service, object
+          storage for uploaded images, and an email delivery provider. They process data so the app
+          can work, under their service agreements, and not for FittList advertising. If you connect
           Google Calendar, that connection is between you and Google and you can cut it from your
           settings or from your Google account.
         </p>
@@ -209,7 +222,7 @@ export default async function PrivacyPage() {
 
         <h2 className="brandh" style={{ marginTop: 26 }}>Asking us</h2>
         <p className="ethos-lead">
-          Write to us through Send feedback in the app, or at the address on the contact page, and a
+          Write to us through Send feedback in the app, or at hello@fittlist.co, and a
           person will answer. If this policy changes in a way that matters, the app will say so
           rather than quietly swapping the page.
         </p>

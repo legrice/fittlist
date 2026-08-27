@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { placeLabel, type GeoPlace } from "@/lib/geocode";
+import { placeLabel, rankOpenMeteoHits, type GeoPlace, type OpenMeteoHit } from "@/lib/geocode";
 
 // The official location picker, by Matt's call: a city typed is a string,
 // a city picked is a place with coordinates, and coordinates are what let
@@ -31,8 +31,9 @@ export function LocationPicker({
   // Debounced lookup; only the newest response may paint, or a slow "mont"
   // lands after "montclair" and the list goes backwards while you type.
   useEffect(() => {
-    const q = value.trim().split(",")[0];
-    if (q.length < 2) {
+    const query = value.trim();
+    const name = query.split(",")[0].trim();
+    if (name.length < 2) {
       setHits([]);
       return;
     }
@@ -40,18 +41,19 @@ export function LocationPicker({
     const t = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`,
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=en&format=json`,
         );
         if (!res.ok) return;
         const data = (await res.json()) as {
-          results?: { name: string; latitude: number; longitude: number; country_code?: string; country?: string; admin1?: string }[];
+          results?: OpenMeteoHit[];
         };
         if (mine !== seq.current) return;
         setHits(
-          (data.results ?? []).map((r) => ({
+          rankOpenMeteoHits(data.results ?? [], query).slice(0, 5).map((r) => ({
             label: placeLabel(r),
             lat: r.latitude,
             lng: r.longitude,
+            timeZone: r.timezone,
           })),
         );
       } catch {

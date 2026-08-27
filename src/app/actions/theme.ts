@@ -12,7 +12,7 @@ export async function setTheme(theme: AppTheme): Promise<{ ok: boolean; theme?: 
   const t = appTheme(theme);
   const db = await getDb();
   await db.update(schema.users).set({ theme: t }).where(eq(schema.users.id, userId));
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath("/app/page");
   return { ok: true, theme: t };
 }

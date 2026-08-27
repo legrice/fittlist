@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { publicSchedule } from "@/lib/coachweek";
 import { DAYS, fmtTime, runsOn, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
@@ -169,10 +169,14 @@ export async function shareWeek(
     // coach has said they may. The saved half rides beside them now, per
     // the brief: a coach's week is both hats, and the picker's shortcuts
     // are what tell them apart.
-    const [rows, marks, own] = await Promise.all([
+    const [rows, marks, own, coachStudioLinks] = await Promise.all([
       publicSchedule(me).then((r) => r.filter((c) => c.isPublic)),
       db.select().from(schema.attendances).where(eq(schema.attendances.userId, userId)),
       db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+      db
+        .select({ studioId: schema.coachStudios.studioId })
+        .from(schema.coachStudios)
+        .where(eq(schema.coachStudios.userId, userId)),
     ]);
     const marked = marks.filter((m) => inRange.has(m.occurrenceDate));
     const markedRows = marked.length
@@ -191,8 +195,42 @@ export async function shareWeek(
           .where(inArray(schema.users.id, [...new Set(markedRows.map((c) => c.userId))]))
       : [];
     const markedName = new Map(markedCoaches.map((u) => [u.id, u.name.split(/\s+/)[0]]));
+    // Older coach-owned classes can predate the direct class-to-studio link.
+    // Recover it only when the answer is unambiguous: one studio on the
+    // coach's profile, or one of their studios with the same catalog name.
+    // A guess here would put the wrong gym on a share image, which is worse
+    // than leaving the legacy row unnamed.
+    const coachStudioIds = [...new Set(coachStudioLinks.map((link) => link.studioId))];
+    const legacyNameKeys = [
+      ...new Set(
+        rows
+          .filter((row) => !row.studioId && !row.location?.trim())
+          .map((row) => row.name.trim().toLowerCase()),
+      ),
+    ];
+    const catalogMatches = coachStudioIds.length && legacyNameKeys.length
+      ? await db
+          .select({ studioId: schema.studioClasses.studioId, nameKey: schema.studioClasses.nameKey })
+          .from(schema.studioClasses)
+          .where(and(
+            inArray(schema.studioClasses.studioId, coachStudioIds),
+            inArray(schema.studioClasses.nameKey, legacyNameKeys),
+          ))
+      : [];
+    const catalogStudios = new Map<string, Set<string>>();
+    for (const match of catalogMatches) {
+      const candidates = catalogStudios.get(match.nameKey) ?? new Set<string>();
+      candidates.add(match.studioId);
+      catalogStudios.set(match.nameKey, candidates);
+    }
+    const inferredStudioId = (row: (typeof rows)[number]) => {
+      if (row.studioId || row.location?.trim()) return row.studioId;
+      const candidates = catalogStudios.get(row.name.trim().toLowerCase());
+      if (candidates?.size === 1) return [...candidates][0];
+      return coachStudioIds.length === 1 ? coachStudioIds[0] : null;
+    };
     const names = await studioNames([
-      ...rows.map((c) => c.studioId),
+      ...rows.map((c) => c.studioId ?? inferredStudioId(c)),
       ...markedRows.map((c) => c.studioId),
       ...own.map((p) => p.studioId),
     ]);
@@ -200,13 +238,14 @@ export async function shareWeek(
       const dow = dowOf(iso);
       for (const c of rows) {
         if (!runsOn(c, iso, dow)) continue;
+        const studioId = c.studioId ?? inferredStudioId(c);
         put(
           iso,
           {
             time: fmtTime(c.startTime),
             startTime: c.startTime,
             name: c.name,
-            where: (c.studioId && names.get(c.studioId)) || c.location || "",
+            where: (studioId && names.get(studioId)) || c.location || "",
             who: "",
             coaching: true,
           },
@@ -258,4 +297,3 @@ export async function shareWeek(
       ),
     }));
 }
-

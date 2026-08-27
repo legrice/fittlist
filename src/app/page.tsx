@@ -10,13 +10,14 @@ import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
 import { pendingInviter } from "@/lib/joinlink";
 import { AuthFlow } from "@/components/AuthFlow";
+import { MarketingLanding } from "@/components/MarketingLanding";
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ via?: string; invited?: string }>;
+  searchParams: Promise<{ via?: string; invited?: string; join?: string; city?: string }>;
 }) {
-  const { via, invited } = await searchParams;
+  const { via, invited, join } = await searchParams;
   const viaHandle = via?.trim() || null;
   // Arrived from a beta invite email rather than stumbling on the site.
   const wasInvited = invited === "1";
@@ -40,16 +41,19 @@ export default async function Home({
   const userId = await getSessionUserId();
   if (userId) {
     const db = await getDb();
-    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-    // A handle is what "set up" means now, for both sides. Bouncing a fan to
-    // /feed on sight is what used to stop them ever reaching the claim step.
-    // Following is home for everyone with the member side on. Coaches used to
-    // land on /app, which since the one-shell change is the bare editable
-    // schedule: every login and every visit to the root surfaced a page with
-    // no identity, in what read as random places.
+    // The front door only decides where to send an existing session. Avoid
+    // pulling profile photos and every settings field before that redirect.
+    const [user] = await db
+      .select({ handle: schema.users.handle, kind: schema.users.kind })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
+    // A handle is what "set up" means now, for both sides. Once claimed, use
+    // the same canonical landing as every auth callback and the onboarding
+    // finish: the Calendar tab. Keeping a separate root redirect was how established
+    // sessions and brand-new sessions ended up on different first screens.
     const pendingGroupToken=(await cookies()).get("fl_group_join")?.value;
     if(user?.handle&&pendingGroupToken&&/^[a-f0-9]{32,64}$/.test(pendingGroupToken))redirect(`/g/join/${pendingGroupToken}`);
-    if (user?.handle) redirect("/calendar");
+    if (user?.handle) redirect(await landingHref());
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
     // ask which they are before demanding a URL. Someone who already answered
@@ -69,6 +73,13 @@ export default async function Home({
           landing={await landingHref()}
         />
       );
+  }
+  // The ordinary logged-out front door is the product, not an explanation of
+  // it. Authentication appears only when somebody asks to save, follow, join,
+  // publish, or explicitly signs in. Invite arrivals keep the focused auth
+  // door they were sent to, and action links return here with `join` set.
+  if (!join && !wasInvited && !via_ && !viaHandle) {
+    return <MarketingLanding />;
   }
   return (
     <AuthFlow

@@ -377,8 +377,11 @@ export function ClassPeek({
       }}
     >
       <div className="sheet clspeek clsfull" ref={sheetRef}>
-        {/* Secondary tools stay on the left; Close stays on the right. Both
+        {/* Close stays on the left; secondary tools stay on the right. Both
             remain visible while a long class scrolls. */}
+        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={20} />
+        </button>
         <button
           className="clspeek-x clsfull-more"
           aria-label="More class actions"
@@ -386,9 +389,6 @@ export function ClassPeek({
           onClick={() => setMoreOpen((open) => !open)}
         >
           <Icon name="more_horiz" size={20} />
-        </button>
-        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={20} />
         </button>
         {moreOpen && full && (
           <div className="clsfull-menu" role="menu">
@@ -418,7 +418,7 @@ export function ClassPeek({
                 void share();
               }}
             >
-              <Icon name="ios_share" size={19} /> Share class
+              <Icon name="reply" className="share-arrow-forward" size={19} /> Share class
             </button>
             {(cls.mine && onEdit || full.adminEdit) && (
               <button className="ovmenu-item" role="menuitem" onClick={editClass}>
@@ -507,27 +507,18 @@ export function ClassPeek({
           </div>
         )}
 
-        {!cls.mine && (bookLinks.length > 0 || full) && (
+        {!cls.mine && bookLinks.length > 0 && (
           <div className="clsfull-sections">
-            {bookLinks.length > 0 && (
-              <section className="clsfull-linksection">
-                <h3>Where to book</h3>
-                <div className="clsfull-linkrows">
-                  {bookLinks.map((link) => (
-                    <a key={link.url} href={link.url} target="_blank" rel="noopener nofollow">
-                      <span>{link.label}</span>
-                      <Icon name="north_east" size={19} />
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )}
             <section className="clsfull-linksection">
-              <h3>Share</h3>
-              <button type="button" onClick={share}>
-                <span>Share this class</span>
-                <Icon name="reply" size={20} className="share-arrow-forward" />
-              </button>
+              <h3>Where to book</h3>
+              <div className="clsfull-linkrows">
+                {bookLinks.map((link) => (
+                  <a key={link.url} href={link.url} target="_blank" rel="noopener nofollow">
+                    <span>{link.label}</span>
+                    <Icon name="north_east" size={19} />
+                  </a>
+                ))}
+              </div>
             </section>
           </div>
         )}
@@ -558,24 +549,26 @@ export function ClassPeek({
           <p className="clspeek-rsvpnote">Your name goes to whoever runs it when you RSVP.</p>
         )}
 
-        {/* The footer is reserved for a calendar state change. Booking and
-            sharing are useful details above, not the primary purpose of the
-            sheet. */}
-        {(cls.mine && cls.shift || cls.saved || full?.canAdd && (full.rsvp || allowWeekAdd)) && (
+        {/* Share and Save stay available at the bottom while the class facts
+            scroll. They are the two universal actions on somebody else's
+            class, and equal width keeps either one from reading as secondary. */}
+        {(!cls.mine || cls.mine && cls.shift) && (
         <div className="clsfull-cta">
           {cls.mine && cls.shift && (
             <button className="clsfull-btn manage" onClick={openManage}>
               {loading ? "Opening…" : "Manage shift"}
             </button>
           )}
-          {(cls.saved || full?.canAdd && (full.rsvp || allowWeekAdd)) &&
+          {!cls.mine && <button className="clsfull-btn share" type="button" onClick={share}>Share</button>}
+          {!cls.mine && (allowWeekAdd || cls.saved || full?.canAdd) &&
             (() => {
               const on = savedNow ?? cls.saved ?? full?.added ?? false;
-              const word = full?.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Remove from calendar" : "Save to calendar";
+              const word = on ? "Saved" : "Save";
               return (
                 <button
                   className={`clsfull-btn save${on ? " on" : ""}`}
                   disabled={saveBusy}
+                  aria-label={word}
                   aria-pressed={on}
                   onClick={async () => {
                     if (saveBusy) return;
@@ -598,9 +591,6 @@ export function ClassPeek({
                     onChanged();
                   }}
                 >
-                  {!full?.rsvp && (
-                    <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
-                  )}
                   {word}
                 </button>
               );

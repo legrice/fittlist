@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  answerShiftRequest,
+  applyStandardDay,
   closeGymDay,
   enableStudioSchedule,
   gymMonth,
@@ -17,18 +17,14 @@ import {
   type GymDayDto,
   type GymMonthDto,
   type GymWeekDto,
-  type ShiftRequestDto,
 } from "@/app/actions/gym";
 import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { StudioAdminSheet } from "@/components/StudioAdminSheet";
-import { StudioManageNav } from "@/components/StudioManageNav";
-import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
 import { studioPlannerColorLabel } from "@/lib/studio-planner";
+import { putImage } from "@/lib/shareimage";
 
 /** "Thu, Aug 6" — the date a swap is about, said the way a person would. */
 const fmtDay = (iso: string) =>
@@ -38,6 +34,14 @@ const fmtDay = (iso: string) =>
     day: "numeric",
     timeZone: "UTC",
   });
+
+const localTodayIso = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 /** What the sheet is open on: a slot, or an empty day waiting for one. */
 type Open = {
@@ -54,18 +58,10 @@ type CoachPick = {
   cls: GymClassDto;
 };
 
-type ShiftFilter = "all" | "mine" | "open";
+type ShiftFilter = "all" | "assigned" | "mine" | "open";
 
 const isShiftFilter = (value: string | null): value is ShiftFilter =>
-  value === "all" || value === "mine" || value === "open";
-
-export type GymRotaAdmin = {
-  studio: StudioEditProps;
-  /** Kept nullable so calendar rendering never has to wait for analytics. */
-  pageViews?: number | null;
-  showCoaches?: boolean;
-  approvalOn?: boolean;
-};
+  value === "all" || value === "assigned" || value === "mine" || value === "open";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -154,14 +150,13 @@ export function GymRota({
   studioAddress,
   studioSlug,
   manageBase,
+  dashboardHref,
   hasAccount,
   week,
   coaches,
   catalog,
   customTypes,
   viewerId,
-  requests,
-  admin,
 }: {
   studioId: string;
   studioName: string;
@@ -169,6 +164,7 @@ export function GymRota({
   studioSlug: string;
   /** /s/{slug}/manage, for the week links. */
   manageBase: string;
+  dashboardHref: string;
   hasAccount: boolean;
   week: GymWeekDto | null;
   coaches: GymCoachDto[];
@@ -177,10 +173,6 @@ export function GymRota({
   customTypes: string[];
   /** The manager viewing the planner, used only by the local My shifts filter. */
   viewerId: string;
-  /** Pending, studio-scoped shift requests; never the full personal notification feed. */
-  requests: ShiftRequestDto[];
-  /** The existing studio overflow, now kept in the calendar workspace. */
-  admin: GymRotaAdmin;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<Open | null>(null);
@@ -188,13 +180,19 @@ export function GymRota({
   const [coachPick, setCoachPick] = useState<CoachPick | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [dayMenu, setDayMenu] = useState<string | null>(null);
+  const [sharingOpenShifts, setSharingOpenShifts] = useState(false);
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
-  const [requestSheet, setRequestSheet] = useState(false);
-  const [requestRows, setRequestRows] = useState(requests);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const [desktopView, setDesktopView] = useState<"week" | "month">("month");
+  const [mobileView, setMobileView] = useState<"day" | "month">("day");
   const [month, setMonth] = useState<GymMonthDto | null>(null);
   const [monthLoading, setMonthLoading] = useState(false);
+  const [selectedDayIso, setSelectedDayIso] = useState(() => {
+    const initialDays = week?.days ?? [];
+    const today = localTodayIso();
+    return initialDays.some((day) => day.iso === today) ? today : initialDays[0]?.iso ?? "";
+  });
   const monthRequest = useRef(0);
   const monthCache = useRef(new Map<string, GymMonthDto>());
   // A roster edit should read back immediately while the server updates the
@@ -220,28 +218,29 @@ export function GymRota({
       coachOverrides[occurrenceKey(cls.id, iso)] ?? cls.onUserId ?? "",
     [coachOverrides],
   );
+
+  useEffect(() => {
+    setSelectedDayIso((current) => {
+      if (days.some((day) => day.iso === current)) return current;
+      const today = localTodayIso();
+      return days.some((day) => day.iso === today) ? today : days[0]?.iso ?? "";
+    });
+  }, [days]);
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("d");
+    if (requested && days.some((day) => day.iso === requested)) setSelectedDayIso(requested);
+  }, [days]);
   const matchesShiftFilter = useCallback(
     (cls: GymClassDto, iso: string) => {
       const coachId = effectiveCoach(cls, iso);
       if (shiftFilter === "mine") return coachId === viewerId;
       if (shiftFilter === "open") return !coachId;
+      if (shiftFilter === "assigned") return !!coachId;
       return true;
     },
     [effectiveCoach, shiftFilter, viewerId],
   );
-  const visibleDays = sourceVisibleDays.map((day) => ({
-    ...day,
-    items: day.items.filter((cls) => matchesShiftFilter(cls, day.iso)),
-  }));
-  const all = visibleDays.flatMap((d) => d.items);
   const sourceAll = sourceVisibleDays.flatMap((d) => d.items);
-  const openSlots = visibleDays.reduce(
-    (count, day) => count + day.items.filter((c) => {
-      const who = effectiveCoach(c, day.iso);
-      return !who;
-    }).length,
-    0,
-  );
   const visibleDrafts = new Set(sourceAll.filter((c) => !c.isPublic).map((c) => c.id)).size;
 
   const loadMonth = useCallback(async (key?: string, force = false) => {
@@ -263,10 +262,6 @@ export function GymRota({
   }, [studioId]);
 
   useEffect(() => {
-    setRequestRows(requests);
-  }, [requests]);
-
-  useEffect(() => {
     const storageKey = `fittlist:studio-calendar-filter:${studioId}`;
     const restore = () => {
       const params = new URLSearchParams(window.location.search);
@@ -284,16 +279,6 @@ export function GymRota({
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, [studioId]);
-
-  useEffect(() => {
-    const restore = () => {
-      const params = new URLSearchParams(window.location.search);
-      setRequestSheet(params.get("panel") === "notifications");
-    };
-    restore();
-    window.addEventListener("popstate", restore);
-    return () => window.removeEventListener("popstate", restore);
-  }, []);
 
   useEffect(() => {
     if (!hasAccount) return;
@@ -347,31 +332,6 @@ export function GymRota({
     window.history.replaceState({}, "", url);
   };
 
-  const showRequestSheet = (showing: boolean) => {
-    setRequestSheet(showing);
-    const url = new URL(window.location.href);
-    if (showing) url.searchParams.set("panel", "notifications");
-    else url.searchParams.delete("panel");
-    window.history.replaceState({}, "", url);
-  };
-
-  const answerRequest = (requestId: string, approve: boolean) => {
-    if (pending) return;
-    start(async () => {
-      const res = await answerShiftRequest(requestId, approve);
-      if (!res.ok) {
-        toast(res.error ?? "Couldn't answer that request");
-        return;
-      }
-      setRequestRows((current) => current.filter((request) => request.id !== requestId));
-      toast(approve ? "Approved" : "Declined");
-      // Approval changes who is on the occurrence; decline only changes the
-      // notification. Reload the planner only when its visible data changed.
-      if (approve) refreshView();
-      else router.refresh();
-    });
-  };
-
   const show = (
     iso: string,
     dayOfWeek: number,
@@ -396,12 +356,17 @@ export function GymRota({
 
   // Who's on this one date. A swap is about a date, so it never touches the
   // standing rota; setting it back to the regular coach clears the exception.
-  const cover = (who: string) => {
-    if (!open?.cls || pending) return;
+  const cover = (who: string, allowCoachConflict = false) => {
+    if (!open?.cls || (pending && !allowCoachConflict)) return;
     const cls = open.cls;
     start(async () => {
-      const res = await setShiftCover(studioId, cls.id, open.iso, who || null);
+      const res = await setShiftCover(studioId, cls.id, open.iso, who || null, allowCoachConflict);
       if (!res.ok) {
+        if (res.error?.startsWith("Schedule conflict:")) {
+          const detail = res.error.replace(/^Schedule conflict:\s*/, "");
+          if (window.confirm(`${detail}\n\nAssign this coach anyway?`)) cover(who, true);
+          return;
+        }
         toast(res.error ?? "Couldn't change that");
         return;
       }
@@ -415,16 +380,21 @@ export function GymRota({
   // The coach is the field a manager changes over and over. Keep it on the
   // occurrence itself: the rest of the card still opens the full class form,
   // while this picker writes the one-date assignment directly.
-  const assignCoach = (cls: GymClassDto, iso: string, who: string) => {
+  const assignCoach = (cls: GymClassDto, iso: string, who: string, allowCoachConflict = false) => {
     const key = occurrenceKey(cls.id, iso);
-    if (coachSaving[key]) return;
+    if (coachSaving[key] && !allowCoachConflict) return;
     const previous = coachOverrides[key] ?? cls.onUserId ?? "";
     setCoachOverrides((current) => ({ ...current, [key]: who }));
     setCoachSaving((current) => ({ ...current, [key]: true }));
     void (async () => {
-      const res = await setShiftCover(studioId, cls.id, iso, who || null);
+      const res = await setShiftCover(studioId, cls.id, iso, who || null, allowCoachConflict);
       if (!res.ok) {
         setCoachOverrides((current) => ({ ...current, [key]: previous }));
+        if (res.error?.startsWith("Schedule conflict:")) {
+          const detail = res.error.replace(/^Schedule conflict:\s*/, "");
+          if (window.confirm(`${detail}\n\nAssign this coach anyway?`)) assignCoach(cls, iso, who, true);
+          return;
+        }
         toast(res.error ?? "Couldn't change that");
       } else {
         const name = coachNameById.get(who);
@@ -503,6 +473,58 @@ export function GymRota({
     }
   };
 
+  const openShiftText = (openDays: GymDayDto[]) => {
+    const lines = openDays.flatMap((day) => [
+      fmtDay(day.iso),
+      ...day.items.map((item) => {
+        const clock = clockParts(item.startTime);
+        return `${clock.hm} ${clock.ap.toUpperCase()} · ${item.name} · ${item.durationMin} min`;
+      }),
+      "",
+    ]);
+    return [studioName, "Open shifts", "", ...lines].join("\n").trim();
+  };
+
+  const copyOpenShifts = async (openDays: GymDayDto[]) => {
+    try {
+      await navigator.clipboard.writeText(openShiftText(openDays));
+      toast("Open shifts copied");
+    } catch {
+      toast("Couldn't copy the open shifts");
+    }
+  };
+
+  const shareOpenShiftImage = async () => {
+    if (sharingOpenShifts) return;
+    setSharingOpenShifts(true);
+    const offset = week?.offset ?? 0;
+    const ok = await putImage(
+      `/api/story/open-shifts/${encodeURIComponent(studioId)}?w=${offset}&name=${encodeURIComponent(studioName)}&v=${Date.now()}`,
+      `${studioSlug || "studio"}-open-shifts.png`,
+    );
+    setSharingOpenShifts(false);
+    if (!ok) toast("Couldn't share the open shifts");
+  };
+
+  const useStandardDay = (day: GymDayDto) => {
+    if (pending) return;
+    setMonthMenu(null);
+    start(async () => {
+      const res = await applyStandardDay(studioId, day.iso);
+      if (!res.ok) {
+        toast(res.error ?? `Couldn't use standard ${WEEKDAYS[day.dayOfWeek]}`);
+        return;
+      }
+      const parts = [
+        `${res.added ?? 0} added`,
+        res.duplicates ? `${res.duplicates} already there` : null,
+        res.conflicts?.length ? `${res.conflicts.length} coach ${res.conflicts.length === 1 ? "conflict" : "conflicts"}` : null,
+      ].filter(Boolean);
+      toast(parts.join(" · "));
+      refreshView();
+    });
+  };
+
   const publishDrafts = () => {
     if (pending) return;
     start(async () => {
@@ -521,32 +543,17 @@ export function GymRota({
       <div className="pad">
         <div className="studio-manage-top pagetop">
           <div className="studio-manage-topbar">
-            <BackLink
+            <Link
               className="evback studio-manage-back"
-              href="/settings"
-              anywhere
-              notUnder={`/s/${studioSlug}`}
-              label="Back to your account"
+              href={dashboardHref}
+              aria-label="Back to studio dashboard"
+              replace
             >
               <Icon name="arrow_back" size={23} />
-            </BackLink>
-            <StudioAdminSheet
-              slug={studioSlug}
-              canSchedule={false}
-              pageViews={admin.pageViews ?? null}
-              studio={admin.studio}
-              showCoaches={admin.showCoaches}
-              approvalOn={admin.approvalOn}
-              settingsTrigger
-            />
+            </Link>
+            <h1 className="studio-calendar-title">Calendar</h1>
+            <span aria-hidden="true" />
           </div>
-          <div>
-            <h1>{studioName}</h1>
-            <p className="adminsub">The schedule</p>
-          </div>
-        </div>
-        <div className="studio-calendar-controls">
-          <StudioManageNav slug={studioSlug} active="calendar" />
         </div>
         <div className="empty-block" style={{ marginTop: 24 }}>
           <h2>Run this studio&rsquo;s calendar here</h2>
@@ -639,109 +646,99 @@ export function GymRota({
     ...day,
     items: day.items.filter((item) => matchesShiftFilter(item, day.iso)),
   }));
+  const openShiftDays = filteredWeekDays.filter((day) => day.items.length > 0);
+  const openShiftCount = openShiftDays.reduce((count, day) => count + day.items.length, 0);
+  const renderedWeekDays = shiftFilter === "open"
+    ? openShiftDays
+    : desktop
+      ? filteredWeekDays
+      : [month?.days.find((day) => day.iso === selectedDayIso) ?? filteredWeekDays.find((day) => day.iso === selectedDayIso)]
+        .filter((day): day is GymDayDto => !!day)
+        .map((day) => ({ ...day, items: day.items.filter((item) => matchesShiftFilter(item, day.iso)) }));
+  const selectedDay = renderedWeekDays[0] ?? filteredWeekDays[0];
+  const canMoveToPreviousDay = Boolean(
+    week && selectedDayIso && (week.offset > 0 || selectedDayIso !== days[0]?.iso),
+  );
   const weekHref = (offset: number) => {
     const params = new URLSearchParams({ w: String(offset) });
     if (shiftFilter !== "all") params.set("show", shiftFilter);
     return `${manageBase}?${params.toString()}`;
   };
-  const summary = all.length === 0
-    ? shiftFilter === "mine"
-      ? "None of your shifts here"
-      : shiftFilter === "open"
-        ? "No open shifts here"
-        : desktop
-          ? "The month is empty"
-          : "The week is empty"
-    : shiftFilter === "mine"
-      ? `${all.length} of your ${all.length === 1 ? "shift" : "shifts"}`
-      : shiftFilter === "open"
-        ? `${all.length} open ${all.length === 1 ? "shift" : "shifts"}`
-        : `${all.length} ${all.length === 1 ? "class" : "classes"}` +
-          (openSlots ? ` · ${openSlots} open` : "");
-
+  const moveMobileDay = (delta: number) => {
+    if (!selectedDayIso || !week) return;
+    if (delta < 0 && !canMoveToPreviousDay) return;
+    const nextDate = new Date(`${selectedDayIso}T00:00:00Z`);
+    nextDate.setUTCDate(nextDate.getUTCDate() + delta);
+    const nextIso = nextDate.toISOString().slice(0, 10);
+    if (days.some((day) => day.iso === nextIso)) {
+      setSelectedDayIso(nextIso);
+      setDayMenu(null);
+      return;
+    }
+    const nextOffset = Math.max(0, week.offset + (delta > 0 ? 1 : -1));
+    const params = new URLSearchParams({ w: String(nextOffset), d: nextIso });
+    if (shiftFilter !== "all") params.set("show", shiftFilter);
+    window.location.assign(`${manageBase}?${params.toString()}`);
+  };
+  const floatingAddDay = (() => {
+    if (mobileView === "day" && selectedDay) return selectedDay;
+    if (month) {
+      const today = localTodayIso();
+      return month.days.find((day) => day.iso === today)
+        ?? month.days.find((day) => day.iso.startsWith(month.month));
+    }
+    return selectedDay ?? days[0];
+  })();
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
       <div className="studio-manage-top pagetop">
         <div className="studio-manage-topbar">
-          <BackLink
+          <Link
             className="evback studio-manage-back"
-            href="/settings"
-            anywhere
-            notUnder={`/s/${studioSlug}`}
-            label="Back to your account"
+            href={dashboardHref}
+            aria-label="Back to studio dashboard"
+            replace
           >
             <Icon name="arrow_back" size={23} />
-          </BackLink>
-          <StudioAdminSheet
-            slug={studioSlug}
-            canSchedule={hasAccount}
-            pageViews={admin.pageViews ?? null}
-            studio={admin.studio}
-            showCoaches={admin.showCoaches}
-            approvalOn={admin.approvalOn}
-            settingsTrigger
-          />
-        </div>
-        <div>
-          <h1>{studioName}</h1>
-          <p className="adminsub">{summary}</p>
-          {visibleDrafts > 0 && (
-            <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
-              Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="studio-calendar-controls">
-        <StudioManageNav slug={studioSlug} active="calendar" />
-        <div className="rota-calendar-tools">
-          <label className="rota-shift-filter">
-            <span>Show:</span>
-            <select
-              aria-label="Show shifts"
-              value={shiftFilter}
-              onChange={(event) => chooseShiftFilter(event.target.value as ShiftFilter)}
-            >
-              <option value="all">All shifts</option>
-              <option value="mine">My shifts</option>
-              <option value="open">Open shifts</option>
-            </select>
-          </label>
-          {desktop && (
-            <div className="rota-view-switch" role="group" aria-label="Calendar view">
-              <button
-                className={desktopView === "week" ? "on" : ""}
-                aria-pressed={desktopView === "week"}
-                onClick={() => chooseDesktopView("week")}
-              >
-                Week
-              </button>
-              <button
-                className={desktopView === "month" ? "on" : ""}
-                aria-pressed={desktopView === "month"}
-                onClick={() => chooseDesktopView("month")}
-              >
-                Month
-              </button>
-            </div>
-          )}
-          <button
-            type="button"
-            className="rota-notification-button"
-            aria-label={`Shift notifications${requestRows.length ? `, ${requestRows.length} waiting` : ""}`}
-            onClick={() => showRequestSheet(true)}
-          >
-            <Icon name="notifications" size={21} />
-            {requestRows.length > 0 && (
-              <span className="rota-notification-badge" aria-hidden="true">{requestRows.length}</span>
-            )}
+          </Link>
+          <h1 className="studio-calendar-title">{shiftFilter === "open" ? "Open shifts" : "Calendar"}</h1>
+          <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
+            <Icon name="tune" size={23} />
           </button>
         </div>
+        {visibleDrafts > 0 && (
+          <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
+            Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
+          </button>
+        )}
       </div>
 
-      {desktop && desktopView === "month" ? (
-        <div className="rota-month-view">
+      {filterOpen && (
+        <div className="calendar-drawer-scrim" onClick={(event) => event.target === event.currentTarget && setFilterOpen(false)}>
+          <aside className="calendar-drawer" role="dialog" aria-modal="true" aria-labelledby="rota-filter-title">
+            <div className="calendar-drawer-head"><h2 id="rota-filter-title">Calendar filters</h2><button className="iconbtn" aria-label="Close" onClick={() => setFilterOpen(false)}><Icon name="close" size={18} /></button></div>
+            <section className="calendar-drawer-section"><h3>View</h3>
+            <div>
+              {([desktop ? "week" : "day", "month"] as const).map((view) => {
+                const selected = desktop ? desktopView === view : mobileView === view;
+                return <button className={`calendar-drawer-row calendar-view-choice${selected ? " on" : ""}`} key={view} onClick={() => {
+                  if (desktop) chooseDesktopView(view === "day" ? "week" : view);
+                  else setMobileView(view === "week" ? "day" : view);
+                  if (view === "month" && !month) void loadMonth();
+                }}><span className="calendar-view-choice-icon"><Icon name={view === "month" ? "calendar_view_month" : "calendar_view_day"} size={20} /></span>{view[0].toUpperCase() + view.slice(1)}</button>;
+              })}
+            </div></section>
+            <section className="calendar-drawer-section"><h3>Schedule</h3><div>
+              {([['all','All shifts'],['assigned','All coaches'],['open','Open shifts'],['mine','My shifts']] as [ShiftFilter,string][]).map(([value,label]) => (
+                <button className={`calendar-drawer-row calendar-view-choice${shiftFilter === value ? " on" : ""}`} key={value} onClick={() => chooseShiftFilter(value)}><span className="calendar-view-choice-icon"><Icon name={value === "open" ? "event_available" : "groups"} size={20} /></span>{label}</button>
+              ))}
+            </div></section>
+          </aside>
+        </div>
+      )}
+
+      {(desktop ? desktopView === "month" : mobileView === "month") ? (
+        <div className={`rota-month-view${desktop ? "" : " mobile"}`}>
           <div className="rota-month-toolbar">
             <div className="rota-month-nav">
               <button
@@ -772,7 +769,15 @@ export function GymRota({
                   return (
                     <section
                       key={day.iso}
-                      className={`rota-month-day${outside ? " outside" : ""}${day.closed ? " closed" : ""}`}
+                      className={`rota-month-day${outside ? " outside" : ""}${day.closed ? " closed" : ""}${day.iso === localTodayIso() ? " today" : ""}`}
+                      onClickCapture={!desktop && !outside ? (event) => {
+                        // The compact month is navigation, not a second tiny
+                        // editing surface. Any tap opens the readable day.
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setSelectedDayIso(day.iso);
+                        setMobileView("day");
+                      } : undefined}
                     >
                       <div className="rota-month-dayhead">
                         <span>
@@ -799,6 +804,11 @@ export function GymRota({
                             </button>
                             {monthMenu === day.iso && (
                               <div className="rota-month-menu">
+                                {month.standardDays.includes(day.dayOfWeek) && !day.closed && (
+                                  <button onClick={() => useStandardDay(day)}>
+                                    Use standard {WEEKDAYS[day.dayOfWeek]}
+                                  </button>
+                                )}
                                 <button onClick={() => void shareDay(day)}>Share day</button>
                                 {day.closed ? (
                                   <button onClick={() => openDay(day)}>Open day</button>
@@ -880,29 +890,81 @@ export function GymRota({
         <>
           {/* A real week, dates and all, because that's what the spreadsheet is
               and what a swap is about. */}
-          <div className="rotaweek">
-            <Link
-              className={`rotanav${week && week.offset > 0 ? "" : " off"}`}
-              href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))}
-              aria-disabled={!week || week.offset === 0}
-            >
+          {shiftFilter === "open" ? (
+            <div className="rota-open-manager-head">
+              <div>
+                <strong>{openShiftCount} open {openShiftCount === 1 ? "shift" : "shifts"}</strong>
+                <span>{week?.label ?? "This week"}</span>
+              </div>
+              <div className="rota-open-actions">
+                <button type="button" onClick={() => void copyOpenShifts(openShiftDays)} disabled={!openShiftCount}>
+                  <Icon name="content_copy" size={19} />
+                  Copy text
+                </button>
+                <button className="primary" type="button" onClick={() => void shareOpenShiftImage()} disabled={!openShiftCount || sharingOpenShifts}>
+                  <Icon name="ios_share" size={20} />
+                  {sharingOpenShifts ? "Preparing…" : "Share image"}
+                </button>
+              </div>
+            </div>
+          ) : <div className={`rotaweek${desktop ? "" : " mobile-day-nav"}`}>
+            {desktop ? <Link className={`rotanav${week && week.offset > 0 ? "" : " off"}`} href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))} aria-disabled={!week || week.offset === 0}>
               <Icon name="chevron_left" size={20} />
-            </Link>
-            <span className="rotaweek-lbl">{week?.label ?? ""}</span>
-            <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
+            </Link> : <button className={`rotanav${canMoveToPreviousDay ? "" : " off"}`} aria-label="Previous day" disabled={!canMoveToPreviousDay} onClick={() => moveMobileDay(-1)}><Icon name="chevron_left" size={20} /></button>}
+            {desktop ? (
+              <span className="rotaweek-lbl">{week?.label ?? ""}</span>
+            ) : (
+              <span className="rotaweek-center">
+                <span className="rotaweek-lbl">{selectedDay ? fmtDay(selectedDay.iso) : "Calendar"}</span>
+                {selectedDay && (
+                  <span className="rota-day-menuwrap">
+                    <button
+                      className="rota-day-more"
+                      aria-label={`Actions for ${fmtDay(selectedDay.iso)}`}
+                      aria-expanded={dayMenu === selectedDay.iso}
+                      onClick={() => setDayMenu(dayMenu === selectedDay.iso ? null : selectedDay.iso)}
+                    >
+                      <Icon name="more_horiz" size={20} />
+                    </button>
+                    {dayMenu === selectedDay.iso && (
+                      <span className="rota-day-menu">
+                        <button onClick={() => void shareDay(selectedDay)}>Share day</button>
+                        <button
+                          disabled={pending}
+                          onClick={() => {
+                            setDayMenu(null);
+                            if (selectedDay.closed) openDay(selectedDay);
+                            else setClosingDay({ iso: selectedDay.iso, label: fmtDay(selectedDay.iso) });
+                          }}
+                        >
+                          {selectedDay.closed ? "Open day" : "Close day"}
+                        </button>
+                      </span>
+                    )}
+                  </span>
+                )}
+              </span>
+            )}
+            {desktop ? <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
               <Icon name="chevron_right" size={20} />
-            </Link>
-          </div>
+            </Link> : <button className="rotanav" aria-label="Next day" onClick={() => moveMobileDay(1)}><Icon name="chevron_right" size={20} /></button>}
+          </div>}
 
           <div className="calendar-cardlist rota-calendar">
-            {filteredWeekDays.map((day) => (
+            {shiftFilter === "open" && renderedWeekDays.length === 0 && (
+              <div className="empty-block rota-open-empty">
+                <h2>No open shifts</h2>
+                <p>Every shift this week has a coach assigned.</p>
+              </div>
+            )}
+            {renderedWeekDays.map((day) => (
               <section key={day.iso} className={`rotaday dayblock${day.closed ? " closed" : ""}`}>
                 <div className="rotaday-h dayband">
                   <span className="dayband-d">
-                    {fmtDay(day.iso)}
+                    {desktop || shiftFilter === "open" ? fmtDay(day.iso) : ""}
                     {day.closed && <b className="rota-day-closed-label">Closed</b>}
                   </span>
-                  <span className="rotaday-actions">
+                  {desktop && <span className="rotaday-actions">
                     {!day.closed && (
                       <button
                         className="rota-day-add"
@@ -937,7 +999,7 @@ export function GymRota({
                         </span>
                       )}
                     </span>
-                  </span>
+                  </span>}
                 </div>
                 {day.items.length === 0 ? (
                   <p className="rotaempty">
@@ -951,7 +1013,6 @@ export function GymRota({
                       const selectedCoachId = coachOverrides[key] ?? c.onUserId ?? "";
                       const selectedCoachName = coachNameById.get(selectedCoachId)
                         ?? (selectedCoachId === c.onUserId ? c.onName : "");
-                      const isCover = selectedCoachId !== (c.coachUserId ?? "");
                       return (
                         <div
                           className="clrow rota-inline-row"
@@ -972,14 +1033,10 @@ export function GymRota({
                               dur: `${c.durationMin} min`,
                               tag: !c.isPublic
                                 ? "Draft"
-                                : selectedCoachId && isCover
-                                  ? "Cover"
-                                  : undefined,
+                                : undefined,
                               tagTone: !c.isPublic
                                 ? "personal"
-                                : selectedCoachId && isCover
-                                  ? "coaching"
-                                  : undefined,
+                                : undefined,
                               onTap: day.closed ? undefined : () => show(day.iso, day.dayOfWeek, c),
                             }}
                           />
@@ -1010,72 +1067,6 @@ export function GymRota({
             ))}
           </div>
         </>
-      )}
-
-      {requestSheet && (
-        <div
-          className="sheet-scrim"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) showRequestSheet(false);
-          }}
-        >
-          <div
-            className="sheet rota-request-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rota-request-title"
-          >
-            <div className="sheettitle rota-request-titlebar">
-              <div>
-                <h2 id="rota-request-title">Shift notifications</h2>
-                <p>Pickups and hand-overs waiting for an answer.</p>
-              </div>
-              <button
-                className="iconbtn sheetclose"
-                aria-label="Close"
-                onClick={() => showRequestSheet(false)}
-              >
-                <Icon name="close" size={18} />
-              </button>
-            </div>
-            {requestRows.length === 0 ? (
-              <p className="rota-request-empty">Nothing waiting.</p>
-            ) : (
-              <div className="rota-request-list">
-                {requestRows.map((request) => (
-                  <div className="rota-request-row" key={request.id}>
-                    <span className="rota-request-copy">
-                      <strong>
-                        {request.kind === "pickup"
-                          ? `${request.toName} wants ${request.className}`
-                          : request.scope === "standing"
-                            ? `${request.fromName ?? "A coach"} wants to make ${request.toName} the regular coach for ${request.className}`
-                            : `${request.fromName ?? "A coach"} is handing ${request.className} to ${request.toName}`}
-                      </strong>
-                      <small>{request.whenLong}</small>
-                    </span>
-                    <span className="rota-request-actions">
-                      <button
-                        className="btn si"
-                        disabled={pending}
-                        onClick={() => answerRequest(request.id, true)}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        className="tertiary"
-                        disabled={pending}
-                        onClick={() => answerRequest(request.id, false)}
-                      >
-                        Decline
-                      </button>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {coachPick && (
@@ -1138,6 +1129,18 @@ export function GymRota({
             </div>
             <p className="rota-coach-note">This changes only {coachPick.label}. Open the class to change every week.</p>
           </div>
+        </div>
+      )}
+
+      {!desktop && shiftFilter !== "open" && floatingAddDay && (
+        <div className="calendar-bottom-actions studio-calendar-add" aria-label="Calendar actions">
+          <button
+            className="calendar-bottom-add"
+            aria-label={`Add a class on ${fmtDay(floatingAddDay.iso)}`}
+            onClick={() => show(floatingAddDay.iso, floatingAddDay.dayOfWeek, null, true)}
+          >
+            <Icon name="add" size={28} />
+          </button>
         </div>
       )}
 

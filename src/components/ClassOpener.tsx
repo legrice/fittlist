@@ -11,6 +11,7 @@ type DeferredClassPeekProps = {
   onClose: () => void;
   onChanged: () => void;
   onToast: (message: string) => void;
+  allowWeekAdd?: boolean;
 };
 
 // Profile, studio, group, and Discover lists all use this opener, but most
@@ -40,9 +41,11 @@ const DeferredClassPeek = dynamic<DeferredClassPeekProps>(() =>
 export function ClassOpener({
   handle,
   children,
+  allowWeekAdd = true,
 }: {
   handle: string;
   children: React.ReactNode;
+  allowWeekAdd?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<ClassDetail | null>(null);
@@ -79,6 +82,7 @@ export function ClassOpener({
           onClose={() => setOpen(null)}
           onChanged={() => router.refresh()}
           onToast={toast}
+          allowWeekAdd={allowWeekAdd}
         />
       )}
       <Toast msg={toastMsg} on={toastOn} />

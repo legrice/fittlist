@@ -33,7 +33,7 @@ const landingSlides = [
     art: "share",
   },
   {
-    title: "Follow your favorites. Respectfully.",
+    title: "Save the calendars you actually use.",
     art: "favorites",
   },
   {
@@ -153,7 +153,7 @@ export function AuthFlow({
   inviter = null,
   claimAs = "coach",
   fans = false,
-  landing = "/calendar",
+  landing = "/feed",
 }: {
   startStage: "email" | "claim";
   via?: string | null;
@@ -192,6 +192,7 @@ export function AuthFlow({
   const [bio, setBio] = useState(false);
   // The "sent" screen doubles as password recovery; this picks the copy.
   const [resetMode, setResetMode] = useState(false);
+  const [signupLink, setSignupLink] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -205,6 +206,8 @@ export function AuthFlow({
   );
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
+  const [nativeIOS, setNativeIOS] = useState(false);
+  const [nativeApplePending, setNativeApplePending] = useState(false);
   const [knownPasskey, setKnownPasskey] = useState(false);
   const [passkeyLabel, setPasskeyLabel] = useState("Log in with a passkey");
   // "Request an invite" modal (invite-only beta).
@@ -218,12 +221,76 @@ export function AuthFlow({
   const viaQ = via ? `?via=${encodeURIComponent(via)}` : "";
 
   useEffect(() => {
+    setNativeIOS(document.documentElement.dataset.native === "ios");
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
     setKnownPasskey(hasLocalPasskeyHistory());
     const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
       || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (appleMobile) setPasskeyLabel("Log in with Face ID");
   }, []);
+  useEffect(() => {
+    if (!nativeIOS) return;
+    const finish = (raw: Event) => {
+      const detail = (raw as CustomEvent<{
+        identityToken?: string;
+        givenName?: string;
+        familyName?: string;
+        error?: string;
+      }>).detail;
+      if (detail?.error) {
+        setNativeApplePending(false);
+        if (detail.error !== "cancelled") setError("Apple sign-in didn't finish. Try again.");
+        return;
+      }
+      if (!detail?.identityToken) {
+        setNativeApplePending(false);
+        setError("Apple sign-in didn't finish. Try again.");
+        return;
+      }
+      void (async () => {
+        try {
+          const res = await fetch("/api/apple/native/complete", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(detail),
+          });
+          const result = await res.json() as { ok?: boolean; href?: string; error?: string };
+          if (!res.ok || !result.ok || !result.href) {
+            setError(result.error === "invite_required"
+              ? "This beta still needs an invitation."
+              : "Apple sign-in didn't finish. Try again.");
+            return;
+          }
+          window.location.assign(result.href);
+        } catch {
+          setError("Apple sign-in needs a connection. Try again when you're online.");
+        } finally {
+          setNativeApplePending(false);
+        }
+      })();
+    };
+    window.addEventListener("fittlist:native-apple-result", finish);
+    return () => window.removeEventListener("fittlist:native-apple-result", finish);
+  }, [nativeIOS]);
+
+  const startNativeApple = async () => {
+    if (nativeApplePending) return;
+    setError("");
+    setNativeApplePending(true);
+    try {
+      const res = await fetch(`/api/apple/native/challenge${viaQ}`, { method: "POST" });
+      const result = await res.json() as { ok?: boolean; nonce?: string };
+      const nativeWindow = window as Window & {
+        webkit?: { messageHandlers?: { fittlistApple?: { postMessage: (body: unknown) => void } } };
+      };
+      if (!res.ok || !result.ok || !result.nonce || !nativeWindow.webkit?.messageHandlers?.fittlistApple)
+        throw new Error("native_apple_unavailable");
+      nativeWindow.webkit.messageHandlers.fittlistApple.postMessage({ nonce: result.nonce });
+    } catch {
+      setNativeApplePending(false);
+      setError("Apple sign-in isn't available right now. You can continue with email.");
+    }
+  };
   // Arriving from a coach's page with a door already chosen: "?join=login"
   // opens the sign-in sheet, "?join=signup" the sign-up one. Tapping Sign in on
   // a profile and landing on the marketing page would just be a second tap.
@@ -261,13 +328,36 @@ export function AuthFlow({
     else router.push(takeAfterAuth() ?? landing);
   };
 
-  const submitPassword = () => {
+  // The same one-tap link, framed two ways. As "magic link" it's a way to skip
+  // typing a password; as "forgot password" it's the recovery path — and for an
+  // account that never set a password (invited by email, signed up with Google)
+  // it's the only way back in. Landing from the link offers to set one.
+  const sendLink = (reset = false, signup = false) => {
+    if (!email.trim()) {
+      setError("Enter your email first.");
+      return;
+    }
+    setError("");
+    startTransition(async () => {
+      const res = await requestMagicLink(email, via, signup ? "signup" : reset ? "reset" : "login");
+      if (res.ok) {
+        setSheet(null);
+        setResetMode(reset);
+        setSignupLink(signup);
+        setStage("sent");
+      } else setError(res.error ?? "Something went wrong.");
+    });
+  };
+
+  const submitAuth = () => {
+    if (sheet === "signup") {
+      sendLink(false, true);
+      return;
+    }
     if (!email.trim() || !password) return;
     setError("");
     startTransition(async () => {
-      // Everyone signs up as a member: "do you teach" is the wizard's
-      // first page now, and setTeaching flips the account there.
-      const res = await passwordAuth(email, password, fans && sheet === "signup");
+      const res = await passwordAuth(email, password, false);
       if (!res.ok) {
         setError(res.error ?? "Something went wrong.");
         return;
@@ -275,31 +365,8 @@ export function AuthFlow({
       setSheet(null);
       pendingProfile.current = !!res.needsProfile;
       pendingFan.current = !!res.fan;
-      // Offer to add a passkey right after signing in with a password. A fan
-      // with a profile still to claim stays on "/", so the prompt has somewhere
-      // to live; one who's already set up would be redirected out from under it.
       if (passkeyable && !res.hasPasskey && (res.needsProfile || !res.fan)) setBio(true);
       else proceed(!!res.needsProfile, !!res.fan);
-    });
-  };
-
-  // The same one-tap link, framed two ways. As "magic link" it's a way to skip
-  // typing a password; as "forgot password" it's the recovery path — and for an
-  // account that never set a password (invited by email, signed up with Google)
-  // it's the only way back in. Landing from the link offers to set one.
-  const sendLink = (reset = false) => {
-    if (!email.trim()) {
-      setError("Enter your email first.");
-      return;
-    }
-    setError("");
-    startTransition(async () => {
-      const res = await requestMagicLink(email, via);
-      if (res.ok) {
-        setSheet(null);
-        setResetMode(reset);
-        setStage("sent");
-      } else setError(res.error ?? "Something went wrong.");
     });
   };
 
@@ -395,8 +462,9 @@ export function AuthFlow({
 
         {stage === "landing" && (
           <>
-            <div className="oblanding-mark" aria-hidden="true">
-              <span className="oblanding-progress-track">
+            <div className="oblanding-mark">
+              <Wordmark variant="ink" className="oblanding-logo" />
+              <span className="oblanding-progress-track" aria-hidden="true">
                 {landingSlides.map((slide, index) => <span className={index <= landingSlide ? "is-on" : ""} key={slide.art} />)}
               </span>
             </div>
@@ -447,11 +515,20 @@ export function AuthFlow({
                       <GoogleG /> Continue with Google
                     </a>
                   )}
-                  {providers.apple && (
+                  {providers.apple && (nativeIOS ? (
+                    <button
+                      type="button"
+                      className="obalt apple"
+                      onClick={startNativeApple}
+                      disabled={nativeApplePending}
+                    >
+                      <AppleLogo /> {nativeApplePending ? "Continuing…" : "Continue with Apple"}
+                    </button>
+                  ) : (
                     <a className="obalt apple" href={`/api/apple/login${viaQ}`}>
                       <AppleLogo /> Continue with Apple
                     </a>
-                  )}
+                  ))}
                 </div>
               )}
               {error && <div className="errorcopy">{error}</div>}
@@ -463,7 +540,12 @@ export function AuthFlow({
           <>
             <h1>Check your inbox.</h1>
             <p>
-              {resetMode ? (
+              {signupLink ? (
+                <>
+                  We emailed a verification link to <b>{email}</b>. Open it on this device to
+                  create your account and continue setup. It expires in 15 minutes.
+                </>
+              ) : resetMode ? (
                 <>
                   We emailed a sign-in link to <b>{email}</b>. Open it on this device and
                   you&rsquo;ll be signed straight in. Then you can set a new password so you
@@ -552,15 +634,15 @@ export function AuthFlow({
                     // said which side they're on. Adding the role line here
                     // would push it to three.
                     invitedByLink
-                    ? "Any email works. Pick a password you'll remember."
-                    : "Use the email your invite was sent to. Pick a password you'll remember."
+                    ? "Any email works. We'll send a secure link to verify it."
+                    : "Use the email your invite was sent to. We'll send a secure link to verify it."
                   : [
                       fans
                         ? "One account, whether you coach or you're here to train."
                         : null,
                       inviteOnly && !inviter
                         ? "Invite-only beta: use your invited email."
-                        : "Pick any password and you're in.",
+                        : "We'll email a secure sign-up link.",
                     ]
                       .filter(Boolean)
                       .join(" ")
@@ -575,16 +657,18 @@ export function AuthFlow({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <input
-              type="password"
-              className="editinput"
-              style={{ marginTop: 10 }}
-              placeholder="Password"
-              autoComplete={sheet === "signup" ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitPassword()}
-            />
+            {sheet === "login" && (
+              <input
+                type="password"
+                className="editinput"
+                style={{ marginTop: 10 }}
+                placeholder="Password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submitAuth()}
+              />
+            )}
             {/* Recovery, said in the words people look for, and sitting where
                 the problem is — right under the field they can't fill in. */}
             {sheet === "login" && (
@@ -594,7 +678,7 @@ export function AuthFlow({
             )}
             {/* The other ways in, both as buttons: they're alternatives to the
                 password, not footnotes about it. */}
-            <div className="obalts" style={{ marginTop: 14 }}>
+            {sheet === "login" && <div className="obalts" style={{ marginTop: 14 }}>
               <button className="obalt" onClick={() => sendLink(false)} disabled={pending}>
                 <Icon name="auto_awesome" size={21} /> Email me a magic link
               </button>
@@ -603,7 +687,7 @@ export function AuthFlow({
                   <Icon name="fingerprint" size={21} /> {passkeyLabel}
                 </button>
               )}
-            </div>
+            </div>}
             {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
             {inviteOnly && !invited && !inviter && sheet === "signup" && (
               <button className="authmagic" onClick={openRequest}>
@@ -611,13 +695,13 @@ export function AuthFlow({
               </button>
             )}
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={submitPassword} disabled={pending}>
-                {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Sign in"}
+              <button className="btn si" onClick={submitAuth} disabled={pending || !email.trim()}>
+                {pending ? "One sec…" : sheet === "signup" ? "Email sign-up link" : "Sign in"}
               </button>
             </div>
             {sheet === "signup" && (
               <p className="authsignup-legal">
-                By creating an account, you agree to FittList&rsquo;s <span>Terms of Use</span> and acknowledge our <Link href="/privacy">Privacy Policy</Link>.
+                By creating an account, you agree to FittList&rsquo;s <Link href="/terms">Terms of Use</Link> and acknowledge our <Link href="/privacy">Privacy Policy</Link>.
               </p>
             )}
             {/* The other door, under the button. Someone who opened Sign in from

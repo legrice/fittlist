@@ -15,6 +15,7 @@ export type ClassDto = {
   endsOn: string | null; // last date a standing weekly runs; null = no end
   skipDates: string[]; // single dates cancelled out of a standing weekly
   startTime: string; // "HH:MM"
+  timeZone: string; // IANA zone for the floating class time
   durationMin: number;
   name: string;
   classType: string | null;

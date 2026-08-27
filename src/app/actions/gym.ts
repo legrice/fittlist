@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
   DAYS,
+  detectProvider,
   dowOfDate,
   fmtDateLong,
   fmtDayHeader,
@@ -24,10 +25,14 @@ import { sendInviteLink } from "@/lib/invite-link";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
 import { coachAnalytics } from "@/lib/visits";
+import { avatarColor } from "@/lib/avatar";
+import { pushToUser } from "@/lib/push";
 import {
   isStudioPlannerColor,
   type StudioPlannerColor,
 } from "@/lib/studio-planner";
+import { staffStudiosForUser } from "@/lib/staff-studios";
+import { objectionableContentError } from "@/lib/content-safety";
 
 // A gym's own schedule: the rota, replacing the spreadsheet.
 //
@@ -95,6 +100,8 @@ export type GymMonthDto = {
   label: string;
   /** Six Monday-through-Sunday rows, including the month's edge days. */
   days: GymDayDto[];
+  /** Weekday indexes captured in the studio's reusable standard week. */
+  standardDays: number[];
 };
 
 export type GymCoachDto = { id: string; name: string; email: string };
@@ -151,13 +158,19 @@ async function assignmentError(
   db: Awaited<ReturnType<typeof getDb>>,
   studioId: string,
   coachUserId: string | null,
+  actingUserId?: string,
 ) {
   if (!coachUserId) return null;
   const [coach] = await db
     .select({ kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, coachUserId));
-  if (!coach || coach.kind === "fan" || coach.kind === "gym") return "That's not a coach.";
+  if (!coach || coach.kind === "gym") return "That's not a coach.";
+  // An owner or manager may also coach. Studio access already authorizes the
+  // caller, so they should not have to invite themselves to their own roster
+  // before putting themselves on a class.
+  if (coachUserId === actingUserId) return null;
+  if (coach.kind === "fan") return "That's not a coach.";
   if (!(await rosterHas(db, studioId, coachUserId)))
     return "Invite this coach and turn on Schedule before assigning them.";
   return null;
@@ -253,7 +266,18 @@ function nextOccurrence(dayOfWeek: number, fromIso = todayIso()) {
 export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return [];
-  return gymCoachesFromDb(ctx.db, studioId);
+  const coaches = await gymCoachesFromDb(ctx.db, studioId);
+  if (coaches.some((coach) => coach.id === ctx.userId)) return coaches;
+  const [manager] = await ctx.db
+    .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, ctx.userId));
+  if (!manager || manager.kind === "gym") return coaches;
+  return [...coaches, {
+    id: manager.id,
+    name: manager.name.trim() || manager.email.split("@")[0],
+    email: manager.email,
+  }].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 async function gymCoachesFromDb(
@@ -445,7 +469,150 @@ export async function gymMonth(
       timeZone: "UTC",
     }),
     days,
+    standardDays: Object.entries(ctx.studio.standardWeek ?? {})
+      .filter(([, slots]) => Array.isArray(slots) && slots.length > 0)
+      .map(([day]) => Number(day))
+      .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6),
   };
+}
+
+/** Capture the seven class days around an anchor as the reusable week.
+ * Staffing is deliberately omitted: the standard week is the class source of
+ * truth, while coach assignments remain a separate dated rota. */
+export async function saveStandardWeek(
+  studioId: string,
+  anchorDate: string,
+): Promise<{ ok: boolean; error?: string; count?: number }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate)) return { ok: false, error: "Pick a date." };
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const anchor = new Date(`${anchorDate}T00:00:00Z`);
+  anchor.setUTCDate(anchor.getUTCDate() - dowOfDate(anchorDate));
+  const week = await gymDays(ctx.db, ctx.gymId, studioId, anchor, 7);
+  const standardWeek: schema.StandardWeek = {};
+  let count = 0;
+  for (const day of week) {
+    const slots = day.closed ? [] : day.items.map((item) => ({
+      name: item.name,
+      classType: item.classType,
+      description: item.description,
+      image: item.image,
+      startTime: item.startTime,
+      durationMin: item.durationMin,
+      links: item.links,
+      plannerColor: item.plannerColor,
+      isPublic: item.isPublic,
+    }));
+    standardWeek[String(day.dayOfWeek) as keyof schema.StandardWeek] = slots;
+    count += slots.length;
+  }
+  await ctx.db
+    .update(schema.studios)
+    .set({ standardWeek })
+    .where(eq(schema.studios.id, studioId));
+  revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}/manage`);
+  return { ok: true, count };
+}
+
+export type StandardCalendarSlot = {
+  name: string;
+  startTime: string;
+  durationMin: number;
+  plannerColor: StudioPlannerColor | null;
+};
+
+/** Save the studio's class-only weekly source of truth. */
+export async function setStandardCalendar(
+  studioId: string,
+  input: Record<string, StandardCalendarSlot[]>,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const standardWeek: schema.StandardWeek = {};
+  let total = 0;
+  for (let day = 0; day < 7; day++) {
+    const slots = Array.isArray(input[String(day)]) ? input[String(day)] : [];
+    const clean = slots.flatMap((slot) => {
+      const name = slot.name?.trim().slice(0, 100);
+      const startTime = slot.startTime?.trim();
+      const durationMin = Number(slot.durationMin);
+      if (!name || !/^\d{2}:\d{2}$/.test(startTime) || !Number.isInteger(durationMin) || durationMin < 5 || durationMin > 600)
+        return [];
+      return [{
+        name,
+        classType: null,
+        description: null,
+        image: null,
+        startTime,
+        durationMin,
+        links: [],
+        plannerColor: isStudioPlannerColor(slot.plannerColor) ? slot.plannerColor : null,
+        isPublic: true,
+      }];
+    }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const safetyError = objectionableContentError(...clean.map((slot) => slot.name));
+    if (safetyError) return { ok: false, error: safetyError };
+    total += clean.length;
+    if (total > 150) return { ok: false, error: "Keep the standard calendar under 150 classes." };
+    standardWeek[String(day) as keyof schema.StandardWeek] = clean;
+  }
+  await ctx.db.update(schema.studios).set({ standardWeek }).where(eq(schema.studios.id, studioId));
+  const slug = ctx.studio.slug ?? ctx.studio.id;
+  revalidatePath(`/s/${slug}/manage`);
+  revalidatePath(`/s/${slug}/manage/calendar`);
+  revalidatePath(`/s/${slug}/manage/standard`);
+  return { ok: true };
+}
+
+/** Add one weekday from the standard week to a real date. Existing rows win,
+ * including their coach assignments. New standard classes begin Open: class
+ * structure comes from the template, staffing never does. */
+export async function applyStandardDay(
+  studioId: string,
+  targetDate: string,
+): Promise<{ ok: boolean; error?: string; added?: number; duplicates?: number; conflicts?: string[] }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) return { ok: false, error: "Pick a date." };
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const dayOfWeek = dowOfDate(targetDate);
+  const slots = ctx.studio.standardWeek?.[String(dayOfWeek) as keyof schema.StandardWeek] ?? [];
+  if (!slots.length) return { ok: false, error: `No standard ${DAYS[dayOfWeek]} has been saved yet.` };
+  const date = new Date(`${targetDate}T00:00:00Z`);
+  const [target] = await gymDays(ctx.db, ctx.gymId, studioId, date, 1);
+  const existing = new Set(
+    (target?.items ?? []).map((item) => `${item.name.trim().toLowerCase()}|${item.startTime.slice(0, 5)}`),
+  );
+  let duplicates = 0;
+  const rows: (typeof schema.classes.$inferInsert)[] = [];
+  for (const slot of slots) {
+    const identity = `${slot.name.trim().toLowerCase()}|${slot.startTime.slice(0, 5)}`;
+    if (existing.has(identity)) {
+      duplicates++;
+      continue;
+    }
+    rows.push({
+      userId: ctx.gymId,
+      coachUserId: null,
+      studioId,
+      seriesId: randomUUID(),
+      dayOfWeek,
+      specificDate: targetDate,
+      startTime: slot.startTime,
+      durationMin: slot.durationMin,
+      name: slot.name,
+      classType: slot.classType,
+      description: slot.description,
+      image: slot.image,
+      links: slot.links,
+      studioPlannerColor: isStudioPlannerColor(slot.plannerColor) ? slot.plannerColor : null,
+      isPublic: slot.isPublic,
+    });
+    existing.add(identity);
+  }
+  if (rows.length) await ctx.db.insert(schema.classes).values(rows);
+  revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}/manage`);
+  revalidatePath(`/s/${ctx.studio.slug ?? ctx.studio.id}`);
+  return { ok: true, added: rows.length, duplicates, conflicts: [] };
 }
 
 /**
@@ -485,6 +652,9 @@ export type GymClassInput = {
   catalogKey?: string | null;
   /** False keeps a new or edited slot in the manager's draft schedule. */
   isPublic?: boolean;
+  /** Studio managers may deliberately keep a double-booking after seeing the
+   * exact conflicting class. Regular coach/member flows never set this. */
+  allowCoachConflict?: boolean;
 };
 
 /** A class already described at this studio, ready to be pulled in. */
@@ -653,8 +823,20 @@ async function syncStudioClassIdentity(
 /** Links people paste: keep the real ones, drop the rest, cap the list. */
 function cleanLinks(raw: GymClassInput["links"]): { label: string; url: string }[] {
   return (raw ?? [])
-    .map((l) => ({ label: (l.label || "Book").trim().slice(0, 30), url: l.url.trim() }))
-    .filter((l) => /^https?:\/\//i.test(l.url))
+    .flatMap((link) => {
+      const rawUrl = link.url.trim();
+      if (!rawUrl || rawUrl.length > 2_048 || /[\r\n]/.test(rawUrl)) return [];
+      try {
+        const candidate = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+        const url = new URL(candidate);
+        if (url.protocol !== "https:" && url.protocol !== "http:") return [];
+        // Labels are derived from the parsed destination. A direct server
+        // action call cannot turn link chrome into a second public text field.
+        return [{ label: detectProvider(url.href), url: url.href }];
+      } catch {
+        return [];
+      }
+    })
     .slice(0, 6);
 }
 
@@ -684,6 +866,8 @@ function shape(input: GymClassInput) {
 
 function validate(input: GymClassInput): string | null {
   if (!input.name.trim()) return "Give the class a name.";
+  const safetyError = objectionableContentError(input.name, input.classType, input.description);
+  if (safetyError) return safetyError;
   const oneOff = input.specificDate?.trim() || null;
   if (oneOff && !/^\d{4}-\d{2}-\d{2}$/.test(oneOff)) return "Pick a date.";
   const { days, endsOn } = shape(input);
@@ -731,7 +915,7 @@ async function tellCoach(
     type: on ? "shift_assigned" : "shift_dropped",
     title: on ? `You're coaching ${className}` : `You're off ${className}`,
     body: `${when} at ${studioName}.`,
-    href: "/week",
+    href: "/calendar",
   });
 }
 
@@ -749,10 +933,10 @@ export async function addGymClass(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const bad = validate(input);
   if (bad) return { ok: false, error: bad };
-  const { db, studio, gymId } = ctx;
+  const { db, userId, studio, gymId } = ctx;
 
   const coachUserId = input.coachUserId || null;
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   const identityKey = input.catalogKey?.trim().toLowerCase() || name.toLowerCase();
@@ -779,7 +963,7 @@ export async function addGymClass(
           startTime,
           input.durationMin,
         );
-        if (conflict) return { ok: false, error: conflict };
+        if (conflict && !input.allowCoachConflict) return { ok: false, error: conflict };
       }
     }
   }
@@ -919,7 +1103,7 @@ export async function updateGymClass(
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const bad = validate(input);
   if (bad) return { ok: false, error: bad };
-  const { db, studio, gymId } = ctx;
+  const { db, userId, studio, gymId } = ctx;
 
   // Scoped to this gym's own rows: a manager may not reach a coach's personal
   // class, or another studio's, by passing its id.
@@ -930,7 +1114,7 @@ export async function updateGymClass(
   if (!existing) return { ok: false, error: "Class not found." };
 
   const coachUserId = input.coachUserId || null;
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
   const name = input.name.trim();
   // One row is one slot, so an edit is about the slot that was opened: the day
@@ -950,7 +1134,7 @@ export async function updateGymClass(
         input.durationMin,
         classId,
       );
-      if (conflict) return { ok: false, error: conflict };
+      if (conflict && !input.allowCoachConflict) return { ok: false, error: conflict };
     }
   }
 
@@ -1084,7 +1268,7 @@ export async function deleteGymClass(
         type: "class_cancelled",
         title: `${existing.name} is off`,
         body: `${when} at ${studio.name} is no longer on the schedule.`,
-        href: "/week",
+        href: "/calendar",
       });
     }
   };
@@ -1219,7 +1403,7 @@ export async function closeGymDay(
       type: "class_cancelled",
       title: `${cls.name} is off`,
       body: `${when} at ${studio.name} is no longer on the schedule.`,
-      href: "/week",
+      href: "/calendar",
     });
   }
   for (const row of rows) {
@@ -1307,7 +1491,7 @@ export async function openGymDay(
       type: "class_updated",
       title: `${cls.name} is back on`,
       body: `${when} at ${studio.name} has reopened.`,
-      href: "/week",
+      href: "/calendar",
     });
   }
   for (const row of rows) {
@@ -1335,13 +1519,14 @@ export async function setShiftCover(
   classId: string,
   occurrenceDate: string,
   coachUserId: string | null,
+  allowCoachConflict = false,
 ): Promise<{ ok: boolean; error?: string }> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
   const { db, userId, studio, gymId } = ctx;
 
-  const coachError = await assignmentError(db, studioId, coachUserId);
+  const coachError = await assignmentError(db, studioId, coachUserId, userId);
   if (coachError) return { ok: false, error: coachError };
 
   const [cls] = await db
@@ -1360,7 +1545,7 @@ export async function setShiftCover(
     cls.durationMin,
     cls.id,
   );
-  if (conflict) return { ok: false, error: conflict };
+  if (conflict && !allowCoachConflict) return { ok: false, error: conflict };
 
   const changed = await db.transaction(async (tx) => {
     const [existing] = await tx
@@ -1424,23 +1609,21 @@ export async function setShiftCover(
         body: coachUserId
           ? `${when} at ${studio.name}. Somebody else is on it.`
           : `${when} at ${studio.name}. The slot is open.`,
-        href: "/week",
+        href: "/calendar",
       });
     if (coachUserId)
       await addNotification(coachUserId, {
         type: "shift_assigned",
         title: `You're covering ${cls.name}`,
         body: `${when} at ${studio.name}.`,
-        href: "/week",
+        href: "/calendar",
       });
   }
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -1569,7 +1752,7 @@ export async function giveUpShift(
     },
     true,
   );
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1647,7 +1830,7 @@ export async function claimShift(
     },
     false,
   );
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1763,12 +1946,12 @@ export async function sendShiftTo(
         type: "shift_assigned",
         title: `${who} transferred ${cls.name} to ${toName}`,
         body: `Starting ${fmtDateLong(occurrenceDate)}, every ${DAYS[cls.dayOfWeek]} at ${fmtTime(cls.startTime)}.`,
-        href: `/s/${studio.slug ?? studio.id}/manage`,
+        href: `/s/${studio.slug ?? studio.id}/manage/calendar`,
         actorUserId: userId,
       },
       false,
     );
-    revalidatePath("/app");
+    revalidatePath("/calendar");
     revalidatePath(`/s/${studio.slug ?? studio.id}`);
     revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
     return { ok: true };
@@ -1813,7 +1996,7 @@ export async function sendShiftTo(
     },
     false,
   );
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1895,7 +2078,7 @@ export async function mergeIntoGym(
   await db.delete(schema.attendances).where(eq(schema.attendances.classId, classId));
   await db.delete(schema.classes).where(eq(schema.classes.id, classId));
 
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath("/feed");
   return { ok: true, moved: ahead.length };
 }
@@ -1940,7 +2123,7 @@ async function tellAboutDuplicate(
     type: "class_overlap",
     title: `${studio.name} lists ${row.name} too`,
     body,
-    href: "/app",
+    href: "/calendar",
   });
 }
 
@@ -1954,6 +2137,8 @@ export type GymCountRow = {
 export type GymCounts = {
   /** The month being counted, as "2026-08", and how it reads. */
   month: string;
+  startDate: string;
+  endDate: string;
   label: string;
   /** The two halves, so it lines up with a semi-monthly pay run. */
   firstLabel: string;
@@ -1977,7 +2162,12 @@ export type GymCounts = {
  * number goes to whoever actually pays people. Every coach can see their own,
  * which is what makes fifteen people the check on it.
  */
-export async function gymCounts(studioId: string, monthIso?: string): Promise<GymCounts | null> {
+export async function gymCounts(
+  studioId: string,
+  monthIso?: string,
+  startInput?: string,
+  endInput?: string,
+): Promise<GymCounts | null> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return null;
   const { db, gymId } = ctx;
@@ -1985,7 +2175,14 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
   const month = /^\d{4}-\d{2}$/.test(monthIso ?? "") ? monthIso! : todayIso().slice(0, 7);
   const [y, mo] = month.split("-").map(Number);
   const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
-  const iso = (d: number) => `${month}-${String(d).padStart(2, "0")}`;
+  const monthStart = `${month}-01`;
+  const monthEnd = `${month}-${String(daysInMonth).padStart(2, "0")}`;
+  const validDate = (value?: string) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "");
+  const startDate = validDate(startInput) ? startInput! : monthStart;
+  const endDate = validDate(endInput) && endInput! >= startDate ? endInput! : monthEnd;
+  const rangeDays = Math.floor((Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 864e5) + 1;
+  if (rangeDays < 1 || rangeDays > 366) return null;
+  const midpoint = Math.ceil(rangeDays / 2);
 
   const rows = await db
     .select()
@@ -2012,8 +2209,10 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
 
   const tally = new Map<string, { first: number; second: number }>();
   let openSlots = 0;
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = iso(d);
+  for (let d = 0; d < rangeDays; d++) {
+    const cursor = new Date(`${startDate}T00:00:00Z`);
+    cursor.setUTCDate(cursor.getUTCDate() + d);
+    const date = cursor.toISOString().slice(0, 10);
     const dow = (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
     for (const r of rows) {
       if (date < (startedOn.get(r.id) ?? "")) continue;
@@ -2025,7 +2224,7 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
         continue;
       }
       const cur = tally.get(who) ?? { first: 0, second: 0 };
-      if (d <= 15) cur.first++;
+      if (d < midpoint) cur.first++;
       else cur.second++;
       tally.set(who, cur);
     }
@@ -2038,23 +2237,23 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
   const nameOf = new Map(
     people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]] as const),
   );
-  // 31st, not 31th.
-  const ordinal = (n: number) => {
-    const rem100 = n % 100;
-    if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
-    return `${n}${["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
-  };
-  const monthName = new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
+  const rangeLabel = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
   });
+  const firstEnd = new Date(`${startDate}T00:00:00Z`);
+  firstEnd.setUTCDate(firstEnd.getUTCDate() + midpoint - 1);
+  const secondStart = new Date(firstEnd);
+  secondStart.setUTCDate(secondStart.getUTCDate() + 1);
 
   return {
     month,
-    label: monthName,
-    firstLabel: "1st to 15th",
-    secondLabel: `16th to ${ordinal(daysInMonth)}`,
+    startDate,
+    endDate,
+    label: `${rangeLabel(startDate)} – ${rangeLabel(endDate)}`,
+    firstLabel: `${rangeLabel(startDate)} – ${rangeLabel(firstEnd.toISOString().slice(0, 10))}`,
+    secondLabel: midpoint < rangeDays
+      ? `${rangeLabel(secondStart.toISOString().slice(0, 10))} – ${rangeLabel(endDate)}`
+      : "Later",
     openSlots,
     rows: ids
       .map((id) => {
@@ -2289,31 +2488,24 @@ export async function inviteStudioCoach(
         ),
       );
     if (already) return { ok: false, error: "They're already associated with this studio." };
-    await db
-      .insert(schema.studioRotaCoaches)
-      .values({
-        studioId,
-        userId: existing.id,
-        state: "active",
-        role,
-        onSchedule: role === "coach",
-        acceptedAt: new Date(),
-      });
+    await createPlaceholderCoach({ studioId, name, email, role });
     await addNotification(existing.id, {
-      type: "shift_assigned",
-      title: `You're on ${studio.name}'s team`,
+      type: "studio_invite",
+      title: `${studio.name} invited you to its team`,
       body: role === "coach"
-        ? "The studio can put you on its calendar and send you coverage requests."
-        : "The studio added you to its front desk team.",
-      href: role === "coach" ? `/s/${studio.slug ?? studio.id}/shifts` : `/s/${studio.slug ?? studio.id}`,
+        ? "Open the email invite to accept and see the classes you're on."
+        : "Open the email invite to accept the front desk role.",
+      href: `/s/${studio.slug ?? studio.id}`,
       actorUserId: userId,
     });
-    revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
-    revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
-    return { ok: true };
+    void pushToUser(existing.id, {
+      title: `${studio.name} invited you`,
+      body: role === "coach" ? "Accept your coaching invite on FittList." : "Accept your team invite on FittList.",
+      url: `/s/${studio.slug ?? studio.id}`,
+    });
   }
 
-  const [already] = await db
+  const [already] = existing ? [true] : await db
     .select({ id: schema.studioRotaCoaches.id })
     .from(schema.studioRotaCoaches)
     .where(
@@ -2447,9 +2639,7 @@ export async function setStudioCoachScheduled(
   revalidatePath(`/s/${slug}/manage/staff`);
   revalidatePath(`/s/${slug}/manage/staff/${userId}`);
   revalidatePath(`/s/${slug}/shifts`);
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -2480,9 +2670,7 @@ export async function removeStudioCoach(
   revalidatePath(`/s/${slug}/manage/staff`);
   revalidatePath(`/s/${slug}/manage/staff/${userId}`);
   revalidatePath(`/s/${slug}/shifts`);
-  revalidatePath("/app");
   revalidatePath("/calendar");
-  revalidatePath("/week");
   return { ok: true };
 }
 
@@ -2493,6 +2681,54 @@ export type StaffPerson = {
   isYou: boolean;
   isOwner: boolean;
 };
+
+export type StudioManagerCandidate = {
+  id: string;
+  name: string;
+  handle: string | null;
+  email: string;
+  photo: string | null;
+  color: string;
+};
+
+/** Existing FittList accounts an owner can add directly as a manager. */
+export async function searchStudioManagerCandidates(
+  studioId: string,
+  queryRaw: string,
+): Promise<StudioManagerCandidate[]> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx || ctx.studio.ownerUserId !== ctx.userId) return [];
+  const query = queryRaw.trim();
+  if (query.length < 2) return [];
+  const matches = await ctx.db
+    .select()
+    .from(schema.users)
+    .where(and(
+      ne(schema.users.kind, "gym"),
+      or(
+        ilike(schema.users.name, `%${query}%`),
+        ilike(schema.users.handle, `%${query}%`),
+        ilike(schema.users.email, `%${query}%`),
+      ),
+    ))
+    .limit(20);
+  const current = await ctx.db
+    .select({ userId: schema.studioManagers.userId })
+    .from(schema.studioManagers)
+    .where(eq(schema.studioManagers.studioId, studioId));
+  const currentIds = new Set(current.map((row) => row.userId));
+  return matches
+    .filter((person) => !currentIds.has(person.id))
+    .slice(0, 8)
+    .map((person) => ({
+      id: person.id,
+      name: person.name.trim() || person.email.split("@")[0],
+      handle: person.handle,
+      email: person.email,
+      photo: person.photoThumb ?? person.photo,
+      color: avatarColor(person),
+    }));
+}
 
 /** Focused loader for the Admin access view in Studio settings. It avoids
  * loading the coach roster just to show the small list of page managers. */
@@ -2887,6 +3123,21 @@ export async function addStudioManager(
     body: "You can edit its page, and its details are yours to state.",
     href: `/s/${studio.slug ?? studio.id}`,
   });
+  try {
+    await sendInviteLink({
+      email: user.email,
+      subject: `${studio.name} invited you to help manage its FittList page`,
+      intro: `${studio.name} invited you to manage its page and calendar. Tap to open FittList`,
+      invite: true,
+    });
+  } catch {
+    return { ok: false, error: "They were added, but the invitation email couldn't be sent. Try again." };
+  }
+  void pushToUser(user.id, {
+    title: `${studio.name} made you an admin`,
+    body: "You can now help manage its page and calendar.",
+    url: `/s/${studio.slug ?? studio.id}/manage`,
+  });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
@@ -3079,7 +3330,7 @@ async function fileRequest(
         args.scope === "standing"
           ? `Starting ${fmtDateLong(args.occurrenceDate)}, every ${DAYS[args.cls.dayOfWeek]} at ${fmtTime(args.cls.startTime)}. Waiting on you.`
           : `${when}. Waiting on you.`,
-      href: `/s/${args.studio.slug ?? args.studio.id}/manage?panel=notifications`,
+      href: `/s/${args.studio.slug ?? args.studio.id}/manage`,
       actorUserId: args.askedBy,
     },
     false,
@@ -3337,7 +3588,7 @@ export async function answerShiftRequest(
       actorUserId: userId,
     });
   }
-  revalidatePath("/app");
+  revalidatePath("/calendar");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
@@ -3488,7 +3739,7 @@ export async function staffView(studioId: string): Promise<StaffView | null> {
     for (const r of rows
       .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))) {
-      if (occurrenceEnded(iso, r.startTime, r.durationMin)) continue;
+      if (occurrenceEnded(iso, r.startTime, r.durationMin, r.timeZone)) continue;
       const cover = coverBy.get(`${r.id}|${iso}`);
       const onUserId = cover ? cover.coachUserId : r.coachUserId;
       const ask = pendBy.get(`${r.id}|${iso}`);
@@ -3550,44 +3801,5 @@ export async function myStaffStudios(): Promise<
 > {
   const userId = await getSessionUserId();
   if (!userId) return [];
-  const db = await getDb();
-  const [rostered, managed] = await Promise.all([
-    db
-      .select({ studioId: schema.studioRotaCoaches.studioId })
-      .from(schema.studioRotaCoaches)
-      .where(
-        and(
-          eq(schema.studioRotaCoaches.userId, userId),
-          eq(schema.studioRotaCoaches.role, "coach"),
-          eq(schema.studioRotaCoaches.onSchedule, true),
-          inArray(schema.studioRotaCoaches.state, INTERACTIVE_ROSTER_STATES),
-        ),
-      ),
-    db
-      .select({ studioId: schema.studioManagers.studioId })
-      .from(schema.studioManagers)
-      .where(eq(schema.studioManagers.userId, userId)),
-  ]);
-  const runs = new Set(managed.map((r) => r.studioId));
-  const ids = [
-    ...new Set(
-      [...rostered, ...managed]
-        .map((r) => r.studioId)
-        .filter((id): id is string => !!id),
-    ),
-  ];
-  if (!ids.length) return [];
-  const rows = await db
-    .select({
-      id: schema.studios.id,
-      name: schema.studios.name,
-      slug: schema.studios.slug,
-      photo: schema.studios.photo,
-    })
-    .from(schema.studios)
-    .where(inArray(schema.studios.id, ids));
-  return rows
-    .map((s) => ({ id: s.id, name: s.name, slug: s.slug ?? s.id, admin: runs.has(s.id), photo: s.photo }))
-    // The places you run first: they carry the work that only you can do.
-    .sort((a, b) => Number(b.admin) - Number(a.admin) || a.name.localeCompare(b.name));
+  return staffStudiosForUser(userId);
 }

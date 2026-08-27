@@ -2,14 +2,20 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { DiscoverSheet } from "@/components/DiscoverSheet";
-import { GlobalAdd } from "@/components/GlobalAdd";
+import type { PeekClass } from "@/components/ClassPeek";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
+import { RailArrows } from "@/components/RailArrows";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
-import { setGoing } from "@/app/actions/going";
+import { toggleCalendarPin } from "@/app/actions/pins";
+import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
+
+const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
+const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
+const DiscoverSheet = dynamic(() => import("@/components/DiscoverSheet").then((module) => module.DiscoverSheet));
 
 export type FeedCoach = {
   id: string;
@@ -55,17 +61,36 @@ export type NearStudio = {
   local: boolean;
 };
 
+export type SocialStudio = {
+  id: string;
+  slug: string;
+  name: string;
+  photo: string | null;
+  color: string;
+};
+
+export type SocialGroup = {
+  id: string;
+  slug: string;
+  name: string;
+  photo: string | null;
+  classKeys: string[];
+};
+
 /** A circle on the Coaches near you rail, the viewer's own follow state
  *  riding along so the pill under the face starts right. */
 export type FeedItem = {
   key: string;
-  /** Which of the three weeks it falls in, decided on the server. */
+  /** Which seven-day chunk of the rolling month it falls in. */
   week: number;
   iso: string;
   classId: string;
   /** The base its class page lives under: a handle, or `s/{slug}` for a gym. */
   base: string;
   coachId: string;
+  /** The coach assigned by a followed studio for this occurrence. The studio
+   * remains the calendar source; null means the shift is still open. */
+  assignedCoachName: string | null;
   name: string;
   where: string | null;
   /** The studio's page, when the class names a studio rather than a room. */
@@ -92,6 +117,8 @@ export type FeedItem = {
   /** The viewer already saved this occurrence: the corner ribbon starts
    *  filled. */
   saved: boolean;
+  /** This occurrence is a studio-assigned shift for the signed-in viewer. */
+  shift: boolean;
 };
 
 const TIMES = [
@@ -114,8 +141,6 @@ type Filters = {
   place: "any" | string[];
 };
 const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
-const SELF_FILTER = "__your_week__";
-const WEEK_INTRO_KEY = "fl-your-week-intro-seen";
 
 /**
  * Following: the coaches you keep up with and their combined schedule.
@@ -126,15 +151,19 @@ const WEEK_INTRO_KEY = "fl-your-week-intro-seen";
  * Discovery stays behind its own door; this screen is the value of a follow.
  */
 export function FollowingScreen({
-  items,
-  coaches,
+  items: initialItems,
+  coaches: initialCoaches,
   favIds,
-  cats,
+  follows,
+  cats: initialCats,
   todayIso,
   meId,
-  myRail,
   meKind,
+  myRail: initialMyRail,
   meFace,
+  savedStudios = [],
+  socialGroups = [],
+  initialPins = [],
   mode = "home",
 }: {
   items: FeedItem[];
@@ -158,10 +187,69 @@ export function FollowingScreen({
   /** The rails under the schedule, by Matt's call: the places and the
    *  people around you, with Follow one tap deep. */
   nearStudios: NearStudio[];
+  savedStudios?: SocialStudio[];
+  socialGroups?: SocialGroup[];
+  initialPins?: string[];
   /** Following is the combined schedule; Upcoming is the filtered browser. */
   mode?: "home" | "upcoming";
 }) {
   const isHome = mode === "home";
+  const [items, setItems] = useState(initialItems);
+  const [coaches, setCoaches] = useState(initialCoaches);
+  const [cats, setCats] = useState(initialCats);
+  const [myRail, setMyRail] = useState(initialMyRail);
+  const [calendarPending, setCalendarPending] = useState(mode === "home");
+  const streamGeneration = useRef(0);
+
+  // Give the browser the useful screen first. The network request for days
+  // 3–31 begins only after hydration, then merges without replacing today's
+  // already-interactive rows or resetting any filters/peek state.
+  useEffect(() => {
+    const generation = ++streamGeneration.current;
+    // A server refresh can change the relationship graph without unmounting
+    // this client component. Reset to that new first response, then stream a
+    // matching remainder; otherwise an old month can survive an unfollow.
+    setItems(initialItems);
+    setCoaches(initialCoaches);
+    setCats(initialCats);
+    setMyRail(initialMyRail);
+    if (!isHome) return undefined;
+    setCalendarPending(true);
+    const frame = requestAnimationFrame(() => {
+      void loadCalendarRemainder()
+        .then((remainder) => {
+          if (!remainder || streamGeneration.current !== generation) return;
+          setItems((current) => {
+            const merged = new Map(current.map((item) => [item.key, item]));
+            for (const item of remainder.items) merged.set(item.key, item);
+            return [...merged.values()];
+          });
+          // Keep identities that occur only in Today/Tomorrow. The remainder
+          // intentionally queries days 3–31, so replacing this array would
+          // make an initial one-off row lose its coach/studio name and face as
+          // soon as the background month finished loading.
+          setCoaches((current) => {
+            const merged = new Map(current.map((coach) => [coach.id, coach]));
+            for (const coach of remainder.coaches) merged.set(coach.id, coach);
+            return [...merged.values()];
+          });
+          setCats([...new Set([...initialCats, ...remainder.cats])]);
+          setMyRail(remainder.myRail);
+        })
+        .catch(() => {
+          // The first two days remain fully usable offline or on a failed
+          // continuation request; a later navigation naturally retries.
+        })
+        .finally(() => {
+          if (streamGeneration.current === generation) setCalendarPending(false);
+        });
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (streamGeneration.current === generation) streamGeneration.current += 1;
+    };
+  }, [initialCats, initialCoaches, initialItems, initialMyRail, isHome]);
+
   // The containerless list lands on today or the first day that holds
   // anything. Home keeps only the date rail and the selected day's results;
   // the dedicated Upcoming view adds the four value-showing filter chips.
@@ -176,12 +264,17 @@ export function FollowingScreen({
   // Where the auto-landing went, so the note under the tabs can say why
   // Today isn't selected; it only ever names this one day.
   const landed = useRef(day);
+  const followingRailRef = useRef<HTMLDivElement>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [weekIntro, setWeekIntro] = useState(false);
-  // Nothing selected is the combined week. A face is an explicit filter,
-  // including your own face at the front of the rail.
-  const [coachFilter, setCoachFilter] = useState<string | null>(null);
+  const [calendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
+  const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
+  const [pins, setPins] = useState(() => new Set(initialPins));
+  const [visibleRailCoachCount, setVisibleRailCoachCount] = useState(16);
+  const railMoreRef = useRef<HTMLSpanElement>(null);
+  const [visibleHomeDayCount, setVisibleHomeDayCount] = useState(2);
+  const homeMoreRef = useRef<HTMLDivElement>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -190,30 +283,13 @@ export function FollowingScreen({
   };
   const router = useRouter();
 
-  const chooseSelf = () => {
-    if (selectedSelf) {
-      setCoachFilter(null);
-      return;
-    }
-    setCoachFilter(SELF_FILTER);
-    try {
-      if (!localStorage.getItem(WEEK_INTRO_KEY)) {
-        localStorage.setItem(WEEK_INTRO_KEY, "1");
-        setWeekIntro(true);
-      }
-    } catch {
-      // Storage can be unavailable in private browsing. The current session
-      // still gets the explanation without blocking the week itself.
-      setWeekIntro(true);
-    }
-  };
-
   const closeFind = () => {
     setFind(false);
     router.refresh();
   };
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
+  const favoriteIds = useMemo(() => new Set(favIds), [favIds]);
 
   // The viewer's pin: taken silently when the browser already granted it
   // somewhere else (the studio tiles say how far, the rail sorts by real
@@ -262,28 +338,103 @@ export function FollowingScreen({
     return true;
   };
 
-  const shown = useMemo(
-    () =>
-      items.filter(
-        (item) =>
-          passes(item) &&
-          (!isHome ||
-            coachFilter === null ||
-            (coachFilter === SELF_FILTER
-              ? item.saved || (!!meId && item.coachId === meId)
-              : item.coachId === coachFilter)),
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, f, geo, isHome, coachFilter],
-  );
-
+  const itemFacets = useMemo(() => ({
+    coachIds: new Set(items.map((item) => item.coachId)),
+    studioHrefs: new Set(items.flatMap((item) => item.whereHref ? [item.whereHref] : [])),
+    keys: new Set(items.map((item) => item.key)),
+  }), [items]);
   const coachOptions = useMemo(
-    () => myRail.filter((person) => person.id !== meId),
-    [myRail, meId],
+    () => myRail.filter((person) => person.id !== meId && itemFacets.coachIds.has(person.id)),
+    [myRail, meId, itemFacets],
   );
-  const railById = useMemo(() => new Map(myRail.map((person) => [person.id, person])), [myRail]);
-  const selectedCoach = coachFilter && coachFilter !== SELF_FILTER ? railById.get(coachFilter) ?? null : null;
-  const selectedSelf = coachFilter === SELF_FILTER;
+  const studioOptions = useMemo(
+    () => savedStudios.filter((studio) => itemFacets.studioHrefs.has(`/s/${studio.slug}`)),
+    [savedStudios, itemFacets],
+  );
+  const groupOptions = useMemo(() => {
+    return socialGroups.filter((group) => group.classKeys.some((key) => itemFacets.keys.has(key)));
+  }, [socialGroups, itemFacets]);
+  const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
+  const sortedStudioOptions = useMemo(() => [...studioOptions].sort((a, b) => Number(pins.has(`studio:${b.id}`)) - Number(pins.has(`studio:${a.id}`))), [studioOptions, pins]);
+  const pinnedStudioOptions = sortedStudioOptions.filter((studio) => pins.has(`studio:${studio.id}`));
+  const railCoachOptions = sortedCoachOptions.slice(0, visibleRailCoachCount);
+  const railStudioOptions = sortedStudioOptions.filter((studio) => !pins.has(`studio:${studio.id}`));
+  const railGroupOptions = groupOptions;
+  const railCoachesComplete = visibleRailCoachCount >= sortedCoachOptions.length;
+
+  useEffect(() => {
+    if (!isHome || railCoachesComplete) return undefined;
+    const root = followingRailRef.current;
+    const target = railMoreRef.current;
+    if (!root || !target) return undefined;
+    if (typeof IntersectionObserver === "undefined") {
+      setVisibleRailCoachCount(sortedCoachOptions.length);
+      return undefined;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      setVisibleRailCoachCount((count) => Math.min(sortedCoachOptions.length, count + 16));
+    }, { root, rootMargin: "0px 600px 0px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isHome, railCoachesComplete, sortedCoachOptions.length, visibleRailCoachCount]);
+
+  const selectedCalendar = useMemo(() => {
+    if (calendarFilter === "all") return null;
+    if (calendarFilter === "you") return {
+      name: "You",
+      href: meKind === "coach" ? "/coachshare" : "/membershare",
+      label: "Your schedule",
+      action: "Share schedule",
+    };
+    if (calendarFilter.startsWith("coach:")) {
+      const coach = coachOptions.find((option) => option.id === calendarFilter.slice(6));
+      return coach ? { name: coach.name, href: coach.handle ? `/${coach.handle}` : "", label: `${coach.name.split(/\s+/)[0]}’s schedule`, action: "View profile" } : null;
+    }
+    if (calendarFilter.startsWith("studio:")) {
+      const studio = studioOptions.find((option) => option.id === calendarFilter.slice(7));
+      return studio ? { name: studio.name, href: `/s/${studio.slug}`, label: `${studio.name}’s schedule`, action: "View profile" } : null;
+    }
+    const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
+    return group ? { name: group.name, href: `/g/${group.slug}`, label: `${group.name}’s schedule`, action: "View profile" } : null;
+  }, [calendarFilter, coachOptions, studioOptions, groupOptions, meKind]);
+
+  const shown = useMemo(() => {
+    const studioHrefs = new Set(studioOptions.map((studio) => `/s/${studio.slug}`));
+    const groupKeys = new Set(groupOptions.flatMap((group) => group.classKeys));
+    return items.filter((item) => {
+      if (!passes(item)) return false;
+      if (!isHome) return true;
+      if (calendarFilter === "you") return item.saved || (!!meId && item.coachId === meId);
+      if (calendarFilter.startsWith("coach:")) return item.coachId === calendarFilter.slice(6);
+      if (calendarFilter.startsWith("studio:")) {
+        const studio = studioOptions.find((option) => option.id === calendarFilter.slice(7));
+        return Boolean(studio && item.whereHref === `/s/${studio.slug}`);
+      }
+      if (calendarFilter.startsWith("group:")) {
+        const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
+        return Boolean(group?.classKeys.includes(item.key));
+      }
+      // The rail is presentation and may be progressively truncated. The
+      // relationship itself is the source of truth for the combined view,
+      // otherwise a class from followed person 17 can vanish on first paint.
+      const fromPeople = item.saved || (!!meId && item.coachId === meId) || favoriteIds.has(item.coachId);
+      const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
+      const fromGroups = groupKeys.has(item.key);
+      return fromPeople || fromStudios || fromGroups;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds]);
+
+  // A brand-new account has no useful calendar identity to put in the rail
+  // yet. Showing a lone “You” circle above an empty state makes the circle
+  // look like content when it is really only a placeholder. Once they follow,
+  // save, join, or add anything, the normal rail comes back.
+  const firstRun = isHome
+    && follows === 0
+    && savedStudios.length === 0
+    && socialGroups.length === 0
+    && shown.length === 0;
 
   // The rail of days: as far ahead as the feed itself looks, every day
   // drawn whether or not it holds anything, because a gap in the dates
@@ -303,6 +454,7 @@ export function FollowingScreen({
   // duration belongs in the class detail rather than every scanning row.
   const rowOf = (i: FeedItem): WeekRow & { item: FeedItem } => {
     const c = coachById.get(i.coachId);
+    const coachName = i.assignedCoachName ?? (c && !sameCalendarIdentity(c, i.where) ? c.name : null);
     return {
       item: i,
       key: i.key,
@@ -312,18 +464,8 @@ export function FollowingScreen({
       ap: i.ap,
       tag: meId && i.coachId === meId ? "You" : undefined,
       tagTone: meId && i.coachId === meId ? "coaching" : undefined,
-      coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
-      onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
-      corner:
-        meId && i.coachId !== meId ? (
-          <FollowingAdd
-            classId={i.classId}
-            iso={i.iso}
-            name={i.name}
-            initialOn={i.saved}
-            onNotice={notify}
-          />
-        ) : undefined,
+      coach: coachName ? { id: c?.id ?? i.classId, name: coachName, color: c?.color ?? "var(--color-olive)", photo: i.assignedCoachName ? null : c?.photo ?? null } : null,
+      onTap: () => setPeek(peekOf(i, c ?? null, favoriteIds.has(i.coachId))),
     };
   };
 
@@ -334,26 +476,26 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Following is the complete rolling week: today through the same weekday
-  // next week. The inclusive end is what makes Wednesday-to-Wednesday read as
-  // a full visible week rather than mysteriously stopping on Tuesday.
-  // It used to stop after twelve rows, which meant a busy Saturday could hide
-  // Sunday entirely and made the page answer "the next twelve" rather than
-  // the question people came with: what are my coaches doing this week?
-  const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
+  // Calendar is a rolling month: today plus the following thirty days. The
+  // server expands that exact range, independent of where today lands in its
+  // calendar week.
+  const homeRows: FeedItem[] = useMemo(
     () => {
-      const nextWeek = plusDays(todayIso, 7);
+      const monthEnd = plusDays(todayIso, 30);
       return [...shown]
-        .filter((item) => item.iso >= todayIso && item.iso <= nextWeek)
-        .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
-        .map(rowOf);
+        .filter((item) => item.iso >= todayIso && item.iso <= monthEnd)
+        .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, todayIso, coachById, favIds],
+    [shown, todayIso],
   );
   const homeDays = useMemo(() => {
-    const days = new Map<string, (WeekRow & { item: FeedItem })[]>();
-    for (const row of homeRows) days.set(row.item.iso, [...(days.get(row.item.iso) ?? []), row]);
+    const days = new Map<string, FeedItem[]>();
+    for (const item of homeRows) {
+      const rows = days.get(item.iso);
+      if (rows) rows.push(item);
+      else days.set(item.iso, [item]);
+    }
     return [...days.entries()].map(([iso, rows]) => ({
       iso,
       label: daySectionLabel(iso, todayIso),
@@ -361,6 +503,23 @@ export function FollowingScreen({
       rows,
     }));
   }, [homeRows, todayIso]);
+  const visibleHomeDays = homeDays.slice(0, visibleHomeDayCount);
+
+  useEffect(() => {
+    if (!isHome || visibleHomeDayCount >= homeDays.length) return undefined;
+    const target = homeMoreRef.current;
+    if (!target) return undefined;
+    if (typeof IntersectionObserver === "undefined") {
+      setVisibleHomeDayCount(homeDays.length);
+      return undefined;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      setVisibleHomeDayCount((count) => Math.min(homeDays.length, count + 4));
+    }, { rootMargin: "800px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [homeDays.length, isHome, visibleHomeDayCount]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -505,111 +664,73 @@ export function FollowingScreen({
           <p>Browse classes by day, time, distance, type, or place.</p>
         </header>
       )}
-      {isHome && (
+      {isHome && !firstRun && (
         <header className="following-head">
-          <div className="following-title-row">
-            <h1 className="tab-page-title">This Week</h1>
-            <Link className="following-manage" href="/following?from=feed">Manage</Link>
-          </div>
-          <div className={`tray following-rail${coachFilter ? " has-context" : ""}`} role="group" aria-label="Filter by person">
-            <div className="tray-scroll">
-              <button
-                className={`trayitem${coachFilter && !selectedSelf ? " dim" : ""}`}
-                aria-pressed={selectedSelf}
-                onClick={chooseSelf}
-              >
-                <span
-                  className={`trayav trayav-you${selectedSelf ? " sel" : ""}`}
-                  style={{ background: meFace.color }}
-                >
-                  {meFace.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={meFace.photo} alt="" />
-                  ) : (
+          <div className="tray following-rail" aria-label="Calendars">
+            <div className="tray-scroll" ref={followingRailRef}>
+              <button className="trayitem" type="button" onClick={() => { if (meId) setPersonPeekOpen({ id:meId, name:meFace.name, photo:meFace.photo, color:meFace.color, self:true }); }}>
+                <span className="trayav" style={{ background: meFace.color }}>
+                  {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
                 </span>
-                <span className="trayitem-nm">Your week</span>
+                <span className="trayitem-nm">You</span>
               </button>
-              {coachOptions.map((coach) => (
-                <button
-                  key={coach.id}
-                  className={`trayitem${coachFilter && coachFilter !== coach.id ? " dim" : ""}`}
-                  aria-pressed={coachFilter === coach.id}
-                  onClick={() => setCoachFilter(coachFilter === coach.id ? null : coach.id)}
-                >
-                  <span
-                    className={`trayav${coachFilter === coach.id ? " sel" : ""}`}
-                    style={{ background: coach.color }}
-                  >
-                    {coach.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={coach.photo} alt="" />
-                    ) : (
-                      <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
-                    )}
-                  </span>
-                  <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
-                </button>
-              ))}
-              <Link className="trayitem trayitem-more" href="/discover?half=coaches" aria-label="Discover more coaches">
-                <span className="trayav trayav-add"><Icon name="add" size={28} /></span>
-                <span className="trayitem-nm">More</span>
-              </Link>
+              {pinnedStudioOptions.map((studio) => {
+                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button><span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span></div>;
+              })}
+              {railCoachOptions.map((coach) => {
+                return (
+                <div className="cash-rail-item" key={coach.id}>
+                  <button type="button" className="trayitem" onClick={() => setPersonPeekOpen({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, self:false })}>
+                    <span className="trayav" style={{ background: coach.color }}>
+                      {coach.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={coach.photo} alt="" width={56} height={56} loading="lazy" decoding="async" />
+                      ) : (
+                        <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
+                      )}
+                    </span>
+                    <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
+                  </button>
+                  {pins.has(`person:${coach.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}
+                </div>
+              )})}
+              {!railCoachesComplete && <span className="cash-rail-more" ref={railMoreRef} aria-hidden="true" />}
+              {railCoachesComplete && railStudioOptions.map((studio) => {
+                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span>}</div>})}
+              {railCoachesComplete && railGroupOptions.map((group) => {
+                return <button
+                key={group.id}
+                type="button"
+                className="trayitem"
+                onClick={() => setEntityPeekOpen({type:"group",id:group.id,name:group.name,photo:group.photo,color:"var(--color-surface-muted)",href:`/g/${group.slug}`,items:items.filter((item)=>group.classKeys.includes(item.key))})}
+              >
+                <span className="trayav">
+                  {group.photo ? <img src={group.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="groups" size={22} />}
+                </span>
+                <span className="trayitem-nm">{group.name}</span>
+              </button>})}
+              {railCoachesComplete && <Link className="trayitem" href="/discover?half=people" aria-label="Discover more people">
+                <span className="trayav trayav-search"><Icon name="search" size={30} /></span>
+                <span className="trayitem-nm">Discover</span>
+              </Link>}
             </div>
+            <RailArrows railRef={followingRailRef} />
           </div>
         </header>
       )}
-      {isHome && (selectedCoach || selectedSelf) && (
+      {isHome && selectedCalendar && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">
-            {selectedSelf ? "Your classes this week" : `Classes with ${selectedCoach!.name.split(/\s+/)[0]}`}
-          </span>
-          <Link
-            href={selectedSelf
-              ? (meKind === "coach" ? "/coachshare" : "/membershare")
-              : selectedCoach?.handle
-                ? `/${selectedCoach.handle}?from=feed`
-                : "/feed"}
-            className="feedfilter-link"
-          >
-            {selectedSelf ? "Share your week" : "View profile"} <Icon name="chevron_right" size={17} />
-          </Link>
+          <span className="feedfilter-txt">{selectedCalendar.label}</span>
+          {selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">
+            {selectedCalendar.action} <Icon name="chevron_right" size={17} />
+          </Link>}
         </div>
       )}
-      {weekIntro && (
-        <div
-          className="sheet-scrim"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setWeekIntro(false);
-          }}
-        >
-          <section className="sheet confirmsheet weekeducation" role="dialog" aria-modal="true" aria-labelledby="week-intro-title">
-            <button className="peekclose sheetclose" type="button" onClick={() => setWeekIntro(false)} aria-label="Close">
-              <Icon name="close" size={22} />
-            </button>
-            <span className="circleeducation-icon" aria-hidden="true">
-              <Icon name="calendar_month" size={24} />
-            </span>
-            <h2 id="week-intro-title">Build your week</h2>
-            <p className="lead">
-              Your week is the fitness you plan to do. Add your own classes and workouts, or follow coaches and add something from their schedules.
-            </p>
-            <div className="publishwrap nostick saveeducation-actions">
-              <Link className="btn si" href="/calendar?add=1" onClick={() => setWeekIntro(false)}>
-                Build your schedule
-              </Link>
-              <Link className="btn ghost" href="/discover?half=coaches" onClick={() => setWeekIntro(false)}>
-                Find coaches
-              </Link>
-            </div>
-            <button className="confirm-keep" type="button" onClick={() => setWeekIntro(false)}>
-              Keep browsing
-            </button>
-          </section>
-        </div>
-      )}
-      {items.length === 0 ? (
+      {isHome && shown.length === 0 && calendarPending ? (
+        <div className="calendar-stream-loading" role="status">Loading your schedule</div>
+      ) : (isHome ? shown.length === 0 : items.length === 0) ? (
         <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -620,22 +741,30 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">{isHome ? "Your week is empty" : "Nothing near you yet"}</h2>
+            <h2 className="wkempty-t">{isHome ? "Nothing on your schedule yet" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
               {isHome
-                ? "Follow a coach or add a class to make this place less lonely."
+                ? firstRun
+                  ? meKind === "member"
+                    ? "Follow a calendar to start filling your schedule."
+                    : "Add the first class you teach to start your schedule."
+                  : "Save a class you want to remember, or add something of your own."
                 : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
-            {isHome && (
-              <div className="wkempty-actions">
-                <button className="btn ghost" onClick={() => setFind(true)}>
-                  Find a coach
-                </button>
-                <Link className="btn si" href="/calendar?add=1">
-                  Add a class
-                </Link>
+            {isHome && (firstRun ? (
+              <div className="wkempty-actions single">
+                {meKind === "member" ? (
+                  <Link className="btn si" href="/discover">Find a calendar to follow</Link>
+                ) : (
+                  <Link className="btn si" href="/calendar?add=1">Add your first class</Link>
+                )}
               </div>
-            )}
+            ) : (
+              <div className="wkempty-actions">
+                <Link className="btn si" href="/search">Find classes</Link>
+                <button className="btn ghost" type="button" onClick={() => setFind(true)}>Find calendars</button>
+              </div>
+            ))}
           </div>
         </>
       ) : (
@@ -700,7 +829,29 @@ export function FollowingScreen({
 
             <div className="cardwrap home-schedule">
               {isHome ? (
-                <CalendarList days={homeDays} className="following-calendar-list" />
+                <div className="cash-activity-list">
+                  {visibleHomeDays.map((section) => (
+                    <section className="cash-day" key={section.iso}>
+                      <h2>{section.label}</h2>
+                      <div>
+                        {section.rows.map((item) => {
+                          const coach = coachById.get(item.coachId);
+                          const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
+                          return <article className="cash-class-row" key={item.key}>
+                            <button type="button" className={`cash-class-main${item.shift ? " shift" : item.coachId === meId ? " coaching" : item.saved ? " saved" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                              <span className="cash-class-copy">
+                                {(coachName || item.shift) && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
+                                <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
+                                <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
+                              </span>
+                            </button>
+                          </article>;
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                  {visibleHomeDayCount < homeDays.length && <div className="cash-days-more" ref={homeMoreRef} aria-hidden="true" />}
+                </div>
               ) : (
                 <>
               {/* Why Today isn't the selected tab, said once: the landing
@@ -815,12 +966,92 @@ export function FollowingScreen({
           onClose={() => setPeek(null)}
           onToast={notify}
           onChanged={() => {}}
-          allowWeekAdd={false}
         />
       )}
-      {isHome && <GlobalAdd floating />}
+      {personPeekOpen && (
+        <CoachPeek
+          id={personPeekOpen.id}
+          name={personPeekOpen.name}
+          photo={personPeekOpen.photo}
+          color={personPeekOpen.color}
+          self={personPeekOpen.self}
+          pinned={!personPeekOpen.self && pins.has(`person:${personPeekOpen.id}`)}
+          onPinChange={!personPeekOpen.self ? (pinned) => setPins((current) => { const next=new Set(current); const key=`person:${personPeekOpen.id}`; if(pinned)next.add(key);else next.delete(key); return next; }) : undefined}
+          onClose={() => setPersonPeekOpen(null)}
+        />
+      )}
+      {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} coaches={coachById} meId={meId} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
+      {isHome && (
+        <BodyPortal>
+          <Link
+            className="calendar-tab-share"
+            href={meKind === "coach" ? "/coachshare" : "/membershare"}
+            aria-label="Share your schedule"
+            onClick={() => window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }))}
+          >
+            <Icon name="reply" className="share-arrow-forward" size={22} />
+            <span>Share</span>
+          </Link>
+        </BodyPortal>
+      )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
+  );
+}
+
+function EntityCalendarPeek({ entity, coaches, meId, pinned, onPinned, onClose }: {
+  entity: { type: "studio" | "group"; id: string; name: string; photo: string | null; color: string; href: string; items: FeedItem[] };
+  coaches: Map<string, FeedCoach>;
+  meId?: string;
+  pinned: boolean;
+  onPinned: (pinned: boolean) => void;
+  onClose: () => void;
+}) {
+  const [busy, start] = useTransition();
+  const sorted = entity.items.slice().sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
+  return (
+    <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="sheet sheet-full peeksheet entity-peeksheet">
+        <div className="peekcontrols">
+          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
+          {entity.type === "studio" && (
+            <button className={`iconbtn peekpin${pinned ? " on" : ""}`} disabled={busy} aria-label={pinned ? "Remove favorite" : "Favorite"} onClick={() => {
+              const next = !pinned;
+              onPinned(next);
+              start(async () => {
+                const result = await toggleCalendarPin("studio", entity.id);
+                if (!result.ok) {
+                  onPinned(!next);
+                  return;
+                }
+                onPinned(result.pinned);
+                window.dispatchEvent(new Event("calendar-pins-changed"));
+              });
+            }}><Icon name={pinned ? "star_filled" : "star"} size={23} /></button>
+          )}
+        </div>
+        <div className="peekhead peekhead-stack">
+          <span className="peekav">{entity.photo ? <img src={entity.photo} alt="" /> : <span className="peekav-ini" style={{ background: entity.color }}><Icon name={entity.type === "studio" ? "storefront" : "groups"} size={25} /></span>}</span>
+          <h2 className="peekhead-nm">{entity.name}</h2>
+          <div className="peekacts"><Link className="peekfollow peekaction" href={entity.href}><Icon name={entity.type === "studio" ? "storefront" : "groups"} size={18} /><span>View profile</span></Link></div>
+        </div>
+        {sorted.length ? (
+          <div className="cash-activity-list entity-peek-list">
+            {sorted.map((item) => {
+              const coach = coaches.get(item.coachId);
+              const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
+              return <Link className={`cash-class-main${item.shift ? " shift" : item.coachId === meId ? " coaching" : item.saved ? " saved" : ""}`} href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
+                <span className="cash-class-copy">
+                  {(coachName || item.shift) && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
+                  <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
+                  <span className="cash-class-studio-row"><span className="cash-class-studio">{tabLabel(item.iso)} · {item.where || entity.name}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
+                </span>
+              </Link>;
+            })}
+          </div>
+        ) : <p className="peekempty">Nothing coming up right now.</p>}
+      </div>
+    </div>
   );
 }
 
@@ -841,52 +1072,6 @@ const renderRow =
     </div>
   );
 
-function FollowingAdd({
-  classId,
-  iso,
-  name,
-  initialOn,
-  onNotice,
-}: {
-  classId: string;
-  iso: string;
-  name: string;
-  initialOn: boolean;
-  onNotice: (message: string, highlight?: string) => void;
-}) {
-  const [on, setOn] = useState(initialOn);
-  const [busy, start] = useTransition();
-  const toggle = () => {
-    const next = !on;
-    setOn(next);
-    start(async () => {
-      const res = await setGoing(classId, iso, next);
-      if (!res.ok) {
-        setOn(!next);
-        onNotice(res.error ?? "Couldn't update your calendar");
-        return;
-      }
-      onNotice(
-        next ? `${name} was saved to your calendar` : `${name} was removed from your calendar`,
-        next ? `${classId}.${iso}` : undefined,
-      );
-    });
-  };
-  return (
-    <button
-      className={`calendar-save-action following-add${on ? " on" : ""}`}
-      type="button"
-      disabled={busy}
-      aria-label={on ? `Remove ${name} from your calendar` : `Save ${name} to your calendar`}
-      aria-pressed={on}
-      onClick={toggle}
-    >
-      <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
-      <span>{on ? "Saved" : "Save"}</span>
-    </button>
-  );
-}
-
 const plusDays = (iso: string, n: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 
@@ -904,7 +1089,20 @@ function daySectionLabel(iso: string, today: string): string {
     day: "numeric",
     timeZone: "UTC",
   });
-  return iso === today ? `Today, ${date.split(", ")[1]}` : date;
+  if (iso === today) return "Today";
+  if (iso === plusDays(today, 1)) return "Tomorrow";
+  return date;
+}
+
+/** A studio-owned occurrence uses a studio-shaped identity so open classes
+ * still have artwork and a valid profile destination. That identity is the
+ * same fact as the place line, not a second coach line. The name comparison
+ * also covers older rows created before studio identities had `s/` handles. */
+function sameCalendarIdentity(coach: FeedCoach | null | undefined, where: string | null): boolean {
+  if (!coach) return false;
+  if (coach.handle.startsWith("s/")) return true;
+  const clean = (value: string) => value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
+  return !!where && clean(coach.name) === clean(where);
 }
 
 /** Miles between two pins, the haversine way, close enough for a rail. */
@@ -918,8 +1116,9 @@ function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: nu
   return 3958.8 * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
-/** The tapped occurrence, as the sheet wants it. Somebody else's class, so it
- *  names the coach and offers their week rather than an edit. */
+/** The tapped occurrence, as the sheet wants it. Somebody else's class names
+ *  the coach and offers Save; a studio shift assigned to the viewer is theirs
+ *  to manage even though the studio owns the underlying class. */
 function peekOf(i: FeedItem, coach: FeedCoach | null, following?: boolean): PeekClass {
   const d = new Date(`${i.iso}T00:00:00Z`);
   // Title case, because it is a value in the facts list now and reads beside
@@ -934,13 +1133,16 @@ function peekOf(i: FeedItem, coach: FeedCoach | null, following?: boolean): Peek
     time: `${i.hm} ${i.ap.toLowerCase()}`,
     studio: i.where,
     studioHref: i.whereHref,
-    coach: coach
+    coach: i.assignedCoachName
+      ? { name: i.assignedCoachName, handle: null }
+      : coach && !sameCalendarIdentity(coach, i.where)
       ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color, favorited: following }
       : null,
     // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's
     // class, which is why the row carries it rather than the coach doing.
     base: i.base,
-    mine: false,
+    shift: i.shift,
+    mine: i.shift,
     preview: {
       description: i.about,
       classType: i.classType,

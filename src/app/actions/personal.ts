@@ -5,10 +5,11 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { storeImage } from "@/lib/storage";
 import { hiddenFrom } from "@/lib/blocks";
-import { clockParts, runsOn, todayIso } from "@/lib/format";
+import { appTz, clockParts, runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { personalNext } from "@/lib/week";
 import type { BookingLink } from "@/db/schema";
+import { objectionableContentError } from "@/lib/content-safety";
 
 // A class you go to, kept by you.
 //
@@ -63,6 +64,8 @@ export async function addPersonalClass(input: {
   if (!userId) return { ok: false, error: "Sign in first." };
   const name = input.name.trim().slice(0, 80);
   if (!name) return { ok: false, error: "Give it a name." };
+  const safetyError = objectionableContentError(name, input.classType, input.description, input.location, input.withWho);
+  if (safetyError) return { ok: false, error: safetyError };
   const specificDate = input.specificDate?.trim() || null;
   if (specificDate && !/^\d{4}-\d{2}-\d{2}$/.test(specificDate))
     return { ok: false, error: "Pick a date." };
@@ -87,6 +90,11 @@ export async function addPersonalClass(input: {
   const [studio] = input.studioId
     ? await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId))
     : [];
+  const [owner] = await db
+    .select({ timeZone: schema.users.timeZone })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  const timeZone = studio?.timeZone ?? owner?.timeZone ?? appTz();
 
   // If the class they're typing in already exists on fittlist (same day, same
   // start, similar name or place), offer the real one instead: it stays up to
@@ -197,6 +205,7 @@ export async function addPersonalClass(input: {
         name,
         dayOfWeek,
         startTime: input.startTime,
+        timeZone,
         durationMin,
         // A studio owns the "where", exactly as it does on a coach's class, so
         // the free-text line is only ever the fallback.
@@ -262,6 +271,7 @@ export async function addPersonalClass(input: {
         description,
         image,
         startTime: input.startTime,
+        timeZone,
         durationMin,
         studioId: studio?.id ?? null,
         location: studio ? null : (input.location?.trim().slice(0, 120) || null),
@@ -276,6 +286,7 @@ export async function addPersonalClass(input: {
           description,
           image,
           startTime: input.startTime,
+          timeZone,
           durationMin,
           studioId: studio?.id ?? null,
           location: studio ? null : (input.location?.trim().slice(0, 120) || null),
@@ -289,7 +300,7 @@ export async function addPersonalClass(input: {
     console.error("personal template upsert failed", err);
   }
 
-  revalidatePath("/week");
+  revalidatePath("/calendar");
   revalidatePath("/membershare");
   return { ok: true, id: written.length === 1 ? written[0].id : undefined };
 }
@@ -386,6 +397,8 @@ export async function updatePersonalClass(
   if (!userId) return { ok: false, error: "Sign in first." };
   const name = input.name.trim().slice(0, 80);
   if (!name) return { ok: false, error: "Give it a name." };
+  const safetyError = objectionableContentError(name, input.classType, input.description, input.location, input.withWho);
+  if (safetyError) return { ok: false, error: safetyError };
   const specificDate = input.specificDate?.trim() || null;
   if (specificDate && !/^\d{4}-\d{2}-\d{2}$/.test(specificDate))
     return { ok: false, error: "Pick a date." };
@@ -407,6 +420,11 @@ export async function updatePersonalClass(
   const [studio] = input.studioId
     ? await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId))
     : [];
+  const [owner] = await db
+    .select({ timeZone: schema.users.timeZone })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  const timeZone = studio?.timeZone ?? owner?.timeZone ?? appTz();
 
   const res = await db
     .update(schema.personalClasses)
@@ -414,6 +432,7 @@ export async function updatePersonalClass(
       name,
       dayOfWeek,
       startTime: input.startTime,
+      timeZone,
       durationMin,
       location: studio ? "" : (input.location?.trim().slice(0, 120) ?? ""),
       withWho: input.withWho?.trim().slice(0, 80) ?? "",
@@ -457,6 +476,7 @@ export async function updatePersonalClass(
         description: tDesc,
         image: tImage,
         startTime: input.startTime,
+        timeZone,
         durationMin,
         studioId: studio?.id ?? null,
         location: tLoc,
@@ -471,6 +491,7 @@ export async function updatePersonalClass(
           description: tDesc,
           image: tImage,
           startTime: input.startTime,
+          timeZone,
           durationMin,
           studioId: studio?.id ?? null,
           location: tLoc,
@@ -484,7 +505,7 @@ export async function updatePersonalClass(
     console.error("personal template upsert failed", err);
   }
 
-  revalidatePath("/week");
+  revalidatePath("/calendar");
   revalidatePath("/membershare");
   return { ok: true };
 }
@@ -496,10 +517,8 @@ export async function removePersonalClass(id: string): Promise<{ ok: boolean; er
   await db
     .delete(schema.personalClasses)
     .where(and(eq(schema.personalClasses.id, id), eq(schema.personalClasses.userId, userId)));
-  // Both calendars carry these rows, so both have to be told. A coach's own
-  // entries lived only on /app and survived every removal for want of this.
-  revalidatePath("/week");
-  revalidatePath("/app");
+  // The canonical calendar carries both personal entries and assigned shifts.
+  revalidatePath("/calendar");
   revalidatePath("/membershare");
   return { ok: true };
 }

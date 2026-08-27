@@ -36,6 +36,7 @@ export function StudioShiftsView({
   studio,
   showCoaches = true,
   canSchedule,
+  coachPreview = false,
 }: {
   view: StaffView;
   /** The studio's own settings, behind the overflow. Null for a staff coach:
@@ -48,6 +49,9 @@ export function StudioShiftsView({
    *  studio without one still renders this screen (it is the only door to the
    *  editor), it just has no shifts on it. */
   canSchedule: boolean;
+  /** A manager opening the dashboard's Coach view. Manager-only navigation
+   *  and request controls stay out so this matches the staff experience. */
+  coachPreview?: boolean;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("mine");
@@ -96,10 +100,11 @@ export function StudioShiftsView({
     });
   };
 
+  const managerMode = view.isManager && !coachPreview;
   const tabs: { key: Tab; label: string; n?: number }[] = [
     { key: "mine", label: "My shifts", n: view.mine.length },
     { key: "open", label: "Open", n: view.open.length },
-    ...(view.isManager
+    ...(managerMode
       ? ([{ key: "requests", label: "Requests", n: view.requests.length }] as const)
       : []),
   ];
@@ -107,21 +112,21 @@ export function StudioShiftsView({
   const rows = tab === "mine" ? view.mine : tab === "open" ? view.open : view.all;
 
   return (
-    <div className="pad">
+    <div className="pad studio-shifts-view">
       <div className="studio-manage-top pagetop">
         <BackLink
           className="evback studio-manage-back"
-          href="/settings"
+          href={coachPreview ? `/s/${view.slug}/manage` : "/settings"}
           anywhere
           notUnder={`/s/${view.slug}`}
-          label="Back to your account"
+          label={coachPreview ? "Back to studio dashboard" : "Back to your account"}
         >
           <Icon name="arrow_back" size={23} />
         </BackLink>
         <div>
           <h1>{view.studioName}</h1>
           <p className="adminsub">
-            {view.isManager ? "You run this studio" : "You coach here"} ·{" "}
+            {coachPreview ? "Coach view preview" : view.isManager ? "You run this studio" : "You coach here"} ·{" "}
             {view.coachCount} {view.coachCount === 1 ? "coach" : "coaches"}
           </p>
         </div>
@@ -129,7 +134,7 @@ export function StudioShiftsView({
 
       {/* The manager's working sections stay visible instead of hiding behind
           a gear. A staff coach sees only the shifts they are allowed to use. */}
-      {view.isManager && (
+      {managerMode && (
         <div className="studio-manage-bar">
           <StudioManageNav slug={view.slug} active="shifts" />
           {/* Everything running a studio needs that isn't one of those two.

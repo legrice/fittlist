@@ -43,8 +43,17 @@ export default async function CalendarPage({
     // shifts folded in, because a coach who is on Thursday at seven has to be
     // able to see that they are on Thursday at seven.
     mySchedule(userId),
-    db.select().from(schema.studios).orderBy(schema.studios.seq),
-    myWeek(userId),
+    db
+      .select({
+        id: schema.studios.id,
+        seq: schema.studios.seq,
+        slug: schema.studios.slug,
+        name: schema.studios.name,
+        address: schema.studios.address,
+      })
+      .from(schema.studios)
+      .orderBy(schema.studios.seq),
+    myWeek(userId, { email: me.email }),
   ]);
 
   const studioById = new Map(studioRows.map((st) => [st.id, st]));
@@ -57,6 +66,7 @@ export default async function CalendarPage({
     endsOn: c.endsOn,
     skipDates: c.skipDates,
     startTime: c.startTime,
+    timeZone: c.timeZone,
     durationMin: c.durationMin,
     name: c.name,
     classType: c.classType,

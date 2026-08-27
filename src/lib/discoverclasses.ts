@@ -44,6 +44,17 @@ export type DirClass = {
   mine: boolean;
 };
 
+type DiscoverOwner = Pick<
+  typeof schema.users.$inferSelect,
+  "id" | "kind" | "handle" | "discoverable" | "name" | "photo" | "avatarColor"
+>;
+type DiscoverStudio = Pick<
+  typeof schema.studios.$inferSelect,
+  "id" | "slug" | "name" | "address"
+>;
+type DiscoverScheduleRow = Omit<ScheduleRow, "image">;
+type DiscoverGymRow = Omit<typeof schema.classes.$inferSelect, "image">;
+
 /**
  * Whether a class answers a search.
  *
@@ -89,13 +100,13 @@ export function classMatches(
 export function buildDiscoverClasses(input: {
   viewerId: string;
   /** Every user row, gyms included: a gym owns classes and has no handle. */
-  owners: (typeof schema.users.$inferSelect)[];
+  owners: DiscoverOwner[];
   hidden: Set<string>;
   /** `publicSchedules()` over the listable people, already run. */
-  personRows: ScheduleRow[];
+  personRows: DiscoverScheduleRow[];
   /** The gyms' own public classes, straight off the table. */
-  gymRows: (typeof schema.classes.$inferSelect)[];
-  studios: (typeof schema.studios.$inferSelect)[];
+  gymRows: DiscoverGymRow[];
+  studios: DiscoverStudio[];
   /** The viewer's future marks, for the ribbon's starting state. */
   marks: { classId: string; occurrenceDate: string }[];
 }): DirClass[] {
@@ -130,7 +141,7 @@ export function buildDiscoverClasses(input: {
       if (!runsOn(c, iso, dow)) continue;
       // A class that has been and gone is off every schedule, and a directory
       // of things you can go to is the strongest case for that rule.
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       const owner = ownerById.get(c.ownerUserId);
       if (!owner) continue;
       const studio = c.studioId ? studioById.get(c.studioId) : undefined;

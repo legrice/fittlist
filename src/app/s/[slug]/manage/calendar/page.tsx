@@ -1,0 +1,63 @@
+import { eq, or } from "drizzle-orm";
+import { notFound } from "next/navigation";
+import { getDb, schema } from "@/db";
+import { currentUser } from "@/lib/current-user";
+import { studioAccess } from "@/lib/studioaccess";
+import { gymCatalog, gymCoaches, gymSchedule } from "@/app/actions/gym";
+import { GymRota } from "@/components/GymRota";
+
+export const dynamic = "force-dynamic";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function StudioCalendarPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ w?: string }>;
+}) {
+  const { slug } = await params;
+  const { w } = await searchParams;
+  const db = await getDb();
+  const [studio] = await db
+    .select()
+    .from(schema.studios)
+    .where(
+      UUID_RE.test(slug)
+        ? or(eq(schema.studios.slug, slug), eq(schema.studios.id, slug))
+        : eq(schema.studios.slug, slug),
+    );
+  if (!studio) notFound();
+
+  const me = await currentUser();
+  if (!me) notFound();
+  const viewerId = me.id;
+  const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
+  if (!access.isManager) notFound();
+
+  const [week, coaches, catalog, typeRows] = await Promise.all([
+    gymSchedule(studio.id, Number(w) || 0),
+    gymCoaches(studio.id),
+    gymCatalog(studio.id),
+    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
+  ]);
+  const studioSlug = studio.slug ?? studio.id;
+
+  return (
+    <GymRota
+      studioId={studio.id}
+      studioName={studio.name}
+      studioAddress={studio.address}
+      studioSlug={studioSlug}
+      manageBase={`/s/${studioSlug}/manage/calendar`}
+      dashboardHref={`/s/${studioSlug}/manage`}
+      hasAccount={!!studio.accountUserId}
+      week={week}
+      coaches={coaches}
+      catalog={catalog}
+      customTypes={typeRows.map((t) => t.name)}
+      viewerId={viewerId}
+    />
+  );
+}

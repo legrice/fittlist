@@ -42,9 +42,9 @@ export default async function InquiryThreadPage({ params }: { params: Promise<{ 
         </div>
       </div>
       <div className="chatbody">
-        <ChatMessages messages={messages} mineIsCoach={false} />
+        <ChatMessages messages={messages} mineIsCoach={false} allowReports reportToken={token} />
       </div>
-      <InquiryReply token={token} />
+      {thread.requesterClosedAt || thread.coachClosedAt ? <div className="chatreply"><p className="adminsub" role="status">{thread.requesterClosedAt ? "You stopped this conversation." : "This conversation is closed."}</p></div> : <InquiryReply token={token} />}
       <div className="chatfoot">
         <Wordmark variant="ink" className="mw-logo" />
       </div>

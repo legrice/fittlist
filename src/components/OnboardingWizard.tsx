@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { LocationPicker } from "@/components/LocationPicker";
+import { Wordmark } from "@/components/Wordmark";
 import { updateProfile } from "@/app/actions/profile";
 import { cityFromCoordinates, completeOnboarding } from "@/app/actions/onboarding";
 import { setTeaching } from "@/app/actions/auth";
@@ -74,7 +75,12 @@ export function OnboardingWizard({
           .then((res) => {
             if (res.ok && res.location) {
               setPLocation(res.location);
-              setPPlace({ label: res.location, lat: res.lat!, lng: res.lng! });
+              setPPlace({
+                label: res.location,
+                lat: res.lat!,
+                lng: res.lng!,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              });
             } else {
               setError("We couldn't find your city. Type it below instead.");
             }
@@ -111,6 +117,8 @@ export function OnboardingWizard({
         location: pLocation,
         locationLat: pPlace?.lat ?? null,
         locationLng: pPlace?.lng ?? null,
+        timeZone:
+          pPlace?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         instagram: "",
         website: "",
         photo: pPhoto,
@@ -121,9 +129,17 @@ export function OnboardingWizard({
         setError(res.error ?? "Couldn't save. Try again.");
         return;
       }
-      await setTeaching(teach);
-      await completeOnboarding();
-      router.push("/calendar");
+      const teaching = await setTeaching(teach);
+      if (!teaching.ok) {
+        setError(teaching.error ?? "Couldn't save your coaching choice. Try again.");
+        return;
+      }
+      const completed = await completeOnboarding();
+      if (!completed.ok) {
+        setError(completed.error ?? "Couldn't finish setup. Try again.");
+        return;
+      }
+      router.push("/feed");
       router.refresh();
     });
   };
@@ -131,6 +147,10 @@ export function OnboardingWizard({
   return (
     <section className="screen wiz">
       <div className="pad">
+        <div className="wizbrandbar">
+          <Wordmark variant="ink" className="wizbrand" />
+          <span>{step} of 2</span>
+        </div>
         {step === 2 && (
           <button className="wizback" type="button" onClick={() => setStep(1)} aria-label="Back">
             <Icon name="arrow_back" size={22} />
@@ -141,9 +161,6 @@ export function OnboardingWizard({
           <>
             <h1>Where are you based?</h1>
             <p>Your city helps us show you people, places, and fitness nearby.</p>
-            <button className="btn ghost wizlocate" type="button" onClick={useMyLocation} disabled={locating}>
-              {locating ? "Finding your city…" : "Use my location"}
-            </button>
             <label className="flabel" htmlFor="wLocation">City and state</label>
             <LocationPicker
               id="wLocation"
@@ -153,6 +170,10 @@ export function OnboardingWizard({
                 setPPlace(place);
               }}
             />
+            <button className="wizlocate" type="button" onClick={useMyLocation} disabled={locating}>
+              <Icon name="explore" size={20} />
+              <span>{locating ? "Finding your city…" : "Use my location"}</span>
+            </button>
             <div className="wizfoot">
               <button className="btn si" onClick={continueFromLocation} disabled={!pLocation.trim()}>
                 Continue

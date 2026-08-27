@@ -61,6 +61,11 @@ async function init(): Promise<Db> {
     }
     return db as unknown as Db;
   }
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_EMBEDDED_DB_IN_PRODUCTION !== "true") {
+    throw new Error(
+      "DATABASE_URL is not set; refusing to use the embedded development database in production",
+    );
+  }
   const { PGlite } = await import("@electric-sql/pglite");
   const { drizzle } = await import("drizzle-orm/pglite");
   const { migrate } = await import("drizzle-orm/pglite/migrator");

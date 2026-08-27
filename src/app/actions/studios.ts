@@ -2,14 +2,24 @@
 
 import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { getDb, schema } from "@/db";
-import { geocodeAddress } from "@/lib/geocode";
+import { geocodeAddress, timeZoneAtCoordinates } from "@/lib/geocode";
 import { storeImage } from "@/lib/storage";
 import { currentAdmin, adminEmails } from "@/lib/admin";
 import { addNotification } from "@/lib/notify";
+import { objectionableContentError } from "@/lib/content-safety";
 import { getSessionUserId } from "@/lib/session";
 import { PLACE_KINDS, STUDIO_TYPES, type PlaceKind } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
+import { isValidTimeZone } from "@/lib/timezone";
+import { syncUserToGoogle } from "@/lib/gcal";
+import {
+  ANONYMOUS_ACTION_RETRY_ERROR,
+  takeAnonymousActionRateLimit,
+  type AnonymousActionRateLimits,
+} from "@/lib/anonymous-rate-limit";
+import { requestIpAddress } from "@/lib/request-ip";
 
 export type StudioDto = {
   id: string;
@@ -17,6 +27,7 @@ export type StudioDto = {
   slug?: string | null;
   name: string;
   address: string;
+  timeZone?: string;
 };
 
 export type StudioMatch = Required<Pick<StudioDto, "id" | "seq" | "name" | "address">> & {
@@ -83,6 +94,7 @@ export type StudioCreateDetails = {
   phone?: string;
   website?: string;
   instagram?: string;
+  timeZone?: string;
 };
 
 const slugify = (s: string) =>
@@ -123,6 +135,8 @@ export async function createStudio(
   const name = nameRaw.trim();
   const address = addressRaw.trim();
   if (!name) return { ok: false, error: "Enter the place name." };
+  const safetyError = objectionableContentError(name, address, details.about);
+  if (safetyError) return { ok: false, error: safetyError };
   const placeKind = PLACE_KINDS.includes(kindRaw) ? kindRaw : "studio";
   if (placeKind !== "virtual" && !address) return { ok: false, error: "Enter the location." };
   if (
@@ -146,6 +160,9 @@ export async function createStudio(
   // A studio is a place, and a place has a point: one lookup at save,
   // best-effort, null on a miss.
   const geo = placeKind === "virtual" ? null : await geocodeAddress(address);
+  const detectedTimeZone = geo
+    ? await timeZoneAtCoordinates(geo.lat, geo.lng)
+    : null;
   const types = (details.types ?? []).filter((type) =>
     (STUDIO_TYPES as readonly string[]).includes(type),
   );
@@ -160,6 +177,9 @@ export async function createStudio(
       placeKind,
       lat: geo?.lat ?? null,
       lng: geo?.lng ?? null,
+      ...(isValidTimeZone(details.timeZone ?? detectedTimeZone)
+        ? { timeZone: (details.timeZone ?? detectedTimeZone)! }
+        : {}),
       slug: await uniqueSlug(name),
       createdByUserId: userId,
       types,
@@ -179,6 +199,7 @@ export async function createStudio(
       slug: studio.slug,
       name: studio.name,
       address: studio.address,
+      timeZone: studio.timeZone,
     },
   };
 }
@@ -194,6 +215,7 @@ export type StudioEdit = {
   phone: string;
   website: string;
   instagram: string;
+  timeZone: string;
 };
 
 // Studios are a shared directory: any coach can add one from the adder, and any
@@ -228,6 +250,8 @@ export async function updateStudio(
   const address = input.address.trim();
   const placeKind = PLACE_KINDS.includes(input.placeKind) ? input.placeKind : "studio";
   if (!name) return { ok: false, error: "Enter the studio name." };
+  const safetyError = objectionableContentError(name, address, input.about);
+  if (safetyError) return { ok: false, error: safetyError };
   if (placeKind !== "virtual" && !address) return { ok: false, error: "Enter the location." };
   if (
     input.photo &&
@@ -253,6 +277,14 @@ export async function updateStudio(
     placeKind === "virtual" || existing.address.trim() === address
       ? null
       : await geocodeAddress(address);
+  const detectedTimeZone = geo
+    ? await timeZoneAtCoordinates(geo.lat, geo.lng)
+    : null;
+  const timeZone = isValidTimeZone(input.timeZone)
+    ? input.timeZone
+    : isValidTimeZone(detectedTimeZone)
+      ? detectedTimeZone
+      : existing.timeZone;
 
   const types = input.types.filter((t) => (STUDIO_TYPES as readonly string[]).includes(t));
   const set: Partial<typeof schema.studios.$inferInsert> = {
@@ -268,6 +300,7 @@ export async function updateStudio(
     phone: input.phone.trim() || null,
     website: input.website.trim() || null,
     instagram: input.instagram.trim().replace(/^@/, "") || null,
+    timeZone,
   };
   if (input.photo !== undefined) set.photo = (await storeImage(input.photo || null, "studio")) || null;
 
@@ -292,6 +325,7 @@ export async function updateStudio(
     line("phone", existing.phone, set.phone ?? null),
     line("website", existing.website, set.website ?? null),
     line("instagram", existing.instagram, set.instagram ?? null),
+    line("time zone", existing.timeZone, timeZone),
     input.photo === undefined || (existing.photo ?? "") === (set.photo ?? "")
       ? null
       : !existing.photo
@@ -300,11 +334,29 @@ export async function updateStudio(
           ? "photo removed"
           : "photo replaced",
   ].filter((c): c is string => !!c);
-  if (changes.length) {
-    await db.insert(schema.studioEdits).values({ studioId: id, editorUserId: userId, changes });
+  const affectedOwners = existing.timeZone === timeZone
+    ? []
+    : await db
+        .select({ userId: schema.classes.userId })
+        .from(schema.classes)
+        .where(eq(schema.classes.studioId, id));
+  await db.transaction(async (tx) => {
+    if (changes.length) {
+      await tx.insert(schema.studioEdits).values({ studioId: id, editorUserId: userId, changes });
+    }
+    await tx.update(schema.studios).set(set).where(eq(schema.studios.id, id));
+    if (existing.timeZone !== timeZone) {
+      await tx.update(schema.classes).set({ timeZone }).where(eq(schema.classes.studioId, id));
+      await tx.update(schema.classTemplates).set({ timeZone }).where(eq(schema.classTemplates.studioId, id));
+      await tx.update(schema.personalClasses).set({ timeZone }).where(eq(schema.personalClasses.studioId, id));
+    }
+  });
+  if (affectedOwners.length) {
+    const ownerIds = [...new Set(affectedOwners.map((row) => row.userId))];
+    after(() => Promise.all(ownerIds.map((ownerId) =>
+      syncUserToGoogle(ownerId).catch((error) => console.error("gcal studio timezone sync failed", error)),
+    )));
   }
-
-  await db.update(schema.studios).set(set).where(eq(schema.studios.id, id));
   revalidatePath(`/s/${slug}`);
   if (existing.slug && existing.slug !== slug) revalidatePath(`/s/${existing.slug}`);
   revalidatePath("/admin");
@@ -393,6 +445,13 @@ export async function removeCoachStudio(studioId: string): Promise<{ ok: boolean
 
 // ---- Reports and suggested edits.
 
+const STUDIO_SUGGESTION_LIMITS: AnonymousActionRateLimits = {
+  ip: { max: 12, windowMs: 60 * 60 * 1000 },
+  ipTarget: { max: 5, windowMs: 60 * 60 * 1000 },
+  subjectTarget: { max: 3, windowMs: 60 * 60 * 1000 },
+  target: { max: 30, windowMs: 60 * 60 * 1000 },
+};
+
 /** A signed-in person says a studio isn't right. One report per person per studio. */
 export async function reportStudio(
   studioId: string,
@@ -432,9 +491,24 @@ export async function suggestStudioEdit(
   const message = messageRaw.trim().slice(0, 1000);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Enter a valid email." };
   if (message.length < 2) return { ok: false, error: "Write what should change." };
+  const safetyError = objectionableContentError(name, relation, message);
+  if (safetyError) return { ok: false, error: safetyError };
   const db = await getDb();
   const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
   if (!studio) return { ok: false, error: "Studio not found." };
+  let allowed = false;
+  try {
+    allowed = await takeAnonymousActionRateLimit(db, {
+      action: "studio_suggestion",
+      target: { kind: "studio", id: studio.id },
+      subject: email,
+      ip: await requestIpAddress(),
+      limits: STUDIO_SUGGESTION_LIMITS,
+    });
+  } catch (error) {
+    console.error("studio suggestion rate limit failed", error);
+  }
+  if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
   await db.insert(schema.studioSuggestions).values({ studioId, name, email, relation, message });
   // Tell whoever runs the place. Best effort, and quiet on failure.
   try {

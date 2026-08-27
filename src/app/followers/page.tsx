@@ -72,7 +72,7 @@ export default async function FollowersPage() {
       photo: u.photo,
       color: avatarColor(u),
       handle: u.handle,
-      canFollow: !!u.handle && u.kind === "coach",
+      canFollow: !!u.handle,
       following: following.has(u.id),
       userId: u.id,
     };

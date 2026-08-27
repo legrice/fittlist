@@ -12,6 +12,7 @@ import { detectProvider } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { sendInviteLink } from "@/lib/invite-link";
 import { normalizeLocation } from "@/lib/location";
+import { geocodeAddress, geocodeCity } from "@/lib/geocode";
 
 // Opening the Activity list is what "seen" means; the header badge counts
 // from here.
@@ -267,6 +268,100 @@ export async function adminFixLocations(): Promise<{
   revalidatePath("/admin");
   revalidatePath("/discover");
   return { ok: true, changed, stuck };
+}
+
+/** Fill the coordinates older profiles and studios never received.
+ *
+ * This is deliberately admin-only and idempotent: it reads the location text
+ * people already supplied, never overwrites an existing point, and can be run
+ * repeatedly when a public geocoder misses or times out. Studios are capped
+ * per pass so the address provider is not flooded; the admin UI continues in
+ * small passes until there is no more safe progress to make. */
+export async function adminBackfillGeolocation(): Promise<{
+  ok: boolean;
+  profilesUpdated?: number;
+  studiosUpdated?: number;
+  profilesRemaining?: number;
+  studiosRemaining?: number;
+  unresolved?: string[];
+  error?: string;
+}> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+  const missingProfile = and(
+    isNotNull(schema.users.location),
+    sql`${schema.users.location} <> ''`,
+    or(isNull(schema.users.locationLat), isNull(schema.users.locationLng)),
+  );
+  const missingStudio = and(
+    sql`${schema.studios.address} <> ''`,
+    sql`${schema.studios.placeKind} <> 'virtual'`,
+    or(isNull(schema.studios.lat), isNull(schema.studios.lng)),
+  );
+  const [profiles, studios] = await Promise.all([
+    db
+      .select({ id: schema.users.id, location: schema.users.location })
+      .from(schema.users)
+      .where(missingProfile)
+      .limit(50),
+    db
+      .select({ id: schema.studios.id, address: schema.studios.address })
+      .from(schema.studios)
+      .where(missingStudio)
+      .limit(6),
+  ]);
+
+  const unresolved = new Set<string>();
+  const cityPoints = new Map<string, Awaited<ReturnType<typeof geocodeCity>>>();
+  await Promise.all(
+    [...new Set(profiles.map((profile) => profile.location!.trim()).filter(Boolean))].map(
+      async (location) => cityPoints.set(location, await geocodeCity(location)),
+    ),
+  );
+  let profilesUpdated = 0;
+  for (const profile of profiles) {
+    const location = profile.location!.trim();
+    const point = cityPoints.get(location);
+    if (!point) {
+      unresolved.add(location);
+      continue;
+    }
+    await db
+      .update(schema.users)
+      .set({ locationLat: point.lat, locationLng: point.lng })
+      .where(and(eq(schema.users.id, profile.id), missingProfile));
+    profilesUpdated += 1;
+  }
+
+  let studiosUpdated = 0;
+  for (const studio of studios) {
+    const address = studio.address.trim();
+    const point = await geocodeAddress(address);
+    if (!point) {
+      unresolved.add(address);
+      continue;
+    }
+    await db
+      .update(schema.studios)
+      .set({ lat: point.lat, lng: point.lng })
+      .where(and(eq(schema.studios.id, studio.id), missingStudio));
+    studiosUpdated += 1;
+  }
+
+  const [[profileCount], [studioCount]] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(schema.users).where(missingProfile),
+    db.select({ count: sql<number>`count(*)::int` }).from(schema.studios).where(missingStudio),
+  ]);
+  revalidatePath("/discover");
+  return {
+    ok: true,
+    profilesUpdated,
+    studiosUpdated,
+    profilesRemaining: profileCount?.count ?? 0,
+    studiosRemaining: studioCount?.count ?? 0,
+    unresolved: [...unresolved].slice(0, 12),
+  };
 }
 
 // Add a studio straight to the shared directory from the admin panel.
@@ -644,7 +739,12 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
     return { ok: false, error: "That's a roster placeholder. Remove it from the studio's roster." };
   }
 
-  await purgeUser(db, id);
+  try {
+    await purgeUser(db, id);
+  } catch (error) {
+    console.error("adminDeleteUser failed", { userId: id, error });
+    return { ok: false, error: "That account couldn't be deleted. Nothing was changed. Please try again." };
+  }
   revalidatePath("/admin");
   return { ok: true };
 }

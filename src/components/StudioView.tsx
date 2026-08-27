@@ -27,7 +27,9 @@ import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { StudioBeenHere } from "@/components/StudioBeenHere";
+import { CalendarPinButton } from "@/components/CalendarPinButton";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
+import { hiddenFrom } from "@/lib/blocks";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -109,10 +111,11 @@ export async function StudioView({
     return all;
   }, {});
   const shoutoutRows = await db
-    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name, authorUserId: schema.shoutouts.authorUserId })
     .from(schema.shoutouts)
     .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
     .where(eq(schema.shoutouts.targetStudioId, s.id));
+  const hiddenShoutoutAuthors = await hiddenFrom(viewerId);
 
   let days: StudioDay[] = [];
   let community = false;
@@ -121,16 +124,32 @@ export async function StudioView({
     // of truth. Coach-contributed rows remain useful while a place is still
     // unclaimed, but showing both after a studio takes over produces stale
     // duplicates and lets the business maintain a schedule nobody sees.
-    const official = await db
+    const managerRows = await db
+      .select({ userId: schema.studioManagers.userId })
+      .from(schema.studioManagers)
+      .where(eq(schema.studioManagers.studioId, s.id));
+    const calendarOwnerIds = [
+      ...new Set([s.accountUserId, ...managerRows.map((row) => row.userId)]),
+    ];
+    const calendarRows = await db
       .select()
       .from(schema.classes)
       .where(
         and(
-          eq(schema.classes.userId, s.accountUserId),
+          inArray(schema.classes.userId, calendarOwnerIds),
           eq(schema.classes.studioId, s.id),
           eq(schema.classes.isPublic, true),
         ),
       );
+    // A manager may have created a personal copy before the studio took over
+    // its own calendar. Prefer the studio-owned slot when both exist, while
+    // still showing manager-owned classes that exist only on their calendar.
+    const official = [...calendarRows]
+      .sort((a, b) => Number(b.userId === s.accountUserId) - Number(a.userId === s.accountUserId))
+      .filter((row, index, all) => {
+        const key = `${row.specificDate ?? row.dayOfWeek}|${row.startTime}|${row.name.trim().toLowerCase()}`;
+        return all.findIndex((candidate) => `${candidate.specificDate ?? candidate.dayOfWeek}|${candidate.startTime}|${candidate.name.trim().toLowerCase()}` === key) === index;
+      });
     const start = new Date(`${todayIso()}T00:00:00Z`);
     const startIso = start.toISOString().slice(0, 10);
     const end = new Date(start);
@@ -177,7 +196,7 @@ export async function StudioView({
       const dow = (dt.getUTCDay() + 6) % 7;
       const items: StudioDay["items"] = [];
       for (const c of official) {
-        if (!runsOn(c, iso, dow) || occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+        if (!runsOn(c, iso, dow) || occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
         const cover = coverBySlot.get(`${c.id}|${iso}`);
         const coach = coachById.get(cover ? cover.coachUserId ?? "" : c.coachUserId ?? "");
         const nameCoach = s.showCoaches && coach?.shiftsPublic ? coach : null;
@@ -237,7 +256,7 @@ export async function StudioView({
       // the row that can be opened wins.
       for (const c of pub) {
         if (!runsOn(c, iso, dow)) continue;
-        if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+        if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
         const base = handleOf.get(c.userId);
         if (!base) continue;
         const key = `${c.name.trim().toLowerCase()}|${c.startTime}`;
@@ -319,6 +338,7 @@ export async function StudioView({
     id: s.id,
     name: s.name,
     address: s.address,
+    timeZone: s.timeZone,
     placeKind: s.placeKind as import("@/lib/studio").PlaceKind,
     types: s.types,
     about: s.about ?? "",
@@ -342,7 +362,7 @@ export async function StudioView({
         {/* A stranger gets the wordmark and one way in, same as they do on a
             person's page. This page had neither, so a shared studio link was a
             dead end for anyone without an account. */}
-        {signedIn && viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/s/${s.slug ?? s.id}`} />}
+        {signedIn && viewerId ? <AppChrome userId={viewerId} social /> : <PublicTopBar next={`/s/${s.slug ?? s.id}`} />}
         {/* The same header a person wears. A studio is a place rather than a
             face, but it is the same kind of page: a photograph, a badge, a
             name, where it is, and the two things you can do about it. */}
@@ -382,7 +402,7 @@ export async function StudioView({
           avatar={null}
           backTo={backTo}
           badges={null}
-          ownerTop={null}
+          ownerTop={viewerId ? <CalendarPinButton entityType="studio" entityId={s.id} /> : null}
           actions={
             /* Nothing to offer, no row: an empty pills row still spends its
                margin, which read as stray space between the address and the
@@ -509,8 +529,9 @@ export async function StudioView({
           studioSlug={s.slug ?? s.id}
           name={s.name}
           signedIn={signedIn}
+          viewerId={viewerId}
           owner={access.isManager}
-          initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+          initial={shoutoutRows.filter((row) => !hiddenShoutoutAuthors.has(row.authorUserId)).map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone", authorUserId: row.authorUserId }))}
         />
         </section>
 

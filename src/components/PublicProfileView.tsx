@@ -15,11 +15,11 @@ import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
+import { CalendarPinButton } from "@/components/CalendarPinButton";
 import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
-import { ClassCardActions } from "@/components/ClassCardActions";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
@@ -30,6 +30,8 @@ import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
 import { ScheduleNudge } from "@/components/ScheduleNudge";
+import { ReportContentButton } from "@/components/ReportContentButton";
+import { hiddenFrom } from "@/lib/blocks";
 
 // A continuous forward window, long enough that even a one-class-a-week
 // schedule can fill seven populated days before View more runs dry.
@@ -84,7 +86,7 @@ export async function PublicProfileView({
 
   // Fan side (flag-gated): a signed-in viewer gets a one-tap Follow button on
   // the subscribe bar instead of the email sheet.
-  let account: { following: boolean; requested: boolean } | null = null;
+  let account: { following: boolean; requested: boolean; followsYou: boolean } | null = null;
   let signedIn = false;
   // Who's looking, for the app header. The owner gets it too: previewing your
   // own page shouldn't drop you out of the app.
@@ -96,7 +98,7 @@ export async function PublicProfileView({
         .where(eq(schema.users.id, viewerId));
       if (viewer) {
         signedIn = true;
-        const [[row], [req]] = await Promise.all([
+        const [[row], [req], [reverse]] = await Promise.all([
           db
             .select({ optedOutAt: schema.subscribers.optedOutAt })
             .from(schema.subscribers)
@@ -115,21 +117,32 @@ export async function PublicProfileView({
                 eq(schema.followRequests.requesterUserId, viewerId),
               ),
             ),
+          db
+            .select({ optedOutAt: schema.subscribers.optedOutAt })
+            .from(schema.subscribers)
+            .where(
+              and(
+                eq(schema.subscribers.trainerUserId, viewerId),
+                eq(schema.subscribers.email, user.email),
+              ),
+            ),
         ]);
         const following = !!row && !row.optedOutAt;
         // Coaches can gate their followers too: a pending ask reads as
         // "Requested", and tapping it again withdraws the ask.
         const requested = !following && !!req;
-        account = { following, requested };
+        account = { following, requested, followsYou: !!reverse && !reverse.optedOutAt };
       }
     }
   }
 
-  // No arrow on your own page. It is what the Profile tab opens now, so
-  // there is nothing behind it to go back to: the bar underneath is the way
-  // on, and an arrow pointing at Following on a screen you reached from a tab
-  // is a control offering to undo a tap you did not make.
-  const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
+  // The Profile tab itself needs no arrow, but its explicit "View profile"
+  // action is a preview with a real screen underneath it. Preserve that
+  // distinction in the URL so the preview has an honest way back without
+  // adding an arrow to every normal visit to your own public page.
+  const backTo = isOwner
+    ? from === "profile" ? { href: "/you", label: "Back to your profile" } : undefined
+    : backToFor(from, !!viewerId);
 
   // Their own classes, plus the shifts a gym has them on when they've said
   // those belong here. One loader, so the page, the share, the feed and the
@@ -165,18 +178,13 @@ export async function PublicProfileView({
       .from(schema.profileEndorsements)
       .where(eq(schema.profileEndorsements.targetUserId, user.id)),
     db
-      .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+      .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name, authorUserId: schema.shoutouts.authorUserId })
       .from(schema.shoutouts)
       .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
       .where(eq(schema.shoutouts.targetUserId, user.id)),
   ]);
+  const hiddenShoutoutAuthors = await hiddenFrom(viewerId);
   const classRows = allClassRows.filter((c) => c.isPublic);
-  const savedRows = viewerId && !isOwner && classRows.length
-    ? await db.select({ classId:schema.attendances.classId, iso:schema.attendances.occurrenceDate })
-      .from(schema.attendances)
-      .where(and(eq(schema.attendances.userId, viewerId), inArray(schema.attendances.classId, classRows.map((c) => c.id))))
-    : [];
-  const savedSet = new Set(savedRows.map((row) => `${row.classId}|${row.iso}`));
   const studioIds = [
     ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
   ].filter((id): id is string => !!id);
@@ -216,7 +224,7 @@ export async function PublicProfileView({
       .filter((c) => runsOn(c, iso, dow))
       // A class that has already ended is not something anyone can still go
       // to, so no schedule shows it.
-      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
+      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length)
       days.push({ iso, week: Math.floor(days.length / 7), items });
@@ -342,9 +350,10 @@ export async function PublicProfileView({
             list: a coach flipping between their calendar and their page was
             reading two apps. It is one row now, everywhere a class is listed.
 
-            The profile uses the same save ribbon as every other calendar; the
-            only profile-specific omission is the coach name the page already
-            says at the top. */}
+            The profile uses the same row and save ribbon as every other
+            calendar. Identity stays in the row even though the page names the
+            coach above it: the repeated face is what makes mixed studio and
+            group calendars immediately scannable too. */}
         <>
           {(() => {
             const listDays = (source: typeof days): WeekDayRows[] => source.map((d) => ({
@@ -367,11 +376,12 @@ export async function PublicProfileView({
                       where: where ?? null,
                       hm: start.hm,
                       ap: start.ap,
+                      dur: `${c.durationMin} min`,
+                      coach: null,
                       href,
                       classId: c.id,
                       iso: d.iso,
                       base: at?.key,
-                      corner: isOwner ? undefined : <ClassCardActions classId={c.id} iso={d.iso} name={c.name} canAdd={!!viewerId} initialOn={savedSet.has(`${c.id}|${d.iso}`)} />,
                     };
                   }),
             }));
@@ -393,11 +403,11 @@ export async function PublicProfileView({
             }
             return (
               <>
-                <CalendarList days={listDays(preview)} />
+                <CalendarList days={listDays(preview)} className="profile-calendar-list" />
                 {later.length > 0 && (
                   <ScheduleMore
                     label="See more schedule"
-                    chunks={[<CalendarList key="more-schedule" days={listDays(later)} />]}
+                    chunks={[<CalendarList key="more-schedule" days={listDays(later)} className="profile-calendar-list" />]}
                   />
                 )}
               </>
@@ -430,6 +440,7 @@ export async function PublicProfileView({
             userId={viewerId}
             bar={isOwner}
             headerNav={false}
+            social
           />
         ) : (
           <PublicTopBar handle={handle} next={`/${handle}`} />
@@ -453,6 +464,7 @@ export async function PublicProfileView({
           ]}
           sectionToggle
           name={user.name}
+          handle={handle}
           summary={null}
           title={user.title ?? ""}
           location={user.location ?? ""}
@@ -522,6 +534,7 @@ export async function PublicProfileView({
                   trainerName={user.name}
                   handle={handle}
                   account={account}
+                  followsYou={account?.followsYou ?? false}
                   canSignUp={fansEnabled()}
                 />
                 {showContact && (
@@ -534,6 +547,7 @@ export async function PublicProfileView({
                   />
                 )}
                 <ProfileShare path={`/${handle}`} name={user.name} pill />
+                {viewerId && <ReportContentButton contentType="profile" contentId={user.id} label="Report profile" canBlock className="btn ghost profile-report-button" />}
               </div>
             )
           }
@@ -541,7 +555,7 @@ export async function PublicProfileView({
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
-          ownerTop={null}
+          ownerTop={!isOwner && account?.following ? <CalendarPinButton entityType="person" entityId={user.id} entityName={user.name} /> : null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
@@ -551,6 +565,7 @@ export async function PublicProfileView({
                 trainerName={user.name}
                 handle={handle}
                 account={account}
+                followsYou={account?.followsYou ?? false}
                 canSignUp={fansEnabled()}
                 compact
               />
@@ -599,8 +614,9 @@ export async function PublicProfileView({
               handle={handle}
               name={user.name}
               signedIn={!!viewerId}
+              viewerId={viewerId}
               owner={isOwner}
-              initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+              initial={shoutoutRows.filter((row) => !hiddenShoutoutAuthors.has(row.authorUserId)).map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone", authorUserId: row.authorUserId }))}
             />
           </section>
         </ProfileTabs>

@@ -9,6 +9,7 @@ import { readPhoto } from "@/lib/photo";
 import { TypePicker } from "@/components/TypePicker";
 import { Toast, useToast } from "@/components/Toast";
 import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
+import { TimeZoneSelect } from "@/components/TimeZoneSelect";
 
 const validPlaceKind = (kind: string): PlaceKind =>
   PLACE_KINDS.includes(kind as PlaceKind) ? (kind as PlaceKind) : "studio";
@@ -17,6 +18,7 @@ export type StudioEditProps = {
   id: string;
   name: string;
   address: string;
+  timeZone: string;
   placeKind: PlaceKind;
   types: string[];
   about: string;
@@ -46,6 +48,7 @@ export function StudioOwnerBar({
 
   const [pName, setPName] = useState(props.name);
   const [pAddress, setPAddress] = useState(props.address);
+  const [pTimeZone, setPTimeZone] = useState(props.timeZone);
   const [pPlaceKind, setPPlaceKind] = useState(() => validPlaceKind(props.placeKind));
   const [pTypes, setPTypes] = useState<string[]>(props.types);
   const [pAbout, setPAbout] = useState(props.about);
@@ -64,6 +67,7 @@ export function StudioOwnerBar({
     if (!open) return;
     setPName(props.name);
     setPAddress(props.address);
+    setPTimeZone(props.timeZone);
     setPPlaceKind(validPlaceKind(props.placeKind));
     setPTypes(props.types);
     setPAbout(props.about);
@@ -83,6 +87,7 @@ export function StudioOwnerBar({
       const res = await updateStudio(props.id, {
         name: pName,
         address: pAddress,
+        timeZone: pTimeZone,
         placeKind: pPlaceKind,
         types: pTypes,
         about: pAbout,
@@ -171,6 +176,13 @@ export function StudioOwnerBar({
                 onChange={(e) => setPAddress(e.target.value)}
               />
             </>}
+
+            <TimeZoneSelect
+              id="stTimeZone"
+              value={pTimeZone}
+              onChange={setPTimeZone}
+              label="Schedule time zone"
+            />
 
             <label className="flabel">
               Type <span>· pick every one that fits</span>

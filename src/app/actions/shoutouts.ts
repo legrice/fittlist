@@ -6,6 +6,8 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { addNotification } from "@/lib/notify";
 import { studioAccess } from "@/lib/studioaccess";
+import { hiddenFrom } from "@/lib/blocks";
+import { objectionableContentError } from "@/lib/content-safety";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -14,11 +16,14 @@ export async function submitShoutout(target: { handle?: string; studioSlug?: str
   if (!authorUserId) return { ok: false, signedOut: true } as const;
   const clean = body.trim().replace(/\s+/g, " ").slice(0, 280);
   if (clean.length < 8) return { ok: false, error: "Write at least a few words." } as const;
+  const safetyError = objectionableContentError(clean);
+  if (safetyError) return { ok: false, error: safetyError } as const;
   const db = await getDb();
 
   if (target.handle) {
     const [person] = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.handle, target.handle));
     if (!person || person.id === authorUserId) return { ok: false, error: "You can’t shout out your own profile." } as const;
+    if ((await hiddenFrom(authorUserId)).has(person.id)) return { ok: false, error: "Profile not found." } as const;
     const where = and(eq(schema.shoutouts.authorUserId, authorUserId), eq(schema.shoutouts.targetUserId, person.id));
     const [existing] = await db.select({ id: schema.shoutouts.id }).from(schema.shoutouts).where(where);
     if (existing) await db.update(schema.shoutouts).set({ body: clean, featuredAt: null }).where(eq(schema.shoutouts.id, existing.id));
@@ -36,7 +41,8 @@ export async function submitShoutout(target: { handle?: string; studioSlug?: str
     if (existing) await db.update(schema.shoutouts).set({ body: clean, featuredAt: null }).where(eq(schema.shoutouts.id, existing.id));
     else await db.insert(schema.shoutouts).values({ authorUserId, targetStudioId: place.id, body: clean });
     const managers = await db.select({ userId: schema.studioManagers.userId }).from(schema.studioManagers).where(eq(schema.studioManagers.studioId, place.id));
-    await Promise.all(managers.filter((m) => m.userId !== authorUserId).map((m) => addNotification(m.userId, { type: "shoutout_received", title: "Your place received a shoutout", body: clean, href: `/s/${place.slug ?? target.studioSlug}#profile-shoutouts`, actorUserId: authorUserId })));
+    const hidden = await hiddenFrom(authorUserId);
+    await Promise.all(managers.filter((m) => m.userId !== authorUserId && !hidden.has(m.userId)).map((m) => addNotification(m.userId, { type: "shoutout_received", title: "Your place received a shoutout", body: clean, href: `/s/${place.slug ?? target.studioSlug}#profile-shoutouts`, actorUserId: authorUserId })));
     revalidatePath(`/s/${place.slug ?? target.studioSlug}`);
     return { ok: true } as const;
   }

@@ -15,8 +15,15 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // their own shifts and the open ones, which is the hole the staff spec is
 // mostly about. `staffView` answers null for anyone else, including a studio
 // that runs no schedule, so the 404 covers both.
-export default async function ShiftsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ShiftsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
+}) {
   const { slug } = await params;
+  const { preview } = await searchParams;
   const db = await getDb();
   const [studio] = await db
     .select()
@@ -41,7 +48,8 @@ export default async function ShiftsPage({ params }: { params: Promise<{ slug: s
       ),
     )
     .limit(1);
-  if (manager) redirect(`/s/${studio.slug ?? studio.id}/manage`);
+  const coachPreview = !!manager && preview === "coach";
+  if (manager && !coachPreview) redirect(`/s/${studio.slug ?? studio.id}/manage`);
   const view = await staffView(studio.id);
   if (!view) notFound();
   return (
@@ -51,6 +59,7 @@ export default async function ShiftsPage({ params }: { params: Promise<{ slug: s
       pageViews={null}
       showCoaches={studio.showCoaches}
       studio={null}
+      coachPreview={coachPreview}
     />
   );
 }

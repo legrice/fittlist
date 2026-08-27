@@ -65,6 +65,9 @@ export type StoryModel = {
   headlineSize: number;
   /** A data URL, or null for no face. */
   photo: string | null;
+  /** A full-bleed user-picked image. The schedule stays on solid panels so
+   * arbitrary photography can never make the class details illegible. */
+  backgroundPhoto?: string | null;
   plan: StoryPlan;
   /** Nothing in range: the picture still has to be worth looking at. */
   empty: boolean;
@@ -89,6 +92,7 @@ export function renderStory(model: StoryModel) {
     line2,
     headlineSize: hSize,
     photo,
+    backgroundPhoto,
     plan,
     empty,
     emptyLine,
@@ -146,6 +150,207 @@ export function renderStory(model: StoryModel) {
   // something in them. One day gets the page, two split it, and three or
   // more settle into the original three-column rhythm.
   const swissCols = Math.max(1, Math.min(3, editorialDays.length));
+
+  // Photo is its own deliberate composition, not a wallpaper slipped under
+  // the normal poster. The image owns the canvas; the headline and every day
+  // sit on opaque colour panels so a bright window, dark wall or busy gym can
+  // never compete with the schedule. This is also much cheaper to reason
+  // about than trying to find one text colour that works on every photograph.
+  if (backgroundPhoto) {
+    const compact = plan.tier !== 1;
+    const storyHeight = square ? 1080 : 1920;
+    const photoMark = iconUri("#9FE870");
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+            padding: square ? "54px" : "72px 64px 58px",
+            fontFamily: "Delight",
+            color: "#ffffff",
+            overflow: "hidden",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={backgroundPhoto}
+            alt=""
+            width={1080}
+            height={storyHeight}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: 1080,
+              height: storyHeight,
+              objectFit: "cover",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              background: "rgba(0,0,0,.24)",
+            }}
+          />
+
+          {(line1 || line2) && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignSelf: "center",
+                width: square ? 780 : 840,
+                padding: compact ? "30px 42px" : "38px 48px",
+                borderRadius: 28,
+                background: "#020D08",
+                textAlign: "center",
+                fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
+                fontStyle: guest?.italic ? "italic" : "normal",
+                fontWeight: 800,
+                // The photo composition used to cap this below the default
+                // computed headline size, so nearly the whole 60–180% slider
+                // produced the same 74/92px text. Keep a canvas-aware safety
+                // ceiling, but let the control make a visibly real change.
+                fontSize: Math.min(hSize, square ? 160 : 200),
+                lineHeight: 0.98,
+                letterSpacing: guest ? Math.round((guest.track ?? 0) * hSize) : -2,
+                marginBottom: compact ? 24 : 34,
+              }}
+            >
+              <span>{line1}</span>
+              {line2 && <span>{line2}</span>}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: compact ? 22 : 30,
+              width: "100%",
+            }}
+          >
+            {empty ? (
+              <div
+                style={{
+                  display: "flex",
+                  padding: "28px 32px",
+                  borderRadius: 18,
+                  background: t.bg,
+                  color: t.fg,
+                  fontSize: 36,
+                  fontWeight: 600,
+                }}
+              >
+                {emptyLine}
+              </div>
+            ) : (
+              editorialDays.map(({ day, rows }) => {
+                const rowHeight = compact ? 64 : 74;
+                const rowGap = compact ? 16 : 22;
+                const panelPadY = compact ? 32 : 40;
+                const panelHeight = panelPadY + Math.max(compact ? 31 : 35, rows.length * rowHeight + Math.max(0, rows.length - 1) * rowGap);
+                return (
+                <div
+                  key={day}
+                  style={{
+                    display: "flex",
+                    flexShrink: 0,
+                    alignItems: "flex-start",
+                    gap: compact ? 20 : 28,
+                    height: panelHeight,
+                    padding: compact ? "16px 22px" : "20px 26px",
+                    borderRadius: 18,
+                    background: t.bg,
+                    color: t.fg,
+                    borderWidth: 2,
+                    borderStyle: "solid",
+                    borderColor: t.accent,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 180,
+                      flexShrink: 0,
+                      fontSize: compact ? 27 : 31,
+                      lineHeight: 1.12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {day}
+                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: compact ? 16 : 22 }}>
+                    {rows.map((row, index) => (
+                      <div key={`${row.time}-${row.name}-${index}`} style={{ display: "flex", flexShrink: 0, height: rowHeight, gap: 16 }}>
+                        <span style={{ width: 150, flexShrink: 0, fontSize: compact ? 25 : 29, fontWeight: 700 }}>
+                          {row.time}
+                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                          <span style={{ display: "block", width: "100%", lineClamp: 1, fontSize: compact ? 25 : 29, fontWeight: 600, lineHeight: 1.12 }}>
+                            {row.name}
+                          </span>
+                          {row.sub && (
+                            <span
+                              style={{
+                                display: "block",
+                                width: "100%",
+                                lineClamp: 1,
+                                marginTop: 3,
+                                fontSize: compact ? 20 : 23,
+                                fontWeight: 600,
+                                lineHeight: 1.1,
+                                color: t.muted,
+                              }}
+                            >
+                              {row.sub}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                );
+              })
+            )}
+          </div>
+
+          <div
+            style={{
+              marginTop: "auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "20px 24px",
+              borderRadius: 18,
+              background: "#020D08",
+            }}
+          >
+            <span style={{ fontSize: 30, fontWeight: 600 }}>{url}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photoMark} alt="" width={52} height={52} />
+              <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: -1 }}>FittList</span>
+            </div>
+          </div>
+        </div>
+      ),
+      {
+        width: 1080,
+        height: storyHeight,
+        fonts: guest
+          ? [...loadStoryFonts(), loadTypeFace(guest.family, guest.file!, guest.italic ? "italic" : "normal")]
+          : loadStoryFonts(),
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  }
 
   return new ImageResponse(
     (

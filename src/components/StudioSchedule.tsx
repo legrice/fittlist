@@ -111,7 +111,7 @@ export function StudioSchedule({
     // The slug is the key classDetail resolves a gym's class by; the /s/
     // prefix belongs to the URL, not to the lookup.
     <ClassOpener handle={slug}>
-      <CalendarList days={listDays} />
+      <CalendarList days={listDays} className="profile-calendar-list" />
     </ClassOpener>
   );
 }

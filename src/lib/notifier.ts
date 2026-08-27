@@ -6,6 +6,7 @@ import { sendMessage } from "@/lib/mailer";
 import { fmtTime, runsOn, siteOrigin, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { fansEnabled } from "@/lib/flags";
 import { sessionSecret } from "@/lib/secret";
+import { emailHtml } from "@/lib/email-html";
 
 // All list email goes through here - the piece most likely to move to SMS
 // later, so callers only describe the change and never touch the channel.
@@ -48,6 +49,33 @@ async function unsubFooter(subscriberId: string): Promise<{ text: string; header
 }
 
 type Trainer = { id: string; name: string; handle: string | null };
+
+/** Ask the mailbox owner to approve an email-only follow. No subscriber row
+ * exists yet, so this deliberately carries no welcome or unsubscribe headers. */
+export async function sendFollowConfirmation(
+  trainer: Trainer,
+  email: string,
+  token: string,
+) {
+  const coach = trainer.name.trim() || "this coach";
+  const url = `${origin()}/follow/confirm?token=${token}`;
+  const body = [
+    `Someone asked to follow ${coach}'s schedule using ${email}.`,
+    "Confirm below to receive schedule updates. Nothing has been subscribed yet, and the link works once for 30 minutes.",
+  ];
+  return sendMessage({
+    to: email,
+    kind: "follow_confirmation",
+    subject: `Confirm following ${coach}`,
+    text: `${body.join("\n\n")}\n\n${url}\n\nIf you didn't ask for this, ignore the email. The address will not be added.`,
+    html: emailHtml({
+      heading: "Confirm your follow",
+      body,
+      cta: { label: "Confirm follow", url },
+      footer: `This was sent to ${email} because someone entered that address on ${coach}'s FittList page. Ignore it if that wasn't you; nothing has been subscribed.`,
+    }),
+  });
+}
 
 export async function sendWelcome(trainer: Trainer, subscriber: { id: string; email: string }) {
   const url = `fittlist.co/${trainer.handle}`;

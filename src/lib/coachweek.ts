@@ -1,4 +1,4 @@
-import { and, inArray, ne } from "drizzle-orm";
+import { and, getTableColumns, gte, inArray, isNull, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { dowOfDate } from "@/lib/format";
 
@@ -36,6 +36,7 @@ export type ScheduleRow = typeof schema.classes.$inferSelect & {
 };
 
 type Who = { id: string; shiftsPublic: boolean };
+type ScheduleWindow = { start: string; end: string };
 
 const own = (r: typeof schema.classes.$inferSelect): ScheduleRow => ({
   ...r,
@@ -75,6 +76,32 @@ export async function publicSchedules(who: Who[]): Promise<ScheduleRow[]> {
 }
 
 /**
+ * The same public schedule graph, without class photos.
+ *
+ * Calendar feeds never render the class image from their server payload: the
+ * detail sheet fetches it only when somebody opens a class. Older images are
+ * data URLs, so selecting one for every class across a large follow graph can
+ * turn a small calendar response into several megabytes before recurrence
+ * expansion even starts. Keep the full loader as the default for profile and
+ * sharing surfaces, and give list-only callers an explicitly lightweight
+ * path.
+ */
+export async function publicFeedSchedules(
+  who: Who[],
+  window?: ScheduleWindow,
+): Promise<ScheduleRow[]> {
+  const ids = [...new Set(who.map((w) => w.id))];
+  if (!ids.length) return [];
+  const rows = await build(
+    ids,
+    who.filter((w) => w.shiftsPublic).map((w) => w.id),
+    true,
+    window,
+  );
+  return rows.filter((r) => !r.duplicateOf);
+}
+
+/**
  * A coach's own schedule, shifts always included.
  *
  * `shiftsPublic` answers "does anyone else see these", which is a question
@@ -83,26 +110,65 @@ export async function publicSchedules(who: Who[]): Promise<ScheduleRow[]> {
  * and not knowing you were on is the thing the spreadsheet cost somebody.
  */
 export async function mySchedule(userId: string): Promise<ScheduleRow[]> {
-  return build([userId], [userId]);
+  // The calendar list never renders class artwork; the detail action fetches
+  // it only when a row is opened. Legacy data URLs made selecting every image
+  // here disproportionately expensive.
+  return build([userId], [userId], true);
 }
 
-async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
+const { image: _classImage, ...feedClassColumns } = getTableColumns(schema.classes);
+
+async function selectClassesWithoutImages(
+  db: Awaited<ReturnType<typeof getDb>>,
+  where: SQL | undefined,
+) {
+  // Kept as a small helper so own rows, shifts and cover extras all use the
+  // same projection. The `where` expression is deliberately accepted as the
+  // query builder's runtime SQL shape; Drizzle validates it at `.where()`.
+  const rows = await db.select(feedClassColumns).from(schema.classes).where(where);
+  return rows.map((row) => ({ ...row, image: null })) as (typeof schema.classes.$inferSelect)[];
+}
+
+async function build(
+  ids: string[],
+  sharing: string[],
+  withoutImages = false,
+  window?: ScheduleWindow,
+): Promise<ScheduleRow[]> {
   const db = await getDb();
-  const rows = await db.select().from(schema.classes).where(inArray(schema.classes.userId, ids));
+  // Feed surfaces only need definitions capable of producing an occurrence
+  // in their rendered window. This removes expired recurring rows and old or
+  // far-future one-offs before they cross the database boundary. Recurring
+  // classes have no starts-on column, so an open-ended row remains eligible.
+  const activeInWindow = window
+    ? or(
+        and(
+          gte(schema.classes.specificDate, window.start),
+          lte(schema.classes.specificDate, window.end),
+        ),
+        and(
+          isNull(schema.classes.specificDate),
+          or(isNull(schema.classes.endsOn), gte(schema.classes.endsOn, window.start)),
+        ),
+      )
+    : undefined;
+  const ownWhere = and(inArray(schema.classes.userId, ids), activeInWindow);
+  const rows = withoutImages
+    ? await selectClassesWithoutImages(db, ownWhere)
+    : await db.select().from(schema.classes).where(ownWhere);
   const out = rows.map(own);
   if (!sharing.length) return out;
 
   // Slots these coaches are on at a gym. Their own rows are already in hand,
   // and a coach can't be on their own class in the rota sense.
-  const shifts = await db
-    .select()
-    .from(schema.classes)
-    .where(
-      and(
-        inArray(schema.classes.coachUserId, sharing),
-        ne(schema.classes.userId, schema.classes.coachUserId),
-      ),
-    );
+  const shiftsWhere = and(
+    inArray(schema.classes.coachUserId, sharing),
+    ne(schema.classes.userId, schema.classes.coachUserId),
+    activeInWindow,
+  );
+  const shifts = withoutImages
+    ? await selectClassesWithoutImages(db, shiftsWhere)
+    : await db.select().from(schema.classes).where(shiftsWhere);
   const mine = new Set(rows.map((r) => r.id));
   const standing = shifts.filter((s) => !mine.has(s.id));
 
@@ -118,12 +184,20 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
       ? db
           .select()
           .from(schema.shiftCovers)
-          .where(inArray(schema.shiftCovers.classId, standing.map((row) => row.id)))
+          .where(and(
+            inArray(schema.shiftCovers.classId, standing.map((row) => row.id)),
+            window ? gte(schema.shiftCovers.occurrenceDate, window.start) : undefined,
+            window ? lte(schema.shiftCovers.occurrenceDate, window.end) : undefined,
+          ))
       : Promise.resolve([]),
     db
       .select()
       .from(schema.shiftCovers)
-      .where(inArray(schema.shiftCovers.coachUserId, sharing)),
+      .where(and(
+        inArray(schema.shiftCovers.coachUserId, sharing),
+        window ? gte(schema.shiftCovers.occurrenceDate, window.start) : undefined,
+        window ? lte(schema.shiftCovers.occurrenceDate, window.end) : undefined,
+      )),
   ]);
   const covers = [...new Map([...standingCovers, ...receivedCovers].map((cover) => [cover.id, cover])).values()];
   const sharingSet = new Set(sharing);
@@ -170,7 +244,9 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
     (id) => !standingById.has(id) && !mine.has(id),
   );
   const extras = extraIds.length
-    ? await db.select().from(schema.classes).where(inArray(schema.classes.id, extraIds))
+    ? withoutImages
+      ? await selectClassesWithoutImages(db, inArray(schema.classes.id, extraIds))
+      : await db.select().from(schema.classes).where(inArray(schema.classes.id, extraIds))
     : [];
   const extraById = new Map(extras.map((e) => [e.id, e]));
   for (const cv of handedOver) {
@@ -221,7 +297,7 @@ export async function whoFor(ids: string[]): Promise<Who[]> {
  * `classDetail` looks the owner up by (`ironbound`, a handle or a slug).
  */
 export function classAddress(
-  row: ScheduleRow,
+  row: Pick<ScheduleRow, "shift">,
   handle: string | null,
   studioSlug: string | null | undefined,
 ): { key: string; base: string } | null {
@@ -230,14 +306,25 @@ export function classAddress(
 }
 
 /** Who to name on a gym's class, per date. */
+type ShiftPerson = {
+  id: string;
+  kind: string;
+  name: string;
+  email: string;
+  handle: string | null;
+  photo: string | null;
+  photoThumb: string | null;
+  avatarColor: string | null;
+};
+
 export type ShiftNaming = {
   /** The coach who normally teaches a slot, keyed by class id. */
-  standing: Map<string, typeof schema.users.$inferSelect>;
+  standing: Map<string, ShiftPerson>;
   /** A single date somebody else took, keyed `${classId}|${iso}`. Present and
    *  null means the date is covered by nobody we may name: an open slot, or a
    *  coach who does not show their shifts. It must not fall back to the
    *  standing coach, who is not on that date. */
-  perDate: Map<string, typeof schema.users.$inferSelect | null>;
+  perDate: Map<string, ShiftPerson | null>;
 };
 
 /**
@@ -259,7 +346,10 @@ export type ShiftNaming = {
  * a gym's schedule names anybody is the gym's call rather than ours: the row
  * stays the gym's, exactly as before.
  */
-export async function shiftNaming(classIds: string[]): Promise<ShiftNaming> {
+export async function shiftNaming(
+  classIds: string[],
+  options: { includePrivate?: boolean } = {},
+): Promise<ShiftNaming> {
   const empty: ShiftNaming = { standing: new Map(), perDate: new Map() };
   if (!classIds.length) return empty;
   const db = await getDb();
@@ -278,15 +368,30 @@ export async function shiftNaming(classIds: string[]): Promise<ShiftNaming> {
     ),
   ];
   if (!ids.length) return empty;
-  const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
-  const nameable = new Map(people.filter((u) => u.shiftsPublic).map((u) => [u.id, u]));
+  const people = await db
+    .select({
+      id: schema.users.id,
+      kind: schema.users.kind,
+      name: schema.users.name,
+      email: schema.users.email,
+      handle: schema.users.handle,
+      photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+      photoThumb: schema.users.photoThumb,
+      avatarColor: schema.users.avatarColor,
+      shiftsPublic: schema.users.shiftsPublic,
+    })
+    .from(schema.users)
+    .where(inArray(schema.users.id, ids));
+  const nameable = new Map(
+    people.filter((u) => options.includePrivate || u.shiftsPublic).map((u) => [u.id, u]),
+  );
 
-  const standing = new Map<string, typeof schema.users.$inferSelect>();
+  const standing = new Map<string, ShiftPerson>();
   for (const r of rows) {
     const u = r.coachUserId ? nameable.get(r.coachUserId) : undefined;
     if (u) standing.set(r.id, u);
   }
-  const perDate = new Map<string, typeof schema.users.$inferSelect | null>();
+  const perDate = new Map<string, ShiftPerson | null>();
   for (const c of covers) {
     perDate.set(
       `${c.classId}|${c.occurrenceDate}`,

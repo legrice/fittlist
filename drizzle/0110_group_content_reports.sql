@@ -1,0 +1,2 @@
+ALTER TABLE "content_reports" DROP CONSTRAINT "content_reports_type_check";--> statement-breakpoint
+ALTER TABLE "content_reports" ADD CONSTRAINT "content_reports_type_check" CHECK ("content_reports"."content_type" IN ('group', 'group_post', 'group_comment', 'shoutout', 'profile', 'inquiry_message'));

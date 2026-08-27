@@ -1,32 +1,44 @@
 import { NextResponse } from "next/server";
-import { consumeMagicToken } from "@/app/actions/auth";
-import { landingHref } from "@/lib/flags";
 import { siteOrigin } from "@/lib/format";
+import { MAGIC_PENDING_COOKIE, MAGIC_PENDING_MAX_AGE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-// A magic-link click lands here. Consume the token (which sets the session
-// cookie), then send the trainer where they need to go: straight to the app, or
-// back to the claim step if they haven't picked a handle yet.
+/**
+ * Email clients and security products routinely preview links with GET. This
+ * endpoint therefore performs no account mutation: it parks a well-formed,
+ * short-lived token in an HttpOnly cookie and sends the browser to a clean
+ * confirmation page. Only that page's explicit POST consumes the token.
+ */
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams;
   const token = q.get("token") ?? "";
-  const result = await consumeMagicToken(token);
+  const invited = q.get("invited") === "1";
   const origin = siteOrigin();
-  if (!result) {
-    // A dead invite link still means they were invited — keep that on the
-    // landing page so they get "you're in", not "request an invite".
-    const inv = q.get("invited") === "1" ? "&invited=1" : "";
-    return NextResponse.redirect(`${origin}/?expired=1${inv}`);
+  if (!/^[a-f0-9]{64}$/.test(token)) {
+    const expired = NextResponse.redirect(`${origin}/?expired=1${invited ? "&invited=1" : ""}`, 303);
+    expired.cookies.set(MAGIC_PENDING_COOKIE, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 0,
+      path: "/",
+    });
+    expired.headers.set("Cache-Control", "no-store");
+    expired.headers.set("Referrer-Policy", "no-referrer");
+    return expired;
   }
-  // Signed in by email alone: prompt for a password so the next browser, or the
-  // next device, isn't another trip through the inbox.
-  const setpw = result.noPassword ? "?setpw=1" : "";
-  if (result.needsProfile) {
-    const q = result.via ? `?via=${encodeURIComponent(result.via)}` : "";
-    return NextResponse.redirect(`${origin}/${q}`);
-  }
-  // Every established account lands on the same calendar. The calendar also
-  // renders the set-a-password prompt when this login came from email.
-  return NextResponse.redirect(`${origin}${await landingHref()}${setpw}`);
+  const destination = new URL("/auth/continue", origin);
+  if (invited) destination.searchParams.set("invited", "1");
+  const response = NextResponse.redirect(destination, 303);
+  response.cookies.set(MAGIC_PENDING_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: MAGIC_PENDING_MAX_AGE,
+    path: "/",
+  });
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("Referrer-Policy", "no-referrer");
+  return response;
 }

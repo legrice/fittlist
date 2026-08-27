@@ -38,7 +38,7 @@ export function FeedbackThread({ messages }: { messages: Msg[] }) {
     <>
       {messages.length > 0 ? (
         <div className="chatbody">
-          <ChatMessages messages={messages} mineIsCoach={false} />
+          <ChatMessages messages={messages} mineIsCoach={false} allowReports allowBlocking />
         </div>
       ) : (
         <div className="fbintro">

@@ -59,6 +59,54 @@ export async function hiddenFrom(viewerId: string | null): Promise<Set<string>> 
 /** The rows a block has to clean up: their follow of you goes with it. */
 export async function dropFollow(ownerId: string, blockedId: string): Promise<void> {
   const db = await getDb();
+  // Invitations are an interaction surface too: after a block, neither person
+  // should be able to keep an old group invitation alive in the other's UI.
+  await db
+    .delete(schema.groupInvitations)
+    .where(
+      and(
+        eq(schema.groupInvitations.invitedByUserId, ownerId),
+        eq(schema.groupInvitations.inviteeUserId, blockedId),
+      ),
+    );
+  await db
+    .delete(schema.groupInvitations)
+    .where(
+      and(
+        eq(schema.groupInvitations.invitedByUserId, blockedId),
+        eq(schema.groupInvitations.inviteeUserId, ownerId),
+      ),
+    );
+  // A group owner must always be able to moderate every current member. If a
+  // block exists in either direction, remove the other person from groups
+  // owned by that account (and from their saved-group list) so blocking cannot
+  // be used to publish updates that are invisible to the owner.
+  const [ownedByOwner, ownedByBlocked] = await Promise.all([
+    db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.ownerUserId, ownerId)),
+    db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.ownerUserId, blockedId)),
+  ]);
+  const ownerGroupIds = ownedByOwner.map((group) => group.id);
+  const blockedGroupIds = ownedByBlocked.map((group) => group.id);
+  if (ownerGroupIds.length) {
+    await db.delete(schema.groupMembers).where(and(
+      inArray(schema.groupMembers.groupId, ownerGroupIds),
+      eq(schema.groupMembers.userId, blockedId),
+    ));
+    await db.delete(schema.groupFavorites).where(and(
+      inArray(schema.groupFavorites.groupId, ownerGroupIds),
+      eq(schema.groupFavorites.userId, blockedId),
+    ));
+  }
+  if (blockedGroupIds.length) {
+    await db.delete(schema.groupMembers).where(and(
+      inArray(schema.groupMembers.groupId, blockedGroupIds),
+      eq(schema.groupMembers.userId, ownerId),
+    ));
+    await db.delete(schema.groupFavorites).where(and(
+      inArray(schema.groupFavorites.groupId, blockedGroupIds),
+      eq(schema.groupFavorites.userId, ownerId),
+    ));
+  }
   const [them] = await db
     .select({ email: schema.users.email })
     .from(schema.users)
@@ -71,6 +119,18 @@ export async function dropFollow(ownerId: string, blockedId: string): Promise<vo
     .where(
       and(eq(schema.subscribers.trainerUserId, ownerId), eq(schema.subscribers.email, them.email)),
     );
+  await db
+    .delete(schema.followRequests)
+    .where(and(eq(schema.followRequests.trainerUserId, ownerId), eq(schema.followRequests.requesterUserId, blockedId)));
+  await db
+    .delete(schema.followRequests)
+    .where(and(eq(schema.followRequests.trainerUserId, blockedId), eq(schema.followRequests.requesterUserId, ownerId)));
+  await db
+    .delete(schema.profileEndorsements)
+    .where(and(eq(schema.profileEndorsements.targetUserId, ownerId), eq(schema.profileEndorsements.endorserUserId, blockedId)));
+  await db
+    .delete(schema.profileEndorsements)
+    .where(and(eq(schema.profileEndorsements.targetUserId, blockedId), eq(schema.profileEndorsements.endorserUserId, ownerId)));
   await db
     .delete(schema.subscribers)
     .where(

@@ -9,14 +9,16 @@ import {
   type StoryThemeId,
 } from "@/lib/format";
 import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
-import { DECOS, type DecoId } from "@/lib/decorations";
+import type { DecoId } from "@/lib/decorations";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
+import { setStoryBackground } from "@/app/actions/profile";
 import { setGoing } from "@/app/actions/going";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { readPhoto } from "@/lib/photo";
 
 // The Share tab's screen, on Matt's concept: one surface, four subjects.
 // Week, Profile and QR code are segments rather than tiles, the title says
@@ -66,6 +68,7 @@ export function ShareHubScreen({
   defaultFrom,
   today,
   savedHeadline,
+  savedBackground,
   studios,
   templates,
   customTypes,
@@ -95,6 +98,8 @@ export function ShareHubScreen({
    *  one, so the Message chip never claims the default while the picture
    *  draws something else. */
   savedHeadline: string;
+  /** The last background picked in this editor, reusable next time. */
+  savedBackground: string | null;
   /** The adder's ingredients, loaded only for a member: their hub carries
    *  the personal adder, because building the week is what the tab is for. */
   studios: StudioDto[];
@@ -113,6 +118,9 @@ export function ShareHubScreen({
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
+  const [background, setBackground] = useState(savedBackground);
+  const [backgroundBusy, setBackgroundBusy] = useState(false);
+  const backgroundRef = useRef<HTMLInputElement>(null);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
@@ -129,10 +137,15 @@ export function ShareHubScreen({
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>("top");
   const [pick, setPick] = useState<
-    null | "dates" | "classes" | "message" | "layout" | "deco"
+    null | "dates" | "classes" | "message" | "layout" | "color"
   >(null);
+  const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const [shareCapabilityKnown, setShareCapabilityKnown] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
+  const [nativeShareAvailable, setNativeShareAvailable] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [preparedShare, setPreparedShare] = useState<{ url: string; file: File } | null>(null);
+  const [prepareFailed, setPrepareFailed] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
   // One buster per visit, bumped after an add: the week changes behind the
   // picture the moment a class lands, and a cached preview of the week
@@ -181,6 +194,59 @@ export function ShareHubScreen({
   };
   const [toastMsg, toastOn, toast] = useToast();
 
+  const chooseBackground = (file: File) => {
+    if (backgroundBusy) return;
+    readPhoto(
+      file,
+      async (dataUrl) => {
+        setBackgroundBusy(true);
+        const result = await setStoryBackground(dataUrl);
+        setBackgroundBusy(false);
+        if (!result.ok || !result.background) {
+          toast(result.error ?? "Couldn't add that background");
+          return;
+        }
+        setBackground(result.background);
+        setBust(Date.now());
+        setPick(null);
+        toast("Photo background added");
+      },
+      () => toast("That photo format isn't supported"),
+    );
+  };
+
+  const removeBackground = async () => {
+    if (backgroundBusy) return;
+    setBackgroundBusy(true);
+    const result = await setStoryBackground(null);
+    setBackgroundBusy(false);
+    if (!result.ok) {
+      toast(result.error ?? "Couldn't remove the background");
+      return;
+    }
+    setBackground(null);
+    setBust(Date.now());
+    setPick(null);
+    toast("Photo background removed");
+  };
+
+  const chooseColorBackground = async (id: StoryThemeId) => {
+    if (backgroundBusy) return;
+    if (background) {
+      setBackgroundBusy(true);
+      const result = await setStoryBackground(null);
+      setBackgroundBusy(false);
+      if (!result.ok) {
+        toast(result.error ?? "Couldn't change the background");
+        return;
+      }
+      setBackground(null);
+      setBust(Date.now());
+    }
+    setThemeId(id);
+    setPick(null);
+  };
+
   // A server change (an add, a mark) has to reach both the list and the
   // picture: refresh re-runs the page's loader for the list, the bust
   // redraws the picture.
@@ -212,8 +278,34 @@ export function ShareHubScreen({
         typeof navigator.share === "function" &&
         typeof navigator.canShare === "function",
     );
+    setNativeShareAvailable(
+      !!(window as typeof window & {
+        webkit?: { messageHandlers?: { fittlistShareTarget?: unknown } };
+      }).webkit?.messageHandlers?.fittlistShareTarget,
+    );
+    setShareCapabilityKnown(true);
     setPageHost(window.location.host);
   }, []);
+
+  // The route version is opened from your circle and owns the whole mobile
+  // screen just like the calendar's embedded editor. The native header and
+  // tab bar live outside the web view, so they need the same explicit signal.
+  useEffect(() => {
+    if (embedded) return;
+    window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: false }));
+    };
+  }, [embedded]);
+
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      if (detail?.message) toast(detail.message);
+    };
+    window.addEventListener("fittlist:native-share-result", receive);
+    return () => window.removeEventListener("fittlist:native-share-result", receive);
+  }, [toast]);
 
   // A member with nothing anywhere yet is building, not sharing: the screen
   // becomes the start block alone, because an empty poster pushed the one
@@ -268,10 +360,10 @@ export function ShareHubScreen({
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
-    `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0` +
+    `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}` +
-    `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}`;
+    `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
   const fileName =
@@ -280,34 +372,118 @@ export function ShareHubScreen({
       : `fittlist-${handle}-card.png`;
   const qrUrl = `/api/qr/${handle}`;
   const qrFileName = `fittlist-${handle}-qr.png`;
+  const activeShareUrl = seg === "qr" ? qrUrl : imgUrl;
+  const activeShareFile = seg === "qr" ? qrFileName : fileName;
+
+  // Safari requires navigator.share to begin in the tap's user-activation
+  // window. Preparing the PNG after the tap can take long enough to lose that
+  // window, so prepare the currently visible subject as soon as it changes.
+  useEffect(() => {
+    if (seg === "text") return;
+    const controller = new AbortController();
+    setPreparedShare(null);
+    setPrepareFailed(false);
+    void (async () => {
+      try {
+        const response = await fetch(activeShareUrl, { signal: controller.signal });
+        if (!response.ok) {
+          setPrepareFailed(true);
+          return;
+        }
+        const blob = await response.blob();
+        setPreparedShare({
+          url: activeShareUrl,
+          file: new File([blob], activeShareFile, { type: blob.type || "image/png" }),
+        });
+      } catch (error) {
+        if ((error as Error)?.name !== "AbortError") {
+          setPreparedShare(null);
+          setPrepareFailed(true);
+        }
+      }
+    })();
+    return () => controller.abort();
+  }, [activeShareFile, activeShareUrl, seg]);
 
   const rangeLabel =
     days === 1 ? `${wday(from)}, ${short(from)}` : `${short(from)} to ${short(plusDays(from, days - 1))}`;
+
+  const downloadImage = (url: string, file: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file;
+    a.click();
+  };
+
+  const nativeShare = (url: string, file: string) => {
+    const handler = (window as typeof window & {
+      webkit?: { messageHandlers?: { fittlistShareTarget?: { postMessage: (body: unknown) => void } } };
+    }).webkit?.messageHandlers?.fittlistShareTarget;
+    if (!handler) return false;
+    // Let the native side download the image with the web view's cookies.
+    // Sending a 1080px PNG as base64 through WKScriptMessage was large enough
+    // to fail before Instagram or Messages ever opened.
+    handler.postMessage({ target: "more", url: new URL(url, window.location.href).href, file });
+    return true;
+  };
 
   const shareImage = async (url: string, file: string, failWord: string) => {
     if (sharing) return;
     setSharing(true);
     try {
+      if (nativeShare(url, file)) return;
+      if (
+        canShareFiles &&
+        preparedShare?.url === url &&
+        navigator.canShare({ files: [preparedShare.file] })
+      ) {
+        await navigator.share({
+          files: [preparedShare.file],
+          title: "Share your FittList",
+        });
+        return;
+      }
       if (canShareFiles) {
         const res = await fetch(url);
-        if (res.ok) {
-          const f = new File([await res.blob()], file, { type: "image/png" });
-          if (navigator.canShare({ files: [f] })) {
-            await navigator.share({ files: [f] });
-            return;
-          }
+        if (!res.ok) throw new Error(`Share image returned ${res.status}`);
+        const f = new File([await res.blob()], file, { type: "image/png" });
+        if (navigator.canShare({ files: [f] })) {
+          await navigator.share({
+            files: [f],
+            title: "Share your FittList",
+          });
+          return;
         }
       }
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file;
-      a.click();
+      downloadImage(url, file);
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") toast(`Couldn't share the ${failWord}`);
     } finally {
       setSharing(false);
     }
   };
+
+  const imageShareActions = (url: string, file: string, failWord: string) => (
+    <div className="shcta">
+      <button
+        className="btn si"
+        disabled={
+          sharing ||
+          !shareCapabilityKnown ||
+          (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url && !prepareFailed)
+        }
+        onClick={() => shareImage(url, file, failWord)}
+      >
+        {sharing
+          ? "Opening share sheet..."
+          : !shareCapabilityKnown || (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url && !prepareFailed)
+            ? "Preparing..."
+            : prepareFailed
+              ? "Try sharing"
+            : "Share"}
+      </button>
+    </div>
+  );
 
   // The week as words, matching the picture exactly: same range, same hide
   // set, same studio names. Ends on the page link, because the text is a
@@ -349,7 +525,7 @@ export function ShareHubScreen({
   // state without the segments is the start block, whose one job is the
   // first add.
   const segs: { id: Seg; label: string }[] = [
-    { id: "week", label: "Week" },
+    { id: "week", label: "Schedule" },
     { id: "profile", label: "Profile" },
     { id: "qr", label: "QR code" },
     // The week as words is a subject of its own, by Matt's call: it sat
@@ -411,12 +587,11 @@ export function ShareHubScreen({
       <div className={`cardwrap shpage${embedded ? " shpage-embedded" : ""}`}>
         {!embedded && (
           <div className="shpage-back">
-            <BackLink className="evback" href="/calendar" anywhere label="Back to calendar">
-              <Icon name="arrow_back" size={23} />
+            <BackLink className="evback share-page-close" href="/calendar" anywhere label="Close share screen">
+              <Icon name="close" size={24} />
             </BackLink>
           </div>
         )}
-        <h1 className="tab-page-title shpage-title">Share</h1>
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
             below the fold. Two lines and the button; the experiment talk
@@ -434,18 +609,17 @@ export function ShareHubScreen({
           </div>
         )}
         {!building && (
-          <div className="shseg" role="tablist" aria-label="What to share">
-            {segs.map((s) => (
-              <button
-                key={s.id}
-                role="tab"
-                aria-selected={seg === s.id}
-                className={`shseg-pill${seg === s.id ? " on" : ""}`}
-                onClick={() => goSeg(s.id)}
-              >
-                {s.label}
-              </button>
-            ))}
+          <div className="shseg">
+            <select
+              className="shseg-select"
+              aria-label="What to share"
+              value={seg}
+              onChange={(event) => goSeg(event.target.value as Seg)}
+            >
+              {segs.map((subject) => (
+                <option key={subject.id} value={subject.id}>{subject.label}</option>
+              ))}
+            </select>
           </div>
         )}
 
@@ -461,13 +635,13 @@ export function ShareHubScreen({
           onScroll={onSlides}
           onTouchStart={() => (rideTo.current = null)}
         >
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "week"}>
             <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" />
           </div>
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "profile"}>
             <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
           </div>
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "qr"}>
             {/* The card the mock drew: name, the code on white, the address.
                 A bare code is anybody's; this one says whose. */}
             <div className="qrcard">
@@ -481,44 +655,16 @@ export function ShareHubScreen({
               </div>
             </div>
           </div>
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "text"}>
             <pre className="shtext">{weekText}</pre>
           </div>
         </div>
         )}
 
         {!building && (seg === "week" || seg === "profile") && (
-          <>
-            {/* The colours right under the picture, bare circles, centred:
-                tapping one redraws the picture above it, and the picture is
-                the label, so the word "Colors" said nothing. */}
-            <div className="shcolors">
-              <div className="shcolors-row" role="listbox" aria-label="Colors">
-                {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
-                  ([id, t]) => (
-                    <button
-                      key={id}
-                      role="option"
-                      aria-selected={id === themeId}
-                      aria-label={t.label}
-                      className={`shswatch${id === themeId ? " sel" : ""}`}
-                      // backgroundImage, never the shorthand: the CSS clips
-                      // the colour to the content circle so the ring can be
-                      // the border, and the shorthand would reset that clip.
-                      style={{
-                        backgroundImage: t.bg.includes("gradient")
-                          ? t.bg
-                          : `linear-gradient(105deg, ${t.bg} 50%, ${t.accent} 50%)`,
-                      }}
-                      onClick={() => setThemeId(id)}
-                    />
-                  ),
-                )}
-              </div>
-            </div>
-
-            {seg === "week" && (
-              <div className="shctrls">
+          <div className="shctrls">
+            {seg === "week" ? (
+              <>
                 {/* The rail of what the picture says: its range, its roster,
                     its words. Each chip is a small labelled door to a sheet.
                     A member's rail leads with the add in brand, by Matt's
@@ -531,12 +677,27 @@ export function ShareHubScreen({
                     + Add another class
                   </button>
                 )}
-                {/* A complete visual style is the fastest way to make the
-                    picture feel yours, so it leads the editing controls. */}
+                <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
+                  <span className="shctrl-k">Background</span>
+                  <span className="shctrl-v">{background ? "Photo" : STORY_THEMES[themeId].label}</span>
+                </button>
+                {/* A complete visual style follows the background: the
+                    picture's surface is the first decision people see. */}
                 <button className="shctrl" onClick={() => setPick("layout")}>
                   <span className="shctrl-k">Style</span>
                   <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
                 </button>
+                <input
+                  ref={backgroundRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    if (file) chooseBackground(file);
+                    event.currentTarget.value = "";
+                  }}
+                />
                 <button className="shctrl" onClick={() => setPick("classes")}>
                   <span className="shctrl-k">Classes</span>
                   <span className="shctrl-v">
@@ -553,42 +714,20 @@ export function ShareHubScreen({
                     {noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   </span>
                 </button>
-                <button className="shctrl" onClick={() => setPick("deco")}>
-                  <span className="shctrl-k">Decoration</span>
-                  <span className="shctrl-v">
-                    {DECOS.find((d) => d.id === decoId)?.label ?? "Top bar"}
-                  </span>
-                </button>
-              </div>
+              </>
+            ) : (
+              <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
+                <span className="shctrl-k">Color</span>
+                <span className="shctrl-v">{STORY_THEMES[themeId].label}</span>
+              </button>
             )}
-
-            {/* One call now that the rail carries the add: the button under
-                the picture shares the thing on screen. */}
-            <div className="shcta">
-              {canShareFiles ? (
-                <button
-                  className="btn si"
-                  disabled={sharing}
-                  onClick={() =>
-                    shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
-                  }
-                >
-                  {sharing ? (
-                    "Opening…"
-                  ) : (
-                    <>
-                      Share <Icon name="ios_share" size={18} />
-                    </>
-                  )}
-                </button>
-              ) : (
-                <a className="btn si" href={imgUrl} download={fileName}>
-                  Save
-                </a>
-              )}
-            </div>
-          </>
+          </div>
         )}
+
+        {!building && (seg === "week" || seg === "profile") &&
+          imageShareActions(imgUrl, fileName, seg === "week" ? "picture" : "card")}
+
+        {!building && seg === "qr" && imageShareActions(qrUrl, qrFileName, "QR code")}
 
         {seg === "text" && (
           <>
@@ -603,19 +742,6 @@ export function ShareHubScreen({
         {seg === "qr" && (
           <>
             <div className="shcta">
-              {canShareFiles ? (
-                <button
-                  className="btn si"
-                  disabled={sharing}
-                  onClick={() => shareImage(qrUrl, qrFileName, "QR code")}
-                >
-                  {sharing ? "Opening…" : "Share QR code"}
-                </button>
-              ) : (
-                <a className="btn si" href={qrUrl} download={qrFileName}>
-                  Save QR code
-                </a>
-              )}
               <button className="btn ghost" onClick={copyLink}>
                 Copy link
               </button>
@@ -686,7 +812,7 @@ export function ShareHubScreen({
         </div>
       )}
 
-      {pick === "deco" && (
+      {pick === "color" && (
         <div
           className="sheet-scrim"
           onClick={(e) => {
@@ -697,34 +823,85 @@ export function ShareHubScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Decoration</h2>
-            {/* Each row carries a little swatch of what it does: a frame
-                you can see beats a frame you can only read about. */}
-            <div className="settingslist">
-              {DECOS.map((d) => {
-                const on = d.id === decoId;
-                return (
-                  <button
-                    key={d.id}
-                    className="setrow"
-                    aria-pressed={on}
-                    onClick={() => {
-                      setDecoId(d.id);
+            <h2>{seg === "week" ? "Background" : "Color"}</h2>
+            <p className="lead">
+              {seg === "week" ? "Choose a color or use one of your photos." : "Choose a color for your profile card."}
+            </p>
+            <div className={`shbackground-choices${seg === "week" ? "" : " single"}`}>
+              <button
+                type="button"
+                className={`shbackground-choice${seg !== "week" || !background ? " on" : ""}`}
+                aria-pressed={seg !== "week" || !background}
+                aria-haspopup="dialog"
+                disabled={backgroundBusy}
+                onClick={() => setColorMenuOpen(true)}
+              >
+                <span className="shbackground-choice-top">
+                  <span className="shcolor-preview shbackground-preview" style={{ background: STORY_THEMES[themeId].bg }} />
+                  {(seg !== "week" || !background) && <Icon name="check" size={20} />}
+                </span>
+                <strong>Color</strong>
+                <span>{STORY_THEMES[themeId].label}</span>
+              </button>
+              {seg === "week" && (
+                <button
+                  type="button"
+                  className={`shbackground-choice${background ? " on" : ""}`}
+                  aria-pressed={!!background}
+                  disabled={backgroundBusy}
+                  onClick={() => backgroundRef.current?.click()}
+                >
+                  <span className="shbackground-choice-top">
+                    <span className="shbackground-image-preview"><Icon name="image" size={24} /></span>
+                    {background && <Icon name="check" size={20} />}
+                  </span>
+                  <strong>Photo</strong>
+                  <span>{background ? "Photo selected" : "Choose from photos"}</span>
+                </button>
+              )}
+            </div>
+            {seg === "week" && background && (
+              <button className="shbackground-remove" disabled={backgroundBusy} onClick={() => void removeBackground()}>
+                Remove photo
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {pick === "color" && colorMenuOpen && (
+        <div
+          className="sheet-scrim shcolor-sheet-scrim"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setColorMenuOpen(false);
+          }}
+        >
+          <div className="sheet shcolor-sheet" role="dialog" aria-modal="true" aria-labelledby="shcolor-title">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setColorMenuOpen(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2 id="shcolor-title">Choose a color</h2>
+            <div className="shcolor-sheet-list" role="listbox" aria-label="Background color">
+              {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(([id, theme]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="option"
+                  aria-selected={id === themeId}
+                  onClick={() => {
+                    setColorMenuOpen(false);
+                    if (seg === "week") void chooseColorBackground(id);
+                    else {
+                      setThemeId(id);
                       setPick(null);
-                    }}
-                  >
-                    <span className={`decochip decochip-${d.id}`} aria-hidden="true" />
-                    <span className="setrow-txt">
-                      <span className="t">{d.label}</span>
-                    </span>
-                    {on && (
-                      <span className="setrow-ic">
-                        <Icon name="check" size={20} />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+                    }
+                  }}
+                >
+                  <span className="shcolor-preview" style={{ background: theme.bg }} />
+                  <span>{theme.label}</span>
+                  {id === themeId && <Icon name="check" size={18} />}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -843,9 +1020,10 @@ export function ShareHubScreen({
                   step={5}
                   value={slider}
                   onChange={(e) => setSlider(Number(e.target.value))}
-                  onPointerUp={() => setHsize(slider)}
-                  onKeyUp={() => setHsize(slider)}
-                  onTouchEnd={() => setHsize(slider)}
+                  onPointerUp={(e) => setHsize(Number(e.currentTarget.value))}
+                  onKeyUp={(e) => setHsize(Number(e.currentTarget.value))}
+                  onTouchEnd={(e) => setHsize(Number(e.currentTarget.value))}
+                  onBlur={(e) => setHsize(Number(e.currentTarget.value))}
                 />
                 {/* The voice, as a plain dropdown, by Matt's call: the sheet
                     of sample rows folded in here with the words it dresses. */}

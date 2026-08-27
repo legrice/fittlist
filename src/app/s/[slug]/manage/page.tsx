@@ -1,10 +1,10 @@
 import { eq, or } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { getSessionUserId } from "@/lib/session";
+import { currentUser } from "@/lib/current-user";
 import { studioAccess } from "@/lib/studioaccess";
-import { gymCatalog, gymCoaches, gymSchedule, shiftRequests } from "@/app/actions/gym";
-import { GymRota } from "@/components/GymRota";
+import { gymCoaches, gymSchedule, shiftRequests } from "@/app/actions/gym";
+import { StudioManageDashboard } from "@/components/StudioManageDashboard";
 import type { PlaceKind } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +19,10 @@ export default async function ManageStudioPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ w?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
-  const { w } = await searchParams;
+  const legacyParams = await searchParams;
   const db = await getDb();
   const [studio] = await db
     .select()
@@ -34,37 +34,41 @@ export default async function ManageStudioPage({
     );
   if (!studio) notFound();
 
-  const viewerId = await getSessionUserId();
-  if (!viewerId) notFound();
-  const [me] = await db
-    .select({ kind: schema.users.kind })
-    .from(schema.users)
-    .where(eq(schema.users.id, viewerId));
+  const me = await currentUser();
   if (!me) notFound();
+  const viewerId = me.id;
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
-  const [week, coaches, catalog, typeRows, requests] = await Promise.all([
-    gymSchedule(studio.id, Number(w) || 0),
+  const [week, coaches, requests] = await Promise.all([
+    gymSchedule(studio.id, 0),
     gymCoaches(studio.id),
-    gymCatalog(studio.id),
-    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
     shiftRequests(studio.id),
   ]);
+  const studioSlug = studio.slug ?? studio.id;
+  const calendarKeys = ["w", "view", "m", "show"];
+  if (calendarKeys.some((key) => legacyParams[key] !== undefined)) {
+    const query = new URLSearchParams();
+    for (const key of calendarKeys) {
+      const value = legacyParams[key];
+      if (typeof value === "string") query.set(key, value);
+    }
+    redirect(`/s/${studioSlug}/manage/calendar?${query.toString()}`);
+  }
+  const classes = week?.days.reduce((total, day) => total + day.items.length, 0) ?? 0;
+  const openShifts = week?.days.reduce(
+    (total, day) => total + day.items.filter((item) => !item.onUserId).length,
+    0,
+  ) ?? 0;
 
   return (
-    <GymRota
-      studioId={studio.id}
+    <StudioManageDashboard
       studioName={studio.name}
-      studioAddress={studio.address}
-      studioSlug={studio.slug ?? studio.id}
-      manageBase={`/s/${studio.slug ?? studio.id}/manage`}
+      studioSlug={studioSlug}
       hasAccount={!!studio.accountUserId}
-      week={week}
-      coaches={coaches}
-      catalog={catalog}
-      customTypes={typeRows.map((t) => t.name)}
-      viewerId={viewerId}
+      classCount={classes}
+      openShiftCount={openShifts}
+      staffCount={coaches.length}
       requests={requests}
       admin={{
         showCoaches: studio.showCoaches,
@@ -73,6 +77,7 @@ export default async function ManageStudioPage({
           id: studio.id,
           name: studio.name,
           address: studio.address,
+          timeZone: studio.timeZone,
           placeKind: studio.placeKind as PlaceKind,
           types: studio.types,
           about: studio.about ?? "",

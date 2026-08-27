@@ -7,7 +7,6 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import {
   beginPasskeyRegistration,
-  changeEmail as changeEmailAction,
   finishPasskeyRegistration,
   logout,
   removePasskeys,
@@ -26,11 +25,13 @@ import { MessagesToggle } from "@/components/MessagesToggle";
 import { MyCalendar } from "@/components/MyCalendar";
 import { InviteSheet } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
+import { EmbedScheduleButton } from "@/components/EmbedScheduleButton";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { myWeekText } from "@/app/actions/weektext";
 import { Toast, useToast } from "@/components/Toast";
 import { forgetLocalPasskey, rememberLocalPasskey } from "@/lib/passkey-device";
+import { TimeZoneSetting } from "@/components/TimeZoneSetting";
 
 // The four the spec's settings list opens, plus the leaves each of those
 // holds. A leaf is still reachable on its own, because the sub-screen is a
@@ -44,6 +45,7 @@ type View =
   | "security"
   | "contact"
   | "gcal"
+  | "embed"
   | "availability";
 
 // The trainer's account. Home shows the profile tile, the share cards, and
@@ -85,6 +87,7 @@ export function ProfileSheet({
   approveFollowers = false,
   messagesOpen = true,
   look,
+  timeZone,
   onClose,
   initialView = "home",
   detailOnly = false,
@@ -134,6 +137,7 @@ export function ProfileSheet({
   approveFollowers?: boolean;
   messagesOpen?: boolean;
   look: string | null;
+  timeZone: string;
   /** Unused as a page: a tab is not a thing you close. */
   onClose?: () => void;
   initialView?: View;
@@ -157,14 +161,12 @@ export function ProfileSheet({
 
   const [pkCount, setPkCount] = useState(passkeyCount);
   const [pwSet, setPwSet] = useState(hasPassword);
-  const [emailShown, setEmailShown] = useState(email);
+  const emailShown = email;
   const [passkeyable, setPasskeyable] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // Change-email / change-password sheets (re-auth with current password).
-  const [emailSheet, setEmailSheet] = useState(false);
+  // Password changes re-authenticate with the current password.
   const [pwSheet, setPwSheet] = useState(false);
-  const [newEmail, setNewEmail] = useState(email);
   const [newPw, setNewPw] = useState("");
   const [curPw, setCurPw] = useState("");
 
@@ -216,7 +218,11 @@ export function ProfileSheet({
 
   const disconnectGcal = () =>
     startDisconnect(async () => {
-      await disconnectGoogleAction();
+      const result = await disconnectGoogleAction();
+      if (!result.ok) {
+        toast("Couldn't disconnect Google Calendar. Try again");
+        return;
+      }
       setConnected(false);
       toast("Google Calendar disconnected");
     });
@@ -255,22 +261,6 @@ export function ProfileSheet({
         forgetLocalPasskey();
         toast("Passkey removed");
       } else toast(res.error ?? "Couldn't remove");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const saveEmail = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      const res = await changeEmailAction(newEmail, curPw);
-      if (res.ok) {
-        setEmailShown(newEmail.trim().toLowerCase());
-        setEmailSheet(false);
-        setCurPw("");
-        toast("Email updated");
-      } else toast(res.error ?? "Couldn't update email");
     } finally {
       setBusy(false);
     }
@@ -378,8 +368,6 @@ export function ProfileSheet({
     }
   };
 
-  const initial = (name.trim().charAt(0) || "?").toUpperCase();
-  const firstName = name.trim().split(/\s+/)[0] || name;
   const AVAIL_LABEL: Record<string, string> = {
     accepting: "Accepting new clients",
     waitlist: "Waitlist only",
@@ -395,6 +383,7 @@ export function ProfileSheet({
     contact: "Contact info",
     availability: "Availability",
     gcal: "Google Calendar",
+    embed: "Embed your schedule",
   };
   const viewTitle = view === "home" ? "" : VIEW_TITLE[view];
 
@@ -404,6 +393,7 @@ export function ProfileSheet({
         className={`acctwrap${page ? " acct-page" : ""}${anim === "left" ? " acct-from-left" : ""}${anim === "none" ? " acct-noanim" : ""}`}
         hidden={detailOnly}
         role={page ? undefined : "dialog"}
+        aria-modal={page ? undefined : true}
         aria-label={page ? undefined : "Your account"}
       >
         {/* As the You tab the face row leads and no heading repeats the tab's
@@ -417,129 +407,8 @@ export function ProfileSheet({
           </div>
         )}
 
-        {/* Who this is, on the paper rather than in a card. It isn't a setting,
-            it's the label on the drawer, so boxing it made it read as the first
-            row of a list it doesn't belong to. */}
-        <div className="acctwho">
-          <button className="acctwho-id" onClick={goProfile} aria-label="Open your profile">
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="acctwho-av" src={photo} alt="" />
-            ) : (
-              <span
-                className="acctwho-av acctwho-av-empty"
-                style={{ background: avatarColor }}
-                aria-hidden="true"
-              >
-                {initial}
-              </span>
-            )}
-            <span className="acctwho-txt">
-              <span className="acctwho-nm">{firstName}</span>
-              {title ? <span className="acctwho-sub">{title}</span> : null}
-              {/* The address people are actually handed. It is the one thing
-                  this screen is about and it was nowhere on it. */}
-              <span className="acctwho-url">fittlist.co/{handle}</span>
-            </span>
-          </button>
-          {/* Editing shouldn't need a detour through the preview: this opens
-              the public page with the editor already up. */}
-          <button className="tertiary acctedit" onClick={() => router.push(`/${handle}?edit=1`)}>
-            Edit
-          </button>
-        </div>
-
-        {/* Three counts of people, and every one of them opens the list it
-            counts, which is why every one carries a chevron. Profile views
-            left: it was the only number here with nowhere to go, and a
-            vanity figure beside two relationships is the wrong thing to put
-            at the top of somebody's own page. */}
-        <div className="acctstats acctstats-grid">
-          <button className="acctstat" onClick={() => router.push("/following")}>
-            <span className="n">{followingCount}</span>
-            <span className="l">
-              Following <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-          <button className="acctstat" onClick={() => router.push("/followers")}>
-            <span className="n">{subsCount}</span>
-            <span className="l">
-              Followers <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-          <button className="acctstat" onClick={() => router.push("/requests")}>
-            <span className="n">
-              {requestCount}
-              {requestCount > 0 && <span className="acctstat-dot" aria-hidden="true" />}
-            </span>
-            <span className="l">
-              Requests <Icon name="chevron_right" size={15} />
-            </span>
-          </button>
-        </div>
-
-        {/* Two buttons where five tiles were. Four of those tiles were the
-            same act in different output formats and they took the whole
-            first screen of somebody's own page; they are rows in one sheet
-            now. Preview outlined, Share filled: the same pair, the same
-            weights and the same spot the visitor's Message and Follow take
-            on the public page. */}
-        <div className="acctacts">
-          <button className="btn ghost" onClick={goProfile}>
-            Preview profile
-          </button>
-          <button className="btn si" onClick={() => setShareMenu(true)}>
-            Share
-          </button>
-        </div>
-
-        {/* One list of four rows, each opening a sub-screen, each subtitle
-            saying where the setting stands so the top level answers most of
-            it without a tap. It was five headed groups and eighteen rows on
-            one scroll, and the calendar alone was in four different places. */}
-
-        {/* A place you run is not a setting, so it sits above them with the
-            other things that are yours. It was reachable only by navigating
-            to the studio's own page and finding the floating pill, which is
-            no way to find something you own. */}
-        {runs.length > 0 && (
-          <>
-            <h3 className="setgroup-h">Your studios</h3>
-            <div className="settingslist">
-              {runs.map((st) => (
-                <Link
-                  key={st.slug}
-                  className="setrow"
-                  href={`/s/${st.slug}/${st.admin ? "manage" : "shifts"}`}
-                  prefetch={false}
-                >
-                  <span className="setrow-ic"><Icon name="storefront" size={24} /></span>
-                  <span className="setrow-txt">
-                    <span className="t">
-                      {st.name}
-                      <span className="staffrole">{st.admin ? "Admin" : "Coach"}</span>
-                    </span>
-                    <span className="s">
-                      {st.admin ? "Calendar and staff" : "Your shifts and what's open"}
-                    </span>
-                  </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
-
-        <h3 className="setgroup-h">Settings</h3>
+        {page && <h3 className="setgroup-h">Settings</h3>}
         <div className="settingslist">
-          <button className="setrow" onClick={() => openView("page")}>
-            <span className="setrow-ic"><Icon name="account_circle" size={24} /></span>
-            <span className="setrow-txt">
-              <span className="t">Profile &amp; public page</span>
-              <span className="s">Handle, contact info, availability</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-          </button>
           <button className="setrow" onClick={() => openView("calendar")}>
             <span className="setrow-ic"><Icon name="event" size={24} /></span>
             <span className="setrow-txt">
@@ -573,59 +442,92 @@ export function ProfileSheet({
           </button>
         </div>
 
-        {/* It earns its place by naming the reason rather than asking a
-            favour: the people you train with being here is what makes the app
-            work. It led the page for a while, above everything somebody came
-            to this screen to do, which is where an ask reads as an ad. Down
-            here it is the last thing on the way out, after the work and
-            before the plain links. It is the beta's card and should not
-            become fixed ad space; when invites stop being the priority it
-            collapses to a row in the share sheet, which is already where the
-            same link lives. It carries no count yet: the spec's "65 have
-            joined from your link" is the line that does the real work, and a
-            number nobody has counted is worse than none. */}
-        <div className="acctinvite">
-          <div className="acctinvite-txt">
-            <h3>Share the love</h3>
-            <p>Fittlist works better when the people you train with are on it.</p>
-          </div>
-          <button className="acctinvite-btn" onClick={() => setInviteOpen(true)}>
-            Invite
+        <h3 className="setgroup-h">FittList</h3>
+        <div className="settingslist">
+          <button className="setrow" onClick={() => setInviteOpen(true)}>
+            <span className="setrow-ic"><Icon name="reply" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Share FittList</span>
+              <span className="s">Send the app to the people you train with</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
           </button>
-        </div>
-
-        {/* Plain links, not a section. Admin, Brand and Ethos are internal
-            and were three rows under their own heading on every staff
-            account's page; a footer is where a thing you use twice a month
-            belongs. */}
-        <div className="acctfoot">
-          {canSendFeedback && (
-            <a className="acctfoot-l" href="/feedback">
-              Send feedback
-            </a>
+          {isAdmin && (
+            <Link className="setrow" href="/admin" prefetch={false}>
+              <span className="setrow-ic"><Icon name="admin_panel_settings" size={24} /></span>
+              <span className="setrow-txt">
+                <span className="t">Admin</span>
+                <span className="s">Activity, people, studios, and maintenance</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+            </Link>
           )}
-          <a className="acctfoot-l" href="/privacy">
-            Privacy
-          </a>
+          {canSendFeedback && (
+            <Link className="setrow" href="/feedback">
+              <span className="setrow-ic"><Icon name="chat_bubble" size={24} /></span>
+              <span className="setrow-txt">
+                <span className="t">Send feedback</span>
+                <span className="s">Tell us what is working or what needs attention</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+            </Link>
+          )}
+          <Link className="setrow" href="/privacy">
+            <span className="setrow-ic"><Icon name="shield" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Privacy policy</span>
+              <span className="s">How FittList handles your information</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+          </Link>
+          <Link className="setrow" href="/support">
+            <span className="setrow-ic"><Icon name="info" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Support &amp; safety</span>
+              <span className="s">Get help or report a concern</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+          </Link>
           {isAdmin && (
             <>
-              <a className="acctfoot-l" href="/admin">
-                Admin
-              </a>
-              <a className="acctfoot-l" href="/brand">
-                Brand
-              </a>
-              <a className="acctfoot-l" href="/ethos">
-                Ethos
-              </a>
+              <Link className="setrow" href="/admin/marketing" prefetch={false}>
+                <span className="setrow-ic"><Icon name="campaign" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Marketing site preview</span>
+                  <span className="s">Review the private landing-page draft</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </Link>
+              <Link className="setrow" href="/brand">
+                <span className="setrow-ic"><Icon name="palette" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Brand</span>
+                  <span className="s">Logos, colors, and visual direction</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </Link>
+              <Link className="setrow" href="/ethos">
+                <span className="setrow-ic"><Icon name="favorite" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Ethos</span>
+                  <span className="s">What FittList believes</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </Link>
             </>
           )}
-          <form action={logout}>
-            <button type="submit" className="acctfoot-l acctfoot-out">
-              Log out
-            </button>
-          </form>
         </div>
+
+        <h3 className="setgroup-h">Session</h3>
+        <form action={logout} className="settingslist">
+          <button type="submit" className="setrow">
+            <span className="setrow-ic"><Icon name="logout" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Log out</span>
+              <span className="s">Sign out of this device</span>
+            </span>
+          </button>
+        </form>
 
       </div>
 
@@ -693,6 +595,7 @@ export function ProfileSheet({
                 </button>
               )}
               <MyCalendar hasShifts={shiftCount > 0} />
+              <TimeZoneSetting initialTimeZone={timeZone} />
               <button className="setrow" onClick={copyCal}>
                 <span className="setrow-ic"><Icon name="link" size={24} /></span>
                 <span className="setrow-txt">
@@ -707,8 +610,18 @@ export function ProfileSheet({
                   <span className="s">Ready to paste anywhere</span>
                 </span>
               </button>
+              <button className="setrow" onClick={() => openView("embed")}>
+                <span className="setrow-ic"><Icon name="link" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Website embed</span>
+                  <span className="s">Choose which teaching studios to include</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </button>
             </div>
           )}
+
+          {view === "embed" && <EmbedScheduleButton handle={handle} inline />}
 
           {/* Who gets to you, and how. The switches live behind a tap rather
               than on the landing screen, because a toggle you can catch with
@@ -756,12 +669,7 @@ export function ProfileSheet({
                   <span className="t">Email</span>
                   <span className="s">{emailShown}</span>
                 </span>
-                <button
-                  className="secbtn"
-                  onClick={() => { setNewEmail(emailShown); setCurPw(""); setEmailSheet(true); }}
-                >
-                  Change
-                </button>
+                <Link className="secbtn" href="/support">Get help</Link>
               </div>
               <div className="secrow">
                 <span className="secrow-ic"><Icon name="lock" size={24} /></span>
@@ -884,27 +792,6 @@ export function ProfileSheet({
         </div>
       )}
 
-      {emailSheet && (
-        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setEmailSheet(false); }}>
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setEmailSheet(false)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>Change email</h2>
-            <p className="lead">This is the email you sign in with.</p>
-            <input className="editinput" type="email" autoCapitalize="none" placeholder="New email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-            {pwSet && (
-              <input className="editinput" style={{ marginTop: 10 }} type="password" autoComplete="current-password" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)} />
-            )}
-            <div className="publishwrap">
-              <button className="btn si" onClick={saveEmail} disabled={busy}>
-                {busy ? "Saving…" : "Save email"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {pwSheet && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setPwSheet(false); }}>
           <div className="sheet">
@@ -1010,8 +897,8 @@ export function ProfileSheet({
               >
                 <span className="setrow-ic"><Icon name="groups" size={24} /></span>
                 <span className="setrow-txt">
-                  <span className="t">Invite link</span>
-                  <span className="s">Anyone who opens it can join</span>
+                  <span className="t">Share FittList</span>
+                  <span className="s">Send the app to the people you train with</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
@@ -1042,7 +929,7 @@ export function ProfileSheet({
       {inviteOpen && (
         <InviteSheet
           onClose={() => setInviteOpen(false)}
-          onCopied={() => toast("Link copied, ready to paste")}
+          onCopied={() => toast("FittList link copied")}
         />
       )}
 

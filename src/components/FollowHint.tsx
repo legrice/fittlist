@@ -52,11 +52,11 @@ export function FollowHint({
   return (
     <div className="folhint" role="status" aria-live="polite">
       <p className="folhint-t">
-        You favorited {name}. See them in your Favorites.
+        {name}&rsquo;s calendar is saved. Find it anytime in You.
       </p>
       <div className="folhint-row">
         <Link className="folhint-go" href={`/saved?highlight=${encodeURIComponent(handle)}`} onClick={onClose}>
-          See them
+          View saved calendars
         </Link>
         <button
           className="folhint-off"

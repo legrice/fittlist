@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -12,10 +12,10 @@ import {
   ScrollHead,
   monthLabel,
   useScrolledPast,
-  useTopDayLabel,
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import type { PeekClass } from "@/components/ClassPeek";
+import { BodyPortal } from "@/components/BodyPortal";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
@@ -28,7 +28,7 @@ import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
 import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
-import { loadCalendarComposerData, loadCalendarShareData, loadFavoriteCalendars, type CalendarComposerData, type FavoriteCalendarData } from "@/app/actions/calendar-data";
+import { loadCalendarComposerData, loadCalendarShareData, type CalendarComposerData } from "@/app/actions/calendar-data";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -58,11 +58,38 @@ const ShareHubScreen = dynamic(() => import("@/components/ShareHubScreen").then(
  *  hundred identical rows; Month is the view for anything further out. */
 
 type View = "list" | "month";
+type CalendarFilter = "all" | "coaching" | "saved" | "personal";
 
 const prefillFromTemplate = (template: TemplateDto): AdderPrefill => ({
   ...template,
   days: [],
 });
+
+/**
+ * A coach can still have an older personal copy of a class after the studio
+ * starts owning that same slot. Covers and manager conflict overrides can
+ * then make both records eligible for the coach's calendar. They are two
+ * records, but one real class occurrence, so prefer the studio-owned shift.
+ */
+function uniqueCoachingOccurrences(rows: ClassDto[], studioById: Map<string, StudioDto>) {
+  const bySlot = new Map<string, ClassDto>();
+  for (const row of rows) {
+    // coachweek identifies the exact legacy pair when it can. Keeping that
+    // copy out also covers dates where the canonical series is skipped.
+    if (row.duplicateOf) continue;
+    // Old coach-owned copies can store the studio as free text while the
+    // managed copy stores its studio id. Resolve both to what the calendar
+    // actually displays so those records compare as the same place.
+    const place = (row.studioId ? studioById.get(row.studioId)?.name : row.location)
+      ?.trim()
+      .toLocaleLowerCase() ?? "";
+    const name = row.name.trim().toLocaleLowerCase();
+    const slot = `${place}|${name}|${row.startTime}`;
+    const current = bySlot.get(slot);
+    if (!current || (row.shift && !current.shift)) bySlot.set(slot, row);
+  }
+  return [...bySlot.values()];
+}
 
 export function CalendarScreen({
   handle,
@@ -93,8 +120,7 @@ export function CalendarScreen({
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [visible, setVisible] = useState({ coaching: !member, saved: true, personal: true });
+  const [filter, setFilter] = useState<CalendarFilter>("all");
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -115,12 +141,14 @@ export function CalendarScreen({
   } | null>(null);
   const [, startRemove] = useTransition();
   const [enablingCoach, startEnablingCoach] = useTransition();
-  // The overlay header's words: the day under it on the list, the month in
-  // view on the grid. The grid's label is set from the first render (this
-  // month is in view at rest), so the grid gates the bar on scroll depth
-  // instead of on having a label at all.
-  const topDay = useTopDayLabel();
+  // The month grid uses a fixed weekday rail once the page has scrolled.
+  // Day view relies on its actual date bands as sticky headers instead of
+  // rendering a second, competing overlay.
   const [ymInView, setYmInView] = useState<string | null>(null);
+  const [dayHorizon, setDayHorizon] = useState(56);
+  const [monthHorizon, setMonthHorizon] = useState(12);
+  const dayMoreRef = useRef<HTMLButtonElement>(null);
+  const lastAutoDayCount = useRef(-1);
   const scrolled = useScrolledPast(120);
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
@@ -130,16 +158,17 @@ export function CalendarScreen({
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
-  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string } | null>(null);
+  const [composerError, setComposerError] = useState<string | null>(null);
+  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string; savedBackground:string | null } | null>(null);
+  const composerLoadingRef = useRef(false);
   const [loadingTools, startTools] = useTransition();
-  const [favoriteData, setFavoriteData] = useState<FavoriteCalendarData | null>(null);
-  const [favoriteLoading, startFavoriteLoading] = useTransition();
-  const [selectedFavorites, setSelectedFavorites] = useState<string[]>([]);
-  const [overlaySaved, setOverlaySaved] = useState<Record<string,boolean>>({});
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
-  const activeFilterCount = Number(visible.coaching) + Number(visible.saved) + Number(visible.personal) + selectedFavorites.length;
-  const favoriteSelectionKey = `fl-calendar-favorites:${viewer.id}`;
   const calendarStateKey = `fl-calendar-state:${viewer.id}`;
+  const visible = {
+    coaching: !member && (filter === "all" || filter === "coaching"),
+    saved: filter === "all" || filter === "saved",
+    personal: filter === "all" || filter === "personal",
+  };
 
   useEffect(() => {
     if (openAdder) {
@@ -158,12 +187,28 @@ export function CalendarScreen({
   }, []);
 
   const ensureComposer = useCallback(() => {
-    if (composerData) return;
+    if (composerData || composerLoadingRef.current) return;
+    composerLoadingRef.current = true;
+    setComposerError(null);
     startTools(async () => {
-      const data = await loadCalendarComposerData();
-      if (data) setComposerData(data);
+      try {
+        const data = await loadCalendarComposerData();
+        if (!data) throw new Error("No composer data");
+        setComposerData(data);
+      } catch {
+        setComposerError("We couldn’t load your class tools. Check your connection and try again.");
+      } finally {
+        composerLoadingRef.current = false;
+      }
     });
   }, [composerData]);
+  // Deep links and the desktop/native add event open the role chooser without
+  // going through openAdd(), so warm the composer from the shared state too.
+  // Otherwise choosing Teaching can open a loading sheet without ever
+  // starting its data request.
+  useEffect(() => {
+    if (addChoice) ensureComposer();
+  }, [addChoice, ensureComposer]);
   const openShare = () => {
     setShareOpen(true);
     ensureComposer();
@@ -172,29 +217,17 @@ export function CalendarScreen({
       if (data) setShareData(data);
     });
   };
-  const openFilters = () => {
-    setMenuOpen(true);
-    if (!favoriteData) startFavoriteLoading(async () => setFavoriteData(await loadFavoriteCalendars() ?? { people:[], events:[] }));
-  };
-  const rememberFavoriteSelection = useCallback((ids:string[]) => {
-    const next=ids.slice(0,2);
-    setSelectedFavorites(next);
-    try { localStorage.setItem(favoriteSelectionKey,JSON.stringify(next)); } catch { /* private mode */ }
-  },[favoriteSelectionKey]);
-  const toggleFavorite = (id:string) => rememberFavoriteSelection(selectedFavorites.includes(id) ? selectedFavorites.filter((value) => value !== id) : selectedFavorites.length < 2 ? [...selectedFavorites,id] : selectedFavorites);
-
   useEffect(() => {
     try {
       const stored: unknown = JSON.parse(localStorage.getItem(calendarStateKey) ?? "null");
       if (stored && typeof stored === "object") {
-        const state = stored as { view?: unknown; visible?: Record<string, unknown> };
+        const state = stored as { view?: unknown; filter?: unknown; visible?: Record<string, unknown> };
         if (state.view === "list" || state.view === "month") setView(state.view);
-        if (state.visible) {
-          setVisible({
-            coaching: member ? false : typeof state.visible.coaching === "boolean" ? state.visible.coaching : true,
-            saved: typeof state.visible.saved === "boolean" ? state.visible.saved : true,
-            personal: typeof state.visible.personal === "boolean" ? state.visible.personal : true,
-          });
+        if (state.filter === "all" || state.filter === "coaching" || state.filter === "saved" || state.filter === "personal")
+          setFilter(member && state.filter === "coaching" ? "all" : state.filter);
+        else if (state.visible) {
+          const legacy = (["coaching", "saved", "personal"] as const).filter((key) => state.visible?.[key] === true);
+          setFilter(legacy.length === 1 && !(member && legacy[0] === "coaching") ? legacy[0] : "all");
         }
       }
     } catch { /* malformed or unavailable storage */ }
@@ -203,62 +236,60 @@ export function CalendarScreen({
 
   useEffect(() => {
     if (!calendarStateLoaded) return;
-    try { localStorage.setItem(calendarStateKey, JSON.stringify({ view, visible })); } catch { /* private mode */ }
-  }, [calendarStateKey, calendarStateLoaded, view, visible]);
+    try { localStorage.setItem(calendarStateKey, JSON.stringify({ view, filter })); } catch { /* private mode */ }
+  }, [calendarStateKey, calendarStateLoaded, filter, view]);
 
   useEffect(() => {
-    let stored:string[]=[];
-    try {
-      const value=JSON.parse(localStorage.getItem(favoriteSelectionKey) ?? "[]");
-      if(Array.isArray(value)) stored=value.filter((id):id is string=>typeof id==="string").slice(0,2);
-    } catch { /* malformed or unavailable storage */ }
-    if(!stored.length) return;
-    setSelectedFavorites(stored);
-    let cancelled=false;
-    void loadFavoriteCalendars().then((data)=>{
-      if(cancelled||!data)return;
-      setFavoriteData(data);
-      const available=new Set(data.people.map((person)=>person.id));
-      const valid=stored.filter((id)=>available.has(id));
-      rememberFavoriteSelection(valid);
-    });
-    return ()=>{cancelled=true;};
-  },[favoriteSelectionKey,rememberFavoriteSelection]);
-
-  useEffect(() => {
-    if (!shareOpen && !menuOpen) return;
+    if (!shareOpen) return;
     document.body.classList.add("sheet-open");
+    window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      setMenuOpen(false);
       setShareOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.classList.remove("sheet-open");
+      window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: false }));
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [shareOpen, menuOpen]);
+  }, [shareOpen]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
-  const savedByIso = useMemo(
-    () =>
-      new Map(
-        savedDays.map((day) => [
-          day.iso,
-          day.items.filter((item) => !gone[`added|${item.personal ? item.id : item.classId}|${item.iso}`]),
-        ] as const),
-      ),
-    [savedDays, gone],
-  );
-  const favoriteByIso = useMemo(() => {
-    const map = new Map<string,FavoriteCalendarData["events"]>();
-    for (const event of favoriteData?.events ?? []) {
-      if (!selectedFavorites.includes(event.personId) || overlaySaved[`${event.classId}|${event.iso}`]) continue;
-      map.set(event.iso,[...(map.get(event.iso) ?? []),event]);
+  const savedByIso = useMemo(() => {
+    const byIso = new Map(
+      savedDays.map((day) => [
+        day.iso,
+        day.items.filter((item) => !gone[`added|${item.personal ? item.id : item.classId}|${item.iso}`]),
+      ] as const),
+    );
+    const personal = new Map<string, WeekItem>();
+    for (const day of savedDays)
+      for (const item of day.items)
+        if (item.personal && item.repeatDay !== undefined && !item.specificDate) personal.set(item.id, item);
+    const start = new Date(`${todayIso}T00:00:00Z`);
+    const through = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + monthHorizon + 1, 1));
+    const dayThrough = new Date(start);
+    dayThrough.setUTCDate(start.getUTCDate() + dayHorizon);
+    if (dayThrough > through) through.setTime(dayThrough.getTime());
+    for (const item of personal.values()) {
+      const firstOffset = ((item.repeatDay! - ((start.getUTCDay() + 6) % 7)) + 7) % 7;
+      const cursor = new Date(start);
+      cursor.setUTCDate(start.getUTCDate() + firstOffset);
+      while (cursor < through) {
+        const iso = cursor.toISOString().slice(0, 10);
+        if (item.endsOn && iso > item.endsOn) break;
+        const key = `added|${item.id}|${iso}`;
+        if (!gone[key]) {
+          const list = byIso.get(iso) ?? [];
+          if (!list.some((entry) => entry.personal && entry.id === item.id))
+            byIso.set(iso, [...list, { ...item, iso, dayLabel: dayBandLabel(iso, todayIso) }]);
+        }
+        cursor.setUTCDate(cursor.getUTCDate() + 7);
+      }
     }
-    return map;
-  },[favoriteData,selectedFavorites,overlaySaved]);
+    return byIso;
+  }, [savedDays, gone, todayIso, dayHorizon, monthHorizon]);
   const atOf = (r: { hm: string; ap: string }) => {
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
@@ -270,17 +301,19 @@ export function CalendarScreen({
   const days: WeekDayRows[] = useMemo(() => {
     const out: WeekDayRows[] = [];
     const start = Date.parse(`${todayIso}T00:00:00Z`);
-    // List is a continuous upcoming schedule, not a disguised week view.
-    // Eight weeks keeps it useful without rendering an unbounded recurrence.
-    for (let i = 0; i < 56; i++) {
+    // The horizon grows as the end approaches. This keeps first paint small
+    // without placing a product limit on how far ahead somebody can plan.
+    for (let i = 0; i < dayHorizon; i++) {
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
-      const coachingRows = classes
-        .filter((c) => runsOn(c, iso, dow))
+      const coachingRows = uniqueCoachingOccurrences(
+        classes.filter((c) => runsOn(c, iso, dow)),
+        studioById,
+      )
         // Been and gone is not on a schedule. Today keeps the ones still to
         // come and drops the six o'clock you already taught.
-        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
+        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
         .map((c) => {
           const t = clockParts(c.startTime);
@@ -296,9 +329,10 @@ export function CalendarScreen({
             where,
             hm: t.hm,
             ap: t.ap,
-            coach: viewer,
-            tag: "Coaching",
-            tagTone: "coaching" as const,
+            dur: `${c.durationMin} min`,
+            coach: null,
+            tag: c.shift ? "Shift" : "Coaching",
+            tagTone: c.shift ? "shift" as const : "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
@@ -312,8 +346,10 @@ export function CalendarScreen({
         where: i.where,
         hm: i.hm,
         ap: i.ap,
-        coach:
-          !i.personal && i.coachName
+        dur: `${i.durationMin} min`,
+        coach: i.personal
+          ? null
+          : i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
         tag: i.personal ? "Personal" : "Saved",
@@ -341,44 +377,31 @@ export function CalendarScreen({
         ),
       };
       });
-      const favoriteRows = (favoriteByIso.get(iso) ?? []).map((event) => {
-        const person = favoriteData?.people.find((item) => item.id === event.personId);
-        const key = `${event.classId}|${event.iso}`;
-        return {
-          key:`overlay|${event.personId}|${key}`, classId:event.classId, iso:event.iso, base:event.base,
-          name:event.name, where:event.where, hm:event.hm, ap:event.ap,
-          coach:person ? { id:person.id, name:person.name, photo:person.photo, color:person.color } : null,
-          overlayColor:person?.color,
-          href:`/${event.base}/${event.classId}?d=${event.iso}&from=schedule`,
-          corner:<button type="button" className="calendar-save-action calendar-overlay-save" onClick={() => startRemove(async () => {
-            setOverlaySaved((current) => ({...current,[key]:true}));
-            const result=await setGoing(event.classId,event.iso,true);
-            if(!result.ok){setOverlaySaved((current)=>({...current,[key]:false}));toast(result.error??"Couldn't save that class");return;}
-            toast(`${event.name} was saved to your calendar`);router.refresh();
-          })}><Icon name="bookmark" size={17}/>Save</button>,
-        };
-      });
       const rows = [
         ...(visible.coaching ? coachingRows : []),
         ...addedRows.filter((row) => row.tagTone === "personal" ? visible.personal : visible.saved),
-        ...favoriteRows,
       ].sort((a, b) => atOf(a) - atOf(b));
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, visible, savedByIso, favoriteByIso, favoriteData, router, viewer]);
+  }, [classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer, dayHorizon]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
   const monthItems = useMemo(() => {
     const m = new Map<string, MonthCellItem[]>();
     const start = Date.parse(`${todayIso}T00:00:00Z`) - 62 * 864e5;
-    for (let i = 0; i < 62 + 380; i++) {
+    const [year, month] = todayIso.slice(0, 7).split("-").map(Number);
+    const rangeEnd = Date.UTC(year, month - 1 + monthHorizon + 1, 1);
+    const rangeDays = Math.ceil((rangeEnd - start) / 864e5);
+    for (let i = 0; i < rangeDays; i++) {
       const d = new Date(start + i * 864e5);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7;
-      const coachingRows = classes
-        .filter((c) => runsOn(c, iso, dow))
+      const coachingRows = uniqueCoachingOccurrences(
+        classes.filter((c) => runsOn(c, iso, dow)),
+        studioById,
+      )
         .map((c) => ({
           kind: "coaching" as const,
           name: c.name,
@@ -390,16 +413,27 @@ export function CalendarScreen({
         name: i.name,
         at: atOf(i),
       }));
-      const favoriteRows = (favoriteByIso.get(iso) ?? []).map((event) => ({ kind:"overlay" as const, name:event.name, at:atOf(event), color:favoriteData?.people.find((person)=>person.id===event.personId)?.color }));
       const rows = [
         ...(visible.coaching ? coachingRows : []),
         ...addedRows.filter((row) => row.kind === "private" ? visible.personal : visible.saved),
-        ...favoriteRows,
       ].sort((a, b) => a.at - b.at);
       if (rows.length) m.set(iso, rows);
     }
     return m;
-  }, [classes, todayIso, visible, savedByIso, favoriteByIso, favoriteData]);
+  }, [classes, todayIso, studioById, visible.coaching, visible.personal, visible.saved, savedByIso, monthHorizon]);
+
+  useEffect(() => {
+    if (view !== "list") return;
+    if (days.length <= lastAutoDayCount.current) return;
+    lastAutoDayCount.current = days.length;
+    const target = dayMoreRef.current;
+    if (!target || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) setDayHorizon((value) => value + 84);
+    }, { rootMargin: "600px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [view, dayHorizon, days.length]);
 
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
@@ -414,11 +448,13 @@ export function CalendarScreen({
       setAddChoice(true);
       return;
     }
+    const offset = Math.max(0, Math.floor((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${todayIso}T00:00:00Z`)) / 864e5));
+    if (offset >= dayHorizon) setDayHorizon(offset + 28);
     setView("list");
     requestAnimationFrame(() => {
       document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start" });
     });
-  }, [ensureComposer, monthItems]);
+  }, [ensureComposer, monthItems, todayIso, dayHorizon]);
 
   // Whether this coach has published anything at all, not whether the next
   // eight weeks do: the empty state offers the thing to do only when there is
@@ -472,42 +508,32 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      <header className="calendar-page-header">
-        <h1>Calendar</h1>
-        <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
-        <button type="button" className="calendar-menu-button" aria-label={`Filter calendar, ${activeFilterCount} selected`} onClick={openFilters}><Icon name="tune" size={22} /><span className="calendar-filter-count">{activeFilterCount}</span></button>
+      <header className="calendar-page-header calendar-page-actions">
+        <div className="calendar-page-title-row">
+          <div className="calendar-page-title">
+            <Link className="calendar-page-back" href="/you" aria-label="Back to You">
+              <Icon name="arrow_back" size={23} />
+            </Link>
+            <h1>My calendar</h1>
+          </div>
+          <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
+        </div>
+        <div className="calendar-desktop-controls">
+          <label className="calendar-desktop-filter">
+            <span className="sr-only">View calendar</span>
+            <select value={filter} onChange={(event) => setFilter(event.target.value as CalendarFilter)}>
+              <option value="all">View: All</option>
+              {!member && <option value="coaching">View: Coaching</option>}
+              <option value="saved">View: Saved</option>
+              <option value="personal">View: Personal</option>
+            </select>
+          </label>
+          <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
+            <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
+            <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_view_month" size={21} /></button>
+          </div>
+        </div>
       </header>
-
-      {menuOpen && <div className="calendar-drawer-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
-        <aside className="calendar-drawer" aria-label="Calendar controls">
-          <div className="calendar-drawer-head"><h2>Calendar</h2><button type="button" className="iconbtn" aria-label="Close calendar menu" onClick={() => setMenuOpen(false)}><Icon name="close" size={20} /></button></div>
-          <section className="calendar-drawer-section">
-            <h3>View</h3>
-            {([['list','calendar_view_day','List'],['month','calendar_month','Month']] as const).map(([value,icon,label]) => {
-              const on=view===value;
-              return <button type="button" className={`calendar-drawer-row calendar-view-choice${on?' on':''}`} aria-pressed={on} onClick={()=>{setView(value);setMenuOpen(false);}} key={value}><span className="calendar-view-choice-icon"><Icon name={icon} size={20}/></span><span>{label}</span></button>;
-            })}
-          </section>
-          <section className="calendar-drawer-section">
-            <h3>My calendar</h3>
-            {([...(member ? [] : [["coaching", "Coaching"]] as const), ["saved", "Saved"], ["personal", "Personal"]] as const).map(([value, label]) => {
-              const on = visible[value];
-              const icon = value === "coaching" ? "event_available" : value === "saved" ? "bookmark" : "activity";
-              return <button type="button" className="calendar-drawer-row calendar-category-row" aria-pressed={on} onClick={() => setVisible((current) => ({ ...current, [value]: !current[value] }))} key={value}><span className={`calendar-category-icon calendar-category-icon-${value}`}><Icon name={icon} size={20} /></span><span>{label}</span><span className={`calendar-check calendar-check-${value}${on ? " on" : ""}`}>{on && <Icon name="check" size={16} />}</span></button>;
-            })}
-          </section>
-          <section className="calendar-drawer-section calendar-favorite-section">
-            <h3>Favorite calendars</h3>
-            <small>Show up to two calendars at a time.</small>
-            {favoriteLoading ? <p>Finding active calendars…</p> : favoriteData?.people.length ? <>{favoriteData.people.map((person) => {
-              const on=selectedFavorites.includes(person.id); const full=!on&&selectedFavorites.length>=2;
-              return <button type="button" className="calendar-drawer-row calendar-favorite-row" aria-pressed={on} disabled={full} onClick={()=>toggleFavorite(person.id)} key={person.id}>{person.photo?<img src={person.photo} alt="" loading="lazy" decoding="async"/>:<span className="calendar-favorite-avatar" style={{background:person.color}}>{person.name.charAt(0).toUpperCase()}</span>}<span>{person.name}</span><span className={`calendar-check${on?" on":""}`} style={on?{background:person.color}:undefined}>{on&&<Icon name="check" size={16}/>}</span></button>;
-            })}</> : <div className="calendar-favorite-empty"><span><Icon name="travel_explore" size={24}/></span><strong>Find favorite calendars</strong><p>Favorite people with upcoming classes, then their calendars will appear here.</p><Link href="/discover?half=people" onClick={()=>setMenuOpen(false)}>Discover people</Link></div>}
-          </section>
-        </aside>
-      </div>}
-
-      {selectedFavorites.length>0 && <div className="calendar-overlay-context"><span>Showing your calendar + {selectedFavorites.map((id)=>favoriteData?.people.find((person)=>person.id===id)?.name).filter(Boolean).join(" + ")}</span><button type="button" onClick={()=>rememberFavoriteSelection([])}>Clear</button></div>}
 
       <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
@@ -519,13 +545,24 @@ export function CalendarScreen({
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
-      {bare && selectedFavorites.length===0 ? (
+      {bare ? (
         <WeekEmpty
           first
           title="This is your calendar"
-          body="You can add classes you’re taking or teaching, or even your own workout."
-          cta="Add your first class"
-          onCta={openAdd}
+          body={member
+            ? "Follow a coach to find classes and start building your calendar."
+            : "Follow people whose classes you want to see, or add the first class you teach."
+          }
+          actions={member ? (
+            <div className="calendar-empty-actions calendar-empty-actions-member">
+              <Link className="btn si" href="/discover">Find a coach to follow</Link>
+            </div>
+          ) : (
+            <div className="calendar-empty-actions">
+              <Link className="btn ghost" href="/discover">Find someone to follow</Link>
+              <button className="btn si" type="button" onClick={openAdd}>Add your first class</button>
+            </div>
+          )}
         />
       ) : view === "month" ? (
         <MonthScroll
@@ -533,86 +570,86 @@ export function CalendarScreen({
           items={monthItems}
           onDay={openDay}
           onMonthInView={setYmInView}
-        />
-      ) : days.length === 0 ? (
-        // A week that has run its course still offers the one act that
-        // changes it: the same Add the title row carries, where somebody
-        // reading "nothing coming up" is already looking.
-        <WeekEmpty
-          first
-          title="Nothing showing"
-          body="Choose calendars from the menu, or add something to your week."
+          monthsAhead={monthHorizon}
+          onNeedMore={() => setMonthHorizon((value) => value + 12)}
         />
       ) : (
-        <CalendarList
-          days={days}
-        />
+        <>
+          {days.length ? (
+            <CalendarList className="personal-calendar-list" days={days} />
+          ) : (
+            <WeekEmpty first title="Nothing showing" body="Keep looking ahead, choose another view, or add something to your calendar." />
+          )}
+          <button ref={dayMoreRef} className="calendar-load-more" type="button" onClick={() => setDayHorizon((value) => value + 84)}>
+            Show more dates
+          </button>
+        </>
       )}
       </div>
 
       {shareOpen && (
-        <div
-          className="sheet-scrim calendar-share-scrim"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setShareOpen(false);
-          }}
-        >
-          <section
-            className="sheet calendar-share-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Share your week"
+        <BodyPortal>
+          <div
+            className="sheet-scrim calendar-share-scrim"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setShareOpen(false);
+            }}
           >
-            <button
-              type="button"
-              className="sheetclose calendar-share-close"
-              aria-label="Close share editor"
-              onClick={() => setShareOpen(false)}
+            <section
+              className="sheet calendar-share-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Share your week"
             >
-              <Icon name="close" size={24} />
-            </button>
-            {shareData ? <ShareHubScreen
-              embedded
-              coach={!member}
-              handle={handle ?? ""}
-              name={viewer.name}
-              items={shareData.items}
-              defaultFrom={shareData.defaultFrom}
-              today={todayIso}
-              savedHeadline={shareData.savedHeadline}
-              studios={studios}
-              templates={composerData?.templates ?? []}
-              customTypes={composerData?.customTypes ?? []}
-              lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
-            /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
-          </section>
-        </div>
+              <button
+                type="button"
+                className="sheetclose calendar-share-close"
+                aria-label="Close share editor"
+                onClick={() => setShareOpen(false)}
+              >
+                <Icon name="close" size={24} />
+              </button>
+              {shareData ? <ShareHubScreen
+                embedded
+                coach={!member}
+                handle={handle ?? ""}
+                name={viewer.name}
+                items={shareData.items}
+                defaultFrom={shareData.defaultFrom}
+                today={todayIso}
+                savedHeadline={shareData.savedHeadline}
+                savedBackground={shareData.savedBackground}
+                studios={studios}
+                templates={composerData?.templates ?? []}
+                customTypes={composerData?.customTypes ?? []}
+                lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
+              /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
+            </section>
+          </div>
+        </BodyPortal>
       )}
 
-      {/* The overlay header: nothing at rest, a glass bar once you're deep,
-          naming the day (or month) under it with the toggle and Add along
-          for the ride, so the two things the title row offered are never a
-          long scroll away. */}
-      {(!bare || selectedFavorites.length > 0) && days.length > 0 && (
+      {/* Month view needs its weekday rail fixed above the grid. Day view
+          uses the real date bands as sticky headers so there is only one
+          date label competing for the top edge while scrolling. */}
+      {!bare && days.length > 0 && view === "month" && (
         <ScrollHead
-          on={view === "month" ? scrolled : !!topDay}
-          label={
-            view === "month"
-              ? ymInView
-                ? monthLabel(ymInView, todayIso)
-                : ""
-              : topDay
-          }
-          sub={view === "month" ? <MonthHeadRow /> : undefined}
+          on={scrolled}
+          label={ymInView ? monthLabel(ymInView, todayIso) : ""}
+          sub={<MonthHeadRow />}
         />
       )}
 
-      {!bare && <div className="calendar-bottom-actions" aria-label="Schedule actions">
-          <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
-            <Icon name="add" size={28} />
-          </button>
-        </div>}
+      <BodyPortal>
+        <div className="calendar-bottom-actions" aria-label="Schedule actions">
+          {!bare && (
+            <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
+              <Icon name="add" size={28} />
+            </button>
+          )}
+        </div>
+      </BodyPortal>
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
@@ -727,14 +764,26 @@ export function CalendarScreen({
             setPersonalWorkout(false);
           }}
           onToast={toast}
-          onPublished={(msg) => {
+          onPublished={(msg, _planId, _live, focus) => {
             setAddOpen(false);
             setQuickPrefill(null);
             setAddDate(null);
             setPersonalAdd(false);
             setPersonalWorkout(false);
             toast(msg);
-            router.refresh();
+            if (focus) {
+              // A new class can land outside the saved view or in Month view.
+              // Put the calendar in the one state where its exact row is
+              // visible, then let HighlightOnLand scroll to and light it.
+              setFilter("all");
+              setView("list");
+              try {
+                localStorage.setItem(calendarStateKey, JSON.stringify({ view: "list", filter: "all" }));
+              } catch { /* private mode */ }
+              router.replace(`/calendar?hl=${encodeURIComponent(`${focus.id}.${focus.iso}`)}`, { scroll: false });
+            } else {
+              router.refresh();
+            }
           }}
           onDeleted={(msg) => {
             setAddOpen(false);
@@ -750,8 +799,19 @@ export function CalendarScreen({
           }}
         />
       )}
-      {addOpen && !composerData && (
-        <div className="sheet-scrim"><div className="sheet calendar-tool-loading" aria-busy="true">Loading your class tools…</div></div>
+      {(addOpen || !!edit || !!planEdit) && !composerData && (
+        <div className="sheet-scrim">
+          <div className="sheet calendar-tool-loading" role="dialog" aria-modal="true" aria-live="polite" aria-busy={!composerError}>
+            {composerError ? (
+              <>
+                <h2>Class tools unavailable</h2>
+                <p className="lead">{composerError}</p>
+                <button className="btn si" type="button" onClick={ensureComposer}>Try again</button>
+                <button className="btn ghost" type="button" style={{ marginTop: 8 }} onClick={() => { setAddOpen(false); setEdit(null); setPlanEdit(null); }}>Close</button>
+              </>
+            ) : "Loading your class tools…"}
+          </div>
+        </div>
       )}
       {match && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMatch(null); }}>

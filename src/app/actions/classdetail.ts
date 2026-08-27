@@ -4,7 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { sendableAt, type Sendable } from "@/lib/rota";
 import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
@@ -143,7 +143,7 @@ export async function classDetail(
   const adminLink = isAdminViewer && c.links.length === 0;
   if (!c.isPublic && !isOwner) return null;
   // Blocked: as far as they're concerned this class doesn't exist.
-  if (await isBlocked(user.id, viewerId)) return null;
+  if ((await hiddenFrom(viewerId)).has(user.id)) return null;
 
   const [studio] = c.studioId
     ? await db.select().from(schema.studios).where(eq(schema.studios.id, c.studioId))
@@ -166,7 +166,7 @@ export async function classDetail(
         const day = new Date(start);
         day.setUTCDate(start.getUTCDate() + i);
         const iso = day.toISOString().slice(0, 10);
-        if (runsOn(c, iso, (day.getUTCDay() + 6) % 7) && !occurrenceEnded(iso, c.startTime, c.durationMin))
+        if (runsOn(c, iso, (day.getUTCDay() + 6) % 7) && !occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone))
           return iso;
       }
       // Every occurrence is behind an end date. Fall back to today so the
@@ -177,7 +177,7 @@ export async function classDetail(
 
   // Already run: there's nothing to RSVP to. A shared link carries its date, so an
   // old one opens on the day it named, and that day can be behind us.
-  const past = occurrenceEnded(whenIso, c.startTime, c.durationMin);
+  const past = occurrenceEnded(whenIso, c.startTime, c.durationMin, c.timeZone);
   // Teaching it isn't attending it. The class belongs to the gym, so the owner
   // test alone would offer the coach on the rota a button that setGoing then
   // refuses; a button that fails is worse than no button.
@@ -329,9 +329,10 @@ export async function classDetail(
     text: c.name,
     dates: `${floatingStart(whenIso, c.startTime)}/${floatingEnd(whenIso, c.startTime, c.durationMin)}`,
     details: gcalDetails,
+    ctz: c.timeZone,
   });
   if (locationText) gcalParams.set("location", locationText);
-  if (!c.specificDate) gcalParams.set("recur", weeklyRule(c.dayOfWeek, c.endsOn));
+  if (!c.specificDate) gcalParams.set("recur", weeklyRule(c.dayOfWeek, c.endsOn, c.timeZone));
 
   // Who to put on the row. A gym owns its classes, so the owner is the place;
   // the person is on the rota, and only where they show their shifts. Resolved

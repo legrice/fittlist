@@ -167,7 +167,6 @@ export function AddBrowse({
                         aria-label={on ? `Saved to your week: ${it.name}` : `Save ${it.name} to your week`}
                       >
                         <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
-                        {!on && <span>Save</span>}
                       </button>
                     )}
                   </div>
