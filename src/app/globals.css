@@ -11658,9 +11658,6 @@ a.clspeek-by:active { opacity: .6; }
   grid-column: 2 / 4;
   grid-row: 4;
 }
-.calendar-cardlist .clline:not(:has(.clline-by)) .clline-nm,
-.calendar-cardlist .clline:not(:has(.clline-by)) .clline-w { grid-column: 1 / 3; }
-.calendar-cardlist .clline:not(:has(.clline-by)) .clline-extra { grid-column: 1 / 4; }
 .calendar-cardlist .calendar-attending-check { display: none; }
 
 /* The text-led occurrence shared by every CalendarList: attribution first,
