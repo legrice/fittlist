@@ -11240,7 +11240,7 @@ a.clspeek-by:active { opacity: .6; }
   position:fixed; right:18px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:44;
   min-height:50px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
   padding:0 18px; border-radius:var(--radius-pill);
-  background:var(--color-lime); color:var(--color-olive); box-shadow:0 4px 14px rgba(0,0,0,.14);
+  background:var(--color-lime); color:var(--color-black); box-shadow:0 4px 14px rgba(0,0,0,.14);
   font-size:16px; font-weight:600; text-decoration:none; white-space:nowrap;
 }
 .calendar-tab-share:active { transform:scale(.96); }
