@@ -154,49 +154,37 @@ export function CalendarList({
 }
 
 export function ClassLine({ row }: { row: WeekRow }) {
+  const cls = `clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}${row.tagTone === "coaching" ? " clline-own-coaching" : ""}`;
   const inner = (
     <>
-      {/* Identity is part of every occurrence, including a coach's own page.
-          The shared CSS places the face first, class and place in the middle,
-          and time at the right—the same scan order as the homepage. */}
-      {row.coach && (
+      {(row.coach || row.tag) && (
         <span className="clline-by">
-          {!row.hideCoachAvatar && (
-            <span className="clline-av" style={{ background: row.coach.color }}>
-              {row.coach.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={row.coach.photo} alt="" loading="lazy" decoding="async" />
-              ) : (
-                initials(row.coach.name)
-              )}
+          {row.coach && <span className="clline-by-name">{row.coach.name}</span>}
+          {row.tag && (
+            <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
+              {row.tag}
             </span>
           )}
-          <span className="clline-by-name">{row.coach.name}</span>
         </span>
       )}
-      <span className="clline-head">
+      <span className="clline-title-row">
+        <span className="clline-nm">{row.name}</span>
         <span className="clline-t">
           {row.hm}
           <span className="clline-ap">{row.ap.toUpperCase()}</span>
         </span>
-        {row.tag && (
-          <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
-            {row.tag}
-          </span>
-        )}
       </span>
-      <span className="clline-nm">{row.name}</span>
-      {row.dur && <span className="clline-dur">{row.dur}</span>}
-      {row.where && (
-        <span className="clline-w">{row.where}</span>
-      )}
+      <span className="clline-studio-row">
+        <span className="clline-w">{row.where || "Location to come"}</span>
+        {row.dur && <span className="clline-dur">{row.dur}</span>}
+      </span>
       {row.extra && <span className="clline-extra">{row.extra}</span>}
     </>
   );
   if (row.href)
     return (
       <a
-        className={`clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}`}
+        className={cls}
         href={row.href}
         data-cid={row.classId}
         data-d={row.iso}
@@ -206,12 +194,12 @@ export function ClassLine({ row }: { row: WeekRow }) {
         {inner}
       </a>
     );
-  if (!row.onTap) return <div className={`clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}`}>{inner}</div>;
+  if (!row.onTap) return <div className={cls}>{inner}</div>;
   return (
     // The data keys ride the button too, when the row has them: the landing
     // highlight (?hl) finds a row by them, and a row that opens a sheet
     // instead of navigating is still the row the highlight means.
-    <button className={`clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}`} onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
+    <button className={cls} onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
       {inner}
     </button>
   );
