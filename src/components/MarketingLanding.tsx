@@ -3,6 +3,19 @@ import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import styles from "@/app/admin/marketing/marketing.module.css";
 
+const sampleClasses = [
+  { day: "Today", time: "6:00pm", name: "Evening Flow", place: "Northline Yoga", tone: "mint" },
+  { day: "Tomorrow", time: "7:00am", name: "Strength Circuit", place: "Harbor Athletic Club", tone: "blue" },
+  { day: "Tomorrow", time: "6:00pm", name: "Mobility Lab", place: "Common Ground Studio", tone: "amber" },
+];
+
+const multiStudioWeek = [
+  { day: "Mon", time: "7:00am", name: "Morning Flow", place: "Northline Yoga", tone: "mint" },
+  { day: "Tue", time: "6:00pm", name: "Strength & Mobility", place: "Harbor Athletic Club", tone: "blue" },
+  { day: "Thu", time: "12:00pm", name: "Sculpt", place: "Common Ground Studio", tone: "amber" },
+  { day: "Sat", time: "9:00am", name: "Power Hour", place: "Atlas Movement", tone: "rose" },
+];
+
 type ShareBrand = "instagram" | "whatsapp" | "tiktok" | "gmail" | "facebook" | "linkedin";
 
 function ShareBrandMark({ brand }: { brand: ShareBrand }) {
@@ -124,11 +137,49 @@ export function MarketingLanding({
         </div>
       </section>
 
+      <section className={styles.proof}>
+        <p className={styles.kicker}>Your week, live</p>
+        <h2>One link.<br />Every class.</h2>
+        <div className={styles.calendarDemo} aria-label="Example FittList calendar">
+          <div className={styles.demoHead}><strong>This week</strong><span>Jersey City</span></div>
+          {sampleClasses.map((item, index) => (
+            <article key={`${item.name}-${index}`}>
+              <span className={styles.demoDay}>{item.day}</span>
+              <span className={styles.demoMark} data-tone={item.tone} aria-hidden="true" />
+              <span className={styles.demoClass}><strong>{item.name}</strong><small>{item.place}</small></span>
+              <time>{item.time}</time>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.coachSection}>
+        <div className={styles.sectionCopy}>
+          <p className={styles.kicker}>For coaches</p>
+          <h2>Four studios.<br />One calendar.</h2>
+          <p>Teach everywhere. Share once.</p>
+        </div>
+        <div className={styles.weekCard}>
+          <div className={styles.weekIdentity}>
+            <span>M</span>
+            <div><strong>Maya&apos;s week</strong><small>4 studios</small></div>
+          </div>
+          {multiStudioWeek.map((item) => (
+            <div className={styles.weekRow} key={`${item.day}-${item.time}`}>
+              <span className={styles.weekDay}>{item.day}</span>
+              <span className={styles.placeMark} data-tone={item.tone} aria-hidden="true">{item.place.slice(0, 1)}</span>
+              <span className={styles.weekClass}><strong>{item.name}</strong><small>{item.place}</small></span>
+              <time>{item.time}</time>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className={styles.shareSection}>
         <div className={styles.shareHeading}>
-          <p className={styles.kicker}>Easy to share</p>
-          <h2>Meet people<br />where they are.</h2>
-          <p>Post it, send it, or put it on your site.</p>
+          <p className={styles.kicker}>Share it your way</p>
+          <h2>One calendar.<br />Everywhere.</h2>
+          <p>Make it easy to find wherever your people already are.</p>
         </div>
         <div className={styles.shareShowcase}>
           <div className={styles.shareVisual} aria-label="Share a FittList calendar through Instagram, WhatsApp, TikTok, email, Facebook, and LinkedIn">
@@ -166,8 +217,8 @@ export function MarketingLanding({
         </div>
         <div className={styles.sectionCopy}>
           <p className={styles.kicker}>For studios</p>
-          <h2>Run the schedule.<br />Skip the spreadsheet.</h2>
-          <p>Assign coaches, cover shifts, and catch conflicts.</p>
+          <h2>Build it.<br />Staff it.<br />Share it.</h2>
+          <p>One source of truth.</p>
         </div>
       </section>
 
