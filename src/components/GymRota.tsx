@@ -24,6 +24,7 @@ import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
 import { studioPlannerColorLabel } from "@/lib/studio-planner";
+import { putImage } from "@/lib/shareimage";
 
 /** "Thu, Aug 6" — the date a swap is about, said the way a person would. */
 const fmtDay = (iso: string) =>
@@ -179,6 +180,7 @@ export function GymRota({
   const [coachPick, setCoachPick] = useState<CoachPick | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [dayMenu, setDayMenu] = useState<string | null>(null);
+  const [sharingOpenShifts, setSharingOpenShifts] = useState(false);
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [desktop, setDesktop] = useState(false);
@@ -471,6 +473,39 @@ export function GymRota({
     }
   };
 
+  const openShiftText = (openDays: GymDayDto[]) => {
+    const lines = openDays.flatMap((day) => [
+      fmtDay(day.iso),
+      ...day.items.map((item) => {
+        const clock = clockParts(item.startTime);
+        return `${clock.hm} ${clock.ap.toUpperCase()} · ${item.name} · ${item.durationMin} min`;
+      }),
+      "",
+    ]);
+    return [studioName, "Open shifts", "", ...lines].join("\n").trim();
+  };
+
+  const copyOpenShifts = async (openDays: GymDayDto[]) => {
+    try {
+      await navigator.clipboard.writeText(openShiftText(openDays));
+      toast("Open shifts copied");
+    } catch {
+      toast("Couldn't copy the open shifts");
+    }
+  };
+
+  const shareOpenShiftImage = async () => {
+    if (sharingOpenShifts) return;
+    setSharingOpenShifts(true);
+    const offset = week?.offset ?? 0;
+    const ok = await putImage(
+      `/api/story/open-shifts/${encodeURIComponent(studioId)}?w=${offset}&name=${encodeURIComponent(studioName)}&v=${Date.now()}`,
+      `${studioSlug || "studio"}-open-shifts.png`,
+    );
+    setSharingOpenShifts(false);
+    if (!ok) toast("Couldn't share the open shifts");
+  };
+
   const useStandardDay = (day: GymDayDto) => {
     if (pending) return;
     setMonthMenu(null);
@@ -611,9 +646,13 @@ export function GymRota({
     ...day,
     items: day.items.filter((item) => matchesShiftFilter(item, day.iso)),
   }));
-  const renderedWeekDays = desktop
-    ? filteredWeekDays
-    : [month?.days.find((day) => day.iso === selectedDayIso) ?? filteredWeekDays.find((day) => day.iso === selectedDayIso)]
+  const openShiftDays = filteredWeekDays.filter((day) => day.items.length > 0);
+  const openShiftCount = openShiftDays.reduce((count, day) => count + day.items.length, 0);
+  const renderedWeekDays = shiftFilter === "open"
+    ? openShiftDays
+    : desktop
+      ? filteredWeekDays
+      : [month?.days.find((day) => day.iso === selectedDayIso) ?? filteredWeekDays.find((day) => day.iso === selectedDayIso)]
         .filter((day): day is GymDayDto => !!day)
         .map((day) => ({ ...day, items: day.items.filter((item) => matchesShiftFilter(item, day.iso)) }));
   const selectedDay = renderedWeekDays[0] ?? filteredWeekDays[0];
@@ -662,7 +701,7 @@ export function GymRota({
           >
             <Icon name="arrow_back" size={23} />
           </Link>
-          <h1 className="studio-calendar-title">Calendar</h1>
+          <h1 className="studio-calendar-title">{shiftFilter === "open" ? "Open shifts" : "Calendar"}</h1>
           <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
             <Icon name="tune" size={23} />
           </button>
@@ -851,7 +890,24 @@ export function GymRota({
         <>
           {/* A real week, dates and all, because that's what the spreadsheet is
               and what a swap is about. */}
-          <div className={`rotaweek${desktop ? "" : " mobile-day-nav"}`}>
+          {shiftFilter === "open" ? (
+            <div className="rota-open-manager-head">
+              <div>
+                <strong>{openShiftCount} open {openShiftCount === 1 ? "shift" : "shifts"}</strong>
+                <span>{week?.label ?? "This week"}</span>
+              </div>
+              <div className="rota-open-actions">
+                <button type="button" onClick={() => void copyOpenShifts(openShiftDays)} disabled={!openShiftCount}>
+                  <Icon name="content_copy" size={19} />
+                  Copy text
+                </button>
+                <button className="primary" type="button" onClick={() => void shareOpenShiftImage()} disabled={!openShiftCount || sharingOpenShifts}>
+                  <Icon name="ios_share" size={20} />
+                  {sharingOpenShifts ? "Preparing…" : "Share image"}
+                </button>
+              </div>
+            </div>
+          ) : <div className={`rotaweek${desktop ? "" : " mobile-day-nav"}`}>
             {desktop ? <Link className={`rotanav${week && week.offset > 0 ? "" : " off"}`} href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))} aria-disabled={!week || week.offset === 0}>
               <Icon name="chevron_left" size={20} />
             </Link> : <button className={`rotanav${canMoveToPreviousDay ? "" : " off"}`} aria-label="Previous day" disabled={!canMoveToPreviousDay} onClick={() => moveMobileDay(-1)}><Icon name="chevron_left" size={20} /></button>}
@@ -892,14 +948,20 @@ export function GymRota({
             {desktop ? <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
               <Icon name="chevron_right" size={20} />
             </Link> : <button className="rotanav" aria-label="Next day" onClick={() => moveMobileDay(1)}><Icon name="chevron_right" size={20} /></button>}
-          </div>
+          </div>}
 
           <div className="calendar-cardlist rota-calendar">
+            {shiftFilter === "open" && renderedWeekDays.length === 0 && (
+              <div className="empty-block rota-open-empty">
+                <h2>No open shifts</h2>
+                <p>Every shift this week has a coach assigned.</p>
+              </div>
+            )}
             {renderedWeekDays.map((day) => (
               <section key={day.iso} className={`rotaday dayblock${day.closed ? " closed" : ""}`}>
                 <div className="rotaday-h dayband">
                   <span className="dayband-d">
-                    {desktop ? fmtDay(day.iso) : ""}
+                    {desktop || shiftFilter === "open" ? fmtDay(day.iso) : ""}
                     {day.closed && <b className="rota-day-closed-label">Closed</b>}
                   </span>
                   {desktop && <span className="rotaday-actions">
@@ -1070,7 +1132,7 @@ export function GymRota({
         </div>
       )}
 
-      {!desktop && floatingAddDay && (
+      {!desktop && shiftFilter !== "open" && floatingAddDay && (
         <div className="calendar-bottom-actions studio-calendar-add" aria-label="Calendar actions">
           <button
             className="calendar-bottom-add"
