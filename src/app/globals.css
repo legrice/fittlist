@@ -11728,9 +11728,11 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clrow > :is(.clmore, .calendar-save-action, .calendar-attending-check, .following-add) { top: 7px; }
 
 /* My calendar omits its already-established owner name but keeps the status
-   tag. Four pixels between rows plus the next row's ten-pixel top padding
-   matches the fourteen pixels above the divider exactly. */
-.personal-calendar-list .dayrows { gap: 4px; }
+   tag. Match the Calendar tab's 22px rhythm on both sides of a divider: the
+   row supplies 22px above it; twelve pixels of gap plus the next row's ten
+   pixels of top padding supplies 22px below it. */
+.personal-calendar-list .dayrows { gap: 12px; }
+.personal-calendar-list .clline { padding-bottom: 22px; }
 
 /* Profiles used the occurrence grid before CalendarList became text-led.
    Keep their hierarchy explicit so older grid coordinates cannot indent the
