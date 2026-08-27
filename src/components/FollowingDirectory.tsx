@@ -14,6 +14,8 @@ import type {
 } from "@/lib/following-directory";
 
 type DirectoryTab = "following" | "discover";
+const distanceOptions = [["1","Within 1 mile"],["2","Within 2 miles"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]] as const;
+const purposeOptions = [["plan","Plan together"],["community","Community"],["event","Events"]] as const;
 
 export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
   const [tab, setTab] = useState<DirectoryTab>("following");
@@ -26,6 +28,8 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
   const [primaryFilter, setPrimaryFilter] = useState("");
   const [secondaryFilter, setSecondaryFilter] = useState("");
   const [sort, setSort] = useState("");
+  const [distance, setDistance] = useState(data.viewerLat != null && data.viewerLng != null ? "2" : "");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const discoverEntities = useMemo(() => entities.filter((entity) => !entity.following), [entities]);
   const primaryOptions = useMemo(() => {
     if (data.kind === "people") return [...new Set(discoverEntities.flatMap((entity) => entity.type === "person" ? entity.disciplines : []))].sort();
@@ -33,7 +37,7 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
     return [...new Set(discoverEntities.flatMap((entity) => entity.type === "group" ? [entity.purpose] : []))].sort();
   }, [data.kind, discoverEntities]);
   const secondaryOptions = useMemo(() => {
-    if (data.kind === "people") return [...new Set(discoverEntities.flatMap((entity) => entity.type === "person" && entity.location ? [entity.location] : []))].sort();
+    if (data.kind === "people") return [];
     if (data.kind === "studios") return [...new Set(discoverEntities.flatMap((entity) => entity.type === "studio" ? entity.types : []))].sort();
     return [];
   }, [data.kind, discoverEntities]);
@@ -41,16 +45,18 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
     () => entities
       .filter((entity) => tab === "following" ? entity.following : !entity.following)
       .filter((entity) => tab === "following" || (
+        (!distance || (data.viewerLat != null && data.viewerLng != null && entity.lat != null && entity.lng != null && milesBetween(data.viewerLat, data.viewerLng, entity.lat, entity.lng) <= Number(distance))) && (
         entity.type === "person"
-          ? (!primaryFilter || entity.disciplines.includes(primaryFilter)) && (!secondaryFilter || entity.location === secondaryFilter)
+          ? (!primaryFilter || entity.disciplines.includes(primaryFilter))
           : entity.type === "studio"
             ? (!primaryFilter || entity.placeKind === primaryFilter) && (!secondaryFilter || entity.types.includes(secondaryFilter))
             : !primaryFilter || entity.purpose === primaryFilter
-      ))
+      )))
       .sort((a, b) => sort === "name" ? a.name.localeCompare(b.name) : 0),
-    [entities, primaryFilter, secondaryFilter, sort, tab],
+    [data.viewerLat, data.viewerLng, distance, entities, primaryFilter, secondaryFilter, sort, tab],
   );
-  const activeFilters = Number(!!primaryFilter) + Number(!!secondaryFilter) + Number(!!sort);
+  const activeFilters = Number(!!distance) + Number(!!primaryFilter) + Number(data.kind === "studios" && !!secondaryFilter) + Number(data.kind === "groups" && !!sort);
+  const clearFilters = () => { setDistance(""); setPrimaryFilter(""); setSecondaryFilter(""); setSort(""); };
 
   const loadTab = (nextTab: DirectoryTab, nextLimit: number) => {
     setLoadFailed((current) => ({ ...current, [nextTab]: false }));
@@ -113,40 +119,36 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
         </div>
 
         {tab === "discover" && loaded.discover && (
-          <div className="follow-directory-filters" aria-label={`${data.title} filters`}>
+          <div className="discover-class-filters discover-tab-filters follow-directory-filters" aria-label={`${data.title} filters`}>
             <button
               type="button"
-              className={activeFilters ? "on" : ""}
-              aria-label={activeFilters ? `Clear ${activeFilters} filters` : "Filters"}
-              disabled={!activeFilters}
-              onClick={() => { setPrimaryFilter(""); setSecondaryFilter(""); setSort(""); }}
+              className={`discover-filters-pill${activeFilters ? " on" : ""}`}
+              aria-label="Filters"
+              onClick={() => setFiltersOpen(true)}
             >
-              <Icon name="tune" size={19} />
-              {activeFilters > 0 && <span>{activeFilters}</span>}
+              <Icon name="tune" size={20} />
+              {activeFilters > 0 && <span className="discover-filters-count">{activeFilters}</span>}
             </button>
-            <label>
-              <span className="sr-only">{data.kind === "people" ? "Specialty" : data.kind === "studios" ? "Type" : "Purpose"}</span>
-              <select value={primaryFilter} onChange={(event) => setPrimaryFilter(event.target.value)}>
-                <option value="">{data.kind === "people" ? "Any specialty" : data.kind === "studios" ? "Any type" : "Any purpose"}</option>
-                {primaryOptions.map((option) => <option value={option} key={option}>{data.kind === "studios" ? PLACE_KIND_LABELS[option as keyof typeof PLACE_KIND_LABELS] ?? option : option}</option>)}
-              </select>
-            </label>
-            {data.kind !== "groups" && (
-              <label>
-                <span className="sr-only">{data.kind === "people" ? "Location" : "Category"}</span>
-                <select value={secondaryFilter} onChange={(event) => setSecondaryFilter(event.target.value)}>
-                  <option value="">{data.kind === "people" ? "Any location" : "Any category"}</option>
-                  {secondaryOptions.map((option) => <option value={option} key={option}>{option}</option>)}
-                </select>
-              </label>
-            )}
-            <label>
-              <span className="sr-only">Sort</span>
-              <select value={sort} onChange={(event) => setSort(event.target.value)}>
-                <option value="">Suggested</option>
-                <option value="name">Name</option>
-              </select>
-            </label>
+            <DirectoryFilter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={data.viewerLat == null || data.viewerLng == null} />
+            {data.kind === "people" && <DirectoryFilter label="Specialty" value={primaryFilter} onChange={setPrimaryFilter} all="Any specialty" options={primaryOptions} />}
+            {data.kind === "studios" && <><DirectoryFilter label="Type" value={primaryFilter} onChange={setPrimaryFilter} all="Any type" options={primaryOptions.map((option) => [option, PLACE_KIND_LABELS[option as keyof typeof PLACE_KIND_LABELS] ?? option] as const)} /><DirectoryFilter label="Category" value={secondaryFilter} onChange={setSecondaryFilter} all="Any category" options={secondaryOptions} /></>}
+            {data.kind === "groups" && <><DirectoryFilter label="Purpose" value={primaryFilter} onChange={setPrimaryFilter} all="Any purpose" options={purposeOptions} /><DirectoryFilter label="Sort" value={sort} onChange={setSort} all="Newest" options={[["name","Name"]]} /></>}
+          </div>
+        )}
+
+        {filtersOpen && (
+          <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}>
+            <div className="sheet discover-filters-sheet">
+              <button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={() => setFiltersOpen(false)}><Icon name="close" size={18} /></button>
+              <div className="discover-filters-sheet-head"><h2>Filters</h2><button type="button" disabled={!activeFilters} onClick={clearFilters}>Clear all</button></div>
+              <div className="discover-filters-sheet-fields">
+                <DirectoryFilter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={data.viewerLat == null || data.viewerLng == null} />
+                {data.kind === "people" && <DirectoryFilter label="Specialty" value={primaryFilter} onChange={setPrimaryFilter} all="Any specialty" options={primaryOptions} />}
+                {data.kind === "studios" && <><DirectoryFilter label="Type" value={primaryFilter} onChange={setPrimaryFilter} all="Any type" options={primaryOptions.map((option) => [option, PLACE_KIND_LABELS[option as keyof typeof PLACE_KIND_LABELS] ?? option] as const)} /><DirectoryFilter label="Category" value={secondaryFilter} onChange={setSecondaryFilter} all="Any category" options={secondaryOptions} /></>}
+                {data.kind === "groups" && <><DirectoryFilter label="Purpose" value={primaryFilter} onChange={setPrimaryFilter} all="Any purpose" options={purposeOptions} /><DirectoryFilter label="Sort" value={sort} onChange={setSort} all="Newest" options={[["name","Name"]]} /></>}
+              </div>
+              <button type="button" className="btn discover-filters-done" onClick={() => setFiltersOpen(false)}>Show results</button>
+            </div>
           </div>
         )}
 
@@ -190,6 +192,18 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
       </main>
     </section>
   );
+}
+
+function DirectoryFilter({ label, value, onChange, all, options, disabled = false }: { label: string; value: string; onChange: (value: string) => void; all: string; options: readonly (string | readonly [string, string])[]; disabled?: boolean }) {
+  return <label><select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}><option value="">{all}</option>{options.map((option) => { const [optionValue, optionLabel] = typeof option === "string" ? [option, option] : option; return <option value={optionValue} key={optionValue}>{optionLabel}</option>; })}</select></label>;
+}
+
+function milesBetween(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const radians = (degrees: number) => degrees * Math.PI / 180;
+  const dLat = radians(lat2 - lat1);
+  const dLng = radians(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function FollowingDirectoryRow({

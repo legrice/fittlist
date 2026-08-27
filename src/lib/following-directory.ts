@@ -19,6 +19,8 @@ export type FollowingDirectoryPerson = {
   detail: string;
   location: string;
   disciplines: string[];
+  lat: number | null;
+  lng: number | null;
   following: boolean;
   requested: boolean;
 };
@@ -33,6 +35,8 @@ export type FollowingDirectoryStudio = {
   detail: string;
   placeKind: string;
   types: string[];
+  lat: number | null;
+  lng: number | null;
   following: boolean;
 };
 
@@ -45,6 +49,8 @@ export type FollowingDirectoryGroup = {
   color: string;
   detail: string;
   purpose: string;
+  lat: number | null;
+  lng: number | null;
   following: boolean;
 };
 
@@ -63,6 +69,8 @@ export type FollowingDirectoryData = FollowingDirectoryBatch & {
   kind: FollowingDirectoryKind;
   title: string;
   pageSize: number;
+  viewerLat: number | null;
+  viewerLng: number | null;
 };
 
 export const FOLLOWING_DIRECTORY_PAGE_SIZE = 24;
@@ -78,6 +86,8 @@ type PersonRow = {
   disciplines: string[];
   photo: string | null;
   avatarColor: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 
 type StudioRow = {
@@ -88,6 +98,8 @@ type StudioRow = {
   placeKind: string;
   address: string;
   types: string[];
+  lat: number | null;
+  lng: number | null;
 };
 
 type GroupRow = {
@@ -97,6 +109,8 @@ type GroupRow = {
   photo: string | null;
   description: string | null;
   purpose: string;
+  lat: number | null;
+  lng: number | null;
 };
 
 const titleFor = (kind: FollowingDirectoryKind) => (
@@ -113,6 +127,8 @@ const personColumns = {
   disciplines: schema.users.disciplines,
   photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
   avatarColor: schema.users.avatarColor,
+  lat: schema.users.locationLat,
+  lng: schema.users.locationLng,
 };
 
 const studioColumns = {
@@ -123,6 +139,8 @@ const studioColumns = {
   placeKind: schema.studios.placeKind,
   address: schema.studios.address,
   types: schema.studios.types,
+  lat: schema.studios.lat,
+  lng: schema.studios.lng,
 };
 
 const groupColumns = {
@@ -132,6 +150,8 @@ const groupColumns = {
   photo: schema.groups.photo,
   description: schema.groups.description,
   purpose: schema.groups.purpose,
+  lat: schema.users.locationLat,
+  lng: schema.users.locationLng,
 };
 
 function peopleFromRows(
@@ -149,6 +169,8 @@ function peopleFromRows(
     detail: account.title?.trim() || account.location?.trim() || `@${account.handle}`,
     location: account.location?.trim() ?? "",
     disciplines: account.disciplines,
+    lat: account.lat,
+    lng: account.lng,
     following: following.has(account.id),
     requested: requested.has(account.id),
   }));
@@ -168,6 +190,8 @@ function studiosFromRows(
     detail: studio.types.slice(0, 2).join(" · ") || studio.address || studio.placeKind,
     placeKind: studio.placeKind,
     types: studio.types,
+    lat: studio.lat,
+    lng: studio.lng,
     following: following.has(studio.id),
   }));
 }
@@ -185,6 +209,8 @@ function groupsFromRows(
     color: avatarColor({ id: group.id }),
     detail: group.description?.trim() || group.purpose || "Fitness group",
     purpose: group.purpose,
+    lat: group.lat,
+    lng: group.lng,
     following: following.has(group.id),
   }));
 }
@@ -331,6 +357,7 @@ export async function followingDirectoryBatch(
   const rows = await db
     .select(groupColumns)
     .from(schema.groups)
+    .innerJoin(schema.users, eq(schema.groups.ownerUserId, schema.users.id))
     .where(conditions ?? undefined)
     .orderBy(desc(schema.groups.createdAt))
     .limit(take);
@@ -347,10 +374,19 @@ export async function followingDirectoryData(
 ): Promise<FollowingDirectoryData | null> {
   const batch = await followingDirectoryBatch(kind, "following", FOLLOWING_DIRECTORY_PAGE_SIZE);
   if (!batch) return null;
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  const db = await getDb();
+  const [viewer] = await db.select({
+    lat: schema.users.locationLat,
+    lng: schema.users.locationLng,
+  }).from(schema.users).where(eq(schema.users.id, userId)).limit(1);
   return {
     kind,
     title: titleFor(kind),
     pageSize: FOLLOWING_DIRECTORY_PAGE_SIZE,
+    viewerLat: viewer?.lat ?? null,
+    viewerLng: viewer?.lng ?? null,
     ...batch,
   };
 }
