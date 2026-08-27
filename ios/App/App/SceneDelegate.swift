@@ -62,7 +62,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.translatesAutoresizingMaskIntoConstraints = false
         tabBar.delegate = self
         tabBar.isTranslucent = true
-        tabBar.tintColor = UIColor(red: 159 / 255, green: 232 / 255, blue: 112 / 255, alpha: 1)
+        tabBar.tintColor = .black
         tabBar.unselectedItemTintColor = UIColor.label.withAlphaComponent(0.76)
 
         let appearance = UITabBarAppearance()
