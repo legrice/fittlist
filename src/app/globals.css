@@ -11658,6 +11658,7 @@ a.clspeek-by:active { opacity: .6; }
   margin: 0; font-size: 15px; line-height: 1.2; color: var(--color-text-secondary);
 }
 .calendar-cardlist .clline-dur { text-align: right; }
+.calendar-cardlist .clline-studio-row.no-location .clline-dur { grid-column: 2; }
 .calendar-cardlist .clline-tag {
   min-height: 20px; margin: 0; padding: 0 8px; position: static;
   display: inline-flex; align-items: center; border-radius: var(--radius-pill);
@@ -11863,11 +11864,12 @@ a.clspeek-by:active { opacity: .6; }
 
 @media (max-width: 1099px) {
   .rota-calendar .rota-inline-row .clline {
-    padding: 20px 20px 82px;
+    padding: 20px 0 82px 20px;
   }
 
   .rota-calendar .rota-inline-row .rota-inline-coachpick {
-    width: calc(100% - 40px);
+    left: 20px;
+    width: calc(100% - 20px);
   }
 }
 

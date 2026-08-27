@@ -174,10 +174,12 @@ export function ClassLine({ row }: { row: WeekRow }) {
           <span className="clline-ap">{row.ap.toUpperCase()}</span>
         </span>
       </span>
-      <span className="clline-studio-row">
-        <span className="clline-w">{row.where || "Location to come"}</span>
-        {row.dur && <span className="clline-dur">{row.dur}</span>}
-      </span>
+      {(row.where || row.dur) && (
+        <span className={`clline-studio-row${row.where ? "" : " no-location"}`}>
+          {row.where && <span className="clline-w">{row.where}</span>}
+          {row.dur && <span className="clline-dur">{row.dur}</span>}
+        </span>
+      )}
       {row.extra && <span className="clline-extra">{row.extra}</span>}
     </>
   );
