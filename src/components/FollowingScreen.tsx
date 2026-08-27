@@ -718,6 +718,10 @@ export function FollowingScreen({
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </button>})}
+              {railCoachesComplete && <Link className="trayitem" href="/discover?half=people" aria-label="Discover more people">
+                <span className="trayav trayav-search"><Icon name="search" size={30} /></span>
+                <span className="trayitem-nm">Discover</span>
+              </Link>}
             </div>
             <RailArrows railRef={followingRailRef} />
           </div>

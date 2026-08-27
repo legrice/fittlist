@@ -8918,6 +8918,10 @@ select.editinput.placekind-select {
 .following-rail .trayitem { width:92px; gap:8px; }
 .following-rail .trayav { width:86px; height:86px; }
 .following-rail .trayitem-nm { max-width:90px; font-size:13px; }
+.following-rail .trayav-search {
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); color:var(--ink);
+}
 .following-rail .railarrow { top:50px; }
 .following-rail .trayav-share-prompt {
   box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-lime);
