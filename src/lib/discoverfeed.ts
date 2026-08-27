@@ -2,7 +2,7 @@ import { and, eq, gte, inArray, isNotNull, isNull, lte, max, sql } from "drizzle
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
-import { classAddress, publicFeedSchedules } from "@/lib/coachweek";
+import { classAddress, publicFeedSchedules, shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import type {
   FeedCoach,
@@ -88,6 +88,7 @@ export async function buildDiscoverFeed(
   // This is the important boundary for people following 90 accounts: it
   // prevents one calendar visit from loading every public coach in FittList.
   const calendarOwnerIds = new Set<string>([userId, ...followed]);
+  const followedStudioIds = new Set<string>();
   if (options.calendarOnly) {
     const [savedStudioOwners, groupRows, savedClassOwners] = await Promise.all([
       db
@@ -114,7 +115,10 @@ export async function buildDiscoverFeed(
           lte(schema.attendances.occurrenceDate, through),
         )),
     ]);
-    for (const row of savedStudioOwners) if (row.ownerId) calendarOwnerIds.add(row.ownerId);
+    for (const row of savedStudioOwners) {
+      followedStudioIds.add(row.studioId);
+      if (row.ownerId) calendarOwnerIds.add(row.ownerId);
+    }
     for (const row of savedClassOwners) {
       calendarOwnerIds.add(row.ownerId);
       if (row.coachId) calendarOwnerIds.add(row.coachId);
@@ -271,6 +275,10 @@ export async function buildDiscoverFeed(
   const classRows = allClassRows.filter(
     (c) => c.isPublic || (options.calendarOnly && c.shift && c.ownerUserId === userId),
   );
+  const followedStudioClassIds = classRows
+    .filter((row) => !!row.studioId && followedStudioIds.has(row.studioId!))
+    .map((row) => row.id);
+  const followedStudioNaming = await shiftNaming(followedStudioClassIds, { includePrivate: true });
   const coaches = coachRows.filter((c) => c.kind !== "gym" && !!c.handle);
   const coachById = new Map(coachRows.map((c) => [c.id, c]));
   const studioById = new Map(allStudios.map((s) => [s.id, s]));
@@ -306,6 +314,9 @@ export async function buildDiscoverFeed(
         : classAddress(c, coach.handle, studioSlug);
       if (!at) continue;
       const t = clockParts(c.startTime);
+      const assignedCoach = c.studioId && followedStudioIds.has(c.studioId)
+        ? shiftCoach(followedStudioNaming, c.id, iso)
+        : null;
       items.push({
         key: `${c.id}|${iso}`,
         week: w,
@@ -313,6 +324,7 @@ export async function buildDiscoverFeed(
         classId: c.id,
         base: at.key,
         coachId: coach.id,
+        assignedCoachName: assignedCoach?.name ?? null,
         name: c.name,
         where: st?.name ?? c.location ?? null,
         // A studio has a page; a class's own free-text location names a

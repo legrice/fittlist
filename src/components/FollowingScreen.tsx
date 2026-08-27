@@ -89,6 +89,9 @@ export type FeedItem = {
   /** The base its class page lives under: a handle, or `s/{slug}` for a gym. */
   base: string;
   coachId: string;
+  /** The coach assigned by a followed studio for this occurrence. The studio
+   * remains the calendar source; null means the shift is still open. */
+  assignedCoachName: string | null;
   name: string;
   where: string | null;
   /** The studio's page, when the class names a studio rather than a room. */
@@ -452,6 +455,7 @@ export function FollowingScreen({
   // duration belongs in the class detail rather than every scanning row.
   const rowOf = (i: FeedItem): WeekRow & { item: FeedItem } => {
     const c = coachById.get(i.coachId);
+    const coachName = i.assignedCoachName ?? (c && !sameCalendarIdentity(c, i.where) ? c.name : null);
     return {
       item: i,
       key: i.key,
@@ -461,7 +465,7 @@ export function FollowingScreen({
       ap: i.ap,
       tag: meId && i.coachId === meId ? "You" : undefined,
       tagTone: meId && i.coachId === meId ? "coaching" : undefined,
-      coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
+      coach: coachName ? { id: c?.id ?? i.classId, name: coachName, color: c?.color ?? "var(--color-olive)", photo: i.assignedCoachName ? null : c?.photo ?? null } : null,
       onTap: () => setPeek(peekOf(i, c ?? null, favoriteIds.has(i.coachId))),
       corner:
         meId && i.coachId !== meId ? (
@@ -843,10 +847,11 @@ export function FollowingScreen({
                       <div>
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
+                          const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className={`cash-class-main${item.coachId === meId ? " own-coaching" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy">
-                                {(coach || item.shift) && <span className="cash-class-coachline">{coach && <small>{coach.name}</small>}{coach && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
+                                {(coachName || item.shift) && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
                                 <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
@@ -1045,9 +1050,10 @@ function EntityCalendarPeek({ entity, coaches, meId, pinned, onPinned, onClose }
           <div className="cash-activity-list entity-peek-list">
             {sorted.map((item) => {
               const coach = coaches.get(item.coachId);
+              const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
               return <Link className={`cash-class-main${item.coachId === meId ? " own-coaching" : ""}`} href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
                 <span className="cash-class-copy">
-                  {(coach || item.shift) && <span className="cash-class-coachline">{coach && <small>{coach.name}</small>}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
+                  {(coachName || item.shift) && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
                   <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                   <span className="cash-class-studio-row"><span className="cash-class-studio">{tabLabel(item.iso)} · {item.where || entity.name}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                 </span>
@@ -1183,7 +1189,9 @@ function peekOf(i: FeedItem, coach: FeedCoach | null, following?: boolean): Peek
     time: `${i.hm} ${i.ap.toLowerCase()}`,
     studio: i.where,
     studioHref: i.whereHref,
-    coach: coach && !sameCalendarIdentity(coach, i.where)
+    coach: i.assignedCoachName
+      ? { name: i.assignedCoachName, handle: null }
+      : coach && !sameCalendarIdentity(coach, i.where)
       ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color, favorited: following }
       : null,
     // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's

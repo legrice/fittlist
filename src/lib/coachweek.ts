@@ -346,7 +346,10 @@ export type ShiftNaming = {
  * a gym's schedule names anybody is the gym's call rather than ours: the row
  * stays the gym's, exactly as before.
  */
-export async function shiftNaming(classIds: string[]): Promise<ShiftNaming> {
+export async function shiftNaming(
+  classIds: string[],
+  options: { includePrivate?: boolean } = {},
+): Promise<ShiftNaming> {
   const empty: ShiftNaming = { standing: new Map(), perDate: new Map() };
   if (!classIds.length) return empty;
   const db = await getDb();
@@ -379,7 +382,9 @@ export async function shiftNaming(classIds: string[]): Promise<ShiftNaming> {
     })
     .from(schema.users)
     .where(inArray(schema.users.id, ids));
-  const nameable = new Map(people.filter((u) => u.shiftsPublic).map((u) => [u.id, u]));
+  const nameable = new Map(
+    people.filter((u) => options.includePrivate || u.shiftsPublic).map((u) => [u.id, u]),
+  );
 
   const standing = new Map<string, ShiftPerson>();
   for (const r of rows) {
