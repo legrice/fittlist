@@ -8940,7 +8940,7 @@ select.editinput.placekind-select {
      line. Centering the variable-height copy was what pushed two-line rows
      down while leaving the time above them. */
   width:100%; min-height:80px; padding:8px 0 8px 14px; display:flex; align-items:flex-start; gap:12px;
-  border:0; border-left:4px solid var(--si); background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
+  border:0; border-left:4px solid var(--color-olive); background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
 }
 .cash-class-avatar {
   width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:hidden;
@@ -8951,12 +8951,20 @@ select.editinput.placekind-select {
   border:1px solid var(--line); background:var(--card);
 }
 .cash-class-avatar img { width:100%; height:100%; object-fit:cover; }
-.cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
-.cash-class-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:1.2; font-weight:700; }
-.cash-class-copy > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
+.cash-class-main.own-coaching { border-left-color:var(--color-lime); }
+.cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:3px; }
+.cash-class-coachline { min-width:0; display:flex; align-items:center; gap:8px; }
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:14px; }
-.cash-class-meta { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:7px; }
-.cash-class-time { flex:0 0 auto; font-size:14px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-class-title-row,
+.cash-class-studio-row { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:14px; }
+.cash-class-title-row > strong:first-child {
+  min-width:0; overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  font-size:17px; line-height:1.18; font-weight:700;
+}
+.cash-class-time { align-self:end; font-size:14px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-class-studio,
+.cash-class-duration { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:14px; }
+.cash-class-duration { text-align:right; }
 .cash-shift-tag {
   padding:4px 10px; border-radius:var(--radius-pill); background:var(--color-shift);
   color:var(--color-shift-text); font-size:11px; line-height:1.2; font-weight:700;
@@ -8987,7 +8995,7 @@ select.editinput.placekind-select {
   }
   .cash-class-main {
     min-height: 70px;
-    padding: 7px 0;
+    padding: 7px 0 7px 14px;
     gap: 14px;
   }
   .cash-class-avatar,
@@ -8996,7 +9004,7 @@ select.editinput.placekind-select {
     height: 54px;
     flex-basis: 54px;
   }
-  .cash-class-copy strong { font-size: 16px; }
+  .cash-class-title-row > strong:first-child { font-size: 16px; }
   .cash-class-copy > span,
   .cash-class-copy small,
   .cash-class-time { font-size: 13.5px; }
