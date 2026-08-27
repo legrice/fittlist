@@ -9032,7 +9032,7 @@ select.editinput.placekind-select {
   min-width:0; overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
   font-size:19px; line-height:1.16; font-weight:700;
 }
-.cash-class-time { align-self:end; font-size:15px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-class-time { align-self:end; font-size:17px; line-height:1.2; font-weight:600; white-space:nowrap; }
 .cash-class-studio,
 .cash-class-duration { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:15px; }
 .cash-class-duration { text-align:right; }
@@ -9076,7 +9076,7 @@ select.editinput.placekind-select {
     flex-basis: 54px;
   }
   .cash-class-title-row > strong:first-child { font-size: 18px; }
-  .cash-class-time,
+  .cash-class-time { font-size: 16.5px; }
   .cash-class-studio,
   .cash-class-duration { font-size: 14.5px; }
   .cash-class-copy small { font-size: 15.5px; }
@@ -11729,9 +11729,9 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 19px; line-height: 1.16; font-weight: 700;
 }
 .calendar-cardlist .clline-t {
-  align-self: end; margin: 0; font-size: 15px; line-height: 1.2;
+  align-self: end; margin: 0; font-size: 17px; line-height: 1.2;
 }
-.calendar-cardlist .clline-ap { font-size: 11px; }
+.calendar-cardlist .clline-ap { font-size: 13px; }
 .calendar-cardlist .clline-w,
 .calendar-cardlist .clline-dur {
   min-width: 0; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
