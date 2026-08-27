@@ -413,11 +413,11 @@ export async function PublicProfileView({
             }
             return (
               <>
-                <CalendarList days={listDays(preview)} />
+                <CalendarList days={listDays(preview)} className="profile-calendar-list" />
                 {later.length > 0 && (
                   <ScheduleMore
                     label="See more schedule"
-                    chunks={[<CalendarList key="more-schedule" days={listDays(later)} />]}
+                    chunks={[<CalendarList key="more-schedule" days={listDays(later)} className="profile-calendar-list" />]}
                   />
                 )}
               </>

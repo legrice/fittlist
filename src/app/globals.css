@@ -11717,6 +11717,34 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clline-extra { width: 100%; margin-top: 4px; }
 .calendar-cardlist .clrow > :is(.clmore, .calendar-save-action, .calendar-attending-check, .following-add) { top: 7px; }
 
+/* Profiles used the occurrence grid before CalendarList became text-led.
+   Keep their hierarchy explicit so older grid coordinates cannot indent the
+   class or studio away from the coach byline: attribution, class, place. */
+.profile-calendar-list .clline {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.profile-calendar-list .clline-by,
+.profile-calendar-list .clline-title-row,
+.profile-calendar-list .clline-studio-row {
+  width: 100%;
+  min-width: 0;
+}
+.profile-calendar-list .clline-title-row,
+.profile-calendar-list .clline-studio-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+}
+.profile-calendar-list .clline :is(.clline-by-name, .clline-nm, .clline-t, .clline-w, .clline-dur) {
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: auto;
+  margin-left: 0;
+}
+
 .wkfab {
   right: 18px;
   bottom: calc(108px + env(safe-area-inset-bottom));
