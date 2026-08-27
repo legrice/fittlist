@@ -9929,7 +9929,18 @@ select.editinput.placekind-select {
   width:100%; height:min(88dvh,780px); max-height:88dvh; padding-top:24px;
   border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
   animation:peek-sheet-up var(--motion-slow) var(--motion-ease-out);
+  transition:transform var(--motion-base) var(--motion-ease-out);
+  will-change:transform;
 }
+.sheet.sheet-full.peeksheet.is-dragging { transition:none; }
+.peekdrag {
+  position:sticky; top:-24px; z-index:10; height:28px; margin:-24px -20px 0;
+  width:calc(100% + 40px); display:flex; align-items:center; justify-content:center;
+  touch-action:none; cursor:grab; background:var(--paper);
+  border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
+}
+.peekdrag:active { cursor:grabbing; }
+.peekdrag span { width:42px; height:5px; border-radius:999px; background:var(--color-border-strong); }
 @keyframes peek-sheet-up {
   from { transform:translateY(100%); opacity:.92; }
   to { transform:translateY(0); opacity:1; }
@@ -9945,6 +9956,7 @@ select.editinput.placekind-select {
 }
 .peekcontrols { position:sticky; top:14px; z-index:8; display:flex; align-items:center; justify-content:space-between; min-height:44px; margin:0 0 22px; pointer-events:none; }
 .peekcontrols > * { pointer-events:auto; }
+.peekcontrols-actions { display:flex; align-items:center; gap:8px; }
 .peekcontrols .peekclose { position:static; display:flex; margin:0; box-shadow:none; }
 .peekrelationship { min-height:44px; padding-inline:18px; }
 .peekpin { position:static; display:flex; margin:0; background:var(--card); color:var(--ink); }

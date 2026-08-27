@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { personPeek, type Peek } from "@/app/actions/peek";
+import { toggleCalendarPin } from "@/app/actions/pins";
 import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
@@ -36,6 +37,7 @@ export function CoachPeek({
   self = false,
   scheduleOnly = false,
   shareHref,
+  pinned: initialPinned = false,
   onPinChange,
   onClose,
 }: {
@@ -51,7 +53,8 @@ export function CoachPeek({
    * privately added for themselves. */
   scheduleOnly?: boolean;
   shareHref?: string;
-  /** Lets a parent rail discard any old priority state after an unfollow. */
+  /** Explicit favorite state, separate from following. */
+  pinned?: boolean;
   onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
 }) {
@@ -62,8 +65,13 @@ export function CoachPeek({
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [messageOpen, setMessageOpen] = useState(false);
   const [relationship, setRelationship] = useState<"off" | "following" | "requested" | null>(null);
+  const [pinned, setPinned] = useState(initialPinned);
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ y: 0, at: 0 });
   const [, startTransition] = useTransition();
   const [followPending, startFollowTransition] = useTransition();
+  const [pinPending, startPinTransition] = useTransition();
   const [toastMsg, toastOn, , dismissToast, toastFor] = useToast();
 
   useEffect(() => {
@@ -76,6 +84,8 @@ export function CoachPeek({
       setRelationship(res.following ? "following" : "off");
     });
   }, [id]);
+
+  useEffect(() => setPinned(initialPinned), [initialPinned]);
 
   const toggleFollow = () => {
     if (!peek?.handle || relationship === null || followPending) return;
@@ -100,6 +110,34 @@ export function CoachPeek({
         toastFor(`Unfollowed ${name}.`, 3600);
       }
     });
+  };
+
+  const togglePin = () => {
+    if (pinPending) return;
+    const before = pinned;
+    setPinned(!before);
+    onPinChange?.(!before);
+    startPinTransition(async () => {
+      const result = await toggleCalendarPin("person", id);
+      if (!result.ok) {
+        setPinned(before);
+        onPinChange?.(before);
+        return;
+      }
+      setPinned(result.pinned);
+      onPinChange?.(result.pinned);
+      window.dispatchEvent(new Event("calendar-pins-changed"));
+    });
+  };
+
+  const finishDrag = (clientY: number) => {
+    const distance = Math.max(0, clientY - dragStart.current.y);
+    const velocity = distance / Math.max(1, performance.now() - dragStart.current.at);
+    setDragging(false);
+    if (distance > 120 || velocity > 0.65) {
+      setDragY(window.innerHeight);
+      window.setTimeout(onClose, 180);
+    } else setDragY(0);
   };
 
   const save = (classId: string, iso: string, on: boolean) => {
@@ -171,11 +209,30 @@ export function CoachPeek({
       }}
     >
       <div
-        className="sheet sheet-full peeksheet"
+        className={`sheet sheet-full peeksheet${dragging ? " is-dragging" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={`${name} calendar`}
+        style={{ transform: `translateY(${dragY}px)` }}
       >
+        <div
+          className="peekdrag"
+          role="presentation"
+          onPointerDown={(event) => {
+            dragStart.current = { y: event.clientY, at: performance.now() };
+            setDragging(true);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            if (dragStart.current.at === 0) return;
+            setDragY(Math.max(0, event.clientY - dragStart.current.y));
+          }}
+          onPointerUp={(event) => {
+            finishDrag(event.clientY);
+            dragStart.current.at = 0;
+          }}
+          onPointerCancel={() => { dragStart.current.at = 0; setDragging(false); setDragY(0); }}
+        ><span aria-hidden="true" /></div>
         {/* A direct child of the scrolling sheet so sticky can hold it for
             the full week. Inside the short header it was constrained to the
             header and disappeared as soon as the dates began. */}
@@ -183,7 +240,7 @@ export function CoachPeek({
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
-          {!self && relationship !== null && <button className={`peekfollow peekrelationship${relationship !== "off" ? " on" : ""}`} type="button" disabled={followPending} aria-label={relationship === "following" ? `Unfollow ${name}` : relationship === "requested" ? `Cancel follow request for ${name}` : `Follow ${name}`} aria-pressed={relationship !== "off"} onClick={toggleFollow}>{relationship === "following" ? "Following" : relationship === "requested" ? "Requested" : "Follow"}</button>}
+          {!self && relationship !== null && <div className="peekcontrols-actions"><button className={`peekfollow peekrelationship${relationship !== "off" ? " on" : ""}`} type="button" disabled={followPending} aria-label={relationship === "following" ? `Unfollow ${name}` : relationship === "requested" ? `Cancel follow request for ${name}` : `Follow ${name}`} aria-pressed={relationship !== "off"} onClick={toggleFollow}>{relationship === "following" ? "Following" : relationship === "requested" ? "Requested" : "Follow"}</button><button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" disabled={pinPending} aria-label={pinned ? `Remove ${name} from favorites` : `Add ${name} to favorites`} aria-pressed={pinned} onClick={togglePin}><Icon name={pinned ? "star_filled" : "star"} size={21} /></button></div>}
         </div>
         {/* Identity stays compact: face beside the name, then the person's
             role and location underneath. Actions remain on their own row. */}
