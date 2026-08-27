@@ -11724,6 +11724,10 @@ a.clspeek-by:active { opacity: .6; }
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  /* The calendar tab leaves a full spacing step between the final caption
+     and its divider. Profiles used the compact row padding, which made the
+     rule look attached to the studio line above it. */
+  padding-bottom: 24px;
 }
 .profile-calendar-list .clline-by,
 .profile-calendar-list .clline-title-row,
