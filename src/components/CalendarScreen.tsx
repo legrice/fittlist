@@ -311,6 +311,7 @@ export function CalendarScreen({
             where,
             hm: t.hm,
             ap: t.ap,
+            dur: `${c.durationMin} min`,
             coach: viewer,
             tag: c.shift ? "Shift" : "Coaching",
             tagTone: c.shift ? "shift" as const : "coaching" as const,
@@ -327,8 +328,9 @@ export function CalendarScreen({
         where: i.where,
         hm: i.hm,
         ap: i.ap,
+        dur: `${i.durationMin} min`,
         coach: i.personal
-          ? viewer
+          ? null
           : i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
@@ -549,7 +551,7 @@ export function CalendarScreen({
       ) : (
         <>
           {days.length ? (
-            <CalendarList days={days} />
+            <CalendarList className="personal-calendar-list" days={days} />
           ) : (
             <WeekEmpty first title="Nothing showing" body="Keep looking ahead, choose another view, or add something to your calendar." />
           )}

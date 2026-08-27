@@ -11734,10 +11734,26 @@ a.clspeek-by:active { opacity: .6; }
 
 @media (max-width: 390px) {
   .calendar-cardlist .clline {
-    padding: 8px 0;
+    padding: 8px 0 14px 14px;
   }
   .calendar-cardlist .clline-tag { padding-inline: 10px; }
   .schedule-kind-tabs button { padding-inline: 20px; }
+}
+
+/* My calendar used to retain grid placement from its management-era rows,
+   which indented the class and place even after CalendarList became text-led.
+   Reset those coordinates on this surface so it reads exactly like Schedule. */
+.calendar-cardwrap .personal-calendar-list .clline > *,
+.calendar-cardwrap .personal-calendar-list .clline :is(.clline-by-name, .clline-nm, .clline-t, .clline-w, .clline-dur, .clline-tag) {
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: auto;
+}
+.calendar-cardwrap .personal-calendar-list .clline-title-row,
+.calendar-cardwrap .personal-calendar-list .clline-studio-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 /* The rail's answer, in words. A filtered list is otherwise indistinguishable
