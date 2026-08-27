@@ -842,7 +842,7 @@ export function FollowingScreen({
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className={`cash-class-main${item.coachId === meId ? " own-coaching" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy">
-                                <span className="cash-class-coachline"><small>{coach?.name || "Coach to come"}</small>{favoriteIds.has(item.coachId) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>
+                                <span className="cash-class-coachline"><small>{coach?.name || "Coach to come"}</small>{pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>
                                 <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
