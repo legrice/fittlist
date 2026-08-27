@@ -8923,6 +8923,9 @@ select.editinput.placekind-select {
 .cash-pin.on { background:var(--ink); color:var(--card); }
 .cash-pin:active { transform:scale(.92); }
 .following-rail .trayitem-more { opacity: 1; }
+/* The large faces already give the rail a strong visual ending. Pull the
+   schedule card up one grid step so its first date stays connected to it. */
+.following-head + .home-listregion .home-schedule { margin-top: 0; }
 .cash-activity-list { padding:0; }
 .calendar-stream-loading {
   min-height: 180px;
