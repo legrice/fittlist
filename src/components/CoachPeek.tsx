@@ -69,6 +69,7 @@ export function CoachPeek({
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef({ y: 0, at: 0 });
+  const sheetRef = useRef<HTMLDivElement>(null);
   const [, startTransition] = useTransition();
   const [followPending, startFollowTransition] = useTransition();
   const [pinPending, startPinTransition] = useTransition();
@@ -140,6 +141,56 @@ export function CoachPeek({
     } else setDragY(0);
   };
 
+  // iOS Safari does not reliably deliver Pointer Events from a sticky drag
+  // handle inside a scrolling sheet. Listen for native touches on the whole
+  // sheet so a downward pull works anywhere while its scroll is at the top.
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    let startY = 0;
+    let startedAt = 0;
+    let distance = 0;
+    let active = false;
+    const onTouchStart = (event: TouchEvent) => {
+      if (sheet.scrollTop > 0) return;
+      startY = event.touches[0].clientY;
+      startedAt = performance.now();
+      distance = 0;
+      active = true;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (!active) return;
+      distance = event.touches[0].clientY - startY;
+      if (distance <= 10 || sheet.scrollTop > 0) {
+        setDragY(0);
+        return;
+      }
+      event.preventDefault();
+      setDragging(true);
+      setDragY(distance - 10);
+    };
+    const onTouchEnd = () => {
+      if (!active) return;
+      active = false;
+      const velocity = distance / Math.max(1, performance.now() - startedAt);
+      setDragging(false);
+      if (distance > 120 || velocity > 0.65) {
+        setDragY(window.innerHeight);
+        window.setTimeout(onClose, 180);
+      } else setDragY(0);
+    };
+    sheet.addEventListener("touchstart", onTouchStart, { passive: true });
+    sheet.addEventListener("touchmove", onTouchMove, { passive: false });
+    sheet.addEventListener("touchend", onTouchEnd);
+    sheet.addEventListener("touchcancel", onTouchEnd);
+    return () => {
+      sheet.removeEventListener("touchstart", onTouchStart);
+      sheet.removeEventListener("touchmove", onTouchMove);
+      sheet.removeEventListener("touchend", onTouchEnd);
+      sheet.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [onClose]);
+
   const save = (classId: string, iso: string, on: boolean) => {
     const key = `${classId}|${iso}`;
     setMarks((m) => ({ ...m, [key]: on }));
@@ -209,6 +260,7 @@ export function CoachPeek({
       }}
     >
       <div
+        ref={sheetRef}
         className={`sheet sheet-full peeksheet${dragging ? " is-dragging" : ""}`}
         role="dialog"
         aria-modal="true"
@@ -219,19 +271,22 @@ export function CoachPeek({
           className="peekdrag"
           role="presentation"
           onPointerDown={(event) => {
+            if (event.pointerType === "touch") return;
             dragStart.current = { y: event.clientY, at: performance.now() };
             setDragging(true);
             event.currentTarget.setPointerCapture(event.pointerId);
           }}
           onPointerMove={(event) => {
+            if (event.pointerType === "touch") return;
             if (dragStart.current.at === 0) return;
             setDragY(Math.max(0, event.clientY - dragStart.current.y));
           }}
           onPointerUp={(event) => {
+            if (event.pointerType === "touch") return;
             finishDrag(event.clientY);
             dragStart.current.at = 0;
           }}
-          onPointerCancel={() => { dragStart.current.at = 0; setDragging(false); setDragY(0); }}
+          onPointerCancel={(event) => { if (event.pointerType !== "touch") { dragStart.current.at = 0; setDragging(false); setDragY(0); } }}
         ><span aria-hidden="true" /></div>
         {/* A direct child of the scrolling sheet so sticky can hold it for
             the full week. Inside the short header it was constrained to the
