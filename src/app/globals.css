@@ -11630,17 +11630,17 @@ a.clspeek-by:active { opacity: .6; }
   padding: 5px 0 6px;
   gap: 1px;
   border-radius: 12px;
-  color: var(--color-black);
+  color: color-mix(in srgb, var(--color-olive) 62%, var(--color-white));
   font-size: 10px;
   font-weight: 700;
 }
 .navtab.on {
   background: transparent;
-  color: var(--color-black);
+  color: var(--color-olive);
 }
 .navtab.on .navglyph {
-  background:var(--color-lime-soft);
-  color: var(--color-black);
+  background:transparent;
+  color: var(--color-olive);
 }
 .navglyph {
   width: 48px;
