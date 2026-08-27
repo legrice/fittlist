@@ -9052,17 +9052,14 @@ select.editinput.placekind-select {
     padding-inline: 0;
   }
   .cash-day {
-    display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
-    align-items: start;
-    column-gap: 26px;
+    display: block;
   }
   .cash-day + .cash-day { margin-top: 46px; }
   .cash-day > h2 {
-    margin: 10px 0 0;
-    font-size: 17px;
-    line-height: 1.2;
-    letter-spacing: -.015em;
+    margin: 0 0 14px;
+    font-size: 24px;
+    line-height: 1.1;
+    letter-spacing: -.025em;
   }
   .cash-class-main {
     min-height: 70px;
@@ -12071,21 +12068,18 @@ a.clspeek-by:active { opacity: .6; }
     gap: 4px;
   }
   .pub.hasnav .pubpanel .calendar-cardlist .dayblock {
-    display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
-    align-items: start;
-    column-gap: 26px;
+    display: block;
   }
   .pub.hasnav .pubpanel .calendar-cardlist .dayblock + .dayblock {
     margin-top: 44px;
   }
   .pub.hasnav .pubpanel .calendar-cardlist .dayband {
-    padding-top: 10px;
+    padding-top: 0;
   }
   .pub.hasnav .pubpanel .calendar-cardlist .dayband-d {
-    font-size: 17px;
-    line-height: 1.2;
-    letter-spacing: -.015em;
+    font-size: 24px;
+    line-height: 1.1;
+    letter-spacing: -.025em;
   }
   .pub.hasnav .pubpanel .calendar-cardlist .clline {
     min-height: 70px;
