@@ -7472,7 +7472,7 @@ select.editinput.placekind-select {
 .rota-coach-select:disabled { opacity: .55; cursor: wait; }
 .rota-inline-row .clline { padding-bottom: 72px; }
 .rota-inline-row[data-planner-color] .clline {
-  border-left: 4px solid var(--studio-planner-color);
+  --row-rail: var(--studio-planner-color);
 }
 .rota-inline-coachpick {
   position: absolute; z-index: 2; left: 20px; bottom: 20px;
@@ -11963,6 +11963,9 @@ a.clspeek-by:active { opacity: .6; }
   .rota-calendar .rota-inline-row .clline {
     padding: 20px 0 82px 20px;
   }
+  .rota-calendar .rota-inline-row .clline::before {
+    top:20px; bottom:20px;
+  }
 
   .rota-calendar .rota-inline-row .rota-inline-coachpick {
     left: 20px;
@@ -11974,6 +11977,9 @@ a.clspeek-by:active { opacity: .6; }
   .rota-calendar .rota-inline-row .clline {
     min-height: 132px;
     padding: 24px min(380px, 42vw) 24px 28px;
+  }
+  .rota-calendar .rota-inline-row .clline::before {
+    top:24px; bottom:24px;
   }
 
   .rota-calendar .rota-inline-row .clline-nm {
