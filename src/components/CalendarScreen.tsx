@@ -491,7 +491,15 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       <header className="calendar-page-header calendar-page-actions">
-        <h1>My calendar</h1>
+        <div className="calendar-page-title-row">
+          <div className="calendar-page-title">
+            <Link className="calendar-page-back" href="/you" aria-label="Back to You">
+              <Icon name="arrow_back" size={23} />
+            </Link>
+            <h1>My calendar</h1>
+          </div>
+          <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
+        </div>
         <div className="calendar-desktop-controls">
           <label className="calendar-desktop-filter">
             <span className="sr-only">View calendar</span>
@@ -503,11 +511,10 @@ export function CalendarScreen({
             </select>
           </label>
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
-            <button type="button" className={view === "list" ? "on" : ""} aria-pressed={view === "list"} onClick={() => setView("list")}>Day</button>
-            <button type="button" className={view === "month" ? "on" : ""} aria-pressed={view === "month"} onClick={() => setView("month")}>Month</button>
+            <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
+            <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_view_month" size={21} /></button>
           </div>
         </div>
-        <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
       </header>
 
       <div className="cardwrap calendar-cardwrap">

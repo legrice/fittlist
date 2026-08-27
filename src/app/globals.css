@@ -11251,7 +11251,14 @@ a.clspeek-by:active { opacity: .6; }
   margin:4px 0; background:var(--ground);
 }
 .calendar-page-header.calendar-page-actions { min-height:0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:4px 0 8px; }
-.calendar-desktop-controls { order:3; width:100%; display:flex; align-items:center; gap:8px; }
+.calendar-page-title-row { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.calendar-page-title { min-width:0; display:flex; align-items:center; gap:12px; }
+.calendar-page-back {
+  width:44px; height:44px; flex:0 0 44px; display:grid; place-items:center;
+  border:1px solid var(--color-border); border-radius:50%; background:var(--color-white); color:var(--color-black); text-decoration:none;
+}
+.calendar-page-back:active { transform:scale(.94); }
+.calendar-desktop-controls { order:3; width:100%; margin-top:8px; display:flex; align-items:center; gap:8px; }
 .calendar-page-header h1 { margin:0; font-size:34px; line-height:1.05; letter-spacing:-.025em; }
 .calendar-menu-button,
 .calendar-header-share {
@@ -11265,7 +11272,7 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-header-share { display:none; }
 }
 .calendar-desktop-view { height:44px; padding:3px; display:flex; align-items:center; gap:3px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); }
-.calendar-desktop-view button { min-width:72px; height:36px; padding:0 13px; border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; }
+.calendar-desktop-view button { width:42px; min-width:42px; height:36px; padding:0; display:grid; place-items:center; border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); }
 .calendar-desktop-view button.on { background:var(--color-black); color:var(--color-white); }
 .calendar-desktop-filter { height:44px; min-width:0; flex:1; padding:0 11px 0 14px; display:flex; align-items:center; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-white); }
 .calendar-desktop-filter select { width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--color-black); font:inherit; font-size:14px; font-weight:700; }

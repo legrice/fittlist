@@ -128,6 +128,7 @@ export function AppHeader({
 
   if (social) {
     const calendarUtility = pathname.startsWith("/calendar");
+    if (calendarUtility) return null;
     return (
       <div className={`brandbar social-brandbar${headerHidden ? " is-hidden" : ""}`}>
         {calendarUtility && <div className="social-brandbar-side social-brandbar-left">
