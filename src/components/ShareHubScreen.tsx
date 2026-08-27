@@ -9,7 +9,7 @@ import {
   type StoryThemeId,
 } from "@/lib/format";
 import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
-import { DECOS, type DecoId } from "@/lib/decorations";
+import type { DecoId } from "@/lib/decorations";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
 import { setStoryBackground } from "@/app/actions/profile";
@@ -137,7 +137,7 @@ export function ShareHubScreen({
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>("top");
   const [pick, setPick] = useState<
-    null | "dates" | "classes" | "message" | "layout" | "deco" | "color"
+    null | "dates" | "classes" | "message" | "layout" | "color"
   >(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [shareCapabilityKnown, setShareCapabilityKnown] = useState(false);
@@ -705,12 +705,6 @@ export function ShareHubScreen({
                     {noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   </span>
                 </button>
-                <button className="shctrl" onClick={() => setPick("deco")}>
-                  <span className="shctrl-k">Decoration</span>
-                  <span className="shctrl-v">
-                    {DECOS.find((d) => d.id === decoId)?.label ?? "Top bar"}
-                  </span>
-                </button>
               </>
             ) : (
               <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
@@ -804,50 +798,6 @@ export function ShareHubScreen({
               <button className="btn si" onClick={() => setPick(null)}>
                 Done
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {pick === "deco" && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPick(null);
-          }}
-        >
-          <div className="sheet shpick">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>Decoration</h2>
-            {/* Each row carries a little swatch of what it does: a frame
-                you can see beats a frame you can only read about. */}
-            <div className="settingslist">
-              {DECOS.map((d) => {
-                const on = d.id === decoId;
-                return (
-                  <button
-                    key={d.id}
-                    className="setrow"
-                    aria-pressed={on}
-                    onClick={() => {
-                      setDecoId(d.id);
-                      setPick(null);
-                    }}
-                  >
-                    <span className={`decochip decochip-${d.id}`} aria-hidden="true" />
-                    <span className="setrow-txt">
-                      <span className="t">{d.label}</span>
-                    </span>
-                    {on && (
-                      <span className="setrow-ic">
-                        <Icon name="check" size={20} />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
             </div>
           </div>
         </div>
