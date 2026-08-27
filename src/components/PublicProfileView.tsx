@@ -381,12 +381,7 @@ export async function PublicProfileView({
                       hm: start.hm,
                       ap: start.ap,
                       dur: `${c.durationMin} min`,
-                      coach: {
-                        id: user.id,
-                        name: user.name,
-                        color: avatarColor(user),
-                        photo: user.photo,
-                      },
+                      coach: null,
                       href,
                       classId: c.id,
                       iso: d.iso,

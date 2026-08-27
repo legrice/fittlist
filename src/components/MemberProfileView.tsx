@@ -256,7 +256,7 @@ export async function MemberProfileView({
         <section id="profile-schedule" className="profile-anchor-section">
         {week.length > 0 ? (
           <ClassOpener handle="">
-            <CalendarList days={memberCalendarDays(week)} className="profile-calendar-list" />
+            <CalendarList days={memberCalendarDays(week, name)} className="profile-calendar-list" />
           </ClassOpener>
         ) : (
           <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p>{canMessage && user.handle && <ScheduleNudge handle={user.handle} name={name} signedIn={!!viewerId} />}</div>
@@ -302,7 +302,11 @@ export async function MemberProfileView({
 
 /** One row of the member's week. A mark at a real class links to its page;
  *  one of their own is plain text, because there is no page behind it. */
-function memberCalendarDays(week: { iso: string; label: string; items: SharedWeekItem[] }[]): WeekDayRows[] {
+function memberCalendarDays(
+  week: { iso: string; label: string; items: SharedWeekItem[] }[],
+  profileName: string,
+): WeekDayRows[] {
+  const ownerName = profileName.trim().toLocaleLowerCase();
   return week.map((day) => ({
     iso: day.iso,
     label: day.label,
@@ -313,7 +317,7 @@ function memberCalendarDays(week: { iso: string; label: string; items: SharedWee
       hm: it.hm,
       ap: it.ap,
       dur: `${it.durationMin} min`,
-      coach: it.coachName
+      coach: it.coachName && it.coachName.trim().toLocaleLowerCase() !== ownerName
         ? { id: it.handle ?? it.coachName, name: it.coachName, color: "var(--color-coaching)", photo: null }
         : null,
       href: it.handle ? `/${it.handle}/${it.classId}?d=${it.iso}` : null,
