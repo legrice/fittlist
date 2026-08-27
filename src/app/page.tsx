@@ -10,7 +10,6 @@ import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
 import { pendingInviter } from "@/lib/joinlink";
 import { AuthFlow } from "@/components/AuthFlow";
-import { MarketingLanding } from "@/components/MarketingLanding";
 
 export default async function Home({
   searchParams,
@@ -79,7 +78,15 @@ export default async function Home({
   // publish, or explicitly signs in. Invite arrivals keep the focused auth
   // door they were sent to, and action links return here with `join` set.
   if (!join && !wasInvited && !via_ && !viaHandle) {
-    return <MarketingLanding />;
+    return (
+      <AuthFlow
+        startStage="email"
+        providers={providers}
+        inviteOnly={false}
+        fans={fansEnabled()}
+        landing={await landingHref()}
+      />
+    );
   }
   return (
     <AuthFlow
