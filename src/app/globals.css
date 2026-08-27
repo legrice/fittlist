@@ -276,6 +276,14 @@ a { color: inherit; }
   background: var(--ground);
   --band: transparent;
 }
+/* Mobile Safari can resolve percentage widths a fraction shy of the visual
+   viewport. Use its dynamic viewport unit for the app shell so no page color
+   can show through as a hairline at either edge. */
+@media (max-width: 939px) {
+  .appshell,
+  .appshell .stage,
+  .screen.hasnav { width: 100dvw; max-width: 100dvw; }
+}
 .screen.hasnav .brandbar { background: transparent; position: static; }
 /* The logged-out landing matches the app it signs into, by Matt's call:
    one surface, and that surface is flat now. */
