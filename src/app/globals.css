@@ -11714,6 +11714,11 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-cardlist .clline-extra { width: 100%; margin-top: 4px; }
 .calendar-cardlist .clrow > :is(.clmore, .calendar-save-action, .calendar-attending-check, .following-add) { top: 7px; }
 
+/* My calendar omits its already-established owner name but keeps the status
+   tag. Four pixels between rows plus the next row's ten-pixel top padding
+   matches the fourteen pixels above the divider exactly. */
+.personal-calendar-list .dayrows { gap: 4px; }
+
 /* Profiles used the occurrence grid before CalendarList became text-led.
    Keep their hierarchy explicit so older grid coordinates cannot indent the
    class or studio away from the coach byline: attribution, class, place. */

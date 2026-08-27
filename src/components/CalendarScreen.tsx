@@ -312,7 +312,7 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             dur: `${c.durationMin} min`,
-            coach: viewer,
+            coach: null,
             tag: c.shift ? "Shift" : "Coaching",
             tagTone: c.shift ? "shift" as const : "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
