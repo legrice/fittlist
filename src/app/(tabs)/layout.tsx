@@ -7,6 +7,7 @@ import { unreadHeaderCounts } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
+import { lookMode } from "@/lib/darkmode";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
 import { NavBar } from "@/components/NavBar";
@@ -108,7 +109,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <section className="screen hasnav early-calendar-dark" data-mode="dark">
+    <section className="screen hasnav" data-mode={lookMode(me.look)}>
       <DesktopChrome
         coach={isCoach}
         scheduleHref={scheduleHref}

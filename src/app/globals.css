@@ -8933,14 +8933,14 @@ select.editinput.placekind-select {
 .cash-rail-more { flex:0 0 2px; align-self:stretch; }
 .cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
 .cash-class-row { position:relative; min-height:72px; }
-.cash-class-row + .cash-class-row { margin-top:8px; }
+.cash-class-row + .cash-class-row { margin-top:4px; padding-top:4px; border-top:1px solid var(--line); }
 .cash-class-main {
   /* Anchor every row to one top line: avatar, class name and time share the
      same edge even when a studio-owned class intentionally omits its coach
      line. Centering the variable-height copy was what pushed two-line rows
      down while leaving the time above them. */
   width:100%; min-height:80px; padding:8px 0 8px 14px; display:flex; align-items:flex-start; gap:12px;
-  border:0; border-left:4px solid transparent; background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
+  border:0; border-left:4px solid var(--si); background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;
 }
 .cash-class-avatar {
   width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:hidden;
@@ -9015,42 +9015,6 @@ select.editinput.placekind-select {
 .screen.hasnav .brandbar {
   background: var(--ground); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--ink);
   border-bottom: 0;
-}
-/* Early-calendar design branch: a true dark-green canvas rather than the
-   warm charcoal used by the account preference. Keeping every app surface in
-   one green family lets portraits, lime actions and schedule type do the work. */
-.screen.hasnav.early-calendar-dark {
-  --color-background: #062c24;
-  --color-surface: #08372d;
-  --color-surface-muted: #10483c;
-  --color-surface-hover: #185548;
-  --color-border: #286659;
-  --color-border-strong: #3a7a6c;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #b8d3ca;
-  --color-text-muted: #8eb4a8;
-  --paper: var(--color-background);
-  --shell: var(--color-background);
-  --ground: var(--color-background);
-  --card: var(--color-surface);
-  --ink: var(--color-text-primary);
-  --ol: var(--color-text-secondary);
-  --line: var(--color-border);
-  --div: var(--color-border);
-  --cl: var(--color-surface-muted);
-  --cl-d: var(--color-surface-hover);
-  --band: var(--color-background);
-  --si-tint: #174b36;
-  --si-ink: var(--color-lime);
-  background: var(--color-background);
-}
-.early-calendar-dark .cash-class-main { border-left-color: var(--color-lime); }
-.early-calendar-dark .trayav:has(img) {
-  outline: 2px solid color-mix(in srgb, var(--color-white) 42%, transparent);
-  outline-offset: 2px;
-}
-.early-calendar-dark .cash-class-coach-avatar:has(img) {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 48%, transparent);
 }
 .screen.hasnav .brandbar.social-brandbar { border-bottom: 1px solid var(--line); }
 .screen.hasnav .brandbar .iconbtn {
