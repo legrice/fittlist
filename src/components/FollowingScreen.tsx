@@ -842,7 +842,7 @@ export function FollowingScreen({
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className={`cash-class-main${item.coachId === meId ? " own-coaching" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy">
-                                <span className="cash-class-coachline"><small>{coach?.name || "Coach to come"}</small>{pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>
+                                {(coach || item.shift) && <span className="cash-class-coachline">{coach && <small>{coach.name}</small>}{coach && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
                                 <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
@@ -1044,7 +1044,7 @@ function EntityCalendarPeek({ entity, coaches, meId, pinned, onPinned, onClose }
               const coach = coaches.get(item.coachId);
               return <Link className={`cash-class-main${item.coachId === meId ? " own-coaching" : ""}`} href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
                 <span className="cash-class-copy">
-                  <span className="cash-class-coachline"><small>{coach?.name || entity.name}</small>{item.shift && <span className="cash-shift-tag">Shift</span>}</span>
+                  {(coach || item.shift) && <span className="cash-class-coachline">{coach && <small>{coach.name}</small>}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
                   <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                   <span className="cash-class-studio-row"><span className="cash-class-studio">{tabLabel(item.iso)} · {item.where || entity.name}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                 </span>
