@@ -992,7 +992,7 @@ export function FollowingScreen({
             aria-label="Share your schedule"
             onClick={() => window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }))}
           >
-            <Icon name="reply" className="share-arrow-forward" size={20} />
+            <Icon name="reply" className="share-arrow-forward" size={22} />
             <span>Share</span>
           </Link>
         </BodyPortal>
