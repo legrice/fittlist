@@ -8,7 +8,7 @@ import { NewMessage, type MessagePerson } from "@/components/NewMessage";
 // Notifications and Messages share the same quiet list grammar, but each owns
 // its route and header action. There is no mode switch hidden inside either.
 
-type Notif = {
+export type Notif = {
   id: string;
   type: string;
   title: string;
@@ -71,7 +71,7 @@ function fmt(d: Date | string) {
     : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function NotificationList({ notifications }: { notifications: Notif[] }) {
+export function NotificationList({ notifications }: { notifications: Notif[] }) {
   if (notifications.length === 0) {
     return (
       <p className="adminempty" style={{ marginTop: 24 }}>

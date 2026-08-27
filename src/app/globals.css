@@ -2000,6 +2000,20 @@ button.bl-band { cursor: pointer; }
 }
 .social-notifications { position: relative; text-decoration: none; }
 .social-notifications i { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-lime); border: 1px solid var(--shell); }
+.notifications-sheet-scrim { z-index: 90; align-items: flex-end; }
+.notifications-sheet {
+  width: 100%; height: min(82dvh, 760px); max-height: 82dvh; padding: 12px var(--page-gutter) calc(28px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; overflow-y: auto;
+}
+.notifications-sheet-grab {
+  display: block; width: 42px; height: 5px; margin: 0 auto 12px;
+  border-radius: var(--radius-pill); background: var(--color-border-strong);
+}
+.notifications-sheet-head { display: grid; grid-template-columns: 48px minmax(0,1fr); align-items: start; gap: 10px; margin-bottom: 18px; }
+.notifications-sheet-close { position: static; width: 44px; height: 44px; margin: 0; background: var(--color-surface-muted); }
+.notifications-sheet-head h2 { margin: 0; padding: 0; font-size: 28px; line-height: 1.08; }
+.notifications-sheet-head p { margin: 4px 0 0; color: var(--color-text-secondary); font-size: 14px; }
+.notifications-sheet-loading { min-height: 180px; display: grid; place-items: center; color: var(--color-text-secondary); }
 .youcalendar-card {
   min-height: 92px; margin: 20px 0 28px; padding: 16px 18px; display: grid;
   grid-template-columns: 50px minmax(0,1fr) auto; align-items: center; gap: 14px;

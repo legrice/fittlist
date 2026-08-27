@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
+import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 import type { YouAccountData } from "@/components/YouDashboard";
@@ -55,6 +56,8 @@ export function AppHeader({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [headerHidden, setHeaderHidden] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationsSeen, setNotificationsSeen] = useState(false);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
@@ -140,19 +143,22 @@ export function AppHeader({
         <div className="social-brandbar-side social-brandbar-right">
           {!calendarUtility && <>
             <GlobalAdd />
-            <Link
-              className={`iconbtn social-notifications${pathname.startsWith("/notifications") ? " onroute" : ""}`}
-              href="/notifications"
+            <button
+              type="button"
+              className="iconbtn social-notifications"
               aria-label={`${notificationUnread} unread notifications`}
+              aria-expanded={notificationsOpen}
+              onClick={() => { setNotificationsSeen(true); setNotificationsOpen(true); }}
             >
               <Icon name="notifications" size={23} />
-              {notificationUnread > 0 && <i aria-hidden="true" />}
-            </Link>
+              {notificationUnread > 0 && !notificationsSeen && <i aria-hidden="true" />}
+            </button>
             <Link className="iconbtn" href="/search" aria-label="Search FittList">
               <Icon name="search" size={23} />
             </Link>
           </>}
         </div>
+        {notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       </div>
     );
   }
