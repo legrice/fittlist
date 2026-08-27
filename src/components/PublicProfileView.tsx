@@ -20,7 +20,6 @@ import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
-import { ClassCardActions } from "@/components/ClassCardActions";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
@@ -183,12 +182,6 @@ export async function PublicProfileView({
       .where(eq(schema.shoutouts.targetUserId, user.id)),
   ]);
   const classRows = allClassRows.filter((c) => c.isPublic);
-  const savedRows = viewerId && !isOwner && classRows.length
-    ? await db.select({ classId:schema.attendances.classId, iso:schema.attendances.occurrenceDate })
-      .from(schema.attendances)
-      .where(and(eq(schema.attendances.userId, viewerId), inArray(schema.attendances.classId, classRows.map((c) => c.id))))
-    : [];
-  const savedSet = new Set(savedRows.map((row) => `${row.classId}|${row.iso}`));
   const studioIds = [
     ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
   ].filter((id): id is string => !!id);
@@ -386,7 +379,6 @@ export async function PublicProfileView({
                       classId: c.id,
                       iso: d.iso,
                       base: at?.key,
-                      corner: isOwner ? undefined : <ClassCardActions classId={c.id} iso={d.iso} name={c.name} canAdd={!!viewerId} initialOn={savedSet.has(`${c.id}|${d.iso}`)} />,
                     };
                   }),
             }));

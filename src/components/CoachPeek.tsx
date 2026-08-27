@@ -4,24 +4,21 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { personPeek, type Peek } from "@/app/actions/peek";
 import { toggleCalendarPin } from "@/app/actions/pins";
-import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
 import { MessageComposer } from "@/components/MessageComposer";
-import { SwipeGoing } from "@/components/SwipeGoing";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
-import { announceSaved } from "@/components/SaveEducation";
 import { Toast, useToast } from "@/components/Toast";
 
 /**
- * One person's week, opened from their circle, and the place you save from.
+ * One person's week, opened from their circle.
  *
  * Everything they coach plus everything they saved, in time order, as a
- * live calendar rather than an image: the same rows as anywhere else, with
- * ribbons that work. Classes they lead carry a Coaching tag, which is the
+ * live calendar rather than an image: the same rows as anywhere else. Classes
+ * they lead carry a Coaching tag, which is the
  * only place in the app where coach and member differ. Anything you have
- * also saved is marked "You saved this too": the overlap marker is the
+ * also saved is marked "In your week too": the overlap marker is the
  * point of the whole feature, "you're going to that, I'm going to that"
  * without anyone declaring anything beyond a save.
  *
@@ -58,9 +55,6 @@ export function CoachPeek({
 }) {
   const [peek, setPeek] = useState<Peek | null>(null);
   const [missing, setMissing] = useState(false);
-  // The mark, locally, so the ribbon fills on the tap rather than on the
-  // round trip. Keyed the way the loader keys it.
-  const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [messageOpen, setMessageOpen] = useState(false);
   const [relationship, setRelationship] = useState<"off" | "following" | "requested" | null>(null);
   const [pinned, setPinned] = useState(initialPinned);
@@ -68,7 +62,6 @@ export function CoachPeek({
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef({ y: 0, at: 0 });
   const sheetRef = useRef<HTMLDivElement>(null);
-  const [, startTransition] = useTransition();
   const [followPending, startFollowTransition] = useTransition();
   const [pinPending, startPinTransition] = useTransition();
   const [toastMsg, toastOn, , dismissToast, toastFor] = useToast();
@@ -189,18 +182,6 @@ export function CoachPeek({
     };
   }, [onClose]);
 
-  const save = (classId: string, iso: string, on: boolean) => {
-    const key = `${classId}|${iso}`;
-    setMarks((m) => ({ ...m, [key]: on }));
-    startTransition(async () => {
-      const res = await setGoing(classId, iso, on);
-      // Put it back if the server disagreed. No toast: the sheet is still
-      // open and the ribbon flipping back is the message.
-      if (!res.ok) setMarks((m) => ({ ...m, [key]: !on }));
-      else if (on) announceSaved(classId, iso);
-    });
-  };
-
   const visibleDays = peek
     ? peek.days
         .map((day) => ({
@@ -214,16 +195,6 @@ export function CoachPeek({
     label: day.label,
     rows: day.items.map((item) => {
       const key = `${item.classId}|${item.iso}`;
-      const on = marks[key] ?? item.saved;
-      const corner = !self && !scheduleOnly ? (
-        <button
-          className={`calendar-save-action following-add${on ? " on" : ""}`}
-          onClick={() => save(item.classId, item.iso, !on)}
-          aria-label={on ? `Saved to your week: ${item.name}` : `Save ${item.name} to your week`}
-        >
-          <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
-        </button>
-      ) : undefined;
       return {
         key,
         name: item.name,
@@ -237,15 +208,7 @@ export function CoachPeek({
         classId: item.classId,
         iso: item.iso,
         base: item.base,
-        tag: !self && on ? "In your week too" : undefined,
-        corner,
-        wrap: !self && !scheduleOnly
-          ? (row) => (
-              <SwipeGoing going={on} onToggle={() => save(item.classId, item.iso, !on)}>
-                {row}
-              </SwipeGoing>
-            )
-          : undefined,
+        tag: !self && item.saved ? "In your week too" : undefined,
       };
     }),
   }));

@@ -2,36 +2,24 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import { FavoritePersonButton } from "@/components/FavoritePersonButton";
 import { FavoritePlaceButton } from "@/components/FavoritePlaceButton";
 import { FavoriteGroupButton } from "@/components/FavoriteGroupButton";
 import type { BrowseDay } from "@/app/actions/discover";
-import { Toast, useToast } from "@/components/Toast";
 import { CreateGroupSheet } from "@/components/SavedScreen";
 import { discoverGroups, discoverPeople, discoverStudios } from "@/app/actions/discover";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
-import { setGoing } from "@/app/actions/going";
-import { addGroupClasses, managedGroupDestinations, type GroupDestination } from "@/app/actions/groups";
 import { PLACE_KIND_LABELS, PLACE_KINDS } from "@/lib/studio";
 
 export type DiscoverHalf = "people" | "places" | "classes" | "groups";
 type Group = { id:string; name:string; slug:string; description:string|null; purpose:string; lat:number|null; lng:number|null; favorited:boolean };
-type UpcomingItem = BrowseDay["items"][number] & { day:string };
 const distanceOptions = [["1","Within 1 mile"],["2","Within 2 miles"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]] as const;
 
 export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,startHalf,upcoming=[],groups=[],backHref,hideBack=false }: { people:DirPerson[];studios?:DirStudio[];cities:string[];myCity?:string|null;myLat?:number|null;myLng?:number|null;startHalf?:DiscoverHalf;upcoming?:BrowseDay[];groups?:Group[];backHref:string;hideBack?:boolean }) {
-  const router=useRouter();
-  const [saved,setSaved]=useState<Record<string,boolean>>(()=>Object.fromEntries(upcoming.flatMap((day)=>day.items.map((item)=>[`${item.classId}|${item.iso}`,item.saved]))));
-  const [savedSheet,setSavedSheet]=useState<UpcomingItem|null>(null);
-  const [saveGroups,setSaveGroups]=useState<GroupDestination[]>([]);
-  const [groupSaved,setGroupSaved]=useState<Record<string,boolean>>({});
-  const [savePending,startSave]=useTransition();
   const [groupCreateOpen,setGroupCreateOpen]=useState(false);
-  const [toastMsg,toastOn,toast]=useToast();
   const [tab,setTab]=useState<DiscoverHalf>(startHalf??"people");
   const [filtersOpen,setFiltersOpen]=useState(false);
   const [studioRows,setStudioRows]=useState(studios);
@@ -57,12 +45,7 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
   const shownStudios=studioRows.filter((studio)=>(!placeKind||studio.placeKind===placeKind)&&(!studioType||studio.types.includes(studioType))&&(!studioDistance||(myLat!=null&&myLng!=null&&studio.lat!=null&&studio.lng!=null&&milesBetween(myLat,myLng,studio.lat,studio.lng)<=Number(studioDistance))));
   const shownGroups=groupRows.filter((group)=>(!purpose||group.purpose===purpose)&&(!groupDistance||(myLat!=null&&myLng!=null&&group.lat!=null&&group.lng!=null&&milesBetween(myLat,myLng,group.lat,group.lng)<=Number(groupDistance)))).sort((a,b)=>groupSort==="name"?a.name.localeCompare(b.name):0);
   const activityByName=upcoming.flatMap((day)=>day.items).reduce((counts,item)=>{const key=item.attributionName.trim().toLowerCase();if(key)counts.set(key,(counts.get(key)??0)+1);return counts;},new Map<string,number>());
-  const showSavedConfirmation=async(item:UpcomingItem)=>{setSaveGroups(await managedGroupDestinations());setGroupSaved({});setSavedSheet(item);};
-  const openSavedConfirmation=(item:UpcomingItem)=>startSave(()=>showSavedConfirmation(item));
-  const saveClass=(item:UpcomingItem)=>startSave(async()=>{const key=`${item.classId}|${item.iso}`;if(saved[key]){await showSavedConfirmation(item);return;}const result=await setGoing(item.classId,item.iso,true);if(!result.ok)return toast(result.error??"Couldn't save that class");setSaved((current)=>({...current,[key]:true}));await showSavedConfirmation(item);router.refresh();});
-  const unsaveClass=(item:UpcomingItem)=>startSave(async()=>{const result=await setGoing(item.classId,item.iso,false);if(!result.ok)return toast(result.error??"Couldn't remove that class");setSaved((current)=>({...current,[`${item.classId}|${item.iso}`]:false}));setSavedSheet(null);toast(`${item.name} was removed from your calendar`);router.refresh();});
-  const saveToGroup=(item:UpcomingItem,group:GroupDestination)=>startSave(async()=>{const result=await addGroupClasses(group.slug,[{classId:item.classId,iso:item.iso}]);if(!result.ok)return toast(result.error);setGroupSaved((current)=>({...current,[group.id]:true}));toast(`${item.name} was added to ${group.name}`);});
-  const discoverCalendarDays:WeekDayRows[]=filteredUpcomingDays.map((day)=>({iso:day.iso,label:day.label,rows:day.items.map((item)=>{const isSaved=!!saved[`${item.classId}|${item.iso}`];const base=item.base.replace(/^\//,"");return {key:`${item.classId}.${item.iso}`,name:item.name,where:item.where||"Location to come",hm:item.hm,ap:item.ap,coach:{id:item.classId,name:item.attributionName,color:item.coachColor,photo:item.coachPhoto},href:`/${base}/${item.classId}?d=${item.iso}&from=discover-classes`,classId:item.classId,iso:item.iso,base,corner:item.own?undefined:<button type="button" aria-label={isSaved?`Manage saved class ${item.name}`:`Save ${item.name} to your calendar`} className={`calendar-save-action calendar-overlay-save${isSaved?" saved":""}`} disabled={savePending} onClick={()=>isSaved?openSavedConfirmation(item):saveClass(item)}><Icon name={isSaved?"bookmark_added":"bookmark"} size={17}/></button>};})}));
+  const discoverCalendarDays:WeekDayRows[]=filteredUpcomingDays.map((day)=>({iso:day.iso,label:day.label,rows:day.items.map((item)=>{const base=item.base.replace(/^\//,"");return {key:`${item.classId}.${item.iso}`,name:item.name,where:item.where||"Location to come",hm:item.hm,ap:item.ap,coach:{id:item.classId,name:item.attributionName,color:item.coachColor,photo:item.coachPhoto},href:`/${base}/${item.classId}?d=${item.iso}&from=discover-classes`,classId:item.classId,iso:item.iso,base};})}));
   useEffect(()=>{
     if(tab==="classes")return;
     const distanceValue=tab==="people"?peopleDistance:tab==="places"?studioDistance:groupDistance;
@@ -96,8 +79,6 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
     {tab==="places"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={studioDistance} onChange={setStudioDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={placeKind} onChange={setPlaceKind} all="Any type" options={PLACE_KINDS.map((kind)=>[kind,PLACE_KIND_LABELS[kind]] as const)}/><Filter label="Category" value={studioType} onChange={setStudioType} all="Any category" options={studioTypes}/></FilterRow>{directoryPending?<Empty>Loading studios…</Empty>:shownStudios.length?<StudioGrid studios={shownStudios}/>:<Empty>There are no studios matching these filters.</Empty>}</>}
     {tab==="groups"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={groupDistance} onChange={setGroupDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Purpose" value={purpose} onChange={setPurpose} all="Any purpose" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></FilterRow>{directoryPending?<Empty>Loading groups…</Empty>:shownGroups.length?<GroupGrid groups={shownGroups}/>:groupRows.length?<Empty>There are no groups matching these filters.</Empty>:<div className="discover-groups-empty"><span><Icon name="groups" size={32}/></span><h2>Plan fitness together</h2><p>Groups are shared calendars and updates for the people you train with. Add classes, invite members, and keep everyone&rsquo;s plans in one place.</p><button type="button" className="btn si" onClick={()=>setGroupCreateOpen(true)}><Icon name="add" size={21}/>Create a group</button></div>}</>}
     {!hideBack&&<Link className="logoutbtn" href={backHref}>Back to your week</Link>}
-    <Toast msg={toastMsg} on={toastOn}/>
-    {savedSheet&&<SavedClassConfirmation item={savedSheet} groups={saveGroups} groupSaved={groupSaved} pending={savePending} onClose={()=>setSavedSheet(null)} onUnsave={()=>unsaveClass(savedSheet)} onGroup={(group)=>saveToGroup(savedSheet,group)}/>}
     {filtersOpen&&<div className="sheet-scrim" onClick={(event)=>{if(event.target===event.currentTarget)setFiltersOpen(false);}}><div className="sheet discover-filters-sheet"><button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={()=>setFiltersOpen(false)}><Icon name="close" size={18}/></button><div className="discover-filters-sheet-head"><h2>Filters</h2><button type="button" disabled={!activeFilters} onClick={clearFilters}>Clear all</button></div><div className="discover-filters-sheet-fields">{tab==="classes"?<><Filter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={classType} onChange={setClassType} all="Any type" options={classTypes}/></>:tab==="people"?<><Filter label="Distance" value={peopleDistance} onChange={setPeopleDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Specialty" value={discipline} onChange={setDiscipline} all="Any specialty" options={disciplines}/></>:tab==="places"?<><Filter label="Distance" value={studioDistance} onChange={setStudioDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={placeKind} onChange={setPlaceKind} all="Any type" options={PLACE_KINDS.map((kind)=>[kind,PLACE_KIND_LABELS[kind]] as const)}/><Filter label="Category" value={studioType} onChange={setStudioType} all="Any category" options={studioTypes}/></>:<><Filter label="Distance" value={groupDistance} onChange={setGroupDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Purpose" value={purpose} onChange={setPurpose} all="Any purpose" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></>}</div><button type="button" className="btn discover-filters-done" onClick={()=>setFiltersOpen(false)}>Show results</button></div></div>}
     {groupCreateOpen&&<CreateGroupSheet onClose={()=>setGroupCreateOpen(false)}/>}
   </>;
@@ -118,4 +99,3 @@ function StudioGrid({studios}:{studios:DirStudio[]}){
   </div>)}</div>
 }
 function GroupGrid({groups}:{groups:Group[]}){return <div className="discover-group-grid">{groups.map((group)=><div className="discover-group-tile" key={group.id}><Link href={`/g/${group.slug}?from=discover-groups`}><span><Icon name="groups" size={28}/></span><strong>{group.name}</strong><small>{group.description||"Open group"}</small></Link><FavoriteGroupButton group={group}/></div>)}</div>}
-function SavedClassConfirmation({item,groups,groupSaved,pending,onClose,onUnsave,onGroup}:{item:UpcomingItem;groups:GroupDestination[];groupSaved:Record<string,boolean>;pending:boolean;onClose:()=>void;onUnsave:()=>void;onGroup:(group:GroupDestination)=>void}){return <div className="sheet-scrim" onClick={(event)=>{if(event.target===event.currentTarget&&!pending)onClose();}}><div className="sheet discover-saved-sheet" role="dialog" aria-modal="true" aria-labelledby="discover-saved-title"><button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18}/></button><div className="discover-saved-head"><div><h2 id="discover-saved-title"><Icon name="check" size={17}/>Saved to your calendar</h2><p>{item.name} · {item.hm}{item.ap.toLowerCase()}</p></div><button type="button" disabled={pending} onClick={onUnsave}>Unsave</button></div><div className="discover-saved-groups"><h3>Save to groups</h3>{groups.length?groups.map((group)=>{const on=!!groupSaved[group.id];return <button type="button" disabled={pending||on} onClick={()=>onGroup(group)} key={group.id}><span><Icon name="groups" size={20}/></span><strong>{group.name}</strong><Icon name={on?"check_circle":"add_circle"} size={22}/></button>}):<p>Groups you manage will appear here.</p>}</div></div></div>}

@@ -10,7 +10,6 @@ import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
-import { setGoing } from "@/app/actions/going";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 
@@ -467,16 +466,6 @@ export function FollowingScreen({
       tagTone: meId && i.coachId === meId ? "coaching" : undefined,
       coach: coachName ? { id: c?.id ?? i.classId, name: coachName, color: c?.color ?? "var(--color-olive)", photo: i.assignedCoachName ? null : c?.photo ?? null } : null,
       onTap: () => setPeek(peekOf(i, c ?? null, favoriteIds.has(i.coachId))),
-      corner:
-        meId && i.coachId !== meId ? (
-          <FollowingAdd
-            classId={i.classId}
-            iso={i.iso}
-            name={i.name}
-            initialOn={i.saved}
-            onNotice={notify}
-          />
-        ) : undefined,
     };
   };
 
@@ -1082,51 +1071,6 @@ const renderRow =
       {r.corner}
     </div>
   );
-
-function FollowingAdd({
-  classId,
-  iso,
-  name,
-  initialOn,
-  onNotice,
-}: {
-  classId: string;
-  iso: string;
-  name: string;
-  initialOn: boolean;
-  onNotice: (message: string, highlight?: string) => void;
-}) {
-  const [on, setOn] = useState(initialOn);
-  const [busy, start] = useTransition();
-  const toggle = () => {
-    const next = !on;
-    setOn(next);
-    start(async () => {
-      const res = await setGoing(classId, iso, next);
-      if (!res.ok) {
-        setOn(!next);
-        onNotice(res.error ?? "Couldn't update your calendar");
-        return;
-      }
-      onNotice(
-        next ? `${name} was saved to your calendar` : `${name} was removed from your calendar`,
-        next ? `${classId}.${iso}` : undefined,
-      );
-    });
-  };
-  return (
-    <button
-      className={`calendar-save-action following-add${on ? " on" : ""}`}
-      type="button"
-      disabled={busy}
-      aria-label={on ? `Remove ${name} from your calendar` : `Save ${name} to your calendar`}
-      aria-pressed={on}
-      onClick={toggle}
-    >
-      <Icon name={on ? "bookmark_added" : "bookmark"} size={24} />
-    </button>
-  );
-}
 
 const plusDays = (iso: string, n: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
