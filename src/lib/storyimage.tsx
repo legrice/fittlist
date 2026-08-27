@@ -246,13 +246,20 @@ export function renderStory(model: StoryModel) {
                 {emptyLine}
               </div>
             ) : (
-              editorialDays.map(({ day, rows }) => (
+              editorialDays.map(({ day, rows }) => {
+                const rowHeight = compact ? 52 : 62;
+                const rowGap = compact ? 16 : 22;
+                const panelPadY = compact ? 32 : 40;
+                const panelHeight = panelPadY + Math.max(compact ? 31 : 35, rows.length * rowHeight + Math.max(0, rows.length - 1) * rowGap);
+                return (
                 <div
                   key={day}
                   style={{
                     display: "flex",
+                    flexShrink: 0,
                     alignItems: "flex-start",
                     gap: compact ? 20 : 28,
+                    minHeight: panelHeight,
                     padding: compact ? "16px 22px" : "20px 26px",
                     borderRadius: 18,
                     background: t.bg,
@@ -276,7 +283,7 @@ export function renderStory(model: StoryModel) {
                   </span>
                   <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: compact ? 16 : 22 }}>
                     {rows.map((row, index) => (
-                      <div key={`${row.time}-${row.name}-${index}`} style={{ display: "flex", gap: 16 }}>
+                      <div key={`${row.time}-${row.name}-${index}`} style={{ display: "flex", flexShrink: 0, minHeight: rowHeight, gap: 16 }}>
                         <span style={{ width: 150, flexShrink: 0, fontSize: compact ? 25 : 29, fontWeight: 700 }}>
                           {row.time}
                         </span>
@@ -302,7 +309,8 @@ export function renderStory(model: StoryModel) {
                     ))}
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 
