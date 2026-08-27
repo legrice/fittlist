@@ -286,9 +286,13 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       const [hourText, minute] = item.startTime.split(":");
       const hour = Number(hourText);
       const time = `${hour % 12 || 12}:${minute}${hour >= 12 ? " PM" : " AM"}`;
-      const base = item.studioSlug ? `/s/${item.studioSlug}` : `/${item.ownerHandle}`;
+      const classBase = item.studioSlug ? `s/${item.studioSlug}` : item.ownerHandle ?? "";
+      const base = classBase ? `/${classBase}` : "/calendar";
       return {
         id: `${item.classId}-${item.occurrenceDate}`,
+        classId: item.classId,
+        iso: item.occurrenceDate,
+        base: classBase,
         name: item.name,
         detail: `${date} · ${time}${item.studioName || item.location ? ` · ${item.studioName ?? item.location}` : ""}`,
         href: `${base}/${item.classId}?d=${item.occurrenceDate}&from=you`,

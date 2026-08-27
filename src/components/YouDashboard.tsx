@@ -8,6 +8,7 @@ import { updateProfilePhoto } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 import { SettingsGear } from "@/components/SettingsGear";
 import { Toast, useToast } from "@/components/Toast";
+import { ClassOpener } from "@/components/ClassOpener";
 import { readPhotoPair } from "@/lib/photo";
 
 export type YouFavoritePerson = {
@@ -71,7 +72,7 @@ export type YouDashboardData = YouAccountData & {
   yourGroups: YouFavoriteGroup[];
   favoriteGroups: YouFavoriteGroup[];
   groupInvitations: YouGroupInvitation[];
-  savedItems: { id: string; name: string; detail: string; href: string }[];
+  savedItems: { id: string; name: string; detail: string; href: string; classId: string; iso: string; base: string }[];
 };
 
 export type ProfileSettingsView = "page" | "calendar" | "reach" | "account";
@@ -218,9 +219,9 @@ export function YouDashboard({
       )}
 
       <AccountGroup title="Saved items">
-        {savedItems.length > 0 ? savedItems.map((item) => (
-          <AccountRow icon="bookmark" title={item.name} detail={item.detail} href={item.href} key={item.id} />
-        )) : (
+        {savedItems.length > 0 ? <ClassOpener handle="">{savedItems.map((item) => (
+          <AccountRow icon="bookmark" title={item.name} detail={item.detail} href={item.href} classTarget={{ id: item.classId, iso: item.iso, base: item.base }} key={item.id} />
+        ))}</ClassOpener> : (
           <p className="youaccount-empty">Classes and events you save will appear here.</p>
         )}
       </AccountGroup>
@@ -257,9 +258,9 @@ function FollowingCountCircle({ href, count, singular, plural, photos, icon }: {
   </Link>;
 }
 
-function AccountRow({ icon, title, detail, href, count = 0, avatar }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string; color?: string } }) {
+function AccountRow({ icon, title, detail, href, count = 0, avatar, classTarget }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string; color?: string }; classTarget?: { id: string; iso: string; base: string } }) {
   return (
-    <Link className="youaccount-row" href={href}>
+    <Link className="youaccount-row" href={href} data-cid={classTarget?.id} data-d={classTarget?.iso} data-base={classTarget?.base}>
       {avatar ? <span className="youaccount-icon youaccount-place-avatar" style={avatar.photo ? undefined : { background: avatar.color }}>{avatar.photo ? <img src={avatar.photo} alt="" /> : <span>{(avatar.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span> : <span className="youaccount-icon"><Icon name={icon} size={20} /></span>}
       <span className="youaccount-copy">
         <strong>{title}</strong>
