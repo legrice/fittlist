@@ -840,7 +840,7 @@ export function FollowingScreen({
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
                           return <article className="cash-class-row" key={item.key}>
-                            <button type="button" className="cash-class-main" style={{ borderLeftColor: coach?.color }} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                            <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy"><small><span className="cash-class-coach-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={24} height={24} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>{coach?.name || "Coach to come"}</small><strong>{item.name}</strong><span>{item.where || "Location to come"}</span></span>
                               <span className="cash-class-meta">
                                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
@@ -1041,7 +1041,7 @@ function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
             {sorted.map((item) => {
               const coach = coaches.get(item.coachId);
               const coachPhoto = coach?.photo ?? entity.photo;
-              return <Link className="cash-class-main" style={{ borderLeftColor:coach?.color ?? entity.color }} href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
+              return <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
                 <span className="cash-class-copy"><small><span className="cash-class-coach-avatar" style={{ background:coach?.color ?? entity.color }}>{coachPhoto ? <img src={coachPhoto} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>{coach?.name || entity.name}</small><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span></span>
                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
               </Link>;

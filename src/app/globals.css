@@ -9044,6 +9044,14 @@ select.editinput.placekind-select {
   --si-ink: var(--color-lime);
   background: var(--color-background);
 }
+.early-calendar-dark .cash-class-main { border-left-color: var(--color-lime); }
+.early-calendar-dark .trayav:has(img) {
+  outline: 2px solid color-mix(in srgb, var(--color-white) 42%, transparent);
+  outline-offset: 2px;
+}
+.early-calendar-dark .cash-class-coach-avatar:has(img) {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 48%, transparent);
+}
 .screen.hasnav .brandbar.social-brandbar { border-bottom: 1px solid var(--line); }
 .screen.hasnav .brandbar .iconbtn {
   width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: transparent;
