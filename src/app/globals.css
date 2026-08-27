@@ -10167,19 +10167,19 @@ select.editinput.placekind-select {
    floats over whatever scrolls beneath it. */
 .clspeek-x.clsfull-x {
   position: sticky; top: 2px; z-index: 6;
-  display: flex; margin-left: auto; margin-bottom: calc(-1 * var(--tap-size));
+  display: flex; margin-bottom: calc(-1 * var(--tap-size));
   width: var(--tap-size); height: var(--tap-size); background: var(--cl);
   box-shadow: none; border: 0;
 }
 .clspeek-x.clsfull-more {
   position: sticky; top: 2px; z-index: 7;
-  display: flex; margin-bottom: calc(-1 * var(--tap-size));
+  display: flex; margin-left: auto; margin-bottom: calc(-1 * var(--tap-size));
   width: var(--tap-size); height: var(--tap-size); background: var(--cl);
   box-shadow: none; border: 0;
 }
 .clsfull-menu {
   position: sticky; top: 50px; z-index: 8;
-  width: min(280px, calc(100% - 44px)); margin: 0 0 -1px;
+  width: min(280px, calc(100% - 44px)); margin: 0 0 -1px auto;
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   box-shadow: var(--soft-shadow); overflow: hidden;
   animation: fadeIn .12s ease;

@@ -377,8 +377,11 @@ export function ClassPeek({
       }}
     >
       <div className="sheet clspeek clsfull" ref={sheetRef}>
-        {/* Secondary tools stay on the left; Close stays on the right. Both
+        {/* Close stays on the left; secondary tools stay on the right. Both
             remain visible while a long class scrolls. */}
+        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={20} />
+        </button>
         <button
           className="clspeek-x clsfull-more"
           aria-label="More class actions"
@@ -386,9 +389,6 @@ export function ClassPeek({
           onClick={() => setMoreOpen((open) => !open)}
         >
           <Icon name="more_horiz" size={20} />
-        </button>
-        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={20} />
         </button>
         {moreOpen && full && (
           <div className="clsfull-menu" role="menu">
