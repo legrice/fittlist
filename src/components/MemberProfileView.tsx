@@ -175,6 +175,7 @@ export async function MemberProfileView({
             userId={viewerId}
             bar={isOwner}
             headerNav={false}
+            social
           />
         ) : (
           <PublicTopBar handle={user.handle ?? ""} next={`/${user.handle ?? ""}`} />

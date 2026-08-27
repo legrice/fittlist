@@ -359,7 +359,7 @@ export async function StudioView({
         {/* A stranger gets the wordmark and one way in, same as they do on a
             person's page. This page had neither, so a shared studio link was a
             dead end for anyone without an account. */}
-        {signedIn && viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/s/${s.slug ?? s.id}`} />}
+        {signedIn && viewerId ? <AppChrome userId={viewerId} social /> : <PublicTopBar next={`/s/${s.slug ?? s.id}`} />}
         {/* The same header a person wears. A studio is a place rather than a
             face, but it is the same kind of page: a photograph, a badge, a
             name, where it is, and the two things you can do about it. */}

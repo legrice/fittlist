@@ -4725,6 +4725,17 @@ select.editinput.placekind-select {
    header everywhere, so the bare icons go white with the wordmark, over
    a photo and over the no-photo colour hero alike. */
 .pub-hero .brandbar-actions .iconbtn { color: #fff; }
+.pub.pub-hero .brandbar.social-brandbar {
+  justify-content: center;
+  min-height: 66px;
+  color: #fff;
+  --wm-ink: #fff;
+  --wm-mark: #fff;
+}
+.pub.pub-hero .brandbar.social-brandbar .iconbtn { color: #fff; }
+.pub.pub-hero .brandbar.social-brandbar .social-notifications i {
+  border-color: rgba(25, 21, 2, .45);
+}
 /* On somebody else's hero, the viewer's own header face can disappear into
    the photograph. Ring only that private account door, not profile imagery
    elsewhere and not the owner's own profile header. */
