@@ -112,7 +112,7 @@ export function StudioShiftsView({
   const rows = tab === "mine" ? view.mine : tab === "open" ? view.open : view.all;
 
   return (
-    <div className="pad">
+    <div className="pad studio-shifts-view">
       <div className="studio-manage-top pagetop">
         <BackLink
           className="evback studio-manage-back"
