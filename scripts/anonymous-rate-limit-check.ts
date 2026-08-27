@@ -13,6 +13,9 @@ import { inquiryMessageAuthorUserId } from "../src/lib/inquiry";
 const hour = 60 * 60 * 1000;
 const coachId = "11111111-1111-4111-8111-111111111111";
 const now = new Date("2026-08-27T15:00:00.000Z");
+// This check exercises an isolated in-memory database. Keep its HMAC output
+// deterministic and independent of whatever secret a deployment uses.
+process.env.SESSION_SECRET = "anonymous-rate-limit-check-only-secret";
 const limits: AnonymousActionRateLimits = {
   ip: { max: 2, windowMs: hour },
   ipTarget: { max: 2, windowMs: hour },
