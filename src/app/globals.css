@@ -11834,7 +11834,7 @@ a.clspeek-by:active { opacity: .6; }
   padding: 5px 0 6px;
   gap: 1px;
   border-radius: 12px;
-  color: color-mix(in srgb, var(--color-olive) 62%, var(--color-white));
+  color: var(--color-text-muted);
   font-size: 10px;
   font-weight: 700;
 }
