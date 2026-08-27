@@ -1984,8 +1984,8 @@ button.bl-band { cursor: pointer; }
 .social-brandbar-right { right: 18px; gap: 10px; }
 .social-brandbar .iconbtn {
   width: 42px; height: 42px; display: grid; place-items: center;
-  border: 1px solid var(--line); border-radius: 50%;
-  background: var(--color-white); color: var(--ink);
+  border: 0; border-radius: 0;
+  background: transparent; color: var(--ink);
 }
 .social-notifications { position: relative; text-decoration: none; }
 .social-notifications i { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-lime); border: 1px solid var(--shell); }
@@ -8904,15 +8904,15 @@ select.editinput.placekind-select {
 .following-manage { color: var(--ol); font-size: 13.5px; font-weight: 600; text-decoration: none; }
 .following-rail { margin: 4px -18px 0; }
 .following-rail .tray-scroll { gap:8px; padding-top:6px; padding-bottom:6px; }
-.following-rail .trayitem { width:80px; gap:6px; }
-.following-rail .trayav { width:76px; height:76px; }
-.following-rail .trayitem-nm { max-width:80px; font-size:12.5px; }
+.following-rail .trayitem { width:88px; gap:7px; }
+.following-rail .trayav { width:82px; height:82px; }
+.following-rail .trayitem-nm { max-width:86px; font-size:13px; }
 .following-rail .trayav-share-prompt {
   box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-lime);
 }
-.cash-rail-item { position:relative; width:80px; flex:0 0 80px; }
+.cash-rail-item { position:relative; width:88px; flex:0 0 88px; }
 .cash-pin {
-  position:absolute; top:57px; right:0; z-index:3; width:24px; height:24px; padding:0;
+  position:absolute; top:63px; right:0; z-index:3; width:24px; height:24px; padding:0;
   display:grid; place-items:center; border:2px solid var(--ground); border-radius:50%;
   background:var(--card); color:var(--ink); cursor:pointer;
 }
@@ -9016,7 +9016,7 @@ select.editinput.placekind-select {
   width: 42px; height: 42px; border-radius: 14px; color: var(--ink); background: transparent;
 }
 .screen.hasnav .brandbar.social-brandbar .iconbtn {
-  border: 1px solid var(--line); border-radius: 50%; background: var(--color-white);
+  border: 0; border-radius: 0; background: transparent;
 }
 .screen.hasnav .brandbar .iconbtn:active { background: var(--cl); }
 .screen.hasnav .brandbar .headnav-l { color: var(--ol); }
