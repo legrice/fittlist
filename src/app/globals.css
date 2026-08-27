@@ -11673,9 +11673,15 @@ a.clspeek-by:active { opacity: .6; }
    then class/time and place/duration, with real air between occurrences. */
 .calendar-cardlist .dayrows { gap: 14px; }
 .calendar-cardlist .clline {
+  --row-rail: var(--color-olive);
+  --row-rail-bottom: 14px;
   min-height: 0; padding: 10px 0 14px 14px;
   display: flex; flex-direction: column; align-items: stretch; gap: 4px;
-  border: 0; border-left: 4px solid var(--color-olive); border-bottom: 1px solid var(--color-border);
+  border: 0; border-bottom: 1px solid var(--color-border);
+}
+.calendar-cardlist .clline::before {
+  content:""; position:absolute; left:0; top:10px; bottom:var(--row-rail-bottom);
+  width:4px; background:var(--row-rail);
 }
 /* These elements used to sit directly in a three-column occurrence grid.
    They now live inside title and studio sub-grids, so their old coordinates
@@ -11686,11 +11692,11 @@ a.clspeek-by:active { opacity: .6; }
   grid-row: auto;
   justify-self: auto;
 }
-.calendar-cardlist .clline-tone-coaching { border-left-color: var(--color-coaching); }
-.calendar-cardlist .clline-tone-shift { border-left-color: var(--color-shift); }
-.calendar-cardlist .clline-tone-attending { border-left-color: var(--color-attending); }
-.calendar-cardlist .clline-tone-personal { border-left-color: var(--color-personal); }
-.calendar-cardlist .clline-tone-attention { border-left-color: var(--color-lime); }
+.calendar-cardlist .clline-tone-coaching { --row-rail: var(--color-coaching); }
+.calendar-cardlist .clline-tone-shift { --row-rail: var(--color-shift); }
+.calendar-cardlist .clline-tone-attending { --row-rail: var(--color-attending); }
+.calendar-cardlist .clline-tone-personal { --row-rail: var(--color-personal); }
+.calendar-cardlist .clline-tone-attention { --row-rail: var(--color-lime); }
 .calendar-cardlist .clline-by {
   display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0;
 }
@@ -11732,12 +11738,13 @@ a.clspeek-by:active { opacity: .6; }
    row supplies 22px above it; twelve pixels of gap plus the next row's ten
    pixels of top padding supplies 22px below it. */
 .personal-calendar-list .dayrows { gap: 12px; }
-.personal-calendar-list .clline { padding-bottom: 22px; }
+.personal-calendar-list .clline { --row-rail-bottom:22px; padding-bottom: 22px; }
 
 /* Profiles used the occurrence grid before CalendarList became text-led.
    Keep their hierarchy explicit so older grid coordinates cannot indent the
    class or studio away from the coach byline: attribution, class, place. */
 .profile-calendar-list .clline {
+  --row-rail-bottom:24px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
