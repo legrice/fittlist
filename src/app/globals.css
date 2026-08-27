@@ -9008,7 +9008,7 @@ select.editinput.placekind-select {
 .cash-class-main.own-coaching { border-left-color:var(--color-lime); }
 .cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:3px; }
 .cash-class-coachline { min-width:0; display:flex; align-items:center; gap:8px; }
-.cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:15px; }
+.cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:16px; }
 .cash-class-favorite { flex:0 0 auto; color:var(--color-olive); }
 .cash-class-title-row,
 .cash-class-studio-row { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:14px; }
@@ -9060,10 +9060,10 @@ select.editinput.placekind-select {
     flex-basis: 54px;
   }
   .cash-class-title-row > strong:first-child { font-size: 18px; }
-  .cash-class-copy small,
   .cash-class-time,
   .cash-class-studio,
   .cash-class-duration { font-size: 14.5px; }
+  .cash-class-copy small { font-size: 15.5px; }
 }
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
