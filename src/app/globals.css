@@ -9072,11 +9072,11 @@ select.editinput.placekind-select {
     height: 54px;
     flex-basis: 54px;
   }
-  .cash-class-title-row > strong:first-child { font-size: 18px; }
-  .cash-class-time { font-size: 16.5px; }
+  .cash-class-title-row > strong:first-child { font-size: 21px; }
+  .cash-class-time { font-size: 18.5px; }
   .cash-class-studio,
-  .cash-class-duration { font-size: 14.5px; }
-  .cash-class-copy small { font-size: 15.5px; }
+  .cash-class-duration { font-size: 16.5px; }
+  .cash-class-copy small { font-size: 17.5px; }
 }
 .following-coach-context {
   min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
@@ -11743,6 +11743,15 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-cardlist .clline-extra { width: 100%; margin-top: 4px; }
 .calendar-cardlist .clrow > :is(.clmore, .calendar-save-action, .calendar-attending-check, .following-add) { top: 7px; }
+
+@media (min-width: 1100px) {
+  .calendar-cardlist .clline-by-name { font-size: 17px; }
+  .calendar-cardlist .clline-nm { font-size: 21px; }
+  .calendar-cardlist .clline-t { font-size: 19px; }
+  .calendar-cardlist .clline-ap { font-size: 15px; }
+  .calendar-cardlist .clline-w,
+  .calendar-cardlist .clline-dur { font-size: 17px; }
+}
 
 /* My calendar omits its already-established owner name but keeps the status
    tag. Match the Calendar tab's 22px rhythm on both sides of a divider: the
