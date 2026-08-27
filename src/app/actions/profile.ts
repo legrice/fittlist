@@ -1,7 +1,8 @@
 "use server";
 
-import { and, eq, gte } from "drizzle-orm";
+import { and, eq, gte, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import { storeImage } from "@/lib/storage";
 import { STUDIO_TYPES } from "@/lib/studio";
@@ -12,6 +13,11 @@ import { geocodeCity } from "@/lib/geocode";
 import { normalizeLocation } from "@/lib/location";
 import { knownLocations } from "@/app/actions/locations";
 import { addNotification } from "@/lib/notify";
+import { isValidTimeZone } from "@/lib/timezone";
+import { objectionableContentError } from "@/lib/content-safety";
+import { PROFILE_REMOVED_MESSAGE, profileRemovedByModeration } from "@/lib/moderation";
+import { syncUserToGoogle } from "@/lib/gcal";
+import { hiddenFrom } from "@/lib/blocks";
 
 export async function nudgeProfileInfo(handle: string) {
   const viewerId = await getSessionUserId();
@@ -22,6 +28,7 @@ export async function nudgeProfileInfo(handle: string) {
     .from(schema.users)
     .where(eq(schema.users.handle, handle));
   if (!target || target.id === viewerId) return { ok: false };
+  if ((await hiddenFrom(viewerId)).has(target.id)) return { ok: false };
 
   const since = new Date();
   since.setDate(since.getDate() - 30);
@@ -113,6 +120,8 @@ export async function updateProfile(input: {
    *  not at all; absent, the server takes its own best-effort shot. */
   locationLat?: number | null;
   locationLng?: number | null;
+  /** IANA timezone captured with the location/browser clock. */
+  timeZone?: string;
   certifications?: string[];
   highlights?: string[];
   disciplines?: string[];
@@ -134,6 +143,16 @@ export async function updateProfile(input: {
   if (!name) return { ok: false, error: "Name can't be empty." };
   const title = input.title.trim().slice(0, 80);
   const about = input.about.trim().slice(0, 600);
+  const profileSafetyError = objectionableContentError(
+    name,
+    title,
+    about,
+    ...(input.certifications ?? []),
+    ...(input.highlights ?? []),
+    ...(input.disciplines ?? []),
+    ...(input.profileLinks ?? []).map((link) => link.label),
+  );
+  if (profileSafetyError) return { ok: false, error: profileSafetyError };
   // One canonical "City, ST" per place, so Discover groups them as one.
   //
   // Only touched when the caller actually collected it. Passing it means the
@@ -172,6 +191,7 @@ export async function updateProfile(input: {
     profileLinks?: { label: string; url: string }[];
     locationLat?: number | null;
     locationLng?: number | null;
+    timeZone?: string;
     photo?: string | null;
     photoThumb?: string | null;
     avatarColor?: string | null;
@@ -185,10 +205,13 @@ export async function updateProfile(input: {
     if (typeof input.locationLat === "number" && typeof input.locationLng === "number") {
       set.locationLat = input.locationLat;
       set.locationLng = input.locationLng;
+      if (isValidTimeZone(input.timeZone)) set.timeZone = input.timeZone;
     } else {
       const place = await geocodeCity(location);
       set.locationLat = place?.lat ?? null;
       set.locationLng = place?.lng ?? null;
+      if (isValidTimeZone(input.timeZone ?? place?.timeZone))
+        set.timeZone = (input.timeZone ?? place?.timeZone)!;
     }
   }
   // Same rule as location, and for the same reason: passing a field means the
@@ -262,11 +285,22 @@ export async function updateProfile(input: {
   }
 
   const db = await getDb();
-  const [user] = await db
-    .update(schema.users)
-    .set(set)
-    .where(eq(schema.users.id, userId))
-    .returning({ handle: schema.users.handle });
+  const user = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(schema.users)
+      .set(set)
+      .where(eq(schema.users.id, userId))
+      .returning({ handle: schema.users.handle });
+    if (set.timeZone) {
+      await tx.update(schema.classTemplates).set({ timeZone: set.timeZone }).where(and(eq(schema.classTemplates.userId, userId), isNull(schema.classTemplates.studioId)));
+      await tx.update(schema.classes).set({ timeZone: set.timeZone }).where(and(eq(schema.classes.userId, userId), isNull(schema.classes.studioId)));
+      await tx.update(schema.personalClasses).set({ timeZone: set.timeZone }).where(and(eq(schema.personalClasses.userId, userId), isNull(schema.personalClasses.studioId)));
+    }
+    return updated;
+  });
+  if (set.timeZone) {
+    after(() => syncUserToGoogle(userId).catch((error) => console.error("gcal timezone sync failed", error)));
+  }
 
   revalidatePath("/calendar");
   if (user?.handle) revalidatePath(`/${user.handle}`);
@@ -331,10 +365,13 @@ export async function setShiftsPublic(on: boolean): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
-export async function setDiscoverable(on: boolean): Promise<{ ok: boolean }> {
+export async function setDiscoverable(on: boolean): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };
   const db = await getDb();
+  if (on && await profileRemovedByModeration(userId, db)) {
+    return { ok: false, error: PROFILE_REMOVED_MESSAGE };
+  }
   await db.update(schema.users).set({ discoverable: on }).where(eq(schema.users.id, userId));
   revalidatePath("/calendar");
   revalidatePath("/discover");
@@ -394,7 +431,7 @@ export async function getStoryPrefs(): Promise<{
 export async function setStoryPrefs(input: {
   headline?: string;
   showPhoto?: boolean;
-}): Promise<{ ok: boolean }> {
+}): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };
   const db = await getDb();
@@ -405,6 +442,8 @@ export async function setStoryPrefs(input: {
   const prefs = { ...(u?.storyPrefs ?? {}) };
   if (input.headline !== undefined) {
     const h = input.headline.replace(/\s+/g, " ").trim().slice(0, HEADLINE_MAX);
+    const safetyError = objectionableContentError(h);
+    if (safetyError) return { ok: false, error: safetyError };
     if (h) prefs.headline = h;
     else delete prefs.headline;
   }
@@ -473,6 +512,9 @@ export async function changeHandle(
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
+  if (await profileRemovedByModeration(userId, db)) {
+    return { ok: false, error: PROFILE_REMOVED_MESSAGE };
+  }
   const [me] = await db
     .select({ handle: schema.users.handle, changedAt: schema.users.handleChangedAt })
     .from(schema.users)
@@ -494,6 +536,8 @@ export async function changeHandle(
   const chosen = slug(handleRaw.trim());
   if (!chosen || handleRaw.trim().length === 0)
     return { ok: false, error: "Type the link you want." };
+  const safetyError = objectionableContentError(handleRaw);
+  if (safetyError) return { ok: false, error: safetyError };
   if (chosen === me.handle) return { ok: false, error: "That's already your link." };
   if (RESERVED_HANDLES.has(chosen)) return { ok: false, error: "That one isn't available." };
   const [taken] = await db

@@ -18,6 +18,7 @@ import { MessagesToggle } from "@/components/MessagesToggle";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
+import { TimeZoneSetting } from "@/components/TimeZoneSetting";
 
 type MView = "profile" | "calendar" | "reach" | "account";
 
@@ -45,6 +46,7 @@ export function MemberAccount({
   photo,
   color,
   look,
+  timeZone,
   followingCount,
   followerCount,
   openEditor = false,
@@ -54,6 +56,7 @@ export function MemberAccount({
   messagesOpen = true,
   initialView = null,
   detailOnly = false,
+  showHeading = true,
   onClose,
 }: {
   /** The studios they run. A member can be a manager: addStudioManager only
@@ -68,6 +71,7 @@ export function MemberAccount({
   photo: string | null;
   color: string;
   look: string | null;
+  timeZone: string;
   /** The two relationships, each opening the list it counts. */
   followingCount: number;
   followerCount: number;
@@ -80,6 +84,8 @@ export function MemberAccount({
   messagesOpen?: boolean;
   initialView?: MView | null;
   detailOnly?: boolean;
+  /** The overlay shell already renders the Settings title. */
+  showHeading?: boolean;
   onClose?: () => void;
 }) {
   const router = useRouter();
@@ -112,7 +118,7 @@ export function MemberAccount({
           saying where the setting stands so the top level answers most of it
           without a tap. It was two headed groups and nine rows on one
           scroll, with sharing and privacy in the same block as your name. */}
-      <h3 className="setgroup-h">Settings</h3>
+      {showHeading && <h3 className="setgroup-h">Settings</h3>}
       <div className="settingslist">
         <button className="setrow" onClick={() => setView("calendar")}>
           <span className="setrow-ic"><Icon name="event" size={24} /></span>
@@ -181,6 +187,14 @@ export function MemberAccount({
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </Link>
+        <Link className="setrow" href="/support">
+          <span className="setrow-ic"><Icon name="info" size={24} /></span>
+          <span className="setrow-txt">
+            <span className="t">Support &amp; safety</span>
+            <span className="s">Get help or report a concern</span>
+          </span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+        </Link>
       </div>
 
       <h3 className="setgroup-h">Session</h3>
@@ -241,6 +255,7 @@ export function MemberAccount({
             {view === "calendar" && (
               <div className="settingslist">
                 <MyCalendar />
+                <TimeZoneSetting initialTimeZone={timeZone} />
               </div>
             )}
 

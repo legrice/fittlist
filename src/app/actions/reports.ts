@@ -4,7 +4,7 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { currentAdmin } from "@/lib/admin";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 
 // A "use server" file can only export async functions, so the reasons the UI
@@ -27,7 +27,7 @@ export async function reportClass(
   const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
   if (!cls || !cls.isPublic) return { ok: false, error: "Class not found." };
   if (cls.userId === userId) return { ok: false, error: "That's your own class." };
-  if (await isBlocked(cls.userId, userId)) return { ok: false, error: "Class not found." };
+  if ((await hiddenFrom(userId)).has(cls.userId)) return { ok: false, error: "Class not found." };
 
   await db
     .insert(schema.classReports)

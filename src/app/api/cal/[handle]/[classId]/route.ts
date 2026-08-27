@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
-import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, recurrenceLines } from "@/lib/ics";
+import { calendarTimeZoneLines, icsEsc as esc, icsFold as fold, recurrenceLines, zonedDateLine, zonedEndLine } from "@/lib/ics";
 
 // A single class as a downloadable .ics — the "Add to calendar" action on a
 // class page. Apple Calendar and Outlook both import this; weekly classes get
@@ -54,14 +54,14 @@ export async function GET(
   const date =
     c.specificDate ??
     (() => {
-      const d = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+      const d = new Date(`${mondayOfCurrentWeek(new Date(), c.timeZone)}T00:00:00Z`);
       d.setUTCDate(d.getUTCDate() + c.dayOfWeek);
       return d.toISOString().slice(0, 10);
     })();
 
   const pageUrl = `${siteOrigin()}/${handle}/${c.id}`;
   const desc = c.links.length
-    ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\\n") + `\\n\\n${pageUrl}`
+    ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\n") + `\n\n${pageUrl}`
     : pageUrl;
 
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
@@ -71,18 +71,20 @@ export async function GET(
     "PRODID:-//fittlist//class//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
+    `X-WR-TIMEZONE:${c.timeZone}`,
+    ...calendarTimeZoneLines([c.timeZone]),
     "BEGIN:VEVENT",
     `UID:${c.id}@fittlist.co`,
     `DTSTAMP:${stamp}`,
-    `DTSTART:${floatingStart(date, c.startTime)}`,
-    `DTEND:${floatingEnd(date, c.startTime, c.durationMin)}`,
+    zonedDateLine("DTSTART", date, c.startTime, c.timeZone),
+    zonedEndLine(date, c.startTime, c.durationMin, c.timeZone),
   ];
   if (!c.specificDate)
-    lines.push(...recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime));
+    lines.push(...recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime, c.timeZone).map(fold));
   lines.push(fold(`SUMMARY:${esc(c.name)}`));
   const loc = studio ? `${studio.name}, ${studio.address}` : c.location ?? "";
   if (loc) lines.push(fold(`LOCATION:${esc(loc)}`));
-  lines.push(fold(`DESCRIPTION:${desc}`));
+  lines.push(fold(`DESCRIPTION:${esc(desc)}`));
   lines.push("END:VEVENT", "END:VCALENDAR");
   const body = lines.join("\r\n") + "\r\n";
 
@@ -90,7 +92,7 @@ export async function GET(
     headers: {
       "content-type": "text/calendar; charset=utf-8",
       "content-disposition": `attachment; filename="${handle}-${c.id.slice(0, 8)}.ics"`,
-      "cache-control": "public, max-age=1800",
+      "cache-control": c.isPublic ? "public, max-age=1800" : "private, no-store",
     },
   });
 }

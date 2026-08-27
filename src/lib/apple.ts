@@ -1,4 +1,5 @@
 import { SignJWT, createRemoteJWKSet, importPKCS8, jwtVerify } from "jose";
+import { createHash } from "node:crypto";
 import { siteOrigin } from "@/lib/format";
 
 // Sign in with Apple. Login only: Apple exposes no calendar API, so unlike
@@ -71,16 +72,47 @@ export async function appleExchange(code: string): Promise<{ id_token?: string; 
 
 const JWKS = createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
 
-// Verify the id_token against Apple's public keys and return the email claim.
-export async function appleEmail(idToken?: string): Promise<string | null> {
-  if (!idToken) return null;
+export type AppleIdentity = {
+  subject: string;
+  email: string | null;
+};
+
+export function nativeAppleAudience(): string {
+  return process.env.APPLE_NATIVE_CLIENT_ID?.trim() || "co.fittlist.app";
+}
+
+export function appleNonceDigest(rawNonce: string): string {
+  return createHash("sha256").update(rawNonce).digest("hex");
+}
+
+/** Verify Apple's signed identity token for either the web Services ID or the
+ * native bundle ID. Native authorization also binds it to a server challenge. */
+export async function appleIdentity(
+  idToken: string | undefined,
+  audience = process.env.APPLE_CLIENT_ID!,
+  expectedNonce?: string,
+): Promise<AppleIdentity | null> {
+  if (!idToken || !audience) return null;
   try {
     const { payload } = await jwtVerify(idToken, JWKS, {
       issuer: ISS,
-      audience: process.env.APPLE_CLIENT_ID!,
+      audience,
     });
-    return typeof payload.email === "string" ? payload.email : null;
+    if (!payload.sub) return null;
+    if (expectedNonce && payload.nonce !== appleNonceDigest(expectedNonce)) return null;
+    const emailVerified = payload.email_verified;
+    if (payload.email && emailVerified !== undefined && emailVerified !== true && emailVerified !== "true")
+      return null;
+    return {
+      subject: payload.sub,
+      email: typeof payload.email === "string" ? payload.email.toLowerCase() : null,
+    };
   } catch {
     return null;
   }
+}
+
+// Verify the id_token against Apple's public keys and return the email claim.
+export async function appleEmail(idToken?: string): Promise<string | null> {
+  return (await appleIdentity(idToken))?.email ?? null;
 }

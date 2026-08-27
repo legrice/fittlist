@@ -75,7 +75,12 @@ export function OnboardingWizard({
           .then((res) => {
             if (res.ok && res.location) {
               setPLocation(res.location);
-              setPPlace({ label: res.location, lat: res.lat!, lng: res.lng! });
+              setPPlace({
+                label: res.location,
+                lat: res.lat!,
+                lng: res.lng!,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              });
             } else {
               setError("We couldn't find your city. Type it below instead.");
             }
@@ -112,6 +117,8 @@ export function OnboardingWizard({
         location: pLocation,
         locationLat: pPlace?.lat ?? null,
         locationLng: pPlace?.lng ?? null,
+        timeZone:
+          pPlace?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         instagram: "",
         website: "",
         photo: pPhoto,
@@ -122,8 +129,16 @@ export function OnboardingWizard({
         setError(res.error ?? "Couldn't save. Try again.");
         return;
       }
-      await setTeaching(teach);
-      await completeOnboarding();
+      const teaching = await setTeaching(teach);
+      if (!teaching.ok) {
+        setError(teaching.error ?? "Couldn't save your coaching choice. Try again.");
+        return;
+      }
+      const completed = await completeOnboarding();
+      if (!completed.ok) {
+        setError(completed.error ?? "Couldn't finish setup. Try again.");
+        return;
+      }
       router.push("/feed");
       router.refresh();
     });

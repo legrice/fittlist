@@ -66,6 +66,7 @@ export default async function CalendarPage({
     endsOn: c.endsOn,
     skipDates: c.skipDates,
     startTime: c.startTime,
+    timeZone: c.timeZone,
     durationMin: c.durationMin,
     name: c.name,
     classType: c.classType,

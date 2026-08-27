@@ -141,7 +141,7 @@ export function buildDiscoverClasses(input: {
       if (!runsOn(c, iso, dow)) continue;
       // A class that has been and gone is off every schedule, and a directory
       // of things you can go to is the strongest case for that rule.
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       const owner = ownerById.get(c.ownerUserId);
       if (!owner) continue;
       const studio = c.studioId ? studioById.get(c.studioId) : undefined;

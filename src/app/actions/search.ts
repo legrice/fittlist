@@ -134,7 +134,7 @@ export async function searchDirectory(query: string): Promise<{
       ownerUserId: schema.groups.ownerUserId,
     }).from(schema.groups).where(ilike(schema.groups.name, pattern)).limit(30),
     db.select({ groupId: schema.groupMembers.groupId }).from(schema.groupMembers).where(eq(schema.groupMembers.userId, userId)),
-    db.select({ groupId: schema.groupInvitations.groupId }).from(schema.groupInvitations).where(eq(schema.groupInvitations.inviteeUserId, userId)),
+    db.select({ groupId: schema.groupInvitations.groupId, invitedByUserId: schema.groupInvitations.invitedByUserId }).from(schema.groupInvitations).where(eq(schema.groupInvitations.inviteeUserId, userId)),
   ]);
   const following = new Set(followRows.map((row) => row.trainerUserId));
   const requested = new Set(askRows.map((row) => row.trainerUserId));
@@ -213,9 +213,13 @@ export async function searchDirectory(query: string): Promise<{
     }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
 
-  const accessibleGroupIds = new Set([...groupMemberRows, ...groupInviteRows].map((row) => row.groupId));
+  const accessibleGroupIds = new Set([
+    ...groupMemberRows.map((row) => row.groupId),
+    ...groupInviteRows.filter((row) => !hidden.has(row.invitedByUserId)).map((row) => row.groupId),
+  ]);
   const groups = groupRows
     .filter((row) => row.name.toLowerCase().includes(needle))
+    .filter((row) => row.ownerUserId === userId || !hidden.has(row.ownerUserId))
     .filter((row) => row.visibility === "public" || row.ownerUserId === userId || accessibleGroupIds.has(row.id))
     .map((row) => ({ id: row.id, slug: row.slug, name: row.name, photo: row.photo, description: row.description }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));

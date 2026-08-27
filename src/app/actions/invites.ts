@@ -17,6 +17,11 @@ export async function requestInvite(
   nameRaw: string,
   emailRaw: string,
 ): Promise<{ ok: boolean; error?: string }> {
+  if (!inviteOnly()) {
+    void nameRaw;
+    void emailRaw;
+    return { ok: false, error: "Invites aren’t required. Create your account directly." };
+  }
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   const name = nameRaw.trim().slice(0, 80);

@@ -1,13 +1,14 @@
-import { eq, inArray } from "drizzle-orm";
+import { createHash } from "node:crypto";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { recurrenceLines } from "@/lib/ics";
 import { decryptSecret } from "@/lib/crypto";
-import { appTz, mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
+import { mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
+import { DEFAULT_TIME_ZONE } from "@/lib/timezone";
 
 // One-way mirror: fittlist classes -> the trainer's Google Calendar. Weekly
-// classes become recurring events; one-offs single events. On every schedule
-// change we clear the events we previously created and repopulate, so their
-// personal events are never touched.
+// classes become recurring events; one-offs single events. Stable remote ids
+// let us reconcile in place without ever touching personal events.
 
 const AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN = "https://oauth2.googleapis.com/token";
@@ -96,6 +97,7 @@ async function accessTokenFrom(refreshToken: string): Promise<string | null> {
       grant_type: "refresh_token",
     }),
   });
+  if (!res.ok) return null;
   const json = (await res.json()) as TokenResponse;
   return json.access_token ?? null;
 }
@@ -124,8 +126,80 @@ function localDateTime(dateStr: string, hhmm: string, addMin = 0): string {
   );
 }
 
-/** Rebuild all fittlist-created events in the trainer's calendar. Safe to call
-    often; silently no-ops when the trainer hasn't connected. */
+type GoogleClassRow = typeof schema.classes.$inferSelect;
+
+/**
+ * Google accepts caller-selected event ids made from lowercase base32hex
+ * characters. A SHA-256 hex prefix fits that alphabet and gives each fittlist
+ * series/day a stable remote identity across edits (edits replace local row
+ * ids but deliberately retain seriesId).
+ */
+export function googleEventIdForClass(
+  row: Pick<GoogleClassRow, "seriesId" | "dayOfWeek" | "specificDate">,
+): string {
+  const occurrence = row.specificDate ?? `weekly-${row.dayOfWeek}`;
+  return `fittlist${createHash("sha256").update(`v1:${row.seriesId}:${occurrence}`).digest("hex").slice(0, 32)}`;
+}
+
+function scheduleFingerprint(rows: GoogleClassRow[]): string {
+  const eventFields = rows
+    .map((row) => ({
+      id: row.id,
+      seriesId: row.seriesId,
+      dayOfWeek: row.dayOfWeek,
+      specificDate: row.specificDate,
+      endsOn: row.endsOn,
+      skipDates: row.skipDates,
+      startTime: row.startTime,
+      timeZone: row.timeZone,
+      durationMin: row.durationMin,
+      name: row.name,
+      studioId: row.studioId,
+      location: row.location,
+      links: row.links,
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  return createHash("sha256").update(JSON.stringify(eventFields)).digest("hex");
+}
+
+async function upsertGoogleEvent(
+  id: string,
+  event: Record<string, unknown>,
+  headers: Record<string, string>,
+): Promise<void> {
+  const url = `${CAL}/events/${encodeURIComponent(id)}`;
+  const write = (method: "PUT" | "POST", body: Record<string, unknown>, target = url) =>
+    fetch(target, {
+      method,
+      headers: { ...headers, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  // Update the deterministic id in place. The first sync gets a 404 and
+  // inserts it; a concurrent first sync can win that insert, in which case a
+  // final update makes this payload authoritative.
+  let response = await write("PUT", event);
+  if (response.status === 404) {
+    response = await write("POST", { ...event, id }, `${CAL}/events`);
+    if (response.status === 409) response = await write("PUT", event);
+  }
+  if (!response.ok) throw new Error(`Google event upsert failed (${response.status})`);
+}
+
+async function deleteGoogleEvent(id: string, headers: Record<string, string>): Promise<boolean> {
+  try {
+    const response = await fetch(`${CAL}/events/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+    });
+    return response.ok || response.status === 404 || response.status === 410;
+  } catch {
+    return false;
+  }
+}
+
+/** Reconcile all fittlist-created events in the trainer's calendar. Safe to
+    call often; silently no-ops when the trainer hasn't connected. */
 export async function syncUserToGoogle(userId: string): Promise<void> {
   if (!googleConfigured()) return;
   const db = await getDb();
@@ -143,27 +217,14 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
   }
   const auth = { authorization: `Bearer ${token}` };
 
-  // The app's timezone, not the calendar's: a class's "18:00" means 6pm
-  // where the classes are (the app's clock, US Eastern by default). Asking
-  // the calendar for its zone shipped a 6pm class four hours early the
-  // moment that lookup fell back to UTC, and would misplace it just as
-  // surely for a coach whose Google calendar sits in another zone.
-  const tz = appTz();
-
-  // clear the events we created last time
-  for (const id of conn.syncedEventIds) {
-    try {
-      await fetch(`${CAL}/events/${encodeURIComponent(id)}`, { method: "DELETE", headers: auth });
-    } catch {
-      /* ignore individual delete failures */
-    }
-  }
-
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  const monday = mondayOfCurrentWeek();
-  const classRows = (
-    await db.select().from(schema.classes).where(eq(schema.classes.userId, userId))
-  ).filter((c) => !c.specificDate || c.specificDate >= monday);
+  const connectionTimeZone = user?.timeZone ?? conn.timeZone ?? DEFAULT_TIME_ZONE;
+  const syncStartedAt = new Date();
+  const readCurrentClasses = async () =>
+    (await db.select().from(schema.classes).where(eq(schema.classes.userId, userId)))
+      .filter((row) => !row.specificDate || row.specificDate >= mondayOfCurrentWeek(syncStartedAt, row.timeZone));
+  const classRows = await readCurrentClasses();
+  const sourceFingerprint = scheduleFingerprint(classRows);
   const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((id): id is string => !!id))];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
@@ -171,13 +232,15 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
   const studioById = new Map(studios.map((s) => [s.id, s]));
   const origin = siteOrigin();
 
-  const newIds: string[] = [];
+  const successfulIds: string[] = [];
+  const failures: string[] = [];
   for (const c of classRows) {
+    const eventId = googleEventIdForClass(c);
     const studio = c.studioId ? studioById.get(c.studioId) : undefined;
     const date =
       c.specificDate ??
       (() => {
-        const d = new Date(`${monday}T00:00:00Z`);
+        const d = new Date(`${mondayOfCurrentWeek(syncStartedAt, c.timeZone)}T00:00:00Z`);
         d.setUTCDate(d.getUTCDate() + c.dayOfWeek);
         return d.toISOString().slice(0, 10);
       })();
@@ -187,34 +250,107 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
     const event: Record<string, unknown> = {
       summary: c.name,
       description: desc,
-      start: { dateTime: localDateTime(date, c.startTime), timeZone: tz },
-      end: { dateTime: localDateTime(date, c.startTime, c.durationMin), timeZone: tz },
+      start: { dateTime: localDateTime(date, c.startTime), timeZone: c.timeZone },
+      end: { dateTime: localDateTime(date, c.startTime, c.durationMin), timeZone: c.timeZone },
       source: { title: "fittlist", url: `${origin}/${user?.handle ?? ""}` },
+      extendedProperties: {
+        private: {
+          fittlist: "true",
+          fittlistSeriesId: c.seriesId,
+          fittlistOccurrence: c.specificDate ?? `weekly-${c.dayOfWeek}`,
+        },
+      },
     };
     if (studio) event.location = `${studio.name}, ${studio.address}`;
     else if (c.location) event.location = c.location;
     if (!c.specificDate)
-      event.recurrence = recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime);
+      event.recurrence = recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime, c.timeZone);
 
     try {
-      const res = await fetch(`${CAL}/events`, {
-        method: "POST",
-        headers: { ...auth, "content-type": "application/json" },
-        body: JSON.stringify(event),
-      });
-      if (res.ok) {
-        const created = await res.json();
-        if (created.id) newIds.push(created.id);
-      }
-    } catch {
-      /* ignore individual insert failures */
+      await upsertGoogleEvent(eventId, event, auth);
+      successfulIds.push(eventId);
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : "Google event upsert failed");
     }
   }
 
-  await db
+  // On a partial run, retain every previously tracked event and add the new
+  // deterministic ids that did succeed. Nothing old is removed until the
+  // complete desired schedule exists remotely.
+  const mergeTrackedIds = async (ids: string[]) => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const [latest] = await db
+        .select({ syncedEventIds: schema.googleConnections.syncedEventIds, syncVersion: schema.googleConnections.syncVersion })
+        .from(schema.googleConnections)
+        .where(eq(schema.googleConnections.userId, userId));
+      if (!latest) return false;
+      const merged = [...new Set([...latest.syncedEventIds, ...ids])];
+      const updated = await db
+        .update(schema.googleConnections)
+        .set({
+          syncedEventIds: merged,
+          timeZone: connectionTimeZone,
+          syncVersion: latest.syncVersion + 1,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.googleConnections.userId, userId),
+            eq(schema.googleConnections.syncVersion, latest.syncVersion),
+          ),
+        )
+        .returning({ userId: schema.googleConnections.userId });
+      if (updated.length) return true;
+    }
+    return false;
+  };
+
+  if (failures.length) {
+    await mergeTrackedIds(successfulIds);
+    throw new Error(`Google calendar sync incomplete (${failures.length} event${failures.length === 1 ? "" : "s"})`);
+  }
+
+  // A schedule edit can land while remote requests are in flight. Never let
+  // that stale snapshot delete events: a changed fingerprint leaves all old
+  // ids tracked and lets the newer post-commit sync reconcile them.
+  const currentRows = await readCurrentClasses();
+  if (scheduleFingerprint(currentRows) !== sourceFingerprint) {
+    await mergeTrackedIds(successfulIds);
+    throw new Error("Google calendar sync superseded by a newer schedule");
+  }
+
+  const desiredIds = new Set(successfulIds);
+  const failedDeletes: string[] = [];
+  for (const id of conn.syncedEventIds) {
+    if (desiredIds.has(id)) continue;
+    if (!(await deleteGoogleEvent(id, auth))) failedDeletes.push(id);
+  }
+
+  // Only replace the tracked set if nobody updated this connection since the
+  // snapshot was read. If another sync won, merge instead of overwriting its
+  // work; deterministic ids make the next reconciliation safe.
+  const trackedIds = [...desiredIds, ...failedDeletes];
+  const updated = await db
     .update(schema.googleConnections)
-    .set({ syncedEventIds: newIds, timeZone: tz, updatedAt: new Date() })
-    .where(eq(schema.googleConnections.userId, userId));
+    .set({
+      syncedEventIds: trackedIds,
+      timeZone: connectionTimeZone,
+      syncVersion: conn.syncVersion + 1,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(schema.googleConnections.userId, userId),
+        eq(schema.googleConnections.syncVersion, conn.syncVersion),
+      ),
+    )
+    .returning({ userId: schema.googleConnections.userId });
+  if (!updated.length) {
+    await mergeTrackedIds(trackedIds);
+    throw new Error("Google calendar sync superseded by another reconciliation");
+  }
+  if (failedDeletes.length)
+    throw new Error(`Google calendar cleanup incomplete (${failedDeletes.length} event${failedDeletes.length === 1 ? "" : "s"})`);
 }
 
 /** Remove fittlist's events and forget the connection. */
@@ -228,16 +364,15 @@ export async function disconnectGoogle(userId: string): Promise<void> {
   if (googleConfigured()) {
     const token = await accessTokenFrom(decryptSecret(conn.refreshToken));
     if (token) {
+      const failed: string[] = [];
       for (const id of conn.syncedEventIds) {
-        try {
-          await fetch(`${CAL}/events/${encodeURIComponent(id)}`, {
-            method: "DELETE",
-            headers: { authorization: `Bearer ${token}` },
-          });
-        } catch {
-          /* ignore */
-        }
+        if (!(await deleteGoogleEvent(id, { authorization: `Bearer ${token}` }))) failed.push(id);
       }
+      // Keep the connection and its ids so a temporary Google failure can be
+      // retried. Forgetting them here would make those events permanent
+      // orphans that fittlist could no longer identify.
+      if (failed.length)
+        throw new Error(`Google calendar disconnect incomplete (${failed.length} event${failed.length === 1 ? "" : "s"})`);
     }
   }
   await db.delete(schema.googleConnections).where(eq(schema.googleConnections.userId, userId));

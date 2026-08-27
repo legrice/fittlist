@@ -100,7 +100,7 @@ export async function buildDiscoverFeed(
           eq(schema.studioEndorsements.trait, "been_here"),
         )),
       db
-        .selectDistinct({ id: schema.groups.id })
+        .selectDistinct({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId })
         .from(schema.groups)
         .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
         .leftJoin(schema.groupFavorites, eq(schema.groupFavorites.groupId, schema.groups.id))
@@ -123,14 +123,15 @@ export async function buildDiscoverFeed(
       calendarOwnerIds.add(row.ownerId);
       if (row.coachId) calendarOwnerIds.add(row.coachId);
     }
+    const visibleGroupRows = groupRows.filter((row) => !hidden.has(row.ownerUserId));
     const [groupClassOwners, studioClassPeople] = await Promise.all([
-      groupRows.length
+      visibleGroupRows.length
         ? db
         .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
         .from(schema.groupClasses)
         .innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId))
         .where(and(
-          inArray(schema.groupClasses.groupId, groupRows.map((row) => row.id)),
+          inArray(schema.groupClasses.groupId, visibleGroupRows.map((row) => row.id)),
           gte(schema.groupClasses.occurrenceDate, from),
           lte(schema.groupClasses.occurrenceDate, through),
         ))
@@ -298,7 +299,7 @@ export async function buildDiscoverFeed(
     for (const c of classRows) {
       if (!runsOn(c, iso, dow)) continue;
       // Been and gone is not an answer to "when can I train next".
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       // A shift is owned by the gym and shown under the coach, so the person
       // this row is about is ownerUserId, never userId.
       const coach = coachById.get(c.ownerUserId);
@@ -465,7 +466,7 @@ export async function buildDiscoverFeed(
     for (const c of publicTheirs) {
       if (nextAt.has(c.ownerUserId)) continue;
       if (!runsOn(c, iso, dow)) continue;
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       consider(c.ownerUserId, `${iso}T${String(timeToMinutes(c.startTime)).padStart(4, "0")}`);
     }
   }

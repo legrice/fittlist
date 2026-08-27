@@ -1,0 +1,1 @@
+ALTER TABLE "inquiry_threads" ADD COLUMN "coach_closed_at" timestamp with time zone;

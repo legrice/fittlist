@@ -9,6 +9,7 @@ import { clockParts, dowOfDate, occurrenceEnded, runsOn, todayIso } from "@/lib/
 import { addNotification } from "@/lib/notify";
 import { storeImage } from "@/lib/storage";
 import { hiddenFrom } from "@/lib/blocks";
+import { objectionableContentError } from "@/lib/content-safety";
 
 export type GroupClassCatalogChoice = { classId: string; iso: string; name: string; detail: string } & {
   classType: string | null;
@@ -76,6 +77,7 @@ export async function groupClassCatalog(): Promise<GroupClassCatalog | null> {
       endsOn: schema.classes.endsOn,
       skipDates: schema.classes.skipDates,
       startTime: schema.classes.startTime,
+      timeZone: schema.classes.timeZone,
       durationMin: schema.classes.durationMin,
       name: schema.classes.name,
       classType: schema.classes.classType,
@@ -107,7 +109,7 @@ export async function groupClassCatalog(): Promise<GroupClassCatalog | null> {
     for (const row of rows) {
       if (hidden.has(row.userId)) continue;
       if (row.ownerKind === "gym" ? !row.studioSlug : !row.ownerHandle || !row.ownerDiscoverable) continue;
-      if (!runsOn(row, iso, dowOfDate(iso)) || occurrenceEnded(iso, row.startTime, row.durationMin)) continue;
+      if (!runsOn(row, iso, dowOfDate(iso)) || occurrenceEnded(iso, row.startTime, row.durationMin, row.timeZone)) continue;
       const dateLabel = date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
       const time = clockParts(row.startTime);
       const coach = row.ownerKind === "gym" ? null : row.ownerName;
@@ -163,6 +165,8 @@ export async function createGroup(input: { name: string; slug: string; purpose: 
     const name = input.name.trim().replace(/\s+/g, " ");
     if (name.length < 2) return { ok: false, error: "Give your group a name." } as const;
     if (name.length > 60) return { ok: false, error: "Keep the name under 60 characters." } as const;
+    const safetyError = objectionableContentError(name, input.slug);
+    if (safetyError) return { ok: false, error: safetyError } as const;
     stage = "database connection";
     const db = await getDb();
     stage = "account check";
@@ -215,7 +219,8 @@ async function groupManager(slug: string) {
   const userId = await getSessionUserId();
   if (!userId) return null;
   const db = await getDb();
-  const [row] = await db.select({ groupId: schema.groups.id, role: schema.groupMembers.role }).from(schema.groups).innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
+  const [row] = await db.select({ groupId: schema.groups.id, ownerUserId: schema.groups.ownerUserId, role: schema.groupMembers.role }).from(schema.groups).innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
+  if (row && row.ownerUserId !== userId && (await hiddenFrom(userId)).has(row.ownerUserId)) return null;
   return row && (row.role === "owner" || row.role === "admin") ? { db, userId, ...row } : null;
 }
 
@@ -225,14 +230,18 @@ async function groupParticipant(slug: string) {
   const db = await getDb();
   const [group] = await db.select({ id:schema.groups.id, name:schema.groups.name, ownerUserId:schema.groups.ownerUserId }).from(schema.groups).where(eq(schema.groups.slug, slug));
   if (!group) return null;
+  if (group.ownerUserId !== userId && (await hiddenFrom(userId)).has(group.ownerUserId)) return null;
   const [member] = await db.select({ role:schema.groupMembers.role }).from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, userId)));
   return member || group.ownerUserId === userId ? { db, userId, groupId:group.id, groupName:group.name } : null;
 }
 
 async function notifyGroup(groupId: string, actorId: string, title: string, body: string, href: string) {
   const db = await getDb();
-  const recipients = await db.select({ userId:schema.groupMembers.userId }).from(schema.groupMembers).where(eq(schema.groupMembers.groupId, groupId));
-  await Promise.all(recipients.filter((row) => row.userId !== actorId).map((row) => addNotification(row.userId, { type:"group_update", title, body, href, actorUserId:actorId })));
+  const [recipients, hidden] = await Promise.all([
+    db.select({ userId:schema.groupMembers.userId }).from(schema.groupMembers).where(eq(schema.groupMembers.groupId, groupId)),
+    hiddenFrom(actorId),
+  ]);
+  await Promise.all(recipients.filter((row) => row.userId !== actorId && !hidden.has(row.userId)).map((row) => addNotification(row.userId, { type:"group_update", title, body, href, actorUserId:actorId })));
 }
 
 export async function addGroupPost(slug: string, value: string) {
@@ -241,6 +250,8 @@ export async function addGroupPost(slug: string, value: string) {
   const body = value.trim().replace(/\s+/g, " ");
   if (!body) return { ok:false, error:"Write an update first." } as const;
   if (body.length > 500) return { ok:false, error:"Keep updates under 500 characters." } as const;
+  const safetyError = objectionableContentError(body);
+  if (safetyError) return { ok:false, error:safetyError } as const;
   const [post] = await member.db.insert(schema.groupPosts).values({ groupId:member.groupId, authorUserId:member.userId, body, kind:"update" }).returning({ id:schema.groupPosts.id });
   await notifyGroup(member.groupId, member.userId, `New update in ${member.groupName}`, body, `/g/${slug}?tab=updates#post-${post.id}`);
   revalidatePath(`/g/${slug}`);
@@ -252,8 +263,11 @@ export async function addGroupComment(slug: string, postId: string, value: strin
   if (!member) return { ok:false, error:"Join the group to comment." } as const;
   const body = value.trim().replace(/\s+/g, " ");
   if (!body || body.length > 300) return { ok:false, error:"Keep comments between 1 and 300 characters." } as const;
+  const safetyError = objectionableContentError(body);
+  if (safetyError) return { ok:false, error:safetyError } as const;
   const [post] = await member.db.select({ id:schema.groupPosts.id, authorUserId:schema.groupPosts.authorUserId }).from(schema.groupPosts).where(and(eq(schema.groupPosts.id, postId), eq(schema.groupPosts.groupId, member.groupId)));
   if (!post) return { ok:false, error:"That update is no longer available." } as const;
+  if ((await hiddenFrom(member.userId)).has(post.authorUserId)) return { ok:false, error:"That update is no longer available." } as const;
   await member.db.insert(schema.groupPostComments).values({ postId, authorUserId:member.userId, body });
   if (post.authorUserId !== member.userId) await addNotification(post.authorUserId, { type:"group_update", title:`New reply in ${member.groupName}`, body, href:`/g/${slug}?tab=updates#post-${postId}`, actorUserId:member.userId });
   revalidatePath(`/g/${slug}`);
@@ -283,6 +297,8 @@ export async function updateGroupDetails(slug: string, input: { name: string; de
     if (name.length > 60) return { ok: false, error: "Keep the name under 60 characters." } as const;
     const description = input.description.trim().replace(/\s+/g, " ");
     if (description.length > 280) return { ok: false, error: "Keep the about under 280 characters." } as const;
+    const safetyError = objectionableContentError(name, description);
+    if (safetyError) return { ok: false, error: safetyError } as const;
     const photoInput = input.photo?.trim() || null;
     if (photoInput && !photoInput.startsWith("data:image/") && !/^https:\/\//i.test(photoInput)) {
       return { ok: false, error: "That image isn’t supported." } as const;
@@ -326,6 +342,7 @@ export async function addGroupClasses(slug: string, choices: { classId: string; 
       endsOn: schema.classes.endsOn,
       skipDates: schema.classes.skipDates,
       startTime: schema.classes.startTime,
+      timeZone: schema.classes.timeZone,
       durationMin: schema.classes.durationMin,
       ownerKind: schema.users.kind,
       ownerHandle: schema.users.handle,
@@ -346,7 +363,7 @@ export async function addGroupClasses(slug: string, choices: { classId: string; 
     const cls = byId.get(item.classId);
     if (!cls || item.iso < todayIso() || hidden.has(cls.userId)) return false;
     if (cls.ownerKind === "gym" ? !cls.studioSlug : !cls.ownerHandle || !cls.ownerDiscoverable) return false;
-    return runsOn(cls, item.iso, dowOfDate(item.iso)) && !occurrenceEnded(item.iso, cls.startTime, cls.durationMin);
+    return runsOn(cls, item.iso, dowOfDate(item.iso)) && !occurrenceEnded(item.iso, cls.startTime, cls.durationMin, cls.timeZone);
   });
   if (!rows.length) return { ok: false, error: "Those classes are no longer available." } as const;
   const added = await manager.db.insert(schema.groupClasses).values(rows.map((item) => ({ groupId: manager.groupId, classId: item.classId, occurrenceDate: item.iso }))).onConflictDoNothing().returning({ classId:schema.groupClasses.classId, iso:schema.groupClasses.occurrenceDate });
@@ -364,7 +381,13 @@ export async function inviteGroupPeople(slug: string, userIds: string[], role: "
   if (!manager) return { ok: false, error: "Only group admins can invite people." } as const;
   const ids = [...new Set(userIds)].filter((id) => id !== manager.userId).slice(0, 30);
   if (!ids.length) return { ok: false, error: "Choose at least one person." } as const;
-  const users = await manager.db.select({ id: schema.users.id }).from(schema.users).where(inArray(schema.users.id, ids));
+  const [hidden, hiddenFromOwner] = await Promise.all([
+    hiddenFrom(manager.userId),
+    hiddenFrom(manager.ownerUserId),
+  ]);
+  const visibleIds = ids.filter((id) => !hidden.has(id) && !hiddenFromOwner.has(id));
+  if (!visibleIds.length) return { ok: false, error: "Those people are no longer available." } as const;
+  const users = await manager.db.select({ id: schema.users.id }).from(schema.users).where(inArray(schema.users.id, visibleIds));
   if (!users.length) return { ok: false, error: "Those people are no longer available." } as const;
   await manager.db.insert(schema.groupInvitations).values(users.map((user) => ({ groupId: manager.groupId, inviteeUserId: user.id, invitedByUserId: manager.userId, role }))).onConflictDoUpdate({ target: [schema.groupInvitations.groupId, schema.groupInvitations.inviteeUserId], set: { role, invitedByUserId: manager.userId } });
   const { recordProductActivity } = await import("@/lib/product-activity");
@@ -377,8 +400,14 @@ export async function respondToGroupInvitation(slug: string, accept: boolean) {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false } as const;
   const db = await getDb();
-  const [invite] = await db.select({ id: schema.groupInvitations.id, groupId: schema.groupInvitations.groupId, role: schema.groupInvitations.role }).from(schema.groupInvitations).innerJoin(schema.groups, eq(schema.groups.id, schema.groupInvitations.groupId)).where(and(eq(schema.groups.slug, slug), eq(schema.groupInvitations.inviteeUserId, userId)));
+  const [invite] = await db.select({ id: schema.groupInvitations.id, groupId: schema.groupInvitations.groupId, role: schema.groupInvitations.role, invitedByUserId: schema.groupInvitations.invitedByUserId, ownerUserId: schema.groups.ownerUserId }).from(schema.groupInvitations).innerJoin(schema.groups, eq(schema.groups.id, schema.groupInvitations.groupId)).where(and(eq(schema.groups.slug, slug), eq(schema.groupInvitations.inviteeUserId, userId)));
   if (!invite) return { ok: false } as const;
+  const hidden = await hiddenFrom(userId);
+  if (hidden.has(invite.invitedByUserId) || hidden.has(invite.ownerUserId)) {
+    await db.delete(schema.groupInvitations).where(eq(schema.groupInvitations.id, invite.id));
+    revalidatePath("/saved");
+    return { ok: false } as const;
+  }
   await db.transaction(async (tx) => {
     if (accept && invite.role === "admin") await tx.insert(schema.groupMembers).values({ groupId: invite.groupId, userId, role: "admin" }).onConflictDoUpdate({ target: [schema.groupMembers.groupId, schema.groupMembers.userId], set: { role: "admin" } });
     else if (accept) await tx.insert(schema.groupMembers).values({ groupId: invite.groupId, userId, role: "member" }).onConflictDoNothing();
@@ -403,6 +432,7 @@ export async function joinOpenGroup(slug: string) {
   if (!group) return { ok:false, error:"That group is no longer available." } as const;
   if (group.visibility === "private") return { ok:false, error:"This group is invite only." } as const;
   if (group.ownerUserId === userId) return { ok:true, joined:true } as const;
+  if ((await hiddenFrom(userId)).has(group.ownerUserId)) return { ok:false, error:"That group is no longer available." } as const;
   const [membership] = await db.insert(schema.groupMembers).values({ groupId:group.id, userId, role:"member" }).onConflictDoNothing().returning({ id:schema.groupMembers.id });
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
@@ -443,8 +473,9 @@ export async function toggleGroupFavorite(slug: string) {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, signedOut: true } as const;
   const db = await getDb();
-  const [group] = await db.select({ id: schema.groups.id }).from(schema.groups).where(eq(schema.groups.slug, slug));
+  const [group] = await db.select({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId }).from(schema.groups).where(eq(schema.groups.slug, slug));
   if (!group) return { ok: false } as const;
+  if (group.ownerUserId !== userId && (await hiddenFrom(userId)).has(group.ownerUserId)) return { ok: false } as const;
   const [existing] = await db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, userId)));
   if (existing) await db.delete(schema.groupFavorites).where(eq(schema.groupFavorites.id, existing.id));
   else await db.insert(schema.groupFavorites).values({ groupId: group.id, userId });

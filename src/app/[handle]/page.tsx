@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { siteOrigin } from "@/lib/format";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { PublicProfileView } from "@/components/PublicProfileView";
@@ -59,7 +59,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   const [viewerId, hdrs] = await Promise.all([getSessionUserId(), headers()]);
   // Blocked: the page simply isn't there. Same shape as a deleted account, so
   // it says nothing about why, and there's nothing to argue with.
-  if (await isBlocked(user.id, viewerId)) notFound();
+  if ((await hiddenFrom(viewerId)).has(user.id)) notFound();
   if (viewerId !== user.id && !looksLikeBot(hdrs.get("user-agent"))) {
     // Analytics must not sit between a tap and the profile it opened.
     after(async () => {

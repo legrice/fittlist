@@ -34,7 +34,7 @@ export default async function EmbeddedSchedule({ params, searchParams }: { param
     const iso = date.toISOString().slice(0, 10);
     const dow = (date.getUTCDay() + 6) % 7;
     const items = classes
-      .filter((row) => runsOn(row, iso, dow) && !occurrenceEnded(iso, row.startTime, row.durationMin))
+      .filter((row) => runsOn(row, iso, dow) && !occurrenceEnded(iso, row.startTime, row.durationMin, row.timeZone))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
       .map((row) => {
         const studio = row.studioId ? studioById.get(row.studioId) : null;

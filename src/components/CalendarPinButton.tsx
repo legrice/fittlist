@@ -28,7 +28,7 @@ export function CalendarPinButton({
         className={`${className}${pinned ? " on" : ""}`}
         disabled={pending}
         aria-pressed={pinned}
-        aria-label={pinned ? "Remove favorite" : "Favorite"}
+        aria-label={pinned ? "Remove calendar from favorites" : "Favorite calendar"}
         onClick={() => {
           const next = !pinned;
           setPinned(next);

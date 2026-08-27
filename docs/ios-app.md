@@ -44,9 +44,21 @@ CAPACITOR_SERVER_URL=https://your-preview.vercel.app npm run ios:sync
 1. Select the organization team under Signing & Capabilities in Xcode.
 2. Add `APPLE_TEAM_ID` to Vercel for Production, Preview and Development. The
    universal-link endpoint uses it to publish the app identifier.
-3. Confirm the Associated Domains capability includes `applinks:fittlist.co`.
-4. Add Sign in with Apple and Push Notifications capabilities.
+3. Confirm the Associated Domains capability includes
+   `applinks:www.fittlist.co`. The apex domain redirects to the canonical host,
+   so it is intentionally not entitled: Apple requires an AASA response from
+   each entitled host without following redirects.
+4. Confirm the checked-in Sign in with Apple capability is enabled for the
+   App ID and provisioning profile; add Push Notifications when device-token
+   registration is ready.
 5. Create the App Store Connect record with bundle ID `co.fittlist.app`.
+
+For native Sign in with Apple, set `APPLE_NATIVE_CLIENT_ID=co.fittlist.app` in
+the deployment in addition to the web Services ID configuration. The native
+shell requests an Apple credential with a server-issued nonce; the canonical
+web origin verifies the identity token and writes the normal FittList session
+cookie. Test first authorization, returning authorization, Hide My Email,
+cancellation, and revoked credentials on a physical device.
 
 ## Before TestFlight
 

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
   DAYS,
+  detectProvider,
   dowOfDate,
   fmtDateLong,
   fmtDayHeader,
@@ -31,6 +32,7 @@ import {
   type StudioPlannerColor,
 } from "@/lib/studio-planner";
 import { staffStudiosForUser } from "@/lib/staff-studios";
+import { objectionableContentError } from "@/lib/content-safety";
 
 // A gym's own schedule: the rota, replacing the spreadsheet.
 //
@@ -548,6 +550,8 @@ export async function setStandardCalendar(
         isPublic: true,
       }];
     }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const safetyError = objectionableContentError(...clean.map((slot) => slot.name));
+    if (safetyError) return { ok: false, error: safetyError };
     total += clean.length;
     if (total > 150) return { ok: false, error: "Keep the standard calendar under 150 classes." };
     standardWeek[String(day) as keyof schema.StandardWeek] = clean;
@@ -819,8 +823,20 @@ async function syncStudioClassIdentity(
 /** Links people paste: keep the real ones, drop the rest, cap the list. */
 function cleanLinks(raw: GymClassInput["links"]): { label: string; url: string }[] {
   return (raw ?? [])
-    .map((l) => ({ label: (l.label || "Book").trim().slice(0, 30), url: l.url.trim() }))
-    .filter((l) => /^https?:\/\//i.test(l.url))
+    .flatMap((link) => {
+      const rawUrl = link.url.trim();
+      if (!rawUrl || rawUrl.length > 2_048 || /[\r\n]/.test(rawUrl)) return [];
+      try {
+        const candidate = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+        const url = new URL(candidate);
+        if (url.protocol !== "https:" && url.protocol !== "http:") return [];
+        // Labels are derived from the parsed destination. A direct server
+        // action call cannot turn link chrome into a second public text field.
+        return [{ label: detectProvider(url.href), url: url.href }];
+      } catch {
+        return [];
+      }
+    })
     .slice(0, 6);
 }
 
@@ -850,6 +866,8 @@ function shape(input: GymClassInput) {
 
 function validate(input: GymClassInput): string | null {
   if (!input.name.trim()) return "Give the class a name.";
+  const safetyError = objectionableContentError(input.name, input.classType, input.description);
+  if (safetyError) return safetyError;
   const oneOff = input.specificDate?.trim() || null;
   if (oneOff && !/^\d{4}-\d{2}-\d{2}$/.test(oneOff)) return "Pick a date.";
   const { days, endsOn } = shape(input);
@@ -3721,7 +3739,7 @@ export async function staffView(studioId: string): Promise<StaffView | null> {
     for (const r of rows
       .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))) {
-      if (occurrenceEnded(iso, r.startTime, r.durationMin)) continue;
+      if (occurrenceEnded(iso, r.startTime, r.durationMin, r.timeZone)) continue;
       const cover = coverBy.get(`${r.id}|${iso}`);
       const onUserId = cover ? cover.coachUserId : r.coachUserId;
       const ask = pendBy.get(`${r.id}|${iso}`);

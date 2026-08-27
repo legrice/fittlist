@@ -1,5 +1,49 @@
 import { createHash } from "node:crypto";
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
+
+const DELETE_BATCH_SIZE = 100;
+const MANAGED_IMAGE_PREFIXES = ["u", "ut", "story-background", "group", "class", "studio"] as const;
+
+/**
+ * Only URLs from a Vercel Blob store are ours to delete. Editors also accept
+ * ordinary https image URLs, and passing one of those to the Blob API would
+ * turn account cleanup into an attempted deletion of somebody else's asset.
+ */
+export function managedBlobUrl(value: unknown): string | null {
+  if (typeof value !== "string" || !value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:") return null;
+    if (!/(^|\.)blob\.vercel-storage\.com$/i.test(url.hostname)) return null;
+    const pathname = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+    if (!MANAGED_IMAGE_PREFIXES.some((prefix) => pathname.startsWith(`${prefix}/`))) return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete known-unreferenced assets from the configured Vercel Blob store.
+ * The caller owns the reference check; this function only enforces provider
+ * scope and batches requests. Missing credentials deliberately make cleanup a
+ * no-op so local account deletion never reaches a production store.
+ */
+export async function deleteStoredImages(values: Iterable<string>): Promise<void> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return;
+  const urls = [
+    ...new Set(
+      [...values]
+        .map((value) => managedBlobUrl(value))
+        .filter((value): value is string => !!value),
+    ),
+  ];
+  for (let i = 0; i < urls.length; i += DELETE_BATCH_SIZE) {
+    await del(urls.slice(i, i + DELETE_BATCH_SIZE), {
+      abortSignal: AbortSignal.timeout(10_000),
+    });
+  }
+}
 
 /**
  * Where a picked picture actually lives.

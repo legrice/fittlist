@@ -11,6 +11,7 @@ import { unreadHeaderCounts } from "@/lib/notify";
 import { publicSchedules } from "@/lib/coachweek";
 import { occurrenceEnded, runsOn } from "@/lib/format";
 import { staffStudiosForUser } from "@/lib/staff-studios";
+import { hiddenFrom } from "@/lib/blocks";
 
 /** The private profile/account surface intentionally has its own small query.
  * Favorites and group calendars belong to /saved; loading all of them before
@@ -76,7 +77,9 @@ export async function groupInvitePeople(): Promise<YouFavoritePerson[]> {
     .from(schema.subscribers)
     .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)))
     .orderBy(desc(schema.subscribers.createdAt));
-  const ids = [...new Set(favorites.map((row) => row.trainerUserId))].filter((id) => id !== userId);
+  const hidden = await hiddenFrom(userId);
+  const ids = [...new Set(favorites.map((row) => row.trainerUserId))]
+    .filter((id) => id !== userId && !hidden.has(id));
   if (!ids.length) return [];
   const rows = await db
     .select({
@@ -117,7 +120,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me?.handle || !me.onboardedAt) return null;
 
-  const [favoriteRows, placeRows, groupMembershipRows, ownedGroupRows, groupFavoriteRows, groupInvitationRows, savedRows, managed, unread] = await Promise.all([
+  const [favoriteRows, placeRows, groupMembershipRows, ownedGroupRows, groupFavoriteRows, groupInvitationRows, savedRows, managed, unread, hidden] = await Promise.all([
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
@@ -166,10 +169,11 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       .limit(12),
     staffStudiosForUser(userId),
     unreadHeaderCounts(userId, me.email),
+    hiddenFrom(userId),
   ]);
 
   const personIds = [...new Set(favoriteRows.map((row) => row.trainerUserId))]
-    .filter((id) => id !== userId);
+    .filter((id) => id !== userId && !hidden.has(id));
   const peopleData = personIds.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, personIds))
     : [];
@@ -190,7 +194,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
     const iso = new Date(Date.parse(`${today}T00:00:00Z`) + offset * 864e5).toISOString().slice(0, 10);
     const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
     for (const row of favoriteSchedules) {
-      if (row.isPublic && runsOn(row, iso, dow) && !occurrenceEnded(iso, row.startTime, row.durationMin)) activeCalendarIds.add(row.ownerUserId);
+      if (row.isPublic && runsOn(row, iso, dow) && !occurrenceEnded(iso, row.startTime, row.durationMin, row.timeZone)) activeCalendarIds.add(row.ownerUserId);
     }
   }
   const peopleById = new Map(peopleData.map((person) => [person.id, person]));
@@ -224,41 +228,47 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
   const groupIds = [...new Set([...groupMembershipRows, ...ownedGroupRows, ...groupFavoriteRows].map((row) => row.groupId))];
   const groupBaseRows = groupIds.length
     ? await db
-        .select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, photo: schema.groups.photo, memberCount: count(schema.groupMembers.id) })
+        .select({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId, name: schema.groups.name, slug: schema.groups.slug, photo: schema.groups.photo, memberCount: count(schema.groupMembers.id) })
         .from(schema.groups)
         .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
         .where(inArray(schema.groups.id, groupIds))
-        .groupBy(schema.groups.id, schema.groups.name, schema.groups.slug, schema.groups.photo, schema.groups.createdAt)
+        .groupBy(schema.groups.id, schema.groups.ownerUserId, schema.groups.name, schema.groups.slug, schema.groups.photo, schema.groups.createdAt)
         .orderBy(desc(schema.groups.createdAt))
     : [];
   const [groupMemberRows, groupClassRows] = groupIds.length ? await Promise.all([
     db.select({ groupId: schema.groupMembers.groupId, id: schema.users.id, name: schema.users.name, photo: schema.users.photoThumb, avatarColor: schema.users.avatarColor }).from(schema.groupMembers).innerJoin(schema.users, eq(schema.users.id, schema.groupMembers.userId)).where(inArray(schema.groupMembers.groupId, groupIds)),
-    db.select({ groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate }).from(schema.groupClasses).where(and(inArray(schema.groupClasses.groupId, groupIds), gte(schema.groupClasses.occurrenceDate, todayIso()))),
+    db.select({ groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate, ownerUserId: schema.classes.userId, coachUserId: schema.classes.coachUserId }).from(schema.groupClasses).innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId)).where(and(inArray(schema.groupClasses.groupId, groupIds), gte(schema.groupClasses.occurrenceDate, todayIso()))),
   ]) : [[], []];
-  const classIds = [...new Set(groupClassRows.map((row) => row.classId))];
+  const visibleGroupClassRows = groupClassRows.filter((row) =>
+    !hidden.has(row.ownerUserId) && (!row.coachUserId || !hidden.has(row.coachUserId))
+  );
+  const classIds = [...new Set(visibleGroupClassRows.map((row) => row.classId))];
   const groupClasses = classIds.length ? await db.select({ id: schema.classes.id, name: schema.classes.name }).from(schema.classes).where(inArray(schema.classes.id, classIds)) : [];
   const classById = new Map(groupClasses.map((item) => [item.id, item.name]));
-  const groups: YouFavoriteGroup[] = groupBaseRows.map((group) => {
-    const next = groupClassRows.filter((row) => row.groupId === group.id).sort((a, b) => a.iso.localeCompare(b.iso))[0];
+  const groups: YouFavoriteGroup[] = groupBaseRows.filter((group) =>
+    group.ownerUserId === userId || !hidden.has(group.ownerUserId)
+  ).map(({ ownerUserId: _ownerUserId, ...group }) => {
+    const next = visibleGroupClassRows.filter((row) => row.groupId === group.id).sort((a, b) => a.iso.localeCompare(b.iso))[0];
     return {
       ...group,
       role: membershipByGroup.get(group.id) ?? null,
       nextClass: next ? classById.get(next.classId) ?? null : null,
       nextDate: next?.iso ?? null,
-      faces: groupMemberRows.filter((row) => row.groupId === group.id).slice(0, 4).map((row) => ({ id: row.id, name: row.name, photo: row.photo, color: avatarColor(row) })),
+      faces: groupMemberRows.filter((row) => row.groupId === group.id && !hidden.has(row.id)).slice(0, 4).map((row) => ({ id: row.id, name: row.name, photo: row.photo, color: avatarColor(row) })),
     };
   });
-  const invitedGroupIds = [...new Set(groupInvitationRows.map((row) => row.groupId))];
-  const inviterIds = [...new Set(groupInvitationRows.map((row) => row.invitedByUserId))];
+  const visibleGroupInvitations = groupInvitationRows.filter((row) => !hidden.has(row.invitedByUserId));
+  const invitedGroupIds = [...new Set(visibleGroupInvitations.map((row) => row.groupId))];
+  const inviterIds = [...new Set(visibleGroupInvitations.map((row) => row.invitedByUserId))];
   const [invitedGroups, inviters] = await Promise.all([
-    invitedGroupIds.length ? db.select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug }).from(schema.groups).where(inArray(schema.groups.id, invitedGroupIds)) : [],
+    invitedGroupIds.length ? db.select({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId, name: schema.groups.name, slug: schema.groups.slug }).from(schema.groups).where(inArray(schema.groups.id, invitedGroupIds)) : [],
     inviterIds.length ? db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users).where(inArray(schema.users.id, inviterIds)) : [],
   ]);
   const invitedGroupById = new Map(invitedGroups.map((group) => [group.id, group]));
   const inviterById = new Map(inviters.map((person) => [person.id, person.name]));
-  const groupInvitations = groupInvitationRows.flatMap((invite) => {
+  const groupInvitations = visibleGroupInvitations.flatMap((invite) => {
     const group = invitedGroupById.get(invite.groupId);
-    return group ? [{ id: invite.id, name: group.name, slug: group.slug, role: invite.role, inviterName: inviterById.get(invite.invitedByUserId) ?? "A group admin" }] : [];
+    return group && !hidden.has(group.ownerUserId) ? [{ id: invite.id, name: group.name, slug: group.slug, role: invite.role, inviterName: inviterById.get(invite.invitedByUserId) ?? "A group admin" }] : [];
   });
 
   return {

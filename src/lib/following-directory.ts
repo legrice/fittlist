@@ -347,11 +347,16 @@ export async function followingDirectoryBatch(
     .from(schema.groupFavorites)
     .where(eq(schema.groupFavorites.userId, userId));
   const following = new Set(followRows.map((row) => row.groupId));
+  const hidden = await hiddenFrom(userId);
   const conditions = tab === "following"
-    ? following.size ? inArray(schema.groups.id, [...following]) : null
+    ? following.size ? and(
+        inArray(schema.groups.id, [...following]),
+        hidden.size ? notInArray(schema.groups.ownerUserId, [...hidden]) : undefined,
+      ) : null
     : and(
         eq(schema.groups.visibility, "public"),
         following.size ? notInArray(schema.groups.id, [...following]) : undefined,
+        hidden.size ? notInArray(schema.groups.ownerUserId, [...hidden]) : undefined,
       );
   if (tab === "following" && !conditions) return { entities: [], hasMore: false, limit };
   const rows = await db

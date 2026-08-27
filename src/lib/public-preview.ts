@@ -202,7 +202,7 @@ export async function publicPreview(rawCity?: string | null): Promise<PublicPrev
     const iso = date.toISOString().slice(0, 10);
     const dow = (date.getUTCDay() + 6) % 7;
     for (const row of [...personSchedules, ...gymSchedules]) {
-      if (!row.isPublic || !runsOn(row, iso, dow) || occurrenceEnded(iso, row.startTime, row.durationMin)) continue;
+      if (!row.isPublic || !runsOn(row, iso, dow) || occurrenceEnded(iso, row.startTime, row.durationMin, row.timeZone)) continue;
       const occurrenceKey = `${row.id}|${iso}`;
       if (seen.has(occurrenceKey)) continue;
       const owner = coachById.get("ownerUserId" in row ? row.ownerUserId : row.userId);

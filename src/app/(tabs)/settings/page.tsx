@@ -78,6 +78,7 @@ export default async function SettingsPage({
         photo={me.photo}
         color={avatarColor(me)}
         look={me.look}
+        timeZone={me.timeZone}
         followingCount={fanFollowing.length}
         followerCount={fanFollowers.length}
         openEditor={edit === "1"}
@@ -174,6 +175,7 @@ export default async function SettingsPage({
       approveFollowers={me.approveFollowers}
       messagesOpen={me.messagesOpen}
       look={me.look}
+      timeZone={me.timeZone}
     />
     </div>
   );

@@ -1,5 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+const serverUrl = process.env.CAPACITOR_SERVER_URL ?? "https://www.fittlist.co";
+const serverHost = new URL(serverUrl).hostname;
+
 const config: CapacitorConfig = {
   appId: "co.fittlist.app",
   appName: "FittList",
@@ -10,8 +13,11 @@ const config: CapacitorConfig = {
     // stale static copy of FittList.
     // Vercel redirects the apex domain to www. Starting at the canonical host
     // prevents iOS from interpreting that redirect as a request for Safari.
-    url: process.env.CAPACITOR_SERVER_URL ?? "https://www.fittlist.co",
-    allowNavigation: ["fittlist.co", "www.fittlist.co", "*.vercel.app"],
+    url: serverUrl,
+    // Preview builds may opt into one exact CAPACITOR_SERVER_URL host. A
+    // wildcard preview domain in a release shell lets unrelated pages reach
+    // native message handlers.
+    allowNavigation: [...new Set(["fittlist.co", "www.fittlist.co", serverHost])],
     cleartext: false,
   },
   ios: {

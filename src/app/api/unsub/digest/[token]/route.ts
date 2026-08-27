@@ -29,6 +29,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ token:
 
 export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  await optOut(token);
-  return NextResponse.redirect(new URL(`/u/digest/${token}`, req.url));
+  // Link previews use GET, so this branch must never change delivery state.
+  // Standards-based one-click unsubscribe remains the POST above.
+  const response = NextResponse.redirect(new URL(`/u/digest/${token}`, req.url));
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("Referrer-Policy", "no-referrer");
+  return response;
 }

@@ -120,7 +120,7 @@ export async function discoverPeople(distanceMiles?: number): Promise<DiscoverDa
     for (const c of classRows) {
       if (soonest.has(c.ownerUserId)) continue;
       if (!runsOn(c, iso, dow)) continue;
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       const t = clockParts(c.startTime);
       const day =
         i === 0
@@ -228,9 +228,10 @@ export async function discoverGroups(distanceMiles?: number) {
   if (!me) return [];
   const db = await getDb();
   const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
-  const [groups, favoriteRows] = await Promise.all([db
+  const [groups, favoriteRows, hidden] = await Promise.all([db
     .select({
       id:schema.groups.id,
+      ownerUserId:schema.groups.ownerUserId,
       name:schema.groups.name,
       slug:schema.groups.slug,
       description:schema.groups.description,
@@ -250,9 +251,12 @@ export async function discoverGroups(distanceMiles?: number) {
   db.select({ groupId:schema.groupFavorites.groupId })
     .from(schema.groupFavorites)
     .where(eq(schema.groupFavorites.userId, me.id)),
+  hiddenFrom(me.id),
   ]);
   const favorites = new Set(favoriteRows.map((row) => row.groupId));
-  return groups.map((group) => ({ ...group, favorited:favorites.has(group.id) }));
+  return groups
+    .filter((group) => !hidden.has(group.ownerUserId))
+    .map(({ ownerUserId: _ownerUserId, ...group }) => ({ ...group, favorited:favorites.has(group.id) }));
 }
 
 /**

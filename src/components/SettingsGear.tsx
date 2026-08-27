@@ -117,7 +117,7 @@ export function SettingsGear({ header = false, pill = false }: {
                       <Icon name="close" size={20} />
                     </button>
                   </div>
-                  <MemberAccount {...data.fan} />
+                  <MemberAccount {...data.fan} showHeading={false} />
                 </div>
               ) : (
                 <div className="header-account-loading">

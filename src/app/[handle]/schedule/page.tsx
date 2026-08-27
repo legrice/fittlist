@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { siteOrigin } from "@/lib/format";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { MemberProfileView } from "@/components/MemberProfileView";
 import { PublicProfileView } from "@/components/PublicProfileView";
@@ -52,7 +52,7 @@ export default async function SchedulePage({ params, searchParams }: Props) {
   if (!user) notFound();
 
   const viewerId = await getSessionUserId();
-  if (await isBlocked(user.id, viewerId)) notFound();
+  if ((await hiddenFrom(viewerId)).has(user.id)) notFound();
   // A member's Schedule pill points here too now, so the page renders
   // their view rather than refusing the kind.
   if (user.kind === "fan") {

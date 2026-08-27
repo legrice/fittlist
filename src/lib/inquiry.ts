@@ -28,6 +28,15 @@ export async function verifyInquiryToken(token: string): Promise<string | null> 
   }
 }
 
+/**
+ * An inbound inquiry's typed email is a delivery address, not proof that the
+ * message came from an account with that address. Until a verified account id
+ * is persisted on the thread/message, moderation must leave its author null.
+ */
+export function inquiryMessageAuthorUserId(fromCoach: boolean, coachUserId: string): string | null {
+  return fromCoach ? coachUserId : null;
+}
+
 /** New visitor message → email the coach, pointing them at their inbox. */
 export async function emailCoachInquiry(opts: {
   to: string;

@@ -3,18 +3,24 @@ import Capacitor
 import WebKit
 import MessageUI
 import Photos
+import AuthenticationServices
+import CryptoKit
 
 /// One native navigation shell around the existing Capacitor bridge. FittList
 /// keeps one web product while the highest-value app surfaces become native.
-final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler, MFMessageComposeViewControllerDelegate {
+final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler, MFMessageComposeViewControllerDelegate, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     private let bridge = CAPBridgeViewController()
     private let headerView = UIView()
     private let tabBar = UITabBar()
     private var settingsButton: UIButton?
     private var bridgeTopToHeader: NSLayoutConstraint?
     private var bridgeTopToView: NSLayoutConstraint?
-    private let tabIDs = ["calendar", "discover", "saved"]
-    private let fallbackRoutes = ["/calendar", "/discover", "/saved"]
+    // These IDs deliberately match src/lib/nav.ts. The web navigation is
+    // hidden in the native shell, so a mismatch here removes the only working
+    // route to a primary destination.
+    private let tabIDs = ["following", "discover", "calendar"]
+    private let fallbackRoutes = ["/feed", "/discover", "/you"]
+    private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
@@ -69,7 +75,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.items = [
             item("Calendar", "calendar", 0),
             item("Discover", "safari", 1),
-            item("Favorites", "heart", 2),
+            item("Profile", "person.crop.circle", 2),
         ]
         tabBar.selectedItem = tabBar.items?.first
         view.addSubview(tabBar)
@@ -154,7 +160,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         }.withRenderingMode(.alwaysTemplate)
     }
 
-    @objc private func openHome() { navigate(tabID: "calendar", fallback: "/calendar") }
+    @objc private func openHome() { navigate(tabID: "following", fallback: "/feed") }
     @objc private func openSearch() { navigate(fallback: "/search") }
     @objc private func openMessages() { navigate(fallback: "/inbox") }
     @objc private func openUpdates() { navigate(fallback: "/notifications") }
@@ -171,6 +177,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         controller.add(self, name: "fittlistExternal")
         controller.add(self, name: "fittlistTakeover")
         controller.add(self, name: "fittlistShareTarget")
+        controller.add(self, name: "fittlistApple")
         bridge.webView?.allowsBackForwardNavigationGestures = true
 
         // Mark the document before it paints so the web header does not flash
@@ -243,7 +250,22 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "fittlistApple", let payload = message.body as? [String: Any] {
+            guard isTrustedWebMessage(message),
+                  let nonce = payload["nonce"] as? String,
+                  nonce.count >= 32,
+                  nonce.count <= 128 else {
+                appleResult(["error": "unavailable"])
+                return
+            }
+            startAppleSignIn(nonce: nonce)
+            return
+        }
         if message.name == "fittlistShareTarget", let payload = message.body as? [String: Any] {
+            guard isTrustedWebMessage(message) else {
+                shareResult("Couldn't prepare that image")
+                return
+            }
             shareImage(payload)
             return
         }
@@ -264,12 +286,12 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         setTakeover(path == "/coachshare" || path == "/membershare")
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
         let active = route["active"] as? String
-        let activeTags = ["calendar": 0, "discover": 1, "saved": 2]
+        let activeTags = ["following": 0, "discover": 1, "calendar": 2]
         let tag: Int?
         if let active, let activeTag = activeTags[active] { tag = activeTag }
-        else if path == "/calendar" || path == "/app" || path == "/week" { tag = 0 }
+        else if path == "/feed" { tag = 0 }
         else if path == "/discover" || path == "/search" { tag = 1 }
-        else if path == "/saved" { tag = 2 }
+        else if path == "/you" || path == "/calendar" || path == "/app" || path == "/week" { tag = 2 }
         else { tag = nil }
         if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
             tabBar.selectedItem = next
@@ -284,17 +306,96 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         view.layoutIfNeeded()
     }
 
+    private func isTrustedWebMessage(_ message: WKScriptMessage) -> Bool {
+        guard message.frameInfo.isMainFrame else { return false }
+        let origin = message.frameInfo.securityOrigin
+        let host = origin.host.lowercased()
+        if origin.protocol == "https" && trustedWebHosts.contains(host) { return true }
+        // A preview build opts into one exact CAPACITOR_SERVER_URL host. The
+        // Capacitor navigation allow-list controls which host can occupy the
+        // main web view; matching that live main-frame URL lets the same build
+        // exercise Apple/share bridges without trusting wildcard previews.
+        if origin.protocol == "https",
+           let currentHost = bridge.webView?.url?.host?.lowercased(),
+           host == currentHost { return true }
+        #if DEBUG
+        return origin.protocol == "http" && (host == "localhost" || host == "127.0.0.1")
+        #else
+        return false
+        #endif
+    }
+
+    private func startAppleSignIn(nonce: String) {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = SHA256.hash(data: Data(nonce.utf8)).map { String(format: "%02x", $0) }.joined()
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        controller.performRequests()
+    }
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let tokenData = credential.identityToken,
+              let identityToken = String(data: tokenData, encoding: .utf8) else {
+            appleResult(["error": "invalid_credential"])
+            return
+        }
+        var payload: [String: String] = ["identityToken": identityToken]
+        if let givenName = credential.fullName?.givenName, !givenName.isEmpty { payload["givenName"] = givenName }
+        if let familyName = credential.fullName?.familyName, !familyName.isEmpty { payload["familyName"] = familyName }
+        appleResult(payload)
+    }
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        let code = (error as? ASAuthorizationError)?.code
+        appleResult(["error": code == .canceled ? "cancelled" : "authorization_failed"])
+    }
+
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        view.window ?? ASPresentationAnchor()
+    }
+
+    private func appleResult(_ payload: [String: String]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let json = String(data: data, encoding: .utf8) else { return }
+        DispatchQueue.main.async {
+            self.bridge.webView?.evaluateJavaScript(
+                "window.dispatchEvent(new CustomEvent('fittlist:native-apple-result',{detail:\(json)}))"
+            )
+        }
+    }
+
+    private func cookies(for url: URL, from allCookies: [HTTPCookie]) -> [HTTPCookie] {
+        guard let targetHost = url.host?.lowercased() else { return [] }
+        return allCookies.filter { cookie in
+            let cookieDomain = cookie.domain
+                .trimmingCharacters(in: CharacterSet(charactersIn: "."))
+                .lowercased()
+            let domainMatches = targetHost == cookieDomain || targetHost.hasSuffix(".\(cookieDomain)")
+            let pathMatches = url.path.hasPrefix(cookie.path)
+            let transportMatches = !cookie.isSecure || url.scheme?.lowercased() == "https"
+            return domainMatches && pathMatches && transportMatches
+        }
+    }
+
     private func shareImage(_ payload: [String: Any]) {
         guard let target = payload["target"] as? String,
               let rawURL = payload["url"] as? String,
-              let url = URL(string: rawURL) else {
+              let url = URL(string: rawURL),
+              url.scheme?.lowercased() == "https",
+              let host = url.host?.lowercased(),
+              trustedWebHosts.contains(host),
+              url.path.hasPrefix("/api/story/") || url.path.hasPrefix("/api/card/") || url.path.hasPrefix("/api/qr/") else {
             shareResult("Couldn't prepare that image")
             return
         }
         let file = payload["file"] as? String
         bridge.webView?.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
             var request = URLRequest(url: url)
-            HTTPCookie.requestHeaderFields(with: cookies).forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
+            let matchingCookies = self.cookies(for: url, from: cookies)
+            HTTPCookie.requestHeaderFields(with: matchingCookies).forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
             URLSession.shared.dataTask(with: request) { data, response, _ in
                 guard let data,
                       let http = response as? HTTPURLResponse,

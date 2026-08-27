@@ -10,6 +10,7 @@ export async function disconnectGoogleAction(): Promise<{ ok: boolean }> {
     await disconnectGoogle(userId);
   } catch (err) {
     console.error("gcal disconnect failed", err);
+    return { ok: false };
   }
   return { ok: true };
 }

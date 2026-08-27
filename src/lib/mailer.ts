@@ -7,6 +7,7 @@ import { getDb, schema } from "@/db";
 export type OutboundKind =
   | "otp"
   | "magic_link"
+  | "follow_confirmation"
   | "schedule_change"
   | "welcome"
   | "announcement"
@@ -27,6 +28,8 @@ export interface SendArgs {
   headers?: Record<string, string>;
 }
 
+export type SendResult = { ok: boolean; status: string };
+
 export async function sendMessage({
   to,
   subject,
@@ -34,12 +37,14 @@ export async function sendMessage({
   html,
   kind,
   headers,
-}: SendArgs): Promise<void> {
+}: SendArgs): Promise<SendResult> {
   let status = "sent";
+  let ok = true;
   try {
     if (process.env.RESEND_API_KEY) {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
+        signal: AbortSignal.timeout(10_000),
         headers: {
           Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
           "Content-Type": "application/json",
@@ -56,16 +61,36 @@ export async function sendMessage({
           ...(headers ? { headers } : {}),
         }),
       });
-      if (!res.ok) status = `error:${res.status}`;
+      if (!res.ok) {
+        ok = false;
+        status = `error:${res.status}`;
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      // Authentication and notification screens must not claim delivery when
+      // a production deployment has no provider configured.
+      ok = false;
+      status = "error:not_configured";
+      console.error(`[mail:${kind}] delivery provider is not configured`);
     } else {
-      // Dev fallback: no email provider configured, log to console.
+      // Local-only fallback: developers need the one-time URL to exercise the
+      // auth flow. Production never prints recipients or message bodies.
       console.log(`[mail:${kind}] to=${to} subject="${subject}"\n${text}`);
       status = "logged";
     }
   } catch (err) {
+    ok = false;
     status = "error";
     console.error("sendMessage failed", err);
   }
-  const db = await getDb();
-  await db.insert(schema.messageLog).values({ toAddress: to, kind, body: text, status });
+  try {
+    const db = await getDb();
+    // Delivery logs are operational metadata, not a second mailbox. In
+    // particular, never persist the bearer URL inside a magic-link email.
+    await db.insert(schema.messageLog).values({ toAddress: to, kind, body: "[content omitted]", status });
+  } catch {
+    // A logging outage must not turn a delivered sign-in email into a false
+    // failure (or prompt the user to request several valid links).
+    console.error(`[mail:${kind}] couldn't record delivery status`);
+  }
+  return { ok, status };
 }

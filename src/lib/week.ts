@@ -4,6 +4,13 @@ import { avatarColor } from "@/lib/avatar";
 import { shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
 
+const displayedTimeMinutes = ({ hm, ap }: { hm: string; ap: string }): number => {
+  const [hourRaw, minuteRaw] = hm.split(":").map(Number);
+  const hour = (Number.isFinite(hourRaw) ? hourRaw : 0) % 12;
+  const minute = Number.isFinite(minuteRaw) ? minuteRaw : 0;
+  return hour * 60 + minute + (ap.toUpperCase() === "PM" ? 12 * 60 : 0);
+};
+
 const { image: _classImage, ...weekClassColumns } = getTableColumns(schema.classes);
 const { image: _personalImage, ...weekPersonalColumns } = getTableColumns(schema.personalClasses);
 
@@ -44,8 +51,8 @@ export type WeekItem = {
 export type WeekDay = { iso: string; label: string; items: WeekItem[] };
 
 /** The next date on or after today falling on this weekday (0 = Monday). */
-function nextOccurrence(dayOfWeek: number): string {
-  const d = new Date(`${todayIso()}T00:00:00Z`);
+function nextOccurrence(dayOfWeek: number, timeZone?: string): string {
+  const d = new Date(`${todayIso(new Date(), timeZone)}T00:00:00Z`);
   const today = (d.getUTCDay() + 6) % 7;
   d.setUTCDate(d.getUTCDate() + ((dayOfWeek - today + 7) % 7));
   return d.toISOString().slice(0, 10);
@@ -61,13 +68,14 @@ export function personalNext(p: {
   dayOfWeek: number;
   startTime: string;
   durationMin: number;
+  timeZone?: string;
   specificDate?: string | null;
   endsOn?: string | null;
 }): string | null {
   if (p.specificDate)
-    return occurrenceEnded(p.specificDate, p.startTime, p.durationMin) ? null : p.specificDate;
-  let iso = nextOccurrence(p.dayOfWeek);
-  if (occurrenceEnded(iso, p.startTime, p.durationMin)) {
+    return occurrenceEnded(p.specificDate, p.startTime, p.durationMin, p.timeZone) ? null : p.specificDate;
+  let iso = nextOccurrence(p.dayOfWeek, p.timeZone);
+  if (occurrenceEnded(iso, p.startTime, p.durationMin, p.timeZone)) {
     const d = new Date(`${iso}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + 7);
     iso = d.toISOString().slice(0, 10);
@@ -128,6 +136,7 @@ export type SharedWeekItem = {
   ap: string;
   /** Raw HH:MM, so a caller can ask `occurrenceEnded` about it. */
   startTime: string;
+  timeZone: string;
   durationMin: number;
   where: string | null;
   /** The base its class page lives under, or null for one of their own: a
@@ -217,6 +226,7 @@ export async function sharedWeek(
       hm: t.hm,
       ap: t.ap,
       startTime: c.startTime,
+      timeZone: c.timeZone,
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
       handle: base,
@@ -260,6 +270,7 @@ export async function sharedWeek(
         hm: t.hm,
         ap: t.ap,
         startTime: p.startTime,
+        timeZone: p.timeZone,
         durationMin: p.durationMin,
         where: p.studioId ? (ownStudioById.get(p.studioId)?.name ?? null) : p.location,
         // No page and nobody else's name: one of their own is a plain row.
@@ -276,7 +287,7 @@ export async function sharedWeek(
     .map(([iso, items]) => ({
       iso,
       label: fmtDayHeader(iso),
-      items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
+      items: items.sort((a, b) => displayedTimeMinutes(a) - displayedTimeMinutes(b)),
     }));
 }
 
@@ -304,7 +315,7 @@ export async function memberWeek(
       items: day.items.filter(
         (it) =>
           (it.handle !== null || it.oneOff) &&
-          !occurrenceEnded(it.iso, it.startTime, it.durationMin),
+          !occurrenceEnded(it.iso, it.startTime, it.durationMin, it.timeZone),
       ),
     }))
     .filter((day) => day.items.length > 0);
@@ -595,6 +606,6 @@ export async function myWeek(
     .map(([iso, items]) => ({
       iso,
       label: fmtDayHeader(iso),
-      items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
+      items: items.sort((a, b) => displayedTimeMinutes(a) - displayedTimeMinutes(b)),
     }));
 }

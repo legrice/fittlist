@@ -33,6 +33,7 @@ import {
 } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { moderateReportedContent, type ReportedContent } from "@/app/actions/content-reports";
 
 type Person = {
   id: string;
@@ -109,6 +110,7 @@ export function AdminPanel({
   reports,
   studioReports = [],
   studioSuggestions = [],
+  contentReports = [],
   coachAsks,
   duplicates,
   people,
@@ -128,6 +130,7 @@ export function AdminPanel({
   reports: ReportedClass[];
   studioReports?: ReportedStudio[];
   studioSuggestions?: StudioSuggestion[];
+  contentReports?: ReportedContent[];
   coachAsks: { id: string; note: string; asked: string | null; name: string; email: string; handle: string }[];
   duplicates: DuplicateSlot[];
   people: Person[];
@@ -299,11 +302,11 @@ export function AdminPanel({
               }}
             >
               <Icon name={t.icon} size={22} />
-              {t.id === "reports" && reports.length + studioReports.length + studioSuggestions.length > 0 && (
+              {t.id === "reports" && reports.length + studioReports.length + studioSuggestions.length + contentReports.length > 0 && (
                 <span className="inboxdot">
-                  {reports.length + studioReports.length + studioSuggestions.length > 9
+                  {reports.length + studioReports.length + studioSuggestions.length + contentReports.length > 9
                     ? "9+"
-                    : reports.length + studioReports.length + studioSuggestions.length}
+                    : reports.length + studioReports.length + studioSuggestions.length + contentReports.length}
                 </span>
               )}
             </button>
@@ -407,13 +410,49 @@ export function AdminPanel({
 
         {tab === "reports" && (
           <div className="reportlist">
-            {reports.filter((r) => !handled[r.seriesId]).length === 0 ? (
+            {reports.filter((r) => !handled[r.seriesId]).length === 0 && studioReports.filter((r) => !handled[r.studioId]).length === 0 && contentReports.filter((r) => !handled[r.key]).length === 0 ? (
               <div className="empty-block">
                 <h2>Nothing reported</h2>
-                <p>When someone flags a class as not right, it lands here, worst first.</p>
+                <p>When someone flags content or a listing, it lands here, worst first.</p>
               </div>
-            ) : (
-              reports.filter((r) => !handled[r.seriesId]).map((r) => (
+            ) : null}
+            {contentReports.filter((r) => !handled[r.key]).length > 0 && (
+              <>
+                <h2 className="brandh">Reported content</h2>
+                {contentReports.filter((r) => !handled[r.key]).map((r) => (
+                  <div key={r.key} className="admincard">
+                    <div className="admincard-h">
+                      <span className="admincard-nm">{r.subject}</span>
+                      <span className={`reportcount${r.count > 1 ? " hot" : ""}`}>{r.count} {r.count === 1 ? "report" : "reports"}</span>
+                    </div>
+                    <p className="adminsub"><strong>{r.contentType.replaceAll("_", " ")}</strong> · {r.reasons.join(" · ")}</p>
+                    {r.excerpt && <p className="adminsub">&ldquo;{r.excerpt}&rdquo;</p>}
+                    {r.notes.length > 0 && <p className="adminsub">Reporter note: &ldquo;{r.notes[0]}&rdquo;</p>}
+                    <p className="adminsub">By {r.reporters.join(", ")}</p>
+                    <div className="admincard-actions">
+                      {r.href && <a className="btn ghost" href={r.href} target="_blank" rel="noopener">Open context</a>}
+                      <button className="btn ghost" onClick={() => {
+                        setHandled((all) => ({ ...all, [r.key]: true }));
+                        moderateReportedContent(r.contentType, r.contentId, "dismiss").then((result) => {
+                          if (!result.ok) { setHandled((all) => ({ ...all, [r.key]: false })); toast(result.error ?? "Couldn’t handle that"); }
+                        });
+                      }}>Keep</button>
+                      <button className="btn danger" onClick={() => {
+                        if (!window.confirm(r.contentType === "group" ? "Delete this group and all of its posts, members, and calendar content?" : r.contentType === "profile" ? "Remove this public profile and its public details?" : r.contentType === "inquiry_message" ? "Redact this message for both participants?" : "Remove this content?")) return;
+                        setHandled((all) => ({ ...all, [r.key]: true }));
+                        moderateReportedContent(r.contentType, r.contentId, "remove").then((result) => {
+                          if (!result.ok) { setHandled((all) => ({ ...all, [r.key]: false })); toast(result.error ?? "Couldn’t handle that"); }
+                        });
+                      }}>{r.contentType === "group" ? "Delete group" : r.contentType === "profile" ? "Remove public profile" : r.contentType === "inquiry_message" ? "Redact message" : "Remove content"}</button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            {reports.filter((r) => !handled[r.seriesId]).length > 0 && (
+              <>
+              <h2 className="brandh" style={{ marginTop: 10 }}>Reported classes</h2>
+              {reports.filter((r) => !handled[r.seriesId]).map((r) => (
                 <div key={r.seriesId} className="admincard">
                   <div className="admincard-h">
                     <span className="admincard-nm">
@@ -449,7 +488,8 @@ export function AdminPanel({
                     </button>
                   </div>
                 </div>
-              ))
+              ))}
+              </>
             )}
             {studioReports.filter((r) => !handled[r.studioId]).length > 0 && (
               <>

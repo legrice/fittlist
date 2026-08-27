@@ -97,7 +97,6 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-planner-peach: #D5A985;
   --color-planner-rose: #C98B9E;
   --color-planner-amber: #D9B44A;
-  --radius-control: 18px;
   --radius-card: 20px;
   --radius-pill: 999px;
   /* Display type should feel confident without squeezing the letters together.
@@ -139,6 +138,15 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --card: var(--color-surface);
   --ink: var(--color-text-primary);
   --ol: var(--color-text-secondary);
+  /* Legacy semantic names still used by older surfaces. Keep every alias
+     defined so a declaration never disappears at computed-value time. */
+  --muted: var(--ol);
+  --muted-surface: var(--cl);
+  --font-body: 'Delight', 'Helvetica Neue', Arial;
+  --ok: var(--go);
+  --soft: var(--cl);
+  --wash: var(--cl);
+  --sub: var(--ol);
   --date-heading-weight: 600; /* one hierarchy across every schedule */
   --line: var(--color-border);
   /* The rule between rows, and its weight, as two tokens.
@@ -730,8 +738,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 /* The location picker: the field, and real places dropping under it. */
 .locpick { position: relative; }
 .locpick-list {
-  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30;
-  background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+  position: relative; margin-top: 6px; z-index: 30; max-height: 220px; overflow-y: auto;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow-x: hidden;
   box-shadow: none;
 }
 .locpick-row {
@@ -972,6 +980,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
    break sticky footers / form editing. */
 body.sheet-open { overflow: hidden; }
 body.sheet-open .appshell .stage { overflow: hidden; }
+[data-native="ios"] .obalt.apple { display:none!important; }
 @keyframes up { from { transform: translateY(24px); opacity: .72; } to { transform: none; opacity: 1; } }
 @keyframes scrim-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .sheet, .sheet-scrim { animation: none; } }
@@ -3881,6 +3890,22 @@ button.ps-card { cursor: pointer; }
 /* Shoutouts close the profile like a guestbook: personal enough to feel
    human, but clearly separate from the scored reviews this product avoids. */
 .profile-shoutouts { padding-bottom: 28px; }
+.content-report-button { appearance:none; border:0; background:none; color:var(--muted); display:inline-flex; align-items:center; gap:5px; padding:6px 0; font:inherit; font-size:12px; cursor:pointer; }
+.content-report-button:hover { color:var(--ink); }
+.content-report-status { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+.content-report-sheet { max-height:min(90vh,720px); overflow:auto; }
+.content-report-reasons { border:0; padding:0; margin:18px 0; display:grid; gap:2px; }
+.content-report-reasons legend { font-weight:700; margin-bottom:8px; }
+.content-report-reasons label { display:flex; align-items:center; gap:10px; min-height:42px; cursor:pointer; }
+.content-report-reasons input { width:18px; height:18px; accent-color:var(--ink); }
+.content-report-sheet .flabel span { color:var(--muted); font-weight:400; }
+.content-report-block { display:flex; align-items:center; gap:10px; min-height:44px; margin:8px 0 16px; cursor:pointer; }
+.content-report-block input { width:18px; height:18px; accent-color:var(--ink); }
+.group-update-card > header .group-report-button { margin-left:auto; }
+.group-comment-report { margin-left:auto; flex:0 0 auto; }
+.profile-report-button { gap:6px; }
+.chat-report-button { align-self:flex-start; margin-top:2px; }
+.chatmsg.mine .chat-report-button { align-self:flex-end; }
 .shoutouts-head { margin-bottom:16px; }
 .shoutouts-head .profile-section-title { margin:0 0 3px; }
 .shoutouts-head p { margin:0; color:var(--muted); font-size:15px; }
@@ -5373,6 +5398,15 @@ select.editinput.placekind-select {
 [data-mode="dark"] .chatscreen, .chatscreen[data-mode="dark"],
 [data-mode="dark"] .sheet,
 [data-mode="dark"] .pub, .pub[data-mode="dark"] {
+  --color-background: #17150f;
+  --color-surface: #211c13;
+  --color-surface-muted: #272115;
+  --color-surface-hover: #322b1b;
+  --color-border: #35301f;
+  --color-border-strong: #4a4330;
+  --color-text-primary: #f3efe3;
+  --color-text-secondary: #a89f8a;
+  --color-text-muted: #a89f8a;
   --paper: #14120d;
   --shell: #0c0b07;
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
@@ -11371,6 +11405,14 @@ a.clspeek-by:active { opacity: .6; }
 .aboutpage .about-kicker { margin-bottom: 8px; color: var(--ol); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }
 .info-page-note a { color: inherit; font-weight: 600; }
+.public-info-shell { min-height:100dvh; max-width:720px; margin:0 auto; padding:24px var(--page-gutter) 36px; }
+.public-info-head { min-height:44px; display:flex; align-items:center; }
+.public-info-head a { color:var(--ink); text-decoration:none; }
+.public-info-shell .aboutpage { margin:18px auto 0; }
+.public-info-shell .aboutpage a:not(.btn) { color:inherit; font-weight:600; }
+.public-info-footer { max-width:560px; margin:44px auto 0; padding-top:20px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; gap:12px 20px; }
+.public-info-footer a { color:var(--ol); font-size:13px; font-weight:600; }
+.secbtn { text-decoration:none; }
 /* List and Month, as one control rather than two buttons: they are two ways of
    looking at one thing, and a segment is what says so. The selected view is
    ink with a white glyph, unmistakably active against the white control. */
@@ -11383,7 +11425,7 @@ a.clspeek-by:active { opacity: .6; }
 /* Square-ish, because what is inside is a glyph rather than a word: a pill
    sized for "Month" and holding an icon is mostly empty pill. */
 .calseg button {
-  width: 40px; height: 34px; padding: 0; border-radius: 999px; border: none;
+  width: 44px; height: 44px; padding: 0; border-radius: 999px; border: none;
   /* Ink, by Matt's call: the two glyphs are the calendar's own controls,
      and gray read as disabled beside the current one's wash. */
   background: none; cursor: pointer; color: var(--ink);
@@ -11394,7 +11436,7 @@ a.clspeek-by:active { opacity: .6; }
    door to the hub now, and Add took the floating button under the thumb
    (the same .wkfab Following's search wears). */
 .calbar-share {
-  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; border: none;
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px; border: none;
   display: inline-flex; align-items: center; justify-content: center;
   /* The glyph uses the shared action green. */
   background: var(--card); color: var(--si); cursor: pointer; text-decoration: none;
@@ -11472,8 +11514,8 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calbar-share {
   width: auto;
-  height: 42px;
-  min-width: 42px;
+  height: 44px;
+  min-width: 44px;
   padding: 0 14px;
   gap: 8px;
   border: 1px solid var(--color-border);
@@ -11545,14 +11587,14 @@ a.clspeek-by:active { opacity: .6; }
   background: var(--color-surface-hover);
 }
 .calendar-overlay-save {
-  position:absolute; right:14px; top:14px; bottom:auto; width:34px; min-height:34px; padding:0;
+  position:absolute; right:14px; top:14px; bottom:auto; width:44px; min-height:44px; padding:0;
   display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--color-border);
   border-radius:var(--radius-pill); background:var(--color-white); color:var(--color-black);
   font:inherit; font-size:12px; font-weight:700; cursor:pointer;
 }
 .calendar-cardlist .calendar-save-action {
   position:absolute; top:7px; right:0; bottom:auto; z-index:2;
-  width:34px; min-width:34px; height:34px; min-height:34px; padding:0;
+  width:44px; min-width:44px; height:44px; min-height:44px; padding:0;
   display:inline-flex; align-items:center; justify-content:center; gap:4px;
   border:1px solid var(--color-border); border-radius:var(--radius-pill);
   background:var(--color-white); color:var(--color-black); font:inherit; font-size:12px; font-weight:700;
@@ -11832,7 +11874,7 @@ a.clspeek-by:active { opacity: .6; }
   border: 0;
   border-top: 1px solid var(--color-border);
   border-radius: 0;
-  background: var(--color-white);
+  background: var(--color-surface);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   box-shadow: none;
@@ -11842,17 +11884,17 @@ a.clspeek-by:active { opacity: .6; }
   padding: 5px 0 6px;
   gap: 1px;
   border-radius: 12px;
-  color: var(--color-text-muted);
-  font-size: 10px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
   font-weight: 700;
 }
 .navtab.on {
   background: transparent;
-  color: var(--color-olive);
+  color: var(--si-ink);
 }
 .navtab.on .navglyph {
   background:transparent;
-  color: var(--color-olive);
+  color: var(--si-ink);
 }
 .navglyph {
   width: 48px;
@@ -11966,7 +12008,7 @@ a.clspeek-by:active { opacity: .6; }
   color:var(--color-text-primary);
   font-weight:700;
 }
-.authsignup-legal :is(a, span) {
+.authsignup-legal a {
   color:var(--color-text-primary);
   font-weight:700;
   text-decoration:underline;
@@ -12144,4 +12186,24 @@ a.clspeek-by:active { opacity: .6; }
   .embed-calendar h1
 ) {
   letter-spacing: var(--headline-tracking);
+}
+.tzsetting {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card, 16px);
+  background: var(--card);
+}
+
+.tzsetting p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tzsetting .flabel {
+  margin-top: 2px;
 }

@@ -12,30 +12,38 @@ import { Icon } from "@/components/Icon";
 export function DiscoverableToggle({ initialOn }: { initialOn: boolean }) {
   const router = useRouter();
   const [on, setOn] = useState(initialOn);
+  const [message, setMessage] = useState("");
   const [, startTransition] = useTransition();
 
   const toggle = () => {
     const next = !on;
+    setMessage("");
     setOn(next);
     startTransition(async () => {
       const res = await setDiscoverable(next);
-      if (!res.ok) setOn(!next);
+      if (!res.ok) {
+        setOn(!next);
+        setMessage(res.error ?? "Couldn't change that setting.");
+      }
       router.refresh();
     });
   };
 
   return (
-    <button className="setrow" onClick={toggle} aria-pressed={on}>
-      <span className="setrow-ic"><Icon name={on ? "travel_explore" : "public_off"} size={24} /></span>
-      <span className="setrow-txt">
-        <span className="t">Listed in Discover</span>
-        <span className="s">
-          {on ? "People can find you in Discover" : "Off, only people with your link"}
+    <>
+      <button className="setrow" onClick={toggle} aria-pressed={on}>
+        <span className="setrow-ic"><Icon name={on ? "travel_explore" : "public_off"} size={24} /></span>
+        <span className="setrow-txt">
+          <span className="t">Listed in Discover</span>
+          <span className="s">
+            {on ? "People can find you in Discover" : "Off, only people with your link"}
+          </span>
         </span>
-      </span>
-      <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
-        <span className="switch-knob" />
-      </span>
-    </button>
+        <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
+          <span className="switch-knob" />
+        </span>
+      </button>
+      {message && <span className="content-report-status" role="status">{message}</span>}
+    </>
   );
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { addNotification } from "@/lib/notify";
+import { hiddenFrom } from "@/lib/blocks";
 
 const TRAIT_LABELS: Record<string, string> = {
   great_coaching: "Coach's choice",
@@ -51,6 +52,7 @@ export async function toggleEndorsement(handle: string, trait: string) {
   const db = await getDb();
   const [target] = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.handle, handle));
   if (!target || target.id === viewerId) return { ok: false };
+  if ((await hiddenFrom(viewerId)).has(target.id)) return { ok: false };
   const where = and(
     eq(schema.profileEndorsements.targetUserId, target.id),
     eq(schema.profileEndorsements.endorserUserId, viewerId),

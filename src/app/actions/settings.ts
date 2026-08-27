@@ -70,6 +70,7 @@ export async function settingsSheetData() {
         discoverable: me.discoverable,
         approveFollowers: me.approveFollowers,
         messagesOpen: me.messagesOpen,
+        timeZone: me.timeZone,
       },
     };
   }
@@ -146,6 +147,7 @@ export async function settingsSheetData() {
       approveFollowers: me.approveFollowers,
       messagesOpen: me.messagesOpen,
       look: me.look,
+      timeZone: me.timeZone,
     },
   };
 }

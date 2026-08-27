@@ -30,6 +30,8 @@ import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
 import { ScheduleNudge } from "@/components/ScheduleNudge";
+import { ReportContentButton } from "@/components/ReportContentButton";
+import { hiddenFrom } from "@/lib/blocks";
 
 // A continuous forward window, long enough that even a one-class-a-week
 // schedule can fill seven populated days before View more runs dry.
@@ -176,11 +178,12 @@ export async function PublicProfileView({
       .from(schema.profileEndorsements)
       .where(eq(schema.profileEndorsements.targetUserId, user.id)),
     db
-      .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+      .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name, authorUserId: schema.shoutouts.authorUserId })
       .from(schema.shoutouts)
       .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
       .where(eq(schema.shoutouts.targetUserId, user.id)),
   ]);
+  const hiddenShoutoutAuthors = await hiddenFrom(viewerId);
   const classRows = allClassRows.filter((c) => c.isPublic);
   const studioIds = [
     ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
@@ -221,7 +224,7 @@ export async function PublicProfileView({
       .filter((c) => runsOn(c, iso, dow))
       // A class that has already ended is not something anyone can still go
       // to, so no schedule shows it.
-      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
+      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length)
       days.push({ iso, week: Math.floor(days.length / 7), items });
@@ -544,6 +547,7 @@ export async function PublicProfileView({
                   />
                 )}
                 <ProfileShare path={`/${handle}`} name={user.name} pill />
+                {viewerId && <ReportContentButton contentType="profile" contentId={user.id} label="Report profile" canBlock className="btn ghost profile-report-button" />}
               </div>
             )
           }
@@ -610,8 +614,9 @@ export async function PublicProfileView({
               handle={handle}
               name={user.name}
               signedIn={!!viewerId}
+              viewerId={viewerId}
               owner={isOwner}
-              initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+              initial={shoutoutRows.filter((row) => !hiddenShoutoutAuthors.has(row.authorUserId)).map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone", authorUserId: row.authorUserId }))}
             />
           </section>
         </ProfileTabs>

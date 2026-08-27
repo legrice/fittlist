@@ -14,6 +14,8 @@ import { NavBar } from "@/components/NavBar";
 import { currentUser } from "@/lib/current-user";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { inviteBannerCountFor } from "@/lib/invite-banner";
+import { passwordPromptPending } from "@/lib/session";
+import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +56,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   const me = await currentUser();
   if (!me) redirect("/");
   const userId = me.id;
+  const passwordPromptMode = await passwordPromptPending();
 
   // A member has a handle too, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
@@ -154,6 +157,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
       <Suspense fallback={null}>
         <DeferredFeedbackPrompt viewer={deferredViewer} />
       </Suspense>
+      {passwordPromptMode && <SetPasswordPrompt mode={passwordPromptMode} />}
     </section>
   );
 }

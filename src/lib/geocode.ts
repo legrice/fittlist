@@ -9,6 +9,8 @@ export type GeoPlace = {
   label: string;
   lat: number;
   lng: number;
+  /** IANA timezone returned by the geocoder when available. */
+  timeZone?: string;
 };
 
 const US_STATES: Record<string, string> = {
@@ -30,14 +32,40 @@ const US_STATE_NAMES = new Map(
   Object.entries(US_STATES).map(([name, abbreviation]) => [abbreviation, name]),
 );
 
-type OpenMeteoHit = {
+export type OpenMeteoHit = {
   name: string;
   latitude: number;
   longitude: number;
   country_code?: string;
   country?: string;
   admin1?: string;
+  timezone?: string;
 };
+
+/** Preserve the place-name search order when no context was typed, but prefer
+ * an exact state/country match when it was. This keeps "Montclair, NJ" from
+ * silently becoming the more populous California result. */
+export function rankOpenMeteoHits(hits: OpenMeteoHit[], query: string): OpenMeteoHit[] {
+  const parts = query.split(",").map((part) => part.trim()).filter(Boolean);
+  const context = parts.slice(1).join(" ").toLowerCase();
+  const stateName = US_STATE_NAMES.get(parts[1]?.toUpperCase() ?? "")?.toLowerCase();
+  if (!context) return [...hits];
+  const score = (candidate: OpenMeteoHit) => {
+    const admin = candidate.admin1?.toLowerCase() ?? "";
+    const country = candidate.country?.toLowerCase() ?? "";
+    const countryCode = candidate.country_code?.toLowerCase() ?? "";
+    return (
+      (stateName && admin === stateName ? 4 : 0) +
+      (context.includes(admin) && admin ? 3 : 0) +
+      (context.includes(country) && country ? 2 : 0) +
+      (context.includes(countryCode) && countryCode ? 1 : 0)
+    );
+  };
+  return hits
+    .map((hit, index) => ({ hit, index, score: score(hit) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ hit }) => hit);
+}
 
 /** "Montclair" + "New Jersey" + "US" -> "Montclair, NJ"; elsewhere the
  *  country does the anchoring. The label is what lands in users.location,
@@ -77,25 +105,14 @@ export async function geocodeCity(q: string): Promise<GeoPlace | null> {
     );
     if (!res.ok) return null;
     const data = (await res.json()) as { results?: OpenMeteoHit[] };
-    const context = parts.slice(1).join(" ").toLowerCase();
-    const stateName = US_STATE_NAMES.get(parts[1]?.toUpperCase() ?? "")?.toLowerCase();
-    const hit = [...(data.results ?? [])].sort((a, b) => {
-      const score = (candidate: OpenMeteoHit) => {
-        if (!context) return 0;
-        const admin = candidate.admin1?.toLowerCase() ?? "";
-        const country = candidate.country?.toLowerCase() ?? "";
-        const countryCode = candidate.country_code?.toLowerCase() ?? "";
-        return (
-          (stateName && admin === stateName ? 4 : 0) +
-          (context.includes(admin) && admin ? 3 : 0) +
-          (context.includes(country) && country ? 2 : 0) +
-          (context.includes(countryCode) && countryCode ? 1 : 0)
-        );
-      };
-      return score(b) - score(a);
-    })[0];
+    const hit = rankOpenMeteoHits(data.results ?? [], q)[0];
     if (!hit) return null;
-    return { label: placeLabel(hit), lat: hit.latitude, lng: hit.longitude };
+    return {
+      label: placeLabel(hit),
+      lat: hit.latitude,
+      lng: hit.longitude,
+      timeZone: hit.timezone,
+    };
   } catch {
     return null;
   }
@@ -135,6 +152,24 @@ export async function geocodeAddress(q: string): Promise<{ lat: number; lng: num
     const hit = data[0];
     if (!hit) return null;
     return { lat: parseFloat(hit.lat), lng: parseFloat(hit.lon) };
+  } catch {
+    return null;
+  }
+}
+
+/** Resolve coordinates to an IANA timezone. Best effort: callers retain the
+ * account/default zone if the public provider is unavailable. */
+export async function timeZoneAtCoordinates(lat: number, lng: number): Promise<string | null> {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  try {
+    const res = await fetchWithTimeout(
+      `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&forecast_days=1&timezone=auto&current=temperature_2m`,
+      undefined,
+      3000,
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { timezone?: string };
+    return data.timezone?.trim() || null;
   } catch {
     return null;
   }

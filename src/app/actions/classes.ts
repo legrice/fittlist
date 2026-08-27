@@ -12,6 +12,7 @@ import { getSessionUserId } from "@/lib/session";
 import { detectProvider, dowOfDate, occurrenceEnded, todayIso } from "@/lib/format";
 import { syncUserToGoogle } from "@/lib/gcal";
 import { humanTime, notifyCancelled } from "@/lib/cancel";
+import { objectionableContentError } from "@/lib/content-safety";
 
 // Mirror the schedule to Google after the response is sent, so publishing stays
 // snappy. No-ops unless the trainer connected Google.
@@ -73,6 +74,8 @@ export async function addClassType(
   if (!userId) return { ok: false, error: "Session expired." };
   const name = nameRaw.trim().replace(/\s+/g, " ").slice(0, 30);
   if (name.length < 2) return { ok: false, error: "Type a longer name." };
+  const safetyError = objectionableContentError(name);
+  if (safetyError) return { ok: false, error: safetyError };
   const db = await getDb();
   await db
     .insert(schema.customClassTypes)
@@ -84,9 +87,18 @@ export async function addClassType(
 function cleanLinks(links: BookingLink[]): BookingLink[] {
   // The label is derived from the URL server-side, so it's always correct
   // regardless of what the client sent.
-  return links
-    .filter((l) => l.url.trim())
-    .map((l) => ({ label: detectProvider(l.url), url: l.url.trim() }));
+  return links.flatMap((link) => {
+    const raw = link.url.trim();
+    if (!raw || raw.length > 2_048 || /[\r\n]/.test(raw)) return [];
+    try {
+      const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      const url = new URL(candidate);
+      if (url.protocol !== "https:" && url.protocol !== "http:") return [];
+      return [{ label: detectProvider(url.href), url: url.href }];
+    } catch {
+      return [];
+    }
+  });
 }
 
 // `id` is the first inserted row, so the moment after publishing can offer
@@ -100,6 +112,40 @@ type SaveResult = {
   focus?: { id: string; iso: string };
   error?: string;
 };
+
+type Db = Awaited<ReturnType<typeof getDb>>;
+type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+class ScheduleConflictError extends Error {}
+
+function postgresErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== "object" || !("code" in error)) return null;
+  return typeof error.code === "string" ? error.code : null;
+}
+
+/**
+ * A class edit is a small schedule rewrite, not a collection of independent
+ * deletes and inserts. Serializable isolation makes the row(s) the editor
+ * read into a precondition: if another request changes the same schedule, one
+ * transaction is retried against the committed state instead of interleaving
+ * the two rewrites. PostgreSQL reports both serialization failures and
+ * deadlocks as safe-to-retry transaction failures.
+ */
+async function scheduleTransaction<T>(db: Db, work: (tx: Transaction) => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await db.transaction(work, { isolationLevel: "serializable" });
+    } catch (error) {
+      const retryable = ["40001", "40P01"].includes(postgresErrorCode(error) ?? "");
+      if (!retryable) throw error;
+      if (attempt >= 2)
+        throw new ScheduleConflictError("Schedule kept changing while the transaction retried");
+      // Give the winning transaction a moment to commit before reading the
+      // schedule again. The longest wait is 30ms and happens only on conflict.
+      await new Promise((resolve) => setTimeout(resolve, 15 * (attempt + 1)));
+    }
+  }
+}
 
 // Shared by publish (new rows) and edit (replaceClassId set: the original
 // row is swapped for rows on the selected days).
@@ -123,49 +169,62 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const durationMin = Math.round(input.durationMin);
   if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
 
-  const db = await getDb();
   const isPublic = input.isPublic !== false; // default public
   // RSVP is a public-class idea: a private session has nobody to count.
   const rsvp = isPublic && input.rsvp === true;
-  // Public inventory is coach-only. There was no gate here, and beta members
-  // used the gap the only way they could: recreating their gyms' real classes
-  // to get their own week into the app. They get personal entries for that
-  // (personal_classes); the directory stays classes taught by whoever posted
-  // them. Start coaching is still one tap for anyone who actually coaches.
-  if (isPublic) {
-    const [me] = await db
-      .select({ kind: schema.users.kind })
+  const links = cleanLinks(input.links ?? []);
+  const classType = cleanType(input.classType);
+  const description = input.description?.trim().slice(0, 500) || null;
+  const safetyError = objectionableContentError(name, classType, description, input.location);
+  if (safetyError) return { ok: false, error: safetyError };
+  // Blob storage is external to PostgreSQL and cannot participate in its
+  // transaction. Resolve the final URL before opening a transaction so a
+  // slow upload never holds schedule locks. A failed upload stops the save.
+  const image = await storeImage(input.image?.trim() || null, "class");
+  const db = await getDb();
+
+  const committed = await scheduleTransaction(db, async (tx) => {
+    // Public inventory is coach-only. Every class also resolves its wall-clock
+    // zone from the selected studio, or from its owner when no studio applies.
+    const [owner] = await tx
+      .select({ kind: schema.users.kind, timeZone: schema.users.timeZone })
       .from(schema.users)
       .where(eq(schema.users.id, userId));
-    if (me?.kind === "fan") {
+    if (!owner) return { ok: false as const, error: "Session expired." };
+    if (isPublic && owner.kind === "fan") {
       return {
-        ok: false,
+        ok: false as const,
         error:
           "Publishing classes is for coaches. Add classes you attend to Your week, or ask to become one in settings.",
       };
     }
-  }
-  let studio: typeof schema.studios.$inferSelect | undefined;
-  if (input.studioId) {
-    [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));
-    if (!studio) return { ok: false, error: "Pick a studio." };
-  }
-  // Public classes must have a studio; private ones can skip it and use a
-  // free-form location instead.
-  if (isPublic && !studio) return { ok: false, error: "Pick a studio." };
-  const studioId = studio?.id ?? null;
-  const location = studioId ? null : input.location?.trim().slice(0, 120) || null;
-  const links = cleanLinks(input.links ?? []);
-  const classType = cleanType(input.classType);
-  const description = input.description?.trim().slice(0, 500) || null;
-  const image = await storeImage(input.image?.trim() || null, "class");
+    let studio: typeof schema.studios.$inferSelect | undefined;
+    if (input.studioId) {
+      [studio] = await tx.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));
+      if (!studio) return { ok: false as const, error: "Pick a studio." };
+    }
+    // Public classes must have a studio; private ones can skip it and use a
+    // free-form location instead.
+    if (isPublic && !studio) return { ok: false as const, error: "Pick a studio." };
+    const studioId = studio?.id ?? null;
+    const location = studioId ? null : input.location?.trim().slice(0, 120) || null;
+    const timeZone = studio?.timeZone ?? owner.timeZone;
 
   // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
   // quietly put you back on the Friday you already said you were off.
   const keptSkips = new Map<number, string[]>();
   // Who was coming, by weekday, so the rewrite below can put them back. -1 is
   // the one-off / single-day case, which has no weekday to key on.
-  const keptGoing = new Map<number, { userId: string; occurrenceDate: string }[]>();
+  const keptGoing = new Map<
+    number,
+    {
+      userId: string;
+      occurrenceDate: string;
+      companions: string[];
+      isPublic: boolean;
+      createdAt: Date;
+    }[]
+  >();
   // The set this save belongs to.
   //
   // A new weekly class joins an existing one when it is the same class in the
@@ -178,8 +237,9 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // classes, and treating them as one is what let an edit to either wipe the
   // other.
   let seriesId: string = randomUUID();
+  let existingSeriesRows: { id: string; dayOfWeek: number }[] = [];
   if (!replaceClassId && !oneOff) {
-    const [sibling] = await db
+    const [sibling] = await tx
       .select({ seriesId: schema.classes.seriesId })
       .from(schema.classes)
       .where(
@@ -194,10 +254,52 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
         ),
       )
       .limit(1);
-    if (sibling) seriesId = sibling.seriesId;
+    if (sibling) {
+      seriesId = sibling.seriesId;
+      existingSeriesRows = await tx
+        .select({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek })
+        .from(schema.classes)
+        .where(
+          and(
+            eq(schema.classes.userId, userId),
+            eq(schema.classes.seriesId, sibling.seriesId),
+            isNull(schema.classes.specificDate),
+          ),
+        );
+    }
+  }
+  if (!replaceClassId && oneOff) {
+    const [duplicate] = await tx
+      .select({
+        id: schema.classes.id,
+        seriesId: schema.classes.seriesId,
+        dayOfWeek: schema.classes.dayOfWeek,
+      })
+      .from(schema.classes)
+      .where(
+        and(
+          eq(schema.classes.userId, userId),
+          eq(schema.classes.name, name),
+          eq(schema.classes.startTime, input.startTime),
+          eq(schema.classes.durationMin, durationMin),
+          studioId ? eq(schema.classes.studioId, studioId) : isNull(schema.classes.studioId),
+          location ? eq(schema.classes.location, location) : isNull(schema.classes.location),
+          classType ? eq(schema.classes.classType, classType) : isNull(schema.classes.classType),
+          description ? eq(schema.classes.description, description) : isNull(schema.classes.description),
+          eq(schema.classes.isPublic, isPublic),
+          eq(schema.classes.rsvp, rsvp),
+          eq(schema.classes.links, links),
+          eq(schema.classes.specificDate, oneOff),
+        ),
+      )
+      .limit(1);
+    if (duplicate) {
+      seriesId = duplicate.seriesId;
+      existingSeriesRows = [{ id: duplicate.id, dayOfWeek: duplicate.dayOfWeek }];
+    }
   }
   if (replaceClassId) {
-    const [existing] = await db
+    const [existing] = await tx
       .select({
         id: schema.classes.id,
         seriesId: schema.classes.seriesId,
@@ -205,7 +307,11 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       })
       .from(schema.classes)
       .where(and(eq(schema.classes.id, replaceClassId), eq(schema.classes.userId, userId)));
-    if (!existing) return { ok: false, error: "Class not found." };
+    if (!existing)
+      return {
+        ok: false as const,
+        error: "This class changed or was deleted. Close it and reopen the latest schedule before saving.",
+      };
     seriesId = existing.seriesId;
     if (!existing.specificDate) {
       // Editing a weekly class replaces its whole recurring set (all its
@@ -220,7 +326,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       // carried over first. Going marks are the reason: they reference the row
       // by id, so the delete below would fail on the foreign key, and a coach
       // changing a description could not save at all once anyone was coming.
-      const old = await db
+      const old = await tx
         .select({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek })
         .from(schema.classes)
         .where(
@@ -233,7 +339,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       const oldIds = old.map((o) => o.id);
       const dayOfOldId = new Map(old.map((o) => [o.id, o.dayOfWeek]));
       if (oldIds.length) {
-        const marks = await db
+        const marks = await tx
           .select()
           .from(schema.attendances)
           .where(inArray(schema.attendances.classId, oldIds));
@@ -241,12 +347,18 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
           const dow = dayOfOldId.get(m.classId);
           if (dow === undefined) continue;
           const list = keptGoing.get(dow) ?? [];
-          list.push({ userId: m.userId, occurrenceDate: m.occurrenceDate });
+          list.push({
+            userId: m.userId,
+            occurrenceDate: m.occurrenceDate,
+            companions: m.companions,
+            isPublic: m.isPublic,
+            createdAt: m.createdAt,
+          });
           keptGoing.set(dow, list);
         }
-        await db.delete(schema.attendances).where(inArray(schema.attendances.classId, oldIds));
+        await tx.delete(schema.attendances).where(inArray(schema.attendances.classId, oldIds));
       }
-      const gone = await db
+      const gone = await tx
         .delete(schema.classes)
         .where(
           and(
@@ -258,33 +370,45 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
         .returning({ dayOfWeek: schema.classes.dayOfWeek, skipDates: schema.classes.skipDates });
       for (const g of gone) if (g.skipDates.length) keptSkips.set(g.dayOfWeek, g.skipDates);
     } else {
-      const marks = await db
+      const marks = await tx
         .select()
         .from(schema.attendances)
         .where(eq(schema.attendances.classId, existing.id));
       for (const m of marks) {
         const list = keptGoing.get(-1) ?? [];
-        list.push({ userId: m.userId, occurrenceDate: m.occurrenceDate });
+        list.push({
+          userId: m.userId,
+          occurrenceDate: m.occurrenceDate,
+          companions: m.companions,
+          isPublic: m.isPublic,
+          createdAt: m.createdAt,
+        });
         keptGoing.set(-1, list);
       }
-      await db.delete(schema.attendances).where(eq(schema.attendances.classId, existing.id));
-      await db.delete(schema.classes).where(eq(schema.classes.id, existing.id));
+      await tx.delete(schema.attendances).where(eq(schema.attendances.classId, existing.id));
+      await tx.delete(schema.classes).where(eq(schema.classes.id, existing.id));
     }
   }
 
   // Templates track latest: publishing upserts the saved class with the
   // values used, so autofill always reflects the most recent version.
-  const [template] = await db
+  const [template] = await tx
     .insert(schema.classTemplates)
-    .values({ userId, name, classType, description, image, startTime: input.startTime, durationMin, studioId, location, isPublic, links })
+    .values({ userId, name, classType, description, image, startTime: input.startTime, timeZone, durationMin, studioId, location, isPublic, links })
     .onConflictDoUpdate({
       target: [schema.classTemplates.userId, schema.classTemplates.name],
-      set: { classType, description, image, startTime: input.startTime, durationMin, studioId, location, isPublic, links, updatedAt: new Date() },
+      set: { classType, description, image, startTime: input.startTime, timeZone, durationMin, studioId, location, isPublic, links, updatedAt: new Date() },
     })
     .returning();
 
-  const inserted = await db.insert(schema.classes).values(
-    days.map((dayOfWeek) => ({
+  // Re-submitting an identical publish (double tap, network retry) is
+  // naturally idempotent. The signature above selects the existing series;
+  // only occurrences that are not already part of it are inserted.
+  const existingDays = new Set(existingSeriesRows.map((row) => row.dayOfWeek));
+  const daysToInsert = replaceClassId ? days : days.filter((day) => !existingDays.has(day));
+  const inserted = daysToInsert.length
+    ? await tx.insert(schema.classes).values(
+      daysToInsert.map((dayOfWeek) => ({
       userId,
       templateId: template.id,
       seriesId,
@@ -293,6 +417,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       endsOn,
       skipDates: oneOff ? [] : (keptSkips.get(dayOfWeek) ?? []),
       startTime: input.startTime,
+      timeZone,
       durationMin,
       name,
       classType,
@@ -303,55 +428,80 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       isPublic,
       rsvp,
       links,
-    })),
-  ).returning({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek });
+      })),
+    ).returning({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek })
+    : [];
 
   // Put the Going marks back on the rows that replaced the ones they were on.
   // A day that no longer runs has nowhere to put them, and those people are
   // told about it by the caller.
   if (keptGoing.size) {
     const idForDay = new Map(inserted.map((r) => [r.dayOfWeek, r.id]));
-    const rows: { userId: string; classId: string; occurrenceDate: string }[] = [];
+    const rows: {
+      userId: string;
+      classId: string;
+      occurrenceDate: string;
+      companions: string[];
+      isPublic: boolean;
+      createdAt: Date;
+    }[] = [];
     for (const [dow, marks] of keptGoing) {
       const classId = dow === -1 ? inserted[0]?.id : idForDay.get(dow);
       if (!classId) continue;
       for (const m of marks) {
-        rows.push({ userId: m.userId, classId, occurrenceDate: m.occurrenceDate });
+        rows.push({
+          userId: m.userId,
+          classId,
+          occurrenceDate: m.occurrenceDate,
+          companions: m.companions,
+          isPublic: m.isPublic,
+          createdAt: m.createdAt,
+        });
       }
     }
-    if (rows.length) await db.insert(schema.attendances).values(rows).onConflictDoNothing();
+    if (rows.length) await tx.insert(schema.attendances).values(rows).onConflictDoNothing();
   }
 
   // Log this class into the shared per-studio catalog (deduped by studio +
   // normalized name). Public + studio only: private sessions must never leak
   // into the cross-coach catalog.
   if (isPublic && studio) {
-    try {
-      await db
-        .insert(schema.studioClasses)
-        .values({
-          studioId: studio.id,
+    await tx
+      .insert(schema.studioClasses)
+      .values({
+        studioId: studio.id,
+        name,
+        nameKey: name.toLowerCase(),
+        classType,
+        description,
+        image,
+        createdByUserId: userId,
+      })
+      .onConflictDoUpdate({
+        target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
+        set: {
           name,
-          nameKey: name.toLowerCase(),
-          classType,
-          description,
-          image,
-          createdByUserId: userId,
-        })
-        .onConflictDoUpdate({
-          target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
-          set: {
-            name,
-            ...(classType ? { classType } : {}),
-            ...(description ? { description } : {}),
-            ...(image ? { image } : {}),
-            updatedAt: new Date(),
-          },
-        });
-    } catch (err) {
-      console.error("studio catalog upsert failed", err);
-    }
+          ...(classType ? { classType } : {}),
+          ...(description ? { description } : {}),
+          ...(image ? { image } : {}),
+          updatedAt: new Date(),
+        },
+      });
   }
+
+  const first = inserted[0] ?? existingSeriesRows.find((row) => days.includes(row.dayOfWeek));
+  return { ok: true as const, studio, inserted, first, timeZone };
+  }).catch((error) => {
+    if (error instanceof ScheduleConflictError)
+      return {
+        ok: false as const,
+        error: "Your schedule changed in another window. Reopen it and try again.",
+      };
+    throw error;
+  });
+
+  if (!committed.ok) return committed;
+  const { studio, inserted, first, timeZone } = committed;
 
   // Two coaches listing the same slot at the same studio is usually one class
   // twice: a sub, a handoff, a re-listing. Tell both, quietly, and point each
@@ -429,7 +579,6 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   syncGoogleAfter(userId);
   revalidatePath("/calendar");
 
-  const first = inserted[0];
   let focusIso: string | null = oneOff;
   if (first && !focusIso) {
     const cursor = new Date(`${todayIso()}T00:00:00Z`);
@@ -437,7 +586,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       const iso = cursor.toISOString().slice(0, 10);
       if (
         dowOfDate(iso) === first.dayOfWeek &&
-        !occurrenceEnded(iso, input.startTime, durationMin) &&
+        !occurrenceEnded(iso, input.startTime, durationMin, timeZone) &&
         (!endsOn || iso <= endsOn)
       ) {
         focusIso = iso;
@@ -448,7 +597,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   }
   return {
     ok: true,
-    count: days.length,
+    count: inserted.length,
     id: first?.id,
     focus: first && focusIso ? { id: first.id, iso: focusIso } : undefined,
   };
@@ -468,7 +617,11 @@ export async function updateClass(classId: string, input: PublishInput): Promise
     .select({ userId: schema.classes.userId })
     .from(schema.classes)
     .where(eq(schema.classes.id, classId));
-  if (!row) return { ok: false, error: "Class not found." };
+  if (!row)
+    return {
+      ok: false,
+      error: "This class changed or was deleted. Close it and reopen the latest schedule before saving.",
+    };
   if (row.userId !== userId) {
     // The admin can edit any coach's class with the coach's own editor, the
     // same acting-as-owner bypass deleteClass carries: everything in save()
@@ -500,73 +653,77 @@ export async function deleteClass(
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const db = await getDb();
-  const [row] = await db
-    .select()
+  const [candidate] = await db
+    .select({ id: schema.classes.id, userId: schema.classes.userId })
     .from(schema.classes)
     .where(eq(schema.classes.id, classId));
-  if (!row) return { ok: true, count: 0 };
+  if (!candidate) return { ok: true, count: 0 };
   // The admin can act on a reported class; everyone else only on their own.
-  // Everything below acts as the owner, so the cancellation notice still
+  // The actual mutation rechecks the row inside its transaction. Everything
+  // below acts as the owner, so the cancellation notice still
   // goes out under the coach's name, which is whose class it is.
-  if (row.userId !== userId && !(await currentAdmin())) return { ok: true, count: 0 };
-  const ownerId = row.userId;
-
-  const [coach] = await db
-    .select({ name: schema.users.name })
-    .from(schema.users)
-    .where(eq(schema.users.id, ownerId));
-  let where = row.location;
-  if (row.studioId) {
-    const [st] = await db
-      .select({ name: schema.studios.name })
-      .from(schema.studios)
-      .where(eq(schema.studios.id, row.studioId));
-    where = st?.name ?? null;
-  }
-  const about = {
-    coachName: coach?.name ?? "",
-    className: row.name,
-    time: humanTime(row.startTime),
-    where,
-  };
+  if (candidate.userId !== userId && !(await currentAdmin())) return { ok: true, count: 0 };
   const today = todayIso();
 
-  // Everyone who said they were coming to these classes, and their email.
-  // They have to go regardless: a Going mark points at the class row, so the
-  // delete below fails on the foreign key while any survive. Until this, a
-  // coach simply could not delete a class once anyone had marked it.
-  const clearGoing = async (classIds: string[]) => {
-    if (!classIds.length) return [] as { userId: string; email: string; date: string }[];
-    const marks = await db
-      .select({
-        userId: schema.attendances.userId,
-        date: schema.attendances.occurrenceDate,
-        email: schema.users.email,
-      })
-      .from(schema.attendances)
-      .innerJoin(schema.users, eq(schema.users.id, schema.attendances.userId))
-      .where(inArray(schema.attendances.classId, classIds));
-    await db.delete(schema.attendances).where(inArray(schema.attendances.classId, classIds));
-    // Only the ones still to come. Nobody needs telling that last Tuesday is off.
-    return marks.filter((m) => m.date >= today);
-  };
+  const outcome = await scheduleTransaction(db, async (tx) => {
+    const [row] = await tx.select().from(schema.classes).where(eq(schema.classes.id, classId));
+    // The class id is the delete precondition. A concurrent edit replaces it;
+    // a concurrent delete removes it. Either way, retrying becomes a no-op.
+    if (!row || row.userId !== candidate.userId) {
+      return { ok: true as const, count: 0, changed: false as const, ownerId: candidate.userId, told: [] };
+    }
+    const ownerId = row.userId;
+    const [coach] = await tx
+      .select({ name: schema.users.name })
+      .from(schema.users)
+      .where(eq(schema.users.id, ownerId));
+    let where = row.location;
+    if (row.studioId) {
+      const [studio] = await tx
+        .select({ name: schema.studios.name })
+        .from(schema.studios)
+        .where(eq(schema.studios.id, row.studioId));
+      where = studio?.name ?? null;
+    }
+    const about = {
+      coachName: coach?.name ?? "",
+      className: row.name,
+      time: humanTime(row.startTime),
+      where,
+    };
 
-  // Cancelling a single date doesn't delete anything — the standing class keeps
-  // running, this one day is stamped out of it. A one-off has only the one
-  // occurrence, so cancelling it is just deleting it.
-  if (scope === "occurrence" && !row.specificDate) {
-    const iso = occurrenceDate?.trim() ?? "";
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return { ok: false, error: "Which date?" };
-    if (!row.skipDates.includes(iso)) {
-      await db
+    // A Going mark references the class row, so attendance removal and class
+    // removal must commit or roll back together. Return future attendees to
+    // the caller; email is deliberately scheduled only after commit.
+    const clearGoing = async (classIds: string[]) => {
+      if (!classIds.length) return [] as { userId: string; email: string; date: string }[];
+      const marks = await tx
+        .select({
+          userId: schema.attendances.userId,
+          date: schema.attendances.occurrenceDate,
+          email: schema.users.email,
+        })
+        .from(schema.attendances)
+        .innerJoin(schema.users, eq(schema.users.id, schema.attendances.userId))
+        .where(inArray(schema.attendances.classId, classIds));
+      await tx.delete(schema.attendances).where(inArray(schema.attendances.classId, classIds));
+      return marks.filter((mark) => mark.date >= today);
+    };
+
+    // Cancelling a single date stamps it out of a standing class. A one-off
+    // falls through to the ordinary row deletion below.
+    if (scope === "occurrence" && !row.specificDate) {
+      const iso = occurrenceDate?.trim() ?? "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(iso))
+        return { ok: false as const, error: "Which date?" };
+      if (row.skipDates.includes(iso)) {
+        return { ok: true as const, count: 1, changed: false as const, ownerId, told: [], about };
+      }
+      await tx
         .update(schema.classes)
         .set({ skipDates: [...row.skipDates, iso].sort() })
         .where(eq(schema.classes.id, row.id));
-      // Nobody is going to a class that isn't on. Clearing the marks keeps the
-      // members' weeks and share images honest — they read attendances
-      // directly rather than through runsOn. And whoever was coming gets told,
-      // which is the whole point of having let them mark it.
-      const told = await db
+      const told = await tx
         .select({
           userId: schema.attendances.userId,
           date: schema.attendances.occurrenceDate,
@@ -580,7 +737,7 @@ export async function deleteClass(
             eq(schema.attendances.occurrenceDate, iso),
           ),
         );
-      await db
+      await tx
         .delete(schema.attendances)
         .where(
           and(
@@ -588,47 +745,62 @@ export async function deleteClass(
             eq(schema.attendances.occurrenceDate, iso),
           ),
         );
-      if (told.length && iso >= today) {
-        after(() => notifyCancelled(about, told));
-      }
+      return {
+        ok: true as const,
+        count: 1,
+        changed: true as const,
+        ownerId,
+        told: iso >= today ? told : [],
+        about,
+      };
     }
-    syncGoogleAfter(ownerId);
-    revalidatePath("/calendar");
-    return { ok: true, count: 1 };
-  }
 
-  let count = 1;
-  if (scope === "all" && !row.specificDate) {
-    const doomed = await db
-      .select({ id: schema.classes.id })
-      .from(schema.classes)
-      .where(
-        and(
-          eq(schema.classes.userId, ownerId),
-          eq(schema.classes.seriesId, row.seriesId),
-          isNull(schema.classes.specificDate),
-        ),
-      );
-    const told = await clearGoing(doomed.map((d) => d.id));
-    const gone = await db
-      .delete(schema.classes)
-      .where(
-        and(
-          eq(schema.classes.userId, ownerId),
-          eq(schema.classes.seriesId, row.seriesId),
-          isNull(schema.classes.specificDate),
-        ),
-      )
-      .returning({ id: schema.classes.id });
-    count = gone.length;
-    if (told.length) after(() => notifyCancelled(about, told));
-  } else {
+    if (scope === "all" && !row.specificDate) {
+      const doomed = await tx
+        .select({ id: schema.classes.id })
+        .from(schema.classes)
+        .where(
+          and(
+            eq(schema.classes.userId, ownerId),
+            eq(schema.classes.seriesId, row.seriesId),
+            isNull(schema.classes.specificDate),
+          ),
+        );
+      const told = await clearGoing(doomed.map((item) => item.id));
+      const gone = await tx
+        .delete(schema.classes)
+        .where(
+          and(
+            eq(schema.classes.userId, ownerId),
+            eq(schema.classes.seriesId, row.seriesId),
+            isNull(schema.classes.specificDate),
+          ),
+        )
+        .returning({ id: schema.classes.id });
+      return { ok: true as const, count: gone.length, changed: gone.length > 0, ownerId, told, about };
+    }
+
     const told = await clearGoing([row.id]);
-    await db.delete(schema.classes).where(eq(schema.classes.id, row.id));
-    if (told.length) after(() => notifyCancelled(about, told));
-  }
+    const gone = await tx
+      .delete(schema.classes)
+      .where(eq(schema.classes.id, row.id))
+      .returning({ id: schema.classes.id });
+    return { ok: true as const, count: gone.length, changed: gone.length > 0, ownerId, told, about };
+  }).catch((error) => {
+    if (error instanceof ScheduleConflictError)
+      return {
+        ok: false as const,
+        error: "Your schedule changed in another window. Reopen it and try again.",
+      };
+    throw error;
+  });
 
-  syncGoogleAfter(ownerId);
-  revalidatePath("/calendar");
-  return { ok: true, count };
+  if (!outcome.ok) return outcome;
+  if (outcome.changed) {
+    if (outcome.told.length && "about" in outcome && outcome.about)
+      after(() => notifyCancelled(outcome.about, outcome.told));
+    syncGoogleAfter(outcome.ownerId);
+    revalidatePath("/calendar");
+  }
+  return { ok: true, count: outcome.count };
 }

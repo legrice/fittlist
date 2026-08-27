@@ -218,6 +218,11 @@ export function YouDashboard({
         </AccountGroup>
       )}
 
+      <AccountGroup title="Activity">
+        <AccountRow icon="chat" title="Messages" detail="Your conversations and replies" href="/inbox" />
+        <AccountRow icon="notifications" title="Notifications" detail="Follows, updates, and cancellations" href="/notifications" />
+      </AccountGroup>
+
       <AccountGroup title="Saved items">
         {savedItems.length > 0 ? <ClassOpener handle="">{savedItems.map((item) => (
           <AccountRow icon="bookmark" title={item.name} detail={item.detail} href={item.href} classTarget={{ id: item.classId, iso: item.iso, base: item.base }} key={item.id} />

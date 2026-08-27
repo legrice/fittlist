@@ -23,6 +23,8 @@ import { ProfileAbout } from "@/components/ProfileAbout";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ScheduleNudge } from "@/components/ScheduleNudge";
+import { ReportContentButton } from "@/components/ReportContentButton";
+import { hiddenFrom } from "@/lib/blocks";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -131,10 +133,11 @@ export async function MemberProfileView({
     ? from === "profile" ? { href: "/you", label: "Back to your profile" } : undefined
     : backToFor(from, !!viewerId);
   const shoutoutRows = await db
-    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name })
+    .select({ id: schema.shoutouts.id, body: schema.shoutouts.body, featuredAt: schema.shoutouts.featuredAt, authorName: schema.users.name, authorUserId: schema.shoutouts.authorUserId })
     .from(schema.shoutouts)
     .innerJoin(schema.users, eq(schema.shoutouts.authorUserId, schema.users.id))
     .where(eq(schema.shoutouts.targetUserId, user.id));
+  const hiddenShoutoutAuthors = await hiddenFrom(viewerId);
 
   // The same ways in a coach's page offers, minus the one that needs a
   // published week. A member with nothing filled in gets no pill at all.
@@ -249,6 +252,7 @@ export async function MemberProfileView({
                   />
                 )}
                 <ProfileShare path={`/${user.handle!}`} name={name} pill />
+                {viewerId && <ReportContentButton contentType="profile" contentId={user.id} label="Report profile" canBlock className="btn ghost profile-report-button" />}
               </div>
             )
           }
@@ -291,8 +295,9 @@ export async function MemberProfileView({
             handle={user.handle ?? undefined}
             name={name}
             signedIn={!!viewerId}
+            viewerId={viewerId}
             owner={isOwner}
-            initial={shoutoutRows.map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone" }))}
+            initial={shoutoutRows.filter((row) => !hiddenShoutoutAuthors.has(row.authorUserId)).map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone", authorUserId: row.authorUserId }))}
           />
         </section>
         </ProfileTabs>

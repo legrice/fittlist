@@ -145,6 +145,7 @@ export function ShareHubScreen({
   const [nativeShareAvailable, setNativeShareAvailable] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [preparedShare, setPreparedShare] = useState<{ url: string; file: File } | null>(null);
+  const [prepareFailed, setPrepareFailed] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
   // One buster per visit, bumped after an add: the week changes behind the
   // picture the moment a class lands, and a cached preview of the week
@@ -381,17 +382,24 @@ export function ShareHubScreen({
     if (seg === "text") return;
     const controller = new AbortController();
     setPreparedShare(null);
+    setPrepareFailed(false);
     void (async () => {
       try {
         const response = await fetch(activeShareUrl, { signal: controller.signal });
-        if (!response.ok) return;
+        if (!response.ok) {
+          setPrepareFailed(true);
+          return;
+        }
         const blob = await response.blob();
         setPreparedShare({
           url: activeShareUrl,
           file: new File([blob], activeShareFile, { type: blob.type || "image/png" }),
         });
       } catch (error) {
-        if ((error as Error)?.name !== "AbortError") setPreparedShare(null);
+        if ((error as Error)?.name !== "AbortError") {
+          setPreparedShare(null);
+          setPrepareFailed(true);
+        }
       }
     })();
     return () => controller.abort();
@@ -437,15 +445,14 @@ export function ShareHubScreen({
       }
       if (canShareFiles) {
         const res = await fetch(url);
-        if (res.ok) {
-          const f = new File([await res.blob()], file, { type: "image/png" });
-          if (navigator.canShare({ files: [f] })) {
-            await navigator.share({
-              files: [f],
-              title: "Share your FittList",
-            });
-            return;
-          }
+        if (!res.ok) throw new Error(`Share image returned ${res.status}`);
+        const f = new File([await res.blob()], file, { type: "image/png" });
+        if (navigator.canShare({ files: [f] })) {
+          await navigator.share({
+            files: [f],
+            title: "Share your FittList",
+          });
+          return;
         }
       }
       downloadImage(url, file);
@@ -463,14 +470,16 @@ export function ShareHubScreen({
         disabled={
           sharing ||
           !shareCapabilityKnown ||
-          (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url)
+          (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url && !prepareFailed)
         }
         onClick={() => shareImage(url, file, failWord)}
       >
         {sharing
           ? "Opening share sheet..."
-          : !shareCapabilityKnown || (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url)
+          : !shareCapabilityKnown || (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url && !prepareFailed)
             ? "Preparing..."
+            : prepareFailed
+              ? "Try sharing"
             : "Share"}
       </button>
     </div>
@@ -626,13 +635,13 @@ export function ShareHubScreen({
           onScroll={onSlides}
           onTouchStart={() => (rideTo.current = null)}
         >
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "week"}>
             <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" />
           </div>
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "profile"}>
             <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
           </div>
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "qr"}>
             {/* The card the mock drew: name, the code on white, the address.
                 A bare code is anybody's; this one says whose. */}
             <div className="qrcard">
@@ -646,7 +655,7 @@ export function ShareHubScreen({
               </div>
             </div>
           </div>
-          <div className="shslide">
+          <div className="shslide" aria-hidden={seg !== "text"}>
             <pre className="shtext">{weekText}</pre>
           </div>
         </div>

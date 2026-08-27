@@ -231,7 +231,9 @@ export function MarketingLanding({
         <Wordmark />
         <div className={styles.footerMeta}>
           <span>© 2026 FittList. All rights reserved.</span>
-          <a href="mailto:hello@fittlist.co">Contact</a>
+          <Link href="/support">Support</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
         </div>
       </footer>
     </main>

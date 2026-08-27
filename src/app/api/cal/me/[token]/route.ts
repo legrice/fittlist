@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mondayOfCurrentWeek } from "@/lib/format";
 import { verifyCalendarToken } from "@/lib/calfeed";
-import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, recurrenceLines } from "@/lib/ics";
+import { calendarTimeZoneLines, icsEsc as esc, icsFold as fold, recurrenceLines, zonedDateLine, zonedEndLine } from "@/lib/ics";
 
 // One member's whole week, across every coach they follow, as a calendar they
 // subscribe to once.
@@ -39,7 +39,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   const gymAccounts = await db.select().from(schema.users).where(eq(schema.users.kind, "gym"));
   for (const g of gymAccounts) if (!coachById.has(g.id)) coachById.set(g.id, g);
 
-  const monday = mondayOfCurrentWeek();
+  const generatedAt = new Date();
   const followed = coachIds.length
     ? await db.select().from(schema.classes).where(inArray(schema.classes.userId, coachIds))
     : [];
@@ -84,10 +84,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   // was actually for rather than every week.
   const oneOffs = givenToMe
     .map((cv) => ({ cover: cv, cls: byId.get(cv.classId) }))
-    .filter((x) => !!x.cls && x.cls.isPublic && x.cover.occurrenceDate >= monday);
+    .filter((x) => !!x.cls && x.cls.isPublic && x.cover.occurrenceDate >= mondayOfCurrentWeek(generatedAt, x.cls.timeZone));
   // Public only. A coach's private client sessions are on their own schedule
   // and must not reach a follower's calendar.
-  const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= monday));
+  const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= mondayOfCurrentWeek(generatedAt, c.timeZone)));
 
   const studioIds = [
     ...new Set(
@@ -110,9 +110,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "X-WR-CALNAME:My week · fittlist",
+    `X-WR-TIMEZONE:${me.timeZone}`,
     "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
     "X-PUBLISHED-TTL:PT1H",
   ];
+  lines.push(...calendarTimeZoneLines([
+    ...rows.map((row) => row.timeZone),
+    ...oneOffs.map(({ cls }) => cls!.timeZone),
+  ]));
 
   for (const c of rows) {
     const coach = coachById.get(c.userId);
@@ -120,13 +125,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     const date =
       c.specificDate ??
       (() => {
-        const d = new Date(`${monday}T00:00:00Z`);
+        const d = new Date(`${mondayOfCurrentWeek(generatedAt, c.timeZone)}T00:00:00Z`);
         d.setUTCDate(d.getUTCDate() + c.dayOfWeek);
         return d.toISOString().slice(0, 10);
       })();
     const page = coach?.handle ? `fittlist.co/${coach.handle}` : "fittlist.co";
     const desc = c.links.length
-      ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\\n") + `\\n\\n${page}`
+      ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\n") + `\n\n${page}`
       : page;
 
     lines.push("BEGIN:VEVENT");
@@ -134,8 +139,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     // doesn't get the same event collapsed into one.
     lines.push(`UID:${c.id}.me@fittlist.co`);
     lines.push(`DTSTAMP:${stamp}`);
-    lines.push(`DTSTART:${floatingStart(date, c.startTime)}`);
-    lines.push(`DTEND:${floatingEnd(date, c.startTime, c.durationMin)}`);
+    lines.push(zonedDateLine("DTSTART", date, c.startTime, c.timeZone));
+    lines.push(zonedEndLine(date, c.startTime, c.durationMin, c.timeZone));
     if (!c.specificDate) {
       lines.push(
         ...recurrenceLines(
@@ -144,7 +149,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
           // The dates somebody else took off me drop out of my recurrence.
           [...(c.skipDates ?? []), ...coveredDatesFor(c.id)],
           c.startTime,
-        ),
+          c.timeZone,
+        ).map(fold),
       );
     }
     // The coach's name is in the title: a merged week is several people's
@@ -153,7 +159,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     lines.push(fold(`SUMMARY:${esc(who ? `${c.name} with ${who}` : c.name)}`));
     if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));
     else if (c.location) lines.push(fold(`LOCATION:${esc(c.location)}`));
-    lines.push(fold(`DESCRIPTION:${desc}`));
+    lines.push(fold(`DESCRIPTION:${esc(desc)}`));
     lines.push("END:VEVENT");
   }
 
@@ -166,8 +172,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     lines.push("BEGIN:VEVENT");
     lines.push(`UID:${c.id}.${iso}.cover@fittlist.co`);
     lines.push(`DTSTAMP:${stamp}`);
-    lines.push(`DTSTART:${floatingStart(iso, c.startTime)}`);
-    lines.push(`DTEND:${floatingEnd(iso, c.startTime, c.durationMin)}`);
+    lines.push(zonedDateLine("DTSTART", iso, c.startTime, c.timeZone));
+    lines.push(zonedEndLine(iso, c.startTime, c.durationMin, c.timeZone));
     const who = owner?.name?.trim();
     lines.push(fold(`SUMMARY:${esc(who ? `${c.name} with ${who}` : c.name)}`));
     if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));

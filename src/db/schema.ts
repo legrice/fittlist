@@ -1,5 +1,6 @@
 import {
   boolean,
+  check,
   date,
   index,
   integer,
@@ -43,6 +44,9 @@ export const users = pgTable("users", {
   // What "near you" is computed from; null on rows saved before this.
   locationLat: doublePrecision("location_lat"),
   locationLng: doublePrecision("location_lng"),
+  // IANA zone for wall-clock schedule values owned by this person. Captured
+  // during onboarding and editable in Calendar settings.
+  timeZone: text("time_zone").notNull().default("America/New_York"),
   // Compact credential chips shown on the profile (e.g. "NASM CPT", "HYROX Coach").
   certifications: jsonb("certifications").$type<string[]>().notNull().default([]),
   // "What to Expect" — a few short descriptors of the coach's style/vibe.
@@ -81,7 +85,9 @@ export const users = pgTable("users", {
   approveFollowers: boolean("approve_followers").notNull().default(false),
   // Listed in the Find coaches directory. Their page stays public either way —
   // this is only about being browsable by people who weren't sent the link.
-  discoverable: boolean("discoverable").notNull().default(true),
+  // New identities are private from directory/search until onboarding commits
+  // their chosen role and profile. Existing accounts keep their stored value.
+  discoverable: boolean("discoverable").notNull().default(false),
   // Whether the Message button appears on their public page. Separate from
   // availability, which says whether they're taking private clients: "my books
   // are full" and "don't write to me" are different sentences, and a coach who
@@ -182,6 +188,42 @@ export const inviteRequests = pgTable("invite_requests", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Durable counters for actions that can trigger external delivery, including
+// public forms and signed-in message participants. IP addresses, emails, user
+// ids and target ids never land in this table: key_hash is a purpose-bound
+// HMAC over the relevant dimension.
+// A row's window begins with its first accepted hit rather than on a global
+// clock boundary, and expired rows are pruned in bounded batches by the helper.
+export const anonymousActionRateLimits = pgTable(
+  "anonymous_action_rate_limits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    action: text("action").notNull(),
+    targetKind: text("target_kind").notNull(),
+    scope: text("scope").notNull(),
+    keyHash: text("key_hash").notNull(),
+    windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull(),
+    hitCount: integer("hit_count").notNull().default(1),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      "anonymous_action_rate_limits_scope_check",
+      sql`${t.scope} IN ('ip', 'ip_target', 'subject_target', 'target')`,
+    ),
+    check("anonymous_action_rate_limits_hit_count_check", sql`${t.hitCount} > 0`),
+    uniqueIndex("anonymous_action_rate_limits_key").on(
+      t.action,
+      t.targetKind,
+      t.scope,
+      t.keyHash,
+    ),
+    index("anonymous_action_rate_limits_expiry").on(t.expiresAt),
+  ],
+);
+
 // Private-training inquiries. A visitor's "Request private session" opens a
 // thread with the coach; both sides can keep replying (the coach in-app, the
 // visitor via a tokenized link). One thread per coach + requester email.
@@ -205,6 +247,12 @@ export const inquiryThreads = pgTable(
     // Unread count on the other side of the table. Only means anything when
     // the requester email belongs to an account; a visitor reads over email.
     requesterUnread: integer("requester_unread").notNull().default(0),
+    // A tokenized email participant can stop a conversation without creating
+    // an account. A new message they deliberately send reopens it.
+    requesterClosedAt: timestamp("requester_closed_at", { withTimezone: true }),
+    // The receiving coach can stop an abusive thread even when the requester
+    // has no account row to block. A new form submission must not reopen it.
+    coachClosedAt: timestamp("coach_closed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -270,6 +318,8 @@ export const studios = pgTable("studios", {
   // has coordinates. Best-effort; null when the lookup missed.
   lat: doublePrecision("lat"),
   lng: doublePrecision("lng"),
+  // The local clock used by this place's public schedule and rota.
+  timeZone: text("time_zone").notNull().default("America/New_York"),
   // What kind of gym it is — a studio is usually more than one thing.
   types: jsonb("types").$type<string[]>().notNull().default([]),
   photo: text("photo"),
@@ -524,6 +574,7 @@ export const events = pgTable("events", {
   // Multi-day happenings (an expo weekend). Same as start_date for one-dayers.
   endDate: date("end_date").notNull(),
   startTime: text("start_time"), // "HH:MM" 24h, null = all-day
+  timeZone: text("time_zone").notNull().default("America/New_York"),
   place: text("place").notNull(),
   city: text("city"),
   photo: text("photo"),
@@ -577,6 +628,7 @@ export const classTemplates = pgTable(
     // The picture comes back with the class name, same as the description.
     image: text("image"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
+    timeZone: text("time_zone").notNull().default("America/New_York"),
     durationMin: integer("duration_min").notNull(),
     // Null for private items with no listed studio; `location` holds a free-form
     // place ("Client's home", "Online") in that case.
@@ -678,6 +730,9 @@ export const classes = pgTable(
     // at every one of the places that expand a recurrence.
     skipDates: jsonb("skip_dates").$type<string[]>().notNull().default([]),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
+    // Denormalised so a class keeps its intended instant if a studio/profile
+    // later changes zone. Editors deliberately re-resolve it on the next save.
+    timeZone: text("time_zone").notNull().default("America/New_York"),
     durationMin: integer("duration_min").notNull(),
     name: text("name").notNull(),
     classType: text("class_type"),
@@ -729,6 +784,7 @@ export const personalClasses = pgTable("personal_classes", {
   name: text("name").notNull(),
   dayOfWeek: integer("day_of_week").notNull(), // 0 = Monday, same as classes
   startTime: text("start_time").notNull(), // "HH:MM", floating, same as classes
+  timeZone: text("time_zone").notNull().default("America/New_York"),
   durationMin: integer("duration_min").notNull().default(60),
   location: text("location").notNull().default(""),
   withWho: text("with_who").notNull().default(""),
@@ -870,6 +926,32 @@ export const subscribers = pgTable(
     // load; the unique index above leads with the trainer, so it can't serve
     // that lookup.
     index("subscribers_email").on(t.email),
+  ],
+);
+
+// A public email follow does not become a subscriber until the mailbox owner
+// explicitly confirms it. Only a SHA-256 digest of the bearer token is kept;
+// the raw value exists in the email and, briefly, an HttpOnly browser cookie.
+// consumedAt makes confirmation single-use and lets one transaction claim the
+// token before it activates (or reactivates) the subscriber row.
+export const emailFollowConfirmations = pgTable(
+  "email_follow_confirmations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trainerUserId: uuid("trainer_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("email_follow_confirmations_token_hash_check", sql`length(${t.tokenHash}) = 64`),
+    uniqueIndex("email_follow_confirmations_token_hash").on(t.tokenHash),
+    index("email_follow_confirmations_subject").on(t.trainerUserId, t.email, t.createdAt),
+    index("email_follow_confirmations_expiry").on(t.expiresAt),
   ],
 );
 
@@ -1155,6 +1237,43 @@ export const shoutouts = pgTable(
   ],
 );
 
+// Reports for heterogeneous user-authored content. The target id intentionally
+// has no FK: posts, comments, shoutouts, profiles and private messages live in
+// different tables, and the report must remain as an audit record when an
+// admin removes the original. Excerpt/subject/href are point-in-time snapshots
+// so the moderation queue remains intelligible after an edit or deletion.
+export const contentReports = pgTable(
+  "content_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    contentType: text("content_type").notNull(),
+    contentId: uuid("content_id").notNull(),
+    contextId: uuid("context_id"),
+    authorUserId: uuid("author_user_id").references(() => users.id, { onDelete: "set null" }),
+    reporterUserId: uuid("reporter_user_id").references(() => users.id, { onDelete: "cascade" }),
+    // Stable de-duplication for account and verified email participants alike;
+    // never contains an email or raw token.
+    reporterKey: text("reporter_key").notNull(),
+    reporterLabel: text("reporter_label").notNull().default("Community member"),
+    reason: text("reason").notNull(),
+    note: text("note").notNull().default(""),
+    excerpt: text("excerpt").notNull().default(""),
+    subject: text("subject").notNull().default(""),
+    href: text("href"),
+    status: text("status").notNull().default("open"),
+    handledByUserId: uuid("handled_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    handledAt: timestamp("handled_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("content_reports_type_check", sql`${t.contentType} IN ('group', 'group_post', 'group_comment', 'shoutout', 'profile', 'inquiry_message')`),
+    check("content_reports_status_check", sql`${t.status} IN ('open', 'dismissed', 'removed')`),
+    uniqueIndex("content_reports_once").on(t.contentType, t.contentId, t.reporterKey).where(sql`${t.status} = 'open'`),
+    index("content_reports_status_created").on(t.status, t.createdAt),
+    index("content_reports_author").on(t.authorUserId),
+  ],
+);
+
 // One row per trainer who connected Google Calendar. We mirror their classes
 // into their calendar (one-way); syncedEventIds tracks the events we created so
 // a re-sync can clear and repopulate without touching their personal events.
@@ -1165,9 +1284,41 @@ export const googleConnections = pgTable("google_connections", {
   timeZone: text("time_zone"),
   email: text("email"),
   syncedEventIds: jsonb("synced_event_ids").$type<string[]>().notNull().default([]),
+  // Optimistic compare-and-swap token for remote reconciliation. Timestamps
+  // lose sub-millisecond precision through some PostgreSQL drivers, so they
+  // are not a safe concurrency precondition.
+  syncVersion: integer("sync_version").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Stable Sign in with Apple subject mapping. Apple may only disclose a relay
+// email on the first authorization, while `sub` remains the durable identity.
+export const appleIdentities = pgTable(
+  "apple_identities",
+  {
+    subject: text("subject").primaryKey(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    email: text("email"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("apple_identities_user").on(t.userId)],
+);
+
+// One-use server challenges for the native Apple credential request. The
+// browser also holds a signed HttpOnly grant, so both pieces are required.
+export const appleNativeChallenges = pgTable(
+  "apple_native_challenges",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    nonceHash: text("nonce_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("apple_native_challenges_expiry").on(t.expiresAt)],
+);
 
 export const messageLog = pgTable("message_log", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -1203,6 +1354,10 @@ export const magicLinks = pgTable(
     tokenHash: text("token_hash").notNull(),
     ip: text("ip"),
     via: text("via"), // growth-loop attribution carried through signup
+    // login | signup | reset. Reset is security authority, not presentation:
+    // setPassword verifies this purpose before accepting a forgotten-password
+    // change without the old password.
+    purpose: text("purpose").notNull().default("login"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -31,6 +31,10 @@ export async function blockPerson(blockedId: string): Promise<{ ok: boolean; err
   // Blocking someone who follows you has to remove the follow, or they keep
   // getting your week by email every Sunday.
   await dropFollow(userId, blockedId);
+  // A block also removes the blocker's own follow and Going marks on the
+  // other person's classes. Otherwise their schedule and digest would keep
+  // delivering the account they just chose not to interact with.
+  await dropFollow(blockedId, userId);
   revalidatePath("/followers");
   revalidatePath("/calendar");
   return { ok: true };

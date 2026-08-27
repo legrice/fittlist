@@ -158,7 +158,9 @@ export function CalendarScreen({
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
+  const [composerError, setComposerError] = useState<string | null>(null);
   const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string; savedBackground:string | null } | null>(null);
+  const composerLoadingRef = useRef(false);
   const [loadingTools, startTools] = useTransition();
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
   const calendarStateKey = `fl-calendar-state:${viewer.id}`;
@@ -185,12 +187,28 @@ export function CalendarScreen({
   }, []);
 
   const ensureComposer = useCallback(() => {
-    if (composerData) return;
+    if (composerData || composerLoadingRef.current) return;
+    composerLoadingRef.current = true;
+    setComposerError(null);
     startTools(async () => {
-      const data = await loadCalendarComposerData();
-      if (data) setComposerData(data);
+      try {
+        const data = await loadCalendarComposerData();
+        if (!data) throw new Error("No composer data");
+        setComposerData(data);
+      } catch {
+        setComposerError("We couldn’t load your class tools. Check your connection and try again.");
+      } finally {
+        composerLoadingRef.current = false;
+      }
     });
   }, [composerData]);
+  // Deep links and the desktop/native add event open the role chooser without
+  // going through openAdd(), so warm the composer from the shared state too.
+  // Otherwise choosing Teaching can open a loading sheet without ever
+  // starting its data request.
+  useEffect(() => {
+    if (addChoice) ensureComposer();
+  }, [addChoice, ensureComposer]);
   const openShare = () => {
     setShareOpen(true);
     ensureComposer();
@@ -295,7 +313,7 @@ export function CalendarScreen({
       )
         // Been and gone is not on a schedule. Today keeps the ones still to
         // come and drops the six o'clock you already taught.
-        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
+        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
         .map((c) => {
           const t = clockParts(c.startTime);
@@ -781,8 +799,19 @@ export function CalendarScreen({
           }}
         />
       )}
-      {addOpen && !composerData && (
-        <div className="sheet-scrim"><div className="sheet calendar-tool-loading" aria-busy="true">Loading your class tools…</div></div>
+      {(addOpen || !!edit || !!planEdit) && !composerData && (
+        <div className="sheet-scrim">
+          <div className="sheet calendar-tool-loading" role="dialog" aria-modal="true" aria-live="polite" aria-busy={!composerError}>
+            {composerError ? (
+              <>
+                <h2>Class tools unavailable</h2>
+                <p className="lead">{composerError}</p>
+                <button className="btn si" type="button" onClick={ensureComposer}>Try again</button>
+                <button className="btn ghost" type="button" style={{ marginTop: 8 }} onClick={() => { setAddOpen(false); setEdit(null); setPlanEdit(null); }}>Close</button>
+              </>
+            ) : "Loading your class tools…"}
+          </div>
+        </div>
       )}
       {match && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMatch(null); }}>

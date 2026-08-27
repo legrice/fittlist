@@ -77,6 +77,7 @@ export default async function ManageStudioPage({
           id: studio.id,
           name: studio.name,
           address: studio.address,
+          timeZone: studio.timeZone,
           placeKind: studio.placeKind as PlaceKind,
           types: studio.types,
           about: studio.about ?? "",

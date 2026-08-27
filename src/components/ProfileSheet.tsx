@@ -7,7 +7,6 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import {
   beginPasskeyRegistration,
-  changeEmail as changeEmailAction,
   finishPasskeyRegistration,
   logout,
   removePasskeys,
@@ -32,6 +31,7 @@ import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { myWeekText } from "@/app/actions/weektext";
 import { Toast, useToast } from "@/components/Toast";
 import { forgetLocalPasskey, rememberLocalPasskey } from "@/lib/passkey-device";
+import { TimeZoneSetting } from "@/components/TimeZoneSetting";
 
 // The four the spec's settings list opens, plus the leaves each of those
 // holds. A leaf is still reachable on its own, because the sub-screen is a
@@ -87,6 +87,7 @@ export function ProfileSheet({
   approveFollowers = false,
   messagesOpen = true,
   look,
+  timeZone,
   onClose,
   initialView = "home",
   detailOnly = false,
@@ -136,6 +137,7 @@ export function ProfileSheet({
   approveFollowers?: boolean;
   messagesOpen?: boolean;
   look: string | null;
+  timeZone: string;
   /** Unused as a page: a tab is not a thing you close. */
   onClose?: () => void;
   initialView?: View;
@@ -159,14 +161,12 @@ export function ProfileSheet({
 
   const [pkCount, setPkCount] = useState(passkeyCount);
   const [pwSet, setPwSet] = useState(hasPassword);
-  const [emailShown, setEmailShown] = useState(email);
+  const emailShown = email;
   const [passkeyable, setPasskeyable] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // Change-email / change-password sheets (re-auth with current password).
-  const [emailSheet, setEmailSheet] = useState(false);
+  // Password changes re-authenticate with the current password.
   const [pwSheet, setPwSheet] = useState(false);
-  const [newEmail, setNewEmail] = useState(email);
   const [newPw, setNewPw] = useState("");
   const [curPw, setCurPw] = useState("");
 
@@ -218,7 +218,11 @@ export function ProfileSheet({
 
   const disconnectGcal = () =>
     startDisconnect(async () => {
-      await disconnectGoogleAction();
+      const result = await disconnectGoogleAction();
+      if (!result.ok) {
+        toast("Couldn't disconnect Google Calendar. Try again");
+        return;
+      }
       setConnected(false);
       toast("Google Calendar disconnected");
     });
@@ -257,22 +261,6 @@ export function ProfileSheet({
         forgetLocalPasskey();
         toast("Passkey removed");
       } else toast(res.error ?? "Couldn't remove");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const saveEmail = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      const res = await changeEmailAction(newEmail, curPw);
-      if (res.ok) {
-        setEmailShown(newEmail.trim().toLowerCase());
-        setEmailSheet(false);
-        setCurPw("");
-        toast("Email updated");
-      } else toast(res.error ?? "Couldn't update email");
     } finally {
       setBusy(false);
     }
@@ -405,6 +393,7 @@ export function ProfileSheet({
         className={`acctwrap${page ? " acct-page" : ""}${anim === "left" ? " acct-from-left" : ""}${anim === "none" ? " acct-noanim" : ""}`}
         hidden={detailOnly}
         role={page ? undefined : "dialog"}
+        aria-modal={page ? undefined : true}
         aria-label={page ? undefined : "Your account"}
       >
         {/* As the You tab the face row leads and no heading repeats the tab's
@@ -418,7 +407,7 @@ export function ProfileSheet({
           </div>
         )}
 
-        <h3 className="setgroup-h">Settings</h3>
+        {page && <h3 className="setgroup-h">Settings</h3>}
         <div className="settingslist">
           <button className="setrow" onClick={() => openView("calendar")}>
             <span className="setrow-ic"><Icon name="event" size={24} /></span>
@@ -488,6 +477,14 @@ export function ProfileSheet({
             <span className="setrow-txt">
               <span className="t">Privacy policy</span>
               <span className="s">How FittList handles your information</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+          </Link>
+          <Link className="setrow" href="/support">
+            <span className="setrow-ic"><Icon name="info" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Support &amp; safety</span>
+              <span className="s">Get help or report a concern</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
           </Link>
@@ -598,6 +595,7 @@ export function ProfileSheet({
                 </button>
               )}
               <MyCalendar hasShifts={shiftCount > 0} />
+              <TimeZoneSetting initialTimeZone={timeZone} />
               <button className="setrow" onClick={copyCal}>
                 <span className="setrow-ic"><Icon name="link" size={24} /></span>
                 <span className="setrow-txt">
@@ -671,12 +669,7 @@ export function ProfileSheet({
                   <span className="t">Email</span>
                   <span className="s">{emailShown}</span>
                 </span>
-                <button
-                  className="secbtn"
-                  onClick={() => { setNewEmail(emailShown); setCurPw(""); setEmailSheet(true); }}
-                >
-                  Change
-                </button>
+                <Link className="secbtn" href="/support">Get help</Link>
               </div>
               <div className="secrow">
                 <span className="secrow-ic"><Icon name="lock" size={24} /></span>
@@ -795,27 +788,6 @@ export function ProfileSheet({
               </button>
             </>
           )}
-          </div>
-        </div>
-      )}
-
-      {emailSheet && (
-        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setEmailSheet(false); }}>
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setEmailSheet(false)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>Change email</h2>
-            <p className="lead">This is the email you sign in with.</p>
-            <input className="editinput" type="email" autoCapitalize="none" placeholder="New email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-            {pwSet && (
-              <input className="editinput" style={{ marginTop: 10 }} type="password" autoComplete="current-password" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)} />
-            )}
-            <div className="publishwrap">
-              <button className="btn si" onClick={saveEmail} disabled={busy}>
-                {busy ? "Saving…" : "Save email"}
-              </button>
-            </div>
           </div>
         </div>
       )}

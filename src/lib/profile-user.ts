@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { profileRemovedByModeration } from "@/lib/moderation";
 
 /** One profile identity read per server render, shared by metadata and every
  * profile tab route. Some legacy photos are data URLs, so deduping this row
@@ -10,5 +11,6 @@ import { getDb, schema } from "@/db";
 export const profileUser = cache(async (handle: string) => {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  if (user && await profileRemovedByModeration(user.id, db)) return null;
   return user ?? null;
 });

@@ -8,6 +8,14 @@ import { emailFeedback } from "@/lib/inquiry";
 import { feedbackHost } from "@/lib/feedback";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
+import { objectionableContentError } from "@/lib/content-safety";
+import { hiddenFrom } from "@/lib/blocks";
+import {
+  ANONYMOUS_ACTION_RETRY_ERROR,
+  takeAnonymousActionRateLimit,
+  type AnonymousActionRateLimits,
+} from "@/lib/anonymous-rate-limit";
+import { requestIpAddress } from "@/lib/request-ip";
 
 // Feedback is a conversation, not a form.
 //
@@ -21,14 +29,24 @@ export type FeedbackThread = {
   messages: { id: string; fromCoach: boolean; body: string; createdAt: Date }[];
 };
 
+const FEEDBACK_MESSAGE_LIMITS: AnonymousActionRateLimits = {
+  ip: { max: 20, windowMs: 60 * 60 * 1000 },
+  ipTarget: { max: 10, windowMs: 60 * 60 * 1000 },
+  subjectTarget: { max: 6, windowMs: 60 * 60 * 1000 },
+  target: { max: 60, windowMs: 60 * 60 * 1000 },
+};
+
 export async function sendFeedback(bodyRaw: string): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const body = bodyRaw.trim().slice(0, 2000);
   if (body.length < 2) return { ok: false, error: "Write a short message." };
+  const safetyError = objectionableContentError(body);
+  if (safetyError) return { ok: false, error: safetyError };
 
   const host = await feedbackHost();
   if (!host) return { ok: false, error: "Feedback isn't set up yet." };
+  if ((await hiddenFrom(userId)).has(host.id)) return { ok: false, error: "Feedback isn't available." };
 
   const db = await getDb();
   const [me] = await db
@@ -39,6 +57,30 @@ export async function sendFeedback(bodyRaw: string): Promise<{ ok: boolean; erro
   if (me.email.toLowerCase() === host.email.toLowerCase()) {
     return { ok: false, error: "That would just be you, writing to you." };
   }
+
+  const [closedThread] = await db
+    .select({ coachClosedAt: schema.inquiryThreads.coachClosedAt })
+    .from(schema.inquiryThreads)
+    .where(and(
+      eq(schema.inquiryThreads.coachUserId, host.id),
+      eq(schema.inquiryThreads.requesterEmail, me.email),
+      eq(schema.inquiryThreads.kind, "feedback"),
+    ));
+  if (closedThread?.coachClosedAt) return { ok: false, error: "Feedback isn't available." };
+
+  let allowed = false;
+  try {
+    allowed = await takeAnonymousActionRateLimit(db, {
+      action: "feedback_message",
+      target: { kind: "feedback_host", id: host.id },
+      subject: `user:${userId}`,
+      ip: await requestIpAddress(),
+      limits: FEEDBACK_MESSAGE_LIMITS,
+    });
+  } catch (error) {
+    console.error("feedback rate limit failed", error);
+  }
+  if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   const [thread] = await db
     .insert(schema.inquiryThreads)

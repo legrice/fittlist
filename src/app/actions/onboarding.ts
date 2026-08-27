@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { avatarColor } from "@/lib/avatar";
 import { publicSchedules } from "@/lib/coachweek";
 import { runsOn, todayIso, weekDates } from "@/lib/format";
+import { PROFILE_REMOVED_MESSAGE, profileRemovedByModeration } from "@/lib/moderation";
 
 // Replace the coach's "I work here" studio set with the given ids (validated
 // against the shared directory). Used by the setup wizard's studios step.
@@ -41,13 +42,31 @@ export async function setCoachStudios(
 }
 
 // Mark the setup wizard done, so the app stops redirecting into /welcome.
-export async function completeOnboarding(): Promise<{ ok: boolean }> {
+export async function completeOnboarding(): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const db = await getDb();
+  if (await profileRemovedByModeration(userId, db)) {
+    return { ok: false, error: PROFILE_REMOVED_MESSAGE };
+  }
+  const [user] = await db
+    .select({
+      name: schema.users.name,
+      handle: schema.users.handle,
+      location: schema.users.location,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!user) return { ok: false, error: "Session expired. Sign in again." };
+  if (!user.name.trim() || !user.handle || !user.location?.trim()) {
+    return { ok: false, error: "Finish your name, profile link, and city before publishing your profile." };
+  }
   await db
     .update(schema.users)
-    .set({ onboardedAt: new Date() })
+    // First-time accounts and newly claimed handles stay out of Discover until
+    // every setup mutation has succeeded. This is the commit point that makes
+    // the chosen public identity listable.
+    .set({ onboardedAt: new Date(), discoverable: true })
     .where(eq(schema.users.id, userId));
   return { ok: true };
 }

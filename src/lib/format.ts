@@ -1,3 +1,10 @@
+import {
+  DEFAULT_TIME_ZONE,
+  isoDateInTimeZone,
+  minutesInTimeZone,
+  normalizeTimeZone,
+} from "@/lib/timezone";
+
 // Shared display logic - mirrors the prototype's helpers exactly.
 
 export const DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] as const;
@@ -455,14 +462,9 @@ export function fmtDays(days: number[]): string {
   return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
 }
 
-// The app's clock. Classes store floating local times ("06:00", no zone), and
-// every screen agrees on what "today" means by asking here. It used to be the
-// server's day, which on Vercel is UTC: from 8pm Eastern the whole app lived a
-// day ahead, showing Thursday as today on Wednesday night. Everyone in the
-// beta trains in US Eastern, so that's the clock, overridable per deployment.
-// A timezone per coach (or per viewer) is the real fix, and it would land in
-// these three functions.
-const APP_TZ = process.env.NEXT_PUBLIC_APP_TZ || "America/New_York";
+// The fallback clock for legacy rows. New schedules persist their own IANA
+// timezone; callers dealing with a specific class pass that value through.
+const APP_TZ = DEFAULT_TIME_ZONE;
 
 /** The app's timezone, for anything that writes a wall-clock time somewhere
  *  else (the Google Calendar sync): a class's "6:00" means 6:00 here. */
@@ -489,19 +491,13 @@ export function fmtDayHeaderRel(iso: string, today = todayIso()): string {
 
 /** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
  *  now on" starts. Pass a Date to ask what day some other instant falls on. */
-export function todayIso(now = new Date()): string {
-  // en-CA is the locale whose short date is already YYYY-MM-DD.
-  return now.toLocaleDateString("en-CA", { timeZone: APP_TZ });
+export function todayIso(now = new Date(), timeZone = APP_TZ): string {
+  return isoDateInTimeZone(now, normalizeTimeZone(timeZone, APP_TZ));
 }
 
 /** Minutes past midnight of this instant, in the app's timezone. */
-function minutesNow(now = new Date()): number {
-  const [h, m] = now
-    .toLocaleTimeString("en-GB", { timeZone: APP_TZ, hour12: false, hour: "2-digit", minute: "2-digit" })
-    .split(":")
-    .map(Number);
-  // en-GB says "24:00" for midnight in some ICU versions; fold it back.
-  return ((h % 24) * 60 + m);
+function minutesNow(now = new Date(), timeZone = APP_TZ): number {
+  return minutesInTimeZone(now, normalizeTimeZone(timeZone, APP_TZ));
 }
 
 /**
@@ -512,19 +508,24 @@ function minutesNow(now = new Date()): number {
  * minutes, both in the app's timezone. A class only counts as gone once its
  * end time has passed, not at midnight.
  */
-export function occurrenceEnded(iso: string, startTime: string, durationMin: number): boolean {
+export function occurrenceEnded(
+  iso: string,
+  startTime: string,
+  durationMin: number,
+  timeZone = APP_TZ,
+): boolean {
   const [h, m] = startTime.split(":").map(Number);
   const end = new Date(`${iso}T00:00:00Z`);
   end.setUTCMinutes(end.getUTCMinutes() + h * 60 + m + durationMin);
   const now = new Date();
-  const ref = new Date(`${todayIso(now)}T00:00:00Z`);
-  ref.setUTCMinutes(ref.getUTCMinutes() + minutesNow(now));
+  const ref = new Date(`${todayIso(now, timeZone)}T00:00:00Z`);
+  ref.setUTCMinutes(ref.getUTCMinutes() + minutesNow(now, timeZone));
   return end.getTime() < ref.getTime();
 }
 
 /** ISO date (YYYY-MM-DD) of the current week's Monday, in the app's timezone. */
-export function mondayOfCurrentWeek(now = new Date()): string {
-  const m = new Date(`${todayIso(now)}T00:00:00Z`);
+export function mondayOfCurrentWeek(now = new Date(), timeZone = APP_TZ): string {
+  const m = new Date(`${todayIso(now, timeZone)}T00:00:00Z`);
   m.setUTCDate(m.getUTCDate() - ((m.getUTCDay() + 6) % 7));
   return m.toISOString().slice(0, 10);
 }
