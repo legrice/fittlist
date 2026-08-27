@@ -839,11 +839,9 @@ export function FollowingScreen({
                       <div>
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
-                          const placeIsCoach = sameCalendarIdentity(coach, item.where);
                           return <article className="cash-class-row" key={item.key}>
-                            <button type="button" className="cash-class-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
-                              <span className={`cash-class-avatar${placeIsCoach ? " studio" : ""}`} style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={placeIsCoach ? 56 : 48} height={placeIsCoach ? 44 : 48} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>
-                              <span className="cash-class-copy"><small>{coach?.name || "Coach to come"}</small><strong>{item.name}</strong><span>{item.where || "Location to come"}</span></span>
+                            <button type="button" className="cash-class-main" style={{ borderLeftColor: coach?.color }} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                              <span className="cash-class-copy"><small><span className="cash-class-coach-avatar" style={{ background:coach?.color ?? "var(--color-surface-muted)" }}>{coach?.photo ? <img src={coach.photo} alt="" width={24} height={24} loading="lazy" decoding="async" /> : <span>{(coach?.name ?? item.name).charAt(0).toUpperCase()}</span>}</span>{coach?.name || "Coach to come"}</small><strong>{item.name}</strong><span>{item.where || "Location to come"}</span></span>
                               <span className="cash-class-meta">
                                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
                                 {item.shift && <span className="cash-shift-tag">Shift</span>}
@@ -1042,10 +1040,9 @@ function EntityCalendarPeek({ entity, coaches, pinned, onPinned, onClose }: {
           <div className="cash-activity-list entity-peek-list">
             {sorted.map((item) => {
               const coach = coaches.get(item.coachId);
-              const placeIsCoach = sameCalendarIdentity(coach, item.where) || (entity.type === "studio" && !coach);
-              return <Link className="cash-class-main" href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
-                <span className={`cash-class-avatar${placeIsCoach ? " studio" : ""}`} style={{ background:coach?.color ?? entity.color }}>{(coach?.photo ?? entity.photo) ? <img src={(coach?.photo ?? entity.photo)!} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>
-                <span className="cash-class-copy"><small>{coach?.name || entity.name}</small><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span></span>
+              const coachPhoto = coach?.photo ?? entity.photo;
+              return <Link className="cash-class-main" style={{ borderLeftColor:coach?.color ?? entity.color }} href={`/${item.base}/${item.classId}?d=${item.iso}`} key={item.key}>
+                <span className="cash-class-copy"><small><span className="cash-class-coach-avatar" style={{ background:coach?.color ?? entity.color }}>{coachPhoto ? <img src={coachPhoto} alt="" loading="lazy" decoding="async" /> : <span>{(coach?.name ?? entity.name).charAt(0).toUpperCase()}</span>}</span>{coach?.name || entity.name}</small><strong>{item.name}</strong><span>{tabLabel(item.iso)} · {item.where || entity.name}</span></span>
                 <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>
               </Link>;
             })}
