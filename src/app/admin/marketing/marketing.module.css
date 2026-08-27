@@ -40,3 +40,44 @@
   .coachSection{padding:82px 20px;display:flex;flex-direction:column;gap:44px}
   .weekCard{width:100%;box-sizing:border-box}
 }
+
+/* Bento visual experiment: full-bleed color bands, ink outlines, no shadows. */
+.page{--marketing-dark:#000;--marketing-paper:#f3f3f1;background:#f3f3f1;color:#000}
+.header{--wm-ink:#000;--wm-mark:#000;height:88px;border-bottom:3px solid #000;background:#f3f3f1}
+.signIn{min-height:42px;padding:0 18px;display:inline-flex;align-items:center;border:2px solid #000;border-radius:999px;background:#fff;color:#000}
+.headerCta,.primary{border:2px solid #000;background:#d2e823;color:#000}
+.headerCta:active,.primary:active{transform:translateY(2px)}
+.hero{padding-top:88px;background:#d2e823;color:#000;border-bottom:3px solid #000}
+.hero .primary{background:#fff}
+.hero h1,.proof h2,.sectionCopy h2,.finalCta h2{font-weight:800;letter-spacing:-.043em}
+.heroPhone{border:3px solid #000;border-bottom:0;background:#fff;box-shadow:none;transform:translateX(-50%) rotate(2deg)}
+.phoneTools i,.phoneFilters span{border:2px solid #000}
+.phoneFilters span[data-selected="true"]{border-color:#000;background:#d2e823}
+.proof{background:#e9c0e9;border-bottom:3px solid #000}
+.kicker{border:2px solid #000;border-radius:999px;background:#fff;color:#000}
+.calendarDemo,.weekCard,.studioCard,.sharePreview{border:3px solid #000;border-radius:32px;background:#fff;box-shadow:none}
+.calendarDemo article,.weekRow{border-top:2px solid #000}
+.coachSection{max-width:none;padding-inline:max(24px,calc((100vw - 1120px)/2));background:#2665d6;color:#fff;border-bottom:3px solid #000}
+.coachSection .kicker{color:#000}
+.coachSection .sectionCopy>p:last-child{color:#fff}
+.weekCard{color:#000;background:#d6a337}
+.weekIdentity>span{border:2px solid #000;background:#fff;color:#000}
+.shareSection{background:#f3f3f1;border-bottom:3px solid #000}
+.shareVisual{border:3px solid #000;border-radius:64px;background:#d2e823}
+.shareBrand{filter:none}
+.shareCopy article{border-bottom:2px solid #000}.shareCopy article:first-child{border-top:2px solid #000}
+.shareCopy article>span{border:2px solid #000;background:#fff}
+.shareReady{border:2px solid #000;background:#061492;color:#fff}
+.studioSection{max-width:none;padding-inline:max(24px,calc((100vw - 1120px)/2));background:#ebffc5;border-bottom:3px solid #000}
+.studioIdentity>span,.studioStats p,.clearStatus{border:2px solid #000}
+.finalCta{background:#780016;border-bottom:3px solid #000;color:#fff}
+.finalCta .primary{background:#fff;color:#000}
+.footer{--wm-ink:#fff;--wm-mark:#d2e823;background:#780016;color:#fff}
+
+@media(max-width:760px){
+  .header{height:72px}
+  .signIn{min-height:38px;padding-inline:13px}
+  .hero{padding-top:64px}
+  .heroPhone{transform:translateX(-50%) rotate(1deg)}
+  .coachSection,.studioSection{padding-inline:20px}
+}

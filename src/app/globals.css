@@ -12207,3 +12207,212 @@ a.clspeek-by:active { opacity: .6; }
 .tzsetting .flabel {
   margin-top: 2px;
 }
+
+/* --------------------------------------------------------------------------
+   Bento restyle experiment
+
+   DESIGN-2.md is treated as a visual reference, while the existing semantic
+   names remain the contract for product code. The result is easy to compare
+   or remove as one final cascade layer on the codex/bento-restyle branch.
+   -------------------------------------------------------------------------- */
+:root {
+  --color-lime-spark: #d2e823;
+  --color-lavender-mist: #e9c0e9;
+  --color-cobalt-band: #2665d6;
+  --color-maroon-plate: #780016;
+  --color-cobalt-deep: #061492;
+  --color-forest-ink: #254f1a;
+  --color-mustard-pop: #d6a337;
+  --color-linen-canvas: #f3f3f1;
+  --color-leaf-wash: #ebffc5;
+  --color-moss-tint: #e8efd6;
+  --color-ink-black: #000000;
+
+  --color-lime: var(--color-lime-spark);
+  --color-lime-pressed: #bfd41b;
+  --color-lime-soft: var(--color-leaf-wash);
+  --color-action: var(--color-lime-spark);
+  --color-action-pressed: #bfd41b;
+  --color-action-soft: var(--color-leaf-wash);
+  --color-black: var(--color-ink-black);
+  --color-background: var(--color-linen-canvas);
+  --color-surface: #ffffff;
+  --color-surface-muted: var(--color-moss-tint);
+  --color-surface-hover: var(--color-leaf-wash);
+  --color-border: var(--color-ink-black);
+  --color-border-strong: var(--color-ink-black);
+  --color-text-primary: var(--color-ink-black);
+  --color-text-secondary: #676b5f;
+  --color-text-muted: #676b5f;
+  --shell: var(--color-linen-canvas);
+  --ground: var(--color-linen-canvas);
+  --paper: #ffffff;
+  --card: #ffffff;
+  --ink: var(--color-ink-black);
+  --ol: #676b5f;
+  --line: var(--color-ink-black);
+  --div: var(--color-ink-black);
+  --edge: var(--color-ink-black);
+  --si: var(--color-lime-spark);
+  --si-tint: var(--color-leaf-wash);
+  --si-soft: var(--color-leaf-wash);
+  --si-ink: var(--color-ink-black);
+  --cl: var(--color-moss-tint);
+  --cl-d: var(--color-leaf-wash);
+  --muted-surface: var(--color-moss-tint);
+  --headline-tracking: -.035em;
+  --radius-card: 32px;
+  --radius-control: 16px;
+  --radius-sheet: 32px;
+  --button-radius: var(--radius-pill);
+}
+
+body,
+.screen,
+.screen.hasnav {
+  background: var(--color-linen-canvas);
+}
+
+:is(
+  h1.screen-title,
+  .ob h1,
+  .wiz h1,
+  .admin h1,
+  .discover-page-title,
+  .discover-title-row h1,
+  .group-hero h1,
+  .savedhead h1,
+  .youaccount-head h1,
+  .calendar-page-header h1,
+  .cityhero h1
+) {
+  font-weight: 700;
+  letter-spacing: var(--headline-tracking);
+}
+
+.btn {
+  border: 2px solid var(--color-ink-black);
+  border-radius: var(--radius-pill);
+  box-shadow: none;
+}
+.btn.ghost {
+  border: 2px solid var(--color-ink-black);
+  background: #ffffff;
+}
+.btn:active { transform: translateY(2px); }
+
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .dissearch,
+  .header-search-field,
+  .studio-sel,
+  .embed-studio-options > button
+) {
+  border: 2px solid var(--color-ink-black);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .dissearch
+):focus,
+:is(.dissearch, .header-search-field):focus-within {
+  border-color: var(--color-ink-black);
+  outline: 3px solid var(--color-lime-spark);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+:is(
+  .class-card,
+  .empty-block,
+  .admincard,
+  .adminaddform,
+  .group-composer,
+  .tzsetting,
+  .availpick,
+  .desktop-side-card,
+  .desktop-share-card,
+  .desktop-side-search
+) {
+  border: 2px solid var(--color-ink-black);
+  border-radius: var(--radius-card);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.cash-class-row {
+  padding: 12px;
+  border: 2px solid var(--color-ink-black);
+  border-radius: 24px;
+  background: #ffffff;
+}
+.cash-class-row + .cash-class-row {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid var(--color-ink-black);
+}
+.cash-class-main { padding-inline: 14px 0; }
+
+.sheet {
+  border: 2px solid var(--color-ink-black);
+  border-bottom: 0;
+  border-radius: 32px 32px 0 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+.sheetclose,
+.iconbtn {
+  border: 2px solid var(--color-ink-black);
+  background: #ffffff;
+  color: var(--color-ink-black);
+}
+
+.navwrap {
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 12px;
+  max-width: 608px;
+}
+.navbar {
+  padding: 6px;
+  border: 2px solid var(--color-ink-black);
+  border-radius: 24px;
+  background: #ffffff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.navtab.on {
+  background: var(--color-lime-spark);
+  color: var(--color-ink-black);
+}
+.navtab:active { background: var(--color-leaf-wash); }
+
+@media (min-width: 1100px) {
+  .desktop-left {
+    border-right: 2px solid var(--color-ink-black);
+    background: var(--color-linen-canvas);
+  }
+  .desktop-nav-link.on {
+    border: 2px solid var(--color-ink-black);
+    background: var(--color-lime-spark);
+  }
+  .desktop-create {
+    border: 2px solid var(--color-ink-black);
+    border-radius: var(--radius-pill);
+    background: var(--color-lime-spark);
+  }
+}
+
+@media (min-width: 1320px) {
+  .desktop-right {
+    border-left: 2px solid var(--color-ink-black);
+    background: var(--color-linen-canvas);
+  }
+}
