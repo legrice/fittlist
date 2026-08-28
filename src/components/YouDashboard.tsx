@@ -81,6 +81,7 @@ export function YouDashboard({
   me,
   managed,
   shareHref,
+  isAdmin,
   unread: _unread,
   people = [],
   places = [],
@@ -215,6 +216,12 @@ export function YouDashboard({
               key={group.id}
             />
           ))}
+        </AccountGroup>
+      )}
+
+      {isAdmin && (
+        <AccountGroup title="Admin">
+          <AccountRow icon="admin_panel_settings" title="Admin dashboard" detail="Activity, people, studios, and maintenance" href="/admin" />
         </AccountGroup>
       )}
 
