@@ -190,6 +190,16 @@ export function YouDashboard({
         </div>
       </section>
 
+      <AccountGroup title="Your calendar">
+        <AccountRow
+          icon="calendar_month"
+          title="Personal calendar"
+          detail="Manage classes, shifts, and calendar tools"
+          href="/calendar"
+          avatar={{ photo: photoPreview, name: me.name, color: me.color }}
+        />
+      </AccountGroup>
+
       {yourGroups.length > 0 && (
         <AccountGroup title="Your groups">
           {yourGroups.map((group) => (
