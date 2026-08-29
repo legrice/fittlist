@@ -12385,7 +12385,10 @@ a.clspeek-by:active { opacity: .6; }
     box-shadow:0 5px 20px rgba(0,0,0,.1);
   }
   .screen.hasnav .navtab { min-height:54px; padding:4px 0; }
-  .screen.hasnav .navtab.on { background:var(--color-surface-muted); }
+  .screen.hasnav .navtab.on {
+    border-radius:var(--radius-pill);
+    background:var(--color-surface-muted);
+  }
   .screen.hasnav .navlabel { display:inline; }
   .calendar-tab-add,
   .calendar-bottom-actions .calendar-bottom-add { display:none; }
