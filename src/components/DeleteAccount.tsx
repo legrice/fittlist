@@ -27,6 +27,19 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
 
+  const openConfirmation = () => {
+    setWord("");
+    setErr("");
+    setOpen(true);
+  };
+
+  const closeConfirmation = () => {
+    if (pending) return;
+    setOpen(false);
+    setWord("");
+    setErr("");
+  };
+
   const go = () => {
     if (word.trim().toLowerCase() !== "delete") return;
     start(async () => {
@@ -50,7 +63,7 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
           should never notice. It is still one tap from the section it
           belongs to, and the sheet behind it is where the seriousness
           lives. */}
-      <button className="dellink" onClick={() => setOpen(true)}>
+      <button className="dellink" onClick={openConfirmation}>
         Delete account
       </button>
 
@@ -58,21 +71,21 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget && !pending) setOpen(false);
+            if (e.target === e.currentTarget) closeConfirmation();
           }}
         >
           <div className="sheet confirmsheet">
             <button
               className="iconbtn sheetclose"
               aria-label="Close"
-              onClick={() => setOpen(false)}
+              onClick={closeConfirmation}
             >
               <Icon name="close" size={18} />
             </button>
-            <h2>Delete your account</h2>
+            <h2>Are you sure you want to delete your account?</h2>
             <p className="lead">
-              This cannot be undone. Everything below goes at once, and nothing about it can be
-              brought back.
+              This is permanent and cannot be undone. Everything below goes at once, and nothing
+              about it can be brought back.
             </p>
             <ul className="dellist">
               <li>Your profile, your photo and your handle. The link stops working.</li>
@@ -113,7 +126,7 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
                 className="tertiary"
                 style={{ marginTop: 10 }}
                 disabled={pending}
-                onClick={() => setOpen(false)}
+                onClick={closeConfirmation}
               >
                 Keep my account
               </button>

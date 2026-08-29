@@ -2883,14 +2883,14 @@ button.ps-card { cursor: pointer; }
    picking something up rather than going somewhere. */
 /* An ask, not a screen: it sits low and stays small, so the list it's about is
    still visible behind it. */
-/* Leaving, as a link rather than a row. Orange because it is the one colour
-   this app raises its voice in, and small because a door most people should
+/* Leaving, as a quiet text link rather than a row. A door most people should
    never take does not deserve the weight of a setting they use. */
 .dellink {
   display: block; margin: 12px 2px 0; padding: 6px 0;
   background: none; border: none; cursor: pointer; text-align: left;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 14px; font-weight: 600; color: var(--si);
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  text-decoration: underline; text-underline-offset: 3px;
 }
 .dellink:active { opacity: .6; }
 .confirmsheet { max-width: 460px; }
