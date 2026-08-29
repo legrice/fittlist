@@ -12,6 +12,7 @@ import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
+import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -760,9 +761,7 @@ export function FollowingScreen({
       {isHome && selectedCalendar && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{selectedCalendar.label}</span>
-          {selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">
-            {selectedCalendar.action} <Icon name="chevron_right" size={17} />
-          </Link>}
+          {calendarFilter === "you" ? <PersonalCalendarSheetTrigger className="feedfilter-link" ariaLabel="Manage calendar">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></PersonalCalendarSheetTrigger> : selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></Link>}
         </div>
       )}
       {isHome && shown.length === 0 && calendarPending ? (

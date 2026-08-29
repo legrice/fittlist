@@ -7,6 +7,7 @@ import { Capacitor } from "@capacitor/core";
 import { updateProfilePhoto } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 import { SettingsGear } from "@/components/SettingsGear";
+import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassOpener } from "@/components/ClassOpener";
 import { readPhotoPair } from "@/lib/photo";
@@ -197,6 +198,7 @@ export function YouDashboard({
           detail="Manage classes, shifts, and calendar tools"
           href="/calendar"
           avatar={{ photo: photoPreview, name: me.name, color: me.color }}
+          calendarSheet
         />
       </AccountGroup>
 
@@ -262,9 +264,8 @@ function FollowingCountCircle({ href, count, singular, plural, photos, icon }: {
   </Link>;
 }
 
-function AccountRow({ icon, title, detail, href, count = 0, avatar, classTarget }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string; color?: string }; classTarget?: { id: string; iso: string; base: string } }) {
-  return (
-    <Link className="youaccount-row" href={href} data-cid={classTarget?.id} data-d={classTarget?.iso} data-base={classTarget?.base}>
+function AccountRow({ icon, title, detail, href, count = 0, avatar, classTarget, calendarSheet = false }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string; color?: string }; classTarget?: { id: string; iso: string; base: string }; calendarSheet?:boolean }) {
+  const content = <>
       {avatar ? <span className="youaccount-icon youaccount-place-avatar" style={avatar.photo ? undefined : { background: avatar.color }}>{avatar.photo ? <img src={avatar.photo} alt="" /> : <span>{(avatar.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span> : <span className="youaccount-icon"><Icon name={icon} size={20} /></span>}
       <span className="youaccount-copy">
         <strong>{title}</strong>
@@ -272,6 +273,7 @@ function AccountRow({ icon, title, detail, href, count = 0, avatar, classTarget 
       </span>
       {count > 0 && <b className="youaccount-unread" aria-label={`${count} unread`}>{count > 99 ? "99+" : count}</b>}
       <Icon className="youaccount-chevron" name="chevron_right" size={19} />
-    </Link>
-  );
+    </>;
+  if (calendarSheet) return <PersonalCalendarSheetTrigger className="youaccount-row" ariaLabel="Open personal calendar">{content}</PersonalCalendarSheetTrigger>;
+  return <Link className="youaccount-row" href={href} data-cid={classTarget?.id} data-d={classTarget?.iso} data-base={classTarget?.base}>{content}</Link>;
 }

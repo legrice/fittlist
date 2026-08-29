@@ -100,6 +100,8 @@ export function CalendarScreen({
   savedDays = [],
   openAdder = false,
   member = false,
+  sheet = false,
+  onClose,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -117,6 +119,8 @@ export function CalendarScreen({
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
+  sheet?: boolean;
+  onClose?: () => void;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
@@ -511,9 +515,7 @@ export function CalendarScreen({
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
-            <Link className="calendar-page-back" href="/you" aria-label="Back to You">
-              <Icon name="arrow_back" size={23} />
-            </Link>
+            {sheet ? <button type="button" className="calendar-page-back" aria-label="Close calendar" onClick={onClose}><Icon name="close" size={23} /></button> : <Link className="calendar-page-back" href="/you" aria-label="Back to You"><Icon name="arrow_back" size={23} /></Link>}
             <h1>My calendar</h1>
           </div>
           <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
@@ -641,15 +643,7 @@ export function CalendarScreen({
         />
       )}
 
-      <BodyPortal>
-        <div className="calendar-bottom-actions" aria-label="Schedule actions">
-          {!bare && (
-            <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}>
-              <Icon name="add" size={28} />
-            </button>
-          )}
-        </div>
-      </BodyPortal>
+      {sheet ? <div className="calendar-bottom-actions" aria-label="Schedule actions"><button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={28} /></button></div> : <BodyPortal><div className="calendar-bottom-actions" aria-label="Schedule actions">{!bare && <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={28} /></button>}</div></BodyPortal>}
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">

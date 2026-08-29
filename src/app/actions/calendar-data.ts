@@ -5,8 +5,51 @@ import { getDb, schema } from "@/db";
 import { currentUser } from "@/lib/current-user";
 import { todayIso } from "@/lib/format";
 import { shareWeek } from "@/lib/shareweek";
-import type { LastUsed, TemplateDto } from "@/lib/types";
+import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { HubItem } from "@/components/ShareHubScreen";
+import type { WeekDay } from "@/lib/week";
+import { myWeek } from "@/lib/week";
+import { mySchedule } from "@/lib/coachweek";
+import { avatarColor } from "@/lib/avatar";
+
+export type PersonalCalendarData = {
+  handle: string | null;
+  viewer: { id: string; name: string; photo: string | null; color: string };
+  classes: ClassDto[];
+  todayIso: string;
+  studios: StudioDto[];
+  savedDays: WeekDay[];
+  member: boolean;
+};
+
+export async function loadPersonalCalendarData(): Promise<PersonalCalendarData | null> {
+  const me = await currentUser();
+  if (!me) return null;
+  const db = await getDb();
+  const [classRows, studioRows, savedDays] = await Promise.all([
+    mySchedule(me.id),
+    db.select({ id:schema.studios.id, seq:schema.studios.seq, slug:schema.studios.slug, name:schema.studios.name, address:schema.studios.address }).from(schema.studios).orderBy(schema.studios.seq),
+    myWeek(me.id, { email:me.email }),
+  ]);
+  const studioById = new Map(studioRows.map((studio) => [studio.id, studio]));
+  return {
+    handle: me.handle,
+    viewer: { id:me.id, name:me.name, photo:me.photoThumb ?? me.photo, color:avatarColor(me) },
+    classes: classRows.map((row) => ({
+      id:row.id, templateId:row.templateId, seriesId:row.seriesId, dayOfWeek:row.dayOfWeek,
+      specificDate:row.specificDate, endsOn:row.endsOn, skipDates:row.skipDates,
+      startTime:row.startTime, timeZone:row.timeZone, durationMin:row.durationMin,
+      name:row.name, classType:row.classType, description:row.description,
+      studioId:row.studioId, location:row.location, isPublic:row.isPublic, links:row.links,
+      shift:row.shift, shiftBase:row.shift && row.studioId ? studioById.get(row.studioId)?.slug ?? null : null,
+      duplicateOf:row.duplicateOf,
+    })),
+    todayIso: todayIso(),
+    studios: studioRows,
+    savedDays,
+    member: me.kind === "fan",
+  };
+}
 
 export type CalendarComposerData = {
   templates: TemplateDto[];
