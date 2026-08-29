@@ -258,9 +258,18 @@ export function CoachPeek({
           </button>
           {!self && relationship !== null && <div className="peekcontrols-actions"><button className={`peekfollow peekrelationship${relationship !== "off" ? " on" : ""}`} type="button" disabled={followPending} aria-label={relationship === "following" ? `Unfollow ${name}` : relationship === "requested" ? `Cancel follow request for ${name}` : `Follow ${name}`} aria-pressed={relationship !== "off"} onClick={toggleFollow}>{relationship === "following" ? "Following" : relationship === "requested" ? "Requested" : "Follow"}</button><button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" disabled={pinPending} aria-label={pinned ? `Remove ${name} from favorites` : `Add ${name} to favorites`} aria-pressed={pinned} onClick={togglePin}><Icon name={pinned ? "star_filled" : "star"} size={21} /></button></div>}
         </div>
+        {!peek && !missing && (
+          <div className="peekloading" role="status" aria-live="polite" aria-busy="true">
+            <span aria-hidden="true" />
+            <p>Loading schedule</p>
+          </div>
+        )}
+        {missing && <p className="peekempty">That schedule isn&rsquo;t available.</p>}
+
         {/* Identity stays compact: face beside the name, then the person's
             role and location underneath. Actions remain on their own row. */}
-        <div className="peekhead peekhead-stack">
+        {peek && <>
+          <div className="peekhead peekhead-stack">
           <div className="peekidentity">
             <span className="peekav">
               {photo ? (
@@ -274,11 +283,9 @@ export function CoachPeek({
             </span>
             <div className="peekhead-txt">
               <h2 className="peekhead-nm">{name}</h2>
-              {peek && (
-                <p className="peekhead-meta">
-                  {peek.personType}{peek.location ? ` · ${peek.location}` : ""}
-                </p>
-              )}
+              <p className="peekhead-meta">
+                {peek.personType}{peek.location ? ` · ${peek.location}` : ""}
+              </p>
             </div>
           </div>
           {peek?.handle && (
@@ -302,11 +309,9 @@ export function CoachPeek({
               )}
             </div>
           )}
-        </div>
+          </div>
 
-        {missing && <p className="peekempty">That schedule isn&rsquo;t available.</p>}
-
-        {peek && !visibleDays.length && (
+        {!visibleDays.length && (
           <p className="peekempty">
             {peek.gated
               ? `Save ${name}'s calendar to see their week.`
@@ -320,9 +325,10 @@ export function CoachPeek({
           </ClassOpener>
         )}
 
-        {!self && !scheduleOnly && peek && visibleDays.length > 0 && (
+        {!self && !scheduleOnly && visibleDays.length > 0 && (
           <p className="peekfoot">Add anything here to put it on your own week.</p>
         )}
+        </>}
       </div>
       {messageOpen && peek?.handle && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMessageOpen(false); }}>

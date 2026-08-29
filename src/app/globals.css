@@ -10146,6 +10146,17 @@ select.editinput.placekind-select {
 }
 .peekhead-nm { font-size: 19px; font-weight: 600; margin: 0; }
 .sheet .peekhead-nm { min-height:0; padding-right:0; font-size:19px; line-height:1.15; }
+.peekloading {
+  min-height:240px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  color:var(--ol);
+}
+.peekloading > span {
+  width:24px; height:24px; border:2px solid var(--line); border-top-color:var(--ink); border-radius:50%;
+  animation:peekloading-spin .75s linear infinite;
+}
+.peekloading p { margin:0; font-size:14px; font-weight:600; }
+@keyframes peekloading-spin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce) { .peekloading > span { animation:none; border-top-color:var(--line); } }
 .peekempty { font-size: 14px; line-height: 1.5; color: var(--ol); margin: 8px 0 0; }
 
 .peekday { margin-top: 18px; }
