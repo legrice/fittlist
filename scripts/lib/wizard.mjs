@@ -7,6 +7,21 @@
 // wants a set-up account goes through here rather than each one learning the
 // wizard's shape again.
 export async function skipSetup(page, city = "Jersey City, NJ", teach = true) {
+  await page.locator("#wLocation, .teachcard").first().waitFor();
+  if (await page.locator("#wLocation").count()) {
+    await page.locator("#wLocation").fill(city);
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    if (teach) {
+      await page.locator('.wizteach input[type="checkbox"]').check();
+      await page.locator(".wizcategory", { hasText: "Strength" }).click();
+    }
+    await page.getByRole("button", { name: "Finish setup" }).click();
+    await page.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 });
+    return;
+  }
+
+  // Older release branches still use the four-step wizard. Keeping the
+  // fallback lets smoke tests run against either side of that migration.
   await page
     .locator(".teachcard", { hasText: teach ? "Yes, I teach" : "I just take classes" })
     .click();

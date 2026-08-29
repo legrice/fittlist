@@ -214,7 +214,7 @@ export function ClassRowMenu({
 
       {cardOpen && (
         <ShareCardSheet
-          path={`/api/card/class/${classId}`}
+          path={`/api/card/class/${classId}?d=${encodeURIComponent(iso)}`}
           fileName={`fittlist-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
           title="Share this class"
           lead="A square picture of the class, made for sharing."

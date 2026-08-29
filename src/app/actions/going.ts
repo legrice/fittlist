@@ -15,7 +15,7 @@ export async function setGoing(
   classId: string,
   occurrenceDate: string,
   on: boolean,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; rsvp?: boolean }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in first." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
@@ -70,7 +70,10 @@ export async function setGoing(
   await recordProductActivity(userId, on ? "class_saved" : "class_removed");
   revalidatePath("/feed");
   revalidatePath("/calendar");
-  return { ok: true };
+  // The client uses RSVP as the stronger commitment moment: a normal save
+  // gets a quiet share invitation, while joining a roster can open it. Send
+  // the class's own setting back so a fast tap does not race classDetail.
+  return { ok: true, rsvp: cls.rsvp };
 }
 
 // The way off being seen: a mark is public to your followers by default

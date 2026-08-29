@@ -373,7 +373,7 @@ export async function addGroupClasses(slug: string, choices: { classId: string; 
     await notifyGroup(manager.groupId, manager.userId, `New class in ${group?.name ?? "your group"}`, "A class was added to the group calendar.", `/g/${slug}?tab=updates`);
   }
   revalidatePath(`/g/${slug}`);
-  return { ok: true } as const;
+  return { ok: true, count: added.length } as const;
 }
 
 export async function inviteGroupPeople(slug: string, userIds: string[], role: "member" | "admin") {

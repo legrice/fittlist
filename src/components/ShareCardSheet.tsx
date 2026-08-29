@@ -25,7 +25,7 @@ export function ShareCardSheet({
   linkUrl,
   linkTitle,
 }: {
-  /** The image route, without its query: "/api/card/matt". */
+  /** The image route. Class cards include their exact occurrence query. */
   path: string;
   fileName: string;
   title: string;
@@ -56,7 +56,7 @@ export function ShareCardSheet({
     );
   }, []);
 
-  const cardUrl = `${path}?theme=${themeId}&v=${bust}-${themeId}`;
+  const cardUrl = `${path}${path.includes("?") ? "&" : "?"}theme=${themeId}&v=${bust}-${themeId}`;
   const cardFileName = fileName;
 
   const shareCard = async () => {

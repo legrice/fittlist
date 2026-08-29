@@ -6228,18 +6228,62 @@ select.editinput.placekind-select {
 .discover-calendar-list .clline-tag { background:var(--color-surface-muted); color:var(--color-black); }
 .discover-calendar-list .clrow:has(.calendar-overlay-save) .clline-by { padding-right:76px; }
 .calendar-overlay-save.saved { background:var(--color-attending); border-color:transparent; }
-.discover-saved-sheet { max-height:min(78dvh,620px); }
-.discover-saved-head { min-height:62px; margin-top:38px; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; }
-.discover-saved-head h2 { min-height:0!important; margin:0; padding:0!important; display:flex!important; align-items:center; gap:7px; color:var(--color-black); font-size:clamp(17px,4.5vw,20px); white-space:nowrap; }
-.discover-saved-head h2 svg { flex:0 0 auto; }
-.discover-saved-head p { margin:3px 0 0; color:var(--color-text-secondary); font-size:13px; }
-.discover-saved-head>button { padding:7px 0; border:0; background:none; color:var(--color-black); font:inherit; font-weight:700; text-decoration:underline; }
-.discover-saved-groups { margin-top:22px; padding-top:18px; border-top:1px solid var(--color-border); }
-.discover-saved-groups h3 { margin:0 0 8px; font-size:18px; }
-.discover-saved-groups>button { width:100%; min-height:58px; padding:8px 0; display:grid; grid-template-columns:40px minmax(0,1fr) 24px; align-items:center; gap:11px; border:0; border-bottom:1px solid var(--color-border); background:none; color:var(--color-black); font:inherit; text-align:left; }
-.discover-saved-groups>button>span { width:38px; height:38px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime-soft); }
-.discover-saved-groups>button:disabled { opacity:.55; }
-.discover-saved-groups>p { margin:8px 0; color:var(--color-text-secondary); font-size:14px; }
+/* Saving stays light. Its Share link opens this focused second sheet, with
+   the finished class picture already in view and the class as the one clear
+   subject. Groups and the whole week are hand-offs, not competing buttons. */
+.postsave-sheet {
+  max-height:min(90dvh,720px); padding-top:22px;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom));
+}
+.postsave-head {
+  min-height:48px; margin:2px 52px 16px 0;
+  display:grid; grid-template-columns:36px minmax(0,1fr); align-items:center; gap:11px;
+}
+.postsave-head>span {
+  width:36px; height:36px; display:grid; place-items:center; border-radius:50%;
+  background:var(--si-tint); color:var(--si-ink);
+}
+.sheet .postsave-head h2 { margin:0; padding:0; font-size:22px; line-height:1.08; }
+.postsave-head p { margin:4px 0 0; color:var(--ol); font-size:13px; line-height:1.35; }
+.postsave-preview {
+  width:min(64vw,28dvh,240px); aspect-ratio:1; margin:0 auto;
+  display:grid; place-items:center; overflow:hidden; border:1px solid var(--line);
+  border-radius:var(--radius-control); background:var(--cl);
+}
+.postsave-preview img { width:100%; height:100%; display:block; object-fit:contain; }
+.postsave-preview-failed { padding:20px; color:var(--ol); font-size:13px; text-align:center; }
+.postsave-preview-loading { color:var(--ol); animation:postsave-pulse 1.2s ease-in-out infinite; }
+@keyframes postsave-pulse { 50% { opacity:.38; } }
+@media (prefers-reduced-motion:reduce) { .postsave-preview-loading { animation:none; } }
+.postsave-actions { margin-top:18px; }
+.postsave-actions>.btn { margin:0; }
+.postsave-row {
+  width:100%; min-height:54px; margin-top:12px; padding:10px 0;
+  display:grid; grid-template-columns:36px minmax(0,1fr) 24px; align-items:center; gap:10px;
+  border:0; border-top:1px solid var(--line); background:none; color:var(--ink);
+  font:inherit; text-align:left;
+}
+.postsave-row>span {
+  width:34px; height:34px; display:grid; place-items:center; border-radius:50%;
+  background:var(--si-tint); color:var(--si-ink);
+}
+.postsave-row strong { overflow:hidden; font-size:15px; text-overflow:ellipsis; white-space:nowrap; }
+.postsave-groups { max-height:154px; margin-left:46px; overflow-y:auto; }
+.postsave-groups>button {
+  width:100%; min-height:48px; padding:7px 0;
+  display:grid; grid-template-columns:30px minmax(0,1fr) auto; align-items:center; gap:9px;
+  border:0; border-top:1px solid var(--line); background:none; color:var(--ink);
+  font:inherit; text-align:left;
+}
+.postsave-groups>button>span { color:var(--ol); }
+.postsave-groups>button strong { overflow:hidden; font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
+.postsave-groups>button[aria-disabled="true"] { opacity:.5; }
+.postsave-group-status { min-width:24px; display:flex; justify-content:flex-end; font-size:12px; font-weight:600; }
+.postsave-week {
+  min-height:44px; padding:10px 4px 4px; display:flex; align-items:center; justify-content:center; gap:7px;
+  color:var(--ol); font-size:14px; font-weight:600; text-decoration:underline; text-underline-offset:3px;
+}
+.postsave-week.first { margin-top:10px; border-top:1px solid var(--line); }
 .discover-event-day > h2 { margin:0 0 var(--space-1); font-size:20px; line-height:1.15; }
 .discover-event-day > div { display:flex; flex-direction:column; gap:var(--space-1); }
 .discover-group-grid {
@@ -7045,6 +7089,8 @@ select.editinput.placekind-select {
 }
 .favtoast.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
 .favtoast-link { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.favtoast button.favtoast-link { padding:0; border:0; background:none; font:inherit; cursor:pointer; }
+.postsave-toast { z-index:49; }
 /* It names the class now, and a long name must trim rather than push the
    link off the screen. */
 .favtoast { max-width: calc(100vw - 32px); }

@@ -10,7 +10,7 @@ import { setGoing } from "@/app/actions/going";
 import { giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
-import { announceSaved } from "@/components/SaveEducation";
+import { SavedClassShareSheet } from "@/components/SavedClassShareSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { FittlistShareSheet } from "@/components/InAppShare";
 
@@ -180,6 +180,10 @@ export function ClassPeek({
   const [loading, setLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
+  const [savePrompt, setSavePrompt] = useState(false);
+  const [savedShareKind, setSavedShareKind] = useState<"saved" | "rsvp" | null>(null);
+  const savePromptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
   // The viewer's mark, locally, so the button flips on the tap rather than
   // the round trip. Null until touched; the loaded detail is the truth
   // before that.
@@ -310,12 +314,63 @@ export function ClassPeek({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cls.id, cls.iso, cls.base, initialDetail]);
 
+  useEffect(
+    () => () => {
+      if (savePromptTimer.current) clearTimeout(savePromptTimer.current);
+    },
+    [],
+  );
+
   // Share first means people and a link. The designed image is a deliberate
   // second door inside that sheet, rather than making every share wait for an
   // image editor when somebody only wants to text the class to a friend.
   const share = () => {
     if (onShare) return onShare();
     setShareOpen(true);
+  };
+
+  const hideSavePrompt = () => {
+    if (savePromptTimer.current) clearTimeout(savePromptTimer.current);
+    savePromptTimer.current = null;
+    setSavePrompt(false);
+  };
+
+  const showSavePrompt = () => {
+    hideSavePrompt();
+    setSavePrompt(true);
+    savePromptTimer.current = setTimeout(() => {
+      setSavePrompt(false);
+      savePromptTimer.current = null;
+    }, 4200);
+  };
+
+  const changeSaved = async (wasOn: boolean) => {
+    if (saveBusy) return;
+    setSaveBusy(true);
+    setSavedNow(!wasOn);
+    hideSavePrompt();
+    try {
+      const res = await setGoing(cls.id, cls.iso, !wasOn);
+      if (!res.ok) {
+        setSavedNow(wasOn);
+        onToast(res.error ?? "Couldn't update your week");
+        return;
+      }
+
+      if (!wasOn) {
+        const rsvp = res.rsvp ?? full?.rsvp ?? false;
+        if (rsvp) setSavedShareKind("rsvp");
+        else showSavePrompt();
+      } else {
+        onToast("Removed from your calendar");
+      }
+      onChanged();
+    } catch {
+      setSavedNow(wasOn);
+      onToast("Couldn't update your week");
+    } finally {
+      setSaveBusy(false);
+    }
   };
 
   const editClass = () => {
@@ -566,30 +621,12 @@ export function ClassPeek({
               const word = on ? "Saved" : "Save";
               return (
                 <button
+                  ref={saveButtonRef}
                   className={`clsfull-btn save${on ? " on" : ""}`}
                   disabled={saveBusy}
                   aria-label={word}
                   aria-pressed={on}
-                  onClick={async () => {
-                    if (saveBusy) return;
-                    setSaveBusy(true);
-                    setSavedNow(!on);
-                    const res = await setGoing(cls.id, cls.iso, !on);
-                    if (!res.ok) setSavedNow(on);
-                    else if (!on) {
-                      announceSaved(cls.id, cls.iso);
-                      onToast(
-                        full?.rsvp
-                          ? "RSVP’d. It’s on your calendar."
-                          : "Saved to your week",
-                        `${cls.id}.${cls.iso}`,
-                      );
-                    } else {
-                      onToast("Removed from your calendar");
-                    }
-                    setSaveBusy(false);
-                    onChanged();
-                  }}
+                  onClick={() => void changeSaved(on)}
                 >
                   {word}
                 </button>
@@ -598,6 +635,37 @@ export function ClassPeek({
         </div>
         )}
       </div>
+
+      {savePrompt && savedShareKind === null && (
+        <div className="favtoast on postsave-toast">
+          <span className="favtoast-t" role="status">Saved to your week</span>
+          <span aria-hidden="true">·</span>
+          <button
+            className="favtoast-link"
+            type="button"
+            onClick={() => {
+              hideSavePrompt();
+              setSavedShareKind("saved");
+            }}
+          >
+            Share
+          </button>
+        </div>
+      )}
+
+      {savedShareKind !== null && (
+        <SavedClassShareSheet
+          classId={cls.id}
+          iso={cls.iso}
+          name={cls.name}
+          saveKind={savedShareKind}
+          onClose={() => {
+            setSavedShareKind(null);
+            requestAnimationFrame(() => saveButtonRef.current?.focus());
+          }}
+          onToast={onToast}
+        />
+      )}
 
       {shareOpen && (
         <FittlistShareSheet
@@ -615,7 +683,7 @@ export function ClassPeek({
       {cardOpen && (
         <ShareCardSheet
           noThemes={!!full?.image}
-          path={`/api/card/class/${cls.id}`}
+          path={`/api/card/class/${cls.id}?d=${encodeURIComponent(cls.iso)}`}
           fileName={`fittlist-${cls.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
           title="Share this class"
           lead="A square picture of the class, made for sharing."

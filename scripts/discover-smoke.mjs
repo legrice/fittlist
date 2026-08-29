@@ -8,11 +8,30 @@
 //   INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 //   node scripts/discover-smoke.mjs
 import { chromium } from "playwright";
+import { existsSync, readFileSync } from "node:fs";
 import { skipSetup } from "./lib/wizard.mjs";
 
 const BASE = "http://localhost:3000";
+const SERVER_LOG = process.env.SMOKE_SERVER_LOG ?? "server.log";
 const fail = (m) => { throw new Error("DISCOVER FAIL: " + m); };
-const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
+const lastMagic = () => {
+  const matches = [...readFileSync(SERVER_LOG, "utf8").matchAll(/http:\/\/localhost:3000\/auth\/magic\?token=[a-f0-9]{64}/g)];
+  if (!matches.length) fail("the local mailer did not print a sign-up link");
+  return matches.at(-1)[0];
+};
+const dismissPasswordPrompt = async (page, timeout = 5000) => {
+  const sheet = page.locator(".setpw-sheet");
+  if (!(await sheet.waitFor({ timeout }).then(() => true).catch(() => false))) return;
+  await sheet.locator(".confirm-keep", { hasText: "Not now" }).click();
+  await sheet.waitFor({ state: "detached" });
+  await page.waitForLoadState("networkidle");
+};
+const macChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM_PATH
+  ?? (existsSync("/opt/pw-browsers/chromium")
+    ? "/opt/pw-browsers/chromium"
+    : existsSync(macChrome) ? macChrome : undefined);
+const b = await chromium.launch(chromiumPath ? { executablePath: chromiumPath } : {});
 const stamp = Date.now().toString(36);
 
 const mk = async (email, name, member) => {
@@ -20,49 +39,62 @@ const mk = async (email, name, member) => {
   const p = await ctx.newPage();
   p.setDefaultTimeout(25000);
   await p.goto(BASE + "/");
-  await p.getByRole("button", { name: "Sign up with email" }).click();
+  while (await p.getByRole("button", { name: "Continue", exact: true }).count()) {
+    await p.getByRole("button", { name: "Continue", exact: true }).click();
+  }
+  await p.getByRole("button", { name: "Sign up", exact: true }).click();
+  await p.getByRole("heading", { name: "Sign up with email" }).waitFor();
   await p.getByPlaceholder("you@example.com").fill(email);
-  await p.getByPlaceholder("Password").fill("disc-pass-123");
-  await p.getByRole("button", { name: "Create account" }).click();
-  await p.getByRole("button", { name: "Not now" }).click().catch(() => {});
+  await p.getByRole("button", { name: "Email sign-up link" }).click();
+  await p.getByText("Check your inbox.").waitFor();
+  await p.goto(lastMagic());
+  await p.getByRole("button", { name: "Continue securely" }).click();
   await p.getByText("Pick your link.").waitFor();
   await p.getByPlaceholder("Your name").fill(name);
   await p.getByRole("button", { name: "Claim it" }).click();
   await skipSetup(p, "Jersey City, NJ", !member);
   if (member) await p.waitForURL("**/feed");
+  await dismissPasswordPrompt(p, 10000);
   return p;
 };
 
 // One coach, three Monday classes at one studio and one Tuesday class:
 // weekly, so the collapse has something to collapse.
 const coach = await mk(`dc${stamp}@example.com`, `Drew ${stamp.slice(-3)}`, false);
-const addClass = async (nm, day, t, firstStudio) => {
+const studioName = `Drew Gym ${stamp.slice(-3)}`;
+const addClass = async (nm, day, t, firstStudio, rsvp = false) => {
   await coach.goto(BASE + "/calendar");
-  await coach.locator(".wkempty-cta, .wkfab").first().click();
-  await coach
-    .locator(".setrow", { hasText: /coaching/ })
-    .click({ timeout: 4000 })
-    .catch(() => {});
-  await coach.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
+  await dismissPasswordPrompt(coach);
+  await coach.locator(".calendar-empty-actions .btn.si, .calendar-bottom-add").first().click();
+  await coach.locator(".addweek-option-coaching", { hasText: "Teaching a class" }).click();
+  await coach.locator(".addrole-continue").click();
+  await coach.locator(".addrole-new-class, .stepline").first().waitFor();
+  if (await coach.locator(".addrole-new-class").isVisible().catch(() => false)) {
+    await coach.locator(".addrole-new-class").click();
+  }
+  await coach.locator(".stepline", { hasText: "Choose the place" }).waitFor();
   if (firstStudio) {
-    await coach.getByRole("button", { name: "+ New studio" }).click();
-    await coach.getByPlaceholder("e.g. Palisade Barbell").fill(`Drew Gym ${stamp.slice(-3)}`);
-    await coach.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("1 Drew St, Jersey City NJ");
-    await coach.getByRole("button", { name: "Add studio" }).click();
+    await coach.getByRole("button", { name: "+ New place" }).click();
+    await coach.locator("#nsName").fill(studioName);
+    await coach.locator("#nsAddr").fill("1 Drew St, Jersey City NJ");
+    await coach.getByRole("button", { name: "Add place" }).click();
   } else {
-    await coach.getByPlaceholder("Start typing a studio…").fill("Drew Gym");
-    await coach.locator(".studio-row", { hasText: "Drew Gym" }).click();
+    await coach.getByPlaceholder("Search places…").fill(studioName);
+    await coach.locator(".studio-row", { hasText: studioName }).click();
     await coach.getByRole("button", { name: "+ New class" }).click();
   }
   await coach.getByPlaceholder("e.g. Barbell Strength").fill(nm);
   await coach.getByRole("button", { name: day, exact: true }).click();
   await coach.locator("#fStart").fill(t);
+  if (rsvp) {
+    await coach.locator(".setrow", { hasText: "Ask people to RSVP" }).click();
+  }
   await coach.locator(".publishwrap .btn").click();
   await coach.waitForTimeout(1200);
-  await coach.locator(".sheetclose").first().click().catch(() => {});
+  await coach.locator(".sheetclose").first().click({ timeout: 1000 }).catch(() => {});
 };
 await addClass("Dawn Lift", "Mo", "06:00", true);
-await addClass("Noon Lift", "Mo", "12:00", false);
+await addClass("Noon Lift", "Mo", "12:00", false, true);
 await addClass("Dusk Lift", "Mo", "18:00", false);
 await addClass("Tuesday Flow", "Tu", "09:00", false);
 console.log("coach's week up: three Mondays, one Tuesday");
@@ -73,6 +105,97 @@ await kai.context().close();
 
 // The member the walk belongs to.
 const m = await mk(`dm${stamp}@example.com`, `Demi ${stamp.slice(-3)}`, true);
+
+const checkSavedShare = async () => {
+  // A normal save stays light, then Share opens the finished image without
+  // dismissing the class. The image must describe the exact occurrence that
+  // was saved, not the series' next date.
+  await m.goto(`${BASE}/drew${stamp.slice(-3)}`);
+  const follow = m.locator(".profacts .followpill").first();
+  if ((await follow.innerText()).trim() === "Follow") {
+    await follow.click();
+    await follow.filter({ hasText: "Following" }).waitFor();
+  }
+  const duskRow = m.locator(".profile-calendar-list .clline", { hasText: "Dusk Lift" }).first();
+  await duskRow.waitFor();
+  const duskIso = await duskRow.getAttribute("data-d");
+  if (!duskIso || !/^\d{4}-\d{2}-\d{2}$/.test(duskIso)) fail("the class row carries its occurrence date");
+  await duskRow.click();
+  await m.locator(".clsfull").waitFor();
+  await m.locator(".clsfull-btn.save", { hasText: "Save" }).click();
+  await m.locator(".clsfull-btn.save.on", { hasText: "Saved" }).waitFor();
+  await m.locator(".postsave-toast", { hasText: "Saved to your week" }).waitFor();
+  if (await m.locator(".postsave-sheet").count()) fail("an ordinary save should not force open sharing");
+  const classCardRequest = m.waitForRequest((request) => request.url().includes("/api/card/class/"));
+  await m.locator(".postsave-toast").getByRole("button", { name: "Share" }).click();
+  const requestedCard = new URL((await classCardRequest).url());
+  if (requestedCard.searchParams.get("d") !== duskIso)
+    fail("the share image should use the exact saved occurrence");
+  await m.locator(".postsave-sheet").waitFor();
+  await m.waitForFunction(() => {
+    const image = document.querySelector(".postsave-preview img");
+    return image instanceof HTMLImageElement && image.naturalWidth === 1080 && image.naturalHeight === 1080;
+  });
+  await m.locator(".postsave-sheet .btn", { hasText: "Share this class" }).waitFor();
+  await m.locator('.postsave-week[href="/share"]', { hasText: "Share my whole week" }).waitFor();
+  await m.locator('.postsave-sheet[data-groups-ready="true"]').waitFor();
+  if (await m.locator(".postsave-row", { hasText: "Add to a group" }).count())
+    fail("people without a managed group should not get a group action");
+  if (process.env.SMOKE_SCREENSHOT) {
+    await m.screenshot({ path: process.env.SMOKE_SCREENSHOT });
+  }
+  await m.locator(".postsave-sheet .sheetclose").click();
+  await m.locator(".postsave-sheet").waitFor({ state: "detached" });
+  await m.locator(".clsfull-btn.save.on", { hasText: "Saved" }).waitFor();
+  await m.locator(".clsfull-x").click();
+
+  // Managed groups are an optional hand-off, visible only when it is honest.
+  const groupName = `Monday Crew ${stamp.slice(-3)}`;
+  await m.goto(`${BASE}/saved`);
+  await m.locator(".savedsection-groups .youfav-add").click();
+  await m.getByPlaceholder("Saturday run crew").fill(groupName);
+  await m.locator(".create-group-submit", { hasText: "Continue" }).click();
+  await m.locator(".create-group-purpose").waitFor();
+  await m.locator(".create-group-submit", { hasText: "Continue" }).click();
+  await m.locator(".create-group-visibility").waitFor();
+  await m.locator(".create-group-submit", { hasText: "Create group" }).click();
+  await m.waitForURL(/\/g\//);
+
+  await m.goto(`${BASE}/drew${stamp.slice(-3)}`);
+  const savedDusk = m.locator(".profile-calendar-list .clline", { hasText: "Dusk Lift" }).first();
+  await savedDusk.click();
+  await m.locator(".clsfull-btn.save.on", { hasText: "Saved" }).click();
+  await m.locator(".clsfull-btn.save", { hasText: "Save" }).click();
+  await m.locator(".postsave-toast").getByRole("button", { name: "Share" }).click();
+  await m.locator('.postsave-sheet[data-groups-ready="true"]').waitFor();
+  await m.locator(".postsave-row", { hasText: "Add to a group you manage" }).click();
+  const groupChoice = m.locator(".postsave-groups button", { hasText: groupName });
+  await groupChoice.click();
+  await groupChoice.getByText("Added", { exact: true }).waitFor();
+  await m.locator(".postsave-sheet .sheetclose").click();
+  await m.locator(".clsfull-x").click();
+
+  // RSVP is a stronger commitment, so this branch opens the same focused
+  // share moment immediately after the successful save.
+  const noonRow = m.locator(".profile-calendar-list .clline", { hasText: "Noon Lift" }).first();
+  await noonRow.click();
+  await m.locator(".clspeek-rsvpnote").waitFor();
+  await m.locator(".clsfull-btn.save", { hasText: "Save" }).click();
+  await m.locator(".postsave-sheet", { hasText: "RSVP sent" }).waitFor();
+  if (await m.locator(".postsave-toast").count()) fail("RSVP should open the focused share moment directly");
+  await m.locator(".postsave-sheet .sheetclose").click();
+  await m.locator(".clsfull-btn.save.on", { hasText: "Saved" }).click();
+  await m.locator(".clsfull-btn.save", { hasText: "Save" }).waitFor();
+  await m.locator(".clsfull-x").click();
+  console.log("normal save, exact image, managed group, and RSVP share paths passed");
+};
+
+if (process.env.SHARE_ONLY === "1") {
+  await checkSavedShare();
+  await b.close();
+  process.exit(0);
+}
+
 const tabs = (await m.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 if (!tabs[0].includes("Home")) fail("Home leads the bar: " + tabs.join("|"));
 
@@ -176,17 +299,7 @@ await m.locator(".trayav-you").waitFor();
 await m.locator(".disflat .clline-nm").first().waitFor();
 console.log("the rails under the schedule, each arrow landing on its segment");
 
-// The class peek: Follow (no star), and Save in the footer. Scoped to the
-// sheet, because the Coaches near you rail behind it carries Follow too.
-await m.locator(".disflat .clline-nm", { hasText: "Dusk Lift" }).first().click();
-await m.locator(".clsfull .peekfollow", { hasText: "Follow" }).waitFor();
-if (await m.locator(".peekstar").count()) fail("no stars anywhere");
-await m.locator(".clsfull .peekfollow").click();
-await m.locator(".clsfull .peekfollow.on", { hasText: "Following" }).waitFor();
-await m.locator(".clsfull-btn.save", { hasText: "Save" }).click();
-await m.locator(".clsfull-btn.save.on", { hasText: "Saved" }).waitFor();
-await m.locator(".clsfull-x").click();
-console.log("followed and saved from the class");
+await checkSavedShare();
 
 // The rail: Drew's circle wears the fresh ring; Kai, quiet, is not on it.
 await m.goto(BASE + "/feed");
