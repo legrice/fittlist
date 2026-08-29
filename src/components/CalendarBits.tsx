@@ -11,12 +11,14 @@ import { Icon } from "@/components/Icon";
 // parts around it.
 
 /** Your relationship to a row, which is also its colour. */
-export type CalKind = "coaching" | "added" | "private";
+export type CalKind = "following" | "coaching" | "added" | "private" | "shift";
 
 export const KIND_LABEL: Record<CalKind, string> = {
+  following: "Following",
   coaching: "Teaching",
   added: "Going",
   private: "Personal",
+  shift: "Shift",
 };
 
 /** Which views exist so far. Week is the one still to come. */
@@ -551,9 +553,11 @@ export function ViewSheet({
  *  one line each on purpose: this is a filter sheet, not an onboarding
  *  screen, and three paragraphs under two switches would bury the switches. */
 const KIND_EMPTY: Record<CalKind, { says: string; cta: string }> = {
+  following: { says: "Nothing from calendars you follow yet.", cta: "Find calendars" },
   coaching: { says: "You aren't teaching anything yet.", cta: "Add a class" },
   added: { says: "You aren't going to any classes.", cta: "Add one" },
   private: { says: "Nothing on your personal calendar.", cta: "Add one" },
+  shift: { says: "You don't have any studio shifts yet.", cta: "View studios" },
 };
 
 export function KindFilterSheet({

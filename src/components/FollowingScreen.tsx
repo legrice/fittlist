@@ -12,6 +12,7 @@ import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
+import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -268,6 +269,9 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [calendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarKind, setCalendarKind] = useState<"all" | "following" | "coaching" | "attending" | "shifts">("all");
+  const [calendarView, setCalendarView] = useState<"list" | "month">("list");
+  const [monthHorizon] = useState(1);
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -405,6 +409,10 @@ export function FollowingScreen({
     return items.filter((item) => {
       if (!passes(item)) return false;
       if (!isHome) return true;
+      if (calendarKind === "following" && (item.shift || item.saved || item.coachId === meId)) return false;
+      if (calendarKind === "coaching" && (item.shift || item.coachId !== meId)) return false;
+      if (calendarKind === "attending" && !item.saved) return false;
+      if (calendarKind === "shifts" && !item.shift) return false;
       if (calendarFilter === "you") return item.saved || (!!meId && item.coachId === meId);
       if (calendarFilter.startsWith("coach:")) return item.coachId === calendarFilter.slice(6);
       if (calendarFilter.startsWith("studio:")) {
@@ -424,7 +432,7 @@ export function FollowingScreen({
       return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds]);
+  }, [items, f, geo, isHome, meId, calendarFilter, calendarKind, coachOptions, studioOptions, groupOptions, favoriteIds]);
 
   // A brand-new account has no useful calendar identity to put in the rail
   // yet. Showing a lone “You” circle above an empty state makes the circle
@@ -504,6 +512,26 @@ export function FollowingScreen({
     }));
   }, [homeRows, todayIso]);
   const visibleHomeDays = homeDays.slice(0, visibleHomeDayCount);
+  const monthItems = useMemo(() => {
+    const mapped = new Map<string, MonthCellItem[]>();
+    for (const item of homeRows) {
+      const relation = calendarRelation(item, meId);
+      const next: MonthCellItem = {
+        kind: relation.tone === "attending" ? "added" : relation.tone,
+        name: item.name,
+        at: item.mins,
+      };
+      const current = mapped.get(item.iso);
+      if (current) current.push(next);
+      else mapped.set(item.iso, [next]);
+    }
+    return mapped;
+  }, [homeRows, meId]);
+
+  const openMonthDay = (iso: string) => {
+    setCalendarView("list");
+    window.setTimeout(() => document.getElementById(`feed-day-${iso}`)?.scrollIntoView({ block: "start" }), 0);
+  };
 
   useEffect(() => {
     if (!isHome || visibleHomeDayCount >= homeDays.length) return undefined;
@@ -728,6 +756,24 @@ export function FollowingScreen({
           </Link>}
         </div>
       )}
+      {isHome && !firstRun && (
+        <div className="unified-calendar-controls">
+          <label>
+            <span className="sr-only">Calendar contents</span>
+            <select value={calendarKind} onChange={(event) => setCalendarKind(event.target.value as typeof calendarKind)}>
+              <option value="all">All calendars</option>
+              <option value="following">Following</option>
+              <option value="coaching">Coaching</option>
+              <option value="attending">Attending</option>
+              <option value="shifts">Shifts</option>
+            </select>
+          </label>
+          <div role="group" aria-label="Calendar view">
+            <button type="button" className={calendarView === "list" ? "on" : ""} aria-label="Day view" aria-pressed={calendarView === "list"} onClick={() => setCalendarView("list")}><Icon name="calendar_view_day" size={21} /></button>
+            <button type="button" className={calendarView === "month" ? "on" : ""} aria-label="Month view" aria-pressed={calendarView === "month"} onClick={() => setCalendarView("month")}><Icon name="calendar_view_month" size={21} /></button>
+          </div>
+        </div>
+      )}
       {isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
@@ -827,21 +873,27 @@ export function FollowingScreen({
               </div>
             )}
 
-            <div className="cardwrap home-schedule">
-              {isHome ? (
+          <div className="cardwrap home-schedule">
+            {isHome && calendarView === "month" ? (
+              <>
+                <MonthHeadRow />
+                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={() => {}} monthsAhead={monthHorizon} />
+              </>
+            ) : isHome ? (
                 <div className="cash-activity-list">
                   {visibleHomeDays.map((section) => (
-                    <section className="cash-day" key={section.iso}>
+                    <section className="cash-day" id={`feed-day-${section.iso}`} key={section.iso}>
                       <h2>{section.label}</h2>
                       <div>
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
                           const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
+                          const relation = calendarRelation(item, meId);
                           return <article className="cash-class-row" key={item.key}>
-                            <button type="button" className={`cash-class-main${item.shift ? " shift" : item.coachId === meId ? " coaching" : item.saved ? " saved" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                            <button type="button" className={`cash-class-main ${relation.tone}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy">
-                                {(coachName || item.shift) && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{item.shift && <span className="cash-shift-tag">Shift</span>}</span>}
-                                <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
+                                {coachName && <span className="cash-class-coachline"><small>{coachName}</small>{!item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}</span>}
+                                <span className="cash-class-title-row"><strong>{item.name}</strong><span className="cash-class-time-stack"><span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span></span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
                             </button>
@@ -878,7 +930,7 @@ export function FollowingScreen({
               )}
                 </>
               )}
-            </div>
+          </div>
           </div>
         </>
       )}
@@ -983,13 +1035,14 @@ export function FollowingScreen({
       {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} coaches={coachById} meId={meId} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
       {isHome && (
         <BodyPortal>
-          <Link
+          <button
+            type="button"
             className="calendar-tab-add"
-            href="/calendar?add=1"
             aria-label="Add to your calendar"
+            onClick={() => document.querySelector<HTMLButtonElement>(".minimal-brandbar .social-brandbar-left > button")?.click()}
           >
             <Icon name="add" size={32} />
-          </Link>
+          </button>
         </BodyPortal>
       )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
@@ -1090,6 +1143,16 @@ function daySectionLabel(iso: string, today: string): string {
   if (iso === today) return "Today";
   if (iso === plusDays(today, 1)) return "Tomorrow";
   return date;
+}
+
+function calendarRelation(item: FeedItem, meId?: string): {
+  label: "Following" | "Coaching" | "Attending" | "Shift";
+  tone: "following" | "coaching" | "attending" | "shift";
+} {
+  if (item.shift) return { label: "Shift", tone: "shift" };
+  if (meId && item.coachId === meId) return { label: "Coaching", tone: "coaching" };
+  if (item.saved) return { label: "Attending", tone: "attending" };
+  return { label: "Following", tone: "following" };
 }
 
 /** A studio-owned occurrence uses a studio-shaped identity so open classes

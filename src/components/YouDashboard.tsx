@@ -190,26 +190,6 @@ export function YouDashboard({
         </div>
       </section>
 
-      <AccountGroup title="Your calendars">
-        <AccountRow
-          icon="calendar_month"
-          title="Personal calendar"
-          detail="View, manage, and share your schedule"
-          href="/calendar"
-          avatar={{ photo: photoPreview, name: me.name, color: me.color }}
-        />
-          {managed.map((place) => (
-            <AccountRow
-              icon="storefront"
-              title={place.name}
-              detail={place.admin ? "Manage calendar and staff" : "Team calendar"}
-              href={place.admin ? `/s/${place.slug}/manage` : `/s/${place.slug}/schedule?from=you`}
-              avatar={{ photo: place.photo, name: place.name }}
-              key={place.id}
-            />
-          ))}
-      </AccountGroup>
-
       {yourGroups.length > 0 && (
         <AccountGroup title="Your groups">
           {yourGroups.map((group) => (
@@ -230,11 +210,6 @@ export function YouDashboard({
           <AccountRow icon="admin_panel_settings" title="Admin dashboard" detail="Activity, people, studios, and maintenance" href="/admin" />
         </AccountGroup>
       )}
-
-      <AccountGroup title="Activity">
-        <AccountRow icon="chat" title="Messages" detail="Your conversations and replies" href="/inbox" />
-        <AccountRow icon="notifications" title="Notifications" detail="Follows, updates, and cancellations" href="/notifications" />
-      </AccountGroup>
 
       <AccountGroup title="Saved items">
         {savedItems.length > 0 ? <ClassOpener handle="">{savedItems.map((item) => (
