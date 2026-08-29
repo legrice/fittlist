@@ -12297,6 +12297,12 @@ a.clspeek-by:active { opacity: .6; }
 .share-tab-header { display:none; }
 @media (max-width:939px) {
   .screen.hasnav > .pad > .social-brandbar { display:none; }
+  .youaccount-head {
+    flex-direction:column;
+    align-items:flex-start;
+    gap:14px;
+  }
+  .youaccount-identity { width:100%; padding-top:0; }
   .screen.hasnav .cash-day > h2 {
     font-size:18px;
     line-height:1.2;
