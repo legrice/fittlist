@@ -595,6 +595,24 @@ export function ShareHubScreen({
             </BackLink>
           </div>
         )}
+        {tabbed && (
+          <header className="share-tab-header">
+            <h1>Share</h1>
+            <div className="shseg">
+              <select
+                className="shseg-select"
+                aria-label="What to share"
+                value={seg}
+                onChange={(event) => goSeg(event.target.value as Seg)}
+              >
+                {segs.map((subject) => (
+                  <option key={subject.id} value={subject.id}>{subject.label}</option>
+                ))}
+              </select>
+              <Icon className="shseg-chevron" name="expand_more" size={20} />
+            </div>
+          </header>
+        )}
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
             below the fold. Two lines and the button; the experiment talk
@@ -611,7 +629,7 @@ export function ShareHubScreen({
             </button>
           </div>
         )}
-        {!building && (
+        {!building && !tabbed && (
           <div className="shseg">
             <select
               className="shseg-select"
@@ -623,6 +641,7 @@ export function ShareHubScreen({
                 <option key={subject.id} value={subject.id}>{subject.label}</option>
               ))}
             </select>
+            <Icon className="shseg-chevron" name="expand_more" size={20} />
           </div>
         )}
 

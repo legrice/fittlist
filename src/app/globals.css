@@ -10590,7 +10590,7 @@ a.clspeek-by:active { opacity: .6; }
 /* One compact subject picker in the header saves the vertical space that a
    rail of four tabs used to occupy. Swiping the preview keeps it in sync. */
 .shseg {
-  display:flex; justify-content:center; margin:0 auto;
+  position:relative; display:flex; justify-content:center; margin:0 auto;
 }
 .shseg-select {
   min-width:150px; max-width:calc(100vw - 148px); height:var(--tap-size);
@@ -10598,6 +10598,11 @@ a.clspeek-by:active { opacity: .6; }
   border-radius:var(--radius-pill); background:var(--color-white); color:var(--ink);
   font-family:'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size:17px; font-weight:700; text-align:center; cursor:pointer;
+  appearance:none; -webkit-appearance:none;
+}
+.shseg-chevron {
+  position:absolute; right:11px; top:50%; transform:translateY(-50%);
+  pointer-events:none; color:var(--ink);
 }
 .shseg-select:focus { outline:2px solid var(--si); outline-offset:2px; }
 @media (max-width:939px) {
@@ -12277,6 +12282,7 @@ a.clspeek-by:active { opacity: .6; }
 /* Headerless iOS navigation preview. Calendar and Discover share one title
    datum; the action changes without shifting the title or page content. */
 .tab-page-header { display:none; }
+.share-tab-header { display:none; }
 @media (max-width:939px) {
   .screen.hasnav > .pad > .social-brandbar { display:none; }
   .tab-page-header {
@@ -12287,6 +12293,29 @@ a.clspeek-by:active { opacity: .6; }
     align-items:center;
     justify-content:space-between;
     gap:12px;
+  }
+  .share-tab-header {
+    min-height:64px;
+    margin:4px 0;
+    padding-top:env(safe-area-inset-top);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .share-tab-header h1 {
+    margin:0;
+    font-size:34px;
+    line-height:1.05;
+    letter-spacing:var(--headline-tracking);
+  }
+  .share-tab-header .shseg { margin:0; }
+  .share-tab-header .shseg-select {
+    min-width:0;
+    max-width:190px;
+    height:44px;
+    padding-left:16px;
+    font-size:16px;
   }
   .tab-page-header h1 {
     margin:0;
