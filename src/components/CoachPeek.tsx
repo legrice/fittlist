@@ -228,31 +228,6 @@ export function CoachPeek({
         aria-label={`${name} calendar`}
         style={{ transform: `translateY(${dragY}px)` }}
       >
-        <div
-          className="peekdrag"
-          role="presentation"
-          onPointerDown={(event) => {
-            if (event.pointerType === "touch") return;
-            dragStart.current = { y: event.clientY, at: performance.now() };
-            setDragging(true);
-            event.currentTarget.setPointerCapture(event.pointerId);
-          }}
-          onPointerMove={(event) => {
-            if (event.pointerType === "touch" || dragStart.current.at === 0) return;
-            setDragY(Math.max(0, event.clientY - dragStart.current.y));
-          }}
-          onPointerUp={(event) => {
-            if (event.pointerType === "touch") return;
-            finishDrag(event.clientY);
-            dragStart.current.at = 0;
-          }}
-          onPointerCancel={(event) => {
-            if (event.pointerType === "touch") return;
-            dragStart.current.at = 0;
-            setDragging(false);
-            setDragY(0);
-          }}
-        ><span aria-hidden="true" /></div>
         {/* A direct child of the scrolling sheet so sticky can hold it for
             the full week. Inside the short header it was constrained to the
             header and disappeared as soon as the dates began. */}
