@@ -12292,15 +12292,7 @@ a.clspeek-by:active { opacity: .6; }
     padding-top:6px;
     padding-bottom:7px;
   }
-  .tab-page-header {
-    min-height:64px;
-    margin:4px 0;
-    padding-top:env(safe-area-inset-top);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-  }
+  .tab-page-header,
   .share-tab-header {
     min-height:64px;
     margin:4px 0;
@@ -12310,6 +12302,7 @@ a.clspeek-by:active { opacity: .6; }
     justify-content:space-between;
     gap:12px;
   }
+  .tab-page-header h1,
   .share-tab-header h1 {
     margin:0;
     font-size:34px;
@@ -12323,12 +12316,6 @@ a.clspeek-by:active { opacity: .6; }
     height:44px;
     padding-left:16px;
     font-size:16px;
-  }
-  .tab-page-header h1 {
-    margin:0;
-    font-size:34px;
-    line-height:1.05;
-    letter-spacing:var(--headline-tracking);
   }
   .tab-page-notifications {
     position:relative;
@@ -12396,6 +12383,8 @@ a.clspeek-by:active { opacity: .6; }
     bottom:calc(88px + env(safe-area-inset-bottom));
   }
   .cardwrap.shpage-tabbed {
+    margin-top:0;
+    padding-top:0;
     padding-bottom:calc(110px + env(safe-area-inset-bottom));
   }
 }
