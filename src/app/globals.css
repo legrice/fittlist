@@ -12436,7 +12436,6 @@ a.clspeek-by:active { opacity: .6; }
   }
   .screen.hasnav .navtab.on .navglyph,
   .screen.hasnav .navtab.on .navlabel { position:relative; z-index:1; }
-  .nav-profile-button { flex:1; cursor:pointer; }
   .nav-profile-dot {
     position:absolute; top:1px; right:6px; z-index:2;
     width:9px; height:9px; border:2px solid var(--color-surface);

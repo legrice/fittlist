@@ -128,7 +128,6 @@ export async function AppChrome({
         active={active}
         face={face}
         unread={unread.notifications > 0 || unread.messages > 0}
-        accountData={accountData}
       />
     </>
   );

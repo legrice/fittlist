@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
-import { HeaderAccountButton } from "@/components/HeaderAccountButton";
-import type { YouAccountData } from "@/components/YouDashboard";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 
 export type { NavTab };
@@ -20,7 +18,6 @@ export function NavBar({
   profileHref,
   face,
   unread = false,
-  accountData,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
    *  A screen off the tabs that belongs to one passes it. */
@@ -33,7 +30,6 @@ export function NavBar({
   profileHref?: string;
   face?: { photo: string | null; color: string; initial: string };
   unread?: boolean;
-  accountData?: YouAccountData;
 }) {
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
@@ -44,14 +40,16 @@ export function NavBar({
       <nav className="navbar" aria-label="Main">
         {dockTabs.map((t) => {
           const on = here === t.id;
-          if (t.id === "calendar") {
-            return <HeaderAccountButton key={t.id} face={face} unread={unread} fallbackHref={profileHref} initialData={accountData} variant="nav" active={on} />;
-          }
           const cls = `navtab${on ? " on" : ""}`;
           const inner = (
             <>
               <span className="navglyph">
-                <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={24} />
+                {t.id === "calendar" && face ? (
+                  face.photo ? <img className="navav" src={face.photo} alt="" /> : (
+                    <span className="navav navav-empty" style={{ background: face.color }}>{face.initial}</span>
+                  )
+                ) : <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={24} />}
+                {t.id === "calendar" && unread && <i className="nav-profile-dot" aria-hidden="true" />}
               </span>
               <span className="navlabel">{t.label}</span>
             </>
