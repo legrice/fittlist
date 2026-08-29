@@ -12398,7 +12398,7 @@ a.clspeek-by:active { opacity: .6; }
   .screen.hasnav .navtab.on::before {
     content:"";
     position:absolute;
-    inset:0 15px;
+    inset:0;
     z-index:0;
     border-radius:var(--radius-pill);
     background:var(--color-surface-muted);
