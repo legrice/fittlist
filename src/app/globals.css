@@ -9062,22 +9062,22 @@ select.editinput.placekind-select {
 .following-rail .tray-scroll {
   gap:8px; padding:6px var(--page-gutter);
 }
-.following-rail .trayitem { width:92px; gap:8px; }
-.following-rail .trayav { width:86px; height:86px; }
-.following-rail .trayitem-nm { max-width:90px; font-size:13px; }
+.following-rail .trayitem { width:74px; gap:7px; }
+.following-rail .trayav { width:68px; height:68px; }
+.following-rail .trayitem-nm { max-width:72px; font-size:12px; }
 .following-rail .trayitem.selected .trayav { box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-black); }
 .following-rail .trayitem.selected .trayitem-nm { font-weight:700; }
 .following-rail .trayav-search {
   display:flex; align-items:center; justify-content:center;
   background:var(--card); color:var(--ink);
 }
-.following-rail .railarrow { top:50px; }
+.following-rail .railarrow { top:41px; }
 .following-rail .trayav-share-prompt {
   box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-lime);
 }
-.cash-rail-item { position:relative; width:92px; flex:0 0 92px; }
+.cash-rail-item { position:relative; width:74px; flex:0 0 74px; }
 .cash-pin {
-  position:absolute; top:67px; right:0; z-index:3; width:24px; height:24px; padding:0;
+  position:absolute; top:49px; right:0; z-index:3; width:22px; height:22px; padding:0;
   display:grid; place-items:center; border:2px solid var(--ground); border-radius:50%;
   background:var(--card); color:var(--ink); cursor:pointer;
 }
