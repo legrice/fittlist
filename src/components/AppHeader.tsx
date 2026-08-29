@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { HeaderAccountButton } from "@/components/HeaderAccountButton";
-import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
@@ -94,24 +93,7 @@ export function AppHeader({
   }
 
   if (social) {
-    return (
-      <div className="brandbar social-brandbar minimal-brandbar">
-        <div className="social-brandbar-side social-brandbar-left">
-          <GlobalAdd />
-        </div>
-        <div className="social-brandbar-side social-brandbar-right">
-          <Link className="iconbtn" href="/search" aria-label="Search FittList">
-            <Icon name="search" size={23} />
-          </Link>
-          <HeaderAccountButton
-            face={face}
-            unread={notificationUnread > 0 || messageUnread > 0}
-            fallbackHref={profileHref}
-            initialData={accountData}
-          />
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

@@ -12347,23 +12347,6 @@ a.clspeek-by:active { opacity: .6; }
 .tab-page-header { display:none; }
 .share-tab-header { display:none; }
 @media (max-width:939px) {
-  .screen.hasnav > .pad > .minimal-brandbar {
-    display:flex;
-    min-height:64px;
-    margin-top:calc(-14px - env(safe-area-inset-top));
-    padding-top:calc(16px + env(safe-area-inset-top));
-    border-bottom:0;
-    background:var(--ground);
-  }
-  .minimal-brandbar .social-brandbar-side { top:auto; bottom:10px; transform:none; }
-  .minimal-brandbar .social-brandbar-left { left:18px; }
-  .minimal-brandbar .social-brandbar-right { right:18px; gap:6px; }
-  .minimal-brandbar .iconbtn {
-    width:44px; height:44px; border:1px solid var(--color-border-strong); border-radius:50%;
-    background:var(--color-surface-muted); box-shadow:0 1px 4px rgba(0,0,0,.06);
-  }
-  .minimal-brandbar .brandbar-avatar { width:44px; height:44px; }
-  .minimal-brandbar .brandbar-avatar :is(img, span) { width:42px; height:42px; }
   .youaccount-head {
     flex-direction:column;
     align-items:flex-start;
@@ -12371,6 +12354,7 @@ a.clspeek-by:active { opacity: .6; }
   }
   .youaccount-identity { width:100%; padding-top:0; }
   .screen.hasnav .cash-day > h2 {
+    top:0;
     font-size:18px;
     line-height:1.2;
     margin-bottom:10px;
@@ -12420,9 +12404,9 @@ a.clspeek-by:active { opacity: .6; }
   .screen.hasnav > .navwrap {
     left:50%;
     right:auto;
-    width:calc(100% - 48px);
+    width:calc(100% - 32px);
     bottom:calc(10px + env(safe-area-inset-bottom));
-    max-width:300px;
+    max-width:352px;
     margin:0;
     transform:translateX(-50%);
     align-items:center;
@@ -12452,6 +12436,12 @@ a.clspeek-by:active { opacity: .6; }
   }
   .screen.hasnav .navtab.on .navglyph,
   .screen.hasnav .navtab.on .navlabel { position:relative; z-index:1; }
+  .nav-profile-button { flex:1; cursor:pointer; }
+  .nav-profile-dot {
+    position:absolute; top:1px; right:6px; z-index:2;
+    width:9px; height:9px; border:2px solid var(--color-surface);
+    border-radius:50%; background:var(--color-danger, #e52b32);
+  }
   .screen.hasnav .navlabel { display:inline; }
   .calendar-bottom-actions .calendar-bottom-add { display:none; }
   .cardwrap.shpage-tabbed {

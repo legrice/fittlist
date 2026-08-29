@@ -32,8 +32,8 @@ export function navTabs(
       label: "Calendar",
     },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
-    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
     { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
   ];
 }
 

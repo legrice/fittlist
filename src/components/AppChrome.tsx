@@ -127,6 +127,8 @@ export async function AppChrome({
         profileHref={profileHref}
         active={active}
         face={face}
+        unread={unread.notifications > 0 || unread.messages > 0}
+        accountData={accountData}
       />
     </>
   );

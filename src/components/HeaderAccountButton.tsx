@@ -19,11 +19,15 @@ export function HeaderAccountButton({
   unread = false,
   fallbackHref = "/you",
   initialData,
+  variant = "header",
+  active = false,
 }: {
   face?: HeaderFace;
   unread?: boolean;
   fallbackHref?: string;
   initialData?: YouAccountData;
+  variant?: "header" | "nav";
+  active?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<YouAccountData | null>(initialData ?? null);
@@ -95,20 +99,37 @@ export function HeaderAccountButton({
     <>
       <button
         type="button"
-        className="brandbar-avatar"
+        className={variant === "nav" ? `navtab nav-profile-button${open || active ? " on" : ""}` : "brandbar-avatar"}
         aria-label={`Open your profile${unread ? ", new activity" : ""}`}
         aria-expanded={open}
         onClick={show}
         onPointerEnter={() => { void loadDashboard(); }}
         onFocus={() => { void loadDashboard(); }}
       >
-        {face?.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={face.photo} alt="" />
+        {variant === "nav" ? (
+          <>
+            <span className="navglyph">
+              {face?.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="navav" src={face.photo} alt="" />
+              ) : (
+                <span className="navav navav-empty" style={{ background: face?.color ?? "var(--color-surface-muted)" }}>{face?.initial ?? "?"}</span>
+              )}
+              {unread && <i className="nav-profile-dot" aria-hidden="true" />}
+            </span>
+            <span className="navlabel">You</span>
+          </>
         ) : (
-          <span style={{ background: face?.color ?? "var(--color-surface-muted)" }}>{face?.initial ?? "?"}</span>
+          <>
+            {face?.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={face.photo} alt="" />
+            ) : (
+              <span style={{ background: face?.color ?? "var(--color-surface-muted)" }}>{face?.initial ?? "?"}</span>
+            )}
+            {unread && <i aria-hidden="true" />}
+          </>
         )}
-        {unread && <i aria-hidden="true" />}
       </button>
 
       {open && (

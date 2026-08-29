@@ -13,6 +13,7 @@ import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
+import { GlobalAdd } from "@/components/GlobalAdd";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -1058,14 +1059,7 @@ export function FollowingScreen({
       {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} coaches={coachById} meId={meId} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
       {isHome && (
         <BodyPortal>
-          <button
-            type="button"
-            className="calendar-tab-add"
-            aria-label="Add to your calendar"
-            onClick={() => document.querySelector<HTMLButtonElement>(".minimal-brandbar .social-brandbar-left > button")?.click()}
-          >
-            <Icon name="add" size={32} />
-          </button>
+          <GlobalAdd triggerClassName="calendar-tab-add" />
         </BodyPortal>
       )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
