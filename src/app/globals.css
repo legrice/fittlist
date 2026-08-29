@@ -12305,8 +12305,8 @@ a.clspeek-by:active { opacity: .6; }
   .minimal-brandbar .social-brandbar-left { left:18px; }
   .minimal-brandbar .social-brandbar-right { right:18px; gap:6px; }
   .minimal-brandbar .iconbtn {
-    width:44px; height:44px; border:1px solid var(--color-border); border-radius:50%;
-    background:var(--color-white);
+    width:44px; height:44px; border:1px solid var(--color-border-strong); border-radius:50%;
+    background:var(--color-surface-muted); box-shadow:0 1px 4px rgba(0,0,0,.06);
   }
   .minimal-brandbar .brandbar-avatar { width:44px; height:44px; }
   .minimal-brandbar .brandbar-avatar :is(img, span) { width:42px; height:42px; }
@@ -12386,7 +12386,7 @@ a.clspeek-by:active { opacity: .6; }
   }
   .screen.hasnav .navtab { min-height:54px; padding:4px 0; }
   .screen.hasnav .navtab.on { background:var(--color-surface-muted); }
-  .screen.hasnav .navlabel { display:none; }
+  .screen.hasnav .navlabel { display:inline; }
   .calendar-tab-add,
   .calendar-bottom-actions .calendar-bottom-add { display:none; }
   .cardwrap.shpage-tabbed {
