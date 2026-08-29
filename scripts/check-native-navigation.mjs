@@ -12,7 +12,7 @@ const fail = (message) => {
 const requiredWebFragments = [
   'id: "following" as const',
   'href: "/feed"',
-  'label: "Home"',
+  'label: "Calendar"',
   '{ id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" }',
   '{ id: "discover", href: "/discover", icon: "search", label: "Search" }',
   'id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile"',
@@ -20,7 +20,7 @@ const requiredWebFragments = [
 const requiredSwiftFragments = [
   'private let tabIDs = ["following", "share", "calendar", "discover"]',
   'private let fallbackRoutes = ["/feed", "/membershare", "/you", "/discover"]',
-  'item("Home", "calendar", 0)',
+  'item("Calendar", "calendar", 0)',
   'item("Share", "arrowshape.turn.up.right", 1)',
   'item("Profile", "person.crop.circle", 2)',
   'item("Search", "magnifyingglass", 3)',

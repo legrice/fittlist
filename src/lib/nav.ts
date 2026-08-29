@@ -29,7 +29,7 @@ export function navTabs(
       id: "following" as const,
       href: "/feed",
       icon: "calendar_month",
-      label: "Home",
+      label: "Calendar",
     },
     { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" },
     { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile" },
