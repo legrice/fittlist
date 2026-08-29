@@ -12311,11 +12311,13 @@ a.clspeek-by:active { opacity: .6; }
   }
   .tab-page-header { display:none; }
   .calendar-tab-header,
+  .screen.hasnav .discover-title-row,
   .share-tab-header {
     min-height:44px; margin:4px 0 10px; padding:0;
     display:flex; align-items:center; justify-content:space-between; gap:12px;
   }
   .calendar-tab-header h1,
+  .screen.hasnav .discover-title-row h1,
   .share-tab-header h1 {
     margin:0; font-size:30px; line-height:1.05; letter-spacing:-.025em;
   }
@@ -12361,7 +12363,6 @@ a.clspeek-by:active { opacity: .6; }
     border-radius:50%;
     background:var(--color-danger, #e52b32);
   }
-  .screen.hasnav .discover-title-row { display:none; }
   .screen.hasnav .calendar-page-header { display:none; }
 
   .screen.hasnav > .navwrap {
