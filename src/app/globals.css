@@ -9065,7 +9065,7 @@ select.editinput.placekind-select {
 .following-rail .trayitem { width:74px; gap:7px; }
 .following-rail .trayav { width:68px; height:68px; }
 .following-rail .trayitem-nm { max-width:72px; font-size:12px; }
-.following-rail .trayitem.selected .trayav { box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-black); }
+.following-rail .trayitem.selected .trayav { box-shadow:0 0 0 3px var(--ground), 0 0 0 6px var(--color-lime); }
 .following-rail .trayitem.selected .trayitem-nm { font-weight:700; }
 .following-rail .trayav-search {
   display:flex; align-items:center; justify-content:center;
