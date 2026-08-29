@@ -9145,15 +9145,6 @@ select.editinput.placekind-select {
   font-size:19px; line-height:1.16; font-weight:700;
 }
 .cash-class-time { align-self:end; font-size:17px; line-height:1.2; font-weight:600; white-space:nowrap; }
-.cash-class-time-stack { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
-.cash-relation-tag {
-  padding:3px 8px; border-radius:var(--radius-pill); font-size:10px;
-  line-height:1.15; font-weight:700; white-space:nowrap;
-}
-.cash-relation-tag.following { background:var(--color-olive); color:var(--color-black); }
-.cash-relation-tag.coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
-.cash-relation-tag.attending { background:var(--color-attending); color:var(--color-attending-text); }
-.cash-relation-tag.shift { background:var(--color-shift); color:var(--color-shift-text); }
 .cash-class-studio,
 .cash-class-duration { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:15px; }
 .cash-class-duration { text-align:right; }
@@ -12302,6 +12293,7 @@ a.clspeek-by:active { opacity: .6; }
    datum; the action changes without shifting the title or page content. */
 .tab-page-header { display:none; }
 .share-tab-header { display:none; }
+.calendar-tab-header { display:none; }
 @media (max-width:939px) {
   .youaccount-head {
     flex-direction:column;
@@ -12318,11 +12310,15 @@ a.clspeek-by:active { opacity: .6; }
     padding-bottom:7px;
   }
   .tab-page-header { display:none; }
+  .calendar-tab-header,
   .share-tab-header {
     min-height:44px; margin:4px 0 10px; padding:0;
-    display:flex; align-items:center; justify-content:flex-end;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
   }
-  .share-tab-header h1 { display:none; }
+  .calendar-tab-header h1,
+  .share-tab-header h1 {
+    margin:0; font-size:30px; line-height:1.05; letter-spacing:-.025em;
+  }
   .share-tab-header .shseg { margin:0; }
   .share-tab-header .shseg-select {
     min-width:0;
@@ -12331,6 +12327,17 @@ a.clspeek-by:active { opacity: .6; }
     padding-left:16px;
     font-size:16px;
   }
+  .calendar-tab-view {
+    display:flex; padding:3px; flex:0 0 auto;
+    border:1px solid var(--color-border); border-radius:var(--radius-pill);
+    background:var(--color-surface);
+  }
+  .calendar-tab-view button {
+    width:38px; height:36px; padding:0; display:grid; place-items:center;
+    border:0; border-radius:var(--radius-pill); background:transparent;
+    color:var(--color-text-muted);
+  }
+  .calendar-tab-view button.on { background:var(--color-surface-muted); color:var(--ink); }
   .tab-page-notifications {
     position:relative;
     width:44px;

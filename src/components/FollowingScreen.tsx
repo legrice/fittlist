@@ -11,6 +11,7 @@ import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
+import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -267,6 +268,7 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarView, setCalendarView] = useState<"day" | "month">("day");
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -502,6 +504,26 @@ export function FollowingScreen({
     }));
   }, [homeRows, todayIso]);
   const visibleHomeDays = homeDays.slice(0, visibleHomeDayCount);
+  const monthItems = useMemo(() => {
+    const mapped = new Map<string, MonthCellItem[]>();
+    for (const item of homeRows) {
+      const relation = calendarRelation(item, meId);
+      const next: MonthCellItem = {
+        kind: relation.tone === "attending" ? "added" : relation.tone,
+        name: item.name,
+        at: item.mins,
+      };
+      const current = mapped.get(item.iso);
+      if (current) current.push(next);
+      else mapped.set(item.iso, [next]);
+    }
+    return mapped;
+  }, [homeRows, meId]);
+
+  const openMonthDay = (iso: string) => {
+    setCalendarView("day");
+    window.setTimeout(() => document.getElementById(`feed-day-${iso}`)?.scrollIntoView({ block: "start" }), 0);
+  };
   useEffect(() => {
     if (!isHome || visibleHomeDayCount >= homeDays.length) return undefined;
     const target = homeMoreRef.current;
@@ -659,6 +681,15 @@ export function FollowingScreen({
           </Link>
           <h1>Upcoming near you</h1>
           <p>Browse classes by day, time, distance, type, or place.</p>
+        </header>
+      )}
+      {isHome && (
+        <header className="calendar-tab-header">
+          <h1>Calendar</h1>
+          <div className="calendar-tab-view" role="group" aria-label="Calendar view">
+            <button type="button" className={calendarView === "day" ? "on" : ""} aria-label="Day view" aria-pressed={calendarView === "day"} onClick={() => setCalendarView("day")}><Icon name="calendar_view_day" size={21} /></button>
+            <button type="button" className={calendarView === "month" ? "on" : ""} aria-label="Month view" aria-pressed={calendarView === "month"} onClick={() => setCalendarView("month")}><Icon name="calendar_month" size={21} /></button>
+          </div>
         </header>
       )}
       {isHome && !firstRun && (
@@ -834,7 +865,12 @@ export function FollowingScreen({
             )}
 
           <div className="cardwrap home-schedule">
-            {isHome ? (
+            {isHome && calendarView === "month" ? (
+              <>
+                <MonthHeadRow />
+                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={() => {}} monthsAhead={1} />
+              </>
+            ) : isHome ? (
                 <div className="cash-activity-list">
                   {visibleHomeDays.map((section) => (
                     <section className="cash-day" id={`feed-day-${section.iso}`} key={section.iso}>
@@ -848,7 +884,7 @@ export function FollowingScreen({
                             <button type="button" className={`cash-class-main ${relation.tone}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy">
                                 {coachName && <span className="cash-class-coachline"><small>{coachName}</small>{!item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}</span>}
-                                <span className="cash-class-title-row"><strong>{item.name}</strong><span className="cash-class-time-stack"><span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span></span>
+                                <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
                             </button>
