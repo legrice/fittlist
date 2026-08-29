@@ -268,7 +268,8 @@ export function FollowingScreen({
   const followingRailRef = useRef<HTMLDivElement>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [calendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarSource, setCalendarSource] = useState<"all" | "you" | "coaches" | "studios" | "groups">("all");
+  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
   const [calendarKind, setCalendarKind] = useState<"all" | "following" | "coaching" | "attending" | "shifts">("all");
   const [calendarView, setCalendarView] = useState<"list" | "month">("list");
   const [monthHorizon] = useState(1);
@@ -342,22 +343,15 @@ export function FollowingScreen({
     return true;
   };
 
-  const itemFacets = useMemo(() => ({
-    coachIds: new Set(items.map((item) => item.coachId)),
-    studioHrefs: new Set(items.flatMap((item) => item.whereHref ? [item.whereHref] : [])),
-    keys: new Set(items.map((item) => item.key)),
-  }), [items]);
   const coachOptions = useMemo(
-    () => myRail.filter((person) => person.id !== meId && itemFacets.coachIds.has(person.id)),
-    [myRail, meId, itemFacets],
+    () => myRail.filter((person) => person.id !== meId),
+    [myRail, meId],
   );
   const studioOptions = useMemo(
-    () => savedStudios.filter((studio) => itemFacets.studioHrefs.has(`/s/${studio.slug}`)),
-    [savedStudios, itemFacets],
+    () => savedStudios,
+    [savedStudios],
   );
-  const groupOptions = useMemo(() => {
-    return socialGroups.filter((group) => group.classKeys.some((key) => itemFacets.keys.has(key)));
-  }, [socialGroups, itemFacets]);
+  const groupOptions = useMemo(() => socialGroups, [socialGroups]);
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
   const sortedStudioOptions = useMemo(() => [...studioOptions].sort((a, b) => Number(pins.has(`studio:${b.id}`)) - Number(pins.has(`studio:${a.id}`))), [studioOptions, pins]);
   const pinnedStudioOptions = sortedStudioOptions.filter((studio) => pins.has(`studio:${studio.id}`));
@@ -413,6 +407,12 @@ export function FollowingScreen({
       if (calendarKind === "coaching" && (item.shift || item.coachId !== meId)) return false;
       if (calendarKind === "attending" && !item.saved) return false;
       if (calendarKind === "shifts" && !item.shift) return false;
+      if (calendarFilter === "all") {
+        if (calendarSource === "you" && !(item.saved || (!!meId && item.coachId === meId) || item.shift)) return false;
+        if (calendarSource === "coaches" && !favoriteIds.has(item.coachId)) return false;
+        if (calendarSource === "studios" && !(item.whereHref && studioHrefs.has(item.whereHref))) return false;
+        if (calendarSource === "groups" && !groupKeys.has(item.key)) return false;
+      }
       if (calendarFilter === "you") return item.saved || (!!meId && item.coachId === meId);
       if (calendarFilter.startsWith("coach:")) return item.coachId === calendarFilter.slice(6);
       if (calendarFilter.startsWith("studio:")) {
@@ -432,7 +432,7 @@ export function FollowingScreen({
       return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, isHome, meId, calendarFilter, calendarKind, coachOptions, studioOptions, groupOptions, favoriteIds]);
+  }, [items, f, geo, isHome, meId, calendarFilter, calendarSource, calendarKind, coachOptions, studioOptions, groupOptions, favoriteIds]);
 
   // A brand-new account has no useful calendar identity to put in the rail
   // yet. Showing a lone “You” circle above an empty state makes the circle
@@ -694,23 +694,43 @@ export function FollowingScreen({
       )}
       {isHome && !firstRun && (
         <header className="following-head">
+          <div className="calendar-source-tabs" role="tablist" aria-label="Calendar sources">
+            {(["all", "you", "coaches", "studios", "groups"] as const).map((source) => (
+              <button
+                key={source}
+                type="button"
+                role="tab"
+                aria-selected={calendarSource === source}
+                className={calendarSource === source ? "on" : ""}
+                onClick={() => {
+                  setCalendarSource(source);
+                  setCalendarFilter("all");
+                  followingRailRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+                }}
+              >
+                {source === "all" ? "All" : source === "you" ? "You" : source.charAt(0).toUpperCase() + source.slice(1)}
+              </button>
+            ))}
+          </div>
           <div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll" ref={followingRailRef}>
-              <button className="trayitem" type="button" onClick={() => { if (meId) setPersonPeekOpen({ id:meId, name:meFace.name, photo:meFace.photo, color:meFace.color, self:true }); }}>
+              {(calendarSource === "all" || calendarSource === "you") && <button className={`trayitem${calendarFilter === "you" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter(calendarFilter === "you" ? "all" : "you")}>
                 <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
                   )}
                 </span>
                 <span className="trayitem-nm">You</span>
-              </button>
-              {pinnedStudioOptions.map((studio) => {
-                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button><span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span></div>;
+              </button>}
+              {(calendarSource === "all" || calendarSource === "studios") && pinnedStudioOptions.map((studio) => {
+                const filter = `studio:${studio.id}` as const;
+                return <div className="cash-rail-item" key={studio.id}><button type="button" aria-pressed={calendarFilter === filter} className={`trayitem social-place-item${calendarFilter === filter ? " selected" : ""}`} onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button><span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span></div>;
               })}
-              {railCoachOptions.map((coach) => {
+              {(calendarSource === "all" || calendarSource === "coaches") && railCoachOptions.map((coach) => {
+                const filter = `coach:${coach.id}` as const;
                 return (
                 <div className="cash-rail-item" key={coach.id}>
-                  <button type="button" className="trayitem" onClick={() => setPersonPeekOpen({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, self:false })}>
+                  <button type="button" aria-pressed={calendarFilter === filter} className={`trayitem${calendarFilter === filter ? " selected" : ""}`} onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}>
                     <span className="trayav" style={{ background: coach.color }}>
                       {coach.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -724,22 +744,25 @@ export function FollowingScreen({
                   {pins.has(`person:${coach.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}
                 </div>
               )})}
-              {!railCoachesComplete && <span className="cash-rail-more" ref={railMoreRef} aria-hidden="true" />}
-              {railCoachesComplete && railStudioOptions.map((studio) => {
-                return <div className="cash-rail-item" key={studio.id}><button type="button" className="trayitem social-place-item" onClick={() => setEntityPeekOpen({type:"studio",id:studio.id,name:studio.name,photo:studio.photo,color:studio.color,href:`/s/${studio.slug}`,items:items.filter((item)=>item.whereHref===`/s/${studio.slug}`)})}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span>}</div>})}
-              {railCoachesComplete && railGroupOptions.map((group) => {
+              {(calendarSource === "all" || calendarSource === "coaches") && !railCoachesComplete && <span className="cash-rail-more" ref={railMoreRef} aria-hidden="true" />}
+              {(calendarSource === "studios" || (calendarSource === "all" && railCoachesComplete)) && railStudioOptions.map((studio) => {
+                const filter = `studio:${studio.id}` as const;
+                return <div className="cash-rail-item" key={studio.id}><button type="button" aria-pressed={calendarFilter === filter} className={`trayitem social-place-item${calendarFilter === filter ? " selected" : ""}`} onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span>}</div>})}
+              {(calendarSource === "groups" || (calendarSource === "all" && railCoachesComplete)) && railGroupOptions.map((group) => {
+                const filter = `group:${group.id}` as const;
                 return <button
                 key={group.id}
                 type="button"
-                className="trayitem"
-                onClick={() => setEntityPeekOpen({type:"group",id:group.id,name:group.name,photo:group.photo,color:"var(--color-surface-muted)",href:`/g/${group.slug}`,items:items.filter((item)=>group.classKeys.includes(item.key))})}
+                aria-pressed={calendarFilter === filter}
+                className={`trayitem${calendarFilter === filter ? " selected" : ""}`}
+                onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}
               >
                 <span className="trayav">
                   {group.photo ? <img src={group.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="groups" size={22} />}
                 </span>
                 <span className="trayitem-nm">{group.name}</span>
               </button>})}
-              {railCoachesComplete && <Link className="trayitem" href="/discover?half=people" aria-label="Discover more people">
+              {calendarSource !== "you" && (calendarSource !== "all" || railCoachesComplete) && (calendarSource !== "coaches" || railCoachesComplete) && <Link className="trayitem" href={calendarSource === "studios" ? "/discover?half=studios" : calendarSource === "groups" ? "/discover?half=groups" : "/discover?half=people"} aria-label="Discover more calendars">
                 <span className="trayav trayav-search"><Icon name="search" size={30} /></span>
                 <span className="trayitem-nm">Discover</span>
               </Link>}
