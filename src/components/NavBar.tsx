@@ -9,12 +9,9 @@ import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 
 export type { NavTab };
 
-// The whole app in thumb reach: the screens you move between, and nothing
-// else. The Slack-style dock (the pill plus a search circle beside it) was
-// tried twice now and reverted twice, the second time by Matt after living
-// with it. Discover is a normal tab pointing at the same search as the header
-// magnifier, and this stays one plain pill. The desktop chrome takes over at
-// larger widths from the same shared list.
+// The calendar, its share canvas, and You live in one thumb-reach dock.
+// Discover is visually separate because it starts a search rather than moving
+// among the user's calendar surfaces.
 export function NavBar({
   active,
   coach = true,
@@ -35,11 +32,13 @@ export function NavBar({
 }) {
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
+  const dockTabs = tabs.filter((tab) => tab.id !== "discover");
+  const discover = tabs.find((tab) => tab.id === "discover")!;
 
   return (
     <div className="navwrap">
       <nav className="navbar" aria-label="Main">
-        {tabs.map((t) => {
+        {dockTabs.map((t) => {
           const on = here === t.id;
           const cls = `navtab${on ? " on" : ""}`;
           const inner = (
@@ -62,6 +61,15 @@ export function NavBar({
           );
         })}
       </nav>
+      <Link
+        className={`navdiscover${here === "discover" ? " on" : ""}`}
+        href={discover.href}
+        aria-label="Discover"
+        aria-current={here === "discover" ? "page" : undefined}
+      >
+        <Icon name="search" size={28} />
+        <LinkPending className="tapspin-tab" />
+      </Link>
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { inviteBannerCountFor } from "@/lib/invite-banner";
 import { passwordPromptPending } from "@/lib/session";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
+import { TabPageHeader } from "@/components/TabPageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -143,6 +144,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           accountData={accountData}
           social
         />
+        <TabPageHeader notificationUnread={unread.notifications} />
         <Suspense fallback={null}>
           <DeferredInviteBanner viewer={deferredViewer} />
         </Suspense>

@@ -91,6 +91,7 @@ export async function hubPage(address: "member" | "coach") {
 
   return (
     <ShareHubScreen
+      tabbed
       coach={coach}
       handle={me.handle}
       name={me.name.trim() || me.handle}

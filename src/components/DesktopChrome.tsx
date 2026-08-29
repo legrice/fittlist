@@ -47,7 +47,7 @@ export function DesktopChrome({
 }) {
   const pathname = usePathname();
   const here = activeTab(pathname, active);
-  const links = navTabs(coach, scheduleHref, profileHref).filter((item) => item.id !== "calendar");
+  const links = navTabs(coach, scheduleHref, profileHref).filter((item) => item.id !== "calendar" && item.id !== "share");
 
   return (
     <>

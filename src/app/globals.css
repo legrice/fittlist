@@ -20,7 +20,7 @@ html[data-native="ios"] body { padding-top: env(safe-area-inset-top); }
 }
 
 /* UIKit owns navigation in the iOS shell. The website keeps the HTML bar. */
-html[data-native="ios"] .navwrap { display: none; }
+html[data-native="ios"] .navwrap { display: flex; }
 html[data-native="ios"] .brandbar { display: none; }
 /* UIKit's material bar overlays the web view, just like the website's fixed
    bar. Keep the last content and floating action reachable above it. */
@@ -10570,17 +10570,17 @@ a.clspeek-by:active { opacity: .6; }
      needs every available pixel. Remove the persistent web chrome and let the
      hub become the viewport; the native shell receives the matching takeover
      signal from ShareHubScreen. */
-  .screen.hasnav:has(.shpage) > .pad {
+  .screen.hasnav:has(.shpage:not(.shpage-tabbed)) > .pad {
     max-width: none; min-height: 100dvh; padding: 0;
   }
-  .screen.hasnav:has(.shpage) > .pad > .brandbar,
-  .screen.hasnav:has(.shpage) > .navwrap { display: none; }
-  .screen.hasnav:has(.shpage) .cardwrap.shpage {
+  .screen.hasnav:has(.shpage:not(.shpage-tabbed)) > .pad > .brandbar,
+  .screen.hasnav:has(.shpage:not(.shpage-tabbed)) > .navwrap { display: none; }
+  .screen.hasnav:has(.shpage:not(.shpage-tabbed)) .cardwrap.shpage {
     min-height: 100dvh; margin: 0; border-radius: 0;
     padding: max(16px, env(safe-area-inset-top)) var(--page-gutter)
       calc(32px + env(safe-area-inset-bottom));
   }
-  .screen.hasnav:has(.shpage) .cardwrap.shpage:not(.shpage-embedded) {
+  .screen.hasnav:has(.shpage:not(.shpage-tabbed)) .cardwrap.shpage:not(.shpage-embedded) {
     animation:calendar-share-up 360ms var(--motion-ease-out) both;
   }
 }
@@ -10601,7 +10601,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shseg-select:focus { outline:2px solid var(--si); outline-offset:2px; }
 @media (max-width:939px) {
-  .cardwrap.shpage:not(.shpage-embedded) .shseg {
+  .cardwrap.shpage:not(.shpage-embedded):not(.shpage-tabbed) .shseg {
     position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%;
     z-index:20; transform:translateX(-50%);
   }
@@ -11349,16 +11349,16 @@ a.clspeek-by:active { opacity: .6; }
   stroke-linejoin: round;
 }
 .calendar-bottom-actions button:active { transform: scale(.96); }
-.calendar-tab-share {
+.calendar-tab-add {
   position:fixed; right:18px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:44;
-  min-height:50px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:0 18px; border-radius:var(--radius-pill);
+  width:62px; height:62px; display:grid; place-items:center;
+  border-radius:50%;
   background:var(--color-lime); color:var(--color-black); box-shadow:0 4px 14px rgba(0,0,0,.14);
-  font-size:16px; font-weight:600; text-decoration:none; white-space:nowrap;
+  text-decoration:none;
 }
-.calendar-tab-share:active { transform:scale(.96); }
+.calendar-tab-add:active { transform:scale(.94); }
 @media (min-width:940px) {
-  .calendar-tab-share { right:24px; bottom:24px; }
+  .calendar-tab-add { right:24px; bottom:24px; }
 }
 .calendar-tool-loading { min-height:180px; display:grid; place-items:center; color:var(--color-text-secondary); font-weight:700; }
 .calendar-page-header {
@@ -12272,4 +12272,97 @@ a.clspeek-by:active { opacity: .6; }
 
 .tzsetting .flabel {
   margin-top: 2px;
+}
+
+/* Headerless iOS navigation preview. Calendar and Discover share one title
+   datum; the action changes without shifting the title or page content. */
+.tab-page-header { display:none; }
+@media (max-width:939px) {
+  .screen.hasnav > .pad > .social-brandbar { display:none; }
+  .tab-page-header {
+    min-height:64px;
+    margin:4px 0;
+    padding-top:env(safe-area-inset-top);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .tab-page-header h1 {
+    margin:0;
+    font-size:34px;
+    line-height:1.05;
+    letter-spacing:var(--headline-tracking);
+  }
+  .tab-page-notifications {
+    position:relative;
+    width:44px;
+    height:44px;
+    flex:0 0 44px;
+    padding:0;
+    display:grid;
+    place-items:center;
+    border:1px solid var(--color-border);
+    border-radius:50%;
+    background:var(--color-white);
+    color:var(--ink);
+  }
+  .tab-page-notifications i {
+    position:absolute;
+    top:5px;
+    right:5px;
+    width:9px;
+    height:9px;
+    border:2px solid var(--color-white);
+    border-radius:50%;
+    background:var(--color-danger, #e52b32);
+  }
+  .screen.hasnav .discover-title-row { display:none; }
+
+  .screen.hasnav > .navwrap {
+    left:12px;
+    right:12px;
+    bottom:calc(10px + env(safe-area-inset-bottom));
+    max-width:608px;
+    margin:0 auto;
+    align-items:center;
+    gap:10px;
+  }
+  .screen.hasnav > .navwrap > .navbar {
+    min-height:64px;
+    padding:4px 8px;
+    border:1px solid var(--color-border);
+    border-radius:32px;
+    background:color-mix(in srgb, var(--color-surface) 88%, transparent);
+    -webkit-backdrop-filter:blur(18px) saturate(160%);
+    backdrop-filter:blur(18px) saturate(160%);
+    box-shadow:0 5px 20px rgba(0,0,0,.1);
+  }
+  .screen.hasnav .navtab { min-height:54px; padding:4px 0; }
+  .navdiscover {
+    position:relative;
+    width:64px;
+    height:64px;
+    flex:0 0 64px;
+    display:grid;
+    place-items:center;
+    border:1px solid var(--color-border);
+    border-radius:50%;
+    background:color-mix(in srgb, var(--color-surface) 88%, transparent);
+    color:var(--color-text-secondary);
+    box-shadow:0 5px 20px rgba(0,0,0,.1);
+    -webkit-backdrop-filter:blur(18px) saturate(160%);
+    backdrop-filter:blur(18px) saturate(160%);
+  }
+  .navdiscover.on { color:var(--ink); }
+  .calendar-tab-add {
+    right:18px;
+    bottom:calc(88px + env(safe-area-inset-bottom));
+  }
+  .cardwrap.shpage-tabbed {
+    padding-bottom:calc(110px + env(safe-area-inset-bottom));
+  }
+}
+@media (min-width:940px) {
+  .navdiscover { display:none; }
 }

@@ -61,6 +61,7 @@ const plusDays = (iso: string, n: number) =>
 
 export function ShareHubScreen({
   embedded = false,
+  tabbed = false,
   coach,
   handle,
   name,
@@ -77,6 +78,8 @@ export function ShareHubScreen({
   /** Render inside another surface (the calendar's share sheet). The sheet
    *  owns dismissal, so the editor does not add a second back control. */
   embedded?: boolean;
+  /** Keep the route inside the persistent app navigation. */
+  tabbed?: boolean;
   /** Both kinds get the full sheet: the week, the card, the QR code and
    *  the text. What `coach` still decides is the week's subject (teaching
    *  against saved), the fallback headline, and whether the hub carries
@@ -291,12 +294,12 @@ export function ShareHubScreen({
   // screen just like the calendar's embedded editor. The native header and
   // tab bar live outside the web view, so they need the same explicit signal.
   useEffect(() => {
-    if (embedded) return;
+    if (embedded || tabbed) return;
     window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
     return () => {
       window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: false }));
     };
-  }, [embedded]);
+  }, [embedded, tabbed]);
 
   useEffect(() => {
     const receive = (event: Event) => {
@@ -584,8 +587,8 @@ export function ShareHubScreen({
   return (
     <>
       {/* `shpage` is the marker the gradient opt-out keys on. */}
-      <div className={`cardwrap shpage${embedded ? " shpage-embedded" : ""}`}>
-        {!embedded && (
+      <div className={`cardwrap shpage${embedded ? " shpage-embedded" : ""}${tabbed ? " shpage-tabbed" : ""}`}>
+        {!embedded && !tabbed && (
           <div className="shpage-back">
             <BackLink className="evback share-page-close" href="/calendar" anywhere label="Close share screen">
               <Icon name="close" size={24} />

@@ -984,13 +984,11 @@ export function FollowingScreen({
       {isHome && (
         <BodyPortal>
           <Link
-            className="calendar-tab-share"
-            href={meKind === "coach" ? "/coachshare" : "/membershare"}
-            aria-label="Share your schedule"
-            onClick={() => window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }))}
+            className="calendar-tab-add"
+            href="/calendar?add=1"
+            aria-label="Add to your calendar"
           >
-            <Icon name="reply" className="share-arrow-forward" size={22} />
-            <span>Share</span>
+            <Icon name="add" size={32} />
           </Link>
         </BodyPortal>
       )}

@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "following" | "discover" | "calendar" | "none";
+export type NavTab = "following" | "share" | "discover" | "calendar" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -17,7 +17,7 @@ export type NavItem = {
  * manage the calendars that belong to you.
  */
 export function navTabs(
-  _coach: boolean,
+  coach: boolean,
   scheduleHref?: string,
   /** Your own profile. It is your public page, so it is your handle; the tab
    *  falls back to /you, which redirects there, for a shell that has not been
@@ -31,8 +31,9 @@ export function navTabs(
       icon: "calendar_month",
       label: "Calendar",
     },
+    { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "image", label: "Share" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
-    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile" },
   ];
 }
 
@@ -42,6 +43,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   // /week is retained only as an old address for the calendar.
   if (pathname.startsWith("/feed")) return "following";
+  if (pathname.startsWith("/coachshare") || pathname.startsWith("/membershare")) return "share";
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week") || pathname.startsWith("/you"))
     return "calendar";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";

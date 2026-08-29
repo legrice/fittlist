@@ -18,8 +18,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     // These IDs deliberately match src/lib/nav.ts. The web navigation is
     // hidden in the native shell, so a mismatch here removes the only working
     // route to a primary destination.
-    private let tabIDs = ["following", "discover", "calendar"]
-    private let fallbackRoutes = ["/feed", "/discover", "/you"]
+    private let tabIDs = ["following", "share", "calendar", "discover"]
+    private let fallbackRoutes = ["/feed", "/membershare", "/you", "/discover"]
     private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -34,8 +34,12 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         bridge.didMove(toParent: self)
 
         configureHeader()
-
         configureTabBar()
+        // This preview deliberately lets the web shell draw the headerless,
+        // DICE-style dock. Keeping the native controls mounted preserves the
+        // bridge contract while removing the duplicate chrome.
+        headerView.isHidden = true
+        tabBar.isHidden = true
 
         let topToHeader = bridge.view.topAnchor.constraint(equalTo: headerView.bottomAnchor)
         let topToView = bridge.view.topAnchor.constraint(equalTo: view.topAnchor)
@@ -46,7 +50,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 62),
-            topToHeader,
+            topToView,
             bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bridge.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -74,8 +78,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.scrollEdgeAppearance = appearance
         tabBar.items = [
             item("Calendar", "calendar", 0),
-            item("Discover", "safari", 1),
+            item("Share", "photo", 1),
             item("Profile", "person.crop.circle", 2),
+            item("Discover", "magnifyingglass", 3),
         ]
         tabBar.selectedItem = tabBar.items?.first
         view.addSubview(tabBar)
@@ -283,15 +288,16 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         guard message.name == "fittlistRoute",
               let route = message.body as? [String: Any],
               let path = route["path"] as? String else { return }
-        setTakeover(path == "/coachshare" || path == "/membershare")
+        setTakeover(false)
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
         let active = route["active"] as? String
-        let activeTags = ["following": 0, "discover": 1, "calendar": 2]
+        let activeTags = ["following": 0, "share": 1, "calendar": 2, "discover": 3]
         let tag: Int?
         if let active, let activeTag = activeTags[active] { tag = activeTag }
         else if path == "/feed" { tag = 0 }
-        else if path == "/discover" || path == "/search" { tag = 1 }
+        else if path == "/coachshare" || path == "/membershare" { tag = 1 }
         else if path == "/you" || path == "/calendar" || path == "/app" || path == "/week" { tag = 2 }
+        else if path == "/discover" || path == "/search" { tag = 3 }
         else { tag = nil }
         if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
             tabBar.selectedItem = next
@@ -299,10 +305,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     private func setTakeover(_ active: Bool) {
-        bridgeTopToHeader?.isActive = !active
-        bridgeTopToView?.isActive = active
-        headerView.isHidden = active
-        tabBar.isHidden = active
+        bridgeTopToHeader?.isActive = false
+        bridgeTopToView?.isActive = true
+        headerView.isHidden = true
+        tabBar.isHidden = true
         view.layoutIfNeeded()
     }
 
