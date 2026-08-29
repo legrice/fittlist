@@ -5,14 +5,12 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { PeekClass } from "@/components/ClassPeek";
-import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
-import { GlobalAdd } from "@/components/GlobalAdd";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -990,11 +988,6 @@ export function FollowingScreen({
         />
       )}
       {entityPeekOpen && <EntityCalendarPeek entity={entityPeekOpen} coaches={coachById} meId={meId} pinned={entityPeekOpen.type==="studio" && pins.has(`studio:${entityPeekOpen.id}`)} onPinned={(pinned)=>setPins((current)=>{const next=new Set(current);const key=`studio:${entityPeekOpen.id}`;if(pinned)next.add(key);else next.delete(key);return next;})} onClose={()=>setEntityPeekOpen(null)} />}
-      {isHome && (
-        <BodyPortal>
-          <GlobalAdd triggerClassName="calendar-tab-add" />
-        </BodyPortal>
-      )}
       <Toast msg={toastMsg} on={toastOn} action={toastAction} />
     </>
   );
