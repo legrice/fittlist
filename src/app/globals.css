@@ -12424,9 +12424,18 @@ a.clspeek-by:active { opacity: .6; }
   }
   .screen.hasnav .navtab { min-height:54px; padding:4px 0; }
   .screen.hasnav .navtab.on {
+    background:transparent;
+  }
+  .screen.hasnav .navtab.on::before {
+    content:"";
+    position:absolute;
+    inset:0 15px;
+    z-index:0;
     border-radius:var(--radius-pill);
     background:var(--color-surface-muted);
   }
+  .screen.hasnav .navtab.on .navglyph,
+  .screen.hasnav .navtab.on .navlabel { position:relative; z-index:1; }
   .screen.hasnav .navlabel { display:inline; }
   .calendar-bottom-actions .calendar-bottom-add { display:none; }
   .cardwrap.shpage-tabbed {
