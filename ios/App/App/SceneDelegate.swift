@@ -18,8 +18,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     // These IDs deliberately match src/lib/nav.ts. The web navigation is
     // hidden in the native shell, so a mismatch here removes the only working
     // route to a primary destination.
-    private let tabIDs = ["following", "share", "calendar", "discover"]
-    private let fallbackRoutes = ["/feed", "/membershare", "/you", "/discover"]
+    private let tabIDs = ["following", "discover", "calendar", "share"]
+    private let fallbackRoutes = ["/feed", "/discover", "/you", "/membershare"]
     private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -78,9 +78,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.scrollEdgeAppearance = appearance
         tabBar.items = [
             item("Calendar", "calendar", 0),
-            item("Share", "photo", 1),
+            item("Discover", "magnifyingglass", 1),
             item("Profile", "person.crop.circle", 2),
-            item("Discover", "magnifyingglass", 3),
+            item("Share", "arrowshape.turn.up.right", 3),
         ]
         tabBar.selectedItem = tabBar.items?.first
         view.addSubview(tabBar)
@@ -291,13 +291,13 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         setTakeover(false)
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
         let active = route["active"] as? String
-        let activeTags = ["following": 0, "share": 1, "calendar": 2, "discover": 3]
+        let activeTags = ["following": 0, "discover": 1, "calendar": 2, "share": 3]
         let tag: Int?
         if let active, let activeTag = activeTags[active] { tag = activeTag }
         else if path == "/feed" { tag = 0 }
-        else if path == "/coachshare" || path == "/membershare" { tag = 1 }
+        else if path == "/discover" || path == "/search" { tag = 1 }
         else if path == "/you" || path == "/calendar" || path == "/app" || path == "/week" { tag = 2 }
-        else if path == "/discover" || path == "/search" { tag = 3 }
+        else if path == "/coachshare" || path == "/membershare" { tag = 3 }
         else { tag = nil }
         if let tag, let next = tabBar.items?.first(where: { $0.tag == tag }) {
             tabBar.selectedItem = next

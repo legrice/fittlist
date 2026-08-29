@@ -9,9 +9,8 @@ import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 
 export type { NavTab };
 
-// The calendar, its share canvas, and You live in one thumb-reach dock.
-// Discover is visually separate because it starts a search rather than moving
-// among the user's calendar surfaces.
+// Calendar, discovery, and You live in one thumb-reach dock. Sharing is the
+// distinct action beside it, while still opening the persistent share canvas.
 export function NavBar({
   active,
   coach = true,
@@ -32,8 +31,8 @@ export function NavBar({
 }) {
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
-  const dockTabs = tabs.filter((tab) => tab.id !== "discover");
-  const discover = tabs.find((tab) => tab.id === "discover")!;
+  const dockTabs = tabs.filter((tab) => tab.id !== "share");
+  const share = tabs.find((tab) => tab.id === "share")!;
 
   return (
     <div className="navwrap">
@@ -62,12 +61,13 @@ export function NavBar({
         })}
       </nav>
       <Link
-        className={`navdiscover${here === "discover" ? " on" : ""}`}
-        href={discover.href}
-        aria-label="Discover"
-        aria-current={here === "discover" ? "page" : undefined}
+        className={`navsolo${here === "share" ? " on" : ""}`}
+        data-tab="share"
+        href={share.href}
+        aria-label="Share"
+        aria-current={here === "share" ? "page" : undefined}
       >
-        <Icon name="search" size={28} />
+        <Icon name="reply" className="share-arrow-forward" size={28} />
         <LinkPending className="tapspin-tab" />
       </Link>
     </div>

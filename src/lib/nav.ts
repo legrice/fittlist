@@ -31,9 +31,9 @@ export function navTabs(
       icon: "calendar_month",
       label: "Calendar",
     },
-    { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "image", label: "Share" },
-    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
+    { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" },
   ];
 }
 
