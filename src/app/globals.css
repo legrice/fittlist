@@ -9661,6 +9661,7 @@ select.editinput.placekind-select {
 .peekidentity { display:flex; align-items:center; gap:12px; min-width:0; }
 .peekhead-meta { margin:3px 0 0; color:var(--ol); font-size:13px; line-height:1.35; }
 .peekacts { display: flex; gap: 8px; margin: 12px 0 2px; }
+.peekacts .peekaction { padding-inline:10px; }
 .peekaction {
   min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   padding: 0 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink);
@@ -10102,6 +10103,14 @@ select.editinput.placekind-select {
   will-change:transform;
 }
 .sheet.sheet-full.peeksheet.is-dragging { transition:none; }
+.peekdrag {
+  position:sticky; top:-12px; z-index:10; height:28px; margin:-12px -20px 8px;
+  width:calc(100% + 40px); display:flex; align-items:center; justify-content:center;
+  touch-action:none; cursor:grab; background:var(--paper);
+  border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
+}
+.peekdrag:active { cursor:grabbing; }
+.peekdrag span { width:42px; height:5px; border-radius:999px; background:var(--color-border-strong); }
 @keyframes peek-sheet-up {
   from { transform:translateY(100%); opacity:.92; }
   to { transform:translateY(0); opacity:1; }
