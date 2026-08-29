@@ -12363,6 +12363,12 @@ a.clspeek-by:active { opacity: .6; }
     color:var(--color-text-muted);
   }
   .calendar-tab-view button.on { background:var(--color-surface-muted); color:var(--ink); }
+  .calendar-tab-add {
+    min-height:40px; padding:0 16px 0 13px; display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black);
+    font:inherit; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .calendar-tab-add:active { transform:scale(.96); }
   .tab-page-notifications {
     position:relative;
     width:44px;

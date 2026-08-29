@@ -687,10 +687,7 @@ export function FollowingScreen({
       {isHome && (
         <header className="calendar-tab-header">
           <h1>Calendar</h1>
-          <div className="calendar-tab-view" role="group" aria-label="Calendar view">
-            <button type="button" className={calendarView === "day" ? "on" : ""} aria-label="Day view" aria-pressed={calendarView === "day"} onClick={() => setCalendarView("day")}><Icon name="calendar_view_day" size={21} /></button>
-            <button type="button" className={calendarView === "month" ? "on" : ""} aria-label="Month view" aria-pressed={calendarView === "month"} onClick={() => setCalendarView("month")}><Icon name="calendar_month" size={21} /></button>
-          </div>
+          <PersonalCalendarSheetTrigger className="calendar-tab-add" ariaLabel="Add to your calendar" openAdder><Icon name="add" size={20} /><span>Add</span></PersonalCalendarSheetTrigger>
         </header>
       )}
       {isHome && !firstRun && (
