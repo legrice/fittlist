@@ -884,7 +884,7 @@ export function FollowingScreen({
                             <button type="button" className={`cash-class-main ${relation.tone}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="cash-class-copy">
                                 {coachName && <span className="cash-class-coachline"><small>{coachName}</small>{!item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}</span>}
-                                <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
+                                <span className="cash-class-title-row"><strong>{item.name}</strong>{calendarFilter === "you" ? <span className="cash-class-time-stack"><span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span> : <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>}</span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
                             </button>

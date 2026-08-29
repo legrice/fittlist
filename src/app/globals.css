@@ -9145,6 +9145,15 @@ select.editinput.placekind-select {
   font-size:19px; line-height:1.16; font-weight:700;
 }
 .cash-class-time { align-self:end; font-size:17px; line-height:1.2; font-weight:600; white-space:nowrap; }
+.cash-class-time-stack { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.cash-relation-tag {
+  padding:3px 8px; border-radius:var(--radius-pill); font-size:10px;
+  line-height:1.15; font-weight:700; white-space:nowrap;
+}
+.cash-relation-tag.following { background:var(--color-olive); color:var(--color-black); }
+.cash-relation-tag.coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
+.cash-relation-tag.attending { background:var(--color-attending); color:var(--color-attending-text); }
+.cash-relation-tag.shift { background:var(--color-shift); color:var(--color-shift-text); }
 .cash-class-studio,
 .cash-class-duration { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ol); font-size:15px; }
 .cash-class-duration { text-align:right; }
