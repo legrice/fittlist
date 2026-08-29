@@ -33,7 +33,8 @@ export function NavBar({
 }) {
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
-  const dockTabs = tabs;
+  const dockTabs = tabs.filter((tab) => tab.id !== "discover");
+  const searchTab = tabs.find((tab) => tab.id === "discover")!;
 
   return (
     <div className="navwrap">
@@ -62,6 +63,15 @@ export function NavBar({
           );
         })}
       </nav>
+      <Link
+        className={`navsearch${here === "discover" ? " on" : ""}`}
+        href={searchTab.href}
+        aria-label={searchTab.label}
+        aria-current={here === "discover" ? "page" : undefined}
+      >
+        <Icon name="search" size={27} />
+        <LinkPending className="tapspin-tab" />
+      </Link>
     </div>
   );
 }

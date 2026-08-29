@@ -29,11 +29,11 @@ export function navTabs(
       id: "following" as const,
       href: "/feed",
       icon: "calendar_month",
-      label: "Calendar",
+      label: "Home",
     },
-    { id: "discover", href: "/discover", icon: "search", label: "Discover" },
     { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" },
-    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "You" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile" },
+    { id: "discover", href: "/discover", icon: "search", label: "Search" },
   ];
 }
 

@@ -18,8 +18,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     // These IDs deliberately match src/lib/nav.ts. The web navigation is
     // hidden in the native shell, so a mismatch here removes the only working
     // route to a primary destination.
-    private let tabIDs = ["following", "discover", "calendar", "share"]
-    private let fallbackRoutes = ["/feed", "/discover", "/you", "/membershare"]
+    private let tabIDs = ["following", "share", "calendar", "discover"]
+    private let fallbackRoutes = ["/feed", "/membershare", "/you", "/discover"]
     private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -77,10 +77,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
         tabBar.items = [
-            item("Calendar", "calendar", 0),
-            item("Discover", "magnifyingglass", 1),
+            item("Home", "calendar", 0),
+            item("Share", "arrowshape.turn.up.right", 1),
             item("Profile", "person.crop.circle", 2),
-            item("Share", "arrowshape.turn.up.right", 3),
+            item("Search", "magnifyingglass", 3),
         ]
         tabBar.selectedItem = tabBar.items?.first
         view.addSubview(tabBar)
@@ -291,7 +291,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         setTakeover(false)
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
         let active = route["active"] as? String
-        let activeTags = ["following": 0, "discover": 1, "calendar": 2, "share": 3]
+        let activeTags = ["following": 0, "share": 1, "calendar": 2, "discover": 3]
         let tag: Int?
         if let active, let activeTag = activeTags[active] { tag = activeTag }
         else if path == "/feed" { tag = 0 }
