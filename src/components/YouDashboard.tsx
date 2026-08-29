@@ -10,6 +10,7 @@ import { SettingsGear } from "@/components/SettingsGear";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassOpener } from "@/components/ClassOpener";
 import { readPhotoPair } from "@/lib/photo";
+import { QrSheet } from "@/components/QrSheet";
 
 export type YouFavoritePerson = {
   id: string;
@@ -97,6 +98,7 @@ export function YouDashboard({
   const [photoMenu, setPhotoMenu] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(me.photo);
   const [photoPending, startPhoto] = useTransition();
+  const [qrOpen, setQrOpen] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
 
   const savePhoto = (file: File) => {
@@ -168,6 +170,10 @@ export function YouDashboard({
           <Icon name="account_circle" size={18} />
           <span>View profile</span>
         </Link>
+        <button type="button" onClick={() => setQrOpen(true)}>
+          <Icon name="qr_code_2" size={18} />
+          <span>QR code</span>
+        </button>
         <Link href={shareHref}>
           <Icon name="reply" className="share-arrow-forward" size={18} />
           <span>Share</span>
@@ -237,6 +243,7 @@ export function YouDashboard({
           <p className="youaccount-empty">Classes and events you save will appear here.</p>
         )}
       </AccountGroup>
+      <QrSheet handle={me.handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
       {photoMenu && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPhotoMenu(false); }}>
           <section className="sheet youphoto-sheet" role="dialog" aria-modal="true" aria-labelledby="youphoto-title">

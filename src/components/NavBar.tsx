@@ -31,8 +31,7 @@ export function NavBar({
 }) {
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
-  const dockTabs = tabs.filter((tab) => tab.id !== "share");
-  const share = tabs.find((tab) => tab.id === "share")!;
+  const dockTabs = tabs.filter((tab) => tab.id !== "calendar");
 
   return (
     <div className="navwrap">
@@ -47,29 +46,19 @@ export function NavBar({
                   face.photo ? <img className="navav" src={face.photo} alt="" /> : (
                     <span className="navav navav-empty" style={{ background: face.color }}>{face.initial}</span>
                   )
-                ) : <Icon name={t.icon} size={22} />}
+                ) : <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={24} />}
               </span>
-              <span>{t.label}</span>
+              <span className="navlabel">{t.label}</span>
             </>
           );
           return (
-            <Link key={t.id} className={cls} data-tab={t.id} href={t.href} aria-current={on ? "page" : undefined}>
+            <Link key={t.id} className={cls} data-tab={t.id} href={t.href} aria-label={t.label} aria-current={on ? "page" : undefined}>
               {inner}
               <LinkPending className="tapspin-tab" />
             </Link>
           );
         })}
       </nav>
-      <Link
-        className={`navsolo${here === "share" ? " on" : ""}`}
-        data-tab="share"
-        href={share.href}
-        aria-label="Share"
-        aria-current={here === "share" ? "page" : undefined}
-      >
-        <Icon name="reply" className="share-arrow-forward" size={28} />
-        <LinkPending className="tapspin-tab" />
-      </Link>
     </div>
   );
 }

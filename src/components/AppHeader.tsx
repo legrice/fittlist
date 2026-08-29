@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { Icon } from "@/components/Icon";
-import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 import type { YouAccountData } from "@/components/YouDashboard";
@@ -55,38 +54,6 @@ export function AppHeader({
   const pathname = usePathname();
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [headerHidden, setHeaderHidden] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notificationsSeen, setNotificationsSeen] = useState(false);
-  const lastScrollY = useRef(0);
-
-  useEffect(() => {
-    setHeaderHidden(false);
-    lastScrollY.current = window.scrollY;
-    if (!social || pathname === "/search") return undefined;
-    let frame = 0;
-    const readScroll = () => {
-      frame = 0;
-      const next = Math.max(0, window.scrollY);
-      if (next <= 24) {
-        setHeaderHidden(false);
-        lastScrollY.current = next;
-        return;
-      }
-      const delta = next - lastScrollY.current;
-      if (Math.abs(delta) < 6) return;
-      setHeaderHidden(delta > 0);
-      lastScrollY.current = next;
-    };
-    const onScroll = () => {
-      if (!frame) frame = window.requestAnimationFrame(readScroll);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, [pathname, social]);
 
   if (pathname === "/search") {
     const updateSearch = (value: string) => {
@@ -127,39 +94,22 @@ export function AppHeader({
   }
 
   if (social) {
-    const calendarUtility = pathname.startsWith("/calendar");
-    if (calendarUtility) return null;
     return (
-      <div className={`brandbar social-brandbar${headerHidden ? " is-hidden" : ""}`}>
-        {calendarUtility && <div className="social-brandbar-side social-brandbar-left">
-          <Link className="iconbtn social-calendar-back" href="/you" aria-label="Back to You">
-            <Icon name="arrow_back" size={23} />
-          </Link>
-        </div>}
-        {!calendarUtility && (
-          <Link className="brandbar-home social-brandbar-logo" href={home} aria-label="FittList calendar">
-            <Wordmark variant="ink" />
-          </Link>
-        )}
-        <div className="social-brandbar-side social-brandbar-right">
-          {!calendarUtility && <>
-            <GlobalAdd />
-            <button
-              type="button"
-              className="iconbtn social-notifications"
-              aria-label={`${notificationUnread} unread notifications`}
-              aria-expanded={notificationsOpen}
-              onClick={() => { setNotificationsSeen(true); setNotificationsOpen(true); }}
-            >
-              <Icon name="notifications" size={23} />
-              {notificationUnread > 0 && !notificationsSeen && <i aria-hidden="true" />}
-            </button>
-            <Link className="iconbtn" href="/search" aria-label="Search FittList">
-              <Icon name="search" size={23} />
-            </Link>
-          </>}
+      <div className="brandbar social-brandbar minimal-brandbar">
+        <div className="social-brandbar-side social-brandbar-left">
+          <GlobalAdd />
         </div>
-        {notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
+        <div className="social-brandbar-side social-brandbar-right">
+          <Link className="iconbtn" href="/search" aria-label="Search FittList">
+            <Icon name="search" size={23} />
+          </Link>
+          <HeaderAccountButton
+            face={face}
+            unread={notificationUnread > 0 || messageUnread > 0}
+            fallbackHref={profileHref}
+            initialData={accountData}
+          />
+        </div>
       </div>
     );
   }
