@@ -12,7 +12,6 @@ import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
-import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { GlobalAdd } from "@/components/GlobalAdd";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
@@ -271,9 +270,6 @@ export function FollowingScreen({
   const [find, setFind] = useState(false);
   const [calendarSource, setCalendarSource] = useState<"all" | "you" | "coaches" | "studios" | "groups">("all");
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
-  const [calendarKind, setCalendarKind] = useState<"all" | "following" | "coaching" | "attending" | "shifts">("all");
-  const [calendarView, setCalendarView] = useState<"list" | "month">("list");
-  const [monthHorizon] = useState(1);
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -404,10 +400,6 @@ export function FollowingScreen({
     return items.filter((item) => {
       if (!passes(item)) return false;
       if (!isHome) return true;
-      if (calendarKind === "following" && (item.shift || item.saved || item.coachId === meId)) return false;
-      if (calendarKind === "coaching" && (item.shift || item.coachId !== meId)) return false;
-      if (calendarKind === "attending" && !item.saved) return false;
-      if (calendarKind === "shifts" && !item.shift) return false;
       if (calendarFilter === "all") {
         if (calendarSource === "you" && !(item.saved || (!!meId && item.coachId === meId) || item.shift)) return false;
         if (calendarSource === "coaches" && !favoriteIds.has(item.coachId)) return false;
@@ -433,7 +425,7 @@ export function FollowingScreen({
       return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, isHome, meId, calendarFilter, calendarSource, calendarKind, coachOptions, studioOptions, groupOptions, favoriteIds]);
+  }, [items, f, geo, isHome, meId, calendarFilter, calendarSource, coachOptions, studioOptions, groupOptions, favoriteIds]);
 
   // A brand-new account has no useful calendar identity to put in the rail
   // yet. Showing a lone “You” circle above an empty state makes the circle
@@ -513,27 +505,6 @@ export function FollowingScreen({
     }));
   }, [homeRows, todayIso]);
   const visibleHomeDays = homeDays.slice(0, visibleHomeDayCount);
-  const monthItems = useMemo(() => {
-    const mapped = new Map<string, MonthCellItem[]>();
-    for (const item of homeRows) {
-      const relation = calendarRelation(item, meId);
-      const next: MonthCellItem = {
-        kind: relation.tone === "attending" ? "added" : relation.tone,
-        name: item.name,
-        at: item.mins,
-      };
-      const current = mapped.get(item.iso);
-      if (current) current.push(next);
-      else mapped.set(item.iso, [next]);
-    }
-    return mapped;
-  }, [homeRows, meId]);
-
-  const openMonthDay = (iso: string) => {
-    setCalendarView("list");
-    window.setTimeout(() => document.getElementById(`feed-day-${iso}`)?.scrollIntoView({ block: "start" }), 0);
-  };
-
   useEffect(() => {
     if (!isHome || visibleHomeDayCount >= homeDays.length) return undefined;
     const target = homeMoreRef.current;
@@ -780,24 +751,6 @@ export function FollowingScreen({
           </Link>}
         </div>
       )}
-      {isHome && !firstRun && (
-        <div className="unified-calendar-controls">
-          <label>
-            <span className="sr-only">Calendar contents</span>
-            <select value={calendarKind} onChange={(event) => setCalendarKind(event.target.value as typeof calendarKind)}>
-              <option value="all">All calendars</option>
-              <option value="following">Following</option>
-              <option value="coaching">Coaching</option>
-              <option value="attending">Attending</option>
-              <option value="shifts">Shifts</option>
-            </select>
-          </label>
-          <div role="group" aria-label="Calendar view">
-            <button type="button" className={calendarView === "list" ? "on" : ""} aria-label="Day view" aria-pressed={calendarView === "list"} onClick={() => setCalendarView("list")}><Icon name="calendar_view_day" size={21} /></button>
-            <button type="button" className={calendarView === "month" ? "on" : ""} aria-label="Month view" aria-pressed={calendarView === "month"} onClick={() => setCalendarView("month")}><Icon name="calendar_view_month" size={21} /></button>
-          </div>
-        </div>
-      )}
       {isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
@@ -898,12 +851,7 @@ export function FollowingScreen({
             )}
 
           <div className="cardwrap home-schedule">
-            {isHome && calendarView === "month" ? (
-              <>
-                <MonthHeadRow />
-                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={() => {}} monthsAhead={monthHorizon} />
-              </>
-            ) : isHome ? (
+            {isHome ? (
                 <div className="cash-activity-list">
                   {visibleHomeDays.map((section) => (
                     <section className="cash-day" id={`feed-day-${section.iso}`} key={section.iso}>
