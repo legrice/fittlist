@@ -12285,6 +12285,13 @@ a.clspeek-by:active { opacity: .6; }
 .share-tab-header { display:none; }
 @media (max-width:939px) {
   .screen.hasnav > .pad > .social-brandbar { display:none; }
+  .screen.hasnav .cash-day > h2 {
+    font-size:18px;
+    line-height:1.2;
+    margin-bottom:10px;
+    padding-top:6px;
+    padding-bottom:7px;
+  }
   .tab-page-header {
     min-height:64px;
     margin:4px 0;
