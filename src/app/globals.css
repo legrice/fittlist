@@ -9661,7 +9661,6 @@ select.editinput.placekind-select {
 .peekidentity { display:flex; align-items:center; gap:12px; min-width:0; }
 .peekhead-meta { margin:3px 0 0; color:var(--ol); font-size:13px; line-height:1.35; }
 .peekacts { display: flex; gap: 8px; margin: 12px 0 2px; }
-.peekacts .peekaction { padding-inline:10px; }
 .peekaction {
   min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   padding: 0 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink);
