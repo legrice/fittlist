@@ -12370,8 +12370,7 @@ a.clspeek-by:active { opacity: .6; }
   }
   .screen.hasnav > .navwrap > .navbar {
     min-height:64px;
-    padding:4px 8px;
-    justify-content:space-around;
+    padding:2px;
     border:1px solid var(--color-border);
     border-radius:32px;
     background:color-mix(in srgb, var(--color-surface) 88%, transparent);
@@ -12393,27 +12392,29 @@ a.clspeek-by:active { opacity: .6; }
   .screen.hasnav > .navwrap > .navsearch.on { background:var(--color-surface-muted); }
   .screen.hasnav > .navwrap > .navsearch:active { transform:scale(.96); }
   .screen.hasnav .navtab {
-    min-width:0; min-height:54px; flex:0 0 auto;
-    padding:4px 6px; overflow:hidden;
+    min-width:0; min-height:58px; flex:1;
+    padding:4px 0; overflow:hidden;
     border-radius:var(--radius-pill);
   }
   .screen.hasnav .navtab:active {
     border-radius:var(--radius-pill);
-    background:var(--color-surface-hover);
+    background:transparent;
   }
   .screen.hasnav .navtab.on {
     background:transparent;
   }
-  .screen.hasnav .navtab.on::before {
+  .screen.hasnav .navtab.on::before,
+  .screen.hasnav .navtab:active::before {
     content:"";
     position:absolute;
-    inset:0;
+    inset:2px;
     z-index:0;
     border-radius:var(--radius-pill);
     background:var(--color-surface-muted);
   }
-  .screen.hasnav .navtab.on .navglyph,
-  .screen.hasnav .navtab.on .navlabel { position:relative; z-index:1; }
+  .screen.hasnav .navtab:active::before { background:var(--color-surface-hover); }
+  .screen.hasnav .navtab .navglyph,
+  .screen.hasnav .navtab .navlabel { position:relative; z-index:1; }
   .nav-profile-dot {
     position:absolute; top:1px; right:6px; z-index:2;
     width:9px; height:9px; border:2px solid var(--color-surface);
