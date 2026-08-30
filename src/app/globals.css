@@ -8267,7 +8267,24 @@ html[data-mode="dark"],
 .savedsection + .savedsection { margin-top: 30px; }
 .saved-rail-invitations { margin-top:30px; }
 .saved-rail-invitations + .savedsection { margin-top:30px; }
-.youaccount-head { display:flex; align-items:flex-start; gap:16px; text-align:left; }
+.youaccount-head { display:flex; flex-direction:column; align-items:flex-start; gap:14px; text-align:left; }
+.youaccount-topline { width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.youprofile-corner-actions { display:flex; align-items:center; gap:8px; }
+.youprofile-corner-actions > button {
+  width:48px;
+  height:48px;
+  flex:0 0 48px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--color-border);
+  border-radius:50%;
+  background:var(--color-surface);
+  color:var(--color-text-primary);
+  box-shadow:none;
+}
+.youprofile-corner-actions > button .icon { width:22px; height:22px; }
+.youprofile-corner-actions > button:active { background:var(--color-surface-hover); transform:scale(.96); }
 .youavatar { width: 88px; height: 88px; border-radius: 999px; object-fit: cover; flex: none; }
 .youavatar-empty { display: grid; place-items: center; color: #fff; font-size: 32px; font-weight: 600; }
 .youaccount-identity { min-width:0; padding-top:3px; }
@@ -12555,7 +12572,6 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-tab-header { display:none; }
 @media (max-width:939px) {
   .youaccount-head {
-    flex-direction:column;
     align-items:flex-start;
     gap:14px;
   }

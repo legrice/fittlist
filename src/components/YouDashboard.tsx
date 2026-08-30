@@ -12,6 +12,7 @@ import { Toast, useToast } from "@/components/Toast";
 import { ClassOpener } from "@/components/ClassOpener";
 import { readPhotoPair } from "@/lib/photo";
 import { QrSheet } from "@/components/QrSheet";
+import { ProfileShare } from "@/components/ProfileShare";
 
 export type YouFavoritePerson = {
   id: string;
@@ -82,7 +83,6 @@ export type ProfileSettingsView = "page" | "calendar" | "reach" | "account";
 export function YouDashboard({
   me,
   managed,
-  shareHref,
   isAdmin,
   unread: _unread,
   people = [],
@@ -144,15 +144,23 @@ export function YouDashboard({
   return (
     <main className="youpage">
       <section className="youaccount-head">
-        <button className="youavatar-edit" type="button" disabled={photoPending} onClick={() => setPhotoMenu(true)} aria-label="Change profile photo">
-          {photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="youavatar" src={photoPreview} alt="" />
-          ) : (
-            <span className="youavatar youavatar-empty" style={{ background: me.color }}>{initial}</span>
-          )}
-          <span><Icon name="image" size={15} /></span>
-        </button>
+        <div className="youaccount-topline">
+          <button className="youavatar-edit" type="button" disabled={photoPending} onClick={() => setPhotoMenu(true)} aria-label="Change profile photo">
+            {photoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="youavatar" src={photoPreview} alt="" />
+            ) : (
+              <span className="youavatar youavatar-empty" style={{ background: me.color }}>{initial}</span>
+            )}
+            <span><Icon name="image" size={15} /></span>
+          </button>
+          <div className="youprofile-corner-actions" role="group" aria-label="Share profile">
+            <button type="button" aria-label="Show your QR code" onClick={() => setQrOpen(true)}>
+              <Icon name="qr_code_2" size={22} />
+            </button>
+            <ProfileShare path={`/${me.handle}`} name={me.name} />
+          </div>
+        </div>
         <input ref={fileRef} className="sr-only" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) savePhoto(file); event.currentTarget.value = ""; }} />
         <div className="youaccount-identity">
           <div className="youhandle-row">
@@ -171,14 +179,6 @@ export function YouDashboard({
         <Link href={`/${me.handle}?from=profile`}>
           <Icon name="account_circle" size={18} />
           <span>View profile</span>
-        </Link>
-        <button type="button" onClick={() => setQrOpen(true)}>
-          <Icon name="qr_code_2" size={18} />
-          <span>QR code</span>
-        </button>
-        <Link href={shareHref}>
-          <Icon name="reply" className="share-arrow-forward" size={18} />
-          <span>Share</span>
         </Link>
         <SettingsGear pill />
       </div>
