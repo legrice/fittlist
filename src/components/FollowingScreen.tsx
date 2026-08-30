@@ -731,7 +731,7 @@ export function FollowingScreen({
       )}
       {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">{soleSelectedCoach ? `${soleSelectedCoach.name.split(/\s+/)[0]}’s calendar` : `${selectedPeople.size + Number(includeYou)} calendars`}</span>
+          <span className="feedfilter-txt">{soleSelectedCoach ? `${soleSelectedCoach.name.split(/\s+/)[0]}’s calendar` : `${selectedPeople.size + Number(includeYou)} calendars selected`}</span>
           {soleSelectedCoach?.handle
             ? <Link className="feedfilter-link" href={`/${soleSelectedCoach.handle}?from=feed`}>See profile <Icon name="chevron_right" size={17} /></Link>
             : <button type="button" className="feedfilter-link" onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); }}>Reset</button>}
