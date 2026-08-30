@@ -806,7 +806,7 @@ export function FollowingScreen({
       )}
       {isHome && !firstRun && calendarFilter === "all" && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">{calendarCount} {calendarCount === 1 ? "calendar" : "calendars"}</span>
+          <span className="feedfilter-txt">Following {calendarCount} {calendarCount === 1 ? "calendar" : "calendars"}</span>
           <button type="button" className="feedfilter-link" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>View all <Icon name="chevron_right" size={17} /></button>
         </div>
       )}
