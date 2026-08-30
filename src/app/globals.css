@@ -9021,9 +9021,9 @@ select.editinput.placekind-select {
   scrollbar-width:none; -webkit-overflow-scrolling:touch;
 }
 .calendar-scope-row::-webkit-scrollbar { display:none; }
-.calendar-person-chip { flex:0 0 78px; width:78px; padding:0; display:flex; flex-direction:column; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
-.calendar-person-face { position:relative; width:72px; min-width:72px; max-width:72px; height:72px; min-height:72px; max-height:72px; flex:0 0 72px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:19px; font-weight:700; }
-.calendar-person-face > img { position:absolute; inset:0; display:block; width:72px; height:72px; border-radius:50%; object-fit:cover; }
+.calendar-person-chip { flex:0 0 86px; width:86px; padding:0; display:flex; flex-direction:column; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
+.calendar-person-face { position:relative; width:80px; min-width:80px; max-width:80px; height:80px; min-height:80px; max-height:80px; flex:0 0 80px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:20px; font-weight:700; }
+.calendar-person-face > img { position:absolute; inset:0; display:block; width:80px; height:80px; border-radius:50%; object-fit:cover; }
 .calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 2px var(--ground),0 0 0 5px var(--color-lime); }
 .calendar-person-chip small { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.1; font-weight:600; }
 .calendar-person-star { position:absolute; right:-4px; bottom:-3px; width:24px; height:24px; padding:3px; border:2px solid var(--ground); border-radius:50%; background:var(--ink); color:var(--color-white); }

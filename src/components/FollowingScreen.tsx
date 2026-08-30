@@ -351,16 +351,10 @@ export function FollowingScreen({
   const groupOptions = useMemo(() => socialGroups, [socialGroups]);
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
   const togglePerson = (id: string) => {
-    if (calendarFilter === "all") {
-      setIncludeYou(false);
-      setSelectedPeople(new Set([id]));
-      setCalendarFilter("people");
-      return;
-    }
-    const next = new Set(selectedPeople);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    const next = selectedPeople.has(id) ? new Set<string>() : new Set([id]);
+    setIncludeYou(false);
     setSelectedPeople(next);
-    setCalendarFilter(next.size || !includeYou ? "people" : "you");
+    setCalendarFilter("people");
   };
   const soleSelectedCoach = !includeYou && selectedPeople.size === 1
     ? coachOptions.find((coach) => selectedPeople.has(coach.id)) ?? null
@@ -707,7 +701,7 @@ export function FollowingScreen({
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
             <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
-            <button type="button" className={`calendar-person-chip${calendarFilter !== "all" && includeYou ? " on" : ""}`} aria-pressed={calendarFilter !== "all" && includeYou} onClick={() => { if (calendarFilter === "all") { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); return; } const next = !includeYou; setIncludeYou(next); setCalendarFilter(next && selectedPeople.size === 0 ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
+            <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
             {sortedCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
             <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>
           </div>
