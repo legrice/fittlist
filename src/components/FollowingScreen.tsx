@@ -374,6 +374,9 @@ export function FollowingScreen({
   };
   const railCoachOptions = sortedCoachOptions.slice(0, visibleRailCoachCount);
   const railCoachesComplete = visibleRailCoachCount >= sortedCoachOptions.length;
+  const soleSelectedCoach = !includeYou && selectedPeople.size === 1
+    ? coachOptions.find((coach) => selectedPeople.has(coach.id)) ?? null
+    : null;
   const calendarCount = 1 + coachOptions.length + studioOptions.length + groupOptions.length;
 
   useEffect(() => {
@@ -781,8 +784,10 @@ export function FollowingScreen({
       )}
       {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">{selectedPeople.size + Number(includeYou)} calendars</span>
-          <button type="button" className="feedfilter-link" onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); }}>Reset</button>
+          <span className="feedfilter-txt">{soleSelectedCoach ? `${soleSelectedCoach.name.split(/\s+/)[0]}’s calendar` : `${selectedPeople.size + Number(includeYou)} calendars`}</span>
+          {soleSelectedCoach?.handle
+            ? <Link className="feedfilter-link" href={`/${soleSelectedCoach.handle}?from=feed`}>See profile <Icon name="chevron_right" size={17} /></Link>
+            : <button type="button" className="feedfilter-link" onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); }}>Reset</button>}
         </div>
       )}
       {isHome && calendarFilter === "people" && !includeYou && selectedPeople.size === 0 ? (
