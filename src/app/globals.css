@@ -9017,8 +9017,8 @@ select.editinput.placekind-select {
 .calendar-scope-row { display:flex; gap:7px; overflow-x:auto; padding:5px 1px 7px; scrollbar-width:none; }
 .calendar-scope-row::-webkit-scrollbar { display:none; }
 .calendar-person-chip { flex:0 0 50px; width:50px; padding:0; display:flex; flex-direction:column; align-items:center; gap:5px; border:0; background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
-.calendar-person-face { position:relative; width:44px; height:44px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:14px; font-weight:700; }
-.calendar-person-face > img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.calendar-person-face { position:relative; width:44px; min-width:44px; max-width:44px; height:44px; min-height:44px; max-height:44px; flex:0 0 44px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:14px; font-weight:700; }
+.calendar-person-face > img { position:absolute; inset:0; display:block; width:44px; height:44px; border-radius:50%; object-fit:cover; }
 .calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 2px var(--ground),0 0 0 5px var(--color-lime); }
 .calendar-person-chip small { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; line-height:1.1; font-weight:600; }
 .calendar-person-star { position:absolute; right:-3px; bottom:-2px; width:17px; height:17px; padding:2px; border:2px solid var(--ground); border-radius:50%; background:var(--ink); color:var(--color-white); }
@@ -9205,6 +9205,7 @@ select.editinput.placekind-select {
   line-height:1.15; font-weight:700; white-space:nowrap;
 }
 .cash-class-coachline .cash-relation-tag { margin-left:auto; }
+.cash-class-coachline.own .cash-relation-tag { margin-left:0; }
 .cash-relation-tag.following { background:var(--color-olive); color:var(--color-black); }
 .cash-relation-tag.coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
 .cash-relation-tag.attending { background:var(--color-attending); color:var(--color-attending-text); }
