@@ -11479,17 +11479,22 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-page-back:active { transform:scale(.94); }
 .personal-calendar-scrim {
-  position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end;
-  background:rgba(0,0,0,.34);
+  position:fixed; inset:0; z-index:120; overflow:hidden; background:transparent;
 }
 .personal-calendar-sheet {
-  position:relative; width:100%; max-height:calc(100dvh - 42px); overflow-y:auto;
-  padding:18px var(--page-gutter) calc(28px + env(safe-area-inset-bottom));
-  border-radius:28px 28px 0 0; background:var(--ground); color:var(--ink);
-  box-shadow:0 -12px 40px rgba(0,0,0,.16); overscroll-behavior:contain;
-  transition:transform 220ms var(--motion-ease-out); will-change:transform;
+  position:absolute; inset:0; width:100%; height:100vh; height:100dvh; overflow:hidden;
+  padding:0 var(--page-gutter); display:flex; flex-direction:column;
+  border-radius:0; background:var(--ground); color:var(--ink);
+  transform:translateX(100%); transition:transform 240ms var(--motion-ease-out); will-change:transform;
 }
-.personal-calendar-sheet.is-pulling { transition:none; }
+.personal-calendar-sheet.is-open { transform:translateX(0); }
+.personal-calendar-sheet .calendar-page-header {
+  flex:0 0 auto; margin:0; padding-top:max(12px, env(safe-area-inset-top));
+}
+.personal-calendar-sheet .calendar-cardwrap {
+  min-height:0; flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain;
+  padding-bottom:calc(112px + env(safe-area-inset-bottom));
+}
 .personal-calendar-sheet .calendar-header-share { display:none; }
 .personal-calendar-sheet .calendar-bottom-actions { left:auto; right:24px; bottom:calc(24px + env(safe-area-inset-bottom)); }
 .personal-calendar-sheet .calendar-bottom-actions .calendar-bottom-add { display:inline-flex; }
