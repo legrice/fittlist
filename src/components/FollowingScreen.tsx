@@ -270,6 +270,7 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | "people" | `coach:${string}` | `studio:${string}` | `group:${string}`>("you");
+  const [includeYou, setIncludeYou] = useState(true);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(() => new Set());
   const [calendarSelectorOpen, setCalendarSelectorOpen] = useState(false);
   useEffect(() => {
@@ -369,7 +370,7 @@ export function FollowingScreen({
     const next = new Set(selectedPeople);
     if (next.has(id)) next.delete(id); else next.add(id);
     setSelectedPeople(next);
-    setCalendarFilter(next.size ? "people" : "you");
+    setCalendarFilter(next.size || !includeYou ? "people" : "you");
   };
   const railCoachOptions = sortedCoachOptions.slice(0, visibleRailCoachCount);
   const railCoachesComplete = visibleRailCoachCount >= sortedCoachOptions.length;
@@ -436,7 +437,7 @@ export function FollowingScreen({
       if (!passes(item)) return false;
       if (!isHome) return true;
       if (calendarFilter === "you") return item.saved || item.shift || (!!meId && item.coachId === meId);
-      if (calendarFilter === "people") return item.saved || item.shift || (!!meId && item.coachId === meId) || selectedPeople.has(item.coachId);
+      if (calendarFilter === "people") return (includeYou && (item.saved || item.shift || (!!meId && item.coachId === meId))) || selectedPeople.has(item.coachId);
       if (calendarFilter === "following") {
         const fromPeople = favoriteIds.has(item.coachId);
         const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
@@ -461,13 +462,15 @@ export function FollowingScreen({
       return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds, selectedPeople]);
+  }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds, selectedPeople, includeYou]);
 
   // A brand-new account has no useful calendar identity to put in the rail
   // yet. Showing a lone “You” circle above an empty state makes the circle
   // look like content when it is really only a placeholder. Once they follow,
   // save, join, or add anything, the normal rail comes back.
   const firstRun = isHome
+    && includeYou
+    && calendarFilter === "you"
     && follows === 0
     && savedStudios.length === 0
     && socialGroups.length === 0
@@ -729,13 +732,13 @@ export function FollowingScreen({
       {isHome && !firstRun && (
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
-            <button type="button" className="calendar-person-chip on" aria-pressed="true" onClick={() => { setSelectedPeople(new Set()); setCalendarFilter("you"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
+            <button type="button" className={`calendar-person-chip${includeYou ? " on" : ""}`} aria-pressed={includeYou} onClick={() => { const next = !includeYou; setIncludeYou(next); setCalendarFilter(next && selectedPeople.size === 0 ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
             {quickCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
             <button type="button" className="calendar-person-chip calendar-selector-trigger" aria-label="Choose more people" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}><span className="calendar-person-face"><Icon name="expand_more" size={22} /></span><small>More</small></button>
           </div>
           {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose people</h2><button type="button" aria-label="Close people selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><div className="tray following-rail" aria-label="People">
             <div className="tray-scroll" ref={followingRailRef}>
-              <button className={`trayitem${calendarFilter === "you" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => { setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarSelectorOpen(false); }}>
+              <button className={`trayitem${includeYou ? " selected" : ""}`} type="button" aria-pressed={includeYou} onClick={() => { const next = !includeYou; setIncludeYou(next); setCalendarFilter(next && selectedPeople.size === 0 ? "you" : "people"); }}>
                 <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
@@ -778,11 +781,13 @@ export function FollowingScreen({
       )}
       {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">{selectedPeople.size + 1} calendars</span>
-          <button type="button" className="feedfilter-link" onClick={() => { setSelectedPeople(new Set()); setCalendarFilter("you"); }}>Reset</button>
+          <span className="feedfilter-txt">{selectedPeople.size + Number(includeYou)} calendars</span>
+          <button type="button" className="feedfilter-link" onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); }}>Reset</button>
         </div>
       )}
-      {isHome && shown.length === 0 && calendarPending ? (
+      {isHome && calendarFilter === "people" && !includeYou && selectedPeople.size === 0 ? (
+        <div className="calendar-selection-empty"><h2>No calendars selected</h2><p>Tap a person above to see what’s on their calendar.</p></div>
+      ) : isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
         firstRun ? (
