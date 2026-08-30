@@ -12,6 +12,7 @@ import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
+import { BodyPortal } from "@/components/BodyPortal";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -271,6 +272,20 @@ export function FollowingScreen({
   const [includeYou, setIncludeYou] = useState(true);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(() => new Set());
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [calendarDirectoryOpen, setCalendarDirectoryOpen] = useState(false);
+  const [calendarDirectoryTab, setCalendarDirectoryTab] = useState<"people" | "studios" | "groups">("people");
+  const [calendarDirectoryQuery, setCalendarDirectoryQuery] = useState("");
+  useEffect(() => {
+    if (!calendarDirectoryOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setCalendarDirectoryOpen(false); };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [calendarDirectoryOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
@@ -349,6 +364,15 @@ export function FollowingScreen({
     [savedStudios],
   );
   const groupOptions = useMemo(() => socialGroups, [socialGroups]);
+  const calendarDirectoryItems = useMemo(() => {
+    const items = calendarDirectoryTab === "people"
+      ? coachOptions.map((coach) => ({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, href:coach.handle ? `/${coach.handle}` : "" }))
+      : calendarDirectoryTab === "studios"
+        ? studioOptions.map((studio) => ({ id:studio.id, name:studio.name, photo:studio.photo, color:studio.color, href:`/s/${studio.slug}` }))
+        : groupOptions.map((group) => ({ id:group.id, name:group.name, photo:group.photo, color:"var(--color-surface-muted)", href:`/g/${group.slug}` }));
+    const query = calendarDirectoryQuery.trim().toLocaleLowerCase();
+    return query ? items.filter((item) => item.name.toLocaleLowerCase().includes(query)) : items;
+  }, [calendarDirectoryQuery, calendarDirectoryTab, coachOptions, studioOptions, groupOptions]);
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
   const togglePerson = (id: string) => {
     const next = selectedPeople.has(id) ? new Set<string>() : new Set([id]);
@@ -715,8 +739,8 @@ export function FollowingScreen({
       )}
       {isHome && !firstRun && calendarFilter === "all" && (
         <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">All calendars</span>
-          <span className="calendar-context-meta">{calendarCount} {calendarCount === 1 ? "calendar" : "calendars"}</span>
+          <span className="feedfilter-txt">{calendarCount} {calendarCount === 1 ? "calendar" : "calendars"}</span>
+          <button type="button" className="feedfilter-link" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>View all <Icon name="chevron_right" size={17} /></button>
         </div>
       )}
       {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
@@ -927,6 +951,7 @@ export function FollowingScreen({
           header search and the Discover classes link. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
       {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
+      {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarDirectoryOpen(false); }}><section className="calendar-directory-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={() => setCalendarDirectoryOpen(false)}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list">{calendarDirectoryItems.map((item) => item.href ? <Link href={item.href} className="calendar-directory-row" key={item.id} onClick={() => setCalendarDirectoryOpen(false)}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong><Icon name="chevron_right" size={20} /></Link> : null)}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
 
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
