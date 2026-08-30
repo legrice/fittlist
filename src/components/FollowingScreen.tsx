@@ -1133,12 +1133,12 @@ function daySectionLabel(iso: string, today: string): string {
 }
 
 function calendarRelation(item: FeedItem, meId?: string): {
-  label: "Following" | "Coaching" | "Attending" | "Shift";
+  label: "Following" | "Coaching" | "Saved" | "Shift";
   tone: "following" | "coaching" | "attending" | "shift";
 } {
   if (item.shift) return { label: "Shift", tone: "shift" };
   if (meId && item.coachId === meId) return { label: "Coaching", tone: "coaching" };
-  if (item.saved) return { label: "Attending", tone: "attending" };
+  if (item.saved) return { label: "Saved", tone: "attending" };
   return { label: "Following", tone: "following" };
 }
 
