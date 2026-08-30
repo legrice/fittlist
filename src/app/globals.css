@@ -9264,11 +9264,14 @@ select.editinput.placekind-select {
   .cash-class-copy small { font-size: 17.5px; }
 }
 .following-coach-context {
-  min-height: 50px; margin: 8px 0 16px; padding: 10px 0;
-  border-radius: 0; border-bottom: 1px solid var(--line); background: transparent;
+  min-height: 58px; margin: 10px 0 20px; padding: 9px 10px 9px 16px;
+  border: 0; border-radius: 18px; background: var(--color-surface-muted);
 }
 .following-coach-context .feedfilter-txt { font-size: 17px; }
-.following-coach-context .feedfilter-link { font-size: 14px; }
+.following-coach-context .feedfilter-link {
+  min-height:40px; padding:0 13px; gap:2px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
+  background:var(--color-surface); color:var(--ink); font-size:14px;
+}
 .screen.hasnav .brandbar {
   background: var(--ground); color: var(--ink); --wm-ink: var(--ink); --wm-mark: var(--ink);
   border-bottom: 0;
