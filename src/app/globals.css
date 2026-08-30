@@ -9170,7 +9170,8 @@ select.editinput.placekind-select {
 .cash-day > div { content-visibility:auto; contain-intrinsic-size:380px; }
 .cash-days-more { height:2px; }
 .cash-rail-more { flex:0 0 2px; align-self:stretch; }
-.cash-day > h2 { margin:0 0 14px; padding-bottom:12px; border-bottom:1px solid var(--line); font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
+.cash-day > h2 { position:relative; margin:0 0 14px; padding-bottom:12px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
+.cash-day > h2::after { content:""; position:absolute; left:0; right:0; bottom:0; height:1px; background:var(--line); }
 @media (max-width:1099px) {
   .cash-day > h2 {
     position:sticky; top:66px; z-index:6;
@@ -9178,6 +9179,7 @@ select.editinput.placekind-select {
     padding:8px var(--page-gutter) 10px;
     background:var(--ground);
   }
+  .cash-day > h2::after { left:var(--page-gutter); right:var(--page-gutter); }
   .screen.hasnav:has(.social-brandbar.is-hidden) .cash-day > h2 { top:0; }
   html[data-native="ios"] .cash-day > h2 { top:0; }
 }
