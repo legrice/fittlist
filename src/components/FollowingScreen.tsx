@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type TouchEvent } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -277,10 +277,50 @@ export function FollowingScreen({
   const [calendarDirectoryQuery, setCalendarDirectoryQuery] = useState("");
   const [calendarDirectoryFollowing, setCalendarDirectoryFollowing] = useState<Record<string, boolean>>({});
   const [calendarDirectoryBusy, setCalendarDirectoryBusy] = useState<string | null>(null);
+  const calendarDirectoryListRef = useRef<HTMLDivElement>(null);
+  const calendarDirectoryDragStartY = useRef<number | null>(null);
+  const calendarDirectoryDragDistance = useRef(0);
+  const [calendarDirectoryDragY, setCalendarDirectoryDragY] = useState(0);
+  const [calendarDirectoryDragging, setCalendarDirectoryDragging] = useState(false);
+  const closeCalendarDirectory = () => {
+    setCalendarDirectoryOpen(false);
+    setCalendarDirectoryDragY(0);
+    setCalendarDirectoryDragging(false);
+    calendarDirectoryDragStartY.current = null;
+    calendarDirectoryDragDistance.current = 0;
+  };
+  const startCalendarDirectoryPull = (event: TouchEvent<HTMLElement>) => {
+    calendarDirectoryDragStartY.current = event.touches[0]?.clientY ?? null;
+    calendarDirectoryDragDistance.current = 0;
+  };
+  const moveCalendarDirectoryPull = (event: TouchEvent<HTMLElement>) => {
+    if (calendarDirectoryDragStartY.current === null) return;
+    const currentY = event.touches[0]?.clientY ?? calendarDirectoryDragStartY.current;
+    if ((calendarDirectoryListRef.current?.scrollTop ?? 0) > 0) {
+      calendarDirectoryDragStartY.current = currentY;
+      return;
+    }
+    const distance = Math.max(0, currentY - calendarDirectoryDragStartY.current);
+    if (!distance) return;
+    event.preventDefault();
+    calendarDirectoryDragDistance.current = distance;
+    setCalendarDirectoryDragging(true);
+    setCalendarDirectoryDragY(distance);
+  };
+  const endCalendarDirectoryPull = () => {
+    if (calendarDirectoryDragDistance.current > 90) {
+      closeCalendarDirectory();
+      return;
+    }
+    setCalendarDirectoryDragY(0);
+    setCalendarDirectoryDragging(false);
+    calendarDirectoryDragStartY.current = null;
+    calendarDirectoryDragDistance.current = 0;
+  };
   useEffect(() => {
     if (!calendarDirectoryOpen) return;
     const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setCalendarDirectoryOpen(false); };
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") closeCalendarDirectory(); };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
     return () => {
@@ -978,7 +1018,7 @@ export function FollowingScreen({
           header search and the Discover classes link. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
       {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
-      {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarDirectoryOpen(false); }}><section className="calendar-directory-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={() => setCalendarDirectoryOpen(false)}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list">{calendarDirectoryItems.map((item) => { const key=`${item.kind}:${item.id}`; const following=calendarDirectoryFollowing[key] ?? true; return <div className="calendar-directory-row" key={key}><Link href={item.href} onClick={() => setCalendarDirectoryOpen(false)}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong></Link><button type="button" className={following ? "on" : ""} disabled={calendarDirectoryBusy === key} onClick={() => void toggleDirectoryFollow(item)}>{following ? "Following" : "Follow"}</button></div>})}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
+      {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCalendarDirectory(); }}><section className={`calendar-directory-sheet${calendarDirectoryDragging ? " is-pulling" : ""}`} style={{ transform:`translateY(${calendarDirectoryDragY}px)` }} role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()} onTouchStart={startCalendarDirectoryPull} onTouchMove={moveCalendarDirectoryPull} onTouchEnd={endCalendarDirectoryPull} onTouchCancel={endCalendarDirectoryPull}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={closeCalendarDirectory}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list" ref={calendarDirectoryListRef}>{calendarDirectoryItems.map((item) => { const key=`${item.kind}:${item.id}`; const following=calendarDirectoryFollowing[key] ?? true; return <div className="calendar-directory-row" key={key}><Link href={item.href} onClick={closeCalendarDirectory}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong></Link><button type="button" className={following ? "on" : ""} disabled={calendarDirectoryBusy === key} onClick={() => void toggleDirectoryFollow(item)}>{following ? "Following" : "Follow"}</button></div>})}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
 
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
