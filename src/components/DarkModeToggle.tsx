@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setLook } from "@/app/actions/profile";
 import { DARK_ENABLED } from "@/lib/darkmode";
 import { Icon } from "@/components/Icon";
+import { applyThemeMode } from "@/components/ThemeModeSync";
 
-// The coach's page look. Stored on their account: it themes the whole app AND
-// their public page for every visitor. The <html> attribute flips immediately
-// for feedback; the server attribute (rendered per page root) is the truth.
+// The viewer's look is stored on their account and follows them across the
+// app. The document flips immediately; the refreshed server root is the
+// persisted truth.
 export function DarkModeToggle({ initialOn }: { initialOn: boolean }) {
   const router = useRouter();
   const [on, setOn] = useState(initialOn);
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
+  useEffect(() => setOn(initialOn), [initialOn]);
   // While the look is off, the row goes with it. A switch that stays on
   // screen and changes nothing is worse than no switch: it reads as broken
   // rather than as withdrawn, and somebody would flip it twice to be sure.
@@ -21,23 +23,33 @@ export function DarkModeToggle({ initialOn }: { initialOn: boolean }) {
   if (!DARK_ENABLED) return null;
 
   const toggle = () => {
+    if (pending) return;
     const next = !on;
     setOn(next);
-    const root = document.documentElement;
-    if (next) root.setAttribute("data-mode", "dark");
-    else root.removeAttribute("data-mode");
+    applyThemeMode(next);
     startTransition(async () => {
-      await setLook(next ? "dark" : "light");
-      router.refresh();
+      try {
+        const result = await setLook(next ? "dark" : "light");
+        if (result.ok) {
+          router.refresh();
+          return;
+        }
+      } catch {
+        // The optimistic switch is rolled back below. A later visit still
+        // reads the stored server value, so a failed request cannot leave the
+        // rest of the app disagreeing with Settings.
+      }
+      setOn(!next);
+      applyThemeMode(!next);
     });
   };
 
   return (
-    <button className="setrow" onClick={toggle} aria-pressed={on}>
+    <button type="button" className="setrow" onClick={toggle} aria-pressed={on} disabled={pending}>
       <span className="setrow-ic"><Icon name={on ? "dark_mode" : "light_mode"} size={24} /></span>
       <span className="setrow-txt">
         <span className="t">Dark mode</span>
-        <span className="s">{on ? "On for your page and app" : "Off"}</span>
+        <span className="s">{on ? "On across FittList" : "Off across FittList"}</span>
       </span>
       <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
         <span className="switch-knob" />

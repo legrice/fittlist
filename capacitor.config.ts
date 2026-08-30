@@ -30,8 +30,10 @@ const config: CapacitorConfig = {
       // Reserve the system status area instead of laying the web view beneath
       // the clock, Dynamic Island and signal indicators.
       overlaysWebView: false,
+      // Light is the default appearance; NativeAppBridge updates both the
+      // glyph style and this background when a signed-in viewer chooses dark.
       style: "LIGHT",
-      backgroundColor: "#191502",
+      backgroundColor: "#fdfcf7",
     },
   },
 };

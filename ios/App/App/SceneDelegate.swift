@@ -6,10 +6,20 @@ import Photos
 import AuthenticationServices
 import CryptoKit
 
+/// UIKit asks the outer shell which status-bar style to use, while Capacitor's
+/// plugin updates its bridge controller. Forward that update through the
+/// container so a web appearance change reaches the actual system chrome.
+final class FittListBridgeViewController: CAPBridgeViewController {
+    override func setStatusBarStyle(_ statusBarStyle: UIStatusBarStyle) {
+        super.setStatusBarStyle(statusBarStyle)
+        parent?.setNeedsStatusBarAppearanceUpdate()
+    }
+}
+
 /// One native navigation shell around the existing Capacitor bridge. FittList
 /// keeps one web product while the highest-value app surfaces become native.
 final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler, MFMessageComposeViewControllerDelegate, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
-    private let bridge = CAPBridgeViewController()
+    private let bridge = FittListBridgeViewController()
     private let headerView = UIView()
     private let tabBar = UITabBar()
     private var settingsButton: UIButton?
@@ -22,11 +32,11 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let fallbackRoutes = ["/feed", "/membershare", "/you", "/discover"]
     private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
 
-    override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+    override var childForStatusBarStyle: UIViewController? { bridge }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 25 / 255, green: 21 / 255, blue: 2 / 255, alpha: 1)
+        view.backgroundColor = UIColor(red: 253 / 255, green: 252 / 255, blue: 247 / 255, alpha: 1)
 
         addChild(bridge)
         bridge.view.translatesAutoresizingMaskIntoConstraints = false

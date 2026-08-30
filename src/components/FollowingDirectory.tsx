@@ -23,7 +23,7 @@ type DirectoryTab = "following" | "discover";
 const distanceOptions = [["1","Within 1 mile"],["2","Within 2 miles"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]] as const;
 const purposeOptions = [["plan","Plan together"],["community","Community"],["event","Events"]] as const;
 
-export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
+export function FollowingDirectory({ data, mode }: { data: FollowingDirectoryData; mode?: "dark" }) {
   const [tab, setTab] = useState<DirectoryTab>("following");
   const [entities, setEntities] = useState(data.entities);
   const [loaded, setLoaded] = useState<Record<DirectoryTab, boolean>>({ following: true, discover: false });
@@ -99,7 +99,7 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
   };
 
   return (
-    <section className="screen follow-directory-screen">
+    <section className="screen follow-directory-screen" data-mode={mode}>
       <main className="follow-directory">
         <header className="follow-directory-head">
           <Link className="follow-directory-back" href="/you" aria-label="Back to profile">

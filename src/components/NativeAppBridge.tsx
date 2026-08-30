@@ -21,7 +21,17 @@ export function NativeAppBridge() {
 
       document.documentElement.dataset.native = Capacitor.getPlatform();
       void StatusBar.setOverlaysWebView({ overlay: false });
-      void StatusBar.setStyle({ style: Style.Light });
+      const syncStatusBar = () => {
+        const dark = document.documentElement.dataset.mode === "dark";
+        // Capacitor names these values for the background they sit on:
+        // Style.Dark is light glyphs for a dark background, and Style.Light
+        // is dark glyphs for a light background.
+        void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light });
+        void StatusBar.setBackgroundColor({ color: dark ? "#17150f" : "#fdfcf7" });
+      };
+      syncStatusBar();
+      window.addEventListener("fittlist:themechange", syncStatusBar);
+      removers.push(async () => window.removeEventListener("fittlist:themechange", syncStatusBar));
       Network.getStatus().then(({ connected }) => {
         if (live) setOffline(!connected);
       });

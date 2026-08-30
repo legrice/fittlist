@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { staffView } from "@/app/actions/gym";
 import { StudioShiftsView } from "@/components/StudioShiftsView";
+import { viewerLook } from "@/lib/look";
 
 export const dynamic = "force-dynamic";
 
@@ -53,13 +54,15 @@ export default async function ShiftsPage({
   const view = await staffView(studio.id);
   if (!view) notFound();
   return (
-    <StudioShiftsView
-      view={view}
-      canSchedule={!!studio.accountUserId}
-      pageViews={null}
-      showCoaches={studio.showCoaches}
-      studio={null}
-      coachPreview={coachPreview}
-    />
+    <section className="screen" data-mode={await viewerLook()}>
+      <StudioShiftsView
+        view={view}
+        canSchedule={!!studio.accountUserId}
+        pageViews={null}
+        showCoaches={studio.showCoaches}
+        studio={null}
+        coachPreview={coachPreview}
+      />
+    </section>
   );
 }

@@ -390,7 +390,7 @@ export async function setMessagesOpen(on: boolean): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
-export async function setLook(look: string): Promise<{ ok: boolean }> {
+export async function setLook(look: "dark" | "light"): Promise<{ ok: boolean }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };
   const v = look === "dark" ? "dark" : null;
@@ -400,7 +400,7 @@ export async function setLook(look: string): Promise<{ ok: boolean }> {
     .set({ look: v })
     .where(eq(schema.users.id, userId))
     .returning({ handle: schema.users.handle });
-  revalidatePath("/calendar");
+  revalidatePath("/", "layout");
   if (user?.handle) revalidatePath(`/${user.handle}`);
   return { ok: true };
 }

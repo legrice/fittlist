@@ -438,12 +438,40 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   if (!initialSrc?.startsWith("/api/story/compose?"))
     fail("the single preview should be the schedule image: " + initialSrc);
 
-  const primaryTools = (await p.locator(".sheditor-tools-primary .sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
-  if (primaryTools.join("|") !== "Remix|Background|Style")
-    fail("the primary image tools should be Remix, Background and Style: " + primaryTools.join("|"));
-  const detailTools = (await p.locator(".sheditor-tools-details .sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
-  if (detailTools.join("|") !== "Classes|Dates|Headline")
-    fail("the coach's schedule tools should be Classes, Dates and Headline: " + detailTools.join("|"));
+  const toolRail = p.locator(".sheditor-tools-all");
+  if ((await toolRail.count()) !== 1)
+    fail("the image editor should have one tool rail");
+  const tools = (await toolRail.locator(".sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
+  if (tools.join("|") !== "Remix|Background|Style|Classes|Dates|Headline")
+    fail("the coach's image tools should share one rail: " + tools.join("|"));
+  if (await p.locator(".shstyle-rail, .shstyle-option").count())
+    fail("styles should live behind the Style tool, not in a second rail");
+  const rail = await toolRail.evaluate((el) => {
+    const icons = [...el.querySelectorAll(".sheditor-tool-icon")].map((icon) => {
+      const box = icon.getBoundingClientRect();
+      return {
+        top:box.top,
+        width:box.width,
+        height:box.height,
+        radius:parseFloat(getComputedStyle(icon).borderRadius),
+      };
+    });
+    return {
+      overflowX:getComputedStyle(el).overflowX,
+      scrolls:el.scrollWidth > el.clientWidth,
+      aligned:icons.every((icon) => Math.abs(icon.top - icons[0].top) < 1),
+      circles:icons.length > 0 && icons.every(
+        (icon) => Math.abs(icon.width - icon.height) < 1 && icon.radius >= icon.width / 2 - 1,
+      ),
+    };
+  });
+  if (rail.overflowX !== "auto" || !rail.scrolls)
+    fail("the single tool rail should scroll horizontally: " + JSON.stringify(rail));
+  if (!rail.aligned || !rail.circles)
+    fail("the editor tool circles should share one horizontal line: " + JSON.stringify(rail));
+  const designActions = (await p.locator(".shdesign-actions button").allInnerTexts()).map((t) => t.trim());
+  if (designActions.join("|") !== "Undo|Reset|Save this look")
+    fail("the design actions should sit beneath the tool rail in order: " + designActions.join("|"));
 
   // Headline rewrites the poster's words, and the picture is asked for
   // exactly what was typed.
@@ -489,8 +517,17 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
   }
 }
-if ((await p.locator(".share-tab-header").getByRole("button", { name: "Share image" }).count()) !== 1)
+const headerShare = p.locator(".share-tab-header").getByRole("button", { name: "Share image" });
+if ((await headerShare.count()) !== 1)
   fail("the image studio should put Share in the top-right header");
+{
+  const colors = await headerShare.evaluate((el) => {
+    const style = getComputedStyle(el);
+    return { background:style.backgroundColor, foreground:style.color };
+  });
+  if (colors.background !== "rgb(159, 232, 112)" || colors.foreground !== "rgb(25, 21, 2)")
+    fail("the header Share action should be lime with dark text: " + JSON.stringify(colors));
+}
 if (await p.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
   fail("the image studio should not duplicate Share at the bottom");
 console.log("the Share tab is one focused schedule image studio");

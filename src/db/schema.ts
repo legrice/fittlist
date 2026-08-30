@@ -68,8 +68,8 @@ export const users = pgTable("users", {
   signupSource: text("signup_source"),
   // Visual style for this trainer's app + public page: "classic" | "blocks" | "poster".
   theme: text("theme").notNull().default("poster"),
-  // Page look: how the coach's app AND public page render. Null = the default
-  // light look; "dark" today, more colour looks later.
+  // The viewer's appearance across the app and public pages they visit.
+  // Null = the default light look; "dark" is the opt-in alternative.
   look: text("look"),
   // Set when this account unsubscribes from the merged weekly digest. Separate
   // from unfollowing on purpose: "stop emailing me" must not empty their feed.

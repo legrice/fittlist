@@ -5,6 +5,7 @@ import { NavTrack } from "@/components/NavTrack";
 import { ScrollLock } from "@/components/ScrollLock";
 import { NativeAppBridge } from "@/components/NativeAppBridge";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeModeSync } from "@/components/ThemeModeSync";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body>
+        <ThemeModeSync />
         <NativeAppBridge />
         <ScrollLock />
         <NavTrack />

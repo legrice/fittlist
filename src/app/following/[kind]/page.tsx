@@ -4,6 +4,7 @@ import {
   followingDirectoryData,
   type FollowingDirectoryKind,
 } from "@/lib/following-directory";
+import { viewerLook } from "@/lib/look";
 
 export const dynamic = "force-dynamic";
 
@@ -18,5 +19,5 @@ export default async function FollowingDirectoryPage({
   if (!kinds.has(kind as FollowingDirectoryKind)) notFound();
   const data = await followingDirectoryData(kind as FollowingDirectoryKind);
   if (!data) redirect("/");
-  return <FollowingDirectory data={data} />;
+  return <FollowingDirectory data={data} mode={await viewerLook()} />;
 }

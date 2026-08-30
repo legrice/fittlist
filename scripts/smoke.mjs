@@ -570,6 +570,13 @@ console.log("sticky header ok (the List starts at today, no walk backwards)");
     fail("calendar Share should put its action at the top right");
   if (await shareDialog.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
     fail("calendar Share should not duplicate its action at the bottom");
+  const tools = (await shareDialog.locator(".sheditor-tools-all .sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
+  if (tools.join("|") !== "Remix|Background|Style|Classes|Dates|Headline")
+    fail("calendar Share should put every image tool in one rail: " + tools.join("|"));
+  if ((await shareDialog.locator(".sheditor-tools").count()) !== 1)
+    fail("calendar Share should render one tool rail");
+  if (await shareDialog.locator(".shstyle-rail, .shstyle-option").count())
+    fail("calendar Share should not duplicate Style in a quick-style rail");
   await shareDialog.locator(".calendar-share-close").click();
   await shareDialog.waitFor({ state: "detached" });
   if (page.url() !== calendarUrl) fail("closing calendar Share should keep the origin route");
@@ -623,21 +630,64 @@ await page.waitForFunction(() => !document.querySelector(".sheet"));
 await closeProfile(page);
 console.log("schedule tools ok (three pills, no title)");
 
-// ---- page look: dark mode is switched off at the source for now, so the
-// app has one look to design illustrations against. DARK_ENABLED in
-// src/lib/darkmode.ts is the whole switch; the column, the action and the
-// CSS all stay. What has to hold while it is off: nothing renders dark, and
-// the row that would set it is not sitting there doing nothing.
-await page.goto(BASE + "/app?acct=1");
+// ---- page look: Settings changes the whole app immediately and persists the
+// choice on the account. A hard reload is the important half of this check:
+// it proves the server-rendered root reads the stored look rather than only a
+// client class making the current screen appear to work.
+await openProfile(page);
+await openSetting(page, "Account & preferences");
+let darkModeRow = page.locator(".sheet .setrow", { hasText: "Dark mode" });
+await darkModeRow.waitFor();
+if ((await darkModeRow.getAttribute("aria-pressed")) !== "false")
+  fail("a new account should begin in light mode");
+await darkModeRow.click();
+await page.waitForFunction(() =>
+  document.documentElement.dataset.mode === "dark" &&
+  !!document.querySelector('.screen[data-mode="dark"], .appshell[data-mode="dark"]'),
+);
+await page.waitForFunction(() => {
+  const row = [...document.querySelectorAll(".sheet .setrow")].find((el) =>
+    el.querySelector(".t")?.textContent?.trim() === "Dark mode",
+  );
+  return row?.getAttribute("aria-pressed") === "true" && !row.hasAttribute("disabled");
+});
+if (!(await darkModeRow.locator(".s", { hasText: "On across FittList" }).count()))
+  fail("the dark mode row should describe its active state");
+
+await page.reload();
 await page.locator(".acctwrap").waitFor();
-await page.waitForTimeout(450);
-if (await page.locator(".setrow", { hasText: "Dark mode" }).count())
-  fail("the dark mode row should be gone while the look is switched off");
-await page.goto(BASE + "/matt");
-await page.locator(".pub").waitFor();
-if (await page.locator('[data-mode="dark"]').count())
-  fail("nothing should render dark while the look is switched off");
-console.log("one look ok (dark switched off at the source, no dead switch)");
+if (await page.evaluate(() => document.documentElement.dataset.mode !== "dark"))
+  fail("dark mode should survive a hard reload");
+if (!(await page.locator('.screen[data-mode="dark"], .appshell[data-mode="dark"]').count()))
+  fail("the persisted dark preference should reach the server-rendered app root");
+
+// The preference belongs to the viewer, so it follows them onto another
+// coach's public profile too.
+await page.goto(BASE + "/sam");
+await page.locator('.pub[data-mode="dark"]').waitFor();
+
+// Return the fixture to light for the visual assertions that follow, and
+// prove that direction persists too rather than leaving later checks coupled
+// to this one.
+await openProfile(page);
+await openSetting(page, "Account & preferences");
+darkModeRow = page.locator(".sheet .setrow", { hasText: "Dark mode" });
+await darkModeRow.waitFor();
+if ((await darkModeRow.getAttribute("aria-pressed")) !== "true")
+  fail("Settings should read the persisted dark preference");
+await darkModeRow.click();
+await page.waitForFunction(() => {
+  const row = [...document.querySelectorAll(".sheet .setrow")].find((el) =>
+    el.querySelector(".t")?.textContent?.trim() === "Dark mode",
+  );
+  return !document.documentElement.dataset.mode &&
+    row?.getAttribute("aria-pressed") === "false" && !row.hasAttribute("disabled");
+});
+await page.reload();
+await page.locator(".acctwrap").waitFor();
+if (await page.evaluate(() => document.documentElement.dataset.mode === "dark"))
+  fail("turning dark mode off should survive a hard reload");
+console.log("dark mode switches immediately and persists across FittList");
 
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
 // The bare handle is the schedule now: it's what the link is for, and a
@@ -2446,14 +2496,13 @@ if (!(await page.getByRole("button", { name: /Back to .*schedule/ }).count()))
 // a class with no booking link says nothing rather than a line of filler
 if (await page.getByText("Just show up").count())
   fail("the no-booking line should be gone");
-// Somebody else's page is light too, because there is one look now. When
-// DARK_ENABLED comes back this is where "the viewer's preference wins on
-// another coach's page" goes back in.
+// The preference test above restored light before the rest of the suite. That
+// restored viewer choice should still win on somebody else's page.
 await page.goto(BASE + "/sam");
 await page.locator(".pub").waitFor();
 if (await page.locator('[data-mode="dark"]').count())
-  fail("another coach's page should not render dark while the look is off");
-console.log("another coach's page keeps the one look ok");
+  fail("another coach's page should reflect the restored light preference");
+console.log("another coach's page follows the viewer's restored light preference");
 
 // ---- studios have their own page, and any coach can correct one
 // The editor sits behind the three dots and a word about care: menu, then

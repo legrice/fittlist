@@ -856,7 +856,7 @@ export function ShareHubScreen({
         )}
         {!building && (
           <section className="sheditor-shell sheditor-week" aria-label="Share image editor">
-            {/* One preview is the center of the studio. The dark stage gives
+            {/* One preview is the center of the studio. The quiet stage gives
                 the artwork a canvas without making other formats compete. */}
             <div className="sheditor-stage">
               <div className="shsingle-preview">
@@ -869,121 +869,92 @@ export function ShareHubScreen({
               </div>
             </div>
 
-            {/* The dock borrows the reference's studio hierarchy, but every
-                tool is one the FittList picture already understands. Detailed
+            {/* Every editor option stays in one horizontal tool rail. Detailed
                 editing still opens the familiar focused sheets. */}
             <div className="sheditor-dock sheditor-dock-week">
-                  <div className="sheditor-tools sheditor-tools-primary" aria-label="Creative tools">
-                    <StudioTool icon="auto_awesome" label="Remix" detail="New look" accent onClick={remix} />
-                    <StudioTool
-                      icon="image"
-                      label="Background"
-                      detail={background ? "Photo" : STORY_THEMES[themeId].label}
-                      onClick={() => {
-                        setDraftPhotoX(photoX);
-                        setDraftPhotoY(photoY);
-                        setDraftPhotoOverlay(photoOverlay);
-                        setColorMenuOpen(false);
-                        setPick("color");
-                      }}
-                    />
-                    <StudioTool
-                      icon="palette"
-                      label="Style"
-                      detail={STORY_STYLES[styleId].label}
-                      onClick={() => setPick("layout")}
-                    />
-                  </div>
-
-                  <div className="shstyle-rail" role="group" aria-label="Quick styles">
-                    {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(
-                      ([id]) => id !== "cowboy",
-                    ).map(([id, style]) => (
-                      <button
-                        key={id}
-                        type="button"
-                        className="shstyle-option"
-                        aria-pressed={id === styleId}
-                        onClick={() => {
-                          if (id === styleId) return;
-                          pushUndo();
-                          applyCompleteStyle(id);
-                        }}
-                      >
-                        <span className={`layoutmini layoutmini-${id}`} aria-hidden="true">
-                          <span />
-                          <span />
-                          <span />
-                        </span>
-                        <span>{style.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="sheditor-tools sheditor-tools-details" aria-label="Schedule and copy tools">
-                    <StudioTool
-                      icon="list"
-                      label="Classes"
-                      detail={hatRows.length === 0 ? "None" : `${shown} of ${hatRows.length}`}
-                      onClick={() => {
-                        setDraftHide(new Set(hide));
-                        setDraftHat(hat);
-                        setDraftFeaturedKey(featuredKey);
-                        setPick("classes");
-                      }}
-                    />
-                    <StudioTool
-                      icon="calendar_month"
-                      label="Dates"
-                      detail={rangeLabel}
-                      onClick={() => {
-                        setDraftFrom(from);
-                        setDraftDays(days);
-                        setPick("dates");
-                      }}
-                    />
-                    <StudioTool
-                      icon="edit"
-                      label="Headline"
-                      detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
-                      onClick={() => {
-                        setDraftHeadline(headline);
-                        setDraftNoHead(noHead);
-                        setDraftTypeId(typeId);
-                        setDraftSlider(hsize);
-                        setPick("message");
-                      }}
-                    />
-                    {!coach && (
-                      <StudioTool
-                        icon="add"
-                        label={adderBusy ? "Loading" : "Add class"}
-                        detail="Build your week"
-                        disabled={adderBusy}
-                        onClick={() => void openAdder()}
-                      />
-                    )}
-                  </div>
-
-                  <input
-                    ref={backgroundRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(event) => {
-                      const file = event.currentTarget.files?.[0];
-                      if (file) chooseBackground(file);
-                      event.currentTarget.value = "";
-                    }}
+              <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
+                <StudioTool icon="auto_awesome" label="Remix" detail="New look" accent onClick={remix} />
+                <StudioTool
+                  icon="image"
+                  label="Background"
+                  detail={background ? "Photo" : STORY_THEMES[themeId].label}
+                  onClick={() => {
+                    setDraftPhotoX(photoX);
+                    setDraftPhotoY(photoY);
+                    setDraftPhotoOverlay(photoOverlay);
+                    setColorMenuOpen(false);
+                    setPick("color");
+                  }}
+                />
+                <StudioTool
+                  icon="palette"
+                  label="Style"
+                  detail={STORY_STYLES[styleId].label}
+                  onClick={() => setPick("layout")}
+                />
+                <StudioTool
+                  icon="list"
+                  label="Classes"
+                  detail={hatRows.length === 0 ? "None" : `${shown} of ${hatRows.length}`}
+                  onClick={() => {
+                    setDraftHide(new Set(hide));
+                    setDraftHat(hat);
+                    setDraftFeaturedKey(featuredKey);
+                    setPick("classes");
+                  }}
+                />
+                <StudioTool
+                  icon="calendar_month"
+                  label="Dates"
+                  detail={rangeLabel}
+                  onClick={() => {
+                    setDraftFrom(from);
+                    setDraftDays(days);
+                    setPick("dates");
+                  }}
+                />
+                <StudioTool
+                  icon="edit"
+                  label="Headline"
+                  detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
+                  onClick={() => {
+                    setDraftHeadline(headline);
+                    setDraftNoHead(noHead);
+                    setDraftTypeId(typeId);
+                    setDraftSlider(hsize);
+                    setPick("message");
+                  }}
+                />
+                {!coach && (
+                  <StudioTool
+                    icon="add"
+                    label={adderBusy ? "Loading" : "Add class"}
+                    detail="Build your week"
+                    disabled={adderBusy}
+                    onClick={() => void openAdder()}
                   />
+                )}
+              </div>
 
-                  <div className="shdesign-actions" aria-label="Design actions">
-                    <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
-                    <button type="button" onClick={resetDesign}>Reset</button>
-                    <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
-                      {designSaving ? "Saving..." : "Save this look"}
-                    </button>
-                  </div>
+              <input
+                ref={backgroundRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  if (file) chooseBackground(file);
+                  event.currentTarget.value = "";
+                }}
+              />
+
+              <div className="shdesign-actions" aria-label="Design actions">
+                <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
+                <button type="button" onClick={resetDesign}>Reset</button>
+                <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
+                  {designSaving ? "Saving..." : "Save this look"}
+                </button>
+              </div>
             </div>
           </section>
         )}
@@ -1733,9 +1704,8 @@ function SlideImg({ cls, src, alt, onReady }: { cls: string; src: string | null;
   );
 }
 
-/** A compact, labelled editor tool. The label stays visible beneath the
- *  icon because this is a creation surface, not a mystery toolbar; the
- *  current value is useful context but deliberately quieter. */
+/** A compact, labelled editor tool. The live value remains in the accessible
+ *  name, while the visible rail stays aligned to one circle and one label. */
 function StudioTool({
   icon,
   label,
@@ -1761,7 +1731,6 @@ function StudioTool({
     >
       <span className="sheditor-tool-icon"><Icon name={icon} size={23} /></span>
       <span className="sheditor-tool-label">{label}</span>
-      {detail && <span className="sheditor-tool-detail">{detail}</span>}
     </button>
   );
 }
