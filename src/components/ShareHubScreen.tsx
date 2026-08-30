@@ -730,26 +730,30 @@ export function ShareHubScreen({
     }
   };
 
-  const imageShareActions = () => (
-    <div className="shcta">
+  const sharePreparing =
+    !shareCapabilityKnown ||
+    (canShareFiles && !nativeShareAvailable && preparedShare?.url !== imgUrl && !prepareFailed);
+  const shareStatus = sharing
+    ? "Opening share sheet"
+    : sharePreparing
+      ? "Preparing share image"
+      : prepareFailed
+        ? "Share image preparation failed. Share will try again."
+        : "Share image ready";
+  const imageShareAction = () => (
+    <>
       <button
-        className="btn si"
-        disabled={
-          sharing ||
-          !shareCapabilityKnown ||
-          (canShareFiles && !nativeShareAvailable && preparedShare?.url !== imgUrl && !prepareFailed)
-        }
-        onClick={() => shareImage()}
+        type="button"
+        className="shheader-share"
+        aria-busy={sharing || sharePreparing}
+        aria-label="Share image"
+        disabled={sharing || sharePreparing}
+        onClick={() => void shareImage()}
       >
-        {sharing
-          ? "Opening share sheet..."
-          : !shareCapabilityKnown || (canShareFiles && !nativeShareAvailable && preparedShare?.url !== imgUrl && !prepareFailed)
-            ? "Preparing..."
-            : prepareFailed
-              ? "Try sharing"
-            : "Share"}
+        Share
       </button>
-    </div>
+      <span className="sr-only" role="status" aria-live="polite">{shareStatus}</span>
+    </>
   );
 
   const saveCurrentDesign = async () => {
@@ -822,11 +826,16 @@ export function ShareHubScreen({
             <BackLink className="evback share-page-close" href="/calendar" anywhere label="Close share screen">
               <Icon name="close" size={24} />
             </BackLink>
+            {!building && imageShareAction()}
           </div>
+        )}
+        {embedded && !building && (
+          <div className="shpage-embedded-action">{imageShareAction()}</div>
         )}
         {tabbed && (
           <header className="share-tab-header">
             <h1>Share</h1>
+            {!building && imageShareAction()}
           </header>
         )}
         {/* The start block, in place of an empty poster, by Matt's call:
@@ -975,7 +984,6 @@ export function ShareHubScreen({
                       {designSaving ? "Saving..." : "Save this look"}
                     </button>
                   </div>
-                  {imageShareActions()}
             </div>
           </section>
         )}

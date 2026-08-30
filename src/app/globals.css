@@ -9613,10 +9613,55 @@ select.editinput.placekind-select {
   letter-spacing: -.02em; color: var(--ink);
 }
 .shpage-title { padding: 2px 0 10px; }
-.shpage-back { margin-bottom: 16px; }
+.shpage-back {
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
 .share-page-close {
   border:1px solid var(--color-border-strong);
   background:var(--color-white);
+}
+.shpage-embedded-action {
+  position:fixed;
+  top:max(16px, env(safe-area-inset-top));
+  right:var(--page-gutter);
+  z-index:4;
+}
+.shheader-share {
+  min-width:88px;
+  height:var(--tap-size);
+  padding:0 17px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  flex:0 0 auto;
+  border:0;
+  border-radius:var(--radius-pill);
+  background:var(--si);
+  color:var(--color-black);
+  font:inherit;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+.shheader-share[aria-busy="true"]::before {
+  content:"";
+  width:12px;
+  height:12px;
+  flex:0 0 12px;
+  border:2px solid rgba(0,0,0,.22);
+  border-top-color:var(--color-black);
+  border-radius:50%;
+  animation:shspin .8s linear infinite;
+}
+.shheader-share:active:not(:disabled) { transform:scale(.96); }
+.shheader-share:disabled { cursor:default; opacity:.64; }
+@media (prefers-reduced-motion: reduce) {
+  .shheader-share[aria-busy="true"]::before { animation-duration:2s; }
 }
 .shpage-heading {
   padding: 0 58px 4px; text-align: center;
@@ -10776,15 +10821,6 @@ a.clspeek-by:active { opacity: .6; }
   box-shadow:0 24px 52px -18px rgba(2,13,8,.32), 0 8px 20px -12px rgba(2,13,8,.2);
   background: var(--cl);
 }
-.shcta {
-  margin-top: 20px; display: flex; flex-direction: column; gap: 10px;
-}
-.shcta .btn { width: 100%; }
-.shcta .btn.si { box-shadow: none; }
-/* The save is this screen's one loud call, and the concept paints it brand:
-   the rest of the app's .btn.si went ink in the orange retreat, so the hub
-   says it locally. */
-.shcta .btn.si { background: var(--si); color: var(--color-black); }
 .shdesign-actions {
   display:flex; align-items:center; justify-content:center; gap:18px; margin-top:14px;
 }
@@ -12754,15 +12790,6 @@ a.clspeek-by:active { opacity: .6; }
 }
 .sheditor-dock .shdesign-actions button:last-child { color:var(--si); }
 .sheditor-dock .shdesign-actions button:disabled { color:var(--sheditor-muted); }
-.sheditor-dock .shcta { margin-top:12px; gap:8px; }
-.sheditor-dock > .shcta:first-child { margin-top:0; }
-.sheditor-dock .shcta .btn {
-  min-height:50px;
-  border-radius:var(--radius-pill);
-  font-size:16px;
-  font-weight:700;
-}
-
 @media (max-width:939px) {
   .cardwrap.shpage-tabbed.shpage-editor { padding-bottom:0; }
   .screen.hasnav:has(.shpage:not(.shpage-tabbed)) .cardwrap.shpage.shpage-editor,

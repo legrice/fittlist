@@ -489,8 +489,10 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
   }
 }
-if (!(await p.locator(".shcta .btn", { hasText: /Share|Preparing|Try sharing/ }).count()))
-  fail("the image studio should offer its poster");
+if ((await p.locator(".share-tab-header").getByRole("button", { name: "Share image" }).count()) !== 1)
+  fail("the image studio should put Share in the top-right header");
+if (await p.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
+  fail("the image studio should not duplicate Share at the bottom");
 console.log("the Share tab is one focused schedule image studio");
 // The header magnifier opens the search screen.
 await p.goto(BASE + "/calendar");

@@ -566,6 +566,10 @@ console.log("sticky header ok (the List starts at today, no walk backwards)");
     fail("calendar Share should show one schedule image");
   if (await shareDialog.locator('[aria-label="What to share"], .shprev-sq, .qrcard, .shtext').count())
     fail("calendar Share should not mount alternate share formats");
+  if ((await shareDialog.locator(".shpage-embedded-action").getByRole("button", { name: "Share image" }).count()) !== 1)
+    fail("calendar Share should put its action at the top right");
+  if (await shareDialog.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
+    fail("calendar Share should not duplicate its action at the bottom");
   await shareDialog.locator(".calendar-share-close").click();
   await shareDialog.waitFor({ state: "detached" });
   if (page.url() !== calendarUrl) fail("closing calendar Share should keep the origin route");
