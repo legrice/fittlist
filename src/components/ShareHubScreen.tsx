@@ -892,7 +892,7 @@ export function ShareHubScreen({
                 editing still opens the familiar focused sheets. */}
             <div className="sheditor-dock sheditor-dock-week">
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
-                <StudioTool icon="auto_awesome" label="Remix" detail="New look" accent onClick={remix} />
+                <StudioTool icon="auto_awesome" label="Random" detail="New look" accent onClick={remix} />
                 <StudioTool
                   icon="image"
                   label="Background"
@@ -1220,7 +1220,7 @@ export function ShareHubScreen({
             <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
             <button className="shremix-action" type="button" onClick={remix}>
               <Icon name="auto_awesome" size={19} />
-              Remix this look
+              Randomize this look
             </button>
             <div className="settingslist layoutlist">
               {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(

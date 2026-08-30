@@ -483,7 +483,7 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   if ((await toolRail.count()) !== 1)
     fail("the image editor should have one tool rail");
   const tools = (await toolRail.locator(".sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
-  if (tools.join("|") !== "Remix|Background|Style|Classes|Dates|Headline")
+  if (tools.join("|") !== "Random|Background|Style|Classes|Dates|Headline")
     fail("the coach's image tools should share one rail: " + tools.join("|"));
   if (await p.locator(".shstyle-rail, .shstyle-option").count())
     fail("styles should live behind the Style tool, not in a second rail");

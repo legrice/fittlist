@@ -571,7 +571,7 @@ console.log("sticky header ok (the List starts at today, no walk backwards)");
   if (await shareDialog.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
     fail("calendar Share should not duplicate its action at the bottom");
   const tools = (await shareDialog.locator(".sheditor-tools-all .sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
-  if (tools.join("|") !== "Remix|Background|Style|Classes|Dates|Headline")
+  if (tools.join("|") !== "Random|Background|Style|Classes|Dates|Headline")
     fail("calendar Share should put every image tool in one rail: " + tools.join("|"));
   if ((await shareDialog.locator(".sheditor-tools").count()) !== 1)
     fail("calendar Share should render one tool rail");
