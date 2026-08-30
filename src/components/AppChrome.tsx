@@ -128,7 +128,6 @@ export async function AppChrome({
         scheduleHref={scheduleHref}
         profileHref={profileHref}
         active={active}
-        face={face}
         unread={unread.notifications > 0 || unread.messages > 0}
       />
     </>

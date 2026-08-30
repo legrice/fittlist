@@ -5983,21 +5983,8 @@ html[data-mode="dark"],
    tabs wear: one colour for "you are here", wherever the ground says it. */
 /* The mark is the brand colour on the current tab's own ink, glyph and
    word together, and nothing else, by Matt's call: the filled circle and
-   the tab-wide wash were both tried and came off. The You tab's face is a
-   photo and marks itself by opacity instead. */
+   the tab-wide wash were both tried and came off. */
 .navtab.on { background: none; color: var(--ink); }
-/* Your face is the Profile tab and stays fully visible in every tab state.
-   Exactly the icons' 26px box: a hair smaller and the whole tab reads as
-   sitting low. */
-.navav {
-  width: 26px; height: 26px; border-radius: 999px; object-fit: cover; display: block;
-  background: #f0ebdd; opacity: 1;
-}
-.navav-empty {
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
-}
-.navtab.on .navav { opacity: 1; }
 /* The Plans count, on the tab's glyph. It hung off the header's heart until
    Plans became a tab. A state, not an alert: nothing is wrong, you just have
    four classes coming. Green, the same yes the add gives. */
@@ -12268,7 +12255,6 @@ a.clspeek-by:active { opacity: .6; }
   border-radius: var(--radius-pill);
 }
 .navtab:active { background: var(--color-surface-hover); }
-.navav,
 .navface-photo,
 .navface-initial {
   width: 22px;
@@ -12757,7 +12743,6 @@ a.clspeek-by:active { opacity: .6; }
   .screen.hasnav .navtab:active::before { background:rgba(255,255,255,.4); }
   .navtab .navglyph { position:relative; z-index:1; width:100%; height:100%; }
   .navtab .navglyph > .icon { width:30px; height:30px; color:var(--color-black); }
-  .navtab .navav { width:30px; height:30px; }
   .navshare > .icon { color:var(--color-black); }
   .nav-profile-dot {
     position:absolute; top:1px; right:6px; z-index:2;

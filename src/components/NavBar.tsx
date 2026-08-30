@@ -17,7 +17,6 @@ export function NavBar({
   coach = true,
   scheduleHref,
   profileHref,
-  face,
   unread = false,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
@@ -29,7 +28,6 @@ export function NavBar({
   scheduleHref?: string;
   /** Where Profile goes: your own page. Defaults to /you, which redirects. */
   profileHref?: string;
-  face?: { photo: string | null; color: string; initial: string };
   unread?: boolean;
 }) {
   const here = activeTab(usePathname(), active);
@@ -89,11 +87,7 @@ export function NavBar({
           const inner = (
             <>
               <span className="navglyph">
-                {t.id === "calendar" && face ? (
-                  face.photo ? <img className="navav" src={face.photo} alt="" /> : (
-                    <span className="navav navav-empty" style={{ background: face.color }}>{face.initial}</span>
-                  )
-                ) : <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={30} />}
+                <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={30} />
                 {t.id === "calendar" && unread && <i className="nav-profile-dot" aria-hidden="true" />}
               </span>
               <span className="navlabel">{t.label}</span>

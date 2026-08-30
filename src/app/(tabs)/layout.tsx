@@ -154,7 +154,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           coach={isCoach}
           scheduleHref={scheduleHref}
           profileHref={profileHref}
-          face={face}
           unread={unread.notifications > 0 || unread.messages > 0}
         />
         <Suspense fallback={null}>
