@@ -932,7 +932,7 @@ export function FollowingScreen({
                           const sourceColor = coach?.color ?? studio?.color ?? "var(--color-olive)";
                           const relation = calendarRelation(item, meId);
                           return <article className="cash-class-row" key={item.key}>
-                            <button type="button" className={`cash-class-main ${relation.tone}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                            <button type="button" className={`cash-class-main ${relation.tone}${calendarFilter !== "you" && sourceName ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               {calendarFilter !== "you" && sourceName && <span className={`cash-class-avatar${!coach && studio ? " studio" : ""}`} style={{ background:sourceColor }}>{sourcePhoto ? <img src={sourcePhoto} alt="" /> : <span>{(sourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
                               <span className="cash-class-copy">
                                 {(sourceName || calendarFilter === "you") && <span className="cash-class-coachline">{sourceName && <small>{sourceName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{calendarFilter === "you" && <span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}
