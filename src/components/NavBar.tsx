@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { ShareTakeover } from "@/components/ShareTakeover";
@@ -36,6 +36,7 @@ export function NavBar({
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
   const dockTabs = tabs.filter((tab) => tab.id !== "share");
   const shareTab = tabs.find((tab) => tab.id === "share")!;
+  const activeDockIndex = dockTabs.findIndex((tab) => tab.id === here);
   const [shareOpen, setShareOpen] = useState(false);
   const shareButton = useRef<HTMLButtonElement>(null);
   const shareOpener = useRef<HTMLElement | null>(null);
@@ -77,6 +78,11 @@ export function NavBar({
   return (
     <nav className="navwrap" aria-label="Main">
       <div className="navbar">
+        <span
+          className={`navglass-indicator${activeDockIndex < 0 ? " is-hidden" : ""}`}
+          style={{ "--nav-index": Math.max(0, activeDockIndex) } as CSSProperties}
+          aria-hidden="true"
+        />
         {dockTabs.map((t) => {
           const on = here === t.id;
           const cls = `navtab${on ? " on" : ""}`;
