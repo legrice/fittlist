@@ -4,7 +4,6 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { startRegistration } from "@simplewebauthn/browser";
-import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import {
   beginPasskeyRegistration,
   finishPasskeyRegistration,
@@ -148,10 +147,8 @@ export function ProfileSheet({
   const [toastMsg, toastOn, toast] = useToast();
   const [view, setView] = useState<View>(initialView);
 
-  const [shareOpen, setShareOpen] = useState(false);
-  // Share is one door with five ways behind it now, not five tiles across
-  // the top of the screen. `storyOpen` is the story image the old Share
-  // button opened straight; it is a row in the menu.
+  // Share is one door with the focused image studio behind it, rather than a
+  // second schedule generator maintained inside Profile.
   const [shareMenu, setShareMenu] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -849,9 +846,11 @@ export function ProfileSheet({
               </button>
               <button
                 className="setrow"
-                onClick={() => {
+                onClick={(event) => {
                   setShareMenu(false);
-                  setShareOpen(true);
+                  window.dispatchEvent(new CustomEvent("fittlist:open-share", {
+                    detail: { opener:event.currentTarget },
+                  }));
                 }}
               >
                 <span className="setrow-ic"><Icon name="auto_awesome" size={24} /></span>
@@ -907,13 +906,6 @@ export function ProfileSheet({
           </div>
         </div>
       )}
-
-      <ShareWeekSheet
-        handle={handle}
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        onToast={toast}
-      />
 
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
       {cardOpen && (

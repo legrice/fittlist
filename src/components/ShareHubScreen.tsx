@@ -26,7 +26,14 @@ import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { InstagramTagPrompt } from "@/components/InstagramTagPrompt";
+import { ShareLivePreview } from "@/components/ShareLivePreview";
 import { readPhoto } from "@/lib/photo";
+import { buildShareStoryLayout } from "@/lib/share-story-layout";
+import {
+  sharePerformance,
+  type SharePerformanceOperation,
+  type SharePreviewAction,
+} from "@/lib/share-performance";
 import {
   DEFAULT_SHARE_DESIGN,
   sanitizeShareDesign,
@@ -66,6 +73,11 @@ export type HubItem = {
   iso: string;
   time: string;
   name: string;
+  /** Display metadata is carried into the editor once. The live preview can
+   *  then plan the poster locally instead of asking the image route to reload
+   *  the same calendar data after every visual edit. */
+  where: string;
+  who: string;
   own?: boolean;
   /** A class the coach leads, against the saved half riding beside it now:
    *  the Classes sheet tags the rows and offers the shortcuts on it. */
@@ -78,6 +90,22 @@ const short = (iso: string) => shortFormatter.format(new Date(`${iso}T00:00:00Z`
 const wday = (iso: string) => weekdayFormatter.format(new Date(`${iso}T00:00:00Z`));
 const plusDays = (iso: string, n: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+
+/** Reusing the last couple of completed exports makes a second Share tap
+ * instant without retaining an unbounded collection of multi-megabyte Files.
+ * The key contains the stable content revision plus the complete design. */
+const exportFileCache = new Map<string, File>();
+const EXPORT_FILE_CACHE_LIMIT = 2;
+
+function rememberExportFile(url: string, file: File) {
+  exportFileCache.delete(url);
+  exportFileCache.set(url, file);
+  while (exportFileCache.size > EXPORT_FILE_CACHE_LIMIT) {
+    const oldest = exportFileCache.keys().next().value as string | undefined;
+    if (!oldest) break;
+    exportFileCache.delete(oldest);
+  }
+}
 
 export function ShareHubScreen({
   embedded = false,
@@ -129,7 +157,7 @@ export function ShareHubScreen({
   templates: TemplateDto[];
   customTypes: string[];
   lastUsed: LastUsed;
-  /** Server-created once per screen load so SSR and hydration use one image URL. */
+  /** Content-derived revision shared by preview assets and final export caches. */
   initialRevision: number;
   /** The account-level design the editor opens with. */
   initialDesign: ShareDesign | null;
@@ -162,13 +190,13 @@ export function ShareHubScreen({
   const [draftFrom, setDraftFrom] = useState(defaultFrom);
   const [draftDays, setDraftDays] = useState(7);
   const [draftHide, setDraftHide] = useState<Set<string>>(new Set());
-  // The words at the top of the poster. Sent explicitly on every request
-  // (the composer's old doctrine): letting the route fall back to saved
-  // prefs would let the chip and the picture disagree.
+  // The words at the top of the poster. They stay local while editing and are
+  // sent explicitly with the final export so its pixels cannot disagree.
   const [headline, setHeadline] = useState(savedHeadline);
   const [draftHeadline, setDraftHeadline] = useState(savedHeadline);
   const [background, setBackground] = useState(hasBackground && startingDesign.useBackgroundPhoto);
   const [photoAvailable, setPhotoAvailable] = useState(hasBackground);
+  const [localBackgroundUrl, setLocalBackgroundUrl] = useState<string | null>(null);
   const [backgroundBusy, setBackgroundBusy] = useState(false);
   const backgroundRef = useRef<HTMLInputElement>(null);
   const [photoX, setPhotoX] = useState(startingDesign.photoX);
@@ -185,9 +213,8 @@ export function ShareHubScreen({
   // The poster's voice, picked by personality: see typefaces.ts.
   const [typeId, setTypeId] = useState<TypeFaceId>(startingDesign.typeId);
   const [draftTypeId, setDraftTypeId] = useState<TypeFaceId>(startingDesign.typeId);
-  // The headline's loudness, in percent. hsize is what the picture reads;
-  // The draft slider stays local to its sheet, so dragging never queues a
-  // server render per pixel. Done commits one final image.
+  // The headline's loudness, in percent. The draft slider stays local to its
+  // sheet; Done commits one lightweight preview configuration update.
   const [hsize, setHsize] = useState(startingDesign.headlineSize);
   const [draftSlider, setDraftSlider] = useState(startingDesign.headlineSize);
   // The dressing: the top bar (the default), frames and day dividers.
@@ -198,25 +225,52 @@ export function ShareHubScreen({
   >(null);
   const [styleSection, setStyleSection] = useState<"presets" | "saved">("presets");
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
-  const [shareCapabilityKnown, setShareCapabilityKnown] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
-  const [nativeShareAvailable, setNativeShareAvailable] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const sharingRef = useRef(false);
+  const exportAbort = useRef<AbortController | null>(null);
+  const previewOperation = useRef<SharePerformanceOperation | null>(null);
+  const firstPreviewPainted = useRef(false);
+  const nativeExportOperation = useRef<SharePerformanceOperation | null>(null);
+  const nativeExportRequestId = useRef<string | null>(null);
+  const nativeRequestCounter = useRef(0);
   const [instagramPromptOpen, setInstagramPromptOpen] = useState(false);
   const closeInstagramPrompt = useCallback(() => setInstagramPromptOpen(false), []);
-  const [preparedShare, setPreparedShare] = useState<{ url: string; file: File } | null>(null);
-  const [prepareFailed, setPrepareFailed] = useState(false);
-  // One buster per visit, bumped after an add: the week changes behind the
-  // picture the moment a class lands, and a cached preview of the week
-  // before is a lie waiting to be posted.
+  // Stable while source content is unchanged, bumped after a mutation. It is
+  // the cache identity for background assets and final exports, not for edits.
   const [bust, setBust] = useState(initialRevision);
   useEffect(() => {
-    // A warm embedded canvas can paint from memory while its host refreshes.
-    // Move only the cache buster when that response arrives: live edits to
-    // the current look stay under the user's fingers.
+    // Move only the content revision when a host refresh arrives: live edits
+    // to the current look stay under the user's fingers.
     setBust(initialRevision);
   }, [initialRevision]);
-  const backgroundPreviewUrl = photoAvailable ? `/api/story/background?v=${bust}` : null;
+  const backgroundPreviewUrl = photoAvailable
+    ? localBackgroundUrl ?? `/api/story/background?v=${bust}`
+    : null;
+  useEffect(() => {
+    if (!backgroundPreviewUrl || localBackgroundUrl || background) return;
+    let disposed = false;
+    let image: HTMLImageElement | null = null;
+    const warm = () => {
+      if (disposed) return;
+      image = new Image();
+      image.decoding = "async";
+      image.src = backgroundPreviewUrl;
+      void image.decode?.().catch(() => undefined);
+    };
+    const idleWindow = window as typeof window & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    const idle = idleWindow.requestIdleCallback?.(warm, { timeout:2_000 });
+    const timer = idle === undefined ? window.setTimeout(warm, 600) : null;
+    return () => {
+      disposed = true;
+      if (idle !== undefined) idleWindow.cancelIdleCallback?.(idle);
+      if (timer !== null) window.clearTimeout(timer);
+      if (image) image.src = "";
+    };
+  }, [background, backgroundPreviewUrl, localBackgroundUrl]);
   // The member's build flow: the adder, and the "that class is on fittlist"
   // offer that comes back from it.
   const [addOpen, setAddOpen] = useState(false);
@@ -244,6 +298,18 @@ export function ShareHubScreen({
   const [lookName, setLookName] = useState("");
   const [designSaving, setDesignSaving] = useState(false);
   const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([]);
+
+  useEffect(() => () => {
+    sharingRef.current = false;
+    exportAbort.current?.abort();
+    const handler = (window as typeof window & {
+      webkit?: { messageHandlers?: { fittlistShareTarget?: { postMessage: (body: unknown) => void } } };
+    }).webkit?.messageHandlers?.fittlistShareTarget;
+    // A closed editor must not let an abandoned native download present a
+    // share sheet seconds later. UIKit ignores this once a sheet is already
+    // visible; it only cancels the still-pending export job.
+    handler?.postMessage({ target:"cancel" });
+  }, []);
 
   useEffect(() => {
     if (adderData) writeClientMemory("calendar-composer", adderData);
@@ -337,24 +403,56 @@ export function ShareHubScreen({
     readPhoto(
       file,
       async (dataUrl) => {
+        const previousBackground = background;
+        const previousAvailable = photoAvailable;
+        const previousLocalUrl = localBackgroundUrl;
+        const previousPhotoX = photoX;
+        const previousPhotoY = photoY;
+        const previousPhotoOverlay = photoOverlay;
+        // The resized local image is already the exact asset being uploaded.
+        // Put it under the preview before the server round trip so choosing a
+        // photo feels like an editor action, not a form submission.
+        beginPreviewUpdate("background");
+        const backgroundUndo = pushUndo();
+        setLocalBackgroundUrl(dataUrl);
+        setPhotoAvailable(true);
+        setBackground(true);
+        setPhotoX(50);
+        setPhotoY(50);
+        setPhotoOverlay(24);
+        setDraftPhotoX(50);
+        setDraftPhotoY(50);
+        setDraftPhotoOverlay(24);
         try {
           const result = await setStoryBackground(dataUrl);
           if (!result.ok || !result.background) {
+            setLocalBackgroundUrl(previousLocalUrl);
+            setPhotoAvailable(previousAvailable);
+            setBackground(previousBackground);
+            setPhotoX(previousPhotoX);
+            setPhotoY(previousPhotoY);
+            setPhotoOverlay(previousPhotoOverlay);
+            setDraftPhotoX(previousPhotoX);
+            setDraftPhotoY(previousPhotoY);
+            setDraftPhotoOverlay(previousPhotoOverlay);
+            setUndoStack((current) => current.filter((snapshot) => snapshot !== backgroundUndo));
             toast(result.error ?? "Couldn't add that background");
             return;
           }
-          pushUndo();
-          setPhotoAvailable(true);
-          setBackground(true);
-          setPhotoX(50);
-          setPhotoY(50);
-          setPhotoOverlay(24);
-          setDraftPhotoX(50);
-          setDraftPhotoY(50);
-          setDraftPhotoOverlay(24);
           setBust(Date.now());
+          invalidateClientMemory("share-takeover");
           toast("Photo added. Position it below.");
         } catch {
+          setLocalBackgroundUrl(previousLocalUrl);
+          setPhotoAvailable(previousAvailable);
+          setBackground(previousBackground);
+          setPhotoX(previousPhotoX);
+          setPhotoY(previousPhotoY);
+          setPhotoOverlay(previousPhotoOverlay);
+          setDraftPhotoX(previousPhotoX);
+          setDraftPhotoY(previousPhotoY);
+          setDraftPhotoOverlay(previousPhotoOverlay);
+          setUndoStack((current) => current.filter((snapshot) => snapshot !== backgroundUndo));
           toast("Couldn't add that background");
         } finally {
           setBackgroundBusy(false);
@@ -369,26 +467,32 @@ export function ShareHubScreen({
 
   const removeBackground = async () => {
     if (backgroundBusy) return;
+    beginPreviewUpdate("background");
     const previous = background;
     const previousAvailable = photoAvailable;
+    const previousLocalUrl = localBackgroundUrl;
     setBackground(false);
     setPhotoAvailable(false);
+    setLocalBackgroundUrl(null);
     setBust(Date.now());
     setPick(null);
     setBackgroundBusy(true);
     try {
       const result = await setStoryBackground(null);
       if (result.ok) {
+        invalidateClientMemory("share-takeover");
         toast("Photo deleted");
         return;
       }
       setBackground(previous);
       setPhotoAvailable(previousAvailable);
+      setLocalBackgroundUrl(previousLocalUrl);
       setBust(Date.now());
       toast(result.error ?? "Couldn't remove the background");
     } catch {
       setBackground(previous);
       setPhotoAvailable(previousAvailable);
+      setLocalBackgroundUrl(previousLocalUrl);
       setBust(Date.now());
       toast("Couldn't remove the background");
     } finally {
@@ -398,15 +502,15 @@ export function ShareHubScreen({
 
   const chooseColorBackground = (id: StoryThemeId) => {
     if (backgroundBusy) return;
+    beginPreviewUpdate("background");
     pushUndo();
     setThemeId(id);
     setBackground(false);
     setPick(null);
   };
 
-  // A server change (an add, a mark) has to reach both the list and the
-  // picture: refresh re-runs the page's loader for the list, the bust
-  // redraws the picture.
+  // A server change (an add, a mark) has to reach both the list and the final
+  // export revision. The live preview already owns the refreshed rows.
   const refreshWeek = () => {
     setBust(Date.now());
     // A personal-calendar takeover keeps its own cached client copy rather
@@ -444,12 +548,6 @@ export function ShareHubScreen({
         typeof navigator.share === "function" &&
         typeof navigator.canShare === "function",
     );
-    setNativeShareAvailable(
-      !!(window as typeof window & {
-        webkit?: { messageHandlers?: { fittlistShareTarget?: unknown } };
-      }).webkit?.messageHandlers?.fittlistShareTarget,
-    );
-    setShareCapabilityKnown(true);
   }, []);
 
   // The route version is opened from your circle and owns the whole mobile
@@ -465,7 +563,40 @@ export function ShareHubScreen({
 
   useEffect(() => {
     const receive = (event: Event) => {
-      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      const detail = (event as CustomEvent<{
+        message?: string;
+        requestId?: string;
+        status?: string;
+      }>).detail;
+      const operation = nativeExportOperation.current;
+      const activeRequestId = nativeExportRequestId.current;
+      const requestMatches = !!activeRequestId
+        && (!detail?.requestId || detail.requestId === activeRequestId);
+      if (requestMatches && detail?.status === "share-ready") {
+        sharePerformance.captureCompleted(operation);
+        sharePerformance.encodingCompleted(operation);
+        sharePerformance.shareReady(operation);
+        sharingRef.current = false;
+        setSharing(false);
+      } else if (requestMatches && detail?.status === "complete") {
+        sharePerformance.captureCompleted(operation);
+        sharePerformance.encodingCompleted(operation);
+        sharePerformance.shareReady(operation);
+        nativeExportOperation.current = null;
+        nativeExportRequestId.current = null;
+        sharingRef.current = false;
+        setSharing(false);
+        void recordShareImageExport();
+        setInstagramPromptOpen(true);
+      } else if (
+        requestMatches
+        && (detail?.status === "failed" || detail?.status === "cancelled" || (!detail?.status && detail?.message))
+      ) {
+        nativeExportOperation.current = null;
+        nativeExportRequestId.current = null;
+        sharingRef.current = false;
+        setSharing(false);
+      }
       if (detail?.message) toast(detail.message);
     };
     window.addEventListener("fittlist:native-share-result", receive);
@@ -516,14 +647,23 @@ export function ShareHubScreen({
   }, [twoHats, hide, hat, inRange]);
 
   // What the Classes sheet lists: the active hat only, when there are two.
-  const hatRows = twoHats
-    ? inRange.filter((it) => (hat === "coaching" ? it.coaching : !it.coaching))
-    : inRange;
-  const draftHatRows = twoHats
-    ? inRange.filter((it) => (draftHat === "coaching" ? it.coaching : !it.coaching))
-    : inRange;
+  const hatRows = useMemo(
+    () => twoHats
+      ? inRange.filter((it) => (hat === "coaching" ? it.coaching : !it.coaching))
+      : inRange,
+    [hat, inRange, twoHats],
+  );
+  const draftHatRows = useMemo(
+    () => twoHats
+      ? inRange.filter((it) => (draftHat === "coaching" ? it.coaching : !it.coaching))
+      : inRange,
+    [draftHat, inRange, twoHats],
+  );
 
-  const shown = inRange.filter((it) => !effHide.has(it.key)).length;
+  const shown = useMemo(
+    () => inRange.reduce((count, item) => count + (effHide.has(item.key) ? 0 : 1), 0),
+    [effHide, inRange],
+  );
 
   const currentDesign = useMemo(
     () => sanitizeShareDesign({
@@ -577,7 +717,21 @@ export function ShareHubScreen({
   const pushUndo = () => {
     const snapshot = captureSnapshot();
     setUndoStack((current) => [...current.slice(-19), snapshot]);
+    return snapshot;
   };
+
+  const beginPreviewUpdate = useCallback((action: SharePreviewAction) => {
+    previewOperation.current = sharePerformance.previewUpdateStarted(action);
+  }, []);
+  const previewRendered = useCallback(() => {
+    if (!firstPreviewPainted.current) {
+      firstPreviewPainted.current = true;
+      sharePerformance.firstPreviewRendered();
+    }
+    const operation = previewOperation.current;
+    previewOperation.current = null;
+    sharePerformance.previewRendered(operation);
+  }, []);
 
   const applyDesign = (design: ShareDesign) => {
     const safe = sanitizeShareDesign(design);
@@ -606,11 +760,13 @@ export function ShareHubScreen({
   const undoLast = () => {
     const previous = undoStack[undoStack.length - 1];
     if (!previous) return;
+    beginPreviewUpdate("undo");
     setUndoStack((current) => current.slice(0, -1));
     restoreSnapshot(previous);
   };
 
   const resetDesign = () => {
+    beginPreviewUpdate("reset");
     pushUndo();
     applyDesign(resetDesignRef.current);
     setFeaturedKey(null);
@@ -631,12 +787,76 @@ export function ShareHubScreen({
       (id) => id !== "cowboy" && id !== styleId,
     );
     const next = choices[Math.floor(Math.random() * choices.length)] ?? "plain";
+    beginPreviewUpdate("random");
     pushUndo();
     applyCompleteStyle(next);
   };
 
-  const hideParam = [...effHide].join(",");
-  const imgUrl =
+  const hideParam = useMemo(() => [...effHide].join(","), [effHide]);
+  const previewDays = useMemo(() => {
+    const grouped = new Map<string, HubItem[]>();
+    for (const item of inRange) {
+      if (effHide.has(item.key)) continue;
+      grouped.set(item.iso, [...(grouped.get(item.iso) ?? []), item]);
+    }
+    return [...grouped].map(([iso, dayItems]) => ({
+      day:`${wday(iso).toUpperCase()} ${short(iso)}`,
+      items:dayItems,
+    }));
+  }, [effHide, inRange]);
+  const liveLayout = useMemo(
+    () => buildShareStoryLayout({
+      days:previewDays,
+      fan:!coach,
+      headline,
+      noHead,
+      headlinePercent:hsize,
+      showPhoto:false,
+      showStudio:true,
+      featuredKey,
+      style:STORY_STYLES[styleId],
+    }),
+    [coach, featuredKey, headline, hsize, noHead, previewDays, styleId],
+  );
+  const previewConfigKey = useMemo(
+    () => [
+      bust,
+      themeId,
+      styleId,
+      typeId,
+      decoId,
+      headline,
+      hsize,
+      noHead ? 1 : 0,
+      background ? 1 : 0,
+      photoX,
+      photoY,
+      photoOverlay,
+      featuredKey ?? "",
+      hideParam,
+      from,
+      days,
+    ].join("|"),
+    [
+      background,
+      bust,
+      days,
+      decoId,
+      featuredKey,
+      from,
+      headline,
+      hideParam,
+      hsize,
+      noHead,
+      photoOverlay,
+      photoX,
+      photoY,
+      styleId,
+      themeId,
+      typeId,
+    ],
+  );
+  const exportUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bo=${photoOverlay}` +
@@ -644,54 +864,29 @@ export function ShareHubScreen({
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const fileName = `fittlist-${handle}-week-${styleId}.png`;
 
-  // Safari requires navigator.share to begin in the tap's user-activation
-  // window. Preparing the PNG after the tap can take long enough to lose it,
-  // so prepare the poster as soon as the complete image is on screen.
-  const readyImages = useRef(new Set<string>());
-  const [readyImageVersion, setReadyImageVersion] = useState(0);
-  const markImageReady = useCallback((url: string) => {
-    if (readyImages.current.has(url)) return;
-    readyImages.current.add(url);
-    setReadyImageVersion((version) => version + 1);
-  }, []);
-  useEffect(() => {
-    if (nativeShareAvailable || !canShareFiles || !readyImages.current.has(imgUrl)) return;
-    const controller = new AbortController();
-    setPreparedShare(null);
-    setPrepareFailed(false);
-    void (async () => {
-      try {
-        const response = await fetch(imgUrl, { signal: controller.signal });
-        if (!response.ok) {
-          setPrepareFailed(true);
-          return;
-        }
-        const blob = await response.blob();
-        setPreparedShare({
-          url: imgUrl,
-          file: new File([blob], fileName, { type: blob.type || "image/png" }),
-        });
-      } catch (error) {
-        if ((error as Error)?.name !== "AbortError") {
-          setPreparedShare(null);
-          setPrepareFailed(true);
-        }
-      }
-    })();
-    return () => controller.abort();
-  }, [canShareFiles, fileName, imgUrl, nativeShareAvailable, readyImageVersion]);
+  const rangeLabel = useMemo(
+    () => days === 1
+      ? `${wday(from)}, ${short(from)}`
+      : `${short(from)} to ${short(plusDays(from, days - 1))}`,
+    [days, from],
+  );
 
-  const rangeLabel =
-    days === 1 ? `${wday(from)}, ${short(from)}` : `${short(from)} to ${short(plusDays(from, days - 1))}`;
-
-  const downloadImage = (url: string, file: string) => {
+  const downloadFile = (blob: Blob, file: string) => {
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = file;
     a.click();
+    // WebKit may not begin consuming the object URL until the click task has
+    // returned. Release it on the next turn instead of retaining every export.
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
-  const nativeShare = (url: string, file: string) => {
+  const nativeShare = (
+    url: string,
+    file: string,
+    requestId: string,
+  ): false | "legacy" | "structured" => {
     const handler = (window as typeof window & {
       webkit?: { messageHandlers?: { fittlistShareTarget?: { postMessage: (body: unknown) => void } } };
     }).webkit?.messageHandlers?.fittlistShareTarget;
@@ -699,74 +894,119 @@ export function ShareHubScreen({
     // Let the native side download the image with the web view's cookies.
     // Sending a 1080px PNG as base64 through WKScriptMessage was large enough
     // to fail before Instagram or Messages ever opened.
-    handler.postMessage({ target: "more", url: new URL(url, window.location.href).href, file });
-    return true;
+    handler.postMessage({
+      target: "more",
+      url: new URL(url, window.location.href).href,
+      file,
+      requestId,
+    });
+    return document.documentElement.dataset.nativeShareProtocol === "2"
+      ? "structured"
+      : "legacy";
   };
 
   const shareImage = async () => {
-    if (sharing) return;
+    if (sharingRef.current || backgroundBusy) return;
+    // Freeze the exact URL and name before yielding. Edits made while a native
+    // share sheet is being prepared can never change the image in that job.
+    const snapshotUrl = exportUrl;
+    const snapshotFileName = fileName;
+    const operation = sharePerformance.exportStarted();
+    sharingRef.current = true;
     setSharing(true);
+    exportAbort.current?.abort();
+    const controller = new AbortController();
+    exportAbort.current = controller;
     const shared = () => {
       void recordShareImageExport();
       setInstagramPromptOpen(true);
     };
+    let handedToNative = false;
     try {
-      if (nativeShare(imgUrl, fileName)) {
-        shared();
+      const requestId = `${Date.now().toString(36)}-${++nativeRequestCounter.current}`;
+      const nativeMode = nativeShare(snapshotUrl, snapshotFileName, requestId);
+      if (nativeMode) {
+        if (nativeMode === "structured") {
+          handedToNative = true;
+          nativeExportOperation.current = operation;
+          nativeExportRequestId.current = requestId;
+        } else {
+          // Web releases independently from App Store binaries. Older shells
+          // have no lifecycle protocol and historically returned immediately
+          // after handing the URL to native; preserve that bounded behavior.
+          sharePerformance.captureCompleted(operation);
+          sharePerformance.encodingCompleted(operation);
+          sharePerformance.shareReady(operation);
+          shared();
+        }
         return;
       }
-      if (
-        canShareFiles &&
-        preparedShare?.url === imgUrl &&
-        navigator.canShare({ files: [preparedShare.file] })
-      ) {
-        await navigator.share({
-          files: [preparedShare.file],
-          title: "Share your FittList",
-        });
-        shared();
-        return;
+
+      let file = exportFileCache.get(snapshotUrl);
+      if (file) {
+        // A repeated export of unchanged art is a cache lookup, not another
+        // Satori render, network transfer, decode, or Blob conversion.
+        exportFileCache.delete(snapshotUrl);
+        exportFileCache.set(snapshotUrl, file);
+        sharePerformance.captureCompleted(operation);
+        sharePerformance.encodingCompleted(operation);
+      } else {
+        const response = await fetch(snapshotUrl, { signal:controller.signal });
+        if (!response.ok) throw new Error(`Share image returned ${response.status}`);
+        const blob = await response.blob();
+        sharePerformance.captureCompleted(operation);
+        file = new File([blob], snapshotFileName, { type:blob.type || "image/png" });
+        rememberExportFile(snapshotUrl, file);
+        sharePerformance.encodingCompleted(operation);
       }
-      if (canShareFiles) {
-        const res = await fetch(imgUrl);
-        if (!res.ok) throw new Error(`Share image returned ${res.status}`);
-        const f = new File([await res.blob()], fileName, { type: "image/png" });
-        if (navigator.canShare({ files: [f] })) {
+
+      if (canShareFiles && navigator.canShare({ files:[file] })) {
+        sharePerformance.shareReady(operation);
+        try {
           await navigator.share({
-            files: [f],
+            files: [file],
             title: "Share your FittList",
           });
           shared();
           return;
+        } catch (error) {
+          if ((error as Error)?.name === "AbortError") return;
+          // Some iOS Safari versions expire transient activation while the
+          // final PNG request is in flight. The completed file must remain
+          // available even when Web Share refuses to open after that await.
+          downloadFile(file, snapshotFileName);
+          shared();
+          toast("Your image was downloaded because the share sheet couldn't open");
+          return;
         }
       }
-      downloadImage(imgUrl, fileName);
+      sharePerformance.shareReady(operation);
+      downloadFile(file, snapshotFileName);
       shared();
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") toast("Couldn't share the picture");
     } finally {
-      setSharing(false);
+      if (exportAbort.current === controller) exportAbort.current = null;
+      if (!handedToNative) {
+        sharingRef.current = false;
+        setSharing(false);
+      }
     }
   };
 
-  const sharePreparing =
-    !shareCapabilityKnown ||
-    (canShareFiles && !nativeShareAvailable && preparedShare?.url !== imgUrl && !prepareFailed);
   const shareStatus = sharing
-    ? "Opening share sheet"
-    : sharePreparing
-      ? "Preparing share image"
-      : prepareFailed
-        ? "Share image preparation failed. Share will try again."
-        : "Share image ready";
+    ? "Preparing share image"
+    : backgroundBusy
+      ? "Saving background photo"
+    : "Share image ready";
   const imageShareAction = () => (
     <>
       <button
         type="button"
         className="shheader-share"
-        aria-busy={sharing || sharePreparing}
+        aria-busy={sharing}
         aria-label="Share image"
-        disabled={sharing || sharePreparing}
+        disabled={sharing || backgroundBusy}
         onClick={() => void shareImage()}
       >
         Share
@@ -855,12 +1095,25 @@ export function ShareHubScreen({
                 the artwork a canvas without making other formats compete. */}
             <div className="sheditor-stage">
               <div className="shsingle-preview">
-                <SlideImg
-                  cls="shprev shprev-week"
-                  src={imgUrl}
-                  alt="Your week as a story image"
-                  onReady={markImageReady}
-                />
+                <div className="shprev-wrap">
+                  <ShareLivePreview
+                    layout={liveLayout}
+                    themeId={themeId}
+                    styleId={styleId}
+                    typeId={typeId}
+                    decoId={decoId}
+                    backgroundPhotoUrl={background ? backgroundPreviewUrl : null}
+                    backgroundX={photoX}
+                    backgroundY={photoY}
+                    backgroundOverlay={photoOverlay}
+                    handle={handle}
+                    configKey={previewConfigKey}
+                    emptyLine={coach
+                      ? "Nothing on the calendar for these days yet."
+                      : "Nothing on the week yet."}
+                    onRendered={previewRendered}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1003,7 +1256,7 @@ export function ShareHubScreen({
               ))}
             </div>
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => { pushUndo(); setFrom(draftFrom); setDays(draftDays); setPick(null); }}>
+              <button className="btn si" onClick={() => { beginPreviewUpdate("dates"); pushUndo(); setFrom(draftFrom); setDays(draftDays); setPick(null); }}>
                 Done
               </button>
             </div>
@@ -1050,6 +1303,7 @@ export function ShareHubScreen({
                     backgroundRef.current?.click();
                     return;
                   }
+                  beginPreviewUpdate("background");
                   pushUndo();
                   setBackground(true);
                 }}
@@ -1102,6 +1356,7 @@ export function ShareHubScreen({
                   <button
                     className="btn si"
                     onClick={() => {
+                      beginPreviewUpdate("background");
                       pushUndo();
                       setPhotoX(draftPhotoX);
                       setPhotoY(draftPhotoY);
@@ -1213,6 +1468,7 @@ export function ShareHubScreen({
                       data-layout={id}
                       aria-pressed={on}
                       onClick={() => {
+                        beginPreviewUpdate("style");
                         pushUndo();
                         applyCompleteStyle(id);
                         setPick(null);
@@ -1278,6 +1534,7 @@ export function ShareHubScreen({
                         type="button"
                         className="shsavedlook-main"
                         onClick={() => {
+                          beginPreviewUpdate("style");
                           pushUndo();
                           applyDesign(look.design);
                           setPick(null);
@@ -1339,9 +1596,8 @@ export function ShareHubScreen({
                   placeholder={coach ? "Train with me." : "Come with me."}
                   onChange={(e) => setDraftHeadline(e.target.value)}
                 />
-                {/* How loud: a slider, by Matt's call, for taking up the room a
-                    quiet week leaves. It commits on release rather than per
-                    pixel, because every value is a fresh server render. */}
+                {/* How loud: a staged slider, so the sheet can be explored
+                    without moving the poster underneath it until Done. */}
                 <label className="flabel" htmlFor="shSize">
                   Size <span>· {draftSlider}%</span>
                 </label>
@@ -1375,7 +1631,7 @@ export function ShareHubScreen({
               </>
             )}
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => { pushUndo(); setHeadline(draftHeadline); setNoHead(draftNoHead); setTypeId(draftTypeId); setHsize(draftSlider); setPick(null); }}>
+              <button className="btn si" onClick={() => { beginPreviewUpdate("headline"); pushUndo(); setHeadline(draftHeadline); setNoHead(draftNoHead); setTypeId(draftTypeId); setHsize(draftSlider); setPick(null); }}>
                 Done
               </button>
             </div>
@@ -1503,6 +1759,7 @@ export function ShareHubScreen({
             )}
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => {
+                beginPreviewUpdate("classes");
                 pushUndo();
                 setHide(new Set(draftHide));
                 setHat(draftHat);
@@ -1658,50 +1915,6 @@ export function ShareHubScreen({
       />
       <Toast msg={toastMsg} on={toastOn} />
     </>
-  );
-}
-
-/** The poster keeps its last painted frame while the next server-rendered
- *  version loads. The spinner makes the redraw visible without flashing an
- *  empty canvas. */
-function SlideImg({ cls, src, alt, onReady }: { cls: string; src: string | null; alt: string; onReady: (url:string) => void }) {
-  const [shownSrc, setShownSrc] = useState(src);
-  const [loading, setLoading] = useState(!!src);
-  // Double-buffer updates: the complete old poster remains readable while
-  // the next PNG draws, then swaps only after the browser has it in memory.
-  useEffect(() => {
-    if (!src || src === shownSrc) return;
-    let live = true;
-    const image = new Image();
-    setLoading(true);
-    image.onload = () => {
-      if (!live) return;
-      setShownSrc(src);
-      setLoading(false);
-      onReady(src);
-    };
-    image.onerror = () => { if (live) setLoading(false); };
-    image.src = src;
-    return () => { live = false; };
-  }, [onReady, shownSrc, src]);
-  if (!shownSrc) return (
-    <div className="shprev-wrap" aria-label={`Preparing ${alt.toLowerCase()}`}>
-      <div className={`${cls} shprev-placeholder`} />
-      <span className="shspin" aria-hidden="true" />
-    </div>
-  );
-  return (
-    <div className="shprev-wrap">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className={cls}
-        src={shownSrc}
-        alt={alt}
-        onLoad={() => { setLoading(false); onReady(shownSrc); }}
-        onError={() => setLoading(false)}
-      />
-      {loading && <span className="shspin" aria-label="Drawing the picture" />}
-    </div>
   );
 }
 

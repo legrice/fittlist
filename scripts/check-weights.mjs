@@ -14,12 +14,19 @@ import { join } from "node:path";
 
 const MAX = 700;
 const css = readFileSync("src/app/globals.css", "utf8");
+// The 1080px ShareLivePreview is the one CSS-rendered canvas exemption. Its
+// inline weights are checked through the named TSX exemption below; remove
+// only its exact static face declaration before checking product CSS.
+const productCss = css.replace(
+  /@font-face\s*\{[^{}]*delight-800\.woff2[^{}]*\}/gi,
+  "",
+);
 const bad = [];
 
-for (const [, w] of css.matchAll(/font-weight:\s*(\d{3})/g))
+for (const [, w] of productCss.matchAll(/font-weight:\s*(\d{3})/g))
   if (Number(w) > MAX) bad.push(`font-weight: ${w} in globals.css`);
 
-for (const [, w] of css.matchAll(/@font-face[^}]*font-weight:\s*(\d{3})/g))
+for (const [, w] of productCss.matchAll(/@font-face[^}]*font-weight:\s*(\d{3})/g))
   if (Number(w) > MAX) bad.push(`a @font-face declares ${w}`);
 
 // Inline styles in the app. The image routes and the two paint modules are
@@ -28,6 +35,9 @@ for (const [, w] of css.matchAll(/@font-face[^}]*font-weight:\s*(\d{3})/g))
 const EXEMPT = [
   "src/lib/storyimage.tsx",
   "src/lib/cardimage.tsx",
+  // The editor's scaled DOM copy of the same 1080px artwork. It intentionally
+  // shares the poster's display weights so preview and final PNG do not drift.
+  "src/components/ShareLivePreview.tsx",
   "src/app/api/",
 ];
 const walk = (dir) =>

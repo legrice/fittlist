@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
-import { ShareTakeover } from "@/components/ShareTakeover";
+import { preloadShareEditor, ShareTakeover } from "@/components/ShareTakeover";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
+import { sharePerformance } from "@/lib/share-performance";
 
 export type { NavTab };
 
@@ -39,8 +40,16 @@ export function NavBar({
   const shareButton = useRef<HTMLButtonElement>(null);
   const shareOpener = useRef<HTMLElement | null>(null);
   const restoreShareFocus = useRef(false);
+  const shareOpenRef = useRef(false);
 
   const openShare = useCallback((opener?: HTMLElement | null) => {
+    if (shareOpenRef.current) return;
+    // Start the clock in the input handler, before React schedules the
+    // takeover. Preloading here also covers programmatic open events that had
+    // no preceding hover or focus opportunity.
+    sharePerformance.navigationStarted();
+    void preloadShareEditor();
+    shareOpenRef.current = true;
     const activeElement = document.activeElement;
     shareOpener.current = opener
       ?? (activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : shareButton.current);
@@ -54,6 +63,7 @@ export function NavBar({
     // The takeover restores inert/aria-hidden during its passive cleanup.
     // Wait for that unmount to commit before focusing the exact opener.
     restoreShareFocus.current = true;
+    shareOpenRef.current = false;
     setShareOpen(false);
   }, []);
 
@@ -72,6 +82,23 @@ export function NavBar({
     window.addEventListener("fittlist:open-share", openShareEvent);
     return () => window.removeEventListener("fittlist:open-share", openShareEvent);
   }, [openShareEvent]);
+
+  useEffect(() => {
+    // Share is a primary workflow. Warm its code and minimum calendar payload
+    // after the current screen has painted, never on the navigation's critical
+    // path. Safari does not expose requestIdleCallback, so give it a quiet
+    // timeout instead.
+    const idleWindow = window as typeof window & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    if (typeof idleWindow.requestIdleCallback === "function") {
+      const idle = idleWindow.requestIdleCallback(() => void preloadShareEditor(), { timeout:2500 });
+      return () => idleWindow.cancelIdleCallback?.(idle);
+    }
+    const timer = setTimeout(() => void preloadShareEditor(), 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <nav className="navwrap" aria-label="Main">
@@ -111,6 +138,15 @@ export function NavBar({
         aria-haspopup={here === "share" ? undefined : "dialog"}
         aria-controls={here === "share" ? undefined : "share-takeover"}
         aria-expanded={here === "share" ? undefined : shareOpen}
+        onPointerEnter={() => {
+          if (here !== "share") void preloadShareEditor();
+        }}
+        onPointerDown={() => {
+          if (here !== "share") void preloadShareEditor();
+        }}
+        onFocus={() => {
+          if (here !== "share") void preloadShareEditor();
+        }}
         onClick={() => {
           // Legacy direct Share URLs still render the same studio. Treat an
           // already-active action like any current tab instead of stacking a

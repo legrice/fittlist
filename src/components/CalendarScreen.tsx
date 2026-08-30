@@ -31,6 +31,7 @@ import {
   loadCalendarComposerData,
   type CalendarComposerData,
 } from "@/app/actions/calendar-data";
+import { invalidateClientMemory } from "@/lib/client-memory";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -167,6 +168,11 @@ export function CalendarScreen({
   const [loadingTools, startTools] = useTransition();
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
   const calendarStateKey = `fl-calendar-state:${viewer.id}`;
+  const refreshCalendarData = useCallback(() => {
+    invalidateClientMemory("share-takeover");
+    window.dispatchEvent(new CustomEvent("fittlist:calendar-data-changed"));
+    router.refresh();
+  }, [router]);
   const visible = {
     coaching: !member && (filter === "all" || filter === "coaching"),
     saved: filter === "all" || filter === "saved",
@@ -662,7 +668,7 @@ export function CalendarScreen({
           }}
           onNotice={(message, highlight) => {
             toast(message);
-            if (highlight) router.refresh();
+            if (highlight) refreshCalendarData();
           }}
         />
       )}
@@ -713,7 +719,7 @@ export function CalendarScreen({
               } catch { /* private mode */ }
               router.replace(`/calendar?hl=${encodeURIComponent(`${focus.id}.${focus.iso}`)}`, { scroll: false });
             } else {
-              router.refresh();
+              refreshCalendarData();
             }
           }}
           onDeleted={(msg) => {
@@ -722,7 +728,7 @@ export function CalendarScreen({
             setAddDate(null);
             setPersonalAdd(false);
             toast(msg);
-            router.refresh();
+            refreshCalendarData();
           }}
           onMatch={(found) => {
             setAddOpen(false);
@@ -762,7 +768,7 @@ export function CalendarScreen({
                   }
                   toast(`${match.name} was saved to your calendar`);
                   setMatch(null);
-                  router.refresh();
+                  refreshCalendarData();
                 })}
               >
                 Add existing class
@@ -777,7 +783,7 @@ export function CalendarScreen({
           cls={peek}
           onClose={() => setPeek(null)}
           onToast={toast}
-          onChanged={() => router.refresh()}
+          onChanged={refreshCalendarData}
           onEdit={() => {
             const c = classes.find((x) => x.id === peek.id);
             setPeek(null);
@@ -794,7 +800,7 @@ export function CalendarScreen({
           onRemoved={(message) => {
             setPlan(null);
             toast(message);
-            router.refresh();
+            refreshCalendarData();
           }}
           onEdit={(personal) => {
             setPlan(null);
@@ -819,12 +825,12 @@ export function CalendarScreen({
           onPublished={(message) => {
             setPlanEdit(null);
             toast(message);
-            router.refresh();
+            refreshCalendarData();
           }}
           onDeleted={(message) => {
             setPlanEdit(null);
             toast(message);
-            router.refresh();
+            refreshCalendarData();
           }}
         />
       )}
@@ -843,12 +849,12 @@ export function CalendarScreen({
           onPublished={(msg) => {
             setEdit(null);
             toast(msg);
-            router.refresh();
+            refreshCalendarData();
           }}
           onDeleted={(msg) => {
             setEdit(null);
             toast(msg);
-            router.refresh();
+            refreshCalendarData();
           }}
         />
       )}
@@ -881,7 +887,7 @@ export function CalendarScreen({
                       return;
                     }
                     toast(`${item.name} was removed from your schedule`);
-                    router.refresh();
+                    refreshCalendarData();
                   });
                 }}
               >

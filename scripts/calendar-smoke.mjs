@@ -498,9 +498,11 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
     fail("the image studio should render exactly one schedule poster");
   if (await p.locator(".shprev-sq, .qrcard, .shtext").count())
     fail("profile, QR and text previews should not render in the image studio");
-  const initialSrc = await p.locator(".shprev-week").getAttribute("src");
-  if (!initialSrc?.startsWith("/api/story/compose?"))
-    fail("the single preview should be the schedule image: " + initialSrc);
+  const preview = p.locator(".shprev-week");
+  if (await preview.getAttribute("data-preview-kind") !== "dom")
+    fail("the editor should use a lightweight DOM poster for live editing");
+  if (await preview.getAttribute("src"))
+    fail("the live preview must not mount an export-quality compose image");
 
   const toolRail = p.locator(".sheditor-tools-all");
   if ((await toolRail.count()) !== 1)
@@ -534,17 +536,17 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   if (!rail.aligned || !rail.circles)
     fail("the editor tool circles should share one horizontal line: " + JSON.stringify(rail));
   const designActions = (await p.locator(".shdesign-actions button").allInnerTexts()).map((t) => t.trim());
-  if (designActions.join("|") !== "Undo|Reset|Save style")
-    fail("the design actions should sit beneath the tool rail in order: " + designActions.join("|"));
+  if (designActions.join("|") !== "Undo|Reset")
+    fail("the compact design actions should align across from Close: " + designActions.join("|"));
 
   // Headline rewrites the poster's words, and the picture is asked for
   // exactly what was typed.
   await p.locator(".sheditor-tool", { hasText: "Headline" }).click();
   await p.locator("#shMsg").fill("Fall schedule is live");
   await p.locator(".shpick .btn", { hasText: "Done" }).click();
-  const srcMsg = await p.locator(".shprev-week").getAttribute("src");
-  if (!/Fall%20schedule%20is%20live/.test(srcMsg ?? ""))
-    fail("the message should reach the picture: " + srcMsg);
+  const keyMsg = (await preview.getAttribute("data-config-key") ?? "").split("|");
+  if (keyMsg[5] !== "Fall schedule is live")
+    fail("the message should reach the live picture: " + keyMsg.join("|"));
 
   // Style is a real structural choice: six visible coordinated styles,
   // all accepted by the image route, and the chosen id rides the preview URL.
@@ -562,21 +564,21 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
       fail(`${id} layout drew the wrong size`);
   }
   await p.locator('.layoutpick[data-layout="party"]').click();
-  const srcLayout = await p.locator(".shprev-week").getAttribute("src");
-  if (!/style=party/.test(srcLayout ?? "") || !/theme=blush/.test(srcLayout ?? "") || !/type=friendly/.test(srcLayout ?? "") || !/hs=90/.test(srcLayout ?? "") || !/deco=double/.test(srcLayout ?? ""))
-    fail("the picked style should apply its coordinated defaults: " + srcLayout);
+  const keyLayout = (await preview.getAttribute("data-config-key") ?? "").split("|");
+  if (keyLayout[1] !== "blush" || keyLayout[2] !== "party" || keyLayout[3] !== "friendly" || keyLayout[4] !== "double" || keyLayout[6] !== "90")
+    fail("the picked style should apply its coordinated defaults: " + keyLayout.join("|"));
   await p.locator(".sheditor-tool", { hasText: "Dates" }).click();
   await p.locator(".shday", { hasText: /^3$/ }).click();
   await p.locator(".shpick .btn", { hasText: "Done" }).click();
-  const src1 = await p.locator(".shprev-week").getAttribute("src");
-  if (!/days=3/.test(src1 ?? "")) fail("the range should reach the picture: " + src1);
+  const keyRange = (await preview.getAttribute("data-config-key") ?? "").split("|");
+  if (keyRange[15] !== "3") fail("the range should reach the picture: " + keyRange.join("|"));
   await p.locator(".sheditor-tool", { hasText: "Classes" }).click();
   const first = p.locator(".shpick .setrow").first();
   if (await first.count()) {
     await first.click();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
-    const src2 = await p.locator(".shprev-week").getAttribute("src");
-    if (!/hide=/.test(src2 ?? "")) fail("a hidden class should reach the picture: " + src2);
+    const keyClasses = (await preview.getAttribute("data-config-key") ?? "").split("|");
+    if (!keyClasses[13]) fail("a hidden class should reach the picture: " + keyClasses.join("|"));
   } else {
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
   }

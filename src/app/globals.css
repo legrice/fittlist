@@ -44,6 +44,10 @@ html[data-native="ios"] .screen.hasnav > .pad {
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+/* The share poster is a scaled copy of the 1080px export and uses the logo's
+   real 800 cut. Register it explicitly so the DOM preview does not synthesize
+   weight 800 from 700 and then shift when the final PNG appears. */
+@font-face { font-family: 'Delight'; src: url('/fonts/delight-800.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
 /* The poster's guest faces (the Type picker's personalities): the same TTFs
    satori draws with, so the picker's sample rows show the truth. Loaded
    lazily by font-display: swap; only the picker and nothing else uses them. */
@@ -12833,6 +12837,12 @@ a.clspeek-by:active { opacity: .6; }
   border-radius:11px;
   box-shadow:0 18px 44px rgba(2,13,8,.16);
 }
+.shsingle-preview .shlive-preview {
+  display:block;
+  width:auto;
+  aspect-ratio:9 / 16;
+  background:var(--color-surface);
+}
 
 .sheditor-dock {
   position:sticky;
@@ -12973,10 +12983,9 @@ a.clspeek-by:active { opacity: .6; }
   }
   .calendar-share-sheet .shsingle-preview .shprev {
     width:auto;
-    height:auto;
+    height:100%;
     max-width:100%;
     max-height:100%;
-    object-fit:contain;
   }
 }
 @media (max-height:700px) and (max-width:939px) {

@@ -45,7 +45,8 @@ export function ShareCardSheet({
   const [styleOpen, setStyleOpen] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
-  // A fresh cache-buster per open; see ShareWeekSheet.
+  // Profile/class cards remain independent one-off assets; give each opened
+  // sheet a stable URL for its lifetime so theme changes cannot reuse pixels.
   const [bust] = useState(() => Date.now());
 
   useEffect(() => {

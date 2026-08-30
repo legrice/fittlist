@@ -6,19 +6,89 @@ import { loadCalendarShareData, type CalendarShareData } from "@/app/actions/cal
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { invalidateClientMemory, loadClientMemory, readClientMemory } from "@/lib/client-memory";
-
-const ShareHubScreen = dynamic(
-  () => import("@/components/ShareHubScreen").then((module) => module.ShareHubScreen),
-  { loading: () => <div className="share-takeover-loading" aria-busy="true"><i aria-hidden="true" /><span>Opening your share studio…</span></div> },
-);
+import { sharePerformance } from "@/lib/share-performance";
 
 const SHARE_CACHE_KEY = "share-takeover";
+type ShareHubModule = typeof import("@/components/ShareHubScreen");
+let shareHubModulePromise: Promise<ShareHubModule> | null = null;
+
+function loadShareHubModule(): Promise<ShareHubModule> {
+  if (!shareHubModulePromise) {
+    shareHubModulePromise = import("@/components/ShareHubScreen").catch((error) => {
+      // A transient chunk failure should be retryable the next time Share is
+      // opened instead of poisoning this browser session permanently.
+      shareHubModulePromise = null;
+      throw error;
+    });
+  }
+  return shareHubModulePromise;
+}
+
+function ShareEditorSkeleton() {
+  return (
+    <div
+      className="cardwrap shpage shpage-editor shpage-embedded"
+      aria-busy="true"
+      aria-label="Opening your share studio"
+    >
+      <span className="sr-only">Opening your share studio…</span>
+      <section className="sheditor-shell sheditor-week" aria-hidden="true">
+        <div className="shdesign-actions">
+          <span className="skel" style={{ width: 92, height: 32, borderRadius: 999 }} />
+        </div>
+        <div className="sheditor-stage">
+          <div className="shsingle-preview">
+            <span
+              className="skel skel-poster"
+              style={{ width: "min(62vw, 300px)", height: "100%", maxHeight: 420, margin: 0 }}
+            />
+          </div>
+        </div>
+        <div className="sheditor-dock sheditor-dock-week">
+          <div className="sheditor-tools sheditor-tools-all">
+            {Array.from({ length: 6 }, (_, index) => (
+              <span className="sheditor-tool" key={index}>
+                <i className="sheditor-tool-icon skel" />
+                <i className="skel" style={{ width: 52, height: 11 }} />
+              </span>
+            ))}
+          </div>
+          <span className="skel" style={{ width: "100%", height: 52, borderRadius: 999 }} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const ShareHubScreen = dynamic(
+  () => loadShareHubModule().then((module) => module.ShareHubScreen),
+  { loading: ShareEditorSkeleton },
+);
+
+/**
+ * Warm both halves of the takeover while a finger or pointer approaches the
+ * Share action. The cache deduplicates an in-flight server action, and the
+ * dynamic component consumes this exact module promise when it mounts.
+ */
+export async function preloadShareEditor(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const remembered = readClientMemory<CalendarShareData>(
+    SHARE_CACHE_KEY,
+  );
+  await Promise.allSettled([
+    loadShareHubModule(),
+    document.fonts?.load("800 16px Delight") ?? Promise.resolve(),
+    remembered
+      ? Promise.resolve(remembered)
+      : loadClientMemory(SHARE_CACHE_KEY, loadCalendarShareData),
+  ]);
+}
 
 export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
   const [data, setData] = useState<CalendarShareData | null>(() =>
-    // The warm copy is only an immediate first frame. Every open refreshes it
-    // below, so it can safely survive for the rest of this signed-in session.
-    readClientMemory<CalendarShareData>(SHARE_CACHE_KEY, Number.POSITIVE_INFINITY),
+    // Mutations explicitly invalidate this signed-in session copy. Reusing it
+    // here lets a return visit paint without another request or loading frame.
+    readClientMemory<CalendarShareData>(SHARE_CACHE_KEY),
   );
   const [error, setError] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -31,10 +101,15 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
   const historyMarker = useRef(`share-takeover-${Math.random().toString(36).slice(2)}`);
   const historyClosePending = useRef(false);
 
+  useEffect(() => {
+    if (data) sharePerformance.dataReady();
+  }, [data]);
+
   const finishClose = useCallback(() => {
     if (!closingRef.current) return;
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = null;
+    sharePerformance.reset();
     onClosed();
   }, [onClosed]);
 
@@ -105,6 +180,9 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
     let focusFrame = 0;
     const focusWhenReady = () => {
       if (dialogRef.current) {
+        // This runs on the first frame after the portaled shell actually
+        // exists, rather than when BodyPortal still renders null.
+        sharePerformance.shellRendered();
         dialogRef.current.focus({ preventScroll:true });
         // The origin can itself be a portaled calendar takeover. Block every
         // body sibling, not just the route shell, so screen readers and
@@ -170,9 +248,10 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
     const onPopState = () => beginClose();
     window.addEventListener("popstate", onPopState);
 
-    // A warm canvas appears immediately. Refreshing it in the background
-    // keeps changed classes current without returning to a skeleton.
-    void load(data === null);
+    // Mutations explicitly invalidate this cache through onRefreshWeek. A
+    // warm opening copy is already current, so do not put a redundant server
+    // refresh on every visit's critical path.
+    if (data === null) void load(true);
 
     return () => {
       mountedRef.current = false;
@@ -253,10 +332,7 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
               <button type="button" onClick={() => void load(true)}>Try again</button>
             </div>
           ) : (
-            <div className="share-takeover-loading" aria-busy="true">
-              <i aria-hidden="true" />
-              <span>Opening your share studio…</span>
-            </div>
+            <ShareEditorSkeleton />
           )}
         </section>
       </div>

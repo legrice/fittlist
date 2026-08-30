@@ -31,6 +31,17 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let tabIDs = ["following", "discover", "calendar", "share"]
     private let fallbackRoutes = ["/feed", "/discover", "/you", "/membershare"]
     private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
+    private let shareFileQueue = DispatchQueue(label: "co.fittlist.share-file-cache", qos: .userInitiated)
+    private let shareFileCacheLimit = 4
+    private let shareFileSizeLimit = 12 * 1024 * 1024
+    private let shareFileCacheSizeLimit = 36 * 1024 * 1024
+    private let pngSignature: [UInt8] = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+    private var shareDownloadTask: URLSessionTask?
+    private var shareDownloadToken: UUID?
+    private var shareDownloadKey: String?
+    private var shareSheetPresented = false
+    private var activeShareFileURL: URL?
+    private var messageShareRequestId: String?
 
     override var childForStatusBarStyle: UIViewController? { bridge }
 
@@ -70,6 +81,14 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         ])
 
         installWebHooks()
+        shareFileQueue.async { [weak self] in
+            self?.pruneShareFileCache(keeping: nil)
+            self?.removeAbandonedActiveShareFiles()
+        }
+    }
+
+    deinit {
+        shareDownloadTask?.cancel()
     }
 
     private func configureTabBar() {
@@ -200,6 +219,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         controller.addUserScript(WKUserScript(
             source: """
             document.documentElement.dataset.native = 'ios';
+            document.documentElement.dataset.nativeShareProtocol = '2';
             const nativeStyle = document.createElement('style');
             nativeStyle.id = 'fittlist-native-shell-style';
             nativeStyle.textContent = '.brandbar,.navwrap{display:none!important}';
@@ -278,7 +298,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         }
         if message.name == "fittlistShareTarget", let payload = message.body as? [String: Any] {
             guard isTrustedWebMessage(message) else {
-                shareResult("Couldn't prepare that image")
+                shareResult(status: "failed", message: "Couldn't prepare that image")
                 return
             }
             shareImage(payload)
@@ -396,87 +416,422 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         }
     }
 
+    private var shareFileCacheDirectory: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("fittlist-share-cache", isDirectory: true)
+    }
+
+    private var activeShareFileDirectory: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("fittlist-share-active", isDirectory: true)
+    }
+
+    private func removeAbandonedActiveShareFiles() {
+        try? FileManager.default.removeItem(at: activeShareFileDirectory)
+    }
+
+    private func activeShareFile(from cachedURL: URL) throws -> URL {
+        let manager = FileManager.default
+        try manager.createDirectory(at: activeShareFileDirectory, withIntermediateDirectories: true)
+        let activeURL = activeShareFileDirectory
+            .appendingPathComponent("fittlist-\(UUID().uuidString).png", isDirectory: false)
+        do {
+            try manager.linkItem(at: cachedURL, to: activeURL)
+        } catch {
+            try manager.copyItem(at: cachedURL, to: activeURL)
+        }
+        return activeURL
+    }
+
+    private func shareFileURL(for sourceURL: URL) -> URL {
+        let digest = SHA256.hash(data: Data(sourceURL.absoluteString.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+        return shareFileCacheDirectory.appendingPathComponent("\(digest).png", isDirectory: false)
+    }
+
+    private func cachedShareFile(for sourceURL: URL) -> URL? {
+        let fileURL = shareFileURL(for: sourceURL)
+        let manager = FileManager.default
+        guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
+              values.isRegularFile == true,
+              let size = values.fileSize,
+              size >= pngSignature.count,
+              size <= shareFileSizeLimit,
+              let handle = try? FileHandle(forReadingFrom: fileURL) else {
+            try? manager.removeItem(at: fileURL)
+            return nil
+        }
+        let prefix = try? handle.read(upToCount: pngSignature.count)
+        try? handle.close()
+        guard let prefix, prefix.starts(with: pngSignature) else {
+            try? manager.removeItem(at: fileURL)
+            return nil
+        }
+        shareFileQueue.async { [weak self] in
+            guard let self else { return }
+            try? manager.setAttributes([.modificationDate: Date()], ofItemAtPath: fileURL.path)
+            self.pruneShareFileCache(keeping: fileURL)
+        }
+        return fileURL
+    }
+
+    private func storeDownloadedShareFile(_ downloadedURL: URL, for sourceURL: URL) throws -> URL {
+        let manager = FileManager.default
+        let values = try downloadedURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+        guard values.isRegularFile == true,
+              let size = values.fileSize,
+              size >= pngSignature.count,
+              size <= shareFileSizeLimit,
+              let handle = try? FileHandle(forReadingFrom: downloadedURL) else {
+            throw NSError(domain: "FittListShare", code: 2)
+        }
+        let prefix = try? handle.read(upToCount: pngSignature.count)
+        try? handle.close()
+        guard let prefix, prefix.starts(with: pngSignature) else {
+            throw NSError(domain: "FittListShare", code: 3)
+        }
+
+        try manager.createDirectory(at: shareFileCacheDirectory, withIntermediateDirectories: true)
+        let fileURL = shareFileURL(for: sourceURL)
+        try? manager.removeItem(at: fileURL)
+        try manager.moveItem(at: downloadedURL, to: fileURL)
+        try? manager.setAttributes([.modificationDate: Date()], ofItemAtPath: fileURL.path)
+        pruneShareFileCache(keeping: fileURL)
+        return fileURL
+    }
+
+    private func presentCachedShareFile(_ cachedURL: URL, requestId: String, token: UUID) {
+        shareFileQueue.async { [weak self] in
+            guard let self else { return }
+            let activeURL = try? self.activeShareFile(from: cachedURL)
+            DispatchQueue.main.async {
+                guard self.finishShareDownload(token: token) else {
+                    if let activeURL {
+                        self.shareFileQueue.async {
+                            try? FileManager.default.removeItem(at: activeURL)
+                        }
+                    }
+                    return
+                }
+                guard let activeURL else {
+                    self.shareResult(status: "failed", message: "Couldn't prepare that image", requestId: requestId)
+                    return
+                }
+                self.presentShareSheet(items: [activeURL], activeFileURL: activeURL, requestId: requestId)
+            }
+        }
+    }
+
+    private func pruneShareFileCache(keeping protectedURL: URL?) {
+        let manager = FileManager.default
+        guard let files = try? manager.contentsOfDirectory(
+            at: shareFileCacheDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey, .isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return }
+        let entries = files.compactMap { url -> (URL, Date, Int)? in
+            guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey, .isRegularFileKey]),
+                  values.isRegularFile == true,
+                  url.pathExtension.lowercased() == "png" else {
+                try? manager.removeItem(at: url)
+                return nil
+            }
+            return (url, values.contentModificationDate ?? .distantPast, values.fileSize ?? 0)
+        }.sorted { left, right in
+            if left.0 == protectedURL { return true }
+            if right.0 == protectedURL { return false }
+            return left.1 > right.1
+        }
+
+        var retainedCount = 0
+        var retainedBytes = 0
+        for (url, _, size) in entries {
+            let isProtected = url == protectedURL
+            let fits = retainedCount < shareFileCacheLimit && retainedBytes + size <= shareFileCacheSizeLimit
+            if isProtected || (size > 0 && size <= shareFileSizeLimit && fits) {
+                retainedCount += 1
+                retainedBytes += size
+            } else {
+                try? manager.removeItem(at: url)
+            }
+        }
+    }
+
+    private func cancelShareDownload() {
+        shareDownloadTask?.cancel()
+        shareDownloadTask = nil
+        shareDownloadToken = nil
+        shareDownloadKey = nil
+    }
+
+    private func finishShareDownload(token: UUID) -> Bool {
+        guard shareDownloadToken == token else { return false }
+        shareDownloadTask = nil
+        shareDownloadToken = nil
+        shareDownloadKey = nil
+        return true
+    }
+
     private func shareImage(_ payload: [String: Any]) {
-        guard let target = payload["target"] as? String,
+        guard let target = payload["target"] as? String else {
+            shareResult(status: "failed", message: "Couldn't prepare that image")
+            return
+        }
+        if target == "cancel" {
+            cancelShareDownload()
+            return
+        }
+        let requestId = (payload["requestId"] as? String)?.prefix(128).description ?? UUID().uuidString
+        guard
               let rawURL = payload["url"] as? String,
               let url = URL(string: rawURL),
               url.scheme?.lowercased() == "https",
               let host = url.host?.lowercased(),
               trustedWebHosts.contains(host),
               url.path.hasPrefix("/api/story/") || url.path.hasPrefix("/api/card/") || url.path.hasPrefix("/api/qr/") else {
-            shareResult("Couldn't prepare that image")
+            shareResult(status: "failed", message: "Couldn't prepare that image", requestId: requestId)
             return
         }
         let file = payload["file"] as? String
-        bridge.webView?.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
-            var request = URLRequest(url: url)
-            let matchingCookies = self.cookies(for: url, from: cookies)
-            HTTPCookie.requestHeaderFields(with: matchingCookies).forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
-            URLSession.shared.dataTask(with: request) { data, response, _ in
-                guard let data,
-                      let http = response as? HTTPURLResponse,
-                      (200..<300).contains(http.statusCode),
-                      let image = UIImage(data: data) else {
-                    self.shareResult("Couldn't prepare that image")
+        let requestKey = "\(target)|\(url.absoluteString)"
+
+        guard !shareSheetPresented else {
+            shareResult(status: "failed", message: "Share is already open", requestId: requestId)
+            return
+        }
+
+        if target == "more", let cachedURL = cachedShareFile(for: url) {
+            cancelShareDownload()
+            let token = UUID()
+            shareDownloadToken = token
+            shareDownloadKey = requestKey
+            presentCachedShareFile(cachedURL, requestId: requestId, token: token)
+            return
+        }
+
+        // A second tap for the same pending export joins the existing job. A
+        // newer, different export cancels the stale network work so it cannot
+        // present an image that no longer matches the user's configuration.
+        if shareDownloadToken != nil, shareDownloadKey == requestKey {
+            shareResult(status: "failed", message: "Share is already being prepared", requestId: requestId)
+            return
+        }
+        cancelShareDownload()
+        let token = UUID()
+        shareDownloadToken = token
+        shareDownloadKey = requestKey
+
+        bridge.webView?.configuration.websiteDataStore.httpCookieStore.getAllCookies { [weak self] cookies in
+            DispatchQueue.main.async {
+                guard let self, self.shareDownloadToken == token else { return }
+                var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
+                request.setValue("image/png", forHTTPHeaderField: "Accept")
+                let matchingCookies = self.cookies(for: url, from: cookies)
+                HTTPCookie.requestHeaderFields(with: matchingCookies).forEach {
+                    request.setValue($0.value, forHTTPHeaderField: $0.key)
+                }
+                if target == "more" {
+                    let task = URLSession.shared.downloadTask(with: request) { [weak self] location, response, error in
+                        guard let self else { return }
+                        let http = response as? HTTPURLResponse
+                        var cachedURL: URL?
+                        if error == nil,
+                           let location,
+                           let http,
+                           (200..<300).contains(http.statusCode),
+                           http.expectedContentLength <= 0 || http.expectedContentLength <= Int64(self.shareFileSizeLimit) {
+                            self.shareFileQueue.sync {
+                                cachedURL = try? self.storeDownloadedShareFile(location, for: url)
+                            }
+                        }
+                        DispatchQueue.main.async {
+                            guard self.shareDownloadToken == token else { return }
+                            guard let cachedURL else {
+                                self.shareResult(
+                                    status: "failed",
+                                    message: "Couldn't prepare that image",
+                                    requestId: requestId
+                                )
+                                return
+                            }
+                            self.presentCachedShareFile(cachedURL, requestId: requestId, token: token)
+                        }
+                    }
+                    self.shareDownloadTask = task
+                    task.resume()
                     return
                 }
-                DispatchQueue.main.async {
-                    self.deliverShareImage(image, data: data, target: target, file: file)
+                let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                    guard let self else { return }
+                    guard error == nil,
+                          let data,
+                          let http = response as? HTTPURLResponse,
+                          (200..<300).contains(http.statusCode),
+                          data.count >= self.pngSignature.count,
+                          data.count <= self.shareFileSizeLimit,
+                          http.expectedContentLength <= 0 || http.expectedContentLength <= Int64(self.shareFileSizeLimit) else {
+                        DispatchQueue.main.async {
+                            guard self.finishShareDownload(token: token) else { return }
+                            self.shareResult(status: "failed", message: "Couldn't prepare that image", requestId: requestId)
+                        }
+                        return
+                    }
+
+                    guard let image = UIImage(data: data) else {
+                        DispatchQueue.main.async {
+                            guard self.finishShareDownload(token: token) else { return }
+                            self.shareResult(status: "failed", message: "Couldn't prepare that image", requestId: requestId)
+                        }
+                        return
+                    }
+                    DispatchQueue.main.async {
+                        guard self.finishShareDownload(token: token) else { return }
+                        self.deliverShareImage(
+                            image,
+                            data: data,
+                            target: target,
+                            file: file,
+                            requestId: requestId
+                        )
+                    }
                 }
-            }.resume()
+                self.shareDownloadTask = task
+                task.resume()
+            }
         }
     }
 
-    private func deliverShareImage(_ image: UIImage, data: Data, target: String, file: String?) {
+    private func presentShareSheet(
+        items: [Any],
+        activeFileURL: URL? = nil,
+        requestId: String
+    ) {
+        guard !shareSheetPresented,
+              presentedViewController == nil,
+              viewIfLoaded?.window != nil else {
+            shareResult(status: "failed", message: "Share is already open", requestId: requestId)
+            return
+        }
+        let sheet = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        shareSheetPresented = true
+        self.activeShareFileURL = activeFileURL
+        sheet.completionWithItemsHandler = { [weak self] _, completed, _, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.shareSheetPresented = false
+                let completedFileURL = self.activeShareFileURL
+                self.activeShareFileURL = nil
+                if let completedFileURL {
+                    self.shareFileQueue.async {
+                        try? FileManager.default.removeItem(at: completedFileURL)
+                    }
+                }
+                if error != nil {
+                    self.shareResult(
+                        status: "failed",
+                        message: "Couldn't share the image",
+                        requestId: requestId
+                    )
+                } else if completed {
+                    self.shareResult(status: "complete", requestId: requestId)
+                } else {
+                    self.shareResult(status: "cancelled", requestId: requestId)
+                }
+            }
+        }
+        sheet.popoverPresentationController?.sourceView = view
+        sheet.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.maxY - 1, width: 1, height: 1)
+        // Web uses this event to end its export spinner. Emit synchronously on
+        // the main thread immediately before UIKit begins presenting the sheet.
+        shareResult(status: "share-ready", requestId: requestId)
+        present(sheet, animated: true)
+    }
+
+    private func deliverShareImage(
+        _ image: UIImage,
+        data: Data,
+        target: String,
+        file: String?,
+        requestId: String
+    ) {
         switch target {
         case "instagram":
             UIPasteboard.general.setItems(
                 [["com.instagram.sharedSticker.backgroundImage": data]],
                 options: [.expirationDate: Date().addingTimeInterval(300)]
             )
-            guard let url = URL(string: "instagram-stories://share") else { return }
+            guard let url = URL(string: "instagram-stories://share") else {
+                shareResult(status: "failed", message: "Instagram isn't available", requestId: requestId)
+                return
+            }
+            shareResult(status: "share-ready", requestId: requestId)
             UIApplication.shared.open(url, options: [:]) { opened in
-                if !opened { self.shareResult("Instagram isn't installed") }
+                if opened {
+                    self.shareResult(status: "complete", requestId: requestId)
+                } else {
+                    self.shareResult(status: "failed", message: "Instagram isn't installed", requestId: requestId)
+                }
             }
         case "messages":
-            guard MFMessageComposeViewController.canSendAttachments() else {
-                shareResult("Messages isn't available")
+            guard MFMessageComposeViewController.canSendAttachments(), presentedViewController == nil else {
+                shareResult(status: "failed", message: "Messages isn't available", requestId: requestId)
                 return
             }
             let composer = MFMessageComposeViewController()
             composer.messageComposeDelegate = self
             composer.addAttachmentData(data, typeIdentifier: "public.png", filename: file ?? "fittlist.png")
+            messageShareRequestId = requestId
+            shareResult(status: "share-ready", requestId: requestId)
             present(composer, animated: true)
         case "photo":
+            shareResult(status: "share-ready", requestId: requestId)
             PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                 guard status == .authorized || status == .limited else {
-                    self.shareResult("Allow photo access to save your image")
+                    self.shareResult(status: "failed", message: "Allow photo access to save your image", requestId: requestId)
                     return
                 }
                 PHPhotoLibrary.shared().performChanges({
                     PHAssetChangeRequest.creationRequestForAsset(from: image)
                 }) { saved, _ in
-                    self.shareResult(saved ? "Photo saved" : "Couldn't save the photo")
+                    if saved {
+                        self.shareResult(status: "complete", message: "Photo saved", requestId: requestId)
+                    } else {
+                        self.shareResult(status: "failed", message: "Couldn't save the photo", requestId: requestId)
+                    }
                 }
             }
         default:
-            DispatchQueue.main.async {
-                let sheet = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-                sheet.popoverPresentationController?.sourceView = self.view
-                sheet.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.maxY - 1, width: 1, height: 1)
-                self.present(sheet, animated: true)
-            }
+            presentShareSheet(items: [image], requestId: requestId)
         }
     }
 
     func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
         controller.dismiss(animated: true)
+        let requestId = messageShareRequestId
+        messageShareRequestId = nil
+        if result == .failed {
+            shareResult(status: "failed", message: "Couldn't send the message", requestId: requestId)
+        } else if result == .cancelled {
+            shareResult(status: "cancelled", requestId: requestId)
+        } else {
+            shareResult(status: "complete", requestId: requestId)
+        }
     }
 
-    private func shareResult(_ message: String) {
-        DispatchQueue.main.async {
-            let safe = message.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
-            self.bridge.webView?.evaluateJavaScript("window.dispatchEvent(new CustomEvent('fittlist:native-share-result',{detail:{message:'\(safe)'}}))")
+    private func shareResult(status: String, message: String? = nil, requestId: String? = nil) {
+        var payload: [String: Any] = ["status": status]
+        if let message { payload["message"] = message }
+        if let requestId { payload["requestId"] = requestId }
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let json = String(data: data, encoding: .utf8) else { return }
+        let send: () -> Void = { [weak self] in
+            _ = self?.bridge.webView?.evaluateJavaScript(
+                "window.dispatchEvent(new CustomEvent('fittlist:native-share-result',{detail:\(json)}))"
+            )
+        }
+        if Thread.isMainThread {
+            send()
+        } else {
+            DispatchQueue.main.async(execute: send)
         }
     }
 }

@@ -11,6 +11,7 @@ import {
   type StoryPlan,
 } from "@/lib/storyplan";
 import type { DecoId } from "@/lib/decorations";
+import { storyHeadline } from "@/lib/share-story-layout";
 
 // One paint for every share image.
 //
@@ -905,10 +906,10 @@ export function renderStory(model: StoryModel) {
                     <div key={e.name} style={{ display: "flex", width: "100%" }}>
                       <span
                         style={{
-                          display: layout === "plain" ? "flex" : "block",
-                          width: layout === "plain" ? "auto" : 650,
-                          lineClamp: layout === "plain" ? undefined : 1,
                           fontWeight: 700,
+                          ...(layout === "plain"
+                            ? { display: "flex", width: "auto" }
+                            : { display: "block", width: 650, lineClamp: 1 }),
                           ...(y.upper ? { textTransform: "uppercase" as const } : {}),
                           ...(layout === "neon" ? { color: t.accent } : {}),
                         }}
@@ -1211,16 +1212,5 @@ export function renderStory(model: StoryModel) {
  * ran off the edge at the first one's size.
  */
 export function headlineOf(text: string, fallback: [string, string]) {
-  let line1 = fallback[0];
-  let line2 = fallback[1];
-  const clean = text.trim();
-  if (clean) {
-    const words = clean.split(/\s+/);
-    const cut = Math.ceil(words.length / 2);
-    line1 = words.slice(0, cut).join(" ");
-    line2 = words.slice(cut).join(" ");
-  }
-  const longest = Math.max(line1.length, line2.length);
-  const size = longest <= 9 ? 104 : longest <= 13 ? 86 : longest <= 18 ? 70 : 58;
-  return { line1, line2, size };
+  return storyHeadline(text, fallback);
 }

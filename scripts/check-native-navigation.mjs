@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
 
-const [swift, web] = await Promise.all([
+const [swift, web, shareHub] = await Promise.all([
   readFile(new URL("../ios/App/App/SceneDelegate.swift", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/nav.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/ShareHubScreen.tsx", import.meta.url), "utf8"),
 ]);
 
 const fail = (message) => {
@@ -28,6 +29,20 @@ const requiredSwiftFragments = [
   'let activeTags = ["following": 0, "discover": 1, "calendar": 2, "share": 3]',
   'headerView.isHidden = true',
   'tabBar.isHidden = true',
+  "document.documentElement.dataset.nativeShareProtocol = '2';",
+  'if target == "cancel"',
+  'URLSession.shared.downloadTask(with: request)',
+  'requestId: requestId',
+  'status: "share-ready"',
+  'status: "complete"',
+  'status: "cancelled"',
+  'activeShareFile(from: cachedURL)',
+];
+const requiredShareHubFragments = [
+  'handler?.postMessage({ target:"cancel" });',
+  'detail.requestId === activeRequestId',
+  'dataset.nativeShareProtocol === "2"',
+  'nativeExportRequestId.current = requestId',
 ];
 
 for (const fragment of requiredWebFragments) {
@@ -41,5 +56,8 @@ for (let index = 1; index < orderedWebIDs.length; index += 1) {
 for (const fragment of requiredSwiftFragments) {
   if (!swift.includes(fragment)) fail(`SceneDelegate is missing ${fragment}`);
 }
+for (const fragment of requiredShareHubFragments) {
+  if (!shareHub.includes(fragment)) fail(`Share editor is missing ${fragment}`);
+}
 
-console.log("Native navigation contract: headerless web dock aligned");
+console.log("Native navigation/share contract: web dock aligned and export lifecycle guarded");

@@ -6,6 +6,7 @@ import { todayIso } from "@/lib/format";
 import { shareWeek } from "@/lib/shareweek";
 import { getSessionUserId } from "@/lib/session";
 import { sanitizeSavedStoryLooks, sanitizeShareDesign } from "@/lib/share-design";
+import { shareContentRevision } from "@/lib/share-content-revision";
 import type { LastUsed } from "@/lib/types";
 
 // One screen, two addresses: page modules cannot export shared helpers, so
@@ -35,16 +36,17 @@ export async function hubPage(address: "member" | "coach") {
   if (!coach && address === "coach") redirect("/membershare");
 
   let defaultFrom = today;
-  const items: HubItem[] = days.flatMap((d) =>
-    d.items.map((it) => ({
-      key: it.key,
-      iso: it.iso,
-      time: it.time,
-      name: it.name,
-      own: it.own,
-      coaching: it.coaching,
-    })),
-  );
+  const sourceItems = days.flatMap((day) => day.items);
+  const items: HubItem[] = sourceItems.map((it) => ({
+    key: it.key,
+    iso: it.iso,
+    time: it.time,
+    name: it.name,
+    where: it.where,
+    who: it.who,
+    own: it.own,
+    coaching: it.coaching,
+  }));
   defaultFrom = days[0]?.iso ?? defaultFrom;
 
   const lastUsed: LastUsed = { startTime: "18:00", durationMin:60, studioId:null };
@@ -63,7 +65,12 @@ export async function hubPage(address: "member" | "coach") {
       templates={[]}
       customTypes={[]}
       lastUsed={lastUsed}
-      initialRevision={Date.now()}
+      initialRevision={shareContentRevision({
+        kind: me.kind,
+        handle: me.handle,
+        storyPrefs: me.storyPrefs,
+        items: sourceItems,
+      })}
       initialDesign={me.storyPrefs?.design ? sanitizeShareDesign(me.storyPrefs.design) : null}
       savedLooks={sanitizeSavedStoryLooks(me.storyPrefs?.savedLooks)}
       deferAdderData={!coach}

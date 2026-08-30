@@ -18,6 +18,7 @@ import {
   type SavedStoryLook,
   type ShareDesign,
 } from "@/lib/share-design";
+import { shareContentRevision } from "@/lib/share-content-revision";
 
 export type PersonalCalendarData = {
   handle: string | null;
@@ -142,15 +143,31 @@ export async function loadCalendarShareData(): Promise<CalendarShareData | null>
   ]);
   const [me] = userRows;
   if (!me?.handle) return null;
+  const sourceItems = days.flatMap((day) => day.items);
+  const items: HubItem[] = sourceItems.map((item) => ({
+    key:item.key,
+    iso:item.iso,
+    time:item.time,
+    name:item.name,
+    where:item.where,
+    who:item.who,
+    own:item.own,
+    coaching:item.coaching,
+  }));
   return {
     handle: me.handle,
     coach: me.kind !== "fan",
     today,
-    items: days.flatMap((day) => day.items.map((item) => ({ key:item.key, iso:item.iso, time:item.time, name:item.name, own:item.own, coaching:item.coaching }))),
+    items,
     defaultFrom: days[0]?.iso ?? today,
     savedHeadline: me.storyPrefs?.headline ?? "",
     hasBackground: !!me.storyPrefs?.background,
-    initialRevision: Date.now(),
+    initialRevision: shareContentRevision({
+      kind: me.kind,
+      handle: me.handle,
+      storyPrefs: me.storyPrefs,
+      items: sourceItems,
+    }),
     initialDesign: me.storyPrefs?.design ? sanitizeShareDesign(me.storyPrefs.design) : null,
     savedLooks: sanitizeSavedStoryLooks(me.storyPrefs?.savedLooks),
   };

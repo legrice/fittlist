@@ -1,0 +1,874 @@
+"use client";
+
+import { memo, useEffect, useRef, type CSSProperties } from "react";
+import {
+  STORY_STYLES,
+  STORY_THEMES,
+  type StoryStyle,
+  type StoryStyleId,
+  type StoryTheme,
+  type StoryThemeId,
+} from "@/lib/format";
+import type { ShareStoryLayout } from "@/lib/share-story-layout";
+import { TYPEFACES, type TypeFace, type TypeFaceId } from "@/lib/typefaces";
+import type { DecoId } from "@/lib/decorations";
+
+const WIDTH = 1080;
+const HEIGHT = 1920;
+
+export type ShareLivePreviewProps = {
+  layout: ShareStoryLayout;
+  themeId: StoryThemeId;
+  styleId: StoryStyleId;
+  typeId: TypeFaceId;
+  decoId: DecoId;
+  backgroundPhotoUrl?: string | null;
+  backgroundX?: number;
+  backgroundY?: number;
+  backgroundOverlay?: number;
+  handle: string;
+  /** A stable identity for the exact configuration currently on screen. */
+  configKey: string;
+  emptyLine?: string;
+  onRendered?: (configKey: string) => void;
+};
+
+type PreviewDay = {
+  day: string;
+  rows: Array<{ time: string; name: string; sub: string }>;
+};
+
+function clamped(value: number | undefined, min: number, max: number, fallback: number) {
+  return Number.isFinite(value) ? Math.max(min, Math.min(max, value!)) : fallback;
+}
+
+function previewDays(layout: ShareStoryLayout): PreviewDay[] {
+  if (layout.plan.tier !== 3) return layout.plan.days;
+  return layout.plan.summary.map(({ day, entries }) => ({
+    day,
+    rows: entries.map((entry) => ({ time: entry.times, name: entry.name, sub: "" })),
+  }));
+}
+
+function BrandMark({ color }: { color: string }) {
+  const bar: CSSProperties = { display: "block", height: 9, borderRadius: 2, background: color };
+  return (
+    <span
+      aria-hidden="true"
+      style={{ width: 54, display: "flex", flexDirection: "column", gap: 6, transform: "skewY(-1deg)" }}
+    >
+      <span style={{ ...bar, width: 54 }} />
+      <span style={{ ...bar, width: 38 }} />
+      <span style={{ ...bar, width: 25 }} />
+    </span>
+  );
+}
+
+function FeatureCard({
+  layout,
+  theme,
+  onPhoto,
+}: {
+  layout: ShareStoryLayout;
+  theme: StoryTheme;
+  onPhoto: boolean;
+}) {
+  const feature = layout.feature;
+  if (!feature) return null;
+  return (
+    <div
+      style={{
+        flex: "0 0 auto",
+        marginBottom: 30,
+        padding: "24px 28px",
+        border: `4px solid ${theme.accent}`,
+        borderRadius: 20,
+        background: onPhoto ? theme.bg : `${theme.accent}14`,
+        color: theme.fg,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 16,
+          color: theme.accent,
+          fontSize: 25,
+          fontWeight: 700,
+          letterSpacing: 1.2,
+          textTransform: "uppercase",
+        }}
+      >
+        <span>Featured</span>
+        <span style={{ color: theme.time }}>{feature.day} · {feature.time}</span>
+      </div>
+      <div
+        style={{
+          overflow: "hidden",
+          fontSize: 55,
+          fontWeight: 800,
+          lineHeight: 1.02,
+          letterSpacing: -1,
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {feature.name}
+      </div>
+      {feature.sub && (
+        <div
+          style={{
+            overflow: "hidden",
+            marginTop: 10,
+            color: theme.faint,
+            fontSize: 29,
+            fontWeight: 600,
+            lineHeight: 1.1,
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {feature.sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhotoSchedule({ days, theme, compact }: { days: PreviewDay[]; theme: StoryTheme; compact: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: compact ? 22 : 30 }}>
+      {days.map(({ day, rows }) => {
+        const [weekday, ...dateParts] = day.replace(",", "").split(/\s+/);
+        return (
+          <div
+            key={day}
+            style={{
+              display: "grid",
+              gridTemplateColumns: `${compact ? 104 : 116}px minmax(0, 1fr)`,
+              gap: compact ? 20 : 28,
+              padding: compact ? "16px 22px" : "20px 26px",
+              border: `2px solid ${theme.accent}`,
+              borderRadius: 18,
+              background: theme.bg,
+              color: theme.fg,
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", fontWeight: 700 }}>
+              <span style={{ fontSize: compact ? 23 : 26, lineHeight: 1, letterSpacing: 1, textTransform: "uppercase" }}>
+                {weekday}
+              </span>
+              {dateParts.length > 0 && (
+                <span style={{ marginTop: 5, fontSize: compact ? 29 : 33, lineHeight: 1 }}>
+                  {dateParts.join(" ")}
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", minWidth: 0, flexDirection: "column", gap: compact ? 16 : 22 }}>
+              {rows.map((row, index) => (
+                <div
+                  key={`${row.time}-${row.name}-${index}`}
+                  style={{ display: "grid", minWidth: 0, gridTemplateColumns: "138px minmax(0, 1fr)", gap: 16 }}
+                >
+                  <span style={{ fontSize: compact ? 29 : 34, fontWeight: 700 }}>{row.time}</span>
+                  <span style={{ minWidth: 0 }}>
+                    <span
+                      style={{
+                        display: "block",
+                        overflow: "hidden",
+                        fontSize: compact ? 29 : 34,
+                        fontWeight: 600,
+                        lineHeight: 1.08,
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.name}
+                    </span>
+                    {row.sub && (
+                      <span
+                        style={{
+                          display: "block",
+                          overflow: "hidden",
+                          marginTop: 3,
+                          color: theme.muted,
+                          fontSize: compact ? 23 : 27,
+                          fontWeight: 600,
+                          lineHeight: 1.1,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {row.sub}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function rowSkin(style: StoryStyle, theme: StoryTheme, index: number): CSSProperties {
+  switch (style.layout) {
+    case "split":
+      return { padding: "18px", border: `2px solid ${theme.fg}`, borderRadius: style.radius };
+    case "party":
+      return {
+        padding: "18px 22px",
+        border: `3px solid ${theme.fg}`,
+        borderRadius: style.radius,
+        background: `${index % 2 === 0 ? theme.accent : theme.fg}14`,
+      };
+    case "neon":
+      return {
+        padding: "16px 18px",
+        border: `3px solid ${theme.accent}`,
+        borderRadius: style.radius,
+        background: `${theme.accent}0d`,
+      };
+    case "brutalist":
+      return {
+        padding: "17px 18px",
+        border: `5px solid ${theme.fg}`,
+        borderRadius: 0,
+        boxShadow: `10px 10px 0 ${theme.accent}`,
+      };
+    default:
+      if (style.chip) {
+        return { padding: "14px 22px", borderRadius: style.radius, background: `${theme.faint}22` };
+      }
+      if (style.rule !== "none") {
+        return { paddingBottom: 14, borderBottom: `${style.rule === "bold" ? 4 : 2}px solid ${theme.faint}55` };
+      }
+      return {};
+  }
+}
+
+function DayHeading({
+  day,
+  style,
+  theme,
+  detailed,
+}: {
+  day: string;
+  style: StoryStyle;
+  theme: StoryTheme;
+  detailed: boolean;
+}) {
+  const treatment: CSSProperties =
+    style.layout === "split"
+      ? { padding: "8px 13px", border: `2px solid ${theme.fg}`, borderRadius: 8, color: theme.fg }
+      : style.layout === "party"
+        ? { padding: "8px 17px", border: `3px solid ${theme.accent}`, borderRadius: 999, color: theme.fg }
+        : style.layout === "neon"
+          ? { paddingLeft: 14, borderLeft: `8px solid ${theme.accent}`, color: theme.accent }
+          : style.layout === "brutalist"
+            ? { paddingBottom: 5, borderBottom: `6px solid ${theme.fg}`, color: theme.fg }
+            : {};
+  return (
+    <div
+      style={{
+        alignSelf: style.align === "center" ? "center" : "flex-start",
+        margin: `${detailed ? 34 : 26}px 0 ${detailed ? 17 : 13}px`,
+        color: theme.faint,
+        fontSize: style.layout === "brutalist" ? (detailed ? 38 : 34) : (detailed ? 34 : 30),
+        fontWeight: 600,
+        letterSpacing: `${style.dayTrack}em`,
+        lineHeight: 1,
+        textTransform: "uppercase",
+        ...treatment,
+      }}
+    >
+      {day}
+    </div>
+  );
+}
+
+function StandardSchedule({
+  days,
+  style,
+  theme,
+  decoId,
+  tier,
+}: {
+  days: PreviewDay[];
+  style: StoryStyle;
+  theme: StoryTheme;
+  decoId: DecoId;
+  tier: 1 | 2;
+}) {
+  const divided = decoId === "dividers" || decoId === "framed";
+  const detailed = tier === 1;
+  const nameSize = Math.round((detailed ? 50 : 44) * style.name);
+  const subSize = Math.round((detailed ? 41 : 36) * style.name);
+  const timeSize = detailed ? 43 : 38;
+  const timeWidth = detailed ? 172 : 150;
+  const rowGap = detailed ? 34 : 30;
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {days.map(({ day, rows }, dayIndex) => (
+        <div
+          key={day}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            borderTop: divided && dayIndex > 0 ? `2px solid ${theme.faint}66` : undefined,
+          }}
+        >
+          <DayHeading day={day} style={style} theme={theme} detailed={detailed} />
+          {rows.map((row, index) => (
+            <div
+              key={`${day}-${row.time}-${row.name}-${index}`}
+              style={{
+                display: "flex",
+                minWidth: 0,
+                flexDirection: style.stackTime ? "column" : "row",
+                alignItems: style.align === "center" ? "center" : "flex-start",
+                gap: style.stackTime ? 4 : rowGap,
+                marginBottom: style.layout === "brutalist" ? 28 : (detailed ? 22 : 18),
+                ...rowSkin(style, theme, index),
+              }}
+            >
+              {!style.stackTime && (
+                <span
+                  style={{
+                    width: timeWidth,
+                    flex: `0 0 ${timeWidth}px`,
+                    alignSelf: "stretch",
+                    display: "flex",
+                    alignItems: style.layout === "split" ? "center" : "flex-start",
+                    borderRight: style.layout === "split" ? `2px solid ${theme.fg}` : undefined,
+                    color: style.layout === "neon" ? theme.accent : theme.time,
+                    fontSize: timeSize,
+                    fontWeight: 700,
+                  }}
+                >
+                  {row.time}
+                </span>
+              )}
+              <span
+                style={{
+                  display: "flex",
+                  minWidth: 0,
+                  flex: 1,
+                  flexDirection: "column",
+                  alignItems: style.align === "center" ? "center" : "flex-start",
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    overflow: "hidden",
+                    color: style.layout === "neon" ? theme.accent : undefined,
+                    fontSize: nameSize,
+                    fontWeight: 700,
+                    lineHeight: 1.15,
+                    textAlign: style.align,
+                    textOverflow: "ellipsis",
+                    textTransform: style.upper ? "uppercase" : undefined,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {row.name}
+                </span>
+                {style.stackTime && (
+                  <span style={{ color: theme.time, fontSize: timeSize, fontWeight: 700 }}>{row.time}</span>
+                )}
+                {row.sub && (
+                  <span
+                    style={{
+                      overflow: "hidden",
+                      maxWidth: "100%",
+                      color: style.layout === "neon" ? theme.accent : theme.faint,
+                      fontSize: subSize,
+                      lineHeight: 1.2,
+                      textAlign: style.align,
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {row.sub}
+                  </span>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SummarySchedule({
+  layout,
+  style,
+  theme,
+}: {
+  layout: ShareStoryLayout;
+  style: StoryStyle;
+  theme: StoryTheme;
+}) {
+  const plain = style.layout === "plain";
+  const fontSize = plain ? layout.plan.summaryFs : Math.min(layout.plan.summaryFs, 38);
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {layout.plan.summary.map(({ day, entries }) => (
+        <div
+          key={day}
+          style={{
+            display: "flex",
+            flexDirection: plain ? "row" : "column",
+            marginBottom: style.layout === "brutalist" ? 36 : 26,
+            ...(style.layout === "split"
+              ? { border:`2px solid ${theme.fg}`, borderRadius:12, padding:16 }
+              : style.layout === "party"
+                ? { border:`3px solid ${theme.fg}`, borderRadius:24, padding:16 }
+                : style.layout === "neon"
+                  ? { border:`3px solid ${theme.accent}`, borderRadius:12, padding:16 }
+                  : style.layout === "brutalist"
+                    ? { border:`5px solid ${theme.fg}`, padding:16, boxShadow:`9px 9px 0 ${theme.accent}` }
+                    : {}),
+          }}
+        >
+          <span
+            style={{
+              width: plain ? 118 : "100%",
+              flexShrink: 0,
+              paddingTop: plain ? Math.max(2, Math.round((layout.plan.summaryFs * 1.3 - 36) / 2)) : 0,
+              marginBottom: plain ? 0 : 10,
+              color: style.layout === "neon" ? theme.accent : plain ? theme.faint : theme.fg,
+              fontSize: 30,
+              fontWeight: 600,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+            }}
+          >
+            {day}
+          </span>
+          <span
+            style={{
+              display: "flex",
+              width: plain ? 764 : 840,
+              flexDirection: "column",
+              fontSize,
+              lineHeight: 1.3,
+            }}
+          >
+            {entries.map((entry) => (
+              <span key={entry.name} style={{ display:"flex", width:"100%" }}>
+                <span
+                  style={{
+                    display: plain ? "flex" : "block",
+                    width: plain ? "auto" : 650,
+                    overflow: plain ? undefined : "hidden",
+                    color: style.layout === "neon" ? theme.accent : undefined,
+                    fontWeight: 700,
+                    textOverflow: plain ? undefined : "ellipsis",
+                    textTransform: style.upper ? "uppercase" : undefined,
+                    whiteSpace: plain ? undefined : "nowrap",
+                  }}
+                >
+                  {entry.name}
+                </span>
+                <span
+                  style={{
+                    width: plain ? "auto" : 150,
+                    marginLeft: plain ? Math.round(layout.plan.summaryFs * 0.32) : 20,
+                    color: style.layout === "neon" ? theme.accent : theme.muted,
+                    fontWeight: 600,
+                    textAlign: plain ? "left" : "right",
+                  }}
+                >
+                  {entry.times}
+                </span>
+              </span>
+            ))}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SwissSchedule({ days, theme }: { days: PreviewDay[]; theme: StoryTheme }) {
+  const columns = Math.max(1, Math.min(3, days.length));
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, width: "100%" }}>
+      {days.map(({ day, rows }, dayIndex) => (
+        <div
+          key={day}
+          style={{
+            minWidth: 0,
+            minHeight: 250,
+            marginBottom: 34,
+            padding: `0 ${dayIndex % columns === columns - 1 ? 0 : 18}px 26px ${dayIndex % columns === 0 ? 0 : 18}px`,
+            borderLeft: dayIndex % columns === 0 ? 0 : `3px solid ${theme.accent}`,
+          }}
+        >
+          <div style={{ marginBottom: 24, fontSize: 28, fontWeight: 600, lineHeight: 1 }}>{day}</div>
+          {rows.map((row, index) => (
+            <div
+              key={`${day}-${index}`}
+              style={{
+                minWidth: 0,
+                marginTop: index === 0 ? 0 : 18,
+                paddingTop: index === 0 ? 0 : 18,
+                borderTop: index === 0 ? 0 : `2px solid ${theme.accent}`,
+              }}
+            >
+              <div style={{ overflow: "hidden", fontSize: 48, fontWeight: 700, lineHeight: 0.98, textOverflow: "ellipsis" }}>
+                {row.name}
+              </div>
+              {row.sub && <div style={{ marginTop: 8, fontSize: 27 }}>{row.sub}</div>}
+              <div style={{ marginTop: 6, fontSize: 30, fontWeight: 600 }}>{row.time}</div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CowboySchedule({ days, theme }: { days: PreviewDay[]; theme: StoryTheme }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", width: "100%" }}>
+      {days.map(({ day, rows }, dayIndex) => {
+        const full = dayIndex % 3 === 2;
+        const right = !full && dayIndex % 2 === 1;
+        return (
+          <div
+            key={day}
+            style={{
+              minWidth: 0,
+              gridColumn: full ? "1 / -1" : undefined,
+              marginBottom: 24,
+              padding: `0 ${right ? 0 : 30}px 20px ${right ? 30 : 0}px`,
+              borderBottom: `4px solid ${theme.accent}`,
+              textAlign: right ? "right" : "left",
+            }}
+          >
+            <div
+              style={{
+                marginBottom: 15,
+                fontSize: full ? 68 : 40,
+                fontWeight: 800,
+                letterSpacing: -2,
+                lineHeight: 0.86,
+                textTransform: "uppercase",
+              }}
+            >
+              {day.split(",")[0]}
+            </div>
+            {rows.map((row, index) => (
+              <div key={`${day}-${index}`} style={{ marginTop: index === 0 ? 0 : 12 }}>
+                <div
+                  style={{
+                    overflow: "hidden",
+                    fontSize: 31,
+                    fontWeight: 800,
+                    lineHeight: 0.98,
+                    textOverflow: "ellipsis",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {row.name}
+                </div>
+                <div style={{ marginTop: 5, fontSize: 23, fontWeight: 600 }}>
+                  {[row.time, row.sub].filter(Boolean).join(" · ")}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Decorations({ decoId, theme, style }: { decoId: DecoId; theme: StoryTheme; style: StoryStyle }) {
+  if (decoId === "none" || decoId === "dividers") return null;
+  if (decoId === "top") {
+    return <span aria-hidden="true" style={{ position: "absolute", inset: "0 0 auto", height: style.layout === "plain" ? 18 : 26, background: theme.accent }} />;
+  }
+  if (decoId === "double") {
+    return (
+      <>
+        <span aria-hidden="true" style={{ position: "absolute", inset: 36, border: `3px solid ${theme.fg}`, borderRadius: 10 }} />
+        <span aria-hidden="true" style={{ position: "absolute", inset: 52, border: `2px solid ${theme.faint}`, borderRadius: 6 }} />
+      </>
+    );
+  }
+  return <span aria-hidden="true" style={{ position: "absolute", inset: 40, border: `3px solid ${theme.fg}`, borderRadius: 8 }} />;
+}
+
+function ShareLivePreviewComponent({
+  layout,
+  themeId,
+  styleId,
+  typeId,
+  decoId,
+  backgroundPhotoUrl = null,
+  backgroundX = 50,
+  backgroundY = 50,
+  backgroundOverlay = 24,
+  handle,
+  configKey,
+  emptyLine = "Nothing on the calendar for these days yet.",
+  onRendered,
+}: ShareLivePreviewProps) {
+  const theme = STORY_THEMES[themeId];
+  const style = STORY_STYLES[styleId];
+  const typeface: TypeFace = TYPEFACES.find((face) => face.id === typeId) ?? TYPEFACES[0];
+  const days = previewDays(layout);
+  const onPhoto = !!backgroundPhotoUrl;
+  const url = `fittlist.co/${handle.replace(/^@/, "")}`;
+  const editorialInk = style.layout === "swiss" || style.layout === "cowboy";
+  const previewRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    if (!onRendered) return;
+    let cancelled = false;
+    let firstFrame = 0;
+    let secondFrame = 0;
+    const photo = previewRef.current?.querySelector("img");
+    const photoReady = photo && typeof photo.decode === "function"
+      ? photo.decode().catch(() => undefined)
+      : Promise.resolve();
+    const typeReady = typeface.file && typeof document.fonts?.load === "function"
+      ? document.fonts.load(`400 16px "${typeface.family.replaceAll('"', "")}"`)
+      : Promise.resolve();
+    void Promise.allSettled([
+      photoReady,
+      document.fonts?.load("800 16px Delight") ?? Promise.resolve(),
+      typeReady,
+    ]).then(() => {
+      if (cancelled) return;
+      firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() => onRendered(configKey));
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(firstFrame);
+      if (secondFrame) cancelAnimationFrame(secondFrame);
+    };
+  }, [backgroundPhotoUrl, configKey, onRendered, typeface.family, typeface.file]);
+
+  const headlineStyle: CSSProperties = onPhoto
+    ? {
+        alignSelf: "flex-start",
+        width: 840,
+        padding: "38px 48px",
+        borderRadius: 28,
+        background: "#020D08",
+        color: "#fff",
+      }
+    : {
+        maxWidth: 908,
+        color: style.layout === "neon" || editorialInk ? theme.accent : theme.fg,
+        ...(style.layout === "split"
+          ? { paddingBottom: 18, borderBottom: `5px solid ${theme.fg}` }
+          : style.layout === "brutalist"
+            ? { paddingBottom: 12, borderBottom: `9px solid ${theme.fg}` }
+            : editorialInk
+              ? { paddingBottom: 18, borderBottom: `${style.layout === "cowboy" ? 8 : 3}px solid ${theme.accent}` }
+              : {}),
+      };
+
+  return (
+    <svg
+      ref={previewRef}
+      className="shprev shprev-week shlive-preview"
+      data-preview-kind="dom"
+      data-config-key={configKey}
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="Your week as a share image"
+    >
+      <title>Your week as a share image</title>
+      <foreignObject x="0" y="0" width={WIDTH} height={HEIGHT}>
+        <div
+          style={{
+            position: "relative",
+            width: WIDTH,
+            height: HEIGHT,
+            overflow: "hidden",
+            boxSizing: "border-box",
+            background: theme.bg,
+            color: editorialInk ? theme.accent : theme.fg,
+            fontFamily: "Delight, Helvetica Neue, Arial, sans-serif",
+            WebkitFontSmoothing: "antialiased",
+          }}
+        >
+          {backgroundPhotoUrl && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={backgroundPhotoUrl}
+                alt=""
+                decoding="async"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: `${clamped(backgroundX, 0, 100, 50)}% ${clamped(backgroundY, 0, 100, 50)}%`,
+                }}
+              />
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: `rgba(0,0,0,${clamped(backgroundOverlay, 0, 60, 24) / 100})`,
+                }}
+              />
+            </>
+          )}
+          {!onPhoto && <Decorations decoId={decoId} theme={theme} style={style} />}
+
+          <div
+            style={{
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              height: "100%",
+              boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
+              padding: onPhoto ? "72px 64px 58px" : "104px 86px",
+              color: onPhoto ? "#fff" : undefined,
+            }}
+          >
+            {(layout.line1 || layout.line2) && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "0 0 auto",
+                  marginBottom: onPhoto ? 34 : editorialInk ? 54 : 78,
+                  fontFamily: `${typeface.family}, Delight, Helvetica Neue, Arial, sans-serif`,
+                  fontSize: layout.headlineSize,
+                  fontStyle: typeface.italic ? "italic" : "normal",
+                  fontWeight: 800,
+                  letterSpacing: `${typeface.track ?? (typeface.id === "standard" ? -0.02 : 0)}em`,
+                  lineHeight: style.layout === "cowboy" ? 0.84 : 0.98,
+                  textTransform: style.upper ? "uppercase" : undefined,
+                  ...headlineStyle,
+                }}
+              >
+                <span>{layout.line1}</span>
+                {layout.line2 && (
+                  <span style={{ color: !onPhoto && (style.layout === "party" || style.layout === "brutalist") ? theme.accent : undefined }}>
+                    {layout.line2}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <FeatureCard layout={layout} theme={theme} onPhoto={onPhoto} />
+
+            {layout.plan.lifted && (
+              <div style={{ marginBottom: 30, color: onPhoto ? "#fff" : theme.faint, fontSize: 36 }}>
+                {layout.plan.lifted}
+              </div>
+            )}
+
+            {layout.empty ? (
+              <div
+                style={{
+                  padding: onPhoto ? "28px 32px" : 0,
+                  borderRadius: onPhoto ? 18 : 0,
+                  background: onPhoto ? theme.bg : undefined,
+                  color: onPhoto ? theme.fg : theme.faint,
+                  fontSize: 40,
+                  fontWeight: 600,
+                }}
+              >
+                {emptyLine}
+              </div>
+            ) : onPhoto ? (
+              <PhotoSchedule days={days} theme={theme} compact={layout.plan.tier !== 1} />
+            ) : style.layout === "swiss" ? (
+              <SwissSchedule days={days} theme={theme} />
+            ) : style.layout === "cowboy" ? (
+              <CowboySchedule days={days} theme={theme} />
+            ) : layout.plan.tier === 3 ? (
+              <SummarySchedule layout={layout} style={style} theme={theme} />
+            ) : (
+              <StandardSchedule
+                days={days}
+                style={style}
+                theme={theme}
+                decoId={decoId}
+                tier={layout.plan.tier}
+              />
+            )}
+
+            {layout.plan.moreDays > 0 && (
+              <div style={{ marginTop: 12, color: onPhoto ? "#fff" : theme.faint, fontSize: 30, fontWeight: 600 }}>
+                + {layout.plan.moreDays} more {layout.plan.moreDays === 1 ? "day" : "days"} at {url}
+              </div>
+            )}
+
+            <div
+              style={{
+                marginTop: "auto",
+                display: "flex",
+                flex: "0 0 auto",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: onPhoto ? "20px 24px" : "18px 0 0",
+                borderTop: !onPhoto && ["neon", "swiss"].includes(style.layout)
+                  ? `3px solid ${theme.accent}`
+                  : !onPhoto && style.layout === "brutalist"
+                    ? `7px solid ${theme.fg}`
+                    : !onPhoto && style.layout === "cowboy"
+                      ? `5px solid ${theme.accent}`
+                      : undefined,
+                borderRadius: onPhoto ? 18 : 0,
+                background: onPhoto ? "#020D08" : undefined,
+              }}
+            >
+              <span style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {!onPhoto && <span style={{ color: theme.faint, fontSize: 30, fontWeight: 600, letterSpacing: 1 }}>See my schedule at</span>}
+                <span style={{ fontSize: onPhoto ? 30 : 40, fontWeight: 600 }}>{url}</span>
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <BrandMark color={onPhoto ? "#9FE870" : theme.lockupAccent ?? theme.accent} />
+                <span
+                  style={{
+                    color: onPhoto ? "#fff" : editorialInk ? theme.accent : theme.fg,
+                    fontFamily: "Delight, Helvetica Neue, Arial, sans-serif",
+                    fontSize: onPhoto ? 42 : 50,
+                    fontWeight: 800,
+                    letterSpacing: -2,
+                  }}
+                >
+                  FittList
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+    </svg>
+  );
+}
+
+/**
+ * A live, client-only rendering of the current share configuration. It uses
+ * the same deterministic layout model as the final ImageResponse but performs
+ * no image-generation request, so visual edits commit at browser-paint speed.
+ */
+export const ShareLivePreview = memo(ShareLivePreviewComponent);
+ShareLivePreview.displayName = "ShareLivePreview";

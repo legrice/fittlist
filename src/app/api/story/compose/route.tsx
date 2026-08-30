@@ -3,33 +3,23 @@ import { unstable_cache } from "next/cache";
 import { getDb, schema } from "@/db";
 import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
-import { headlineOf, renderStory } from "@/lib/storyimage";
+import { renderStory } from "@/lib/storyimage";
+import { buildShareStoryLayout } from "@/lib/share-story-layout";
 import { typeFaceOf } from "@/lib/typefaces";
 import { decoOf } from "@/lib/decorations";
-import {
-  listBudget,
-  planStory,
-  storyFeatureBudget,
-  type StoryFormat,
-} from "@/lib/storyplan";
+import type { StoryFormat } from "@/lib/storyplan";
 import { shareRange, shareWeek } from "@/lib/shareweek";
 
 // The composer's picture. One route for both hats and both canvases, because
 // the composer is one screen: a second route per combination is four routes
 // that have to agree about a headline.
 //
-// Everything is a query parameter and nothing is stored, so the preview redraws
-// the moment a control moves and the thing that gets shared is the thing that
-// was on screen. The one exception is the headline, which is also saved to the
-// profile, because somebody's own words should survive closing the composer.
+// Everything is a query parameter and nothing is stored. The live editor uses
+// the same query values with its shared layout model, while this expensive
+// 1080×1920 rasterization runs only for the frozen configuration passed by the
+// final Share action.
 
 export const dynamic = "force-dynamic";
-
-/** Never a blank field. One week per kind: a coach's picture invites people
- *  to train with them, a member's invites people along. "Train with me.",
- *  by Matt's call: the longer "Come train with me." read as two asks. */
-const FALLBACK: [string, string] = ["Train", "with me."];
-const FALLBACK_FAN: [string, string] = ["Come", "with me."];
 
 const boundedNumber = (
   value: string | null,
@@ -42,9 +32,9 @@ const boundedNumber = (
   return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 };
 
-// A visual edit changes the PNG but not the underlying week. Keep those DB
-// reads warm for this editor revision; a class/background mutation bumps the
-// revision in the URL and gets a fresh snapshot.
+// A visual edit changes the final PNG but not the underlying week. Keep those
+// DB reads warm for this content revision; a class/background mutation changes
+// the revision and gets a fresh snapshot.
 const composeUser = unstable_cache(
   async (userId: string, revision: string, includeBackground: boolean, includePhoto: boolean) => {
     void revision;
@@ -111,10 +101,9 @@ export async function GET(req: Request) {
   // the picture can be the week alone. Distinct from an empty field, which
   // falls back, because a blank poster by accident is worse than either.
   const noHead = qs.get("nohead") === "1";
-  // The headline rides the URL so the preview redraws without a round trip;
-  // the saved one is the fallback for anything that isn't the composer.
+  // The headline rides the export URL so the frozen final image matches the
+  // live DOM preview; the saved one is the fallback outside the editor.
   const typed = qs.get("headline") ?? me.headline ?? "";
-  const { line1, line2, size } = headlineOf(typed, fan ? FALLBACK_FAN : FALLBACK);
 
   // An explicit param wins over the saved preference: the hub always asks
   // for the photo (photo=1, by Matt's call), and a coach who turned it off
@@ -127,101 +116,35 @@ export async function GET(req: Request) {
   const backgroundX = boundedNumber(qs.get("bx"), 50, 0, 100);
   const backgroundY = boundedNumber(qs.get("by"), 50, 0, 100);
   const backgroundOverlay = boundedNumber(qs.get("bo"), 24, 0, 60);
-
-  // The slider's loudness knob, over a 1.4 baseline, by Matt's call: the
-  // default poster wears what used to be 140%, and the slider moves
-  // relative to that. The old photo-off auto-bump left with it (one knob,
-  // not two fighting). The budget below reads the final size, or the
-  // extra height would come out of the rows without the sums knowing.
-  const hs =
-    Math.max(
-      60,
-      Math.min(180, parseInt(qs.get("hs") ?? String(y.headlineSize), 10) || y.headlineSize),
-    ) / 100;
-  const hSize = Math.round(size * hs * 1.4);
-  // What the top of the canvas costs. Without a headline the rows take the
-  // room, except the face still needs clearing when it is on: the paint
-  // draws the matching spacer, and 246 stays ahead of the photo's height on
-  // either canvas so the sums never trail the paint.
-  const headH = noHead
-    ? showPhoto
-      ? 246
-      : 0
-    : hSize * 0.98 * (line2 ? 2 : 1) + 78;
-
-  // "Coaching" on the image, per the brief: tag only the classes you are
-  // coaching and leave the rest bare. Only when the picture actually mixes
-  // the two hats, though: a poster that is all teaching rows (the classic
-  // coach picture) saying Coaching on every line is the tag saying nothing.
-  const flat = byDay.flatMap((d) => d.items);
-  const mixed = flat.some((c) => c.coaching) && flat.some((c) => !c.coaching);
-  // Feature selection happens after hiding, by design: a class cannot be both
-  // omitted and promoted. Remove the promoted occurrence from the ordinary
-  // planner so the same class never appears twice on one image.
   const featureKey = (qs.get("feature") ?? "").trim();
-  const featured = featureKey
-    ? byDay
-        .flatMap(({ day, items }) => items.map((item) => ({ day, item })))
-        .find(({ item }) => item.key === featureKey)
-    : undefined;
-  const feature = featured
-    ? {
-        day: featured.day,
-        time: featured.item.time,
-        name: featured.item.name,
-        sub: [
-          mixed && featured.item.coaching ? "Coaching" : featured.item.who,
-          showStudio ? featured.item.where : "",
-        ]
-          .filter(Boolean)
-          .join(" · "),
-      }
-    : null;
-  const regularDays = byDay
-    .map((day) => ({
-      ...day,
-      items: featured ? day.items.filter((item) => item.key !== featured.item.key) : day.items,
-    }))
-    .filter((day) => day.items.length > 0);
-  const scheduleBudget = Math.max(
-    0,
-    listBudget(headH, format) - (feature ? storyFeatureBudget(format) : 0),
-  );
-  const plan = planStory(
-    regularDays.map(({ day, items }) => ({
-      day,
-      items: items.map((c) => ({
-        time: c.time,
-        name: c.name,
-        // Off keeps a busy week short, which is the whole reason the switch
-        // exists; the tiers would have dropped them eventually anyway.
-        where: showStudio ? c.where : "",
-        who: mixed && c.coaching ? "Coaching" : c.who,
-      })),
-    })),
-    scheduleBudget / y.rowScale,
-    764,
-    // A lifted "All at" belongs to the regular list only and reads as a claim
-    // about the hero too. Keep places attached when there is a feature so the
-    // two parts of the image cannot contradict each other.
-    { keepPlacesWithClasses: !!feature || flat.some((c) => c.coaching) },
-  );
+  const layout = buildShareStoryLayout({
+    days:byDay,
+    fan,
+    headline:typed,
+    noHead,
+    headlinePercent:boundedNumber(qs.get("hs"), y.headlineSize, 60, 180),
+    showPhoto,
+    showStudio,
+    featuredKey:featureKey || null,
+    style:y,
+    format,
+  });
 
   return renderStory({
     theme: t,
     style: y,
     format,
-    line1: noHead ? "" : line1,
-    line2: noHead ? "" : line2,
-    headlineSize: hSize,
+    line1: layout.line1,
+    line2: layout.line2,
+    headlineSize: layout.headlineSize,
     photo: showPhoto ? me.photo : null,
     backgroundPhoto,
     backgroundX,
     backgroundY,
     backgroundOverlay,
-    feature,
-    plan,
-    empty: byDay.length === 0,
+    feature:layout.feature,
+    plan:layout.plan,
+    empty:layout.empty,
     emptyLine: fan
       ? "Nothing on the week yet."
       : "Nothing on the calendar for these days yet.",

@@ -15,7 +15,6 @@ import { readPhotoPair } from "@/lib/photo";
 import { LocationInput } from "@/components/LocationInput";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
-import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // What a coach does with their own page, in the same two slots a visitor gets.
@@ -89,7 +88,6 @@ export function ProfileOwnerBar({
   const [pColor, setPColor] = useState<string | null>(avatarColorProp ?? null);
   const [colorOpen, setColorOpen] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const shownColor = avatarColor({ id: userId, avatarColor: pColor });
@@ -227,9 +225,11 @@ export function ProfileOwnerBar({
             <div className="settingslist ownermenu">
               <button
                 className="setrow"
-                onClick={() => {
+                onClick={(event) => {
                   setShareMenu(false);
-                  setShareOpen(true);
+                  window.dispatchEvent(new CustomEvent("fittlist:open-share", {
+                    detail: { opener:event.currentTarget },
+                  }));
                 }}
               >
                 <span className="setrow-ic"><Icon name="campaign" size={24} /></span>
@@ -294,12 +294,6 @@ export function ProfileOwnerBar({
         </div>
       )}
 
-      <ShareWeekSheet
-        handle={handle}
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        onToast={toast}
-      />
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
       {cardOpen && (
         <ShareCardSheet
