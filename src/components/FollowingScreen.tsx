@@ -275,6 +275,8 @@ export function FollowingScreen({
   const [calendarDirectoryOpen, setCalendarDirectoryOpen] = useState(false);
   const [calendarDirectoryTab, setCalendarDirectoryTab] = useState<"people" | "studios" | "groups">("people");
   const [calendarDirectoryQuery, setCalendarDirectoryQuery] = useState("");
+  const [calendarDirectoryFollowing, setCalendarDirectoryFollowing] = useState<Record<string, boolean>>({});
+  const [calendarDirectoryBusy, setCalendarDirectoryBusy] = useState<string | null>(null);
   useEffect(() => {
     if (!calendarDirectoryOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -366,13 +368,38 @@ export function FollowingScreen({
   const groupOptions = useMemo(() => socialGroups, [socialGroups]);
   const calendarDirectoryItems = useMemo(() => {
     const items = calendarDirectoryTab === "people"
-      ? coachOptions.map((coach) => ({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, href:coach.handle ? `/${coach.handle}` : "" }))
+      ? coachOptions.map((coach) => ({ id:coach.id, name:coach.name, photo:coach.photo, color:coach.color, href:coach.handle ? `/${coach.handle}` : "", handle:coach.handle, slug:"", kind:"people" as const }))
       : calendarDirectoryTab === "studios"
-        ? studioOptions.map((studio) => ({ id:studio.id, name:studio.name, photo:studio.photo, color:studio.color, href:`/s/${studio.slug}` }))
-        : groupOptions.map((group) => ({ id:group.id, name:group.name, photo:group.photo, color:"var(--color-surface-muted)", href:`/g/${group.slug}` }));
+        ? studioOptions.map((studio) => ({ id:studio.id, name:studio.name, photo:studio.photo, color:studio.color, href:`/s/${studio.slug}`, handle:"", slug:studio.slug, kind:"studios" as const }))
+        : groupOptions.map((group) => ({ id:group.id, name:group.name, photo:group.photo, color:"var(--color-surface-muted)", href:`/g/${group.slug}`, handle:"", slug:group.slug, kind:"groups" as const }));
     const query = calendarDirectoryQuery.trim().toLocaleLowerCase();
     return query ? items.filter((item) => item.name.toLocaleLowerCase().includes(query)) : items;
   }, [calendarDirectoryQuery, calendarDirectoryTab, coachOptions, studioOptions, groupOptions]);
+  const toggleDirectoryFollow = async (item: { id:string; handle:string|null; slug:string; kind:"people"|"studios"|"groups" }) => {
+    const key = `${item.kind}:${item.id}`;
+    if (calendarDirectoryBusy) return;
+    const following = calendarDirectoryFollowing[key] ?? true;
+    setCalendarDirectoryBusy(key);
+    let ok = false;
+    if (item.kind === "people" && item.handle) {
+      const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
+      const result = following ? await unfollowTrainer(item.handle) : await followTrainer(item.handle);
+      ok = result.ok;
+    } else if (item.kind === "studios") {
+      const { toggleStudioVisit } = await import("@/app/actions/endorsements");
+      const result = await toggleStudioVisit(item.slug);
+      ok = result.ok;
+    } else if (item.kind === "groups") {
+      const { toggleGroupFavorite } = await import("@/app/actions/groups");
+      const result = await toggleGroupFavorite(item.slug);
+      ok = result.ok;
+    }
+    if (ok) {
+      setCalendarDirectoryFollowing((current) => ({ ...current, [key]:!following }));
+      window.dispatchEvent(new Event("calendar-pins-changed"));
+    }
+    setCalendarDirectoryBusy(null);
+  };
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
   const togglePerson = (id: string) => {
     const next = selectedPeople.has(id) ? new Set<string>() : new Set([id]);
@@ -951,7 +978,7 @@ export function FollowingScreen({
           header search and the Discover classes link. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
       {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
-      {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarDirectoryOpen(false); }}><section className="calendar-directory-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={() => setCalendarDirectoryOpen(false)}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list">{calendarDirectoryItems.map((item) => item.href ? <Link href={item.href} className="calendar-directory-row" key={item.id} onClick={() => setCalendarDirectoryOpen(false)}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong><Icon name="chevron_right" size={20} /></Link> : null)}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
+      {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarDirectoryOpen(false); }}><section className="calendar-directory-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={() => setCalendarDirectoryOpen(false)}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list">{calendarDirectoryItems.map((item) => { const key=`${item.kind}:${item.id}`; const following=calendarDirectoryFollowing[key] ?? true; return <div className="calendar-directory-row" key={key}><Link href={item.href} onClick={() => setCalendarDirectoryOpen(false)}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong></Link><button type="button" className={following ? "on" : ""} disabled={calendarDirectoryBusy === key} onClick={() => void toggleDirectoryFollow(item)}>{following ? "Following" : "Follow"}</button></div>})}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
 
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
