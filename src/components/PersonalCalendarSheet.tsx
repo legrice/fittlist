@@ -5,10 +5,15 @@ import { BodyPortal } from "@/components/BodyPortal";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { loadPersonalCalendarData, type PersonalCalendarData } from "@/app/actions/calendar-data";
 
+// Shared by every Calendar entry point for the lifetime of this app session.
+// Reopening paints the last complete answer immediately, then refreshes it
+// quietly so navigation never falls back to a loading frame.
+let personalCalendarMemory: PersonalCalendarData | null = null;
+
 export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, openAdder = false }: { children:ReactNode; className?:string; ariaLabel?:string; openAdder?:boolean }) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [data, setData] = useState<PersonalCalendarData | null>(null);
+  const [data, setData] = useState<PersonalCalendarData | null>(() => personalCalendarMemory);
   const [pending, startTransition] = useTransition();
   const historyMarker = useRef(`personal-calendar-${Math.random().toString(36).slice(2)}`);
   const originScrollY = useRef(0);
@@ -45,15 +50,33 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
   useEffect(() => () => {
     if (exitTimer.current) clearTimeout(exitTimer.current);
   }, []);
-  const show = () => startTransition(async () => {
-    const next = data ?? await loadPersonalCalendarData();
-    if (!next) return;
+  const openCalendar = (next: PersonalCalendarData) => {
     originScrollY.current = window.scrollY;
     window.history.pushState({ ...(window.history.state ?? {}), personalCalendarTakeover:historyMarker.current }, "", window.location.href);
     setData(next);
     setVisible(false);
     setOpen(true);
+  };
+  const refreshCalendar = () => startTransition(async () => {
+    const fresh = await loadPersonalCalendarData();
+    if (!fresh) return;
+    personalCalendarMemory = fresh;
+    setData(fresh);
   });
+  const show = () => {
+    const remembered = data ?? personalCalendarMemory;
+    if (remembered) {
+      openCalendar(remembered);
+      refreshCalendar();
+      return;
+    }
+    startTransition(async () => {
+      const fresh = await loadPersonalCalendarData();
+      if (!fresh) return;
+      personalCalendarMemory = fresh;
+      openCalendar(fresh);
+    });
+  };
   return <>
     <button type="button" className={className} aria-label={ariaLabel} aria-busy={pending} disabled={pending} onClick={show}>{children}</button>
     {open && data && <BodyPortal><div className="personal-calendar-scrim"><section className={`personal-calendar-sheet${visible ? " is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Your calendar"><CalendarScreen {...data} sheet openAdder={openAdder} onClose={goBack} /></section></div></BodyPortal>}

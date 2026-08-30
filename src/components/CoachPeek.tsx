@@ -11,6 +11,8 @@ import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
 import { Toast, useToast } from "@/components/Toast";
 
+const personCalendarMemory = new Map<string, Peek>();
+
 /**
  * One person's week, opened from their circle.
  *
@@ -53,10 +55,11 @@ export function CoachPeek({
   onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
 }) {
-  const [peek, setPeek] = useState<Peek | null>(null);
+  const rememberedPeek = personCalendarMemory.get(id) ?? null;
+  const [peek, setPeek] = useState<Peek | null>(rememberedPeek);
   const [missing, setMissing] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
-  const [relationship, setRelationship] = useState<"off" | "following" | "requested" | null>(null);
+  const [relationship, setRelationship] = useState<"off" | "following" | "requested" | null>(rememberedPeek ? (rememberedPeek.following ? "following" : "off") : null);
   const [pinned, setPinned] = useState(initialPinned);
   const [visible, setVisible] = useState(false);
   const historyMarker = useRef(`person-profile-${Math.random().toString(36).slice(2)}`);
@@ -104,9 +107,10 @@ export function CoachPeek({
   useEffect(() => {
     personPeek(id).then((res) => {
       if (!res) {
-        setMissing(true);
+        if (!rememberedPeek) setMissing(true);
         return;
       }
+      personCalendarMemory.set(id, res);
       setPeek(res);
       setRelationship(res.following ? "following" : "off");
     });
