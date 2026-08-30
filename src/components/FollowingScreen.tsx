@@ -269,7 +269,7 @@ export function FollowingScreen({
   const followingRailRef = useRef<HTMLDivElement>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
   const [calendarSelectorOpen, setCalendarSelectorOpen] = useState(false);
   useEffect(() => {
     if (!calendarSelectorOpen) return;
@@ -401,6 +401,12 @@ export function FollowingScreen({
       label: "Your calendar",
       action: "Manage calendar",
     };
+    if (calendarFilter === "following") return {
+      name: "Following",
+      href: "/following",
+      label: "Following calendars",
+      action: "Manage",
+    };
     if (calendarFilter.startsWith("coach:")) {
       const coach = coachOptions.find((option) => option.id === calendarFilter.slice(6));
       return coach ? { name: coach.name, href: coach.handle ? `/${coach.handle}` : "", label: `${coach.name.split(/\s+/)[0]}’s calendar`, action: "View profile" } : null;
@@ -420,6 +426,12 @@ export function FollowingScreen({
       if (!passes(item)) return false;
       if (!isHome) return true;
       if (calendarFilter === "you") return item.saved || item.shift || (!!meId && item.coachId === meId);
+      if (calendarFilter === "following") {
+        const fromPeople = favoriteIds.has(item.coachId);
+        const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
+        const fromGroups = groupKeys.has(item.key);
+        return fromPeople || fromStudios || fromGroups;
+      }
       if (calendarFilter.startsWith("coach:")) return item.coachId === calendarFilter.slice(6);
       if (calendarFilter.startsWith("studio:")) {
         const studio = studioOptions.find((option) => option.id === calendarFilter.slice(7));
@@ -705,9 +717,10 @@ export function FollowingScreen({
       )}
       {isHome && !firstRun && (
         <header className="following-head">
-          <button type="button" className="calendar-selector-trigger" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}>
-            <span><Icon name="calendar_month" size={19} />{selectedCalendar?.label ?? `${calendarCount} calendars`}</span><Icon name="expand_more" size={20} />
-          </button>
+          <div className="calendar-scope-row" aria-label="Calendar scope">
+            {(["all", "you", "following"] as const).map((scope) => <button key={scope} type="button" className={calendarFilter === scope ? "on" : ""} aria-pressed={calendarFilter === scope} onClick={() => setCalendarFilter(scope)}>{scope === "all" ? "All" : scope === "you" ? "You" : "Following"}</button>)}
+            <button type="button" className={`calendar-selector-trigger${!(["all", "you", "following"] as string[]).includes(calendarFilter) ? " on" : ""}`} aria-label="Choose a specific calendar" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}><Icon name="expand_more" size={22} /></button>
+          </div>
           {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose a calendar</h2><button type="button" aria-label="Close calendar selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll" ref={followingRailRef}>
               <button className={`trayitem${calendarFilter === "all" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => { setCalendarFilter("all"); setCalendarSelectorOpen(false); }}>
@@ -771,7 +784,7 @@ export function FollowingScreen({
           </div></section></div></BodyPortal>}
         </header>
       )}
-      {isHome && selectedCalendar && calendarFilter !== "all" && (
+      {isHome && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{selectedCalendar.label}</span>
           {calendarFilter === "you" ? <PersonalCalendarSheetTrigger className="feedfilter-link" ariaLabel="Manage calendar">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></PersonalCalendarSheetTrigger> : selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></Link>}
