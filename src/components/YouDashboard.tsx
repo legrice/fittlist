@@ -95,6 +95,7 @@ export function YouDashboard({
   const router = useRouter();
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
+  const profileGroups = [...yourGroups, ...favoriteGroups.filter((group) => !yourGroups.some((mine) => mine.id === group.id))];
   const fileRef = useRef<HTMLInputElement>(null);
   const [photoMenu, setPhotoMenu] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(me.photo);
@@ -182,16 +183,7 @@ export function YouDashboard({
         <SettingsGear pill />
       </div>
 
-      <section className="profile-following">
-        <h2>Following</h2>
-        <div className="profile-following-rail">
-          <FollowingCountCircle href="/following/people" count={people.length} singular="person" plural="people" photos={people.flatMap((person) => person.photo ? [person.photo] : []).slice(0, 3)} icon="person" />
-          <FollowingCountCircle href="/following/studios" count={places.length} singular="studio" plural="studios" photos={places.flatMap((place) => place.photo ? [place.photo] : []).slice(0, 3)} icon="storefront" />
-          <FollowingCountCircle href="/following/groups" count={favoriteGroups.length} singular="group" plural="groups" photos={favoriteGroups.flatMap((group) => group.photo ? [group.photo] : []).slice(0, 3)} icon="groups" />
-        </div>
-      </section>
-
-      <AccountGroup title="Your calendar">
+      <AccountGroup title="Your calendars">
         <AccountRow
           icon="calendar_month"
           title="Personal calendar"
@@ -200,15 +192,33 @@ export function YouDashboard({
           avatar={{ photo: photoPreview, name: me.name, color: me.color }}
           calendarSheet
         />
+        {managed.map((calendar) => (
+          <AccountRow
+            icon="storefront"
+            title={calendar.name}
+            detail={calendar.admin ? "Manage studio calendar" : "Studio calendar"}
+            href={calendar.admin ? `/s/${calendar.slug}/manage/calendar` : `/s/${calendar.slug}`}
+            avatar={{ photo: calendar.photo, name: calendar.name }}
+            key={calendar.id}
+          />
+        ))}
       </AccountGroup>
 
-      {yourGroups.length > 0 && (
-        <AccountGroup title="Your groups">
-          {yourGroups.map((group) => (
+      <section className="profile-following">
+        <h2>Following</h2>
+        <div className="profile-following-rail">
+          <FollowingCountCircle href="/following/people" count={people.length} singular="person" plural="people" photos={people.flatMap((person) => person.photo ? [person.photo] : []).slice(0, 3)} icon="person" />
+          <FollowingCountCircle href="/following/studios" count={places.length} singular="studio" plural="studios" photos={places.flatMap((place) => place.photo ? [place.photo] : []).slice(0, 3)} icon="storefront" />
+        </div>
+      </section>
+
+      {profileGroups.length > 0 && (
+        <AccountGroup title="Groups">
+          {profileGroups.map((group) => (
             <AccountRow
               icon="groups"
               title={group.name}
-              detail={managedGroups.some((managedGroup) => managedGroup.id === group.id) ? "Manage calendar and members" : "Group calendar"}
+              detail={managedGroups.some((managedGroup) => managedGroup.id === group.id) ? "Manage calendar and members" : yourGroups.some((mine) => mine.id === group.id) ? "Group calendar" : "Following group"}
               href={`/g/${group.slug}`}
               avatar={{ photo: group.photo, name: group.name }}
               key={group.id}
