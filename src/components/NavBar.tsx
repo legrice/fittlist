@@ -118,7 +118,7 @@ export function NavBar({
           if (here !== "share") openShare(shareButton.current);
         }}
       >
-        <Icon name={shareTab.icon} className="share-arrow-forward" size={27} />
+        <Icon name={shareTab.icon} className="share-arrow-forward" size={30} />
       </button>
       {shareOpen && <ShareTakeover onClosed={finishClose} />}
     </nav>
