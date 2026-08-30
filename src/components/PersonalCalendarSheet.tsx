@@ -28,6 +28,6 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
   });
   return <>
     <button type="button" className={className} aria-label={ariaLabel} aria-busy={pending} disabled={pending} onClick={show}>{children}</button>
-    {open && data && <BodyPortal><div className="personal-calendar-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}><section className="personal-calendar-sheet" role="dialog" aria-modal="true" aria-label="My calendar" onMouseDown={(event) => event.stopPropagation()}><CalendarScreen {...data} sheet openAdder={openAdder} onClose={() => setOpen(false)} /></section></div></BodyPortal>}
+    {open && data && <BodyPortal><div className="personal-calendar-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}><section className="personal-calendar-sheet" role="dialog" aria-modal="true" aria-label="Your calendar" onMouseDown={(event) => event.stopPropagation()}><CalendarScreen {...data} sheet openAdder={openAdder} onClose={() => setOpen(false)} /></section></div></BodyPortal>}
   </>;
 }

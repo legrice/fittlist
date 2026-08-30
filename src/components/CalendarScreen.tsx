@@ -516,7 +516,7 @@ export function CalendarScreen({
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
             {sheet ? <button type="button" className="calendar-page-back" aria-label="Close calendar" onClick={onClose}><Icon name="close" size={23} /></button> : <Link className="calendar-page-back" href="/you" aria-label="Back to You"><Icon name="arrow_back" size={23} /></Link>}
-            <h1>My calendar</h1>
+            <h1>Your calendar</h1>
           </div>
           <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         </div>
