@@ -764,7 +764,29 @@ export function FollowingScreen({
       {isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
-        <>
+        firstRun ? (
+          <section className="calendar-onboarding-empty" aria-labelledby="calendar-empty-title">
+            <div className="calendar-onboarding-hero">
+              <h2 id="calendar-empty-title">{meKind === "member" ? "Find something worth showing up for" : "Your schedule starts here"}</h2>
+            </div>
+            <div className="calendar-onboarding-body">
+              <ol className="calendar-onboarding-steps">
+                {(meKind === "member" ? [
+                  ["Follow your favorites", "Follow coaches, studios, and groups you care about."],
+                  ["Build your week", "Save classes and add the ones you plan to attend."],
+                  ["Bring people along", "Share your week and make plans with friends."],
+                ] : [
+                  ["Add your classes", "Add classes, shifts, and the studios where you teach."],
+                  ["Build your week", "Keep your schedule organized in one calendar."],
+                  ["Share everywhere", "Share your week so clients and friends know where to find you."],
+                ]).map(([title, copy], index) => <li key={title}><span>{index + 1}</span><div><strong>{title}</strong><p>{copy}</p></div></li>)}
+              </ol>
+              {meKind === "member"
+                ? <Link className="calendar-onboarding-cta" href="/discover">Discover calendars</Link>
+                : <PersonalCalendarSheetTrigger className="calendar-onboarding-cta" ariaLabel="Add your first class" openAdder>Add your first class</PersonalCalendarSheetTrigger>}
+            </div>
+          </section>
+        ) : <>
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
