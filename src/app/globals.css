@@ -4529,7 +4529,10 @@ select.editinput.placekind-select {
 
 /* Identity returns to the photograph, while the useful content begins below. */
 .pubhero-media {
-  height: calc(256px + var(--head-top, 0px));
+  /* The mobile profile no longer spends this vertical space on a top nav.
+     Give the portrait itself more room while retaining the measured safe-area
+     offset used by the floating profile controls. */
+  height: calc(320px + var(--head-top, 0px));
   margin-top: calc(-1 * var(--head-top, 0px));
 }
 .pubidentity-overlay {
