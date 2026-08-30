@@ -9093,7 +9093,7 @@ html[data-mode="dark"],
 .calendar-person-face > img { position:absolute; inset:0; display:block; width:80px; height:80px; border-radius:50%; object-fit:cover; }
 .calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 2px var(--ground),0 0 0 5px var(--color-lime); }
 .calendar-person-chip small { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.1; font-weight:600; }
-.calendar-person-star { position:absolute; right:-4px; bottom:-3px; width:24px; height:24px; padding:3px; border:2px solid var(--ground); border-radius:50%; background:var(--color-black); color:var(--color-white); }
+.calendar-person-star { position:absolute; right:-5px; bottom:-4px; width:30px; height:30px; padding:4px; border:2px solid var(--ground); border-radius:50%; background:var(--color-black); color:var(--color-white); }
 .calendar-discover-chip { color:var(--ink); text-decoration:none; }
 .following-head .trayitem { border:0; padding:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
 .social-schedule-switch {
