@@ -12660,3 +12660,306 @@ a.clspeek-by:active { opacity: .6; }
     padding-bottom:calc(110px + env(safe-area-inset-bottom));
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Share design studio
+
+   The picture now sits on a dedicated dark canvas and the controls read as
+   one editing dock below it. The generated artwork keeps its exact colors;
+   only the surrounding chrome is dark. Picker sheets remain on their shared
+   light surface so long forms and class lists do not inherit editor styling.
+   --------------------------------------------------------------------------- */
+.screen.hasnav:has(.shpage-editor) { background:#101310; }
+.cardwrap.shpage-editor {
+  --sheditor-bg:#101310;
+  --sheditor-panel:#1a1d1a;
+  --sheditor-text:#f8faf7;
+  --sheditor-muted:rgba(248,250,247,.64);
+  --sheditor-border:rgba(255,255,255,.12);
+  background:var(--sheditor-bg);
+  color:var(--sheditor-text);
+}
+.shpage-editor .share-tab-header h1 { color:var(--sheditor-text); }
+.shpage-editor .shseg-select {
+  border-color:var(--sheditor-border);
+  background:rgba(255,255,255,.075);
+  color:var(--sheditor-text);
+  color-scheme:dark;
+}
+.shpage-editor .shseg-select option {
+  background:var(--sheditor-panel);
+  color:var(--sheditor-text);
+}
+.shpage-editor .shseg-chevron { color:var(--sheditor-text); }
+.shpage-editor .share-page-close,
+.calendar-share-sheet:has(.shpage-editor) > .calendar-share-close {
+  border-color:var(--sheditor-border);
+  background:rgba(255,255,255,.075);
+  color:var(--sheditor-text);
+}
+.calendar-share-sheet:has(.shpage-editor),
+.calendar-share-sheet .shpage-embedded.shpage-editor {
+  background:var(--color-black);
+}
+
+.sheditor-shell {
+  min-width:0;
+  margin:10px calc(-1 * var(--page-gutter)) 0;
+  display:flex;
+  flex-direction:column;
+}
+.sheditor-stage {
+  min-width:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(159,232,112,.075), transparent 44%),
+    var(--sheditor-bg);
+}
+.sheditor-stage .shslides {
+  width:100%;
+  height:clamp(330px, 46dvh, 500px);
+  margin:0;
+  padding:12px max(7vw, 24px) 24px;
+  align-items:center;
+}
+.sheditor-stage .shslide {
+  flex-basis:min(84vw, 520px);
+  align-items:center;
+}
+.sheditor-stage .shprev-wrap {
+  height:100%;
+  max-width:100%;
+  align-items:center;
+}
+.sheditor-stage .shprev {
+  height:calc(100% - 8px);
+  max-height:100%;
+  margin:0;
+  border-radius:11px;
+  box-shadow:0 22px 52px rgba(0,0,0,.4);
+}
+.sheditor-stage .shprev-sq {
+  width:min(100%, 420px);
+  height:auto;
+  max-height:100%;
+}
+.sheditor-stage .qrcard {
+  margin:0;
+  box-shadow:0 22px 52px rgba(0,0,0,.4);
+}
+.sheditor-stage .shtext { margin:0; }
+
+.sheditor-dock {
+  position:relative;
+  z-index:1;
+  padding:16px 16px calc(20px + env(safe-area-inset-bottom));
+  border:1px solid var(--sheditor-border);
+  border-bottom:0;
+  border-radius:26px 26px 0 0;
+  background:var(--sheditor-panel);
+  color:var(--sheditor-text);
+  box-shadow:0 -14px 36px rgba(0,0,0,.2);
+}
+.sheditor-tools {
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(72px, 1fr);
+  gap:6px;
+  min-width:0;
+  overflow-x:auto;
+  padding:0 0 10px;
+  scrollbar-width:none;
+  overscroll-behavior-inline:contain;
+}
+.sheditor-tools::-webkit-scrollbar,
+.shstyle-rail::-webkit-scrollbar { display:none; }
+.sheditor-tools-single {
+  grid-auto-columns:96px;
+  justify-content:center;
+}
+.sheditor-tool {
+  min-width:72px;
+  min-height:76px;
+  padding:2px 2px 7px;
+  display:grid;
+  grid-template-rows:48px auto auto;
+  justify-items:center;
+  align-content:start;
+  gap:3px;
+  border:0;
+  border-radius:14px;
+  background:transparent;
+  color:var(--sheditor-text);
+  font:inherit;
+  text-align:center;
+  cursor:pointer;
+}
+.sheditor-tool-icon {
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:50%;
+  background:rgba(255,255,255,.075);
+  color:var(--sheditor-text);
+}
+.sheditor-tool-label {
+  max-width:100%;
+  overflow:hidden;
+  font-size:12.5px;
+  line-height:1.1;
+  font-weight:600;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.sheditor-tool-detail {
+  max-width:100%;
+  overflow:hidden;
+  color:var(--sheditor-muted);
+  font-size:10.5px;
+  line-height:1.1;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.sheditor-tool.is-accent .sheditor-tool-icon {
+  border-color:color-mix(in srgb, var(--si) 52%, transparent);
+  background:color-mix(in srgb, var(--si) 16%, transparent);
+  color:var(--si);
+}
+.sheditor-tool.is-accent .sheditor-tool-label { color:var(--si); }
+.sheditor-tool:active { background:rgba(255,255,255,.055); }
+.sheditor-tool:disabled { cursor:default; opacity:.42; }
+.sheditor-tool:focus-visible,
+.shstyle-option:focus-visible,
+.sheditor-dock .shdesign-actions button:focus-visible {
+  outline:2px solid var(--si);
+  outline-offset:2px;
+}
+
+.shstyle-rail {
+  display:flex;
+  gap:12px;
+  margin:0 -16px 10px;
+  padding:4px 16px 10px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  overscroll-behavior-inline:contain;
+}
+.shstyle-option {
+  flex:0 0 66px;
+  min-height:102px;
+  padding:2px 0 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--sheditor-muted);
+  font:inherit;
+  font-size:12px;
+  line-height:1.1;
+  cursor:pointer;
+}
+.shstyle-option .layoutmini {
+  width:62px;
+  height:78px;
+  padding:9px 7px;
+  border-color:rgba(255,255,255,.18);
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+}
+.shstyle-option[aria-pressed="true"] { color:var(--si); font-weight:600; }
+.shstyle-option[aria-pressed="true"] .layoutmini {
+  border-color:var(--si);
+  box-shadow:0 0 0 2px var(--si), 0 8px 18px rgba(0,0,0,.24);
+}
+
+.sheditor-dock .shdesign-actions {
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:0;
+  margin:2px 0 0;
+  padding:2px;
+  border:1px solid rgba(255,255,255,.045);
+  border-radius:14px;
+  background:rgba(255,255,255,.045);
+}
+.sheditor-dock .shdesign-actions button {
+  min-height:44px;
+  padding:0 8px;
+  color:var(--sheditor-text);
+  font-size:13px;
+}
+.sheditor-dock .shdesign-actions button + button {
+  border-left:1px solid var(--sheditor-border);
+}
+.sheditor-dock .shdesign-actions button:last-child { color:var(--si); }
+.sheditor-dock .shdesign-actions button:disabled { color:var(--sheditor-muted); }
+.sheditor-dock .shcta { margin-top:12px; gap:8px; }
+.sheditor-dock > .shcta:first-child { margin-top:0; }
+.sheditor-dock .shcta .btn {
+  min-height:50px;
+  border-radius:var(--radius-pill);
+  font-size:16px;
+  font-weight:700;
+}
+.sheditor-dock .shcta .btn.ghost {
+  border-color:var(--sheditor-border);
+  background:rgba(255,255,255,.045);
+  color:var(--sheditor-text);
+}
+
+@media (max-width:939px) {
+  .cardwrap.shpage-tabbed.shpage-editor { padding-bottom:0; }
+  .screen.hasnav:has(.shpage:not(.shpage-tabbed)) .cardwrap.shpage.shpage-editor,
+  .calendar-share-sheet .shpage-embedded.shpage-editor { padding-bottom:0; }
+  .shpage-tabbed .sheditor-dock {
+    padding-bottom:calc(98px + env(safe-area-inset-bottom));
+  }
+  .calendar-share-sheet .sheditor-stage .shslides {
+    height:clamp(330px, 46dvh, 500px);
+    margin-top:0;
+  }
+  .calendar-share-sheet .sheditor-stage .shprev {
+    height:calc(100% - 8px);
+  }
+  .calendar-share-sheet .sheditor-stage .shprev-sq {
+    width:min(100%, 420px);
+    height:auto;
+  }
+}
+@media (max-height:700px) and (max-width:939px) {
+  .sheditor-stage .shslides,
+  .calendar-share-sheet .sheditor-stage .shslides {
+    height:clamp(290px, 40dvh, 330px);
+  }
+}
+@media (min-width:940px) {
+  .cardwrap.shpage-editor {
+    max-width:660px;
+    margin-inline:auto;
+    border-radius:28px;
+    padding-bottom:0;
+  }
+  .shpage-editor .share-tab-header {
+    min-height:60px;
+    padding:18px 24px 4px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .shpage-editor .share-tab-header h1 {
+    margin:0;
+    font-size:30px;
+    line-height:1.05;
+    letter-spacing:-.025em;
+  }
+  .shpage-editor .share-tab-header .shseg { margin:0; }
+  .sheditor-shell { margin-inline:calc(-1 * var(--page-gutter)); }
+  .sheditor-dock { padding-inline:24px; }
+}

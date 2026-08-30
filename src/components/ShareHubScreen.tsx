@@ -962,7 +962,7 @@ export function ShareHubScreen({
   return (
     <>
       {/* `shpage` is the marker the gradient opt-out keys on. */}
-      <div className={`cardwrap shpage${embedded ? " shpage-embedded" : ""}${tabbed ? " shpage-tabbed" : ""}`}>
+      <div className={`cardwrap shpage${!building ? " shpage-editor" : ""}${embedded ? " shpage-embedded" : ""}${tabbed ? " shpage-tabbed" : ""}`}>
         {!embedded && !tabbed && (
           <div className="shpage-back">
             <BackLink className="evback share-page-close" href="/calendar" anywhere label="Close share screen">
@@ -1020,155 +1020,194 @@ export function ShareHubScreen({
           </div>
         )}
 
-        {/* The slides, one per segment, swiped between the way Spotify's
-            share sheet swipes between the song card and the lyrics, by
-            Matt's call: the next card peeks in from the edge, which is
-            what says a swipe exists. A grab mid-ride cancels the pill
-            tap's claim on the scroll. */}
         {!building && (
-        <div
-          className="shslides"
-          ref={slidesRef}
-          onScroll={onSlides}
-          onTouchStart={() => (rideTo.current = null)}
-        >
-          <div className="shslide" aria-hidden={seg !== "week"}>
-            <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" onReady={markImageReady} />
-          </div>
-          <div className="shslide" aria-hidden={seg !== "profile"}>
-            <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" onReady={markImageReady} />
-          </div>
-          <div className="shslide" aria-hidden={seg !== "qr"}>
-            {/* The card the mock drew: name, the code on white, the address.
-                A bare code is anybody's; this one says whose. */}
-            <div className="qrcard">
-              <div className="qrcard-nm">{name}</div>
-              <div className="qrframe">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" loading="lazy" onLoad={() => markImageReady(qrUrl)} />
+          <section className={`sheditor-shell sheditor-${seg}`} aria-label={`${segs.find((subject) => subject.id === seg)?.label ?? "Share"} editor`}>
+            {/* The preview stays a direct-child carousel: swiping still changes
+                the subject, while the dark stage gives the artwork a canvas
+                instead of letting controls compete with it. */}
+            <div className="sheditor-stage">
+              <div
+                className="shslides"
+                ref={slidesRef}
+                onScroll={onSlides}
+                onTouchStart={() => (rideTo.current = null)}
+              >
+                <div className="shslide" aria-hidden={seg !== "week"}>
+                  <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" onReady={markImageReady} />
+                </div>
+                <div className="shslide" aria-hidden={seg !== "profile"}>
+                  <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" onReady={markImageReady} />
+                </div>
+                <div className="shslide" aria-hidden={seg !== "qr"}>
+                  <div className="qrcard">
+                    <div className="qrcard-nm">{name}</div>
+                    <div className="qrframe">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" loading="lazy" onLoad={() => markImageReady(qrUrl)} />
+                    </div>
+                    <div className="qrurl">{pageHost}/{handle}</div>
+                  </div>
+                </div>
+                <div className="shslide" aria-hidden={seg !== "text"}>
+                  <pre className="shtext">{weekText}</pre>
+                </div>
               </div>
-              <div className="qrurl">
-                {pageHost}/{handle}
-              </div>
             </div>
-          </div>
-          <div className="shslide" aria-hidden={seg !== "text"}>
-            <pre className="shtext">{weekText}</pre>
-          </div>
-        </div>
-        )}
 
-        {!building && (seg === "week" || seg === "profile") && (
-          <div className="shctrls">
-            {seg === "week" ? (
-              <>
-                {/* The rail of what the picture says: its range, its roster,
-                    its words. Each chip is a small labelled door to a sheet.
-                    A member's rail leads with the add in brand, by Matt's
-                    call: growing the week is this screen's first action, so
-                    the loud chip is the one that does it. */}
-                {/* "another", because this chip only exists once the first
-                    add has landed: the start block owns the first one. */}
-                {!coach && (
-                  <button className="shctrl shctrl-add" disabled={adderBusy} onClick={() => void openAdder()}>
-                    {adderBusy ? "Loading..." : "+ Add another class"}
-                  </button>
-                )}
-                <button className="shctrl shctrl-remix" onClick={remix}>
-                  <span className="shctrl-k"><Icon name="auto_awesome" size={14} /> Remix</span>
-                  <span className="shctrl-v">Try another look</span>
-                </button>
-                <button className="shctrl" onClick={() => {
-                  setDraftPhotoX(photoX);
-                  setDraftPhotoY(photoY);
-                  setDraftPhotoOverlay(photoOverlay);
-                  setColorMenuOpen(false);
-                  setPick("color");
-                }}>
-                  <span className="shctrl-k">Background</span>
-                  <span className="shctrl-v">{background ? "Photo" : STORY_THEMES[themeId].label}</span>
-                </button>
-                {/* A complete visual style follows the background: the
-                    picture's surface is the first decision people see. */}
-                <button className="shctrl" onClick={() => setPick("layout")}>
-                  <span className="shctrl-k">Style</span>
-                  <span className="shctrl-v">{STORY_STYLES[styleId].label}</span>
-                </button>
-                <input
-                  ref={backgroundRef}
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(event) => {
-                    const file = event.currentTarget.files?.[0];
-                    if (file) chooseBackground(file);
-                    event.currentTarget.value = "";
-                  }}
-                />
-                <button className="shctrl" onClick={() => {
-                  setDraftHide(new Set(hide));
-                  setDraftHat(hat);
-                  setDraftFeaturedKey(featuredKey);
-                  setPick("classes");
-                }}>
-                  <span className="shctrl-k">Classes</span>
-                  <span className="shctrl-v">
-                    {hatRows.length === 0 ? "None in range" : `${shown} of ${hatRows.length} showing`}
-                  </span>
-                </button>
-                <button className="shctrl" onClick={() => { setDraftFrom(from); setDraftDays(days); setPick("dates"); }}>
-                  <span className="shctrl-k">Dates</span>
-                  <span className="shctrl-v">{rangeLabel}</span>
-                </button>
-                <button className="shctrl" onClick={() => { setDraftHeadline(headline); setDraftNoHead(noHead); setDraftTypeId(typeId); setDraftSlider(hsize); setPick("message"); }}>
-                  <span className="shctrl-k">Headline</span>
-                  <span className="shctrl-v">
-                    {noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
-                  </span>
-                </button>
-              </>
-            ) : (
-              <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
-                <span className="shctrl-k">Color</span>
-                <span className="shctrl-v">{STORY_THEMES[themeId].label}</span>
-              </button>
-            )}
-          </div>
-        )}
+            {/* The dock borrows the reference's studio hierarchy, but every
+                tool is one the FittList picture already understands. Detailed
+                editing still opens the familiar focused sheets. */}
+            <div className={`sheditor-dock sheditor-dock-${seg}`}>
+              {seg === "week" && (
+                <>
+                  <div className="sheditor-tools sheditor-tools-primary" aria-label="Creative tools">
+                    <StudioTool icon="auto_awesome" label="Remix" detail="New look" accent onClick={remix} />
+                    <StudioTool
+                      icon="image"
+                      label="Background"
+                      detail={background ? "Photo" : STORY_THEMES[themeId].label}
+                      onClick={() => {
+                        setDraftPhotoX(photoX);
+                        setDraftPhotoY(photoY);
+                        setDraftPhotoOverlay(photoOverlay);
+                        setColorMenuOpen(false);
+                        setPick("color");
+                      }}
+                    />
+                    <StudioTool
+                      icon="palette"
+                      label="Style"
+                      detail={STORY_STYLES[styleId].label}
+                      onClick={() => setPick("layout")}
+                    />
+                  </div>
 
-        {!building && seg === "week" && (
-          <div className="shdesign-actions" aria-label="Design actions">
-            <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
-            <button type="button" onClick={resetDesign}>Reset</button>
-            <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
-              {designSaving ? "Saving..." : "Save this look"}
-            </button>
-          </div>
-        )}
+                  <div className="shstyle-rail" role="group" aria-label="Quick styles">
+                    {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(
+                      ([id]) => id !== "cowboy",
+                    ).map(([id, style]) => (
+                      <button
+                        key={id}
+                        type="button"
+                        className="shstyle-option"
+                        aria-pressed={id === styleId}
+                        onClick={() => {
+                          if (id === styleId) return;
+                          pushUndo();
+                          applyCompleteStyle(id);
+                        }}
+                      >
+                        <span className={`layoutmini layoutmini-${id}`} aria-hidden="true">
+                          <span />
+                          <span />
+                          <span />
+                        </span>
+                        <span>{style.label}</span>
+                      </button>
+                    ))}
+                  </div>
 
-        {!building && (seg === "week" || seg === "profile") &&
-          imageShareActions(imgUrl, fileName, seg === "week" ? "picture" : "card", seg === "week")}
+                  <div className="sheditor-tools sheditor-tools-details" aria-label="Schedule and copy tools">
+                    <StudioTool
+                      icon="list"
+                      label="Classes"
+                      detail={hatRows.length === 0 ? "None" : `${shown} of ${hatRows.length}`}
+                      onClick={() => {
+                        setDraftHide(new Set(hide));
+                        setDraftHat(hat);
+                        setDraftFeaturedKey(featuredKey);
+                        setPick("classes");
+                      }}
+                    />
+                    <StudioTool
+                      icon="calendar_month"
+                      label="Dates"
+                      detail={rangeLabel}
+                      onClick={() => {
+                        setDraftFrom(from);
+                        setDraftDays(days);
+                        setPick("dates");
+                      }}
+                    />
+                    <StudioTool
+                      icon="edit"
+                      label="Headline"
+                      detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
+                      onClick={() => {
+                        setDraftHeadline(headline);
+                        setDraftNoHead(noHead);
+                        setDraftTypeId(typeId);
+                        setDraftSlider(hsize);
+                        setPick("message");
+                      }}
+                    />
+                    {!coach && (
+                      <StudioTool
+                        icon="add"
+                        label={adderBusy ? "Loading" : "Add class"}
+                        detail="Build your week"
+                        disabled={adderBusy}
+                        onClick={() => void openAdder()}
+                      />
+                    )}
+                  </div>
 
-        {!building && seg === "qr" && imageShareActions(qrUrl, qrFileName, "QR code")}
+                  <input
+                    ref={backgroundRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(event) => {
+                      const file = event.currentTarget.files?.[0];
+                      if (file) chooseBackground(file);
+                      event.currentTarget.value = "";
+                    }}
+                  />
 
-        {seg === "text" && (
-          <>
-            <div className="shcta">
-              <button className="btn si" onClick={copyText}>
-                Copy text
-              </button>
+                  <div className="shdesign-actions" aria-label="Design actions">
+                    <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
+                    <button type="button" onClick={resetDesign}>Reset</button>
+                    <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
+                      {designSaving ? "Saving..." : "Save this look"}
+                    </button>
+                  </div>
+                  {imageShareActions(imgUrl, fileName, "picture", true)}
+                </>
+              )}
+
+              {seg === "profile" && (
+                <>
+                  <div className="sheditor-tools sheditor-tools-single" aria-label="Profile card tools">
+                    <StudioTool
+                      icon="palette"
+                      label="Color"
+                      detail={STORY_THEMES[themeId].label}
+                      onClick={() => {
+                        setColorMenuOpen(false);
+                        setPick("color");
+                      }}
+                    />
+                  </div>
+                  {imageShareActions(imgUrl, fileName, "card")}
+                </>
+              )}
+
+              {seg === "qr" && (
+                <>
+                  {imageShareActions(qrUrl, qrFileName, "QR code")}
+                  <div className="shcta">
+                    <button className="btn ghost" onClick={copyLink}>Copy link</button>
+                  </div>
+                </>
+              )}
+
+              {seg === "text" && (
+                <div className="shcta">
+                  <button className="btn si" onClick={copyText}>Copy text</button>
+                </div>
+              )}
             </div>
-          </>
-        )}
-
-        {seg === "qr" && (
-          <>
-            <div className="shcta">
-              <button className="btn ghost" onClick={copyLink}>
-                Copy link
-              </button>
-            </div>
-          </>
+          </section>
         )}
       </div>
 
@@ -1923,5 +1962,38 @@ function SlideImg({ cls, src, alt, onReady }: { cls: string; src: string | null;
       />
       {loading && <span className="shspin" aria-label="Drawing the picture" />}
     </div>
+  );
+}
+
+/** A compact, labelled editor tool. The label stays visible beneath the
+ *  icon because this is a creation surface, not a mystery toolbar; the
+ *  current value is useful context but deliberately quieter. */
+function StudioTool({
+  icon,
+  label,
+  detail,
+  onClick,
+  disabled = false,
+  accent = false,
+}: {
+  icon: string;
+  label: string;
+  detail?: string;
+  onClick: () => void;
+  disabled?: boolean;
+  accent?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className={`sheditor-tool${accent ? " is-accent" : ""}`}
+      aria-label={detail ? `${label}: ${detail}` : label}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <span className="sheditor-tool-icon"><Icon name={icon} size={23} /></span>
+      <span className="sheditor-tool-label">{label}</span>
+      {detail && <span className="sheditor-tool-detail">{detail}</span>}
+    </button>
   );
 }
