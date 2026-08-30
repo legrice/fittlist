@@ -26,7 +26,7 @@ export default async function SearchPage() {
     <section className="screen hasnav" data-mode={lookMode(me?.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
-        <SearchScreen todayIso={todayIso()} />
+        <SearchScreen todayIso={todayIso()} userId={userId} />
       </div>
     </section>
   );

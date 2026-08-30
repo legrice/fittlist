@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
+import { ClientCacheScope } from "@/components/ClientCacheScope";
 
 // What a stranger sees first on a coach's page.
 //
@@ -24,21 +25,23 @@ export function PublicTopBar({ handle, next }: { handle?: string; next?: string 
   // crediting a coach who doesn't exist.
   const via = handle ? `via=${encodeURIComponent(handle)}` : "";
   return (
-    <div className="pubtop">
-      <Link className="pubtop-home" href={via ? `/?${via}` : "/"} aria-label="fittlist, home">
-        <Wordmark variant="ink" className="wordmark pubtop-wm" />
-      </Link>
-      {/* `next` is this page. Signing in from here is part of doing something
-          here, and the flow used to end on /feed with whatever they were part
-          way through nowhere in sight. */}
-      <Link
-        className="pubtop-login"
-        href={`/?${[via, "join=signup", next ? `next=${encodeURIComponent(next)}` : ""]
-          .filter(Boolean)
-          .join("&")}`}
-      >
-        Sign up
-      </Link>
-    </div>
+    <ClientCacheScope viewerId="anonymous">
+      <div className="pubtop">
+        <Link className="pubtop-home" href={via ? `/?${via}` : "/"} aria-label="fittlist, home">
+          <Wordmark variant="ink" className="wordmark pubtop-wm" />
+        </Link>
+        {/* `next` is this page. Signing in from here is part of doing something
+            here, and the flow used to end on /feed with whatever they were part
+            way through nowhere in sight. */}
+        <Link
+          className="pubtop-login"
+          href={`/?${[via, "join=signup", next ? `next=${encodeURIComponent(next)}` : ""]
+            .filter(Boolean)
+            .join("&")}`}
+        >
+          Sign up
+        </Link>
+      </div>
+    </ClientCacheScope>
   );
 }

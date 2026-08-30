@@ -10,9 +10,11 @@ import {
 } from "@/app/actions/groups";
 import { recordShareImageExport } from "@/app/actions/product-activity";
 import { Icon } from "@/components/Icon";
+import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import { canShareFiles, putImage } from "@/lib/shareimage";
 
 type PreparedImage = { file: File; url: string };
+const MANAGED_GROUPS_MEMORY_KEY = "sheet:saved-class:managed-groups";
 
 /**
  * The focused share moment after a save or RSVP.
@@ -37,8 +39,11 @@ export function SavedClassShareSheet({
   onToast: (message: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const [groups, setGroups] = useState<GroupDestination[]>([]);
-  const [groupsReady, setGroupsReady] = useState(false);
+  const [initialGroups] = useState<GroupDestination[] | null>(() =>
+    readClientMemory<GroupDestination[]>(MANAGED_GROUPS_MEMORY_KEY),
+  );
+  const [groups, setGroups] = useState<GroupDestination[]>(initialGroups ?? []);
+  const [groupsReady, setGroupsReady] = useState(initialGroups !== null);
   const [groupsOpen, setGroupsOpen] = useState(false);
   const [groupSaved, setGroupSaved] = useState<Record<string, boolean>>({});
   const [pendingGroupId, setPendingGroupId] = useState<string | null>(null);
@@ -100,9 +105,9 @@ export function SavedClassShareSheet({
 
   useEffect(() => {
     let live = true;
-    void managedGroupDestinations()
+    void loadClientMemory(MANAGED_GROUPS_MEMORY_KEY, managedGroupDestinations)
       .then((rows) => {
-        if (live) {
+        if (live && rows !== null) {
           setGroups(rows);
           setGroupsReady(true);
         }

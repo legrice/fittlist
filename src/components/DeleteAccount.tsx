@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMyAccount } from "@/app/actions/auth";
 import { Icon } from "@/components/Icon";
+import { clearClientMemory } from "@/lib/client-memory";
 
 // The way out.
 //
@@ -48,6 +49,7 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
         setErr(res.error ?? "Couldn't delete that account.");
         return;
       }
+      clearClientMemory();
       // The session is already gone server-side; this is just the way out of
       // a screen that no longer has anything behind it.
       router.replace("/");

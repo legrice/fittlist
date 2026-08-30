@@ -19,6 +19,7 @@ import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { TimeZoneSetting } from "@/components/TimeZoneSetting";
+import { clearClientMemory } from "@/lib/client-memory";
 
 type MView = "profile" | "calendar" | "reach" | "account";
 
@@ -198,7 +199,7 @@ export function MemberAccount({
       </div>
 
       <h3 className="setgroup-h">Session</h3>
-      <form action={logout} className="settingslist">
+      <form action={logout} className="settingslist" onSubmit={clearClientMemory}>
         <button type="submit" className="setrow">
           <span className="setrow-ic"><Icon name="logout" size={24} /></span>
           <span className="setrow-txt">
@@ -240,14 +241,14 @@ export function MemberAccount({
                 />
                 <ChangeHandle />
                 {handle && (
-                  <a className="setrow" href={`/${handle}`}>
+                  <Link className="setrow" href={`/${handle}`}>
                     <span className="setrow-ic"><Icon name="north_east" size={24} /></span>
                     <span className="setrow-txt">
                       <span className="t">View your profile</span>
                       <span className="s">How it looks to everyone else</span>
                     </span>
                     <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-                  </a>
+                  </Link>
                 )}
               </div>
             )}
@@ -264,14 +265,14 @@ export function MemberAccount({
                 <MessagesToggle initialOn={messagesOpen} />
                 <DiscoverableToggle initialOn={discoverable} />
                 <ApproveFollowersToggle initialOn={approveFollowers} />
-                <a className="setrow" href="/blocked">
+                <Link className="setrow" href="/blocked">
                   <span className="setrow-ic"><Icon name="public_off" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Removed people</span>
                     <span className="s">Who can&rsquo;t see your page</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-                </a>
+                </Link>
               </div>
             )}
 

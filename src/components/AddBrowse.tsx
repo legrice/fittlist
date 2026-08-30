@@ -1,11 +1,33 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { addBrowse, type AddBrowseData } from "@/app/actions/discover";
 import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { announceSaved } from "@/components/SaveEducation";
+import {
+  invalidateClientMemory,
+  loadClientMemory,
+  readClientMemory,
+  writeClientMemory,
+} from "@/lib/client-memory";
+
+const ADD_BROWSE_MEMORY_KEY = "sheet:add-browse";
+
+function withSavedMarks(data: AddBrowseData, marks: Record<string, boolean>): AddBrowseData {
+  let changed = false;
+  const days = data.days.map((day) => ({
+    ...day,
+    items: day.items.map((item) => {
+      const saved = marks[`${item.classId}|${item.iso}`];
+      if (saved === undefined || saved === item.saved) return item;
+      changed = true;
+      return { ...item, saved };
+    }),
+  }));
+  return changed ? { ...data, days } : data;
+}
 
 // The Add screen's Discover half, per the brief: a browsable list of the
 // classes near you with an inline Save on each row, and the way to add one
@@ -26,8 +48,12 @@ export function AddBrowse({
   onNotice?: (message: string, highlight?: string) => void;
   onClose: () => void;
 }) {
-  const [browse, setBrowse] = useState<AddBrowseData | null>(null);
+  const [browse, setBrowse] = useState<AddBrowseData | null>(() =>
+    readClientMemory<AddBrowseData>(ADD_BROWSE_MEMORY_KEY),
+  );
+  const [loadFailed, setLoadFailed] = useState(false);
   const [marks, setMarks] = useState<Record<string, boolean>>({});
+  const marksRef = useRef<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
   const [classType, setClassType] = useState("");
   const [distance, setDistance] = useState("");
@@ -35,7 +61,31 @@ export function AddBrowse({
   const [, start] = useTransition();
 
   useEffect(() => {
-    addBrowse().then((data) => setBrowse(data ?? { days: [], myLat: null, myLng: null }));
+    let live = true;
+    void loadClientMemory(ADD_BROWSE_MEMORY_KEY, addBrowse)
+      .then((data) => {
+        if (data === null) {
+          invalidateClientMemory(ADD_BROWSE_MEMORY_KEY);
+          if (live) {
+            setBrowse({ days: [], myLat: null, myLng: null });
+            setLoadFailed(false);
+          }
+          return;
+        }
+        const next = withSavedMarks(data, marksRef.current);
+        writeClientMemory(ADD_BROWSE_MEMORY_KEY, next);
+        if (live) {
+          setBrowse(next);
+          setLoadFailed(false);
+        }
+      })
+      .catch(() => {
+        // Preserve cached results; without cache, retain the existing loader.
+        if (live && browse === null) setLoadFailed(true);
+      });
+    return () => {
+      live = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -47,16 +97,32 @@ export function AddBrowse({
 
   const save = (classId: string, iso: string, name: string, on: boolean) => {
     const key = `${classId}|${iso}`;
+    marksRef.current = { ...marksRef.current, [key]: on };
     setMarks((m) => ({ ...m, [key]: on }));
     start(async () => {
-      const res = await setGoing(classId, iso, on);
-      if (!res.ok) setMarks((m) => ({ ...m, [key]: !on }));
-      else {
+      const rollBack = () => {
+        marksRef.current = { ...marksRef.current, [key]: !on };
+        setMarks((m) => ({ ...m, [key]: !on }));
+      };
+      try {
+        const res = await setGoing(classId, iso, on);
+        if (!res.ok) {
+          rollBack();
+          return;
+        }
+        setBrowse((current) => {
+          if (!current) return current;
+          const next = withSavedMarks(current, { [key]: on });
+          writeClientMemory(ADD_BROWSE_MEMORY_KEY, next);
+          return next;
+        });
         if (on) announceSaved(classId, iso);
         onNotice?.(
           on ? `${name} was saved to your calendar` : `${name} was removed from your calendar`,
           on ? `${classId}.${iso}` : undefined,
         );
+      } catch {
+        rollBack();
       }
     });
   };
@@ -130,7 +196,8 @@ export function AddBrowse({
         </div>
 
         <div className="addbrowse-results">
-          {!days && <p className="peekempty">Looking at the week&hellip;</p>}
+          {!days && loadFailed && <p className="peekempty">Couldn&rsquo;t load classes. Try again in a moment.</p>}
+          {!days && !loadFailed && <p className="peekempty">Looking at the week&hellip;</p>}
           {days && days.length === 0 && (
             <p className="peekempty">Nothing listed near you this week yet.</p>
           )}

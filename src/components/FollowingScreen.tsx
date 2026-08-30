@@ -13,6 +13,7 @@ import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { BodyPortal } from "@/components/BodyPortal";
+import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -78,6 +79,8 @@ export type SocialGroup = {
   photo: string | null;
   classKeys: string[];
 };
+
+type CalendarRemainder = NonNullable<Awaited<ReturnType<typeof loadCalendarRemainder>>>;
 
 /** A circle on the Coaches near you rail, the viewer's own follow state
  *  riding along so the pill under the face starts right. */
@@ -216,27 +219,29 @@ export function FollowingScreen({
     setCats(initialCats);
     setMyRail(initialMyRail);
     if (!isHome) return undefined;
-    setCalendarPending(true);
+    const memoryKey = `calendar-remainder:${todayIso}`;
+    const applyRemainder = (remainder: CalendarRemainder) => {
+      if (streamGeneration.current !== generation) return;
+      // Rebuild from the current server seed each time. That lets remembered
+      // data paint instantly, while a quiet fresh answer can still remove a
+      // class that disappeared since the last visit.
+      const mergedItems = new Map(initialItems.map((item) => [item.key, item]));
+      for (const item of remainder.items) mergedItems.set(item.key, item);
+      setItems([...mergedItems.values()]);
+      const mergedCoaches = new Map(initialCoaches.map((coach) => [coach.id, coach]));
+      for (const coach of remainder.coaches) mergedCoaches.set(coach.id, coach);
+      setCoaches([...mergedCoaches.values()]);
+      setCats([...new Set([...initialCats, ...remainder.cats])]);
+      setMyRail(remainder.myRail);
+    };
+    const remembered = readClientMemory<CalendarRemainder>(memoryKey);
+    if (remembered) applyRemainder(remembered);
+    setCalendarPending(!remembered);
     const frame = requestAnimationFrame(() => {
-      void loadCalendarRemainder()
+      void loadClientMemory(memoryKey, loadCalendarRemainder)
         .then((remainder) => {
           if (!remainder || streamGeneration.current !== generation) return;
-          setItems((current) => {
-            const merged = new Map(current.map((item) => [item.key, item]));
-            for (const item of remainder.items) merged.set(item.key, item);
-            return [...merged.values()];
-          });
-          // Keep identities that occur only in Today/Tomorrow. The remainder
-          // intentionally queries days 3–31, so replacing this array would
-          // make an initial one-off row lose its coach/studio name and face as
-          // soon as the background month finished loading.
-          setCoaches((current) => {
-            const merged = new Map(current.map((coach) => [coach.id, coach]));
-            for (const coach of remainder.coaches) merged.set(coach.id, coach);
-            return [...merged.values()];
-          });
-          setCats([...new Set([...initialCats, ...remainder.cats])]);
-          setMyRail(remainder.myRail);
+          applyRemainder(remainder);
         })
         .catch(() => {
           // The first two days remain fully usable offline or on a failed
@@ -250,7 +255,7 @@ export function FollowingScreen({
       cancelAnimationFrame(frame);
       if (streamGeneration.current === generation) streamGeneration.current += 1;
     };
-  }, [initialCats, initialCoaches, initialItems, initialMyRail, isHome]);
+  }, [initialCats, initialCoaches, initialItems, initialMyRail, isHome, todayIso]);
 
   // The containerless list lands on today or the first day that holds
   // anything. Home keeps only the date rail and the selected day's results;

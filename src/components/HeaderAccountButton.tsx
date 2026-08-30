@@ -8,6 +8,7 @@ import { settingsSheetData, type SettingsSheetData } from "@/app/actions/setting
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { YouDashboard, type ProfileSettingsView, type YouAccountData } from "@/components/YouDashboard";
+import { loadClientMemory, readClientMemory, writeClientMemory } from "@/lib/client-memory";
 
 const ProfileSheet = dynamic(() => import("@/components/ProfileSheet").then((module) => module.ProfileSheet));
 const MemberAccount = dynamic(() => import("@/components/MemberAccount").then((module) => module.MemberAccount));
@@ -26,12 +27,16 @@ export function HeaderAccountButton({
   initialData?: YouAccountData;
 }) {
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState<YouAccountData | null>(initialData ?? null);
-  const [settingsData, setSettingsData] = useState<SettingsSheetData | null>(null);
+  const [data, setData] = useState<YouAccountData | null>(() => initialData ?? readClientMemory("you-dashboard"));
+  const [settingsData, setSettingsData] = useState<SettingsSheetData | null>(() => readClientMemory("settings-sheet"));
   const [settingsView, setSettingsView] = useState<ProfileSettingsView | null>(null);
   const dashboardRequest = useRef<Promise<YouAccountData | null> | null>(null);
   const dashboardLoaded = useRef(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (data) writeClientMemory("you-dashboard", data);
+  }, [data]);
 
   useEffect(() => {
     if (!open) return;
@@ -51,7 +56,7 @@ export function HeaderAccountButton({
   const loadDashboard = useCallback(async () => {
     if (dashboardLoaded.current) return data;
     if (!dashboardRequest.current) {
-      dashboardRequest.current = youAccountData()
+      dashboardRequest.current = loadClientMemory("you-dashboard", youAccountData)
         .then((next) => {
           if (next) setData(next);
           dashboardLoaded.current = true;
@@ -76,9 +81,14 @@ export function HeaderAccountButton({
   };
   const openSettings = async (view: ProfileSettingsView) => {
     setSettingsView(view);
-    if (settingsData) return;
+    if (settingsData) {
+      void loadClientMemory("settings-sheet", settingsSheetData).then((next) => {
+        if (next) setSettingsData(next);
+      });
+      return;
+    }
     try {
-      const next = await settingsSheetData();
+      const next = await loadClientMemory("settings-sheet", settingsSheetData);
       if (next) setSettingsData(next);
       else setSettingsView(null);
     } catch {

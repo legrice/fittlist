@@ -2,9 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { Toast, useToast } from "@/components/Toast";
+import {
+  invalidateClientMemory,
+  loadClientMemory,
+  readClientMemory,
+  writeClientMemory,
+} from "@/lib/client-memory";
 
 type DeferredClassPeekProps = {
   detail: ClassDetail;
@@ -32,6 +38,9 @@ const DeferredClassPeek = dynamic<DeferredClassPeekProps>(() =>
   }),
 );
 
+const classMemoryKey = (base: string, id: string, iso?: string) =>
+  `class-detail:${base.replace(/^s\//, "")}:${id}:${iso || "next"}`;
+
 // Turns a server-rendered list of class rows into rows that open a sheet.
 //
 // The rows are still built on the server (they're the same markup a crawler and
@@ -50,6 +59,7 @@ export function ClassOpener({
   const router = useRouter();
   const [open, setOpen] = useState<ClassDetail | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
+  const openRequest = useRef(0);
 
   return (
     <>
@@ -67,10 +77,34 @@ export function ClassOpener({
           // studio, so a shift on a coach's page opens under the gym that
           // owns it rather than under the coach, which resolves to nothing.
           const base = row.dataset.base || handle;
-          void classDetail(base.replace(/^s\//, ""), row.dataset.cid!, row.dataset.d || undefined)
+          const classId = row.dataset.cid!;
+          const iso = row.dataset.d || undefined;
+          const key = classMemoryKey(base, classId, iso);
+          const remembered = readClientMemory<ClassDetail>(key);
+          const request = ++openRequest.current;
+          if (remembered) setOpen(remembered);
+          else setOpen(null);
+          void loadClientMemory<ClassDetail | null>(key, () =>
+            classDetail(base.replace(/^s\//, ""), classId, iso),
+          )
             .then((detail) => {
-              if (detail) setOpen(detail);
-              else toast("That class isn't available");
+              if (request !== openRequest.current) return;
+              if (detail) {
+                // An undated door resolves to a concrete occurrence. Keep the
+                // canonical date key warm too, because ClassPeek uses it.
+                writeClientMemory(classMemoryKey(base, classId, detail.whenIso), detail);
+                setOpen(detail);
+              } else {
+                invalidateClientMemory(key);
+                setOpen(null);
+                toast("That class isn't available");
+              }
+            })
+            .catch(() => {
+              // A remembered answer is still useful when a quiet refresh
+              // fails. A cold tap has no sheet to preserve, so say so.
+              if (request === openRequest.current && !remembered)
+                toast("That class isn't available");
             });
         }}
       >
@@ -79,7 +113,10 @@ export function ClassOpener({
       {open && (
         <DeferredClassPeek
           detail={open}
-          onClose={() => setOpen(null)}
+          onClose={() => {
+            openRequest.current += 1;
+            setOpen(null);
+          }}
           onChanged={() => router.refresh()}
           onToast={toast}
           allowWeekAdd={allowWeekAdd}

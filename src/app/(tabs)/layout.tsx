@@ -16,6 +16,7 @@ import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { inviteBannerCountFor } from "@/lib/invite-banner";
 import { passwordPromptPending } from "@/lib/session";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
+import { ClientCacheScope } from "@/components/ClientCacheScope";
 
 export const dynamic = "force-dynamic";
 
@@ -112,53 +113,55 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <section className="screen hasnav" data-mode={lookMode(me.look)}>
-      <DesktopChrome
-        coach={isCoach}
-        scheduleHref={scheduleHref}
-        profileHref={profileHref}
-        notificationUnread={unread.notifications}
-        messageUnread={unread.messages}
-        admin={isAdmin}
-        adminAttention={adminAttention}
-        adminActivity={adminActivity}
-        person={{
-          name: me.name.trim() || me.email.split("@")[0],
-          location: me.location,
-          photo: me.photoThumb ?? me.photo,
-          color: face.color,
-          initial: face.initial,
-        }}
-      />
-      <div className="pad">
-        <AppHeader
+    <ClientCacheScope viewerId={userId}>
+      <section className="screen hasnav" data-mode={lookMode(me.look)}>
+        <DesktopChrome
+          coach={isCoach}
+          scheduleHref={scheduleHref}
+          profileHref={profileHref}
           notificationUnread={unread.notifications}
           messageUnread={unread.messages}
-          home="/feed"
           admin={isAdmin}
           adminAttention={adminAttention}
           adminActivity={adminActivity}
-          face={face}
+          person={{
+            name: me.name.trim() || me.email.split("@")[0],
+            location: me.location,
+            photo: me.photoThumb ?? me.photo,
+            color: face.color,
+            initial: face.initial,
+          }}
+        />
+        <div className="pad">
+          <AppHeader
+            notificationUnread={unread.notifications}
+            messageUnread={unread.messages}
+            home="/feed"
+            admin={isAdmin}
+            adminAttention={adminAttention}
+            adminActivity={adminActivity}
+            face={face}
+            profileHref={profileHref}
+            accountData={accountData}
+            social
+          />
+          <Suspense fallback={null}>
+            <DeferredInviteBanner viewer={deferredViewer} />
+          </Suspense>
+          {children}
+        </div>
+        <NavBar
+          coach={isCoach}
+          scheduleHref={scheduleHref}
           profileHref={profileHref}
-          accountData={accountData}
-          social
+          face={face}
+          unread={unread.notifications > 0 || unread.messages > 0}
         />
         <Suspense fallback={null}>
-          <DeferredInviteBanner viewer={deferredViewer} />
+          <DeferredFeedbackPrompt viewer={deferredViewer} />
         </Suspense>
-        {children}
-      </div>
-      <NavBar
-        coach={isCoach}
-        scheduleHref={scheduleHref}
-        profileHref={profileHref}
-        face={face}
-        unread={unread.notifications > 0 || unread.messages > 0}
-      />
-      <Suspense fallback={null}>
-        <DeferredFeedbackPrompt viewer={deferredViewer} />
-      </Suspense>
-      {passwordPromptMode && <SetPasswordPrompt mode={passwordPromptMode} />}
-    </section>
+        {passwordPromptMode && <SetPasswordPrompt mode={passwordPromptMode} />}
+      </section>
+    </ClientCacheScope>
   );
 }

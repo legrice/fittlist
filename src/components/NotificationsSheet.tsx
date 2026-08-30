@@ -5,15 +5,29 @@ import { loadNotificationSheet } from "@/app/actions/notifications";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { NotificationList, type Notif } from "@/components/UpdatesScreen";
+import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
+
+const NOTIFICATIONS_MEMORY_KEY = "sheet:notifications";
 
 export function NotificationsSheet({ onClose }: { onClose: () => void }) {
-  const [notifications, setNotifications] = useState<Notif[] | null>(null);
+  const [notifications, setNotifications] = useState<Notif[] | null>(() =>
+    readClientMemory<Notif[]>(NOTIFICATIONS_MEMORY_KEY),
+  );
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let live = true;
-    loadNotificationSheet().then((items) => {
-      if (live) setNotifications(items);
-    });
+    void loadClientMemory(NOTIFICATIONS_MEMORY_KEY, loadNotificationSheet)
+      .then((items) => {
+        if (live && items !== null) {
+          setNotifications(items);
+          setFailed(false);
+        }
+      })
+      .catch(() => {
+        // Keep the last successful list visible if the refresh fails.
+        if (live && notifications === null) setFailed(true);
+      });
     return () => { live = false; };
   }, []);
 
@@ -31,7 +45,13 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
               <p>Calendar, badge, and account activity</p>
             </div>
           </div>
-          {notifications ? <NotificationList notifications={notifications} /> : <div className="notifications-sheet-loading" role="status">Loading notifications</div>}
+          {notifications ? (
+            <NotificationList notifications={notifications} />
+          ) : failed ? (
+            <div className="notifications-sheet-loading" role="status">Couldn&rsquo;t load notifications</div>
+          ) : (
+            <div className="notifications-sheet-loading" role="status">Loading notifications</div>
+          )}
         </section>
       </div>
     </BodyPortal>

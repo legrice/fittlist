@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
 import { currentUser } from "@/lib/current-user";
 import { lookMode } from "@/lib/darkmode";
+import { ClientCacheScope } from "@/components/ClientCacheScope";
 
 export const dynamic = "force-dynamic";
 export const viewport: Viewport = { themeColor: "#ffffff" };
@@ -17,11 +18,13 @@ export default async function StudioManageLayout({ children }: { children: React
   if (!me) redirect("/");
 
   return (
-    <section className="screen hasnav" data-mode={lookMode(me.look)}>
-      <div className="pad studio-manage-shell">
-        <AppChrome userId={me.id} bar active="calendar" social />
-        {children}
-      </div>
-    </section>
+    <ClientCacheScope viewerId={me.id}>
+      <section className="screen hasnav" data-mode={lookMode(me.look)}>
+        <div className="pad studio-manage-shell">
+          <AppChrome userId={me.id} bar active="calendar" social />
+          {children}
+        </div>
+      </section>
+    </ClientCacheScope>
   );
 }

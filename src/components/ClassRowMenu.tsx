@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { FittlistShareSheet } from "@/components/InAppShare";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
@@ -130,17 +131,17 @@ export function ClassRowMenu({
                   </span>
                 </button>
               ) : (
-                <a className="setrow" href={pagePath}>
+                <Link className="setrow" href={pagePath}>
                   <span className="setrow-ic">
                     <Icon name="event" size={20} />
                   </span>
                   <span className="setrow-txt">
                     <span className="t">Class details</span>
                   </span>
-                </a>
+                </Link>
               )}
               {coach && (
-                <a className="setrow" href={coach.href}>
+                <Link className="setrow" href={coach.href}>
                   <span className="setrow-ic">
                     <Icon name="account_circle" size={20} />
                   </span>
@@ -148,10 +149,10 @@ export function ClassRowMenu({
                     <span className="t">Coach&rsquo;s profile</span>
                     <span className="s">{coach.name}</span>
                   </span>
-                </a>
+                </Link>
               )}
               {studio && (
-                <a className="setrow" href={studio.href}>
+                <Link className="setrow" href={studio.href}>
                   <span className="setrow-ic">
                     <Icon name="place" size={20} />
                   </span>
@@ -159,7 +160,7 @@ export function ClassRowMenu({
                     <span className="t">Studio page</span>
                     <span className="s">{studio.name}</span>
                   </span>
-                </a>
+                </Link>
               )}
               <button className="setrow" onClick={() => { setOpen(false); setShareOpen(true); }}>
                 <span className="setrow-ic">

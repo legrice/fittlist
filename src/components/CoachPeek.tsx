@@ -10,8 +10,12 @@ import { MessageComposer } from "@/components/MessageComposer";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
 import { Toast, useToast } from "@/components/Toast";
-
-const personCalendarMemory = new Map<string, Peek>();
+import {
+  invalidateClientMemory,
+  loadClientMemory,
+  readClientMemory,
+  writeClientMemory,
+} from "@/lib/client-memory";
 
 /**
  * One person's week, opened from their circle.
@@ -55,7 +59,8 @@ export function CoachPeek({
   onPinChange?: (pinned: boolean) => void;
   onClose: () => void;
 }) {
-  const rememberedPeek = personCalendarMemory.get(id) ?? null;
+  const memoryKey = `person-calendar:${id}`;
+  const rememberedPeek = readClientMemory<Peek>(memoryKey);
   const [peek, setPeek] = useState<Peek | null>(rememberedPeek);
   const [missing, setMissing] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
@@ -105,16 +110,19 @@ export function CoachPeek({
   }, []);
 
   useEffect(() => {
-    personPeek(id).then((res) => {
+    loadClientMemory(memoryKey, () => personPeek(id)).then((res) => {
       if (!res) {
-        if (!rememberedPeek) setMissing(true);
+        invalidateClientMemory(memoryKey);
+        setPeek(null);
+        setRelationship(null);
+        setMissing(true);
         return;
       }
-      personCalendarMemory.set(id, res);
       setPeek(res);
+      setMissing(false);
       setRelationship(res.following ? "following" : "off");
     });
-  }, [id]);
+  }, [id, memoryKey]);
 
   useEffect(() => setPinned(initialPinned), [initialPinned]);
 
@@ -132,10 +140,13 @@ export function CoachPeek({
       }
       if (before === "off") {
         const requested = "requested" in result && !!result.requested;
-        setRelationship(requested ? "requested" : "following");
+        const settled = requested ? "requested" : "following";
+        setRelationship(settled);
+        if (peek) writeClientMemory(memoryKey, { ...peek, following: !requested });
         toastFor(requested ? `Requested to follow ${name}.` : `Following ${name}.`, 3600);
       } else {
         setRelationship("off");
+        if (peek) writeClientMemory(memoryKey, { ...peek, following: false });
         onPinChange?.(false);
         window.dispatchEvent(new Event("calendar-pins-changed"));
         toastFor(`Unfollowed ${name}.`, 3600);

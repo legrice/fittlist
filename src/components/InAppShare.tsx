@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { peopleForSharing, type SharePerson } from "@/app/actions/share";
 import { sendInquiry } from "@/app/actions/inquiries";
 import { Icon } from "@/components/Icon";
+import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
+
+const SHARE_PEOPLE_MEMORY_KEY = "sheet:share:people";
 
 export function InAppShare({
   title,
@@ -14,16 +17,29 @@ export function InAppShare({
   url: string;
   onToast: (message: string) => void;
 }) {
-  const [people, setPeople] = useState<SharePerson[]>([]);
+  const [initialPeople] = useState<SharePerson[] | null>(() =>
+    readClientMemory<SharePerson[]>(SHARE_PEOPLE_MEMORY_KEY),
+  );
+  const [people, setPeople] = useState<SharePerson[]>(initialPeople ?? []);
   const [query, setQuery] = useState("");
   const [sent, setSent] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialPeople === null);
+  const [failed, setFailed] = useState(false);
   const [pending, start] = useTransition();
 
   useEffect(() => {
     let live = true;
-    peopleForSharing()
-      .then((rows) => live && setPeople(rows))
+    void loadClientMemory(SHARE_PEOPLE_MEMORY_KEY, peopleForSharing)
+      .then((rows) => {
+        if (live && rows !== null) {
+          setPeople(rows);
+          setFailed(false);
+        }
+      })
+      .catch(() => {
+        // Keep cached people on screen; an error is not an empty response.
+        if (live && initialPeople === null) setFailed(true);
+      })
       .finally(() => live && setLoading(false));
     return () => { live = false; };
   }, []);
@@ -72,7 +88,8 @@ export function InAppShare({
             <b>{sent[person.id] ? "Sent" : person.name}</b>
           </button>
         ))}
-        {!loading && shown.length === 0 && <p>No people match that.</p>}
+        {!loading && failed && <p>Couldn&rsquo;t load people right now.</p>}
+        {!loading && !failed && shown.length === 0 && <p>No people match that.</p>}
         {loading && <p>Finding people…</p>}
       </div>
     </section>

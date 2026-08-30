@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminClassEditor } from "@/app/actions/admin";
 import { deleteClass } from "@/app/actions/classes";
@@ -13,6 +14,13 @@ import { Icon } from "@/components/Icon";
 import { SavedClassShareSheet } from "@/components/SavedClassShareSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { FittlistShareSheet } from "@/components/InAppShare";
+import {
+  invalidateClientMemory,
+  invalidateClientMemoryPrefix,
+  loadClientMemory,
+  readClientMemory,
+  writeClientMemory,
+} from "@/lib/client-memory";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 
@@ -138,12 +146,15 @@ function CoachBy({ coach }: { coach: NonNullable<PeekClass["coach"]> }) {
   );
   if (!coach.handle) return <span className="clspeek-by">{face}</span>;
   return (
-    <a className="clspeek-by" href={`/${coach.handle}`}>
+    <Link className="clspeek-by" href={`/${coach.handle}`}>
       {face}
       <Icon name="chevron_right" size={18} />
-    </a>
+    </Link>
   );
 }
+
+const classMemoryKey = (base: string, id: string, iso?: string) =>
+  `class-detail:${base.replace(/^s\//, "")}:${id}:${iso || "next"}`;
 
 export function ClassPeek({
   cls,
@@ -171,12 +182,20 @@ export function ClassPeek({
 }) {
   const router = useRouter();
   const sheetRef = useRef<HTMLDivElement>(null);
+  // The base is an address ("s/{slug}" for a gym's class); classDetail wants
+  // the bare key it looks the owner up by. Conflating those two is how a
+  // shift's sheet loaded nothing: the lookup ran on "s/ironbound" and found
+  // neither a handle nor a slug.
+  const detailKey = cls.base?.replace(/^s\//, "");
+  const detailMemoryKey = detailKey ? classMemoryKey(detailKey, cls.id, cls.iso) : null;
   const [confirm, setConfirm] = useState<"occurrence" | "all" | null>(null);
   const [pending, start] = useTransition();
   // The depth, loaded only when somebody asks for it. Most taps are somebody
   // checking a time, and a photograph and a description are a lot to send for
   // that; this way the sheet is instant and the detail is one tap behind it.
-  const [full, setFull] = useState<ClassDetail | null>(initialDetail);
+  const [full, setFull] = useState<ClassDetail | null>(() =>
+    initialDetail ?? (detailMemoryKey ? readClientMemory<ClassDetail>(detailMemoryKey) : null) ?? null,
+  );
   const [loading, setLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
@@ -201,21 +220,39 @@ export function ClassPeek({
   const [adminAdder, setAdminAdder] = useState<Awaited<
     ReturnType<typeof adminClassEditor>
   > | null>(null);
+  const detailRequest = useRef(0);
+  const manageRequest = useRef(0);
 
-  // The base is an address ("s/{slug}" for a gym's class); classDetail wants
-  // the bare key it looks the owner up by. Conflating those two is how a
-  // shift's sheet loaded nothing: the lookup ran on "s/ironbound" and found
-  // neither a handle nor a slug.
-  const detailKey = cls.base?.replace(/^s\//, "");
+  const invalidateThisClass = () => {
+    if (detailKey)
+      invalidateClientMemoryPrefix(`class-detail:${detailKey}:${cls.id}:`);
+  };
 
   const openManage = () => {
-    if (loading || !detailKey) return;
-    setLoading(true);
-    classDetail(detailKey, cls.id, cls.iso)
+    if (loading || !detailKey || !detailMemoryKey) return;
+    const remembered = readClientMemory<ClassDetail>(detailMemoryKey) ?? full;
+    if (remembered)
+      setManage(remembered.shift ?? { onName: "", canGiveUp: true, canClaim: false, sendable: [] });
+    setLoading(!remembered);
+    const request = ++manageRequest.current;
+    void loadClientMemory<ClassDetail | null>(detailMemoryKey, () =>
+      classDetail(detailKey, cls.id, cls.iso),
+    )
       // A shift with no rota block back means the gym has nothing to offer on
       // this date; the sheet still opens, with give-up as the one thing left.
-      .then((d) => setManage(d?.shift ?? { onName: "", canGiveUp: true, canClaim: false, sendable: [] }))
-      .finally(() => setLoading(false));
+      .then((d) => {
+        if (request !== manageRequest.current) return;
+        setManage(d?.shift ?? { onName: "", canGiveUp: true, canClaim: false, sendable: [] });
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (request === manageRequest.current) setLoading(false);
+      });
+  };
+
+  const closeManage = () => {
+    manageRequest.current += 1;
+    setManage(null);
   };
 
   const runShift = (what: "give" | "send", toUserId?: string) =>
@@ -236,8 +273,10 @@ export function ClassPeek({
             ? "Sent. The studio has to approve it."
             : "Handed on. They have been told.",
       );
+      detailRequest.current += 1;
+      invalidateThisClass();
       setSending(false);
-      setManage(null);
+      closeManage();
       onClose();
       onChanged();
       router.refresh();
@@ -302,12 +341,38 @@ export function ClassPeek({
   // booking door are the sheet rather than a second tap behind it. The
   // summary fields paint instantly from the row while it arrives.
   useEffect(() => {
-    if (!detailKey || (initialDetail?.id === cls.id && initialDetail.whenIso === cls.iso)) return undefined;
+    if (!detailKey || !detailMemoryKey) return undefined;
     let live = true;
-    setLoading(true);
-    classDetail(detailKey, cls.id, cls.iso)
-      .then((d) => live && setFull(d))
-      .finally(() => live && setLoading(false));
+    const request = ++detailRequest.current;
+    if (initialDetail?.id === cls.id && initialDetail.whenIso === cls.iso) {
+      writeClientMemory(detailMemoryKey, initialDetail);
+      setFull(initialDetail);
+      setLoading(false);
+      return () => {
+        live = false;
+      };
+    }
+    const remembered = readClientMemory<ClassDetail>(detailMemoryKey);
+    if (remembered) setFull(remembered);
+    else setFull(null);
+    setLoading(!remembered);
+    void loadClientMemory<ClassDetail | null>(detailMemoryKey, () =>
+      classDetail(detailKey, cls.id, cls.iso),
+    )
+      .then((d) => {
+        if (!live || request !== detailRequest.current) return;
+        if (d) setFull(d);
+        else {
+          invalidateClientMemory(detailMemoryKey);
+          setFull(null);
+        }
+      })
+      // Keep a complete remembered answer on screen when a quiet refresh
+      // fails. Cold rows still have their summary fields from `cls`.
+      .catch(() => {})
+      .finally(() => {
+        if (live && request === detailRequest.current) setLoading(false);
+      });
     return () => {
       live = false;
     };
@@ -364,6 +429,24 @@ export function ClassPeek({
       } else {
         onToast("Removed from your calendar");
       }
+      detailRequest.current += 1;
+      if (full && detailMemoryKey) {
+        const nowOn = !wasOn;
+        const nextRsvp = res.rsvp ?? full.rsvp;
+        const updated = {
+          ...full,
+          added: nowOn,
+          addedPublic: nowOn ? true : null,
+          rsvp: nextRsvp,
+          rsvpCount: nextRsvp
+            ? Math.max(0, full.rsvpCount + (nowOn ? 1 : -1))
+            : full.rsvpCount,
+        };
+        setFull(updated);
+        writeClientMemory(detailMemoryKey, updated);
+      } else if (detailMemoryKey) {
+        invalidateClientMemory(detailMemoryKey);
+      }
       onChanged();
     } catch {
       setSavedNow(wasOn);
@@ -376,6 +459,7 @@ export function ClassPeek({
   const editClass = () => {
     setMoreOpen(false);
     if (cls.mine && onEdit) {
+      invalidateThisClass();
       onEdit();
       return;
     }
@@ -418,6 +502,8 @@ export function ClassPeek({
         return;
       }
       onToast(scope === "occurrence" ? "Cancelled, and everyone following knows" : "Off your week");
+      detailRequest.current += 1;
+      invalidateThisClass();
       setConfirm(null);
       onClose();
       onChanged();
@@ -529,10 +615,10 @@ export function ClassPeek({
               </span>
               <span className="clsfull-txt">
                 {cls.studioHref ? (
-                  <a className="clspeek-door" href={cls.studioHref}>
+                  <Link className="clspeek-door" href={cls.studioHref}>
                     <span className="t">{cls.studio}</span>
                     <Icon name="chevron_right" size={19} />
-                  </a>
+                  </Link>
                 ) : (
                   <span className="t">{cls.studio}</span>
                 )}
@@ -586,7 +672,10 @@ export function ClassPeek({
         {cls.mine && !cls.shift && (
           <>
             <div className="clspeek-cta">
-              <button className="clspeek-btn ghost" onClick={onEdit}>
+              <button className="clspeek-btn ghost" onClick={() => {
+                invalidateThisClass();
+                onEdit?.();
+              }}>
                 Edit
               </button>
               <button className="clspeek-btn ghost" onClick={() => setConfirm("occurrence")}>
@@ -703,7 +792,7 @@ export function ClassPeek({
               <div className="clspeek-titles">
                 <h2 className="clspeek-nm">Manage shift</h2>
               </div>
-              <button className="clspeek-x" aria-label="Close" onClick={() => setManage(null)}>
+              <button className="clspeek-x" aria-label="Close" onClick={closeManage}>
                 <Icon name="close" size={20} />
               </button>
             </div>
@@ -833,12 +922,16 @@ export function ClassPeek({
           onToast={onToast}
           onPublished={() => {
             setAdminAdder(null);
+            detailRequest.current += 1;
+            invalidateThisClass();
             onToast("Saved");
             onChanged();
             router.refresh();
           }}
           onDeleted={(message) => {
             setAdminAdder(null);
+            detailRequest.current += 1;
+            invalidateThisClass();
             onToast(message);
             onChanged();
             onClose();

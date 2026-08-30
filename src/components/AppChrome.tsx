@@ -7,6 +7,7 @@ import type { NavTab } from "@/lib/nav";
 import { DesktopChrome } from "@/components/DesktopChrome";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { currentUser } from "@/lib/current-user";
+import { ClientCacheScope } from "@/components/ClientCacheScope";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
@@ -83,6 +84,7 @@ export async function AppChrome({
 
   const header = (
     <>
+      <ClientCacheScope viewerId={userId}>{null}</ClientCacheScope>
       <DesktopChrome
         coach={isCoach}
         scheduleHref={scheduleHref}

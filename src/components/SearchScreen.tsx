@@ -7,6 +7,7 @@ import { ClassResults } from "@/components/ClassResults";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
 import type { DirClass } from "@/lib/discoverclasses";
+import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 
 // Two characters keeps a stray keystroke from asking for the directory.
 // The server action holds the same floor.
@@ -21,9 +22,15 @@ type RecentHit = {
   href: string;
 };
 
-function readRecents(): RecentHit[] {
+type SearchAnswer = Awaited<ReturnType<typeof searchDirectory>>;
+
+function recentKey(userId: string) {
+  return `${RECENT_KEY}:${userId}`;
+}
+
+function readRecents(userId: string): RecentHit[] {
   try {
-    const value: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    const value: unknown = JSON.parse(localStorage.getItem(recentKey(userId)) ?? "[]");
     if (!Array.isArray(value)) return [];
     // Older search builds also stored studios. Search is coaches-only now, so
     // those entries quietly fall out rather than preserving a hidden studio
@@ -54,20 +61,20 @@ function readRecents(): RecentHit[] {
   }
 }
 
-function writeRecent(hit: RecentHit): RecentHit[] {
-  const next = [hit, ...readRecents().filter((item) => item.href !== hit.href)].slice(
+function writeRecent(userId: string, hit: RecentHit): RecentHit[] {
+  const next = [hit, ...readRecents(userId).filter((item) => item.href !== hit.href)].slice(
     0,
     RECENT_MAX,
   );
   try {
-    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    localStorage.setItem(recentKey(userId), JSON.stringify(next));
   } catch {
     // Private mode: search still works, it just is not remembered.
   }
   return next;
 }
 
-export function SearchScreen({ todayIso }: { todayIso: string }) {
+export function SearchScreen({ todayIso, userId }: { todayIso: string; userId: string }) {
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
@@ -83,13 +90,14 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const run = useRef(0);
 
   useEffect(() => {
-    setRecent(readRecents());
+    setRecent(readRecents(userId));
     try {
       localStorage.removeItem("fl-recent-locations");
+      localStorage.removeItem(RECENT_KEY);
     } catch {
       // Nothing stored is a valid starting state.
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     const receive = (event: Event) => setQ((event as CustomEvent<string>).detail ?? "");
@@ -111,11 +119,21 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       return;
     }
     const mine = ++run.current;
-    setBusy(true);
+    const cacheKey = `directory-search:${needle.toLocaleLowerCase()}`;
+    const remembered = readClientMemory<SearchAnswer>(cacheKey);
+    if (remembered) {
+      setPeople(remembered.people);
+      setStudios(remembered.studios);
+      setClasses(remembered.classes);
+      setGroups(remembered.groups);
+      setAsked(needle);
+    }
+    setBusy(!remembered);
     setFailed(false);
     const timer = setTimeout(async () => {
       try {
-        const result = await searchDirectory(needle);
+        const result = await loadClientMemory(cacheKey, () => searchDirectory(needle));
+        if (!result) throw new Error("Search returned no result");
         if (run.current !== mine) return;
         setPeople(result.people);
         setStudios(result.studios);
@@ -124,12 +142,16 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
         setAsked(needle);
       } catch {
         if (run.current !== mine) return;
-        setPeople([]);
-        setStudios([]);
-        setClasses([]);
-        setGroups([]);
-        setAsked(needle);
-        setFailed(true);
+        // A remembered answer stays useful if the quiet refresh fails. Only a
+        // first visit needs to replace the screen with an error state.
+        if (!remembered) {
+          setPeople([]);
+          setStudios([]);
+          setClasses([]);
+          setGroups([]);
+          setAsked(needle);
+          setFailed(true);
+        }
       } finally {
         if (run.current === mine) setBusy(false);
       }
@@ -146,7 +168,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       if (!anchor) return;
       const handle = (anchor.getAttribute("href") ?? "").match(/^\/([^/?]+)(?:\?|$)/)?.[1];
       const person = rows.find((row) => row.handle === handle);
-      if (person) setRecent(writeRecent({ t: "p", name: person.name, href: `/${person.handle}?from=search` }));
+      if (person) setRecent(writeRecent(userId, { t: "p", name: person.name, href: `/${person.handle}?from=search` }));
     };
 
   const rememberStudio =
@@ -154,21 +176,21 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       const anchor = (event.target as HTMLElement).closest("a");
       const href = anchor?.getAttribute("href") ?? "";
       const studio = rows.find((row) => href.startsWith(`/s/${row.slug}`));
-      if (studio) setRecent(writeRecent({ t: "s", name: studio.name, href: `/s/${studio.slug}?from=search` }));
+      if (studio) setRecent(writeRecent(userId, { t: "s", name: studio.name, href: `/s/${studio.slug}?from=search` }));
     };
 
   const rememberClass = (event: MouseEvent<HTMLDivElement>) => {
     const anchor = (event.target as HTMLElement).closest("a");
     const href = anchor?.getAttribute("href") ?? "";
     const cls = classes.find((row) => href.includes(`/${row.classId}?`));
-    if (cls) setRecent(writeRecent({ t: "c", name: cls.name, href }));
+    if (cls) setRecent(writeRecent(userId, { t: "c", name: cls.name, href }));
   };
 
   const rememberGroup = (event: MouseEvent<HTMLDivElement>) => {
     const anchor = (event.target as HTMLElement).closest("a");
     const href = anchor?.getAttribute("href") ?? "";
     const group = groups.find((row) => href.startsWith(`/g/${row.slug}`));
-    if (group) setRecent(writeRecent({ t: "g", name: group.name, href: `/g/${group.slug}?from=search` }));
+    if (group) setRecent(writeRecent(userId, { t: "g", name: group.name, href: `/g/${group.slug}?from=search` }));
   };
 
   return (
@@ -185,7 +207,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
                   onClick={() => {
                     setRecent([]);
                     try {
-                      localStorage.removeItem(RECENT_KEY);
+                      localStorage.removeItem(recentKey(userId));
                     } catch {
                       // The visible state is already clear.
                     }

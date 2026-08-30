@@ -21,11 +21,16 @@ import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { readPhoto } from "@/lib/photo";
+import {
+  invalidateClientMemory,
+  loadClientMemory,
+  readClientMemory,
+  writeClientMemory,
+} from "@/lib/client-memory";
 
 const loadAdderModule = () => import("@/components/Adder");
 const Adder = dynamic(() => loadAdderModule().then((module) => module.Adder));
 type PersonalDetail = NonNullable<Awaited<ReturnType<typeof personalDetail>>>;
-const personalDetailMemory = new Map<string, PersonalDetail>();
 
 // The Share tab's screen, on Matt's concept: one surface, four subjects.
 // Week, Profile and QR code are segments rather than tiles, the title says
@@ -172,13 +177,15 @@ export function ShareHubScreen({
   // offer that comes back from it.
   const [addOpen, setAddOpen] = useState(false);
   const [adderBusy, setAdderBusy] = useState(false);
-  const [adderData, setAdderData] = useState<CalendarComposerData | null>(() => deferAdderData ? null : {
-    studios,
-    templates,
-    customTypes,
-    lastUsed,
-    subsCount:0,
-  });
+  const [adderData, setAdderData] = useState<CalendarComposerData | null>(() => deferAdderData
+    ? readClientMemory<CalendarComposerData>("calendar-composer")
+    : {
+        studios,
+        templates,
+        customTypes,
+        lastUsed,
+        subsCount:0,
+      });
   const adderPromise = useRef<Promise<CalendarComposerData | null> | null>(null);
   const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
   const [matchBusy, setMatchBusy] = useState(false);
@@ -187,9 +194,15 @@ export function ShareHubScreen({
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [editBusy, setEditBusy] = useState(false);
 
+  useEffect(() => {
+    if (adderData) writeClientMemory("calendar-composer", adderData);
+  }, [adderData]);
+
   const ensureAdderData = async () => {
     if (adderData) return adderData;
-    if (!adderPromise.current) adderPromise.current = loadCalendarComposerData(false);
+    if (!adderPromise.current) {
+      adderPromise.current = loadClientMemory("calendar-composer", () => loadCalendarComposerData(false));
+    }
     const loaded = await adderPromise.current;
     adderPromise.current = null;
     if (loaded) setAdderData(loaded);
@@ -218,8 +231,10 @@ export function ShareHubScreen({
     setEditBusy(true);
     const id = it.key.split(".")[0];
     try {
+      const detailKey = `personal-detail:${id}`;
+      const remembered = readClientMemory<PersonalDetail>(detailKey);
       const [d, tools] = await Promise.all([
-        personalDetailMemory.get(id) ?? personalDetail(id),
+        remembered ?? loadClientMemory(detailKey, () => personalDetail(id)),
         ensureAdderData(),
         loadAdderModule(),
       ]);
@@ -232,7 +247,11 @@ export function ShareHubScreen({
         toast("Couldn't load your class tools");
         return;
       }
-      personalDetailMemory.set(id, d);
+      writeClientMemory(detailKey, d);
+      // A cache hit opens the editor without waiting. Refresh its remembered
+      // source quietly for the next visit, without moving fields under the
+      // user's fingers after the form is already on screen.
+      if (remembered) void loadClientMemory(detailKey, () => personalDetail(id));
       setPick(null);
       setEdit({
         id: d.id,
@@ -1348,13 +1367,13 @@ export function ShareHubScreen({
           onClose={() => setEdit(null)}
           onToast={toast}
           onPublished={() => {
-            personalDetailMemory.delete(edit.id);
+            invalidateClientMemory(`personal-detail:${edit.id}`);
             setEdit(null);
             toast("Saved");
             refreshWeek();
           }}
           onDeleted={(msg) => {
-            personalDetailMemory.delete(edit.id);
+            invalidateClientMemory(`personal-detail:${edit.id}`);
             setEdit(null);
             toast(msg);
             refreshWeek();

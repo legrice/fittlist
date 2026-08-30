@@ -13,6 +13,7 @@ import { discoverGroups, discoverPeople, discoverStudios } from "@/app/actions/d
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
 import { PLACE_KIND_LABELS, PLACE_KINDS } from "@/lib/studio";
+import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 
 export type DiscoverHalf = "people" | "places" | "classes" | "groups";
 type Group = { id:string; name:string; slug:string; description:string|null; purpose:string; lat:number|null; lng:number|null; favorited:boolean };
@@ -25,7 +26,8 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
   const [studioRows,setStudioRows]=useState(studios);
   const [groupRows,setGroupRows]=useState(groups);
   const [peopleRows,setPeopleRows]=useState(people);
-  const [directoryPending,startDirectory]=useTransition();
+  const [,startDirectory]=useTransition();
+  const [directoryLoading,setDirectoryLoading]=useState(false);
   const loadedDirectories=useRef(new Map<DiscoverHalf,string>());
   const directoryRequests=useRef(new Map<DiscoverHalf,number>());
   const initialDistance=myLat!=null&&myLng!=null?"2":"";
@@ -55,18 +57,35 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
     const request=(directoryRequests.current.get(tab)??0)+1;
     directoryRequests.current.set(tab,request);
     const miles=distanceValue?Number(distanceValue):undefined;
+    const memoryKey=`discover-directory:${tab}:${key}`;
+    const remembered=tab==="places"
+      ? readClientMemory<DirStudio[]>(memoryKey)
+      : tab==="groups"
+        ? readClientMemory<Group[]>(memoryKey)
+        : readClientMemory<DirPerson[]>(memoryKey);
+    if(tab==="places")setStudioRows((remembered as DirStudio[]|null)??[]);
+    if(tab==="groups")setGroupRows((remembered as Group[]|null)??[]);
+    if(tab==="people")setPeopleRows((remembered as DirPerson[]|null)??[]);
+    setDirectoryLoading(!remembered);
     startDirectory(async()=>{
-      if(tab==="places"){
-        const rows=await discoverStudios(miles);
-        if(directoryRequests.current.get(tab)===request)setStudioRows(rows);
-      }
-      if(tab==="groups"){
-        const rows=await discoverGroups(miles);
-        if(directoryRequests.current.get(tab)===request)setGroupRows(rows);
-      }
-      if(tab==="people"){
-        const data=await discoverPeople(miles);
-        if(directoryRequests.current.get(tab)===request)setPeopleRows(data.people);
+      try{
+        if(tab==="places"){
+          const rows=await loadClientMemory(memoryKey,()=>discoverStudios(miles));
+          if(rows&&directoryRequests.current.get(tab)===request)setStudioRows(rows);
+        }
+        if(tab==="groups"){
+          const rows=await loadClientMemory(memoryKey,()=>discoverGroups(miles));
+          if(rows&&directoryRequests.current.get(tab)===request)setGroupRows(rows);
+        }
+        if(tab==="people"){
+          const rows=await loadClientMemory(memoryKey,async()=>(await discoverPeople(miles)).people);
+          if(rows&&directoryRequests.current.get(tab)===request)setPeopleRows(rows);
+        }
+      }catch{
+        // A remembered directory stays visible. A first-load failure keeps
+        // the existing empty treatment and naturally retries next visit.
+      }finally{
+        if(directoryRequests.current.get(tab)===request)setDirectoryLoading(false);
       }
     });
   },[tab,peopleDistance,studioDistance,groupDistance]);
@@ -75,9 +94,9 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
     <div className="dissearchrow discover-searchrow"><Link className="dissearch discover-search-door" href="/search"><Icon name="search" size={20} className="dissearch-ic"/><span>Search FittList</span></Link></div>
     <div className="discover-directory-tabs" role="tablist">{([['people','People'],['places','Studios'],['groups','Groups']] as const).map(([value,label])=><button role="tab" aria-selected={tab===value} className={tab===value?"on":""} onClick={()=>setTab(value)} key={value}>{label}</button>)}</div>
     {tab==="classes"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={classType} onChange={setClassType} all="Any type" options={classTypes}/></FilterRow>{discoverCalendarDays.length?<ClassOpener handle=""><CalendarList className="discover-calendar-list" days={discoverCalendarDays}/></ClassOpener>:<Empty>There are no classes matching these filters.</Empty>}</>}
-    {tab==="people"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={peopleDistance} onChange={setPeopleDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Specialty" value={discipline} onChange={setDiscipline} all="Any specialty" options={disciplines}/></FilterRow>{directoryPending?<Empty>Loading people…</Empty>:shownPeople.length?<div className="discover-person-grid">{shownPeople.map((person,index)=><DiscoverPerson person={person} index={index} activity={activityByName.get(person.name.trim().toLowerCase())??person.classesThisWeek} key={person.id}/>)}</div>:<Empty>There are no people matching these filters.</Empty>}</>}
-    {tab==="places"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={studioDistance} onChange={setStudioDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={placeKind} onChange={setPlaceKind} all="Any type" options={PLACE_KINDS.map((kind)=>[kind,PLACE_KIND_LABELS[kind]] as const)}/><Filter label="Category" value={studioType} onChange={setStudioType} all="Any category" options={studioTypes}/></FilterRow>{directoryPending?<Empty>Loading studios…</Empty>:shownStudios.length?<StudioGrid studios={shownStudios}/>:<Empty>There are no studios matching these filters.</Empty>}</>}
-    {tab==="groups"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={groupDistance} onChange={setGroupDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Purpose" value={purpose} onChange={setPurpose} all="Any purpose" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></FilterRow>{directoryPending?<Empty>Loading groups…</Empty>:shownGroups.length?<GroupGrid groups={shownGroups}/>:groupRows.length?<Empty>There are no groups matching these filters.</Empty>:<div className="discover-groups-empty"><span><Icon name="groups" size={32}/></span><h2>Plan fitness together</h2><p>Groups are shared calendars and updates for the people you train with. Add classes, invite members, and keep everyone&rsquo;s plans in one place.</p><button type="button" className="btn si" onClick={()=>setGroupCreateOpen(true)}><Icon name="add" size={21}/>Create a group</button></div>}</>}
+    {tab==="people"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={peopleDistance} onChange={setPeopleDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Specialty" value={discipline} onChange={setDiscipline} all="Any specialty" options={disciplines}/></FilterRow>{directoryLoading?<Empty>Loading people…</Empty>:shownPeople.length?<div className="discover-person-grid">{shownPeople.map((person,index)=><DiscoverPerson person={person} index={index} activity={activityByName.get(person.name.trim().toLowerCase())??person.classesThisWeek} key={person.id}/>)}</div>:<Empty>There are no people matching these filters.</Empty>}</>}
+    {tab==="places"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={studioDistance} onChange={setStudioDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={placeKind} onChange={setPlaceKind} all="Any type" options={PLACE_KINDS.map((kind)=>[kind,PLACE_KIND_LABELS[kind]] as const)}/><Filter label="Category" value={studioType} onChange={setStudioType} all="Any category" options={studioTypes}/></FilterRow>{directoryLoading?<Empty>Loading studios…</Empty>:shownStudios.length?<StudioGrid studios={shownStudios}/>:<Empty>There are no studios matching these filters.</Empty>}</>}
+    {tab==="groups"&&<><FilterRow active={activeFilters} onOpen={()=>setFiltersOpen(true)}><Filter label="Distance" value={groupDistance} onChange={setGroupDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Purpose" value={purpose} onChange={setPurpose} all="Any purpose" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></FilterRow>{directoryLoading?<Empty>Loading groups…</Empty>:shownGroups.length?<GroupGrid groups={shownGroups}/>:groupRows.length?<Empty>There are no groups matching these filters.</Empty>:<div className="discover-groups-empty"><span><Icon name="groups" size={32}/></span><h2>Plan fitness together</h2><p>Groups are shared calendars and updates for the people you train with. Add classes, invite members, and keep everyone&rsquo;s plans in one place.</p><button type="button" className="btn si" onClick={()=>setGroupCreateOpen(true)}><Icon name="add" size={21}/>Create a group</button></div>}</>}
     {!hideBack&&<Link className="logoutbtn" href={backHref}>Back to your week</Link>}
     {filtersOpen&&<div className="sheet-scrim" onClick={(event)=>{if(event.target===event.currentTarget)setFiltersOpen(false);}}><div className="sheet discover-filters-sheet"><button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={()=>setFiltersOpen(false)}><Icon name="close" size={18}/></button><div className="discover-filters-sheet-head"><h2>Filters</h2><button type="button" disabled={!activeFilters} onClick={clearFilters}>Clear all</button></div><div className="discover-filters-sheet-fields">{tab==="classes"?<><Filter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={classType} onChange={setClassType} all="Any type" options={classTypes}/></>:tab==="people"?<><Filter label="Distance" value={peopleDistance} onChange={setPeopleDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Specialty" value={discipline} onChange={setDiscipline} all="Any specialty" options={disciplines}/></>:tab==="places"?<><Filter label="Distance" value={studioDistance} onChange={setStudioDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Type" value={placeKind} onChange={setPlaceKind} all="Any type" options={PLACE_KINDS.map((kind)=>[kind,PLACE_KIND_LABELS[kind]] as const)}/><Filter label="Category" value={studioType} onChange={setStudioType} all="Any category" options={studioTypes}/></>:<><Filter label="Distance" value={groupDistance} onChange={setGroupDistance} all="Any distance" options={distanceOptions} disabled={myLat==null||myLng==null}/><Filter label="Purpose" value={purpose} onChange={setPurpose} all="Any purpose" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></>}</div><button type="button" className="btn discover-filters-done" onClick={()=>setFiltersOpen(false)}>Show results</button></div></div>}
     {groupCreateOpen&&<CreateGroupSheet onClose={()=>setGroupCreateOpen(false)}/>}

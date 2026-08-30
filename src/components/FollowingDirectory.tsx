@@ -10,8 +10,14 @@ import { Icon } from "@/components/Icon";
 import { PLACE_KIND_LABELS } from "@/lib/studio";
 import type {
   FollowingDirectoryData,
+  FollowingDirectoryBatch,
   FollowingDirectoryEntity,
 } from "@/lib/following-directory";
+import {
+  invalidateClientMemoryPrefix,
+  loadClientMemory,
+  readClientMemory,
+} from "@/lib/client-memory";
 
 type DirectoryTab = "following" | "discover";
 const distanceOptions = [["1","Within 1 mile"],["2","Within 2 miles"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]] as const;
@@ -59,24 +65,30 @@ export function FollowingDirectory({ data }: { data: FollowingDirectoryData }) {
   const clearFilters = () => { setDistance(""); setPrimaryFilter(""); setSecondaryFilter(""); setSort(""); };
 
   const loadTab = (nextTab: DirectoryTab, nextLimit: number) => {
+    const memoryKey = `following-directory:${data.kind}:${nextTab}:${nextLimit}`;
+    const apply = (result: FollowingDirectoryBatch) => {
+      setEntities((current) => {
+        const merged = new Map(current.map((entity) => [`${entity.type}:${entity.id}`, entity]));
+        for (const entity of result.entities) merged.set(`${entity.type}:${entity.id}`, entity);
+        return [...merged.values()];
+      });
+      setLoaded((current) => ({ ...current, [nextTab]: true }));
+      setLimits((current) => ({ ...current, [nextTab]: result.limit }));
+      setHasMore((current) => ({ ...current, [nextTab]: result.hasMore }));
+    };
+    const remembered = readClientMemory<FollowingDirectoryBatch>(memoryKey);
+    if (remembered) apply(remembered);
     setLoadFailed((current) => ({ ...current, [nextTab]: false }));
     startLoading(async () => {
       try {
-        const result = await loadFollowingDirectory(data.kind, nextTab, nextLimit);
+        const result = await loadClientMemory(memoryKey, () => loadFollowingDirectory(data.kind, nextTab, nextLimit));
         if (!result) {
-          setLoadFailed((current) => ({ ...current, [nextTab]: true }));
+          if (!remembered) setLoadFailed((current) => ({ ...current, [nextTab]: true }));
           return;
         }
-        setEntities((current) => {
-          const merged = new Map(current.map((entity) => [`${entity.type}:${entity.id}`, entity]));
-          for (const entity of result.entities) merged.set(`${entity.type}:${entity.id}`, entity);
-          return [...merged.values()];
-        });
-        setLoaded((current) => ({ ...current, [nextTab]: true }));
-        setLimits((current) => ({ ...current, [nextTab]: result.limit }));
-        setHasMore((current) => ({ ...current, [nextTab]: result.hasMore }));
+        apply(result);
       } catch {
-        setLoadFailed((current) => ({ ...current, [nextTab]: true }));
+        if (!remembered) setLoadFailed((current) => ({ ...current, [nextTab]: true }));
       }
     });
   };
@@ -224,11 +236,15 @@ function FollowingDirectoryRow({
         const result = await unfollowTrainer(entity.handle);
         if (result.ok) {
           onChange({ following: false, requested: false });
+          invalidateClientMemoryPrefix("following-directory:");
           window.dispatchEvent(new Event("calendar-pins-changed"));
         }
       } else {
         const result = await followTrainer(entity.handle);
-        if (result.ok) onChange({ following: !result.requested, requested: !!result.requested });
+        if (result.ok) {
+          onChange({ following: !result.requested, requested: !!result.requested });
+          invalidateClientMemoryPrefix("following-directory:");
+        }
       }
       return;
     }
@@ -236,12 +252,16 @@ function FollowingDirectoryRow({
       const result = await toggleStudioVisit(entity.slug);
       if (result.ok && result.selected !== undefined) {
         onChange({ following: result.selected });
+        invalidateClientMemoryPrefix("following-directory:");
         if (!result.selected) window.dispatchEvent(new Event("calendar-pins-changed"));
       }
       return;
     }
     const result = await toggleGroupFavorite(entity.slug);
-    if (result.ok && result.selected !== undefined) onChange({ following: result.selected });
+    if (result.ok && result.selected !== undefined) {
+      onChange({ following: result.selected });
+      invalidateClientMemoryPrefix("following-directory:");
+    }
   });
 
   return (

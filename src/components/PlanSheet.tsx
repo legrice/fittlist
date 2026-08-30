@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   personalDetail,
   removePersonalClass,
@@ -9,6 +9,11 @@ import {
 import { Icon } from "@/components/Icon";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { fmtDateLong } from "@/lib/format";
+import {
+  invalidateClientMemory,
+  loadClientMemory,
+  readClientMemory,
+} from "@/lib/client-memory";
 
 // One of your own entries, opened.
 //
@@ -47,19 +52,40 @@ export function PlanSheet({
   onRemoved: (msg: string) => void;
   onToast: (msg: string) => void;
 }) {
-  const [p, setP] = useState<PersonalDetail | null>(null);
-  const [missing, setMissing] = useState(false);
+  const memoryKey = `personal-detail:${id}`;
+  const remembered = readClientMemory<PersonalDetail>(memoryKey) ?? null;
+  const [loaded, setLoaded] = useState<PersonalDetail | null>(() => remembered);
+  // If React reuses this sheet for another row, never paint the previous
+  // entry for the one frame before its effect runs.
+  const p = loaded?.id === id ? loaded : remembered;
+  const [missingId, setMissingId] = useState<string | null>(null);
+  const missing = missingId === id;
   const [cardOpen, setCardOpen] = useState(share);
   const [confirm, setConfirm] = useState(false);
   const [pending, startTransition] = useTransition();
+  const detailRequest = useRef(0);
 
   useEffect(() => {
+    const key = `personal-detail:${id}`;
+    const cached = readClientMemory<PersonalDetail>(key) ?? null;
+    setLoaded(cached);
+    setMissingId(null);
+    const request = ++detailRequest.current;
     let live = true;
-    personalDetail(id).then((res) => {
-      if (!live) return;
-      if (res) setP(res);
-      else setMissing(true);
-    });
+    void loadClientMemory<PersonalDetail | null>(key, () => personalDetail(id))
+      .then((res) => {
+        if (!live || request !== detailRequest.current) return;
+        if (res) {
+          setLoaded(res);
+          setMissingId(null);
+        } else {
+          invalidateClientMemory(key);
+          setLoaded(null);
+          setMissingId(id);
+        }
+      })
+      // A quiet refresh should not replace a remembered entry with an error.
+      .catch(() => {});
     return () => {
       live = false;
     };
@@ -74,6 +100,8 @@ export function PlanSheet({
         onToast(res.error ?? "Couldn't remove that");
         return;
       }
+      detailRequest.current += 1;
+      invalidateClientMemory(memoryKey);
       onRemoved("Removed from your week");
     });
   };
@@ -153,7 +181,13 @@ export function PlanSheet({
               </section>
             </div>
             <div className="clspeek-cta">
-              <button className="clspeek-btn ghost" onClick={() => onEdit(p)}>Edit</button>
+              <button className="clspeek-btn ghost" onClick={() => {
+                // The editor owns the mutation callback, so drop this answer
+                // before handing it over; the next open cannot replay the
+                // pre-edit version even if the surrounding route stays put.
+                invalidateClientMemory(memoryKey);
+                onEdit(p);
+              }}>Edit</button>
               <button className="clspeek-btn ghost" onClick={() => setConfirm(true)}>Remove</button>
             </div>
           </>

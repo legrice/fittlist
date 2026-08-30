@@ -678,7 +678,7 @@ export function GymRota({
     const nextOffset = Math.max(0, week.offset + (delta > 0 ? 1 : -1));
     const params = new URLSearchParams({ w: String(nextOffset), d: nextIso });
     if (shiftFilter !== "all") params.set("show", shiftFilter);
-    window.location.assign(`${manageBase}?${params.toString()}`);
+    router.push(`${manageBase}?${params.toString()}`);
   };
   const floatingAddDay = (() => {
     if (mobileView === "day" && selectedDay) return selectedDay;

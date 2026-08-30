@@ -8,10 +8,20 @@ import { searchDirectory, type SearchGroup } from "@/app/actions/search";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
 import { initials } from "@/components/WeekView";
+import {
+  invalidateClientMemory,
+  invalidateClientMemoryPrefix,
+  loadClientMemory,
+  readClientMemory,
+} from "@/lib/client-memory";
 
 // The same floor /search holds; it lives in three files because a
 // "use server" module can only export async functions.
 const MIN = 2;
+const DISCOVER_PEOPLE_MEMORY_KEY = "sheet:discover:people";
+const DIRECTORY_SEARCH_MEMORY_PREFIX = "directory-search:";
+const SHARE_PEOPLE_MEMORY_KEY = "sheet:share:people";
+type DiscoverSearchData = Awaited<ReturnType<typeof searchDirectory>>;
 
 /**
  * The directory, pulled up over Following.
@@ -35,12 +45,16 @@ const MIN = 2;
  * button, and this way Following costs what Following costs.
  */
 export function DiscoverSheet({ onClose }: { onClose: () => void }) {
-  const [data, setData] = useState<DiscoverData | null>(null);
+  const [data, setData] = useState<DiscoverData | null>(() =>
+    readClientMemory<DiscoverData>(DISCOVER_PEOPLE_MEMORY_KEY),
+  );
+  const [dataFailed, setDataFailed] = useState(false);
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
   const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [asked, setAsked] = useState("");
   // Only the newest request may paint, or a slow "st" lands after "stacey"
   // and the results go backwards while you type.
@@ -54,7 +68,17 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     let live = true;
-    discoverPeople().then((d) => live && setData(d));
+    void loadClientMemory(DISCOVER_PEOPLE_MEMORY_KEY, discoverPeople)
+      .then((next) => {
+        if (live && next !== null) {
+          setData(next);
+          setDataFailed(false);
+        }
+      })
+      .catch(() => {
+        // A stale value remains useful; without one, keep the existing loader.
+        if (live && data === null) setDataFailed(true);
+      });
     return () => {
       live = false;
     };
@@ -67,20 +91,44 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
       setStudios([]);
       setGroups([]);
       setBusy(false);
+      setFailed(false);
       setAsked("");
       run.current++;
       return;
     }
     const mine = ++run.current;
-    setBusy(true);
-    const t = setTimeout(async () => {
-      const res = await searchDirectory(needle);
-      if (run.current !== mine) return;
-      setPeople(res.people);
-      setStudios(res.studios);
-      setGroups(res.groups);
+    const key = `${DIRECTORY_SEARCH_MEMORY_PREFIX}${needle.toLocaleLowerCase()}`;
+    const cached = readClientMemory<DiscoverSearchData>(key);
+    if (cached) {
+      setPeople(cached.people);
+      setStudios(cached.studios);
+      setGroups(cached.groups);
       setAsked(needle);
       setBusy(false);
+    } else {
+      setBusy(true);
+    }
+    setFailed(false);
+    const t = setTimeout(async () => {
+      try {
+        const res = await loadClientMemory<DiscoverSearchData>(key, () => searchDirectory(needle));
+        if (run.current !== mine || res === null) return;
+        setPeople(res.people);
+        setStudios(res.studios);
+        setGroups(res.groups);
+        setAsked(needle);
+      } catch {
+        // Do not turn a failed request into an empty result or discard cache.
+        if (run.current === mine && !cached) {
+          setPeople([]);
+          setStudios([]);
+          setGroups([]);
+          setAsked(needle);
+          setFailed(true);
+        }
+      } finally {
+        if (run.current === mine) setBusy(false);
+      }
     }, 220);
     return () => clearTimeout(t);
   }, [q]);
@@ -88,7 +136,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
   if (!mounted) return null;
   const searching = q.trim().length >= MIN;
   const nothing =
-    searching && !busy && asked === q.trim() && !people.length && !studios.length && !groups.length;
+    searching && !busy && !failed && asked === q.trim() && !people.length && !studios.length && !groups.length;
 
   return createPortal(
     <div
@@ -128,7 +176,12 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         {searching ? (
-          nothing ? (
+          failed ? (
+            <div className="empty-block">
+              <h2>Couldn&rsquo;t search right now</h2>
+              <p>Try that search again in a moment.</p>
+            </div>
+          ) : nothing ? (
             <div className="empty-block">
               <h2>Nothing matches that</h2>
               <p>Try another name, a town, or the link somebody gave you.</p>
@@ -203,6 +256,8 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
               )}
             </div>
           </>
+        ) : dataFailed ? (
+          <p className="dissheet-wait">Couldn&rsquo;t load coaches. Try again in a moment.</p>
         ) : (
           // Nothing dramatic while it loads: the sheet is already up and the
           // list is the only thing in it, so a spinner would be a second
@@ -229,12 +284,20 @@ function PeopleRow({ p }: { p: DirPerson }) {
     const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
     if (state === "off") {
       const res = await followTrainer(p.handle);
-      if (res.ok) setState(res.requested ? "requested" : "following");
+      if (res.ok) {
+        setState(res.requested ? "requested" : "following");
+        invalidateClientMemory(DISCOVER_PEOPLE_MEMORY_KEY);
+        invalidateClientMemoryPrefix(DIRECTORY_SEARCH_MEMORY_PREFIX);
+        invalidateClientMemory(SHARE_PEOPLE_MEMORY_KEY);
+      }
     } else {
       // Unfollow also withdraws a pending ask, so Requested is the cancel.
       const res = await unfollowTrainer(p.handle);
       if (res.ok) {
         setState("off");
+        invalidateClientMemory(DISCOVER_PEOPLE_MEMORY_KEY);
+        invalidateClientMemoryPrefix(DIRECTORY_SEARCH_MEMORY_PREFIX);
+        invalidateClientMemory(SHARE_PEOPLE_MEMORY_KEY);
         window.dispatchEvent(new Event("calendar-pins-changed"));
       }
     }

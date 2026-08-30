@@ -4,16 +4,14 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 import { BodyPortal } from "@/components/BodyPortal";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { loadPersonalCalendarData, type PersonalCalendarData } from "@/app/actions/calendar-data";
+import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 
-// Shared by every Calendar entry point for the lifetime of this app session.
-// Reopening paints the last complete answer immediately, then refreshes it
-// quietly so navigation never falls back to a loading frame.
-let personalCalendarMemory: PersonalCalendarData | null = null;
+const PERSONAL_CALENDAR_KEY = "personal-calendar";
 
 export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, openAdder = false }: { children:ReactNode; className?:string; ariaLabel?:string; openAdder?:boolean }) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [data, setData] = useState<PersonalCalendarData | null>(() => personalCalendarMemory);
+  const [data, setData] = useState<PersonalCalendarData | null>(() => readClientMemory(PERSONAL_CALENDAR_KEY));
   const [pending, startTransition] = useTransition();
   const historyMarker = useRef(`personal-calendar-${Math.random().toString(36).slice(2)}`);
   const originScrollY = useRef(0);
@@ -58,22 +56,20 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
     setOpen(true);
   };
   const refreshCalendar = () => startTransition(async () => {
-    const fresh = await loadPersonalCalendarData();
+    const fresh = await loadClientMemory(PERSONAL_CALENDAR_KEY, loadPersonalCalendarData);
     if (!fresh) return;
-    personalCalendarMemory = fresh;
     setData(fresh);
   });
   const show = () => {
-    const remembered = data ?? personalCalendarMemory;
+    const remembered = data ?? readClientMemory<PersonalCalendarData>(PERSONAL_CALENDAR_KEY);
     if (remembered) {
       openCalendar(remembered);
       refreshCalendar();
       return;
     }
     startTransition(async () => {
-      const fresh = await loadPersonalCalendarData();
+      const fresh = await loadClientMemory(PERSONAL_CALENDAR_KEY, loadPersonalCalendarData);
       if (!fresh) return;
-      personalCalendarMemory = fresh;
       openCalendar(fresh);
     });
   };

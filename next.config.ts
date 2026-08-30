@@ -15,13 +15,12 @@ const nextConfig: NextConfig = {
     // sharper hero source can legitimately pass Next's 1MB default once it is
     // base64 encoded; the action validates the image again before storage.
     serverActions: { bodySizeLimit: "3mb" },
-    // Let the client router reuse a dynamic page it rendered in the last 30
-    // seconds instead of round-tripping to the server again. Every screen is
-    // force-dynamic, so without this each tab tap re-rendered a page you were
-    // just looking at; with it, hopping between tabs is instant and the data
-    // is at most half a minute old, which for a weekly schedule is nothing.
-    // Mutations still bust it: server actions call revalidatePath.
-    staleTimes: { dynamic: 30 },
+    // Keep recently visited dynamic routes in the browser's in-memory working
+    // set. Five minutes is long enough for normal tab/profile hopping to feel
+    // immediate without persisting private pages to disk. Mutations still bust
+    // affected entries through revalidatePath/router.refresh; action-loaded
+    // sheets use the account-scoped stale-while-refresh cache alongside this.
+    staleTimes: { dynamic: 300 },
   },
   // Files read off disk at runtime must be listed here or serverless
   // bundles omit them: drizzle/ (migrations run on boot, every route
