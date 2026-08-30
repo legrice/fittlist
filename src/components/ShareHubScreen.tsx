@@ -197,6 +197,7 @@ export function ShareHubScreen({
   const [pick, setPick] = useState<
     null | "dates" | "classes" | "message" | "layout" | "color"
   >(null);
+  const [styleSection, setStyleSection] = useState<"presets" | "saved">("presets");
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [shareCapabilityKnown, setShareCapabilityKnown] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
@@ -1199,12 +1200,30 @@ export function ShareHubScreen({
               <Icon name="close" size={18} />
             </button>
             <h2>Style</h2>
-            <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
-            <button className="shremix-action" type="button" onClick={remix}>
-              <Icon name="auto_awesome" size={19} />
-              Randomize this look
-            </button>
-            <div className="settingslist layoutlist">
+            <div className="shstyle-tabs" role="tablist" aria-label="Style choices">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={styleSection === "presets"}
+                className={styleSection === "presets" ? "on" : ""}
+                onClick={() => setStyleSection("presets")}
+              >
+                Presets
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={styleSection === "saved"}
+                className={styleSection === "saved" ? "on" : ""}
+                onClick={() => setStyleSection("saved")}
+              >
+                Saved
+              </button>
+            </div>
+            {styleSection === "presets" && (
+              <>
+              <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
+              <div className="settingslist layoutlist">
               {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(
                 ([id]) => id !== "cowboy",
               ).map(
@@ -1240,8 +1259,11 @@ export function ShareHubScreen({
                   );
                 },
               )}
-            </div>
-            <div className="shsavedlooks">
+              </div>
+              </>
+            )}
+            {styleSection === "saved" && (
+            <div className="shsavedlooks shsavedlooks-tab">
               <div className="shsavedlooks-head">
                 <div>
                   <h3>Your looks</h3>
@@ -1295,6 +1317,7 @@ export function ShareHubScreen({
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
       )}
