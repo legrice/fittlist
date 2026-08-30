@@ -925,12 +925,17 @@ export function FollowingScreen({
                       <div>
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
+                          const studio = item.whereHref ? studioOptions.find((option) => `/s/${option.slug}` === item.whereHref) : null;
                           const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
+                          const sourceName = coachName ?? studio?.name ?? null;
+                          const sourcePhoto = coach?.photo ?? studio?.photo ?? null;
+                          const sourceColor = coach?.color ?? studio?.color ?? "var(--color-olive)";
                           const relation = calendarRelation(item, meId);
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className={`cash-class-main ${relation.tone}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                              {calendarFilter !== "you" && sourceName && <span className={`cash-class-avatar${!coach && studio ? " studio" : ""}`} style={{ background:sourceColor }}>{sourcePhoto ? <img src={sourcePhoto} alt="" /> : <span>{(sourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
                               <span className="cash-class-copy">
-                                {(coachName || calendarFilter === "you") && <span className="cash-class-coachline">{coachName && <small>{coachName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{calendarFilter === "you" && <span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}
+                                {(sourceName || calendarFilter === "you") && <span className="cash-class-coachline">{sourceName && <small>{sourceName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{calendarFilter === "you" && <span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}
                                 <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
