@@ -17,7 +17,6 @@ import { loadCalendarComposerData, type CalendarComposerData } from "@/app/actio
 import { setStoryBackground } from "@/app/actions/profile";
 import {
   deleteSavedStoryLook,
-  saveDefaultStoryDesign,
   saveNamedStoryLook,
 } from "@/app/actions/share-design";
 import { recordShareImageExport } from "@/app/actions/product-activity";
@@ -132,7 +131,7 @@ export function ShareHubScreen({
   lastUsed: LastUsed;
   /** Server-created once per screen load so SSR and hydration use one image URL. */
   initialRevision: number;
-  /** The account-level default chosen with Save style. */
+  /** The account-level design the editor opens with. */
   initialDesign: ShareDesign | null;
   /** Reusable named looks, such as Teaching week or Weekend plans. */
   savedLooks: SavedStoryLook[];
@@ -776,25 +775,6 @@ export function ShareHubScreen({
     </>
   );
 
-  const saveCurrentDesign = async () => {
-    if (designSaving || backgroundBusy) return;
-    setDesignSaving(true);
-    try {
-      const result = await saveDefaultStoryDesign(currentDesign);
-      if (!result.ok) {
-        toast(result.error);
-        return;
-      }
-      writeClientMemory(`share-design-draft:${handle}`, result.design);
-      resetDesignRef.current = result.design;
-      toast("Look saved for next time");
-    } catch {
-      toast("Couldn't save this look");
-    } finally {
-      setDesignSaving(false);
-    }
-  };
-
   const saveNamedLook = async () => {
     if (designSaving || backgroundBusy || !lookName.trim()) return;
     setDesignSaving(true);
@@ -869,9 +849,6 @@ export function ShareHubScreen({
             <div className="shdesign-actions" aria-label="Design actions">
               <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
               <button type="button" onClick={resetDesign}>Reset</button>
-              <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
-                {designSaving ? "Saving..." : "Save style"}
-              </button>
             </div>
 
             {/* One preview is the center of the studio. The quiet stage gives

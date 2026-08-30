@@ -10907,7 +10907,6 @@ a.clspeek-by:active { opacity: .6; }
   min-height:36px; padding:0; border:0; background:none; color:var(--ink);
   font:inherit; font-size:14px; font-weight:600; cursor:pointer;
 }
-.shdesign-actions button:last-child { color:var(--si-strong); }
 .shdesign-actions button:disabled { color:var(--muted); cursor:default; opacity:.5; }
 .shedit {
   align-self: center; display: inline-flex; align-items: center; gap: 2px;
@@ -12924,7 +12923,6 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-share-sheet .shdesign-actions button + button {
   border-left:1px solid var(--sheditor-border);
 }
-.calendar-share-sheet .shdesign-actions button:last-child { color:var(--si-ink); }
 .calendar-share-sheet .shdesign-actions button:disabled { color:var(--sheditor-muted); }
 .sheditor-share-action { margin-top:10px; }
 .sheditor-share-action .shheader-share { width:100%; }
