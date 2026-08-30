@@ -1,12 +1,18 @@
 import { eq, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { getDb, schema } from "@/db";
+import { INSTAGRAM_HANDLE } from "@/lib/brand";
 import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { typeFaceOf } from "@/lib/typefaces";
 import { decoOf } from "@/lib/decorations";
-import { listBudget, planStory, type StoryFormat } from "@/lib/storyplan";
+import {
+  listBudget,
+  planStory,
+  storyFeatureBudget,
+  type StoryFormat,
+} from "@/lib/storyplan";
 import { shareRange, shareWeek } from "@/lib/shareweek";
 
 // The composer's picture. One route for both hats and both canvases, because
@@ -25,6 +31,17 @@ export const dynamic = "force-dynamic";
  *  by Matt's call: the longer "Come train with me." read as two asks. */
 const FALLBACK: [string, string] = ["Train", "with me."];
 const FALLBACK_FAN: [string, string] = ["Come", "with me."];
+
+const boundedNumber = (
+  value: string | null,
+  fallback: number,
+  min: number,
+  max: number,
+): number => {
+  if (value === null || value.trim() === "") return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
+};
 
 // A visual edit changes the PNG but not the underlying week. Keep those DB
 // reads warm for this editor revision; a class/background mutation bumps the
@@ -108,6 +125,9 @@ export async function GET(req: Request) {
     (photoParam ? photoParam !== "0" : me.showPhoto !== false) && !!me.photo;
   const showStudio = qs.get("studios") !== "0";
   const handle = (me.handle ?? "").trim();
+  const backgroundX = boundedNumber(qs.get("bx"), 50, 0, 100);
+  const backgroundY = boundedNumber(qs.get("by"), 50, 0, 100);
+  const backgroundOverlay = boundedNumber(qs.get("bo"), 24, 0, 60);
 
   // The slider's loudness knob, over a 1.4 baseline, by Matt's call: the
   // default poster wears what used to be 140%, and the slider moves
@@ -136,8 +156,40 @@ export async function GET(req: Request) {
   // coach picture) saying Coaching on every line is the tag saying nothing.
   const flat = byDay.flatMap((d) => d.items);
   const mixed = flat.some((c) => c.coaching) && flat.some((c) => !c.coaching);
+  // Feature selection happens after hiding, by design: a class cannot be both
+  // omitted and promoted. Remove the promoted occurrence from the ordinary
+  // planner so the same class never appears twice on one image.
+  const featureKey = (qs.get("feature") ?? "").trim();
+  const featured = featureKey
+    ? byDay
+        .flatMap(({ day, items }) => items.map((item) => ({ day, item })))
+        .find(({ item }) => item.key === featureKey)
+    : undefined;
+  const feature = featured
+    ? {
+        day: featured.day,
+        time: featured.item.time,
+        name: featured.item.name,
+        sub: [
+          mixed && featured.item.coaching ? "Coaching" : featured.item.who,
+          showStudio ? featured.item.where : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      }
+    : null;
+  const regularDays = byDay
+    .map((day) => ({
+      ...day,
+      items: featured ? day.items.filter((item) => item.key !== featured.item.key) : day.items,
+    }))
+    .filter((day) => day.items.length > 0);
+  const scheduleBudget = Math.max(
+    0,
+    listBudget(headH, format) - (feature ? storyFeatureBudget(format) : 0),
+  );
   const plan = planStory(
-    byDay.map(({ day, items }) => ({
+    regularDays.map(({ day, items }) => ({
       day,
       items: items.map((c) => ({
         time: c.time,
@@ -148,9 +200,12 @@ export async function GET(req: Request) {
         who: mixed && c.coaching ? "Coaching" : c.who,
       })),
     })),
-    listBudget(headH, format) / y.rowScale,
+    scheduleBudget / y.rowScale,
     764,
-    { keepPlacesWithClasses: flat.some((c) => c.coaching) },
+    // A lifted "All at" belongs to the regular list only and reads as a claim
+    // about the hero too. Keep places attached when there is a feature so the
+    // two parts of the image cannot contradict each other.
+    { keepPlacesWithClasses: !!feature || flat.some((c) => c.coaching) },
   );
 
   return renderStory({
@@ -162,6 +217,10 @@ export async function GET(req: Request) {
     headlineSize: hSize,
     photo: showPhoto ? me.photo : null,
     backgroundPhoto,
+    backgroundX,
+    backgroundY,
+    backgroundOverlay,
+    feature,
     plan,
     empty: byDay.length === 0,
     emptyLine: fan
@@ -172,6 +231,7 @@ export async function GET(req: Request) {
     // stays Delight.
     typeface: typeFaceOf(qs.get("type") ?? y.typeface),
     deco: decoOf(qs.get("deco") ?? y.decoration),
+    instagramTag: qs.get("tag") === "1" ? INSTAGRAM_HANDLE : null,
     cacheControl: qs.has("v") ? "private, max-age=31536000, immutable" : "no-store",
   });
 }

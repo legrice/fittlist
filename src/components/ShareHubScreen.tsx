@@ -15,12 +15,25 @@ import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
 import { loadCalendarComposerData, type CalendarComposerData } from "@/app/actions/calendar-data";
 import { setStoryBackground } from "@/app/actions/profile";
+import {
+  deleteSavedStoryLook,
+  saveDefaultStoryDesign,
+  saveNamedStoryLook,
+} from "@/app/actions/share-design";
+import { recordShareImageExport } from "@/app/actions/product-activity";
 import { setGoing } from "@/app/actions/going";
 import type { AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { InstagramTagPrompt } from "@/components/InstagramTagPrompt";
 import { readPhoto } from "@/lib/photo";
+import {
+  DEFAULT_SHARE_DESIGN,
+  sanitizeShareDesign,
+  type SavedStoryLook,
+  type ShareDesign,
+} from "@/lib/share-design";
 import {
   invalidateClientMemory,
   loadClientMemory,
@@ -42,6 +55,15 @@ type PersonalDetail = NonNullable<Awaited<ReturnType<typeof personalDetail>>>;
 // and the page link lives with the QR code.
 //
 type Seg = "week" | "profile" | "qr" | "text";
+type EditorSnapshot = {
+  design: ShareDesign;
+  headline: string;
+  from: string;
+  days: number;
+  hidden: string[];
+  hat: "coaching" | "saved";
+  featuredKey: string | null;
+};
 
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
@@ -83,6 +105,8 @@ export function ShareHubScreen({
   customTypes,
   lastUsed,
   initialRevision,
+  initialDesign,
+  savedLooks: initialSavedLooks,
   deferAdderData = false,
 }: {
   /** Render inside another surface (the calendar's share sheet). The sheet
@@ -111,7 +135,7 @@ export function ShareHubScreen({
    *  one, so the Message chip never claims the default while the picture
    *  draws something else. */
   savedHeadline: string;
-  /** The last background picked in this editor, reusable next time. */
+  /** Whether a reusable background photo is already stored. */
   hasBackground: boolean;
   /** The adder's ingredients, loaded only for a member: their hub carries
    *  the personal adder, because building the week is what the tab is for. */
@@ -121,13 +145,29 @@ export function ShareHubScreen({
   lastUsed: LastUsed;
   /** Server-created once per screen load so SSR and hydration use one image URL. */
   initialRevision: number;
+  /** The account-level default chosen with Save this look. */
+  initialDesign: ShareDesign | null;
+  /** Reusable named looks, such as Teaching week or Weekend plans. */
+  savedLooks: SavedStoryLook[];
   /** Route tabs defer member-only class tools until Add or Edit is used. */
   deferAdderData?: boolean;
 }) {
   const router = useRouter();
+  const rememberedDesign = useRef(
+    readClientMemory<ShareDesign>(`share-design-draft:${handle}`),
+  ).current;
+  const startingDesign = useRef(
+    sanitizeShareDesign(
+      rememberedDesign ?? initialDesign ?? {
+        ...DEFAULT_SHARE_DESIGN,
+        useBackgroundPhoto: hasBackground,
+      },
+    ),
+  ).current;
+  const resetDesignRef = useRef(startingDesign);
   const [seg, setSeg] = useState<Seg>("week");
-  const [themeId, setThemeId] = useState<StoryThemeId>("paper");
-  const [styleId, setStyleId] = useState<StoryStyleId>("plain");
+  const [themeId, setThemeId] = useState<StoryThemeId>(startingDesign.themeId);
+  const [styleId, setStyleId] = useState<StoryStyleId>(startingDesign.styleId);
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
   const [hide, setHide] = useState<Set<string>>(new Set());
@@ -139,25 +179,33 @@ export function ShareHubScreen({
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
   const [draftHeadline, setDraftHeadline] = useState(savedHeadline);
-  const [background, setBackground] = useState(hasBackground);
+  const [background, setBackground] = useState(hasBackground && startingDesign.useBackgroundPhoto);
+  const [photoAvailable, setPhotoAvailable] = useState(hasBackground);
   const [backgroundBusy, setBackgroundBusy] = useState(false);
   const backgroundRef = useRef<HTMLInputElement>(null);
+  const [photoX, setPhotoX] = useState(startingDesign.photoX);
+  const [photoY, setPhotoY] = useState(startingDesign.photoY);
+  const [photoOverlay, setPhotoOverlay] = useState(startingDesign.overlay);
+  const [draftPhotoX, setDraftPhotoX] = useState(startingDesign.photoX);
+  const [draftPhotoY, setDraftPhotoY] = useState(startingDesign.photoY);
+  const [draftPhotoOverlay, setDraftPhotoOverlay] = useState(startingDesign.overlay);
+  const [showInstagramTag, setShowInstagramTag] = useState(startingDesign.showInstagramTag);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
-  const [noHead, setNoHead] = useState(false);
-  const [draftNoHead, setDraftNoHead] = useState(false);
+  const [noHead, setNoHead] = useState(startingDesign.noHead);
+  const [draftNoHead, setDraftNoHead] = useState(startingDesign.noHead);
   // The poster's voice, picked by personality: see typefaces.ts.
-  const [typeId, setTypeId] = useState<TypeFaceId>("standard");
-  const [draftTypeId, setDraftTypeId] = useState<TypeFaceId>("standard");
+  const [typeId, setTypeId] = useState<TypeFaceId>(startingDesign.typeId);
+  const [draftTypeId, setDraftTypeId] = useState<TypeFaceId>(startingDesign.typeId);
   // The headline's loudness, in percent. hsize is what the picture reads;
   // The draft slider stays local to its sheet, so dragging never queues a
   // server render per pixel. Done commits one final image.
-  const [hsize, setHsize] = useState(100);
-  const [draftSlider, setDraftSlider] = useState(100);
+  const [hsize, setHsize] = useState(startingDesign.headlineSize);
+  const [draftSlider, setDraftSlider] = useState(startingDesign.headlineSize);
   // The dressing: the top bar (the default), frames and day dividers.
   // See decorations.ts.
-  const [decoId, setDecoId] = useState<DecoId>("top");
+  const [decoId, setDecoId] = useState<DecoId>(startingDesign.decoId);
   const [pick, setPick] = useState<
     null | "dates" | "classes" | "message" | "layout" | "color"
   >(null);
@@ -166,6 +214,8 @@ export function ShareHubScreen({
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [nativeShareAvailable, setNativeShareAvailable] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [instagramPromptOpen, setInstagramPromptOpen] = useState(false);
+  const closeInstagramPrompt = useCallback(() => setInstagramPromptOpen(false), []);
   const [preparedShare, setPreparedShare] = useState<{ url: string; file: File } | null>(null);
   const [prepareFailed, setPrepareFailed] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -173,6 +223,7 @@ export function ShareHubScreen({
   // picture the moment a class lands, and a cached preview of the week
   // before is a lie waiting to be posted.
   const [bust, setBust] = useState(initialRevision);
+  const backgroundPreviewUrl = photoAvailable ? `/api/story/background?v=${bust}` : null;
   // The member's build flow: the adder, and the "that class is on fittlist"
   // offer that comes back from it.
   const [addOpen, setAddOpen] = useState(false);
@@ -193,6 +244,13 @@ export function ShareHubScreen({
   // on the row's saved details.
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [editBusy, setEditBusy] = useState(false);
+  const [featuredKey, setFeaturedKey] = useState<string | null>(null);
+  const [draftFeaturedKey, setDraftFeaturedKey] = useState<string | null>(null);
+  const [savedLooks, setSavedLooks] = useState(initialSavedLooks);
+  const [savingLook, setSavingLook] = useState(false);
+  const [lookName, setLookName] = useState("");
+  const [designSaving, setDesignSaving] = useState(false);
+  const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([]);
 
   useEffect(() => {
     if (adderData) writeClientMemory("calendar-composer", adderData);
@@ -292,10 +350,17 @@ export function ShareHubScreen({
             toast(result.error ?? "Couldn't add that background");
             return;
           }
+          pushUndo();
+          setPhotoAvailable(true);
           setBackground(true);
+          setPhotoX(50);
+          setPhotoY(50);
+          setPhotoOverlay(24);
+          setDraftPhotoX(50);
+          setDraftPhotoY(50);
+          setDraftPhotoOverlay(24);
           setBust(Date.now());
-          setPick(null);
-          toast("Photo background added");
+          toast("Photo added. Position it below.");
         } catch {
           toast("Couldn't add that background");
         } finally {
@@ -312,21 +377,25 @@ export function ShareHubScreen({
   const removeBackground = async () => {
     if (backgroundBusy) return;
     const previous = background;
+    const previousAvailable = photoAvailable;
     setBackground(false);
+    setPhotoAvailable(false);
     setBust(Date.now());
     setPick(null);
     setBackgroundBusy(true);
     try {
       const result = await setStoryBackground(null);
       if (result.ok) {
-        toast("Photo background removed");
+        toast("Photo deleted");
         return;
       }
       setBackground(previous);
+      setPhotoAvailable(previousAvailable);
       setBust(Date.now());
       toast(result.error ?? "Couldn't remove the background");
     } catch {
       setBackground(previous);
+      setPhotoAvailable(previousAvailable);
       setBust(Date.now());
       toast("Couldn't remove the background");
     } finally {
@@ -334,32 +403,12 @@ export function ShareHubScreen({
     }
   };
 
-  const chooseColorBackground = async (id: StoryThemeId) => {
+  const chooseColorBackground = (id: StoryThemeId) => {
     if (backgroundBusy) return;
-    const previous = background;
-    const previousTheme = themeId;
+    pushUndo();
     setThemeId(id);
+    setBackground(false);
     setPick(null);
-    if (background) {
-      setBackground(false);
-      setBust(Date.now());
-      setBackgroundBusy(true);
-      try {
-        const result = await setStoryBackground(null);
-        if (result.ok) return;
-        setBackground(previous);
-        setThemeId(previousTheme);
-        setBust(Date.now());
-        toast(result.error ?? "Couldn't change the background");
-      } catch {
-        setBackground(previous);
-        setThemeId(previousTheme);
-        setBust(Date.now());
-        toast("Couldn't change the background");
-      } finally {
-        setBackgroundBusy(false);
-      }
-    }
   };
 
   // A server change (an add, a mark) has to reach both the list and the
@@ -475,13 +524,127 @@ export function ShareHubScreen({
 
   const shown = inRange.filter((it) => !effHide.has(it.key)).length;
 
+  const currentDesign = useMemo(
+    () => sanitizeShareDesign({
+      styleId,
+      themeId,
+      typeId,
+      decoId,
+      headlineSize:hsize,
+      noHead,
+      useBackgroundPhoto:background && photoAvailable,
+      photoX,
+      photoY,
+      overlay:photoOverlay,
+      showInstagramTag,
+    }),
+    [
+      background,
+      decoId,
+      hsize,
+      noHead,
+      photoAvailable,
+      photoOverlay,
+      photoX,
+      photoY,
+      showInstagramTag,
+      styleId,
+      themeId,
+      typeId,
+    ],
+  );
+
+  // Returning to Share keeps the work-in-progress look instantly. Save this
+  // look below is the deliberate cross-session/account action; this short
+  // memory is what makes an accidental tab switch harmless.
+  useEffect(() => {
+    writeClientMemory(`share-design-draft:${handle}`, currentDesign);
+  }, [currentDesign, handle]);
+
+  useEffect(() => {
+    if (featuredKey && !items.some((item) => item.key === featuredKey)) setFeaturedKey(null);
+  }, [featuredKey, items]);
+
+  const captureSnapshot = (): EditorSnapshot => ({
+    design:currentDesign,
+    headline,
+    from,
+    days,
+    hidden:[...hide],
+    hat,
+    featuredKey,
+  });
+
+  const pushUndo = () => {
+    const snapshot = captureSnapshot();
+    setUndoStack((current) => [...current.slice(-19), snapshot]);
+  };
+
+  const applyDesign = (design: ShareDesign) => {
+    const safe = sanitizeShareDesign(design);
+    setStyleId(safe.styleId);
+    setThemeId(safe.themeId);
+    setTypeId(safe.typeId);
+    setDecoId(safe.decoId);
+    setHsize(safe.headlineSize);
+    setNoHead(safe.noHead);
+    setBackground(photoAvailable && safe.useBackgroundPhoto);
+    setPhotoX(safe.photoX);
+    setPhotoY(safe.photoY);
+    setPhotoOverlay(safe.overlay);
+    setShowInstagramTag(safe.showInstagramTag);
+  };
+
+  const restoreSnapshot = (snapshot: EditorSnapshot) => {
+    applyDesign(snapshot.design);
+    setHeadline(snapshot.headline);
+    setFrom(snapshot.from);
+    setDays(snapshot.days);
+    setHide(new Set(snapshot.hidden));
+    setHat(snapshot.hat);
+    setFeaturedKey(snapshot.featuredKey);
+  };
+
+  const undoLast = () => {
+    const previous = undoStack[undoStack.length - 1];
+    if (!previous) return;
+    setUndoStack((current) => current.slice(0, -1));
+    restoreSnapshot(previous);
+  };
+
+  const resetDesign = () => {
+    pushUndo();
+    applyDesign(resetDesignRef.current);
+    setFeaturedKey(null);
+  };
+
+  const applyCompleteStyle = (id: StoryStyleId) => {
+    const style = STORY_STYLES[id];
+    setStyleId(id);
+    setThemeId(style.theme);
+    setTypeId(style.typeface);
+    setDecoId(style.decoration);
+    setHsize(style.headlineSize);
+    setBackground(false);
+  };
+
+  const remix = () => {
+    const choices = (Object.keys(STORY_STYLES) as StoryStyleId[]).filter(
+      (id) => id !== "cowboy" && id !== styleId,
+    );
+    const next = choices[Math.floor(Math.random() * choices.length)] ?? "plain";
+    pushUndo();
+    applyCompleteStyle(next);
+  };
+
   const hideParam = [...effHide].join(",");
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
   const rawWeekImgUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
-    `&nohead=${noHead ? 1 : 0}` +
+    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bo=${photoOverlay}&tag=${showInstagramTag ? 1 : 0}` +
+    `${featuredKey ? `&feature=${encodeURIComponent(featuredKey)}` : ""}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const rawCardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   // An offscreen carousel card keeps the last image it successfully showed.
@@ -561,11 +724,23 @@ export function ShareHubScreen({
     return true;
   };
 
-  const shareImage = async (url: string, file: string, failWord: string) => {
+  const shareImage = async (
+    url: string,
+    file: string,
+    failWord: string,
+    offerInstagramReshare = false,
+  ) => {
     if (sharing) return;
     setSharing(true);
+    const shared = () => {
+      void recordShareImageExport();
+      if (offerInstagramReshare) setInstagramPromptOpen(true);
+    };
     try {
-      if (nativeShare(url, file)) return;
+      if (nativeShare(url, file)) {
+        shared();
+        return;
+      }
       if (
         canShareFiles &&
         preparedShare?.url === url &&
@@ -575,6 +750,7 @@ export function ShareHubScreen({
           files: [preparedShare.file],
           title: "Share your FittList",
         });
+        shared();
         return;
       }
       if (canShareFiles) {
@@ -586,10 +762,12 @@ export function ShareHubScreen({
             files: [f],
             title: "Share your FittList",
           });
+          shared();
           return;
         }
       }
       downloadImage(url, file);
+      shared();
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") toast(`Couldn't share the ${failWord}`);
     } finally {
@@ -597,7 +775,12 @@ export function ShareHubScreen({
     }
   };
 
-  const imageShareActions = (url: string, file: string, failWord: string) => (
+  const imageShareActions = (
+    url: string,
+    file: string,
+    failWord: string,
+    offerInstagramReshare = false,
+  ) => (
     <div className="shcta">
       <button
         className="btn si"
@@ -606,7 +789,7 @@ export function ShareHubScreen({
           !shareCapabilityKnown ||
           (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url && !prepareFailed)
         }
-        onClick={() => shareImage(url, file, failWord)}
+        onClick={() => shareImage(url, file, failWord, offerInstagramReshare)}
       >
         {sharing
           ? "Opening share sheet..."
@@ -650,6 +833,63 @@ export function ShareHubScreen({
       toast("Link copied, ready to paste");
     } catch {
       toast(url);
+    }
+  };
+
+  const saveCurrentDesign = async () => {
+    if (designSaving || backgroundBusy) return;
+    setDesignSaving(true);
+    try {
+      const result = await saveDefaultStoryDesign(currentDesign);
+      if (!result.ok) {
+        toast(result.error);
+        return;
+      }
+      writeClientMemory(`share-design-draft:${handle}`, result.design);
+      resetDesignRef.current = result.design;
+      toast("Look saved for next time");
+    } catch {
+      toast("Couldn't save this look");
+    } finally {
+      setDesignSaving(false);
+    }
+  };
+
+  const saveNamedLook = async () => {
+    if (designSaving || backgroundBusy || !lookName.trim()) return;
+    setDesignSaving(true);
+    try {
+      const result = await saveNamedStoryLook({ name:lookName, design:currentDesign });
+      if (!result.ok) {
+        toast(result.error);
+        return;
+      }
+      setSavedLooks(result.savedLooks);
+      setLookName("");
+      setSavingLook(false);
+      toast(`${result.look.name} saved`);
+    } catch {
+      toast("Couldn't save that look");
+    } finally {
+      setDesignSaving(false);
+    }
+  };
+
+  const removeNamedLook = async (id: string) => {
+    if (designSaving || backgroundBusy) return;
+    setDesignSaving(true);
+    try {
+      const result = await deleteSavedStoryLook(id);
+      if (!result.ok) {
+        toast(result.error);
+        return;
+      }
+      setSavedLooks(result.savedLooks);
+      toast("Saved look removed");
+    } catch {
+      toast("Couldn't remove that look");
+    } finally {
+      setDesignSaving(false);
     }
   };
 
@@ -838,7 +1078,17 @@ export function ShareHubScreen({
                     {adderBusy ? "Loading..." : "+ Add another class"}
                   </button>
                 )}
-                <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
+                <button className="shctrl shctrl-remix" onClick={remix}>
+                  <span className="shctrl-k"><Icon name="auto_awesome" size={14} /> Remix</span>
+                  <span className="shctrl-v">Try another look</span>
+                </button>
+                <button className="shctrl" onClick={() => {
+                  setDraftPhotoX(photoX);
+                  setDraftPhotoY(photoY);
+                  setDraftPhotoOverlay(photoOverlay);
+                  setColorMenuOpen(false);
+                  setPick("color");
+                }}>
                   <span className="shctrl-k">Background</span>
                   <span className="shctrl-v">{background ? "Photo" : STORY_THEMES[themeId].label}</span>
                 </button>
@@ -859,11 +1109,27 @@ export function ShareHubScreen({
                     event.currentTarget.value = "";
                   }}
                 />
-                <button className="shctrl" onClick={() => { setDraftHide(new Set(hide)); setDraftHat(hat); setPick("classes"); }}>
+                <button className="shctrl" onClick={() => {
+                  setDraftHide(new Set(hide));
+                  setDraftHat(hat);
+                  setDraftFeaturedKey(featuredKey);
+                  setPick("classes");
+                }}>
                   <span className="shctrl-k">Classes</span>
                   <span className="shctrl-v">
                     {hatRows.length === 0 ? "None in range" : `${shown} of ${hatRows.length} showing`}
                   </span>
+                </button>
+                <button
+                  className="shctrl"
+                  aria-pressed={showInstagramTag}
+                  onClick={() => {
+                    pushUndo();
+                    setShowInstagramTag((shown) => !shown);
+                  }}
+                >
+                  <span className="shctrl-k">Image tag</span>
+                  <span className="shctrl-v">{showInstagramTag ? "@fittlist on" : "@fittlist off"}</span>
                 </button>
                 <button className="shctrl" onClick={() => { setDraftFrom(from); setDraftDays(days); setPick("dates"); }}>
                   <span className="shctrl-k">Dates</span>
@@ -885,8 +1151,18 @@ export function ShareHubScreen({
           </div>
         )}
 
+        {!building && seg === "week" && (
+          <div className="shdesign-actions" aria-label="Design actions">
+            <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
+            <button type="button" onClick={resetDesign}>Reset</button>
+            <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
+              {designSaving ? "Saving..." : "Save this look"}
+            </button>
+          </div>
+        )}
+
         {!building && (seg === "week" || seg === "profile") &&
-          imageShareActions(imgUrl, fileName, seg === "week" ? "picture" : "card")}
+          imageShareActions(imgUrl, fileName, seg === "week" ? "picture" : "card", seg === "week")}
 
         {!building && seg === "qr" && imageShareActions(qrUrl, qrFileName, "QR code")}
 
@@ -965,7 +1241,7 @@ export function ShareHubScreen({
               ))}
             </div>
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => { setFrom(draftFrom); setDays(draftDays); setPick(null); }}>
+              <button className="btn si" onClick={() => { pushUndo(); setFrom(draftFrom); setDays(draftDays); setPick(null); }}>
                 Done
               </button>
             </div>
@@ -1007,23 +1283,100 @@ export function ShareHubScreen({
               {seg === "week" && (
                 <button
                   type="button"
-                  className={`shbackground-choice${background ? " on" : ""}`}
-                  aria-pressed={!!background}
-                  disabled={backgroundBusy}
-                  onClick={() => backgroundRef.current?.click()}
-                >
+                className={`shbackground-choice${background ? " on" : ""}`}
+                aria-pressed={!!background}
+                disabled={backgroundBusy}
+                onClick={() => {
+                  if (!photoAvailable) {
+                    backgroundRef.current?.click();
+                    return;
+                  }
+                  pushUndo();
+                  setBackground(true);
+                }}
+              >
                   <span className="shbackground-choice-top">
                     <span className="shbackground-image-preview"><Icon name="image" size={24} /></span>
                     {background && <Icon name="check" size={20} />}
-                  </span>
-                  <strong>Photo</strong>
-                  <span>{background ? "Photo selected" : "Choose from photos"}</span>
-                </button>
+                </span>
+                <strong>Photo</strong>
+                <span>{photoAvailable ? (background ? "Photo selected" : "Use saved photo") : "Choose from photos"}</span>
+              </button>
               )}
             </div>
             {seg === "week" && background && (
-              <button className="shbackground-remove" disabled={backgroundBusy} onClick={() => void removeBackground()}>
-                Remove photo
+              <div className="shphoto-controls">
+                {backgroundPreviewUrl && (
+                  <div className="shphoto-position-preview" aria-hidden="true">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={backgroundPreviewUrl}
+                      alt=""
+                      style={{ objectPosition:`${draftPhotoX}% ${draftPhotoY}%` }}
+                    />
+                    <span style={{ background:`rgba(0,0,0,${draftPhotoOverlay / 100})` }} />
+                  </div>
+                )}
+                <label className="flabel" htmlFor="shPhotoX">Move left or right</label>
+                <input
+                  id="shPhotoX"
+                  className="shslider"
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={draftPhotoX}
+                  onChange={(event) => setDraftPhotoX(Number(event.target.value))}
+                />
+                <label className="flabel" htmlFor="shPhotoY">Move up or down</label>
+                <input
+                  id="shPhotoY"
+                  className="shslider"
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={draftPhotoY}
+                  onChange={(event) => setDraftPhotoY(Number(event.target.value))}
+                />
+                <label className="flabel" htmlFor="shPhotoOverlay">
+                  Darken photo <span>· {draftPhotoOverlay}%</span>
+                </label>
+                <input
+                  id="shPhotoOverlay"
+                  className="shslider"
+                  type="range"
+                  min={0}
+                  max={60}
+                  step={2}
+                  value={draftPhotoOverlay}
+                  onChange={(event) => setDraftPhotoOverlay(Number(event.target.value))}
+                />
+                <div className="publishwrap nostick">
+                  <button
+                    className="btn si"
+                    onClick={() => {
+                      pushUndo();
+                      setPhotoX(draftPhotoX);
+                      setPhotoY(draftPhotoY);
+                      setPhotoOverlay(draftPhotoOverlay);
+                      setPick(null);
+                    }}
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+            {seg === "week" && photoAvailable && (
+              <button
+                className="shbackground-remove"
+                disabled={backgroundBusy}
+                onClick={() => {
+                  if (window.confirm("Delete this saved photo? This cannot be undone.")) {
+                    void removeBackground();
+                  }
+                }}
+              >
+                Delete saved photo
               </button>
             )}
           </div>
@@ -1053,6 +1406,7 @@ export function ShareHubScreen({
                     setColorMenuOpen(false);
                     if (seg === "week") void chooseColorBackground(id);
                     else {
+                      pushUndo();
                       setThemeId(id);
                       setPick(null);
                     }
@@ -1081,6 +1435,10 @@ export function ShareHubScreen({
             </button>
             <h2>Style</h2>
             <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
+            <button className="shremix-action" type="button" onClick={remix}>
+              <Icon name="auto_awesome" size={19} />
+              Remix this look
+            </button>
             <div className="settingslist layoutlist">
               {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(
                 ([id]) => id !== "cowboy",
@@ -1094,11 +1452,8 @@ export function ShareHubScreen({
                       data-layout={id}
                       aria-pressed={on}
                       onClick={() => {
-                        setStyleId(id);
-                        setThemeId(style.theme);
-                        setTypeId(style.typeface);
-                        setDecoId(style.decoration);
-                        setHsize(style.headlineSize);
+                        pushUndo();
+                        applyCompleteStyle(id);
                         setPick(null);
                       }}
                     >
@@ -1119,6 +1474,60 @@ export function ShareHubScreen({
                     </button>
                   );
                 },
+              )}
+            </div>
+            <div className="shsavedlooks">
+              <div className="shsavedlooks-head">
+                <div>
+                  <h3>Your looks</h3>
+                  <p>Keep a few versions ready for different kinds of weeks.</p>
+                </div>
+                <button type="button" disabled={designSaving || backgroundBusy} onClick={() => setSavingLook(true)}>Save new</button>
+              </div>
+              {savingLook && (
+                <div className="shsavedlooks-form">
+                  <label className="flabel" htmlFor="shLookName">Look name</label>
+                  <input
+                    id="shLookName"
+                    className="editinput"
+                    autoFocus
+                    maxLength={32}
+                    value={lookName}
+                    placeholder="Teaching week"
+                    onChange={(event) => setLookName(event.target.value)}
+                  />
+                  <div>
+                    <button type="button" onClick={() => { setSavingLook(false); setLookName(""); }}>Cancel</button>
+                    <button type="button" className="shsavedlooks-save" disabled={!lookName.trim() || designSaving || backgroundBusy} onClick={() => void saveNamedLook()}>
+                      {designSaving ? "Saving..." : "Save look"}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {savedLooks.length === 0 && !savingLook ? (
+                <p className="shsavedlooks-empty">Save a look for teaching weeks, workouts, or weekend plans.</p>
+              ) : (
+                <div className="shsavedlooks-list">
+                  {savedLooks.map((look) => (
+                    <div className="shsavedlook" key={look.id}>
+                      <button
+                        type="button"
+                        className="shsavedlook-main"
+                        onClick={() => {
+                          pushUndo();
+                          applyDesign(look.design);
+                          setPick(null);
+                        }}
+                      >
+                        <span className="shsavedlook-swatch" style={{ background:STORY_THEMES[look.design.themeId].bg }} />
+                        <span>{look.name}</span>
+                      </button>
+                      <button type="button" className="shsavedlook-delete" aria-label={`Delete ${look.name}`} disabled={designSaving || backgroundBusy} onClick={() => void removeNamedLook(look.id)}>
+                        <Icon name="delete" size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -1201,7 +1610,7 @@ export function ShareHubScreen({
               </>
             )}
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => { setHeadline(draftHeadline); setNoHead(draftNoHead); setTypeId(draftTypeId); setHsize(draftSlider); setPick(null); }}>
+              <button className="btn si" onClick={() => { pushUndo(); setHeadline(draftHeadline); setNoHead(draftNoHead); setTypeId(draftTypeId); setHsize(draftSlider); setPick(null); }}>
                 Done
               </button>
             </div>
@@ -1224,7 +1633,7 @@ export function ShareHubScreen({
             {/* Without this line people read a checkbox as a delete and stop
                 touching the control: hiding is the picture's business only. */}
             <p className="lead">
-              Untick one to leave it off the picture. Your schedule keeps it.
+              Untick one to leave it off the picture. Tap a star to make one class the feature.
             </p>
             {/* Which hat, never both, by Matt's call: the picture is the
                 classes you coach or the ones you added, and the segment
@@ -1266,7 +1675,10 @@ export function ShareHubScreen({
                         setDraftHide((cur) => {
                           const next = new Set(cur);
                           if (next.has(it.key)) next.delete(it.key);
-                          else next.add(it.key);
+                          else {
+                            next.add(it.key);
+                            if (draftFeaturedKey === it.key) setDraftFeaturedKey(null);
+                          }
                           return next;
                         })
                       }
@@ -1285,6 +1697,15 @@ export function ShareHubScreen({
                           {wday(it.iso)}, {short(it.iso)} · {it.time}
                         </span>
                       </span>
+                    </button>
+                    <button
+                      className={`shpick-featurebtn${draftFeaturedKey === it.key ? " on" : ""}`}
+                      aria-label={draftFeaturedKey === it.key ? `Stop featuring ${it.name}` : `Feature ${it.name}`}
+                      aria-pressed={draftFeaturedKey === it.key}
+                      disabled={off}
+                      onClick={() => setDraftFeaturedKey((current) => current === it.key ? null : it.key)}
+                    >
+                      <Icon name={draftFeaturedKey === it.key ? "star_filled" : "star"} size={20} />
                     </button>
                     {it.own && (
                       <button
@@ -1316,7 +1737,17 @@ export function ShareHubScreen({
               </button>
             )}
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => { setHide(new Set(draftHide)); setHat(draftHat); setPick(null); }}>
+              <button className="btn si" onClick={() => {
+                pushUndo();
+                setHide(new Set(draftHide));
+                setHat(draftHat);
+                setFeaturedKey(
+                  draftFeaturedKey && draftHatRows.some((item) => item.key === draftFeaturedKey) && !draftHide.has(draftFeaturedKey)
+                    ? draftFeaturedKey
+                    : null,
+                );
+                setPick(null);
+              }}>
                 Done
               </button>
             </div>
@@ -1455,6 +1886,11 @@ export function ShareHubScreen({
           </div>
         </div>
       )}
+      <InstagramTagPrompt
+        open={instagramPromptOpen}
+        onClose={closeInstagramPrompt}
+        onToast={toast}
+      />
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

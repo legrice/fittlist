@@ -435,21 +435,25 @@ export async function setStoryPrefs(input: {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };
   const db = await getDb();
-  const [u] = await db
-    .select({ storyPrefs: schema.users.storyPrefs })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId));
-  const prefs = { ...(u?.storyPrefs ?? {}) };
-  if (input.headline !== undefined) {
-    const h = input.headline.replace(/\s+/g, " ").trim().slice(0, HEADLINE_MAX);
-    const safetyError = objectionableContentError(h);
-    if (safetyError) return { ok: false, error: safetyError };
-    if (h) prefs.headline = h;
-    else delete prefs.headline;
-  }
-  if (input.showPhoto !== undefined) prefs.showPhoto = !!input.showPhoto;
-  await db.update(schema.users).set({ storyPrefs: prefs }).where(eq(schema.users.id, userId));
-  return { ok: true };
+  return db.transaction(async (tx) => {
+    const [u] = await tx
+      .select({ storyPrefs: schema.users.storyPrefs })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .for("update");
+    if (!u) return { ok: false };
+    const prefs = { ...u.storyPrefs };
+    if (input.headline !== undefined) {
+      const h = input.headline.replace(/\s+/g, " ").trim().slice(0, HEADLINE_MAX);
+      const safetyError = objectionableContentError(h);
+      if (safetyError) return { ok: false, error: safetyError };
+      if (h) prefs.headline = h;
+      else delete prefs.headline;
+    }
+    if (input.showPhoto !== undefined) prefs.showPhoto = !!input.showPhoto;
+    await tx.update(schema.users).set({ storyPrefs: prefs }).where(eq(schema.users.id, userId));
+    return { ok: true };
+  });
 }
 
 /** A reusable full-bleed photo for the share poster. It lives with the other
@@ -457,22 +461,30 @@ export async function setStoryPrefs(input: {
  * never change somebody's identity everywhere else in the app. */
 export async function setStoryBackground(
   dataUrl: string | null,
-): Promise<{ ok: boolean; background?: string; error?: string }> {
+): Promise<{ ok: boolean; background?: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in again to add a background." };
   if (dataUrl && (!dataUrl.startsWith("data:image/") || dataUrl.length > 2_500_000)) {
     return { ok: false, error: "That photo is too large. Try choosing it again." };
   }
+  const storedBackground = dataUrl ? await storeImage(dataUrl, "story-background") : null;
+  if (dataUrl && !storedBackground) {
+    return { ok: false, error: "Couldn't save that background. Try choosing it again." };
+  }
   const db = await getDb();
-  const [u] = await db
-    .select({ storyPrefs: schema.users.storyPrefs })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId));
-  const prefs = { ...(u?.storyPrefs ?? {}) };
-  if (dataUrl) prefs.background = (await storeImage(dataUrl, "story-background")) ?? undefined;
-  else delete prefs.background;
-  await db.update(schema.users).set({ storyPrefs: prefs }).where(eq(schema.users.id, userId));
-  return { ok: true, background: prefs.background };
+  return db.transaction(async (tx) => {
+    const [u] = await tx
+      .select({ storyPrefs: schema.users.storyPrefs })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .for("update");
+    if (!u) return { ok: false, error: "That account could not be found." };
+    const prefs = { ...u.storyPrefs };
+    if (storedBackground) prefs.background = storedBackground;
+    else delete prefs.background;
+    await tx.update(schema.users).set({ storyPrefs: prefs }).where(eq(schema.users.id, userId));
+    return { ok: true, background: !!prefs.background };
+  });
 }
 
 

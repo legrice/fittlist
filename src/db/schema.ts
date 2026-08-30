@@ -14,6 +14,7 @@ import {
   doublePrecision,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { SavedStoryLook, ShareDesign } from "@/lib/share-design";
 
 export type BookingLink = { label: string; url: string };
 
@@ -117,7 +118,14 @@ export const users = pgTable("users", {
   // Share-image customisation: headline, photo chip, preferred theme. A blob so
   // later knobs (background image, formats) slot in without schema churn.
   storyPrefs: jsonb("story_prefs")
-    .$type<{ headline?: string; showPhoto?: boolean; theme?: string; background?: string }>()
+    .$type<{
+      headline?: string;
+      showPhoto?: boolean;
+      theme?: string;
+      background?: string;
+      design?: ShareDesign;
+      savedLooks?: SavedStoryLook[];
+    }>()
     .notNull()
     .default({}),
   // Set when the coach finishes (or skips) the post-signup setup wizard. Null =

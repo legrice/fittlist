@@ -3,7 +3,13 @@ import { join } from "path";
 import { ImageResponse } from "next/og";
 import { brandIcon } from "@/lib/brand";
 import type { StoryStyle, StoryTheme } from "@/lib/format";
-import { storyPadding, type StoryFormat, type StoryPlan } from "@/lib/storyplan";
+import {
+  storyFeatureMetrics,
+  storyPadding,
+  type StoryFeature,
+  type StoryFormat,
+  type StoryPlan,
+} from "@/lib/storyplan";
 import type { DecoId } from "@/lib/decorations";
 
 // One paint for every share image.
@@ -68,6 +74,14 @@ export type StoryModel = {
   /** A full-bleed user-picked image. The schedule stays on solid panels so
    * arbitrary photography can never make the class details illegible. */
   backgroundPhoto?: string | null;
+  /** Focal point and shade for a full-bleed background, in percentages.
+   * Values are clamped again here because public render helpers should not
+   * rely on one route having sanitised their input. */
+  backgroundX?: number;
+  backgroundY?: number;
+  backgroundOverlay?: number;
+  /** One occurrence promoted above the rest of the week. */
+  feature?: StoryFeature | null;
   plan: StoryPlan;
   /** Nothing in range: the picture still has to be worth looking at. */
   empty: boolean;
@@ -81,9 +95,101 @@ export type StoryModel = {
   typeface?: { family: string; file: string | null; italic?: boolean; track?: number } | null;
   /** The dressing: a frame, day dividers, both, or nothing. */
   deco?: DecoId;
+  /** A small optional Instagram credit in the footer. */
+  instagramTag?: string | null;
   /** Editor URLs carry a content revision and are safe in the private browser cache. */
   cacheControl?: string;
 };
+
+function finiteClamp(value: number | undefined, min: number, max: number, fallback: number): number {
+  return Number.isFinite(value) ? Math.max(min, Math.min(max, value!)) : fallback;
+}
+
+/** The promoted occurrence uses one visual contract in both renderer
+ * branches. Its box is border-box sized from `storyFeatureMetrics`, so the
+ * pixels reserved by the planner are exactly the pixels painted here. */
+function FeaturedClass({
+  feature,
+  theme,
+  format,
+  onPhoto,
+}: {
+  feature: StoryFeature;
+  theme: StoryTheme;
+  format: StoryFormat;
+  onPhoto: boolean;
+}) {
+  const scale = format === "square" ? 0.68 : 1;
+  const px = (n: number) => Math.round(n * scale);
+  const metrics = storyFeatureMetrics(format);
+  return (
+    <div
+      style={{
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        width: "100%",
+        height: metrics.height,
+        marginBottom: metrics.gap,
+        padding: `${px(24)}px ${px(28)}px`,
+        borderWidth: px(4),
+        borderStyle: "solid",
+        borderColor: theme.accent,
+        borderRadius: px(20),
+        background: onPhoto ? theme.bg : `${theme.accent}14`,
+        color: theme.fg,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: px(16),
+          fontSize: px(25),
+          fontWeight: 700,
+          letterSpacing: 1.2,
+          textTransform: "uppercase",
+        }}
+      >
+        <span style={{ display: "flex", color: theme.accent }}>Featured</span>
+        <span style={{ display: "flex", color: theme.time }}>
+          {feature.day} · {feature.time}
+        </span>
+      </div>
+      <span
+        style={{
+          display: "block",
+          width: "100%",
+          lineClamp: 1,
+          fontSize: px(55),
+          fontWeight: 800,
+          lineHeight: 1.02,
+          letterSpacing: -1,
+        }}
+      >
+        {feature.name}
+      </span>
+      {feature.sub && (
+        <span
+          style={{
+            display: "block",
+            width: "100%",
+            lineClamp: 1,
+            marginTop: px(10),
+            fontSize: px(29),
+            fontWeight: 600,
+            lineHeight: 1.1,
+            color: theme.faint,
+          }}
+        >
+          {feature.sub}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export function renderStory(model: StoryModel) {
   const {
@@ -95,6 +201,10 @@ export function renderStory(model: StoryModel) {
     headlineSize: hSize,
     photo,
     backgroundPhoto,
+    backgroundX,
+    backgroundY,
+    backgroundOverlay,
+    feature,
     plan,
     empty,
     emptyLine,
@@ -103,6 +213,7 @@ export function renderStory(model: StoryModel) {
     // On by default, by Matt's call: the thick brand stripe is back on
     // every share image, and Clean is the pick that takes it off.
     deco = "top",
+    instagramTag,
     cacheControl = "no-store",
   } = model;
   const framed = deco === "frame" || deco === "framed";
@@ -111,6 +222,9 @@ export function renderStory(model: StoryModel) {
   const markUri = iconUri(t.lockupAccent ?? t.accent);
   const pad = storyPadding(format);
   const square = format === "square";
+  const bgX = finiteClamp(backgroundX, 0, 100, 50);
+  const bgY = finiteClamp(backgroundY, 0, 100, 50);
+  const bgShade = finiteClamp(backgroundOverlay, 0, 60, 24) / 100;
   const layout = y.layout;
   const editorialInk = layout === "swiss" || layout === "cowboy";
   // A square is a little over half the height, so the furniture comes down
@@ -190,6 +304,7 @@ export function renderStory(model: StoryModel) {
               width: 1080,
               height: storyHeight,
               objectFit: "cover",
+              objectPosition: `${bgX}% ${bgY}%`,
             }}
           />
           <div
@@ -197,7 +312,7 @@ export function renderStory(model: StoryModel) {
               position: "absolute",
               inset: 0,
               display: "flex",
-              background: "rgba(0,0,0,.24)",
+              background: `rgba(0,0,0,${bgShade})`,
             }}
           />
 
@@ -229,6 +344,8 @@ export function renderStory(model: StoryModel) {
               {line2 && <span>{line2}</span>}
             </div>
           )}
+
+          {feature && <FeaturedClass feature={feature} theme={t} format={format} onPhoto />}
 
           <div
             style={{
@@ -335,7 +452,23 @@ export function renderStory(model: StoryModel) {
               background: "#020D08",
             }}
           >
-            <span style={{ fontSize: 30, fontWeight: 600 }}>{url}</span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 13,
+                maxWidth: 610,
+                fontSize: 30,
+                fontWeight: 600,
+              }}
+            >
+              {instagramTag && (
+                <span style={{ display: "flex", color: "#9FE870", fontSize: 25 }}>
+                  {instagramTag}
+                </span>
+              )}
+              <span style={{ display: "block", lineClamp: 1 }}>{url}</span>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photoMark} alt="" width={52} height={52} />
@@ -540,6 +673,8 @@ export function renderStory(model: StoryModel) {
         {/* No line under the headline any more: the URL rode here for a
             build and went back to the footer, by Matt's call, under "See
             my schedule at". The headline opens straight onto the week. */}
+
+        {feature && <FeaturedClass feature={feature} theme={t} format={format} onPhoto={false} />}
 
         {plan.lifted && (
           <div style={{ display: "flex", fontSize: px(36), color: t.faint, marginBottom: px(30) }}>
@@ -1044,7 +1179,7 @@ export function renderStory(model: StoryModel) {
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontWeight: 600, fontSize: px(30), color: t.faint, letterSpacing: 1 }}>
-              See my schedule at
+              {instagramTag ? `${instagramTag} · See my schedule at` : "See my schedule at"}
             </span>
             <span style={{ fontWeight: 600, fontSize: px(40) }}>{url}</span>
           </div>

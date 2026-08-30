@@ -32,6 +32,16 @@ export type StoryItem = {
 
 export type StoryDay = { day: string; items: StoryItem[] };
 
+/** One occurrence promoted above the regular schedule. It is deliberately a
+ * fixed-height card: the planner can reserve its exact footprint before it
+ * decides how much detail the rest of the week can afford. */
+export type StoryFeature = {
+  day: string;
+  time: string;
+  name: string;
+  sub: string;
+};
+
 /** A class as one row: the time in its column, the name, and a line under it. */
 export type PlanRow = { time: string; name: string; sub: string };
 /** A day as one line: each name with the times it runs at. */
@@ -107,6 +117,24 @@ const FOOTER_H = 76;
  *  the headline for a build and went back down, by Matt's call, so the
  *  footer is two lines again and nothing sits under the headline. */
 const VERB_H = 46;
+
+/** The featured card's painted height and the air beneath it. Keep this next
+ * to the other canvas furniture so the route and renderer cannot quietly
+ * disagree about how much schedule remains. The square card is deliberately
+ * tighter so a normal headline still leaves one readable schedule row. */
+const FEATURE = {
+  story: { height: 238, gap: 30 },
+  square: { height: 162, gap: 18 },
+} satisfies Record<StoryFormat, { height: number; gap: number }>;
+
+export function storyFeatureMetrics(format: StoryFormat): { height: number; gap: number } {
+  return FEATURE[format];
+}
+
+export function storyFeatureBudget(format: StoryFormat): number {
+  const feature = storyFeatureMetrics(format);
+  return feature.height + feature.gap;
+}
 
 /**
  * How much room the list gets, once the furniture has taken its share. The

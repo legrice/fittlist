@@ -8,7 +8,12 @@
 // worrying about. It needs no browser and no database:
 //
 //   node scripts/storyplan-check.mjs
-import { listBudget, measurePlan, planStory } from "../src/lib/storyplan.ts";
+import {
+  listBudget,
+  measurePlan,
+  planStory,
+  storyFeatureBudget,
+} from "../src/lib/storyplan.ts";
 import { STORY_STYLES } from "../src/lib/format.ts";
 
 const fail = (m) => {
@@ -49,32 +54,33 @@ function week({ days, perDay, names, places, longNames }) {
 
 let checked = 0;
 const tiers = new Set();
-for (const headline of HEADLINES)
-  for (const days of [1, 2, 3, 4, 5, 6, 7])
-    for (const perDay of [1, 2, 3, 4, 5, 6, 8, 10])
-      for (const names of [1, 2, 5])
-        for (const places of [1, 2, 4])
-          for (const longNames of [false, true]) {
-            const budget = listBudget(headline);
-            const plan = planStory(week({ days, perDay, names, places, longNames }), budget);
-            const drawn = measurePlan(plan);
-            tiers.add(plan.tier);
-            checked++;
-            if (drawn > budget)
-              fail(
-                `${days}d x ${perDay} (${places} places, headline ${Math.round(headline)}) ` +
-                  `planned tier ${plan.tier} at ${Math.round(drawn)}px into ${Math.round(budget)}px`,
-              );
-            // Dropping a day is the last resort, so it may only happen once the
-            // poster is genuinely full: tier 3, at its smallest type.
-            if (plan.moreDays > 0 && plan.tier !== 3)
-              fail(`tier ${plan.tier} dropped ${plan.moreDays} days, which only tier 3 may do`);
-            // Nothing may go missing quietly. Either every day is on the
-            // poster, or the poster says how many are not.
-            const shown = plan.tier === 3 ? plan.summary.length : plan.days.length;
-            if (shown + plan.moreDays !== days)
-              fail(`${days} days in, ${shown} drawn and ${plan.moreDays} owned up to`);
-          }
+for (const format of ["story", "square"])
+  for (const headline of HEADLINES)
+    for (const days of [1, 2, 3, 4, 5, 6, 7])
+      for (const perDay of [1, 2, 3, 4, 5, 6, 8, 10])
+        for (const names of [1, 2, 5])
+          for (const places of [1, 2, 4])
+            for (const longNames of [false, true]) {
+              const budget = listBudget(headline, format);
+              const plan = planStory(week({ days, perDay, names, places, longNames }), budget);
+              const drawn = measurePlan(plan);
+              tiers.add(plan.tier);
+              checked++;
+              if (drawn > budget)
+                fail(
+                  `${format}: ${days}d x ${perDay} (${places} places, headline ${Math.round(headline)}) ` +
+                    `planned tier ${plan.tier} at ${Math.round(drawn)}px into ${Math.round(budget)}px`,
+                );
+              // Dropping a day is the last resort, so it may only happen once the
+              // poster is genuinely full: tier 3, at its smallest type.
+              if (plan.moreDays > 0 && plan.tier !== 3)
+                fail(`tier ${plan.tier} dropped ${plan.moreDays} days, which only tier 3 may do`);
+              // Nothing may go missing quietly. Either every day is on the
+              // poster, or the poster says how many are not.
+              const shown = plan.tier === 3 ? plan.summary.length : plan.days.length;
+              if (shown + plan.moreDays !== days)
+                fail(`${days} days in, ${shown} drawn and ${plan.moreDays} owned up to`);
+            }
 
 if (!(tiers.has(1) && tiers.has(2) && tiers.has(3)))
   fail(`only reached tiers ${[...tiers].join(", ")}; the check isn't exercising all three`);
@@ -82,31 +88,45 @@ if (!(tiers.has(1) && tiers.has(2) && tiers.has(3)))
 // Every visual layout declares how much taller its rows draw. The routes
 // divide by that scale before planning; hold that contract here so a new
 // card treatment cannot quietly spend more vertical space than it reserved.
-for (const [id, style] of Object.entries(STORY_STYLES)) {
-  const budget = listBudget(282);
-  const plan = planStory(
-    week({ days: 5, perDay: 3, names: 5, places: 4, longNames: false }),
-    budget / style.rowScale,
-  );
-  const claimed = measurePlan(plan) * style.rowScale;
-  if (claimed > budget)
-    fail(`${id} claims ${Math.round(claimed)}px inside a ${Math.round(budget)}px layout budget`);
-}
+for (const format of ["story", "square"])
+  for (const [id, style] of Object.entries(STORY_STYLES)) {
+    const budget = listBudget(282, format);
+    const plan = planStory(
+      week({ days: 5, perDay: 3, names: 5, places: 4, longNames: false }),
+      budget / style.rowScale,
+    );
+    const claimed = measurePlan(plan) * style.rowScale;
+    if (claimed > budget)
+      fail(`${format}/${id} claims ${Math.round(claimed)}px inside a ${Math.round(budget)}px layout budget`);
+
+    // The feature is outside the plan and reserves a fixed footprint before
+    // the style scale is applied to the remaining schedule.
+    const feature = storyFeatureBudget(format);
+    const featurePlan = planStory(
+      week({ days: 5, perDay: 3, names: 5, places: 4, longNames: false }),
+      Math.max(0, budget - feature) / style.rowScale,
+    );
+    const featureClaimed = feature + measurePlan(featurePlan) * style.rowScale;
+    if (featureClaimed > budget)
+      fail(
+        `${format}/${id} feature claims ${Math.round(featureClaimed)}px inside a ${Math.round(budget)}px layout budget`,
+      );
+  }
 
 // A single class must never be summarised: the simplest week keeps the layout
 // the poster was designed around.
-{
-  const plan = planStory(week({ days: 1, perDay: 1, names: 1, places: 1 }), listBudget(282));
-  if (plan.tier !== 1) fail(`one class should draw at tier 1, got ${plan.tier}`);
+for (const format of ["story", "square"]) {
+  const plan = planStory(week({ days: 1, perDay: 1, names: 1, places: 1 }), listBudget(282, format));
+  if (plan.tier !== 1) fail(`${format}: one class should draw at tier 1, got ${plan.tier}`);
 }
 // The same class twice in a day is one line with both its times on it.
-{
+for (const format of ["story", "square"]) {
   const dense = Array.from({ length: 7 }, (_, d) => ({
     day: DAYS[d],
     items: TIMES.map((time) => ({ time, name: "Vinyasa Flow", where: PLACES[0] })),
   }));
-  const plan = planStory(dense, listBudget(282));
-  if (plan.tier !== 3) fail(`56 classes should summarise, got tier ${plan.tier}`);
+  const plan = planStory(dense, listBudget(282, format));
+  if (plan.tier !== 3) fail(`${format}: 56 classes should summarise, got tier ${plan.tier}`);
   const first = plan.summary[0];
   if (first.entries.length !== 1)
     fail(`one class name should collapse to one entry, got ${first.entries.length}`);

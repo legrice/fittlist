@@ -2899,6 +2899,54 @@ button.ps-card { cursor: pointer; }
 }
 .dellink:active { opacity: .6; }
 .confirmsheet { max-width: 460px; }
+
+/* Post-share Instagram tag prompt. This is a small acknowledgement after an
+   image leaves FittList, not another editor, so it stays compact and keeps its
+   two choices side by side. */
+.instagram-tag-sheet {
+  max-width: 420px;
+  padding-top: 26px;
+  text-align: center;
+}
+.instagram-tag-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  background: var(--cl);
+}
+.instagram-tag-sheet h2 {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1.08;
+}
+.instagram-tag-sheet > p {
+  max-width: 310px;
+  margin: 9px auto 20px;
+  color: var(--ol);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.instagram-tag-sheet > p a {
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+.instagram-tag-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.instagram-tag-actions .btn {
+  width: 100%;
+  min-width: 0;
+}
 .saveeducation-icon, .circleeducation-icon {
   display: flex; align-items: center; justify-content: center;
   width: 48px; height: 48px; margin-bottom: 16px; border-radius: 999px;
@@ -10740,6 +10788,8 @@ a.clspeek-by:active { opacity: .6; }
   font-weight: 600; font-size: 15px;
 }
 .shctrl.shctrl-add:active { background: var(--si); opacity: .85; }
+.shctrl-remix { border-color: color-mix(in srgb, var(--si) 62%, var(--line)); }
+.shctrl-remix .shctrl-k { display:flex; align-items:center; gap:4px; color:var(--ink); }
 .shctrl-k {
   font-size: 11px; font-weight: 600; letter-spacing: .09em;
   text-transform: uppercase; color: var(--ol);
@@ -10768,6 +10818,15 @@ a.clspeek-by:active { opacity: .6; }
    the rest of the app's .btn.si went ink in the orange retreat, so the hub
    says it locally. */
 .shcta .btn.si { background: var(--si); color: var(--color-black); }
+.shdesign-actions {
+  display:flex; align-items:center; justify-content:center; gap:18px; margin-top:14px;
+}
+.shdesign-actions button {
+  min-height:36px; padding:0; border:0; background:none; color:var(--ink);
+  font:inherit; font-size:14px; font-weight:600; cursor:pointer;
+}
+.shdesign-actions button:last-child { color:var(--si-strong); }
+.shdesign-actions button:disabled { color:var(--muted); cursor:default; opacity:.5; }
 .shedit {
   align-self: center; display: inline-flex; align-items: center; gap: 2px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -10808,7 +10867,25 @@ a.clspeek-by:active { opacity: .6; }
 .qrcard .qrurl { color: var(--ol); margin-bottom: 0; }
 /* The pickers behind Dates and Classes: a scrolling list of rows and a Done. */
 .shpick-list { max-height: 42vh; overflow-y: auto; overscroll-behavior: contain; }
+.shphoto-controls { margin-top:18px; padding-top:4px; }
+.shphoto-position-preview {
+  position:relative; width:min(46%, 180px); aspect-ratio:9 / 16; margin:0 auto; overflow:hidden;
+  border:1px solid var(--line); border-radius:16px; background:var(--shell);
+}
+.shphoto-position-preview img,
+.shphoto-position-preview span { position:absolute; inset:0; width:100%; height:100%; }
+.shphoto-position-preview img { display:block; object-fit:cover; }
+.shphoto-controls .flabel { margin-top:14px; }
+.shphoto-controls .publishwrap { margin-top:18px; }
 .layoutlist { margin-top: 8px; }
+.shremix-action {
+  width:100%; min-height:46px; margin:4px 0 8px; padding:0 16px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  border:1px solid color-mix(in srgb, var(--si) 68%, var(--line));
+  border-radius:var(--radius-pill); background:var(--si-tint); color:var(--ink);
+  font:inherit; font-size:15px; font-weight:600; cursor:pointer;
+}
+.shremix-action:active { transform:scale(.985); }
 .layoutpick { align-items: center; }
 .layoutmini {
   flex: 0 0 auto; width: 52px; height: 64px; padding: 8px 6px;
@@ -10853,6 +10930,12 @@ a.clspeek-by:active { opacity: .6; }
 .layoutmini-cowboy > span:nth-child(3) { width: 70%; align-self: flex-end; }
 .shpick-titleline { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .shpick-titleline > .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.shpick-featurebtn {
+  flex-shrink:0; width:36px; height:36px; display:grid; place-items:center;
+  border:0; border-radius:var(--radius-pill); background:none; color:var(--muted); cursor:pointer;
+}
+.shpick-featurebtn.on { color:var(--si-strong); background:var(--si-tint); }
+.shpick-featurebtn:disabled { opacity:.3; cursor:default; }
 .shclass-tag {
   flex: 0 0 auto; padding: 3px 7px; border-radius: 999px;
   font-size: 10px; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
@@ -10867,6 +10950,41 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15.5px; font-weight: 600;
 }
 .shday.on { background: var(--si); border-color: var(--si); color: var(--color-black); }
+.shsavedlooks { margin-top:20px; padding-top:18px; border-top:1px solid var(--line); }
+.shsavedlooks-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.shsavedlooks-head h3 { margin:0; font-size:18px; line-height:1.1; }
+.shsavedlooks-head p { margin:5px 0 0; color:var(--muted); font-size:13px; line-height:1.35; }
+.shsavedlooks-head > button {
+  flex:0 0 auto; padding:3px 0; border:0; background:none; color:var(--si-strong);
+  font:inherit; font-size:14px; font-weight:600; cursor:pointer;
+}
+.shsavedlooks-head > button:disabled { color:var(--muted); cursor:default; opacity:.5; }
+.shsavedlooks-form {
+  margin-top:14px; padding:14px; border:1px solid var(--line); border-radius:16px; background:var(--shell);
+}
+.shsavedlooks-form .flabel { margin-top:0; }
+.shsavedlooks-form > div { display:flex; justify-content:flex-end; gap:14px; margin-top:12px; }
+.shsavedlooks-form > div button {
+  min-height:36px; padding:0; border:0; background:none; color:var(--ink);
+  font:inherit; font-size:14px; font-weight:600; cursor:pointer;
+}
+.shsavedlooks-form > div .shsavedlooks-save { color:var(--si-strong); }
+.shsavedlooks-form > div button:disabled { color:var(--muted); cursor:default; opacity:.5; }
+.shsavedlooks-empty { margin:14px 0 0; color:var(--muted); font-size:13px; }
+.shsavedlooks-list { display:grid; margin-top:10px; }
+.shsavedlook { display:flex; align-items:center; border-bottom:1px solid var(--line); }
+.shsavedlook-main {
+  flex:1; min-width:0; min-height:48px; padding:0; display:flex; align-items:center; gap:10px;
+  border:0; background:none; color:var(--ink); font:inherit; font-size:15px; font-weight:600;
+  text-align:left; cursor:pointer;
+}
+.shsavedlook-swatch { width:26px; height:26px; flex:0 0 auto; border:1px solid var(--line); border-radius:8px; }
+.shsavedlook-delete {
+  width:40px; height:40px; flex:0 0 auto; display:grid; place-items:center;
+  border:0; border-radius:var(--radius-pill); background:none; color:var(--muted); cursor:pointer;
+}
+.shsavedlook-delete:active { background:var(--shell); }
+.shsavedlook-delete:disabled { cursor:default; opacity:.4; }
 /* The Today preset in the Dates sheet: the shday's own drawing at its
    natural width, above the dropdown it saves a trip through. */
 .shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }

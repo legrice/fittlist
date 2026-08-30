@@ -5,3 +5,8 @@ export function brandIcon(color = "#020D08"): string {
 }
 
 export const BRAND_ICON = brandIcon();
+
+// Keep the social identity in one place. Share prompts and future exported
+// captions should never have to repeat (or retype) the account name.
+export const INSTAGRAM_HANDLE = "@fittlist";
+export const INSTAGRAM_URL = "https://www.instagram.com/fittlist/";

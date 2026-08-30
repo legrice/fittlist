@@ -1,6 +1,6 @@
 "use server";
 
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { currentUser } from "@/lib/current-user";
 import { todayIso } from "@/lib/format";
@@ -12,6 +12,12 @@ import { myWeek } from "@/lib/week";
 import { mySchedule } from "@/lib/coachweek";
 import { avatarColor } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
+import {
+  sanitizeSavedStoryLooks,
+  sanitizeShareDesign,
+  type SavedStoryLook,
+  type ShareDesign,
+} from "@/lib/share-design";
 
 export type PersonalCalendarData = {
   handle: string | null;
@@ -105,7 +111,17 @@ export async function loadCalendarComposerData(includeSubscriberCount = true): P
   };
 }
 
-export async function loadCalendarShareData(): Promise<{ items: HubItem[]; defaultFrom: string; savedHeadline: string; hasBackground:boolean; initialRevision:number } | null> {
+export type CalendarShareData = {
+  items: HubItem[];
+  defaultFrom: string;
+  savedHeadline: string;
+  hasBackground: boolean;
+  initialRevision: number;
+  initialDesign: ShareDesign | null;
+  savedLooks: SavedStoryLook[];
+};
+
+export async function loadCalendarShareData(): Promise<CalendarShareData | null> {
   const userId = await getSessionUserId();
   if (!userId) return null;
   const db = await getDb();
@@ -113,8 +129,7 @@ export async function loadCalendarShareData(): Promise<{ items: HubItem[]; defau
   const [userRows, days] = await Promise.all([
     db
       .select({
-        headline: sql<string | null>`${schema.users.storyPrefs}->>'headline'`,
-        hasBackground: sql<boolean>`coalesce(${schema.users.storyPrefs} ? 'background', false)`,
+        storyPrefs: schema.users.storyPrefs,
       })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
@@ -125,8 +140,10 @@ export async function loadCalendarShareData(): Promise<{ items: HubItem[]; defau
   return {
     items: days.flatMap((day) => day.items.map((item) => ({ key:item.key, iso:item.iso, time:item.time, name:item.name, where:item.where, own:item.own, coaching:item.coaching }))),
     defaultFrom: days[0]?.iso ?? today,
-    savedHeadline: me.headline ?? "",
-    hasBackground: me.hasBackground,
+    savedHeadline: me.storyPrefs?.headline ?? "",
+    hasBackground: !!me.storyPrefs?.background,
     initialRevision: Date.now(),
+    initialDesign: me.storyPrefs?.design ? sanitizeShareDesign(me.storyPrefs.design) : null,
+    savedLooks: sanitizeSavedStoryLooks(me.storyPrefs?.savedLooks),
   };
 }

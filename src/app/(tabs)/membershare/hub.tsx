@@ -1,10 +1,11 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { ShareHubScreen, type HubItem } from "@/components/ShareHubScreen";
 import { getDb, schema } from "@/db";
 import { todayIso } from "@/lib/format";
 import { shareWeek } from "@/lib/shareweek";
 import { getSessionUserId } from "@/lib/session";
+import { sanitizeSavedStoryLooks, sanitizeShareDesign } from "@/lib/share-design";
 import type { LastUsed } from "@/lib/types";
 
 // One screen, two addresses: page modules cannot export shared helpers, so
@@ -20,8 +21,7 @@ export async function hubPage(address: "member" | "coach") {
         kind: schema.users.kind,
         handle: schema.users.handle,
         name: schema.users.name,
-        headline: sql<string | null>`${schema.users.storyPrefs}->>'headline'`,
-        hasBackground: sql<boolean>`coalesce(${schema.users.storyPrefs} ? 'background', false)`,
+        storyPrefs: schema.users.storyPrefs,
       })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
@@ -59,13 +59,15 @@ export async function hubPage(address: "member" | "coach") {
       items={items}
       defaultFrom={defaultFrom}
       today={today}
-      savedHeadline={me.headline ?? ""}
-      hasBackground={me.hasBackground}
+      savedHeadline={me.storyPrefs?.headline ?? ""}
+      hasBackground={!!me.storyPrefs?.background}
       studios={[]}
       templates={[]}
       customTypes={[]}
       lastUsed={lastUsed}
       initialRevision={Date.now()}
+      initialDesign={me.storyPrefs?.design ? sanitizeShareDesign(me.storyPrefs.design) : null}
+      savedLooks={sanitizeSavedStoryLooks(me.storyPrefs?.savedLooks)}
       deferAdderData={!coach}
     />
   );

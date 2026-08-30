@@ -19,7 +19,6 @@ import { BodyPortal } from "@/components/BodyPortal";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
-import type { HubItem } from "@/components/ShareHubScreen";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
@@ -28,7 +27,12 @@ import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
 import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
-import { loadCalendarComposerData, loadCalendarShareData, type CalendarComposerData } from "@/app/actions/calendar-data";
+import {
+  loadCalendarComposerData,
+  loadCalendarShareData,
+  type CalendarComposerData,
+  type CalendarShareData,
+} from "@/app/actions/calendar-data";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -163,7 +167,7 @@ export function CalendarScreen({
   const [shareOpen, setShareOpen] = useState(false);
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
   const [composerError, setComposerError] = useState<string | null>(null);
-  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string; hasBackground:boolean; initialRevision:number } | null>(null);
+  const [shareData, setShareData] = useState<CalendarShareData | null>(null);
   const composerLoadingRef = useRef(false);
   const [loadingTools, startTools] = useTransition();
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
@@ -626,6 +630,8 @@ export function CalendarScreen({
                 customTypes={composerData?.customTypes ?? []}
                 lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
                 initialRevision={shareData.initialRevision}
+                initialDesign={shareData.initialDesign}
+                savedLooks={shareData.savedLooks}
                 deferAdderData={member && !composerData}
               /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
             </section>
