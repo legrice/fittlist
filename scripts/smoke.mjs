@@ -559,17 +559,15 @@ console.log("sticky header ok (the List starts at today, no walk backwards)");
   const calendarUrl = page.url();
   const calendarScroll = await page.evaluate(() => window.scrollY);
   await page.locator(".calendar-header-share").click();
-  const shareDialog = page.getByRole("dialog", { name: "Share your week" });
+  const shareDialog = page.getByRole("dialog", { name: "Share" });
   await shareDialog.waitFor();
   if (page.url() !== calendarUrl) fail("calendar Share should not navigate away");
   if ((await shareDialog.locator(".shsingle-preview .shprev-week").count()) !== 1)
     fail("calendar Share should show one schedule image");
   if (await shareDialog.locator('[aria-label="What to share"], .shprev-sq, .qrcard, .shtext').count())
     fail("calendar Share should not mount alternate share formats");
-  if ((await shareDialog.locator(".shpage-embedded-action").getByRole("button", { name: "Share image" }).count()) !== 1)
-    fail("calendar Share should put its action at the top right");
-  if (await shareDialog.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
-    fail("calendar Share should not duplicate its action at the bottom");
+  if ((await shareDialog.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count()) !== 1)
+    fail("calendar Share should keep its action in the bottom editing dock");
   const tools = (await shareDialog.locator(".sheditor-tools-all .sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
   if (tools.join("|") !== "Random|Background|Style|Classes|Dates|Headline")
     fail("calendar Share should put every image tool in one rail: " + tools.join("|"));

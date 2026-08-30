@@ -207,7 +207,7 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
           className={`sheet calendar-share-sheet share-takeover-sheet${closing ? " is-closing" : ""}`}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="share-takeover-title"
+          aria-label="Share"
           tabIndex={-1}
           onAnimationEnd={(event) => {
             if (closing && event.target === event.currentTarget && event.animationName === "calendar-share-down") {
@@ -224,7 +224,6 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
             >
               <Icon name="close" size={24} />
             </button>
-            <h1 id="share-takeover-title">Share</h1>
           </header>
 
           {data ? (

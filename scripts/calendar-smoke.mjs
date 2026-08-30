@@ -462,12 +462,20 @@ if (p.url() !== shareOriginUrl) fail("Share should not change the current route:
   if (!geometry.coversNav || geometry.z < 46)
     fail("Share should cover the bottom navigation: " + JSON.stringify(geometry));
   const head = shareDialog.locator(".share-takeover-head");
-  if ((await head.getByRole("button", { name: "Close share editor" }).count()) !== 1 || (await head.getByRole("heading", { name: "Share" }).count()) !== 1)
-    fail("the takeover header should put Close immediately left of Share");
+  if ((await head.getByRole("button", { name: "Close share editor" }).count()) !== 1 || await head.getByRole("heading").count())
+    fail("the takeover header should contain only the Close control");
 }
 // Share is one focused image studio. Profile cards, QR codes and plain text
 // are not hidden tabs or pre-rendered slides behind the schedule poster.
 await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
+{
+  const dock = await p.locator(".sheditor-dock").evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return { position:getComputedStyle(element).position, bottom:box.bottom, viewport:innerHeight };
+  });
+  if (dock.position !== "sticky" || Math.abs(dock.bottom - dock.viewport) > 2)
+    fail("the editing circles and Share action should stay pinned to the viewport bottom: " + JSON.stringify(dock));
+}
 {
   if (await p.locator('[aria-label="What to share"]').count())
     fail("the image studio should not have a format selector");
@@ -558,19 +566,17 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
   }
 }
-const headerShare = p.locator(".shpage-embedded-action").getByRole("button", { name: "Share image" });
-if ((await headerShare.count()) !== 1)
-  fail("the image studio should put Share in the top-right header");
+const dockShare = p.locator(".sheditor-dock").getByRole("button", { name: "Share image" });
+if ((await dockShare.count()) !== 1)
+  fail("the image studio should keep Share in the sticky editing dock");
 {
-  const colors = await headerShare.evaluate((el) => {
+  const colors = await dockShare.evaluate((el) => {
     const style = getComputedStyle(el);
     return { background:style.backgroundColor, foreground:style.color };
   });
   if (colors.background !== "rgb(159, 232, 112)" || colors.foreground !== "rgb(25, 21, 2)")
-    fail("the header Share action should be lime with dark text: " + JSON.stringify(colors));
+    fail("the dock Share action should be lime with dark text: " + JSON.stringify(colors));
 }
-if (await p.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
-  fail("the image studio should not duplicate Share at the bottom");
 await shareDialog.getByRole("button", { name: "Close share editor" }).click();
 await shareDialog.waitFor({ state:"detached" });
 await p.waitForTimeout(40);

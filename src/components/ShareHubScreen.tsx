@@ -845,17 +845,7 @@ export function ShareHubScreen({
             <BackLink className="evback share-page-close" href="/calendar" anywhere label="Close share screen">
               <Icon name="close" size={24} />
             </BackLink>
-            {!building && imageShareAction()}
           </div>
-        )}
-        {embedded && !building && (
-          <div className="shpage-embedded-action">{imageShareAction()}</div>
-        )}
-        {tabbed && (
-          <header className="share-tab-header">
-            <h1>Share</h1>
-            {!building && imageShareAction()}
-          </header>
         )}
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
@@ -974,6 +964,7 @@ export function ShareHubScreen({
                   {designSaving ? "Saving..." : "Save this look"}
                 </button>
               </div>
+              <div className="sheditor-share-action">{imageShareAction()}</div>
             </div>
           </section>
         )}
