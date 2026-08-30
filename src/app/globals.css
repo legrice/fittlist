@@ -9014,14 +9014,15 @@ select.editinput.placekind-select {
 .following-head {
   padding: 4px 0 0;
 }
-.calendar-scope-row { display:flex; gap:6px; overflow-x:auto; padding:1px 0 3px; scrollbar-width:none; }
+.calendar-scope-row { display:flex; gap:7px; overflow-x:auto; padding:5px 1px 7px; scrollbar-width:none; }
 .calendar-scope-row::-webkit-scrollbar { display:none; }
-.calendar-scope-row > button {
-  flex:0 0 auto; min-width:68px; min-height:44px; padding:0 13px; display:inline-flex; align-items:center; justify-content:center; gap:5px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
-  background:var(--color-surface); color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; cursor:pointer;
-}
-.calendar-scope-row > button.on { border-color:var(--color-lime); background:var(--color-lime); color:var(--color-black); }
-.calendar-scope-row .calendar-selector-trigger { min-width:44px; width:44px; padding:0; display:grid; place-items:center; border-radius:50%; }
+.calendar-person-chip { flex:0 0 50px; width:50px; padding:0; display:flex; flex-direction:column; align-items:center; gap:5px; border:0; background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
+.calendar-person-face { position:relative; width:44px; height:44px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:14px; font-weight:700; }
+.calendar-person-face > img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 2px var(--ground),0 0 0 5px var(--color-lime); }
+.calendar-person-chip small { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; line-height:1.1; font-weight:600; }
+.calendar-person-star { position:absolute; right:-3px; bottom:-2px; width:17px; height:17px; padding:2px; border:2px solid var(--ground); border-radius:50%; background:var(--ink); color:var(--color-white); }
+.calendar-scope-row .calendar-selector-trigger { min-width:50px; }
 .calendar-selector-scrim { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end; background:rgba(0,0,0,.34); }
 .calendar-selector-sheet {
   width:100%; padding:22px 0 calc(28px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0;

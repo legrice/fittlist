@@ -366,7 +366,7 @@ export function FollowingScreen({
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
   const quickCoachOptions = [...sortedCoachOptions]
     .sort((a, b) => Number(selectedPeople.has(b.id)) - Number(selectedPeople.has(a.id)))
-    .slice(0, 4);
+    .slice(0, 5);
   const togglePerson = (id: string) => {
     const next = new Set(selectedPeople);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -731,9 +731,9 @@ export function FollowingScreen({
       {isHome && !firstRun && (
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
-            <button type="button" className={calendarFilter === "you" ? "on" : ""} aria-pressed={calendarFilter === "you"} onClick={() => { setSelectedPeople(new Set()); setCalendarFilter("you"); }}>You</button>
-            {quickCoachOptions.map((coach) => <button key={coach.id} type="button" className={selectedPeople.has(coach.id) ? "on" : ""} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}>{pins.has(`person:${coach.id}`) && <Icon name="star_filled" size={14} />}{coach.name.split(/\s+/)[0]}</button>)}
-            <button type="button" className={`calendar-selector-trigger${calendarFilter === "people" && selectedPeople.size > 0 ? " on" : ""}`} aria-label="Choose more people" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}><Icon name="expand_more" size={22} /></button>
+            <button type="button" className="calendar-person-chip on" aria-pressed="true" onClick={() => { setSelectedPeople(new Set()); setCalendarFilter("you"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
+            {quickCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
+            <button type="button" className="calendar-person-chip calendar-selector-trigger" aria-label="Choose more people" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}><span className="calendar-person-face"><Icon name="expand_more" size={22} /></span><small>More</small></button>
           </div>
           {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose people</h2><button type="button" aria-label="Close people selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><div className="tray following-rail" aria-label="People">
             <div className="tray-scroll" ref={followingRailRef}>
@@ -919,13 +919,17 @@ export function FollowingScreen({
                           const sourcePhoto = coach?.photo ?? studio?.photo ?? null;
                           const sourceColor = coach?.color ?? studio?.color ?? "var(--color-olive)";
                           const relation = calendarRelation(item, meId);
+                          const ownedByYou = item.shift || (!!meId && item.coachId === meId);
                           const isYourItem = item.saved || item.shift || (!!meId && item.coachId === meId);
-                          const showSourceAvatar = sourceName && !isYourItem && calendarFilter !== "you";
+                          const displaySourceName = ownedByYou ? "You" : sourceName;
+                          const displaySourcePhoto = ownedByYou ? meFace.photo : sourcePhoto;
+                          const displaySourceColor = ownedByYou ? meFace.color : sourceColor;
+                          const showSourceAvatar = Boolean(displaySourceName);
                           return <article className="cash-class-row" key={item.key}>
                             <button type="button" className={`cash-class-main ${relation.tone}${showSourceAvatar ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
-                              {showSourceAvatar && <span className={`cash-class-avatar${!coach && studio ? " studio" : ""}`} style={{ background:sourceColor }}>{sourcePhoto ? <img src={sourcePhoto} alt="" /> : <span>{(sourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
+                              {showSourceAvatar && displaySourceName && <span className={`cash-class-avatar${!ownedByYou && !coach && studio ? " studio" : ""}`} style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
                               <span className="cash-class-copy">
-                                {(sourceName || isYourItem) && <span className="cash-class-coachline">{sourceName && <small>{sourceName}</small>}{coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{isYourItem && <span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}
+                                {(displaySourceName || isYourItem) && <span className="cash-class-coachline">{displaySourceName && <small>{displaySourceName}</small>}{!ownedByYou && coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{isYourItem && <span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}
                                 <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
