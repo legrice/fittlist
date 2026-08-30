@@ -1,6 +1,6 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { publicSchedule } from "@/lib/coachweek";
+import { publicFeedSchedules } from "@/lib/coachweek";
 import { DAYS, fmtTime, runsOn, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 
 // What goes on a share image, for a range and one of the two hats.
@@ -64,6 +64,28 @@ export function shareRange(fromRaw: string | null, daysRaw: string | null) {
 
 const dowOf = (iso: string) => (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
 
+const shareClassColumns = {
+  id: schema.classes.id,
+  userId: schema.classes.userId,
+  isPublic: schema.classes.isPublic,
+  startTime: schema.classes.startTime,
+  name: schema.classes.name,
+  studioId: schema.classes.studioId,
+  location: schema.classes.location,
+};
+
+const sharePersonalColumns = {
+  id: schema.personalClasses.id,
+  dayOfWeek: schema.personalClasses.dayOfWeek,
+  specificDate: schema.personalClasses.specificDate,
+  endsOn: schema.personalClasses.endsOn,
+  startTime: schema.personalClasses.startTime,
+  name: schema.personalClasses.name,
+  studioId: schema.personalClasses.studioId,
+  location: schema.personalClasses.location,
+  withWho: schema.personalClasses.withWho,
+};
+
 /**
  * Everything in range, grouped by day, days with nothing on them dropped.
  *
@@ -78,10 +100,14 @@ export async function shareWeek(
   hide: Set<string> = new Set(),
 ): Promise<ShareDay[]> {
   const db = await getDb();
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return [];
   const dates = rangeDates(from, days);
   const inRange = new Set(dates);
+  const window = { start: dates[0], end: dates[dates.length - 1] };
+  const [me] = await db
+    .select({ id:schema.users.id, kind:schema.users.kind, shiftsPublic:schema.users.shiftsPublic })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me) return [];
 
   const byDate = new Map<string, ShareItem[]>();
   const put = (iso: string, it: Omit<ShareItem, "key" | "iso">, id: string) => {
@@ -94,7 +120,10 @@ export async function shareWeek(
   const studioNames = async (ids: (string | null)[]) => {
     const list = [...new Set(ids.filter((x): x is string => !!x))];
     if (!list.length) return new Map<string, string>();
-    const rows = await db.select().from(schema.studios).where(inArray(schema.studios.id, list));
+    const rows = await db
+      .select({ id:schema.studios.id, name:schema.studios.name })
+      .from(schema.studios)
+      .where(inArray(schema.studios.id, list));
     return new Map(rows.map((s) => [s.id, s.name]));
   };
 
@@ -106,14 +135,21 @@ export async function shareWeek(
     // shares it, and this loader is what the picture and the picker both
     // read. Their profile page draws the same rows through `sharedWeek`.
     const [marks, own] = await Promise.all([
-      db.select().from(schema.attendances).where(eq(schema.attendances.userId, userId)),
-      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+      db
+        .select({ classId:schema.attendances.classId, occurrenceDate:schema.attendances.occurrenceDate })
+        .from(schema.attendances)
+        .where(and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, window.start),
+          lte(schema.attendances.occurrenceDate, window.end),
+        )),
+      db.select(sharePersonalColumns).from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
     ]);
     const marked = marks.filter((m) => inRange.has(m.occurrenceDate));
     const classRows = marked.length
       ? (
           await db
-            .select()
+            .select(shareClassColumns)
             .from(schema.classes)
             .where(inArray(schema.classes.id, [...new Set(marked.map((m) => m.classId))]))
         ).filter((c) => c.isPublic)
@@ -170,9 +206,16 @@ export async function shareWeek(
     // the brief: a coach's week is both hats, and the picker's shortcuts
     // are what tell them apart.
     const [rows, marks, own, coachStudioLinks] = await Promise.all([
-      publicSchedule(me).then((r) => r.filter((c) => c.isPublic)),
-      db.select().from(schema.attendances).where(eq(schema.attendances.userId, userId)),
-      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+      publicFeedSchedules([me], window).then((r) => r.filter((c) => c.isPublic)),
+      db
+        .select({ classId:schema.attendances.classId, occurrenceDate:schema.attendances.occurrenceDate })
+        .from(schema.attendances)
+        .where(and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, window.start),
+          lte(schema.attendances.occurrenceDate, window.end),
+        )),
+      db.select(sharePersonalColumns).from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
       db
         .select({ studioId: schema.coachStudios.studioId })
         .from(schema.coachStudios)
@@ -182,7 +225,7 @@ export async function shareWeek(
     const markedRows = marked.length
       ? (
           await db
-            .select()
+            .select(shareClassColumns)
             .from(schema.classes)
             .where(inArray(schema.classes.id, [...new Set(marked.map((m) => m.classId))]))
         ).filter((c) => c.isPublic)

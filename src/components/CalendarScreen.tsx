@@ -163,7 +163,7 @@ export function CalendarScreen({
   const [shareOpen, setShareOpen] = useState(false);
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
   const [composerError, setComposerError] = useState<string | null>(null);
-  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string; savedBackground:string | null } | null>(null);
+  const [shareData, setShareData] = useState<{ items:HubItem[]; defaultFrom:string; savedHeadline:string; hasBackground:boolean; initialRevision:number } | null>(null);
   const composerLoadingRef = useRef(false);
   const [loadingTools, startTools] = useTransition();
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
@@ -215,7 +215,6 @@ export function CalendarScreen({
   }, [addChoice, ensureComposer]);
   const openShare = () => {
     setShareOpen(true);
-    ensureComposer();
     if (!shareData) startTools(async () => {
       const data = await loadCalendarShareData();
       if (data) setShareData(data);
@@ -621,11 +620,13 @@ export function CalendarScreen({
                 defaultFrom={shareData.defaultFrom}
                 today={todayIso}
                 savedHeadline={shareData.savedHeadline}
-                savedBackground={shareData.savedBackground}
+                hasBackground={shareData.hasBackground}
                 studios={studios}
                 templates={composerData?.templates ?? []}
                 customTypes={composerData?.customTypes ?? []}
                 lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
+                initialRevision={shareData.initialRevision}
+                deferAdderData={member && !composerData}
               /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
             </section>
           </div>

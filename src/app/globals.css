@@ -720,11 +720,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .teachcard-s { font-size: 15px; line-height: 1.45; color: var(--ol); }
 
-/* The preview's spinner: the story redraws server-side on every knob and
-   takes a second or two, and the ring is what says the wait is the picture
-   coming rather than a dead control. The image dims while it is stale. */
+/* Keep the complete poster readable while its replacement is drawing. */
 .shprev-wrap { position: relative; display: flex; justify-content: center; }
-.shprev.loading { opacity: .45; }
 .shspin {
   position: absolute; top: 50%; left: 50%; margin: -16px 0 0 -16px;
   width: 32px; height: 32px; border-radius: 999px;

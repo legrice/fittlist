@@ -1,9 +1,9 @@
 import { readFileSync } from "fs";
 import { join } from "path";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
-import { publicSchedule } from "@/lib/coachweek";
+import { publicFeedSchedules } from "@/lib/coachweek";
 import { avatarColor } from "@/lib/avatar";
 import { brandIcon } from "@/lib/brand";
 import { runsOn, storyTheme, todayIso as todayIsoNow } from "@/lib/format";
@@ -44,19 +44,38 @@ export async function GET(
   const markUri = iconUri(t.lockupAccent ?? t.accent);
 
   const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      kind: schema.users.kind,
+      name: schema.users.name,
+      email: schema.users.email,
+      title: schema.users.title,
+      location: schema.users.location,
+      photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`.as("photo"),
+      shiftsPublic: schema.users.shiftsPublic,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
   const isCoach = user.kind !== "fan";
   const name = user.name.trim() || user.email.split("@")[0];
   const initial = (name.charAt(0) || "?").toUpperCase();
+  const profilePhoto = user.photo;
 
   // One quiet line of proof for coaches: how much is on this week. Counted,
   // never listed; the schedule has its own image.
   let classesThisWeek = 0;
   if (isCoach) {
-    const classRows = (await publicSchedule(user)).filter((c) => c.isPublic);
-    const start = new Date(`${todayIsoNow()}T00:00:00Z`);
+    const today = todayIsoNow();
+    const endDate = new Date(`${today}T00:00:00Z`);
+    endDate.setUTCDate(endDate.getUTCDate() + 6);
+    const classRows = (await publicFeedSchedules(
+      [{ id:user.id, shiftsPublic:user.shiftsPublic }],
+      { start:today, end:endDate.toISOString().slice(0, 10) },
+    )).filter((c) => c.isPublic);
+    const start = new Date(`${today}T00:00:00Z`);
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);
       d.setUTCDate(start.getUTCDate() + i);
@@ -130,10 +149,10 @@ export async function GET(
             gap: 40,
           }}
         >
-          {user.photo ? (
+          {profilePhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={user.photo}
+              src={profilePhoto}
               alt=""
               width={400}
               height={400}
@@ -238,7 +257,7 @@ export async function GET(
       height: 1080,
       fonts: loadFonts(),
       // Same reasoning as the story image: it reflects the live profile.
-      headers: { "Cache-Control": "no-store" },
+      headers: { "Cache-Control": search.has("v") ? "private, max-age=31536000, immutable" : "no-store" },
     },
   );
 }

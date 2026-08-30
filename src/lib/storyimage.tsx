@@ -81,6 +81,8 @@ export type StoryModel = {
   typeface?: { family: string; file: string | null; italic?: boolean; track?: number } | null;
   /** The dressing: a frame, day dividers, both, or nothing. */
   deco?: DecoId;
+  /** Editor URLs carry a content revision and are safe in the private browser cache. */
+  cacheControl?: string;
 };
 
 export function renderStory(model: StoryModel) {
@@ -101,6 +103,7 @@ export function renderStory(model: StoryModel) {
     // On by default, by Matt's call: the thick brand stripe is back on
     // every share image, and Clean is the pick that takes it off.
     deco = "top",
+    cacheControl = "no-store",
   } = model;
   const framed = deco === "frame" || deco === "framed";
   const divided = deco === "dividers" || deco === "framed";
@@ -347,7 +350,7 @@ export function renderStory(model: StoryModel) {
         fonts: guest
           ? [...loadStoryFonts(), loadTypeFace(guest.family, guest.file!, guest.italic ? "italic" : "normal")]
           : loadStoryFonts(),
-        headers: { "Cache-Control": "no-store" },
+        headers: { "Cache-Control": cacheControl },
       },
     );
   }
@@ -1071,7 +1074,7 @@ export function renderStory(model: StoryModel) {
       fonts: guest
         ? [...loadStoryFonts(), loadTypeFace(guest.family, guest.file!, guest.italic ? "italic" : "normal")]
         : loadStoryFonts(),
-      headers: { "Cache-Control": "no-store" },
+      headers: { "Cache-Control": cacheControl },
     },
   );
 }

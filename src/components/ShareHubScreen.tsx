@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   STORY_STYLES,
@@ -12,13 +13,19 @@ import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
 import type { DecoId } from "@/lib/decorations";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
+import { loadCalendarComposerData, type CalendarComposerData } from "@/app/actions/calendar-data";
 import { setStoryBackground } from "@/app/actions/profile";
 import { setGoing } from "@/app/actions/going";
-import { Adder, type AdderPrefill } from "@/components/Adder";
+import type { AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { readPhoto } from "@/lib/photo";
+
+const loadAdderModule = () => import("@/components/Adder");
+const Adder = dynamic(() => loadAdderModule().then((module) => module.Adder));
+type PersonalDetail = NonNullable<Awaited<ReturnType<typeof personalDetail>>>;
+const personalDetailMemory = new Map<string, PersonalDetail>();
 
 // The Share tab's screen, on Matt's concept: one surface, four subjects.
 // Week, Profile and QR code are segments rather than tiles, the title says
@@ -48,14 +55,10 @@ export type HubItem = {
   coaching?: boolean;
 };
 
-const short = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-const wday = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+const shortFormatter = new Intl.DateTimeFormat("en-US", { month:"short", day:"numeric", timeZone:"UTC" });
+const weekdayFormatter = new Intl.DateTimeFormat("en-US", { weekday:"short", timeZone:"UTC" });
+const short = (iso: string) => shortFormatter.format(new Date(`${iso}T00:00:00Z`));
+const wday = (iso: string) => weekdayFormatter.format(new Date(`${iso}T00:00:00Z`));
 const plusDays = (iso: string, n: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 
@@ -69,11 +72,13 @@ export function ShareHubScreen({
   defaultFrom,
   today,
   savedHeadline,
-  savedBackground,
+  hasBackground,
   studios,
   templates,
   customTypes,
   lastUsed,
+  initialRevision,
+  deferAdderData = false,
 }: {
   /** Render inside another surface (the calendar's share sheet). The sheet
    *  owns dismissal, so the editor does not add a second back control. */
@@ -102,13 +107,17 @@ export function ShareHubScreen({
    *  draws something else. */
   savedHeadline: string;
   /** The last background picked in this editor, reusable next time. */
-  savedBackground: string | null;
+  hasBackground: boolean;
   /** The adder's ingredients, loaded only for a member: their hub carries
    *  the personal adder, because building the week is what the tab is for. */
   studios: StudioDto[];
   templates: TemplateDto[];
   customTypes: string[];
   lastUsed: LastUsed;
+  /** Server-created once per screen load so SSR and hydration use one image URL. */
+  initialRevision: number;
+  /** Route tabs defer member-only class tools until Add or Edit is used. */
+  deferAdderData?: boolean;
 }) {
   const router = useRouter();
   const [seg, setSeg] = useState<Seg>("week");
@@ -117,25 +126,30 @@ export function ShareHubScreen({
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
   const [hide, setHide] = useState<Set<string>>(new Set());
+  const [draftFrom, setDraftFrom] = useState(defaultFrom);
+  const [draftDays, setDraftDays] = useState(7);
+  const [draftHide, setDraftHide] = useState<Set<string>>(new Set());
   // The words at the top of the poster. Sent explicitly on every request
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
-  const [background, setBackground] = useState(savedBackground);
+  const [draftHeadline, setDraftHeadline] = useState(savedHeadline);
+  const [background, setBackground] = useState(hasBackground);
   const [backgroundBusy, setBackgroundBusy] = useState(false);
   const backgroundRef = useRef<HTMLInputElement>(null);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
   const [noHead, setNoHead] = useState(false);
+  const [draftNoHead, setDraftNoHead] = useState(false);
   // The poster's voice, picked by personality: see typefaces.ts.
   const [typeId, setTypeId] = useState<TypeFaceId>("standard");
+  const [draftTypeId, setDraftTypeId] = useState<TypeFaceId>("standard");
   // The headline's loudness, in percent. hsize is what the picture reads;
-  // slider is the thumb's live position, committed on release, because a
-  // poster takes a second to draw and a redraw per pixel of drag is a
-  // spinner that never ends.
+  // The draft slider stays local to its sheet, so dragging never queues a
+  // server render per pixel. Done commits one final image.
   const [hsize, setHsize] = useState(100);
-  const [slider, setSlider] = useState(100);
+  const [draftSlider, setDraftSlider] = useState(100);
   // The dressing: the top bar (the default), frames and day dividers.
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>("top");
@@ -153,10 +167,19 @@ export function ShareHubScreen({
   // One buster per visit, bumped after an add: the week changes behind the
   // picture the moment a class lands, and a cached preview of the week
   // before is a lie waiting to be posted.
-  const [bust, setBust] = useState(() => Date.now());
+  const [bust, setBust] = useState(initialRevision);
   // The member's build flow: the adder, and the "that class is on fittlist"
   // offer that comes back from it.
   const [addOpen, setAddOpen] = useState(false);
+  const [adderBusy, setAdderBusy] = useState(false);
+  const [adderData, setAdderData] = useState<CalendarComposerData | null>(() => deferAdderData ? null : {
+    studios,
+    templates,
+    customTypes,
+    lastUsed,
+    subsCount:0,
+  });
+  const adderPromise = useRef<Promise<CalendarComposerData | null> | null>(null);
   const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
   const [matchBusy, setMatchBusy] = useState(false);
   // Editing one of your own from the Classes sheet: the same form, opened
@@ -164,90 +187,160 @@ export function ShareHubScreen({
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [editBusy, setEditBusy] = useState(false);
 
+  const ensureAdderData = async () => {
+    if (adderData) return adderData;
+    if (!adderPromise.current) adderPromise.current = loadCalendarComposerData(false);
+    const loaded = await adderPromise.current;
+    adderPromise.current = null;
+    if (loaded) setAdderData(loaded);
+    return loaded;
+  };
+  const openAdder = async () => {
+    if (adderBusy) return;
+    if (adderData) {
+      setAddOpen(true);
+      return;
+    }
+    setAdderBusy(true);
+    try {
+      const [, tools] = await Promise.all([loadAdderModule(), ensureAdderData()]);
+      if (tools) setAddOpen(true);
+      else toast("Couldn't load your class tools");
+    } catch {
+      toast("Couldn't load your class tools");
+    } finally {
+      setAdderBusy(false);
+    }
+  };
+
   const openEdit = async (it: HubItem) => {
     if (editBusy) return;
     setEditBusy(true);
-    const d = await personalDetail(it.key.split(".")[0]);
-    setEditBusy(false);
-    if (!d) {
-      toast("That class isn't there any more");
-      refreshWeek();
-      return;
+    const id = it.key.split(".")[0];
+    try {
+      const [d, tools] = await Promise.all([
+        personalDetailMemory.get(id) ?? personalDetail(id),
+        ensureAdderData(),
+        loadAdderModule(),
+      ]);
+      if (!d) {
+        toast("That class isn't there any more");
+        refreshWeek();
+        return;
+      }
+      if (!tools) {
+        toast("Couldn't load your class tools");
+        return;
+      }
+      personalDetailMemory.set(id, d);
+      setPick(null);
+      setEdit({
+        id: d.id,
+        prefill: {
+          name: d.name,
+          classType: d.classType,
+          description: d.description,
+          image: d.image,
+          startTime: d.startTime,
+          durationMin: d.durationMin,
+          studioId: d.studioId,
+          location: d.location,
+          withWho: d.withWho,
+          links: d.links,
+          days: [d.dayOfWeek],
+          dayOfWeek: d.dayOfWeek,
+          endsOn: d.endsOn,
+          specificDate: d.specificDate,
+        },
+      });
+    } catch {
+      toast("Couldn't open that class");
+    } finally {
+      setEditBusy(false);
     }
-    setPick(null);
-    setEdit({
-      id: d.id,
-      prefill: {
-        name: d.name,
-        classType: d.classType,
-        description: d.description,
-        image: d.image,
-        startTime: d.startTime,
-        durationMin: d.durationMin,
-        studioId: d.studioId,
-        location: d.location,
-        withWho: d.withWho,
-        links: d.links,
-        days: [d.dayOfWeek],
-        dayOfWeek: d.dayOfWeek,
-        endsOn: d.endsOn,
-        specificDate: d.specificDate,
-      },
-    });
   };
   const [toastMsg, toastOn, toast] = useToast();
 
   const chooseBackground = (file: File) => {
     if (backgroundBusy) return;
+    setBackgroundBusy(true);
     readPhoto(
       file,
       async (dataUrl) => {
-        setBackgroundBusy(true);
-        const result = await setStoryBackground(dataUrl);
-        setBackgroundBusy(false);
-        if (!result.ok || !result.background) {
-          toast(result.error ?? "Couldn't add that background");
-          return;
+        try {
+          const result = await setStoryBackground(dataUrl);
+          if (!result.ok || !result.background) {
+            toast(result.error ?? "Couldn't add that background");
+            return;
+          }
+          setBackground(true);
+          setBust(Date.now());
+          setPick(null);
+          toast("Photo background added");
+        } catch {
+          toast("Couldn't add that background");
+        } finally {
+          setBackgroundBusy(false);
         }
-        setBackground(result.background);
-        setBust(Date.now());
-        setPick(null);
-        toast("Photo background added");
       },
-      () => toast("That photo format isn't supported"),
+      () => {
+        setBackgroundBusy(false);
+        toast("That photo format isn't supported");
+      },
     );
   };
 
   const removeBackground = async () => {
     if (backgroundBusy) return;
-    setBackgroundBusy(true);
-    const result = await setStoryBackground(null);
-    setBackgroundBusy(false);
-    if (!result.ok) {
-      toast(result.error ?? "Couldn't remove the background");
-      return;
-    }
-    setBackground(null);
+    const previous = background;
+    setBackground(false);
     setBust(Date.now());
     setPick(null);
-    toast("Photo background removed");
+    setBackgroundBusy(true);
+    try {
+      const result = await setStoryBackground(null);
+      if (result.ok) {
+        toast("Photo background removed");
+        return;
+      }
+      setBackground(previous);
+      setBust(Date.now());
+      toast(result.error ?? "Couldn't remove the background");
+    } catch {
+      setBackground(previous);
+      setBust(Date.now());
+      toast("Couldn't remove the background");
+    } finally {
+      setBackgroundBusy(false);
+    }
   };
 
   const chooseColorBackground = async (id: StoryThemeId) => {
     if (backgroundBusy) return;
-    if (background) {
-      setBackgroundBusy(true);
-      const result = await setStoryBackground(null);
-      setBackgroundBusy(false);
-      if (!result.ok) {
-        toast(result.error ?? "Couldn't change the background");
-        return;
-      }
-      setBackground(null);
-      setBust(Date.now());
-    }
+    const previous = background;
+    const previousTheme = themeId;
     setThemeId(id);
     setPick(null);
+    if (background) {
+      setBackground(false);
+      setBust(Date.now());
+      setBackgroundBusy(true);
+      try {
+        const result = await setStoryBackground(null);
+        if (result.ok) return;
+        setBackground(previous);
+        setThemeId(previousTheme);
+        setBust(Date.now());
+        toast(result.error ?? "Couldn't change the background");
+      } catch {
+        setBackground(previous);
+        setThemeId(previousTheme);
+        setBust(Date.now());
+        toast("Couldn't change the background");
+      } finally {
+        setBackgroundBusy(false);
+      }
+    }
   };
 
   // A server change (an add, a mark) has to reach both the list and the
@@ -343,6 +436,7 @@ export function ShareHubScreen({
   // stay a within-hat choice. A member has one hat and no segment.
   const twoHats = coach && items.some((it) => it.coaching) && items.some((it) => !it.coaching);
   const [hat, setHat] = useState<"coaching" | "saved">("coaching");
+  const [draftHat, setDraftHat] = useState<"coaching" | "saved">("coaching");
   const effHide = useMemo(() => {
     if (!twoHats) return hide;
     const next = new Set(hide);
@@ -356,19 +450,30 @@ export function ShareHubScreen({
   const hatRows = twoHats
     ? inRange.filter((it) => (hat === "coaching" ? it.coaching : !it.coaching))
     : inRange;
+  const draftHatRows = twoHats
+    ? inRange.filter((it) => (draftHat === "coaching" ? it.coaching : !it.coaching))
+    : inRange;
 
   const shown = inRange.filter((it) => !effHide.has(it.key)).length;
 
   const hideParam = [...effHide].join(",");
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
-  const weekImgUrl =
+  const rawWeekImgUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
-  const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
-  const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
+  const rawCardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
+  // An offscreen carousel card keeps the last image it successfully showed.
+  // A week edit should not also redraw the hidden profile card, and vice versa.
+  const [restingWeekImgUrl, setRestingWeekImgUrl] = useState(rawWeekImgUrl);
+  const [restingCardImgUrl, setRestingCardImgUrl] = useState<string | null>(null);
+  const weekImgUrl = seg === "week" ? rawWeekImgUrl : restingWeekImgUrl;
+  const cardImgUrl = seg === "profile" ? rawCardImgUrl : restingCardImgUrl;
+  useEffect(() => { if (seg === "week") setRestingWeekImgUrl(rawWeekImgUrl); }, [rawWeekImgUrl, seg]);
+  useEffect(() => { if (seg === "profile") setRestingCardImgUrl(rawCardImgUrl); }, [rawCardImgUrl, seg]);
+  const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl ?? rawCardImgUrl;
   const fileName =
     seg === "week"
       ? `fittlist-${handle}-week-${styleId}.png`
@@ -381,8 +486,15 @@ export function ShareHubScreen({
   // Safari requires navigator.share to begin in the tap's user-activation
   // window. Preparing the PNG after the tap can take long enough to lose that
   // window, so prepare the currently visible subject as soon as it changes.
+  const readyImages = useRef(new Set<string>());
+  const [readyImageVersion, setReadyImageVersion] = useState(0);
+  const markImageReady = useCallback((url: string) => {
+    if (readyImages.current.has(url)) return;
+    readyImages.current.add(url);
+    setReadyImageVersion((version) => version + 1);
+  }, []);
   useEffect(() => {
-    if (seg === "text") return;
+    if (seg === "text" || nativeShareAvailable || !canShareFiles || !readyImages.current.has(activeShareUrl)) return;
     const controller = new AbortController();
     setPreparedShare(null);
     setPrepareFailed(false);
@@ -406,7 +518,7 @@ export function ShareHubScreen({
       }
     })();
     return () => controller.abort();
-  }, [activeShareFile, activeShareUrl, seg]);
+  }, [activeShareFile, activeShareUrl, canShareFiles, nativeShareAvailable, readyImageVersion, seg]);
 
   const rangeLabel =
     days === 1 ? `${wday(from)}, ${short(from)}` : `${short(from)} to ${short(plusDays(from, days - 1))}`;
@@ -546,6 +658,7 @@ export function ShareHubScreen({
   // slide is nearest the middle, measured rather than divided, so a peeking
   // neighbour never throws the arithmetic.
   const slidesRef = useRef<HTMLDivElement>(null);
+  const slideFrame = useRef<number | null>(null);
   // A pill tap animates the scroll; the handler stays quiet until the ride
   // ends, or the controls would flick through every segment passed over.
   const rideTo = useRef<number | null>(null);
@@ -573,16 +686,23 @@ export function ShareHubScreen({
     el.scrollTo({ left: kid.offsetLeft - (el.clientWidth - kid.offsetWidth) / 2, behavior: "smooth" });
   };
   const onSlides = () => {
-    const el = slidesRef.current;
-    if (!el) return;
-    const i = nearestSlide(el);
-    if (rideTo.current !== null) {
-      if (i === rideTo.current) rideTo.current = null;
-      return;
-    }
-    const id = segs[i]?.id;
-    if (id && id !== seg) setSeg(id);
+    if (slideFrame.current !== null) return;
+    slideFrame.current = window.requestAnimationFrame(() => {
+      slideFrame.current = null;
+      const el = slidesRef.current;
+      if (!el) return;
+      const i = nearestSlide(el);
+      if (rideTo.current !== null) {
+        if (i === rideTo.current) rideTo.current = null;
+        return;
+      }
+      const id = segs[i]?.id;
+      if (id && id !== seg) setSeg(id);
+    });
   };
+  useEffect(() => () => {
+    if (slideFrame.current !== null) window.cancelAnimationFrame(slideFrame.current);
+  }, []);
 
   return (
     <>
@@ -624,8 +744,8 @@ export function ShareHubScreen({
               We&rsquo;ll turn them into a shareable schedule and keep them on your profile
               until they&rsquo;re over.
             </p>
-            <button className="btn si" onClick={() => setAddOpen(true)}>
-              Add a class
+            <button className="btn si" disabled={adderBusy} onClick={() => void openAdder()}>
+              {adderBusy ? "Loading class tools..." : "Add a class"}
             </button>
           </div>
         )}
@@ -658,10 +778,10 @@ export function ShareHubScreen({
           onTouchStart={() => (rideTo.current = null)}
         >
           <div className="shslide" aria-hidden={seg !== "week"}>
-            <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" />
+            <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" onReady={markImageReady} />
           </div>
           <div className="shslide" aria-hidden={seg !== "profile"}>
-            <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
+            <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" onReady={markImageReady} />
           </div>
           <div className="shslide" aria-hidden={seg !== "qr"}>
             {/* The card the mock drew: name, the code on white, the address.
@@ -670,7 +790,7 @@ export function ShareHubScreen({
               <div className="qrcard-nm">{name}</div>
               <div className="qrframe">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
+                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" loading="lazy" onLoad={() => markImageReady(qrUrl)} />
               </div>
               <div className="qrurl">
                 {pageHost}/{handle}
@@ -695,8 +815,8 @@ export function ShareHubScreen({
                 {/* "another", because this chip only exists once the first
                     add has landed: the start block owns the first one. */}
                 {!coach && (
-                  <button className="shctrl shctrl-add" onClick={() => setAddOpen(true)}>
-                    + Add another class
+                  <button className="shctrl shctrl-add" disabled={adderBusy} onClick={() => void openAdder()}>
+                    {adderBusy ? "Loading..." : "+ Add another class"}
                   </button>
                 )}
                 <button className="shctrl" onClick={() => { setColorMenuOpen(false); setPick("color"); }}>
@@ -720,17 +840,17 @@ export function ShareHubScreen({
                     event.currentTarget.value = "";
                   }}
                 />
-                <button className="shctrl" onClick={() => setPick("classes")}>
+                <button className="shctrl" onClick={() => { setDraftHide(new Set(hide)); setDraftHat(hat); setPick("classes"); }}>
                   <span className="shctrl-k">Classes</span>
                   <span className="shctrl-v">
                     {hatRows.length === 0 ? "None in range" : `${shown} of ${hatRows.length} showing`}
                   </span>
                 </button>
-                <button className="shctrl" onClick={() => setPick("dates")}>
+                <button className="shctrl" onClick={() => { setDraftFrom(from); setDraftDays(days); setPick("dates"); }}>
                   <span className="shctrl-k">Dates</span>
                   <span className="shctrl-v">{rangeLabel}</span>
                 </button>
-                <button className="shctrl" onClick={() => setPick("message")}>
+                <button className="shctrl" onClick={() => { setDraftHeadline(headline); setDraftNoHead(noHead); setDraftTypeId(typeId); setDraftSlider(hsize); setPick("message"); }}>
                   <span className="shctrl-k">Headline</span>
                   <span className="shctrl-v">
                     {noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
@@ -787,10 +907,10 @@ export function ShareHubScreen({
             {/* The one preset worth a chip: "I'm at this tonight" is a real
                 post, and it was a dropdown plus a number away. */}
             <button
-              className={`shday shtoday${from === today && days === 1 ? " on" : ""}`}
+              className={`shday shtoday${draftFrom === today && draftDays === 1 ? " on" : ""}`}
               onClick={() => {
-                setFrom(today);
-                setDays(1);
+                setDraftFrom(today);
+                setDraftDays(1);
               }}
             >
               Today only
@@ -804,8 +924,8 @@ export function ShareHubScreen({
             <select
               id="shFrom"
               className="typeselect"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
+              value={draftFrom}
+              onChange={(e) => setDraftFrom(e.target.value)}
             >
               {startDays.map((iso) => (
                 <option key={iso} value={iso}>
@@ -818,15 +938,15 @@ export function ShareHubScreen({
               {[1, 2, 3, 4, 5, 6, 7].map((n) => (
                 <button
                   key={n}
-                  className={`shday${days === n ? " on" : ""}`}
-                  onClick={() => setDays(n)}
+                  className={`shday${draftDays === n ? " on" : ""}`}
+                  onClick={() => setDraftDays(n)}
                 >
                   {n}
                 </button>
               ))}
             </div>
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => setPick(null)}>
+              <button className="btn si" onClick={() => { setFrom(draftFrom); setDays(draftDays); setPick(null); }}>
                 Done
               </button>
             </div>
@@ -960,7 +1080,6 @@ export function ShareHubScreen({
                         setTypeId(style.typeface);
                         setDecoId(style.decoration);
                         setHsize(style.headlineSize);
-                        setSlider(style.headlineSize);
                         setPick(null);
                       }}
                     >
@@ -1004,17 +1123,17 @@ export function ShareHubScreen({
                 slider for words that aren't there is a control that lies. */}
             <button
               className="setrow"
-              aria-pressed={!noHead}
-              onClick={() => setNoHead((v) => !v)}
+              aria-pressed={!draftNoHead}
+              onClick={() => setDraftNoHead((v) => !v)}
             >
               <span className="setrow-txt">
                 <span className="t">Show a headline</span>
               </span>
-              <span className={`switch${!noHead ? " on" : ""}`} aria-hidden="true">
+              <span className={`switch${!draftNoHead ? " on" : ""}`} aria-hidden="true">
                 <span className="switch-knob" />
               </span>
             </button>
-            {!noHead && (
+            {!draftNoHead && (
               <>
                 <label className="flabel" htmlFor="shMsg">
                   Your words
@@ -1022,16 +1141,16 @@ export function ShareHubScreen({
                 <input
                   id="shMsg"
                   className="editinput"
-                  value={headline}
+                  value={draftHeadline}
                   maxLength={44}
                   placeholder={coach ? "Train with me." : "Come with me."}
-                  onChange={(e) => setHeadline(e.target.value)}
+                  onChange={(e) => setDraftHeadline(e.target.value)}
                 />
                 {/* How loud: a slider, by Matt's call, for taking up the room a
                     quiet week leaves. It commits on release rather than per
                     pixel, because every value is a fresh server render. */}
                 <label className="flabel" htmlFor="shSize">
-                  Size <span>· {slider}%</span>
+                  Size <span>· {draftSlider}%</span>
                 </label>
                 <input
                   id="shSize"
@@ -1040,12 +1159,8 @@ export function ShareHubScreen({
                   min={60}
                   max={180}
                   step={5}
-                  value={slider}
-                  onChange={(e) => setSlider(Number(e.target.value))}
-                  onPointerUp={(e) => setHsize(Number(e.currentTarget.value))}
-                  onKeyUp={(e) => setHsize(Number(e.currentTarget.value))}
-                  onTouchEnd={(e) => setHsize(Number(e.currentTarget.value))}
-                  onBlur={(e) => setHsize(Number(e.currentTarget.value))}
+                  value={draftSlider}
+                  onChange={(e) => setDraftSlider(Number(e.target.value))}
                 />
                 {/* The voice, as a plain dropdown, by Matt's call: the sheet
                     of sample rows folded in here with the words it dresses. */}
@@ -1055,8 +1170,8 @@ export function ShareHubScreen({
                 <select
                   id="shFont"
                   className="typeselect"
-                  value={typeId}
-                  onChange={(e) => setTypeId(e.target.value as TypeFaceId)}
+                  value={draftTypeId}
+                  onChange={(e) => setDraftTypeId(e.target.value as TypeFaceId)}
                 >
                   {TYPEFACES.map((f) => (
                     <option key={f.id} value={f.id}>
@@ -1067,7 +1182,7 @@ export function ShareHubScreen({
               </>
             )}
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => setPick(null)}>
+              <button className="btn si" onClick={() => { setHeadline(draftHeadline); setNoHead(draftNoHead); setTypeId(draftTypeId); setHsize(draftSlider); setPick(null); }}>
                 Done
               </button>
             </div>
@@ -1106,8 +1221,8 @@ export function ShareHubScreen({
                 ).map(([id, label]) => (
                   <button
                     key={id}
-                    className={`shday${hat === id ? " on" : ""}`}
-                    onClick={() => setHat(id)}
+                    className={`shday${draftHat === id ? " on" : ""}`}
+                    onClick={() => setDraftHat(id)}
                   >
                     {label}
                   </button>
@@ -1115,9 +1230,9 @@ export function ShareHubScreen({
               </div>
             )}
             <div className="settingslist shpick-list">
-              {hatRows.length === 0 && <p className="empty">Nothing in this range yet.</p>}
-              {hatRows.map((it) => {
-                const off = hide.has(it.key);
+              {draftHatRows.length === 0 && <p className="empty">Nothing in this range yet.</p>}
+              {draftHatRows.map((it) => {
+                const off = draftHide.has(it.key);
                 return (
                   // The tick and the edit are two buttons in one row, and
                   // siblings on purpose: a button inside a button is not a
@@ -1129,7 +1244,7 @@ export function ShareHubScreen({
                       className="setrow"
                       aria-pressed={!off}
                       onClick={() =>
-                        setHide((cur) => {
+                        setDraftHide((cur) => {
                           const next = new Set(cur);
                           if (next.has(it.key)) next.delete(it.key);
                           else next.add(it.key);
@@ -1172,16 +1287,17 @@ export function ShareHubScreen({
             {!coach && (
               <button
                 className="tertiary shpick-add"
+                disabled={adderBusy}
                 onClick={() => {
                   setPick(null);
-                  setAddOpen(true);
+                  void openAdder();
                 }}
               >
-                + Add a class
+                {adderBusy ? "Loading class tools..." : "+ Add a class"}
               </button>
             )}
             <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => setPick(null)}>
+              <button className="btn si" onClick={() => { setHide(new Set(draftHide)); setHat(draftHat); setPick(null); }}>
                 Done
               </button>
             </div>
@@ -1191,10 +1307,10 @@ export function ShareHubScreen({
 
       {addOpen && (
         <Adder
-          studios={studios}
-          templates={templates}
-          customTypes={customTypes}
-          lastUsed={lastUsed}
+          studios={adderData?.studios ?? []}
+          templates={adderData?.templates ?? []}
+          customTypes={adderData?.customTypes ?? []}
+          lastUsed={adderData?.lastUsed ?? lastUsed}
           subsCount={0}
           firstPublish={false}
           personal={{ canCoach: false, oneOff: true }}
@@ -1221,10 +1337,10 @@ export function ShareHubScreen({
 
       {edit && (
         <Adder
-          studios={studios}
-          templates={templates}
-          customTypes={customTypes}
-          lastUsed={lastUsed}
+          studios={adderData?.studios ?? []}
+          templates={adderData?.templates ?? []}
+          customTypes={adderData?.customTypes ?? []}
+          lastUsed={adderData?.lastUsed ?? lastUsed}
           subsCount={0}
           firstPublish={false}
           personal={{ canCoach: false, editId: edit.id }}
@@ -1232,11 +1348,13 @@ export function ShareHubScreen({
           onClose={() => setEdit(null)}
           onToast={toast}
           onPublished={() => {
+            personalDetailMemory.delete(edit.id);
             setEdit(null);
             toast("Saved");
             refreshWeek();
           }}
           onDeleted={(msg) => {
+            personalDetailMemory.delete(edit.id);
             setEdit(null);
             toast(msg);
             refreshWeek();
@@ -1327,21 +1445,40 @@ export function ShareHubScreen({
  *  server-side on every knob and takes a second or two to paint, and the
  *  spinner is what says the wait is the picture coming rather than a dead
  *  control. Per slide, because two pictures are on screen at once now. */
-function SlideImg({ cls, src, alt }: { cls: string; src: string; alt: string }) {
-  const [loading, setLoading] = useState(true);
-  // Every knob that changes the url restarts the wait; a cached picture
-  // fires onLoad immediately and the spinner never registers.
+function SlideImg({ cls, src, alt, onReady }: { cls: string; src: string | null; alt: string; onReady: (url:string) => void }) {
+  const [shownSrc, setShownSrc] = useState(src);
+  const [loading, setLoading] = useState(!!src);
+  // Double-buffer updates: the complete old poster remains readable while
+  // the next PNG draws, then swaps only after the browser has it in memory.
   useEffect(() => {
+    if (!src || src === shownSrc) return;
+    let live = true;
+    const image = new Image();
     setLoading(true);
-  }, [src]);
+    image.onload = () => {
+      if (!live) return;
+      setShownSrc(src);
+      setLoading(false);
+      onReady(src);
+    };
+    image.onerror = () => { if (live) setLoading(false); };
+    image.src = src;
+    return () => { live = false; };
+  }, [onReady, shownSrc, src]);
+  if (!shownSrc) return (
+    <div className="shprev-wrap" aria-label={`Preparing ${alt.toLowerCase()}`}>
+      <div className={`${cls} shprev-placeholder`} />
+      <span className="shspin" aria-hidden="true" />
+    </div>
+  );
   return (
     <div className="shprev-wrap">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        className={`${cls}${loading ? " loading" : ""}`}
-        src={src}
+        className={cls}
+        src={shownSrc}
         alt={alt}
-        onLoad={() => setLoading(false)}
+        onLoad={() => { setLoading(false); onReady(shownSrc); }}
         onError={() => setLoading(false)}
       />
       {loading && <span className="shspin" aria-label="Drawing the picture" />}

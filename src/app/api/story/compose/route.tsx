@@ -1,4 +1,5 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { getDb, schema } from "@/db";
 import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
@@ -25,45 +26,86 @@ export const dynamic = "force-dynamic";
 const FALLBACK: [string, string] = ["Train", "with me."];
 const FALLBACK_FAN: [string, string] = ["Come", "with me."];
 
+// A visual edit changes the PNG but not the underlying week. Keep those DB
+// reads warm for this editor revision; a class/background mutation bumps the
+// revision in the URL and gets a fresh snapshot.
+const composeUser = unstable_cache(
+  async (userId: string, revision: string, includeBackground: boolean, includePhoto: boolean) => {
+    void revision;
+    const db = await getDb();
+    const [user] = await db
+      .select({
+        kind: schema.users.kind,
+        handle: schema.users.handle,
+        headline: sql<string | null>`${schema.users.storyPrefs}->>'headline'`,
+        showPhoto: sql<boolean | null>`(${schema.users.storyPrefs}->>'showPhoto')::boolean`,
+        background: includeBackground
+          ? sql<string | null>`${schema.users.storyPrefs}->>'background'`
+          : sql<string | null>`null`,
+        photo: includePhoto
+          ? sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`
+          : sql<string | null>`null`,
+      })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
+    return user ?? null;
+  },
+  ["story-compose-user"],
+  { revalidate:300 },
+);
+
+const composeWeek = unstable_cache(
+  async (userId: string, from: string, days: number, revision: string) => {
+    void revision;
+    return shareWeek(userId, from, days);
+  },
+  ["story-compose-week"],
+  { revalidate:300 },
+);
+
 export async function GET(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) return new Response("Not found", { status: 404 });
   const qs = new URL(req.url).searchParams;
-
-  const db = await getDb();
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return new Response("Not found", { status: 404 });
-
-  // A member's week draws here too now: the Share tab is theirs as well,
-  // and `shareWeek` answers by kind, so the same route serves both.
-  const fan = me.kind === "fan";
   // A style supplies a coordinated palette, typeface and decoration. Explicit
   // query parameters are editor overrides and win over those defaults.
   const [, y, t] = storyLook(qs.get("style"), qs.get("palette") ?? qs.get("theme"));
   const format: StoryFormat = qs.get("fmt") === "square" ? "square" : "story";
   const { from, days } = shareRange(qs.get("from"), qs.get("days"));
   const hide = new Set((qs.get("hide") ?? "").split(",").filter(Boolean));
+  const revision = (qs.get("v") ?? "base").split("-")[0];
+  const includeBackground = qs.get("bg") === "1";
+  const photoParam = qs.get("photo");
+  const includePhoto = photoParam ? photoParam !== "0" : true;
+  const [me, completeWeek] = await Promise.all([
+    composeUser(userId, revision, includeBackground, includePhoto),
+    composeWeek(userId, from, days, revision),
+  ]);
+  if (!me) return new Response("Not found", { status: 404 });
+  const byDay = completeWeek
+    .map((day) => ({ ...day, items:day.items.filter((item) => !hide.has(item.key)) }))
+    .filter((day) => day.items.length > 0);
 
-  const byDay = await shareWeek(userId, from, days, hide);
+  // A member's week draws here too now: the Share tab is theirs as well,
+  // and `shareWeek` answers by kind, so the same route serves both.
+  const fan = me.kind === "fan";
 
-  const prefs = me.storyPrefs ?? {};
-  const backgroundPhoto = qs.get("bg") === "1" ? prefs.background ?? null : null;
+  const backgroundPhoto = includeBackground ? me.background : null;
   // No headline at all, by Matt's call: a switch in the Headline sheet, so
   // the picture can be the week alone. Distinct from an empty field, which
   // falls back, because a blank poster by accident is worse than either.
   const noHead = qs.get("nohead") === "1";
   // The headline rides the URL so the preview redraws without a round trip;
   // the saved one is the fallback for anything that isn't the composer.
-  const typed = qs.get("headline") ?? prefs.headline ?? "";
+  const typed = qs.get("headline") ?? me.headline ?? "";
   const { line1, line2, size } = headlineOf(typed, fan ? FALLBACK_FAN : FALLBACK);
 
   // An explicit param wins over the saved preference: the hub always asks
   // for the photo (photo=1, by Matt's call), and a coach who turned it off
   // in the old composer should not have that survive a screen that no
   // longer offers the switch.
-  const photoParam = qs.get("photo");
   const showPhoto =
-    (photoParam ? photoParam !== "0" : prefs.showPhoto !== false) && !!me.photo;
+    (photoParam ? photoParam !== "0" : me.showPhoto !== false) && !!me.photo;
   const showStudio = qs.get("studios") !== "0";
   const handle = (me.handle ?? "").trim();
 
@@ -130,5 +172,6 @@ export async function GET(req: Request) {
     // stays Delight.
     typeface: typeFaceOf(qs.get("type") ?? y.typeface),
     deco: decoOf(qs.get("deco") ?? y.decoration),
+    cacheControl: qs.has("v") ? "private, max-age=31536000, immutable" : "no-store",
   });
 }
