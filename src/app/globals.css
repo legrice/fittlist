@@ -12492,7 +12492,7 @@ a.clspeek-by:active { opacity: .6; }
     padding:2px;
     border:1px solid var(--color-border);
     border-radius:32px;
-    background:color-mix(in srgb, var(--color-surface) 88%, transparent);
+    background:color-mix(in srgb, var(--color-surface) 82%, transparent);
     -webkit-backdrop-filter:blur(18px) saturate(160%);
     backdrop-filter:blur(18px) saturate(160%);
     box-shadow:0 5px 20px rgba(0,0,0,.1);
@@ -12502,7 +12502,7 @@ a.clspeek-by:active { opacity: .6; }
     width:64px; height:64px; flex:0 0 64px;
     display:grid; place-items:center;
     border:1px solid var(--color-border); border-radius:50%;
-    background:color-mix(in srgb, var(--color-surface) 88%, transparent);
+    background:color-mix(in srgb, var(--color-surface) 82%, transparent);
     color:var(--ink); text-decoration:none;
     -webkit-backdrop-filter:blur(18px) saturate(160%);
     backdrop-filter:blur(18px) saturate(160%);
