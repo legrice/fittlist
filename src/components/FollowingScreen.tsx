@@ -403,7 +403,7 @@ export function FollowingScreen({
       name: "You",
       href: "/calendar",
       label: "Your calendar",
-      action: "Manage calendar",
+      action: "Manage",
     };
     if (calendarFilter === "following") return {
       name: "Following",
