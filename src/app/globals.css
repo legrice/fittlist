@@ -9151,7 +9151,7 @@ select.editinput.placekind-select {
 .cash-day > div { content-visibility:auto; contain-intrinsic-size:380px; }
 .cash-days-more { height:2px; }
 .cash-rail-more { flex:0 0 2px; align-self:stretch; }
-.cash-day > h2 { position:relative; margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
+.cash-day > h2 { position:relative; margin:0 0 14px; font-size:28px; line-height:1.08; font-weight:600; letter-spacing:-.025em; }
 @media (max-width:1099px) {
   .cash-day > h2 {
     position:sticky; top:66px; z-index:6;
@@ -9233,7 +9233,7 @@ select.editinput.placekind-select {
   .cash-day + .cash-day { margin-top: 46px; }
   .cash-day > h2 {
     margin: 0 0 14px;
-    font-size: 24px;
+    font-size: 28px;
     line-height: 1.1;
     letter-spacing: -.025em;
   }
@@ -12386,8 +12386,8 @@ a.clspeek-by:active { opacity: .6; }
   .youaccount-identity { width:100%; padding-top:0; }
   .screen.hasnav .cash-day > h2 {
     top:0;
-    font-size:18px;
-    line-height:1.2;
+    font-size:24px;
+    line-height:1.12;
     margin-bottom:10px;
     padding-top:6px;
     padding-bottom:7px;
