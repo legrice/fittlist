@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { updateProfilePhoto } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
-import { SettingsGear } from "@/components/SettingsGear";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassOpener } from "@/components/ClassOpener";
@@ -154,10 +153,19 @@ export function YouDashboard({
             )}
             <span><Icon name="image" size={15} /></span>
           </button>
-          <div className="youprofile-corner-actions" role="group" aria-label="Share profile">
+          <div className="youprofile-corner-actions" role="group" aria-label="Profile tools">
             <button type="button" aria-label="Show your QR code" onClick={() => setQrOpen(true)}>
               <Icon name="qr_code_2" size={22} />
             </button>
+            {onOpenSettings ? (
+              <button type="button" aria-label="Settings" onClick={() => onOpenSettings("account")}>
+                <Icon name="settings" size={22} />
+              </button>
+            ) : (
+              <Link className="youprofile-corner-link" href="/settings" aria-label="Settings">
+                <Icon name="settings" size={22} />
+              </Link>
+            )}
             <ProfileShare path={`/${me.handle}`} name={me.name} />
           </div>
         </div>
@@ -165,11 +173,6 @@ export function YouDashboard({
         <div className="youaccount-identity">
           <div className="youhandle-row">
             <span className="youhandle">@{me.handle}</span>
-            {onOpenSettings ? (
-              <button className="youeditlink" type="button" onClick={() => onOpenSettings("page")}>Edit profile</button>
-            ) : (
-              <Link className="youeditlink" href="/settings?edit=1">Edit profile</Link>
-            )}
           </div>
           <h1>{me.name}</h1>
         </div>
@@ -180,7 +183,17 @@ export function YouDashboard({
           <Icon name="account_circle" size={18} />
           <span>View profile</span>
         </Link>
-        <SettingsGear pill />
+        {onOpenSettings ? (
+          <button type="button" onClick={() => onOpenSettings("page")}>
+            <Icon name="edit" size={18} />
+            <span>Edit profile</span>
+          </button>
+        ) : (
+          <Link href="/settings?edit=1">
+            <Icon name="edit" size={18} />
+            <span>Edit profile</span>
+          </Link>
+        )}
       </div>
 
       <AccountGroup title="Your calendars">
