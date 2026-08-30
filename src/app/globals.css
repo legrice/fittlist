@@ -9310,12 +9310,13 @@ html[data-mode="dark"],
 .following-coach-context {
   min-height: 58px; margin: 10px 0 20px; padding: 9px 10px 9px 16px;
   border: 0; border-radius: 18px; background: var(--color-surface-muted);
-}
-.following-coach-context :is(.feedfilter-txt, .feedfilter-link, .calendar-context-meta) {
   font-family:'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size:15px;
   font-weight:600;
   line-height:1.2;
+}
+.following-coach-context :is(.feedfilter-txt, .feedfilter-link, .calendar-context-meta) {
+  font:inherit;
 }
 .calendar-context-meta { color:var(--color-text-secondary); }
 .calendar-directory-scrim { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end; background:rgba(0,0,0,.34); }
