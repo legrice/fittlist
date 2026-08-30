@@ -9185,6 +9185,7 @@ select.editinput.placekind-select {
   padding:3px 8px; border-radius:var(--radius-pill); font-size:10px;
   line-height:1.15; font-weight:700; white-space:nowrap;
 }
+.cash-class-coachline .cash-relation-tag { margin-left:auto; }
 .cash-relation-tag.following { background:var(--color-olive); color:var(--color-black); }
 .cash-relation-tag.coaching { background:var(--color-coaching); color:var(--color-coaching-text); }
 .cash-relation-tag.attending { background:var(--color-attending); color:var(--color-attending-text); }
