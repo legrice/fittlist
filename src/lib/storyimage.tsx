@@ -318,12 +318,12 @@ export function renderStory(model: StoryModel) {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                alignSelf: "center",
+                alignSelf: "flex-start",
                 width: square ? 780 : 840,
                 padding: compact ? "30px 42px" : "38px 48px",
                 borderRadius: 28,
                 background: "#020D08",
-                textAlign: "center",
+                textAlign: "left",
                 fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
                 fontStyle: guest?.italic ? "italic" : "normal",
                 fontWeight: 800,
@@ -372,6 +372,8 @@ export function renderStory(model: StoryModel) {
                 const rowGap = compact ? 16 : 22;
                 const panelPadY = compact ? 32 : 40;
                 const panelHeight = panelPadY + Math.max(compact ? 31 : 35, rows.length * rowHeight + Math.max(0, rows.length - 1) * rowGap);
+                const [weekday, ...dateParts] = day.replace(",", "").split(/\s+/);
+                const date = dateParts.join(" ");
                 return (
                 <div
                   key={day}
@@ -393,23 +395,29 @@ export function renderStory(model: StoryModel) {
                   <span
                     style={{
                       display: "flex",
-                      width: 180,
+                      flexDirection: "column",
+                      width: compact ? 104 : 116,
                       flexShrink: 0,
-                      fontSize: compact ? 27 : 31,
-                      lineHeight: 1.12,
                       fontWeight: 700,
                     }}
                   >
-                    {day}
+                    <span style={{ display: "flex", fontSize: compact ? 23 : 26, lineHeight: 1, textTransform: "uppercase", letterSpacing: 1 }}>
+                      {weekday}
+                    </span>
+                    {date && (
+                      <span style={{ display: "flex", marginTop: 5, fontSize: compact ? 29 : 33, lineHeight: 1 }}>
+                        {date}
+                      </span>
+                    )}
                   </span>
                   <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: compact ? 16 : 22 }}>
                     {rows.map((row, index) => (
                       <div key={`${row.time}-${row.name}-${index}`} style={{ display: "flex", flexShrink: 0, height: rowHeight, gap: 16 }}>
-                        <span style={{ width: 150, flexShrink: 0, fontSize: compact ? 25 : 29, fontWeight: 700 }}>
+                        <span style={{ width: 138, flexShrink: 0, fontSize: compact ? 29 : 34, fontWeight: 700 }}>
                           {row.time}
                         </span>
                         <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                          <span style={{ display: "block", width: "100%", lineClamp: 1, fontSize: compact ? 25 : 29, fontWeight: 600, lineHeight: 1.12 }}>
+                          <span style={{ display: "block", width: "100%", lineClamp: 1, fontSize: compact ? 29 : 34, fontWeight: 600, lineHeight: 1.08 }}>
                             {row.name}
                           </span>
                           {row.sub && (
@@ -419,7 +427,7 @@ export function renderStory(model: StoryModel) {
                                 width: "100%",
                                 lineClamp: 1,
                                 marginTop: 3,
-                                fontSize: compact ? 20 : 23,
+                                fontSize: compact ? 23 : 27,
                                 fontWeight: 600,
                                 lineHeight: 1.1,
                                 color: t.muted,
