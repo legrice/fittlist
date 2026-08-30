@@ -447,9 +447,14 @@ export function FollowingScreen({
   };
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
   const togglePerson = (id: string) => {
-    const next = selectedPeople.has(id) ? new Set<string>() : new Set([id]);
+    if (selectedPeople.has(id)) {
+      setIncludeYou(true);
+      setSelectedPeople(new Set());
+      setCalendarFilter("all");
+      return;
+    }
     setIncludeYou(false);
-    setSelectedPeople(next);
+    setSelectedPeople(new Set([id]));
     setCalendarFilter("people");
   };
   const soleSelectedCoach = !includeYou && selectedPeople.size === 1
