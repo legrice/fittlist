@@ -9197,10 +9197,10 @@ select.editinput.placekind-select {
 .cash-class-main.attending { border-left-color:var(--color-attending); }
 .cash-class-main.has-source-avatar { padding-left:0; border-left:0; }
 .cash-class-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:3px; }
-.cash-class-coachline { min-width:0; display:flex; align-items:center; gap:8px; }
+.cash-class-coachline { min-width:0; display:flex; align-items:baseline; gap:8px; }
 .cash-class-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:16px; }
 .cash-class-favorite { flex:0 0 auto; color:var(--color-olive); }
-.cash-you-tag { padding:2px 7px; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-black); font-size:10px; line-height:1.2; font-weight:700; white-space:nowrap; }
+.cash-you-tag { display:inline-flex; align-items:center; padding:2px 7px; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-black); font-size:10px; line-height:1.2; font-weight:700; white-space:nowrap; }
 .cash-class-title-row,
 .cash-class-studio-row { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:14px; }
 .cash-class-title-row > strong:first-child {
