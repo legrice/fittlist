@@ -364,9 +364,7 @@ export function FollowingScreen({
   );
   const groupOptions = useMemo(() => socialGroups, [socialGroups]);
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
-  const quickCoachOptions = [...sortedCoachOptions]
-    .sort((a, b) => Number(selectedPeople.has(b.id)) - Number(selectedPeople.has(a.id)))
-    .slice(0, 5);
+  const quickCoachOptions = sortedCoachOptions.slice(0, 5);
   const togglePerson = (id: string) => {
     const next = new Set(selectedPeople);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -776,6 +774,12 @@ export function FollowingScreen({
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{selectedCalendar.label}</span>
           {calendarFilter === "you" ? <PersonalCalendarSheetTrigger className="feedfilter-link" ariaLabel="Manage calendar">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></PersonalCalendarSheetTrigger> : selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></Link>}
+        </div>
+      )}
+      {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
+        <div className="feedfilterbar following-coach-context">
+          <span className="feedfilter-txt">{selectedPeople.size + 1} calendars</span>
+          <button type="button" className="feedfilter-link" onClick={() => { setSelectedPeople(new Set()); setCalendarFilter("you"); }}>Reset</button>
         </div>
       )}
       {isHome && shown.length === 0 && calendarPending ? (
