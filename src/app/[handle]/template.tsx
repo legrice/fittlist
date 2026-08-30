@@ -38,7 +38,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
   }, [staySeated]);
 
   return (
-    <div className={`page-slide${staySeated ? " no-slide" : ""}`} ref={ref}>
+    <div className={`page-slide profile-page-slide${staySeated ? " no-slide" : ""}`} ref={ref}>
       {children}
     </div>
   );

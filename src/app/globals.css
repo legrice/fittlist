@@ -5049,6 +5049,7 @@ select.editinput.placekind-select {
    changed. Short on purpose: at .3s a fade reads as loading, at .16s it
    reads as response. */
 .page-slide { min-height: 100dvh; animation: pageFade var(--motion-fast) var(--motion-ease-out); }
+.profile-page-slide { animation:slideInRight var(--motion-base) var(--motion-ease-out); }
 @keyframes pageFade { from { opacity: 0; } to { opacity: 1; } }
 /* Switching tabs within one profile: the header above is identical, so nothing
    moves at all. Even a fade there would flicker the parts that didn't change. */
@@ -10192,35 +10193,26 @@ select.editinput.placekind-select {
 .peekstar.on { color: var(--si); }
 .peekstar[disabled] { opacity: .55; }
 
-/* The peek is a real bottom sheet, not a full-screen page. `sheet-full` still
-   gives its long calendar an internal scroller, but this more specific rule
-   releases the height and corners that made a quick look feel like a route. */
-.peek-scrim { background:rgba(23,26,31,.42); }
+/* Person profiles behave like pushed routes while leaving their origin
+   mounted beneath them, so Back restores the exact rail and scroll state. */
+.peek-scrim { overflow:hidden; background:transparent; }
 .sheet.sheet-full.peeksheet {
-  width:100%; height:min(88dvh,780px); max-height:88dvh; padding-top:24px;
-  border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
-  animation:peek-sheet-up var(--motion-slow) var(--motion-ease-out);
-  transition:transform var(--motion-base) var(--motion-ease-out);
+  position:absolute; inset:0; width:100%; height:100vh; height:100dvh; max-height:none;
+  padding:0 var(--page-gutter) calc(32px + env(safe-area-inset-bottom));
+  border-radius:0; background:var(--paper);
+  animation:none;
+  transform:translateX(100%); transition:transform 240ms var(--motion-ease-out);
   will-change:transform;
 }
-.sheet.sheet-full.peeksheet.is-dragging { transition:none; }
-@keyframes peek-sheet-up {
-  from { transform:translateY(100%); opacity:.92; }
-  to { transform:translateY(0); opacity:1; }
-}
+.sheet.sheet-full.peeksheet.is-open { transform:translateX(0); }
 @media (prefers-reduced-motion:reduce) {
-  .sheet.sheet-full.peeksheet { animation:none; }
-}
-@media (min-width:940px) {
-  .sheet.sheet-full.peeksheet {
-    width:min(620px,100%); height:min(82dvh,760px); max-height:82dvh;
-    border-radius:var(--radius-sheet);
-  }
+  .sheet.sheet-full.peeksheet { transition-duration:1ms; }
 }
 .peekcontrols {
   position:sticky; top:0; z-index:8;
   display:flex; align-items:center; justify-content:space-between; min-height:44px;
-  width:calc(100% + 40px); margin:0 -20px 60px; padding:0 20px;
+  width:calc(100% + (2 * var(--page-gutter))); margin:0 calc(-1 * var(--page-gutter)) 60px;
+  padding:max(12px, env(safe-area-inset-top)) var(--page-gutter) 0;
   background:var(--paper); box-shadow:0 -24px 0 var(--paper); pointer-events:none;
 }
 .peekcontrols > * { pointer-events:auto; }

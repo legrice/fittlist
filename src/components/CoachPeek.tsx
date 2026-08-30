@@ -58,13 +58,48 @@ export function CoachPeek({
   const [messageOpen, setMessageOpen] = useState(false);
   const [relationship, setRelationship] = useState<"off" | "following" | "requested" | null>(null);
   const [pinned, setPinned] = useState(initialPinned);
-  const [dragY, setDragY] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const dragStart = useRef({ y: 0, at: 0 });
-  const sheetRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const historyMarker = useRef(`person-profile-${Math.random().toString(36).slice(2)}`);
+  const originScrollY = useRef(0);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeRef = useRef(onClose);
   const [followPending, startFollowTransition] = useTransition();
   const [pinPending, startPinTransition] = useTransition();
   const [toastMsg, toastOn, , dismissToast, toastFor] = useToast();
+
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+
+  const beginClose = () => {
+    setVisible(false);
+    if (exitTimer.current) clearTimeout(exitTimer.current);
+    exitTimer.current = setTimeout(() => {
+      closeRef.current();
+      window.requestAnimationFrame(() => window.scrollTo(0, originScrollY.current));
+    }, 240);
+  };
+  const goBack = () => {
+    if (window.history.state?.personProfileTakeover === historyMarker.current) window.history.back();
+    else beginClose();
+  };
+
+  useEffect(() => {
+    originScrollY.current = window.scrollY;
+    const previousOverflow = document.body.style.overflow;
+    window.history.pushState({ ...(window.history.state ?? {}), personProfileTakeover:historyMarker.current }, "", window.location.href);
+    const enterFrame = window.requestAnimationFrame(() => setVisible(true));
+    const closeOnPop = () => beginClose();
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") goBack(); };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("popstate", closeOnPop);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.cancelAnimationFrame(enterFrame);
+      if (exitTimer.current) clearTimeout(exitTimer.current);
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("popstate", closeOnPop);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   useEffect(() => {
     personPeek(id).then((res) => {
@@ -122,66 +157,6 @@ export function CoachPeek({
     });
   };
 
-  const finishDrag = (clientY: number) => {
-    const distance = Math.max(0, clientY - dragStart.current.y);
-    const velocity = distance / Math.max(1, performance.now() - dragStart.current.at);
-    setDragging(false);
-    if (distance > 120 || velocity > 0.65) {
-      setDragY(window.innerHeight);
-      window.setTimeout(onClose, 180);
-    } else setDragY(0);
-  };
-
-  // iOS Safari does not reliably deliver Pointer Events from a sticky drag
-  // handle inside a scrolling sheet. Listen for native touches on the whole
-  // sheet so a downward pull works anywhere while its scroll is at the top.
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    let startY = 0;
-    let startedAt = 0;
-    let distance = 0;
-    let active = false;
-    const onTouchStart = (event: TouchEvent) => {
-      if (sheet.scrollTop > 0) return;
-      startY = event.touches[0].clientY;
-      startedAt = performance.now();
-      distance = 0;
-      active = true;
-    };
-    const onTouchMove = (event: TouchEvent) => {
-      if (!active) return;
-      distance = event.touches[0].clientY - startY;
-      if (distance <= 10 || sheet.scrollTop > 0) {
-        setDragY(0);
-        return;
-      }
-      event.preventDefault();
-      setDragging(true);
-      setDragY(distance - 10);
-    };
-    const onTouchEnd = () => {
-      if (!active) return;
-      active = false;
-      const velocity = distance / Math.max(1, performance.now() - startedAt);
-      setDragging(false);
-      if (distance > 120 || velocity > 0.65) {
-        setDragY(window.innerHeight);
-        window.setTimeout(onClose, 180);
-      } else setDragY(0);
-    };
-    sheet.addEventListener("touchstart", onTouchStart, { passive: true });
-    sheet.addEventListener("touchmove", onTouchMove, { passive: false });
-    sheet.addEventListener("touchend", onTouchEnd);
-    sheet.addEventListener("touchcancel", onTouchEnd);
-    return () => {
-      sheet.removeEventListener("touchstart", onTouchStart);
-      sheet.removeEventListener("touchmove", onTouchMove);
-      sheet.removeEventListener("touchend", onTouchEnd);
-      sheet.removeEventListener("touchcancel", onTouchEnd);
-    };
-  }, [onClose]);
-
   const visibleDays = peek
     ? peek.days
         .map((day) => ({
@@ -216,24 +191,19 @@ export function CoachPeek({
   return (
     <div
       className="sheet-scrim peek-scrim"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
       <div
-        ref={sheetRef}
-        className={`sheet sheet-full peeksheet${dragging ? " is-dragging" : ""}`}
+        className={`sheet sheet-full peeksheet${visible ? " is-open" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={`${name} calendar`}
-        style={{ transform: `translateY(${dragY}px)` }}
       >
         {/* A direct child of the scrolling sheet so sticky can hold it for
             the full week. Inside the short header it was constrained to the
             header and disappeared as soon as the dates began. */}
         <div className="peekcontrols">
-          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
+          <button className="iconbtn sheetclose peekclose" aria-label="Back" onClick={goBack}>
+            <Icon name="arrow_back" size={21} />
           </button>
           {!self && relationship !== null && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" disabled={pinPending} aria-label={pinned ? `Remove ${name} from favorites` : `Add ${name} to favorites`} aria-pressed={pinned} onClick={togglePin}><Icon name={pinned ? "star_filled" : "star"} size={21} /></button>}
         </div>
