@@ -11464,7 +11464,9 @@ a.clspeek-by:active { opacity: .6; }
   padding:18px var(--page-gutter) calc(28px + env(safe-area-inset-bottom));
   border-radius:28px 28px 0 0; background:var(--ground); color:var(--ink);
   box-shadow:0 -12px 40px rgba(0,0,0,.16); overscroll-behavior:contain;
+  transition:transform 220ms var(--motion-ease-out); will-change:transform;
 }
+.personal-calendar-sheet.is-pulling { transition:none; }
 .personal-calendar-sheet .calendar-header-share { display:none; }
 .personal-calendar-sheet .calendar-bottom-actions { left:auto; right:24px; bottom:calc(24px + env(safe-area-inset-bottom)); }
 .personal-calendar-sheet .calendar-bottom-actions .calendar-bottom-add { display:inline-flex; }
