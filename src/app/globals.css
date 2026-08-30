@@ -9030,12 +9030,22 @@ select.editinput.placekind-select {
 .calendar-scope-row .calendar-selector-trigger { min-width:78px; }
 .calendar-selector-scrim { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end; background:rgba(0,0,0,.34); }
 .calendar-selector-sheet {
-  width:100%; padding:22px 0 calc(28px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0;
+  width:100%; max-height:82dvh; overflow-y:auto; padding:22px 0 calc(28px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0;
   background:var(--ground); color:var(--ink); box-shadow:0 -12px 40px rgba(0,0,0,.16);
 }
 .calendar-selector-head { padding:0 var(--page-gutter) 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .calendar-selector-head h2 { margin:0; font-size:25px; letter-spacing:-.025em; }
 .calendar-selector-head button { width:42px; height:42px; padding:0; display:grid; place-items:center; border:0; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); }
+.calendar-selector-search {
+  height:46px; margin:0 var(--page-gutter) 22px; padding:0 14px; display:flex; align-items:center; gap:9px;
+  border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-secondary);
+}
+.calendar-selector-search input { min-width:0; flex:1; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; font-size:16px; }
+.calendar-selector-search input::placeholder { color:var(--color-text-muted); }
+.calendar-selector-grid { padding:2px var(--page-gutter) 8px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); justify-items:center; gap:24px 8px; }
+.calendar-selector-grid .calendar-person-chip { width:100%; min-width:0; }
+.calendar-selector-grid .calendar-person-chip small { max-width:78px; }
+.calendar-selector-empty { grid-column:1/-1; margin:24px 0 34px; color:var(--color-text-secondary); font-size:14px; }
 .calendar-selector-sheet .following-rail { margin:0; }
 .following-head .trayitem { border:0; padding:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
 .social-schedule-switch {

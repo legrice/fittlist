@@ -6,7 +6,6 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { PeekClass } from "@/components/ClassPeek";
 import { Icon } from "@/components/Icon";
-import { RailArrows } from "@/components/RailArrows";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
@@ -267,13 +266,13 @@ export function FollowingScreen({
   // Where the auto-landing went, so the note under the tabs can say why
   // Today isn't selected; it only ever names this one day.
   const landed = useRef(day);
-  const followingRailRef = useRef<HTMLDivElement>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | "people" | `coach:${string}` | `studio:${string}` | `group:${string}`>("you");
   const [includeYou, setIncludeYou] = useState(true);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(() => new Set());
   const [calendarSelectorOpen, setCalendarSelectorOpen] = useState(false);
+  const [calendarPeopleQuery, setCalendarPeopleQuery] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   useEffect(() => {
     if (!calendarSelectorOpen) return;
@@ -290,8 +289,6 @@ export function FollowingScreen({
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
-  const [visibleRailCoachCount, setVisibleRailCoachCount] = useState(16);
-  const railMoreRef = useRef<HTMLSpanElement>(null);
   const [visibleHomeDayCount, setVisibleHomeDayCount] = useState(2);
   const homeMoreRef = useRef<HTMLDivElement>(null);
   const [toastMsg, toastOn, toast] = useToast();
@@ -374,29 +371,11 @@ export function FollowingScreen({
     setSelectedPeople(next);
     setCalendarFilter(next.size || !includeYou ? "people" : "you");
   };
-  const railCoachOptions = sortedCoachOptions.slice(0, visibleRailCoachCount);
-  const railCoachesComplete = visibleRailCoachCount >= sortedCoachOptions.length;
+  const filteredCoachOptions = sortedCoachOptions.filter((coach) => coach.name.toLocaleLowerCase().includes(calendarPeopleQuery.trim().toLocaleLowerCase()));
   const soleSelectedCoach = !includeYou && selectedPeople.size === 1
     ? coachOptions.find((coach) => selectedPeople.has(coach.id)) ?? null
     : null;
   const calendarCount = 1 + coachOptions.length + studioOptions.length + groupOptions.length;
-
-  useEffect(() => {
-    if (!isHome || railCoachesComplete) return undefined;
-    const root = followingRailRef.current;
-    const target = railMoreRef.current;
-    if (!root || !target) return undefined;
-    if (typeof IntersectionObserver === "undefined") {
-      setVisibleRailCoachCount(sortedCoachOptions.length);
-      return undefined;
-    }
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      setVisibleRailCoachCount((count) => Math.min(sortedCoachOptions.length, count + 16));
-    }, { root, rootMargin: "0px 600px 0px 0px" });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [isHome, railCoachesComplete, sortedCoachOptions.length, visibleRailCoachCount]);
 
   const selectedCalendar = useMemo(() => {
     if (calendarFilter === "all") return {
@@ -739,43 +718,9 @@ export function FollowingScreen({
           <div className="calendar-scope-row" aria-label="Calendar scope">
             <button type="button" className={`calendar-person-chip${includeYou ? " on" : ""}`} aria-pressed={includeYou} onClick={() => { const next = !includeYou; setIncludeYou(next); setCalendarFilter(next && selectedPeople.size === 0 ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
             {quickCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
-            <button type="button" className="calendar-person-chip calendar-selector-trigger" aria-label="Choose more people" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}><span className="calendar-person-face"><Icon name="expand_more" size={22} /></span><small>More</small></button>
+            <button type="button" className="calendar-person-chip calendar-selector-trigger" aria-label="Choose more people" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => { setCalendarPeopleQuery(""); setCalendarSelectorOpen(true); }}><span className="calendar-person-face"><Icon name="expand_more" size={22} /></span><small>More</small></button>
           </div>
-          {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose people</h2><button type="button" aria-label="Close people selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><div className="tray following-rail" aria-label="People">
-            <div className="tray-scroll" ref={followingRailRef}>
-              <button className={`trayitem${includeYou ? " selected" : ""}`} type="button" aria-pressed={includeYou} onClick={() => { const next = !includeYou; setIncludeYou(next); setCalendarFilter(next && selectedPeople.size === 0 ? "you" : "people"); }}>
-                <span className="trayav" style={{ background: meFace.color }}>
-                  {meFace.photo ? <img src={meFace.photo} alt="" /> : (
-                    <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
-                  )}
-                </span>
-                <span className="trayitem-nm">You</span>
-              </button>
-              {railCoachOptions.map((coach) => {
-                return (
-                <div className="cash-rail-item" key={coach.id}>
-                  <button type="button" aria-pressed={selectedPeople.has(coach.id)} className={`trayitem${selectedPeople.has(coach.id) ? " selected" : ""}`} onClick={() => togglePerson(coach.id)}>
-                    <span className="trayav" style={{ background: coach.color }}>
-                      {coach.photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={coach.photo} alt="" width={56} height={56} loading="lazy" decoding="async" />
-                      ) : (
-                        <span className="trayav-ini">{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>
-                      )}
-                    </span>
-                    <span className="trayitem-nm">{coach.name.split(/\s+/)[0]}</span>
-                  </button>
-                  {pins.has(`person:${coach.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={18} /></span>}
-                </div>
-              )})}
-              {!railCoachesComplete && <span className="cash-rail-more" ref={railMoreRef} aria-hidden="true" />}
-              {railCoachesComplete && <Link className="trayitem" href="/discover?half=people" aria-label="Discover more calendars">
-                <span className="trayav trayav-search"><Icon name="search" size={30} /></span>
-                <span className="trayitem-nm">Discover</span>
-              </Link>}
-            </div>
-            <RailArrows railRef={followingRailRef} />
-          </div></section></div></BodyPortal>}
+          {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose coaches</h2><button type="button" aria-label="Close coach selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><label className="calendar-selector-search"><Icon name="search" size={20} /><input type="search" value={calendarPeopleQuery} onChange={(event) => setCalendarPeopleQuery(event.target.value)} placeholder="Search coaches" autoFocus /></label><div className="calendar-selector-grid" aria-label="Coaches">{filteredCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name}</small></button>)}{filteredCoachOptions.length === 0 && <p className="calendar-selector-empty">No coaches found.</p>}</div></section></div></BodyPortal>}
         </header>
       )}
       {isHome && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && calendarFilter !== "people" && (
