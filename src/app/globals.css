@@ -10931,6 +10931,7 @@ a.clspeek-by:active { opacity: .6; }
   background:transparent; color:var(--muted); font:inherit; font-size:14px; font-weight:600; cursor:pointer;
 }
 .shstyle-tabs button.on { background:var(--card); color:var(--ink); box-shadow:0 1px 3px rgba(25, 21, 2, .1); }
+.shstyle-sheet { height:min(760px, 94dvh); }
 .layoutlist { margin-top: 8px; }
 .layoutpick { align-items: center; }
 .layoutmini {

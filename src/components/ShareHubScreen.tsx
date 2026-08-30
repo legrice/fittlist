@@ -1195,7 +1195,7 @@ export function ShareHubScreen({
             if (e.target === e.currentTarget) setPick(null);
           }}
         >
-          <div className="sheet shpick">
+          <div className="sheet shpick shstyle-sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
