@@ -269,7 +269,7 @@ export function FollowingScreen({
   const followingRailRef = useRef<HTMLDivElement>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | `coach:${string}` | `studio:${string}` | `group:${string}`>("you");
   const [calendarSelectorOpen, setCalendarSelectorOpen] = useState(false);
   useEffect(() => {
     if (!calendarSelectorOpen) return;
@@ -718,15 +718,11 @@ export function FollowingScreen({
       {isHome && !firstRun && (
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
-            {(["all", "you", "following"] as const).map((scope) => <button key={scope} type="button" className={calendarFilter === scope ? "on" : ""} aria-pressed={calendarFilter === scope} onClick={() => setCalendarFilter(scope)}>{scope === "all" ? "All" : scope === "you" ? "You" : "Following"}</button>)}
-            <button type="button" className={`calendar-selector-trigger${!(["all", "you", "following"] as string[]).includes(calendarFilter) ? " on" : ""}`} aria-label="Choose a specific calendar" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}><Icon name="expand_more" size={22} /></button>
+            {(["you", "following"] as const).map((scope) => <button key={scope} type="button" className={calendarFilter === scope ? "on" : ""} aria-pressed={calendarFilter === scope} onClick={() => setCalendarFilter(scope)}>{scope === "you" ? "You" : "Following"}</button>)}
+            <button type="button" className={`calendar-selector-trigger${!(["you", "following"] as string[]).includes(calendarFilter) ? " on" : ""}`} aria-label="Choose a specific calendar" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}><Icon name="expand_more" size={22} /></button>
           </div>
           {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose a calendar</h2><button type="button" aria-label="Close calendar selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll" ref={followingRailRef}>
-              <button className={`trayitem${calendarFilter === "all" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => { setCalendarFilter("all"); setCalendarSelectorOpen(false); }}>
-                <span className="trayav trayav-all"><Icon name="calendar_month" size={30} /></span>
-                <span className="trayitem-nm">All</span>
-              </button>
               <button className={`trayitem${calendarFilter === "you" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => { setCalendarFilter("you"); setCalendarSelectorOpen(false); }}>
                 <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
