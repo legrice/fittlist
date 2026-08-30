@@ -9021,13 +9021,13 @@ select.editinput.placekind-select {
   scrollbar-width:none; -webkit-overflow-scrolling:touch;
 }
 .calendar-scope-row::-webkit-scrollbar { display:none; }
-.calendar-person-chip { flex:0 0 70px; width:70px; padding:0; display:flex; flex-direction:column; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
-.calendar-person-face { position:relative; width:64px; min-width:64px; max-width:64px; height:64px; min-height:64px; max-height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:17px; font-weight:700; }
-.calendar-person-face > img { position:absolute; inset:0; display:block; width:64px; height:64px; border-radius:50%; object-fit:cover; }
+.calendar-person-chip { flex:0 0 78px; width:78px; padding:0; display:flex; flex-direction:column; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
+.calendar-person-face { position:relative; width:72px; min-width:72px; max-width:72px; height:72px; min-height:72px; max-height:72px; flex:0 0 72px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:19px; font-weight:700; }
+.calendar-person-face > img { position:absolute; inset:0; display:block; width:72px; height:72px; border-radius:50%; object-fit:cover; }
 .calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 2px var(--ground),0 0 0 5px var(--color-lime); }
 .calendar-person-chip small { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.1; font-weight:600; }
 .calendar-person-star { position:absolute; right:-3px; bottom:-2px; width:17px; height:17px; padding:2px; border:2px solid var(--ground); border-radius:50%; background:var(--ink); color:var(--color-white); }
-.calendar-scope-row .calendar-selector-trigger { min-width:70px; }
+.calendar-scope-row .calendar-selector-trigger { min-width:78px; }
 .calendar-selector-scrim { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end; background:rgba(0,0,0,.34); }
 .calendar-selector-sheet {
   width:100%; padding:22px 0 calc(28px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0;
