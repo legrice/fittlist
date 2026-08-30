@@ -553,15 +553,27 @@ if (await page.locator(".ps-pastday").count())
     fail(`the List should start no earlier than today, got ${firstIso}`);
 }
 console.log("sticky header ok (the List starts at today, no walk backwards)");
-// The calendar's Share goes straight to the editor. It opened a sheet of three
-// rows once (the image, the week as text, the link); the editor is the one
-// generator now, and the other two still live on the profile's own Share.
-await page.locator(".calshare").click();
-await page.waitForURL(/\/share/);
-await page.locator(".composer").waitFor();
-await page.goBack();
-await page.locator(".calshare").waitFor();
-console.log("the calendar's Share opens the editor ok");
+// The calendar's Share opens one image editor in place. Closing it keeps the
+// calendar route and state; no profile card, QR or text format is mounted.
+{
+  const calendarUrl = page.url();
+  const calendarScroll = await page.evaluate(() => window.scrollY);
+  await page.locator(".calendar-header-share").click();
+  const shareDialog = page.getByRole("dialog", { name: "Share your week" });
+  await shareDialog.waitFor();
+  if (page.url() !== calendarUrl) fail("calendar Share should not navigate away");
+  if ((await shareDialog.locator(".shsingle-preview .shprev-week").count()) !== 1)
+    fail("calendar Share should show one schedule image");
+  if (await shareDialog.locator('[aria-label="What to share"], .shprev-sq, .qrcard, .shtext').count())
+    fail("calendar Share should not mount alternate share formats");
+  await shareDialog.locator(".calendar-share-close").click();
+  await shareDialog.waitFor({ state: "detached" });
+  if (page.url() !== calendarUrl) fail("closing calendar Share should keep the origin route");
+  const restoredScroll = await page.evaluate(() => window.scrollY);
+  if (Math.abs(restoredScroll - calendarScroll) > 2)
+    fail(`closing calendar Share should preserve scroll, got ${restoredScroll} from ${calendarScroll}`);
+}
+console.log("the calendar's Share opens one image editor in place");
 // Share holds every way of sharing, and each row goes where it says
 await page.goto(BASE + "/matt");
 {

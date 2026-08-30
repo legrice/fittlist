@@ -138,7 +138,7 @@ export async function loadCalendarShareData(): Promise<CalendarShareData | null>
   const [me] = userRows;
   if (!me) return null;
   return {
-    items: days.flatMap((day) => day.items.map((item) => ({ key:item.key, iso:item.iso, time:item.time, name:item.name, where:item.where, own:item.own, coaching:item.coaching }))),
+    items: days.flatMap((day) => day.items.map((item) => ({ key:item.key, iso:item.iso, time:item.time, name:item.name, own:item.own, coaching:item.coaching }))),
     defaultFrom: days[0]?.iso ?? today,
     savedHeadline: me.storyPrefs?.headline ?? "",
     hasBackground: !!me.storyPrefs?.background,

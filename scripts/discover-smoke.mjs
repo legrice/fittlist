@@ -387,6 +387,11 @@ await m.locator(".trayav-you.trayav-ring").waitFor();
 await m.locator(".trayitem", { hasText: "You" }).first().click();
 await m.waitForURL(/\/membershare/);
 await m.locator(".shareintro h2", { hasText: "Your week lives here" }).waitFor();
+{
+  const intro = (await m.locator(".shareintro .lead").innerText()).trim();
+  if (!intro.includes("Share it to your story") || /QR code|\blink\b/i.test(intro))
+    fail("the Share intro should describe the image workflow only: " + intro);
+}
 await m.locator(".shareintro .btn", { hasText: "Continue" }).click();
 if (await m.locator(".shareintro").count()) fail("Continue closes the intro");
 await m.goto(BASE + "/feed");

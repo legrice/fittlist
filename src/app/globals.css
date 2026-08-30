@@ -9650,7 +9650,7 @@ select.editinput.placekind-select {
   width: 100%; max-width: none; height: 100dvh; max-height: none; overflow-y: auto;
   overscroll-behavior: contain;
   margin: 0;
-  padding: max(76px, calc(22px + env(safe-area-inset-top))) var(--page-gutter)
+  padding: calc(max(16px, env(safe-area-inset-top)) + var(--tap-size) + 12px) var(--page-gutter)
     calc(32px + env(safe-area-inset-bottom));
   background:var(--color-surface-muted);
 }
@@ -9658,10 +9658,6 @@ select.editinput.placekind-select {
   position: fixed;
   top: max(16px, env(safe-area-inset-top)); left: var(--page-gutter); right: auto;
   z-index: 3;
-}
-.calendar-share-sheet .shseg {
-  position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%;
-  z-index:3; margin:0; transform:translateX(-50%);
 }
 .calendar-share-sheet .sheetclose {
   background:var(--color-white); border:1px solid var(--color-border);
@@ -9682,7 +9678,6 @@ select.editinput.placekind-select {
 .shbackground-choices {
   display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:18px;
 }
-.shbackground-choices.single { grid-template-columns:1fr; }
 .shbackground-choice {
   min-width:0; min-height:142px; padding:16px; border:1px solid var(--color-border);
   border-radius:20px; background:var(--color-white); color:var(--ink);
@@ -10701,16 +10696,13 @@ a.clspeek-by:active { opacity: .6; }
 /* ---------------------------------------------------------------------------
    The Share screen: the hub behind the bar's Share tab.
 
-   One surface, four subjects. The title says which one you are on, the
-   segment pills switch it, the colour swatches redraw the picture live, and
-   the big button saves the thing on screen. The picture is the label: a
-   preview that changes when a swatch is tapped explains the swatches better
-   than any words beside them.
+   One surface, one image. The poster is the center of the workflow, the
+   controls redraw it live, and the big button shares exactly what is on
+   screen.
    --------------------------------------------------------------------------- */
-/* The hub carries no title and no gradient, by Matt's call: the segments
-   say what there is, the picture is the screen, and the plain ground is
-   what makes the poster's own colours read. The marker class is on the
-   hub's cardwrap because the gradient lives on the layout's .screen. */
+/* The picture is the screen, and the plain ground is what makes the poster's
+   own colours read. The marker class is on the hub's cardwrap because the
+   gradient lives on the layout's .screen. */
 .screen.hasnav:has(.shpage) { background: var(--ground); }
 .cardwrap.shpage { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 @media (max-width: 939px) {
@@ -10734,30 +10726,6 @@ a.clspeek-by:active { opacity: .6; }
 }
 @media (max-width: 939px) and (prefers-reduced-motion: reduce) {
   .screen.hasnav:has(.shpage) .cardwrap.shpage:not(.shpage-embedded) { animation:none; }
-}
-/* One compact subject picker in the header saves the vertical space that a
-   rail of four tabs used to occupy. Swiping the preview keeps it in sync. */
-.shseg {
-  position:relative; display:flex; justify-content:center; margin:0 auto;
-}
-.shseg-select {
-  min-width:150px; max-width:calc(100vw - 148px); height:var(--tap-size);
-  padding:0 34px 0 14px; border:1px solid var(--color-border);
-  border-radius:var(--radius-pill); background:var(--color-white); color:var(--ink);
-  font-family:'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size:17px; font-weight:700; text-align:center; cursor:pointer;
-  appearance:none; -webkit-appearance:none;
-}
-.shseg-chevron {
-  position:absolute; right:11px; top:50%; transform:translateY(-50%);
-  pointer-events:none; color:var(--ink);
-}
-.shseg-select:focus { outline:2px solid var(--si); outline-offset:2px; }
-@media (max-width:939px) {
-  .cardwrap.shpage:not(.shpage-embedded):not(.shpage-tabbed) .shseg {
-    position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%;
-    z-index:20; transform:translateX(-50%);
-  }
 }
 /* The rail under the colours: Dates, Classes, Message, each a small
    labelled door to its sheet. What the picture covers, what's on it,
@@ -10808,7 +10776,6 @@ a.clspeek-by:active { opacity: .6; }
   box-shadow:0 24px 52px -18px rgba(2,13,8,.32), 0 8px 20px -12px rgba(2,13,8,.2);
   background: var(--cl);
 }
-.shprev-sq { height: auto; width: min(100%, 440px); aspect-ratio: 1; }
 .shcta {
   margin-top: 20px; display: flex; flex-direction: column; gap: 10px;
 }
@@ -10833,38 +10800,6 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: none;
   padding: 6px 2px;
 }
-/* The QR as the card the concept drew: whose it is, the ask, the code on
-   white, the address. It reuses the frame the QR sheet already had. */
-.qrcard {
-  margin-top: 20px; padding: 26px 22px 18px; border:0; border-radius:24px;
-  background:var(--card); text-align:center;
-  box-shadow:0 24px 52px -18px rgba(2,13,8,.32), 0 8px 20px -12px rgba(2,13,8,.2);
-}
-.qrcard-nm {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 24px; font-weight: 600; letter-spacing: -.008em; color: var(--ink);
-  /* One line however long the name runs: the card has a fixed shape, and a
-     wrapping name pushed the code around. */
-  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.qrcard .qrframe {
-  /* Do not let the fixed-height share stage resolve the generic QR image's
-     `height: 100%` against the card. Mobile Safari could briefly give that
-     percentage a non-square containing block, leaving only the top half of
-     the code visible. This frame and its image own an explicit square. */
-  flex: 0 0 auto;
-  width: min(232px, 100%);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  border: none;
-  overflow: visible;
-}
-.qrcard .qrimg {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
-}
-.qrcard .qrurl { color: var(--ol); margin-bottom: 0; }
 /* The pickers behind Dates and Classes: a scrolling list of rows and a Done. */
 .shpick-list { max-height: 42vh; overflow-y: auto; overscroll-behavior: contain; }
 .shphoto-controls { margin-top:18px; padding-top:4px; }
@@ -10988,41 +10923,6 @@ a.clspeek-by:active { opacity: .6; }
 /* The Today preset in the Dates sheet: the shday's own drawing at its
    natural width, above the dropdown it saves a trip through. */
 .shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }
-/* The carousel: one slide per segment, snapped, the neighbour peeking in
-   from the edge because the peek is what says a swipe exists. Full bleed
-   so the swipe lands anywhere on the row. */
-.shslides {
-  display: flex; gap: 14px; align-items: flex-start;
-  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none;
-  /* The bottom padding is the shadow's room: the scroller clips anything
-     past its box, and the previews' 30px blur was cut square at 4px. */
-  /* One fixed editor stage for every format. The old ResizeObserver resized
-     this rail to each active preview, which made the primary CTA jump after
-     every swipe. Shorter formats can have a little air; the action stays
-     where the thumb expects it. */
-  height: min(58vh, 520px); box-sizing: border-box;
-  margin: 6px calc(50% - 50vw) 0; padding: 12px max(7vw, calc(50vw - 280px)) 36px;
-  -webkit-overflow-scrolling: touch;
-}
-.shslides::-webkit-scrollbar { display: none; }
-.shslide {
-  flex: 0 0 min(86vw, 560px); scroll-snap-align: center;
-  height: 100%; display: flex; align-items: center; justify-content: center;
-}
-.shslide .qrcard { width: min(100%, 340px); }
-.shslide .shtext { width: min(100%, 340px); max-height: 100%; margin-top: 0; overflow-y: auto; }
-.calendar-share-sheet .shslides {
-  height: min(60dvh, 620px);
-  margin-top: 4px;
-}
-.calendar-share-sheet .shprev { height: min(54dvh, 570px); }
-.calendar-share-sheet .shprev-sq {
-  width: min(100%, 520px); height: auto;
-}
-@media (max-width: 480px) {
-  .calendar-share-sheet .shslides { height: min(57dvh, 540px); }
-  .calendar-share-sheet .shprev { height: min(50dvh, 500px); }
-}
 /* The headline's loudness slider: the platform's own control in the brand
    colour, full width under its label. */
 .shslider { width: 100%; margin: 8px 0 4px; accent-color: var(--si); }
@@ -11080,15 +10980,6 @@ a.clspeek-by:active { opacity: .6; }
   background-size: 50% 2px, 50% 2px;
   background-repeat: no-repeat;
   background-position: center 35%, center 65%;
-}
-/* The week as words, previewed before the copy: the same monospace-free
-   type as everything, on its own quiet card so it reads as a block. */
-.shtext {
-  margin: 14px 0 0; padding: 16px 18px; border-radius: 16px;
-  background: var(--card); color: var(--ink);
-  font-family: inherit; font-size: 14.5px; line-height: 1.5;
-  white-space: pre-wrap; overflow-wrap: anywhere;
-  max-height: 40vh; overflow-y: auto;
 }
 /* The tick that says a class is on the picture: filled when showing, an
    empty ring when hidden, sitting where a setrow's icon would. */
@@ -12539,14 +12430,6 @@ a.clspeek-by:active { opacity: .6; }
   .share-tab-header h1 {
     margin:0; font-size:30px; line-height:1.05; letter-spacing:-.025em;
   }
-  .share-tab-header .shseg { margin:0; }
-  .share-tab-header .shseg-select {
-    min-width:0;
-    max-width:190px;
-    height:44px;
-    padding-left:16px;
-    font-size:16px;
-  }
   .calendar-tab-view {
     display:flex; padding:3px; flex:0 0 auto;
     border:1px solid var(--color-border); border-radius:var(--radius-pill);
@@ -12680,17 +12563,6 @@ a.clspeek-by:active { opacity: .6; }
   color:var(--sheditor-text);
 }
 .shpage-editor .share-tab-header h1 { color:var(--sheditor-text); }
-.shpage-editor .shseg-select {
-  border-color:var(--sheditor-border);
-  background:rgba(255,255,255,.075);
-  color:var(--sheditor-text);
-  color-scheme:dark;
-}
-.shpage-editor .shseg-select option {
-  background:var(--sheditor-panel);
-  color:var(--sheditor-text);
-}
-.shpage-editor .shseg-chevron { color:var(--sheditor-text); }
 .shpage-editor .share-page-close,
 .calendar-share-sheet:has(.shpage-editor) > .calendar-share-close {
   border-color:var(--sheditor-border);
@@ -12717,39 +12589,26 @@ a.clspeek-by:active { opacity: .6; }
     radial-gradient(circle at 50% 38%, rgba(159,232,112,.075), transparent 44%),
     var(--sheditor-bg);
 }
-.sheditor-stage .shslides {
+.shsingle-preview {
   width:100%;
   height:clamp(330px, 46dvh, 500px);
-  margin:0;
   padding:12px max(7vw, 24px) 24px;
-  align-items:center;
+  display:grid;
+  place-items:center;
 }
-.sheditor-stage .shslide {
-  flex-basis:min(84vw, 520px);
-  align-items:center;
-}
-.sheditor-stage .shprev-wrap {
+.shsingle-preview .shprev-wrap {
+  width:min(84vw, 520px);
   height:100%;
   max-width:100%;
   align-items:center;
 }
-.sheditor-stage .shprev {
+.shsingle-preview .shprev {
   height:calc(100% - 8px);
   max-height:100%;
   margin:0;
   border-radius:11px;
   box-shadow:0 22px 52px rgba(0,0,0,.4);
 }
-.sheditor-stage .shprev-sq {
-  width:min(100%, 420px);
-  height:auto;
-  max-height:100%;
-}
-.sheditor-stage .qrcard {
-  margin:0;
-  box-shadow:0 22px 52px rgba(0,0,0,.4);
-}
-.sheditor-stage .shtext { margin:0; }
 
 .sheditor-dock {
   position:relative;
@@ -12775,10 +12634,6 @@ a.clspeek-by:active { opacity: .6; }
 }
 .sheditor-tools::-webkit-scrollbar,
 .shstyle-rail::-webkit-scrollbar { display:none; }
-.sheditor-tools-single {
-  grid-auto-columns:96px;
-  justify-content:center;
-}
 .sheditor-tool {
   min-width:72px;
   min-height:76px;
@@ -12907,11 +12762,6 @@ a.clspeek-by:active { opacity: .6; }
   font-size:16px;
   font-weight:700;
 }
-.sheditor-dock .shcta .btn.ghost {
-  border-color:var(--sheditor-border);
-  background:rgba(255,255,255,.045);
-  color:var(--sheditor-text);
-}
 
 @media (max-width:939px) {
   .cardwrap.shpage-tabbed.shpage-editor { padding-bottom:0; }
@@ -12920,21 +12770,16 @@ a.clspeek-by:active { opacity: .6; }
   .shpage-tabbed .sheditor-dock {
     padding-bottom:calc(98px + env(safe-area-inset-bottom));
   }
-  .calendar-share-sheet .sheditor-stage .shslides {
+  .calendar-share-sheet .shsingle-preview {
     height:clamp(330px, 46dvh, 500px);
-    margin-top:0;
   }
-  .calendar-share-sheet .sheditor-stage .shprev {
+  .calendar-share-sheet .shsingle-preview .shprev {
     height:calc(100% - 8px);
-  }
-  .calendar-share-sheet .sheditor-stage .shprev-sq {
-    width:min(100%, 420px);
-    height:auto;
   }
 }
 @media (max-height:700px) and (max-width:939px) {
-  .sheditor-stage .shslides,
-  .calendar-share-sheet .sheditor-stage .shslides {
+  .shsingle-preview,
+  .calendar-share-sheet .shsingle-preview {
     height:clamp(290px, 40dvh, 330px);
   }
 }
@@ -12959,7 +12804,6 @@ a.clspeek-by:active { opacity: .6; }
     line-height:1.05;
     letter-spacing:-.025em;
   }
-  .shpage-editor .share-tab-header .shseg { margin:0; }
   .sheditor-shell { margin-inline:calc(-1 * var(--page-gutter)); }
   .sheditor-dock { padding-inline:24px; }
 }

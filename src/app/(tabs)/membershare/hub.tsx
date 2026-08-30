@@ -41,7 +41,6 @@ export async function hubPage(address: "member" | "coach") {
       iso: it.iso,
       time: it.time,
       name: it.name,
-      where: it.where,
       own: it.own,
       coaching: it.coaching,
     })),
@@ -55,7 +54,6 @@ export async function hubPage(address: "member" | "coach") {
       tabbed
       coach={coach}
       handle={me.handle}
-      name={me.name.trim() || me.handle}
       items={items}
       defaultFrom={defaultFrom}
       today={today}

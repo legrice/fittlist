@@ -619,7 +619,6 @@ export function CalendarScreen({
                 embedded
                 coach={!member}
                 handle={handle ?? ""}
-                name={viewer.name}
                 items={shareData.items}
                 defaultFrom={shareData.defaultFrom}
                 today={todayIso}

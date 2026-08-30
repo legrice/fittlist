@@ -45,16 +45,9 @@ const loadAdderModule = () => import("@/components/Adder");
 const Adder = dynamic(() => loadAdderModule().then((module) => module.Adder));
 type PersonalDetail = NonNullable<Awaited<ReturnType<typeof personalDetail>>>;
 
-// The Share tab's screen, on Matt's concept: one surface, four subjects.
-// Week, Profile and QR code are segments rather than tiles, the title says
-// which one you are on, the colours redraw the picture live, and the big
-// button saves the thing on screen. The Week segment carries the Dates and
-// Classes pickers side by side above the colours, so the whole picture is
-// decided here. The old composer at /share still exists but nothing links
-// to it any more, by Matt's call; copy-week-as-text is gone the same way,
-// and the page link lives with the QR code.
-//
-type Seg = "week" | "profile" | "qr" | "text";
+// The Share tab is one focused image studio. The schedule poster is the thing
+// people actually send, so profile cards, QR codes and plain text no longer
+// compete with the editing workflow or render behind it.
 type EditorSnapshot = {
   design: ShareDesign;
   headline: string;
@@ -67,15 +60,13 @@ type EditorSnapshot = {
 
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
- *  `where` rides along for the text version, which says the studio the way
- *  the poster does. `own` marks a member's own entry, the only kind the
- *  sheet can offer to edit: a mark points at somebody else's class. */
+ *  `own` marks a member's own entry, the only kind the sheet can offer to
+ *  edit: a mark points at somebody else's class. */
 export type HubItem = {
   key: string;
   iso: string;
   time: string;
   name: string;
-  where: string;
   own?: boolean;
   /** A class the coach leads, against the saved half riding beside it now:
    *  the Classes sheet tags the rows and offers the shortcuts on it. */
@@ -94,7 +85,6 @@ export function ShareHubScreen({
   tabbed = false,
   coach,
   handle,
-  name,
   items,
   defaultFrom,
   today,
@@ -114,15 +104,11 @@ export function ShareHubScreen({
   embedded?: boolean;
   /** Keep the route inside the persistent app navigation. */
   tabbed?: boolean;
-  /** Both kinds get the full sheet: the week, the card, the QR code and
-   *  the text. What `coach` still decides is the week's subject (teaching
-   *  against saved), the fallback headline, and whether the hub carries
-   *  the build flow, which is a member's. */
+  /** What `coach` decides is the schedule subject (teaching against saved),
+   *  the fallback headline, and whether the hub carries the member build
+   *  flow. */
   coach: boolean;
   handle: string;
-  /** On the QR card, above the code: the code is a thing you hold up, and a
-   *  bare code is anybody's. */
-  name: string;
   /** A fortnight of occurrences for the pickers, oldest first. */
   items: HubItem[];
   /** The first day with something on it: the empty poster should never be
@@ -165,7 +151,6 @@ export function ShareHubScreen({
     ),
   ).current;
   const resetDesignRef = useRef(startingDesign);
-  const [seg, setSeg] = useState<Seg>("week");
   const [themeId, setThemeId] = useState<StoryThemeId>(startingDesign.themeId);
   const [styleId, setStyleId] = useState<StoryStyleId>(startingDesign.styleId);
   const [from, setFrom] = useState(defaultFrom);
@@ -217,7 +202,6 @@ export function ShareHubScreen({
   const closeInstagramPrompt = useCallback(() => setInstagramPromptOpen(false), []);
   const [preparedShare, setPreparedShare] = useState<{ url: string; file: File } | null>(null);
   const [prepareFailed, setPrepareFailed] = useState(false);
-  const [pageHost, setPageHost] = useState("fittlist.co");
   // One buster per visit, bumped after an add: the week changes behind the
   // picture the moment a class lands, and a cached preview of the week
   // before is a lie waiting to be posted.
@@ -447,7 +431,6 @@ export function ShareHubScreen({
       }).webkit?.messageHandlers?.fittlistShareTarget,
     );
     setShareCapabilityKnown(true);
-    setPageHost(window.location.host);
   }, []);
 
   // The route version is opened from your circle and owns the whole mobile
@@ -634,36 +617,17 @@ export function ShareHubScreen({
   };
 
   const hideParam = [...effHide].join(",");
-  // Both pictures at once now, because both slides are on screen: the
-  // carousel is what makes swiping between them a thing.
-  const rawWeekImgUrl =
+  const imgUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bo=${photoOverlay}` +
     `${featuredKey ? `&feature=${encodeURIComponent(featuredKey)}` : ""}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
-  const rawCardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
-  // An offscreen carousel card keeps the last image it successfully showed.
-  // A week edit should not also redraw the hidden profile card, and vice versa.
-  const [restingWeekImgUrl, setRestingWeekImgUrl] = useState(rawWeekImgUrl);
-  const [restingCardImgUrl, setRestingCardImgUrl] = useState<string | null>(null);
-  const weekImgUrl = seg === "week" ? rawWeekImgUrl : restingWeekImgUrl;
-  const cardImgUrl = seg === "profile" ? rawCardImgUrl : restingCardImgUrl;
-  useEffect(() => { if (seg === "week") setRestingWeekImgUrl(rawWeekImgUrl); }, [rawWeekImgUrl, seg]);
-  useEffect(() => { if (seg === "profile") setRestingCardImgUrl(rawCardImgUrl); }, [rawCardImgUrl, seg]);
-  const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl ?? rawCardImgUrl;
-  const fileName =
-    seg === "week"
-      ? `fittlist-${handle}-week-${styleId}.png`
-      : `fittlist-${handle}-card.png`;
-  const qrUrl = `/api/qr/${handle}`;
-  const qrFileName = `fittlist-${handle}-qr.png`;
-  const activeShareUrl = seg === "qr" ? qrUrl : imgUrl;
-  const activeShareFile = seg === "qr" ? qrFileName : fileName;
+  const fileName = `fittlist-${handle}-week-${styleId}.png`;
 
   // Safari requires navigator.share to begin in the tap's user-activation
-  // window. Preparing the PNG after the tap can take long enough to lose that
-  // window, so prepare the currently visible subject as soon as it changes.
+  // window. Preparing the PNG after the tap can take long enough to lose it,
+  // so prepare the poster as soon as the complete image is on screen.
   const readyImages = useRef(new Set<string>());
   const [readyImageVersion, setReadyImageVersion] = useState(0);
   const markImageReady = useCallback((url: string) => {
@@ -672,21 +636,21 @@ export function ShareHubScreen({
     setReadyImageVersion((version) => version + 1);
   }, []);
   useEffect(() => {
-    if (seg === "text" || nativeShareAvailable || !canShareFiles || !readyImages.current.has(activeShareUrl)) return;
+    if (nativeShareAvailable || !canShareFiles || !readyImages.current.has(imgUrl)) return;
     const controller = new AbortController();
     setPreparedShare(null);
     setPrepareFailed(false);
     void (async () => {
       try {
-        const response = await fetch(activeShareUrl, { signal: controller.signal });
+        const response = await fetch(imgUrl, { signal: controller.signal });
         if (!response.ok) {
           setPrepareFailed(true);
           return;
         }
         const blob = await response.blob();
         setPreparedShare({
-          url: activeShareUrl,
-          file: new File([blob], activeShareFile, { type: blob.type || "image/png" }),
+          url: imgUrl,
+          file: new File([blob], fileName, { type: blob.type || "image/png" }),
         });
       } catch (error) {
         if ((error as Error)?.name !== "AbortError") {
@@ -696,7 +660,7 @@ export function ShareHubScreen({
       }
     })();
     return () => controller.abort();
-  }, [activeShareFile, activeShareUrl, canShareFiles, nativeShareAvailable, readyImageVersion, seg]);
+  }, [canShareFiles, fileName, imgUrl, nativeShareAvailable, readyImageVersion]);
 
   const rangeLabel =
     days === 1 ? `${wday(from)}, ${short(from)}` : `${short(from)} to ${short(plusDays(from, days - 1))}`;
@@ -720,26 +684,21 @@ export function ShareHubScreen({
     return true;
   };
 
-  const shareImage = async (
-    url: string,
-    file: string,
-    failWord: string,
-    offerInstagramReshare = false,
-  ) => {
+  const shareImage = async () => {
     if (sharing) return;
     setSharing(true);
     const shared = () => {
       void recordShareImageExport();
-      if (offerInstagramReshare) setInstagramPromptOpen(true);
+      setInstagramPromptOpen(true);
     };
     try {
-      if (nativeShare(url, file)) {
+      if (nativeShare(imgUrl, fileName)) {
         shared();
         return;
       }
       if (
         canShareFiles &&
-        preparedShare?.url === url &&
+        preparedShare?.url === imgUrl &&
         navigator.canShare({ files: [preparedShare.file] })
       ) {
         await navigator.share({
@@ -750,9 +709,9 @@ export function ShareHubScreen({
         return;
       }
       if (canShareFiles) {
-        const res = await fetch(url);
+        const res = await fetch(imgUrl);
         if (!res.ok) throw new Error(`Share image returned ${res.status}`);
-        const f = new File([await res.blob()], file, { type: "image/png" });
+        const f = new File([await res.blob()], fileName, { type: "image/png" });
         if (navigator.canShare({ files: [f] })) {
           await navigator.share({
             files: [f],
@@ -762,34 +721,29 @@ export function ShareHubScreen({
           return;
         }
       }
-      downloadImage(url, file);
+      downloadImage(imgUrl, fileName);
       shared();
     } catch (err) {
-      if ((err as Error)?.name !== "AbortError") toast(`Couldn't share the ${failWord}`);
+      if ((err as Error)?.name !== "AbortError") toast("Couldn't share the picture");
     } finally {
       setSharing(false);
     }
   };
 
-  const imageShareActions = (
-    url: string,
-    file: string,
-    failWord: string,
-    offerInstagramReshare = false,
-  ) => (
+  const imageShareActions = () => (
     <div className="shcta">
       <button
         className="btn si"
         disabled={
           sharing ||
           !shareCapabilityKnown ||
-          (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url && !prepareFailed)
+          (canShareFiles && !nativeShareAvailable && preparedShare?.url !== imgUrl && !prepareFailed)
         }
-        onClick={() => shareImage(url, file, failWord, offerInstagramReshare)}
+        onClick={() => shareImage()}
       >
         {sharing
           ? "Opening share sheet..."
-          : !shareCapabilityKnown || (canShareFiles && !nativeShareAvailable && preparedShare?.url !== url && !prepareFailed)
+          : !shareCapabilityKnown || (canShareFiles && !nativeShareAvailable && preparedShare?.url !== imgUrl && !prepareFailed)
             ? "Preparing..."
             : prepareFailed
               ? "Try sharing"
@@ -797,40 +751,6 @@ export function ShareHubScreen({
       </button>
     </div>
   );
-
-  // The week as words, matching the picture exactly: same range, same hide
-  // set, same studio names. Ends on the page link, because the text is a
-  // door as well as an answer.
-  const weekText = useMemo(() => {
-    const kept = inRange.filter((it) => !effHide.has(it.key));
-    const byDay = new Map<string, HubItem[]>();
-    for (const it of kept) byDay.set(it.iso, [...(byDay.get(it.iso) ?? []), it]);
-    const blocks = [...byDay.entries()].map(
-      ([iso, list]) =>
-        `${wday(iso)}, ${short(iso)}\n` +
-        list.map((it) => `${it.time} ${it.name}${it.where ? ` · ${it.where}` : ""}`).join("\n"),
-    );
-    return [`My week, ${rangeLabel}`, ...blocks, `Full schedule: ${pageHost}/${handle}`].join("\n\n");
-  }, [inRange, effHide, rangeLabel, pageHost, handle]);
-
-  const copyText = async () => {
-    try {
-      await navigator.clipboard.writeText(weekText);
-      toast("Copied, ready to paste");
-    } catch {
-      toast("Couldn't copy");
-    }
-  };
-
-  const copyLink = async () => {
-    const url = `${window.location.origin}/${handle}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Link copied, ready to paste");
-    } catch {
-      toast(url);
-    }
-  };
 
   const saveCurrentDesign = async () => {
     if (designSaving || backgroundBusy) return;
@@ -889,75 +809,9 @@ export function ShareHubScreen({
     }
   };
 
-  // Everyone gets the full sheet now, by Matt's call: a member's week is a
-  // real thing to share since they build it here, and their profile card,
-  // QR code and week-as-words are as real as a coach's. The only member
-  // state without the segments is the start block, whose one job is the
-  // first add.
-  const segs: { id: Seg; label: string }[] = [
-    { id: "week", label: "Schedule" },
-    { id: "profile", label: "Profile" },
-    { id: "qr", label: "QR code" },
-    // The week as words is a subject of its own, by Matt's call: it sat
-    // on the rail as a chip and reads better beside Profile and QR code,
-    // because it is a different thing to send, not a knob on the picture.
-    { id: "text", label: "Text" },
-  ];
   // The next fortnight of start days on offer, whether or not each holds
   // anything: "from Saturday" is a real ask on a week that starts quiet.
   const startDays = useMemo(() => Array.from({ length: 14 }, (_, i) => plusDays(today, i)), [today]);
-
-  // The carousel: the slides scroll-snap, a swipe lands on the next one and
-  // the controls below follow, and a pill tap rides the same scroll. The
-  // segment state stays the one truth; the scroll handler only reads which
-  // slide is nearest the middle, measured rather than divided, so a peeking
-  // neighbour never throws the arithmetic.
-  const slidesRef = useRef<HTMLDivElement>(null);
-  const slideFrame = useRef<number | null>(null);
-  // A pill tap animates the scroll; the handler stays quiet until the ride
-  // ends, or the controls would flick through every segment passed over.
-  const rideTo = useRef<number | null>(null);
-  const nearestSlide = (el: HTMLDivElement) => {
-    const mid = el.scrollLeft + el.clientWidth / 2;
-    let best = 0;
-    let bd = Infinity;
-    [...el.children].forEach((k, idx) => {
-      const kid = k as HTMLElement;
-      const d = Math.abs(kid.offsetLeft + kid.offsetWidth / 2 - mid);
-      if (d < bd) {
-        bd = d;
-        best = idx;
-      }
-    });
-    return best;
-  };
-  const goSeg = (id: Seg) => {
-    setSeg(id);
-    const el = slidesRef.current;
-    const i = segs.findIndex((s) => s.id === id);
-    const kid = el?.children[i] as HTMLElement | undefined;
-    if (!el || !kid) return;
-    rideTo.current = i;
-    el.scrollTo({ left: kid.offsetLeft - (el.clientWidth - kid.offsetWidth) / 2, behavior: "smooth" });
-  };
-  const onSlides = () => {
-    if (slideFrame.current !== null) return;
-    slideFrame.current = window.requestAnimationFrame(() => {
-      slideFrame.current = null;
-      const el = slidesRef.current;
-      if (!el) return;
-      const i = nearestSlide(el);
-      if (rideTo.current !== null) {
-        if (i === rideTo.current) rideTo.current = null;
-        return;
-      }
-      const id = segs[i]?.id;
-      if (id && id !== seg) setSeg(id);
-    });
-  };
-  useEffect(() => () => {
-    if (slideFrame.current !== null) window.cancelAnimationFrame(slideFrame.current);
-  }, []);
 
   return (
     <>
@@ -973,19 +827,6 @@ export function ShareHubScreen({
         {tabbed && (
           <header className="share-tab-header">
             <h1>Share</h1>
-            <div className="shseg">
-              <select
-                className="shseg-select"
-                aria-label="What to share"
-                value={seg}
-                onChange={(event) => goSeg(event.target.value as Seg)}
-              >
-                {segs.map((subject) => (
-                  <option key={subject.id} value={subject.id}>{subject.label}</option>
-                ))}
-              </select>
-              <Icon className="shseg-chevron" name="expand_more" size={20} />
-            </div>
           </header>
         )}
         {/* The start block, in place of an empty poster, by Matt's call:
@@ -1004,62 +845,25 @@ export function ShareHubScreen({
             </button>
           </div>
         )}
-        {!building && !tabbed && (
-          <div className="shseg">
-            <select
-              className="shseg-select"
-              aria-label="What to share"
-              value={seg}
-              onChange={(event) => goSeg(event.target.value as Seg)}
-            >
-              {segs.map((subject) => (
-                <option key={subject.id} value={subject.id}>{subject.label}</option>
-              ))}
-            </select>
-            <Icon className="shseg-chevron" name="expand_more" size={20} />
-          </div>
-        )}
-
         {!building && (
-          <section className={`sheditor-shell sheditor-${seg}`} aria-label={`${segs.find((subject) => subject.id === seg)?.label ?? "Share"} editor`}>
-            {/* The preview stays a direct-child carousel: swiping still changes
-                the subject, while the dark stage gives the artwork a canvas
-                instead of letting controls compete with it. */}
+          <section className="sheditor-shell sheditor-week" aria-label="Share image editor">
+            {/* One preview is the center of the studio. The dark stage gives
+                the artwork a canvas without making other formats compete. */}
             <div className="sheditor-stage">
-              <div
-                className="shslides"
-                ref={slidesRef}
-                onScroll={onSlides}
-                onTouchStart={() => (rideTo.current = null)}
-              >
-                <div className="shslide" aria-hidden={seg !== "week"}>
-                  <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" onReady={markImageReady} />
-                </div>
-                <div className="shslide" aria-hidden={seg !== "profile"}>
-                  <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" onReady={markImageReady} />
-                </div>
-                <div className="shslide" aria-hidden={seg !== "qr"}>
-                  <div className="qrcard">
-                    <div className="qrcard-nm">{name}</div>
-                    <div className="qrframe">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" loading="lazy" onLoad={() => markImageReady(qrUrl)} />
-                    </div>
-                    <div className="qrurl">{pageHost}/{handle}</div>
-                  </div>
-                </div>
-                <div className="shslide" aria-hidden={seg !== "text"}>
-                  <pre className="shtext">{weekText}</pre>
-                </div>
+              <div className="shsingle-preview">
+                <SlideImg
+                  cls="shprev shprev-week"
+                  src={imgUrl}
+                  alt="Your week as a story image"
+                  onReady={markImageReady}
+                />
               </div>
             </div>
 
             {/* The dock borrows the reference's studio hierarchy, but every
                 tool is one the FittList picture already understands. Detailed
                 editing still opens the familiar focused sheets. */}
-            <div className={`sheditor-dock sheditor-dock-${seg}`}>
-              {seg === "week" && (
-                <>
+            <div className="sheditor-dock sheditor-dock-week">
                   <div className="sheditor-tools sheditor-tools-primary" aria-label="Creative tools">
                     <StudioTool icon="auto_awesome" label="Remix" detail="New look" accent onClick={remix} />
                     <StudioTool
@@ -1171,41 +975,7 @@ export function ShareHubScreen({
                       {designSaving ? "Saving..." : "Save this look"}
                     </button>
                   </div>
-                  {imageShareActions(imgUrl, fileName, "picture", true)}
-                </>
-              )}
-
-              {seg === "profile" && (
-                <>
-                  <div className="sheditor-tools sheditor-tools-single" aria-label="Profile card tools">
-                    <StudioTool
-                      icon="palette"
-                      label="Color"
-                      detail={STORY_THEMES[themeId].label}
-                      onClick={() => {
-                        setColorMenuOpen(false);
-                        setPick("color");
-                      }}
-                    />
-                  </div>
-                  {imageShareActions(imgUrl, fileName, "card")}
-                </>
-              )}
-
-              {seg === "qr" && (
-                <>
-                  {imageShareActions(qrUrl, qrFileName, "QR code")}
-                  <div className="shcta">
-                    <button className="btn ghost" onClick={copyLink}>Copy link</button>
-                  </div>
-                </>
-              )}
-
-              {seg === "text" && (
-                <div className="shcta">
-                  <button className="btn si" onClick={copyText}>Copy text</button>
-                </div>
-              )}
+                  {imageShareActions()}
             </div>
           </section>
         )}
@@ -1284,29 +1054,26 @@ export function ShareHubScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>{seg === "week" ? "Background" : "Color"}</h2>
-            <p className="lead">
-              {seg === "week" ? "Choose a color or use one of your photos." : "Choose a color for your profile card."}
-            </p>
-            <div className={`shbackground-choices${seg === "week" ? "" : " single"}`}>
+            <h2>Background</h2>
+            <p className="lead">Choose a color or use one of your photos.</p>
+            <div className="shbackground-choices">
               <button
                 type="button"
-                className={`shbackground-choice${seg !== "week" || !background ? " on" : ""}`}
-                aria-pressed={seg !== "week" || !background}
+                className={`shbackground-choice${!background ? " on" : ""}`}
+                aria-pressed={!background}
                 aria-haspopup="dialog"
                 disabled={backgroundBusy}
                 onClick={() => setColorMenuOpen(true)}
               >
                 <span className="shbackground-choice-top">
                   <span className="shcolor-preview shbackground-preview" style={{ background: STORY_THEMES[themeId].bg }} />
-                  {(seg !== "week" || !background) && <Icon name="check" size={20} />}
+                  {!background && <Icon name="check" size={20} />}
                 </span>
                 <strong>Color</strong>
                 <span>{STORY_THEMES[themeId].label}</span>
               </button>
-              {seg === "week" && (
-                <button
-                  type="button"
+              <button
+                type="button"
                 className={`shbackground-choice${background ? " on" : ""}`}
                 aria-pressed={!!background}
                 disabled={backgroundBusy}
@@ -1326,9 +1093,8 @@ export function ShareHubScreen({
                 <strong>Photo</strong>
                 <span>{photoAvailable ? (background ? "Photo selected" : "Use saved photo") : "Choose from photos"}</span>
               </button>
-              )}
             </div>
-            {seg === "week" && background && (
+            {background && (
               <div className="shphoto-controls">
                 {backgroundPreviewUrl && (
                   <div className="shphoto-position-preview" aria-hidden="true">
@@ -1390,7 +1156,7 @@ export function ShareHubScreen({
                 </div>
               </div>
             )}
-            {seg === "week" && photoAvailable && (
+            {photoAvailable && (
               <button
                 className="shbackground-remove"
                 disabled={backgroundBusy}
@@ -1428,12 +1194,7 @@ export function ShareHubScreen({
                   aria-selected={id === themeId}
                   onClick={() => {
                     setColorMenuOpen(false);
-                    if (seg === "week") void chooseColorBackground(id);
-                    else {
-                      pushUndo();
-                      setThemeId(id);
-                      setPick(null);
-                    }
+                    void chooseColorBackground(id);
                   }}
                 >
                   <span className="shcolor-preview" style={{ background: theme.bg }} />
@@ -1891,8 +1652,8 @@ export function ShareHubScreen({
           <div className="sheet confirmsheet shareintro">
             <h2>Your week lives here</h2>
             <p className="lead">
-              Everything you save lands on this picture. Share it as a story, a
-              link or a QR code, and the people you train with can come along.
+              Everything you save lands on this picture. Share it to your story
+              or send it to the people you train with.
             </p>
             <button
               className="btn si"
@@ -1920,10 +1681,9 @@ export function ShareHubScreen({
   );
 }
 
-/** One picture in the carousel, with its own spinner: the preview redraws
- *  server-side on every knob and takes a second or two to paint, and the
- *  spinner is what says the wait is the picture coming rather than a dead
- *  control. Per slide, because two pictures are on screen at once now. */
+/** The poster keeps its last painted frame while the next server-rendered
+ *  version loads. The spinner makes the redraw visible without flashing an
+ *  empty canvas. */
 function SlideImg({ cls, src, alt, onReady }: { cls: string; src: string | null; alt: string; onReady: (url:string) => void }) {
   const [shownSrc, setShownSrc] = useState(src);
   const [loading, setLoading] = useState(!!src);

@@ -45,12 +45,13 @@ await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/week/);
 console.log("a member's /calendar lands on their own week");
 
-// The Share tab opens the hub for a member too now: the Week alone, and
-// the build flow leading because the week starts empty.
+// The Share tab opens the image workflow for a member too, with the build
+// flow leading because the week starts empty.
 await p.goto(BASE + "/membershare");
 await p.locator(".shstart h2", { hasText: "Add the classes you\u2019re taking this week" }).waitFor();
 await p.getByRole("button", { name: "Add a class" }).waitFor();
-if (await p.locator(".shseg").count()) fail("a member's hub has one subject and no segment row");
+if (await p.locator('[aria-label="What to share"]').count())
+  fail("a member's image workflow should not have a format selector");
 console.log("a member’s /membershare opens on the start block");
 
 // The Profile tab opens your page, not a list of switches. Settings stays in

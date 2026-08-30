@@ -424,74 +424,39 @@ await p.goto(BASE + "/calendar");
 await p.locator('.navtab[data-tab="share"]').click();
 await p.waitForURL(/\/coachshare/);
 if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
-// A coach's hub: Week leads and is selected, the colours redraw the
-// preview, and the QR segment carries the code card and the copy link.
-// No title on the hub any more: the segments are the first thing.
-await p.locator(".shseg").waitFor();
+// Share is one focused image studio. Profile cards, QR codes and plain text
+// are not hidden tabs or pre-rendered slides behind the schedule poster.
+await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
 {
-  const pills = (await p.locator(".shseg-pill").allInnerTexts()).map((t) => t.trim());
-  if (pills.join("|") !== "Week|Profile|QR code|Text")
-    fail("a coach's segments are Week, Profile, QR code, Text: " + pills.join("|"));
-  if (!(await p.locator(".shseg-pill.on", { hasText: "Week" }).count()))
-    fail("Week should lead selected");
-  if ((await p.locator(".shswatch").count()) !== 16) fail("sixteen colours");
-  const before = await p.locator(".shprev-week").getAttribute("src");
-  await p.locator(".shswatch").nth(3).click();
-  const after = await p.locator(".shprev-week").getAttribute("src");
-  if (before === after) fail("a swatch should redraw the preview");
-  // Copy-as-text came back as the rail's Text chip, by Matt's call: group
-  // chats want a pasted week. It is a chip and a sheet now, never the old
-  // "Copy your week" settings row.
-  if (await p.locator(".setrow", { hasText: "Copy your week" }).count())
-    fail("the old copy-week row should not return; Text is a rail chip");
-}
-// The QR segment: the named card, the code, and the link beside it.
-await p.locator(".shseg-pill", { hasText: "QR code" }).click();
-await p.locator(".qrcard .qrimg").waitFor();
-{
-  const qrBox = await p.locator(".qrcard .qrimg").boundingBox();
-  if (Math.abs(qrBox.width - qrBox.height) > 2)
-    fail(`the QR code must render square, got ${qrBox.width}x${qrBox.height}`);
-}
-if (!(await p.locator(".qrcard-nm").innerText()).trim()) fail("the QR card names its owner");
-if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
-  fail("the copy link lives with the QR code");
-// The Plain text segment: the why, the preview ending on the page link,
-// and the copy landing in the toast. It was a rail chip for a day and
-// moved up beside Profile and QR code, by Matt's call: a different thing
-// to send, not a knob on the picture.
-await p.locator(".shseg-pill", { hasText: "Text" }).click();
-{
-  await p.locator(".shtext").waitFor();
-  const txt = (await p.locator(".shtext").innerText()).trim();
-  if (!/Full schedule:/.test(txt)) fail("the text ends on the page link");
-  await p.locator(".shcta .btn", { hasText: "Copy text" }).click();
-  await p.locator(".toast.on", { hasText: "Copied" }).waitFor();
-}
-// The week segment carries the rail: Dates, Classes, Headline, Layout and Decoration, one
-// scrolling row of chips under the colours, and the pickers really move
-// the picture: fewer days, and a hidden class comes off the count and the
-// compose URL alike.
-await p.locator(".shseg-pill", { hasText: "Week" }).click();
-{
-  // innerText reports the CSS-uppercased label, so compare in lower case.
-  const keys = (await p.locator(".shctrl .shctrl-k").allInnerTexts()).map((t) => t.trim().toLowerCase());
-  if (keys.join("|") !== "classes|dates|headline|layout|decoration")
-    fail("the rail leads with Classes, per the brief: " + keys.join("|"));
-  const a = await p.locator(".shctrl").first().boundingBox();
-  const b2 = await p.locator(".shctrl").nth(1).boundingBox();
-  if (Math.abs(a.y - b2.y) > 2) fail("the chips share a row");
-  // The Message chip rewrites the poster's words, and the picture is asked
-  // for exactly what was typed.
-  await p.locator(".shctrl", { hasText: "Headline" }).click();
+  if (await p.locator('[aria-label="What to share"]').count())
+    fail("the image studio should not have a format selector");
+  if ((await p.locator(".shsingle-preview .shprev-week").count()) !== 1)
+    fail("the image studio should render exactly one schedule poster");
+  if (await p.locator(".shprev-sq, .qrcard, .shtext").count())
+    fail("profile, QR and text previews should not render in the image studio");
+  const initialSrc = await p.locator(".shprev-week").getAttribute("src");
+  if (!initialSrc?.startsWith("/api/story/compose?"))
+    fail("the single preview should be the schedule image: " + initialSrc);
+
+  const primaryTools = (await p.locator(".sheditor-tools-primary .sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
+  if (primaryTools.join("|") !== "Remix|Background|Style")
+    fail("the primary image tools should be Remix, Background and Style: " + primaryTools.join("|"));
+  const detailTools = (await p.locator(".sheditor-tools-details .sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
+  if (detailTools.join("|") !== "Classes|Dates|Headline")
+    fail("the coach's schedule tools should be Classes, Dates and Headline: " + detailTools.join("|"));
+
+  // Headline rewrites the poster's words, and the picture is asked for
+  // exactly what was typed.
+  await p.locator(".sheditor-tool", { hasText: "Headline" }).click();
   await p.locator("#shMsg").fill("Fall schedule is live");
   await p.locator(".shpick .btn", { hasText: "Done" }).click();
   const srcMsg = await p.locator(".shprev-week").getAttribute("src");
   if (!/Fall%20schedule%20is%20live/.test(srcMsg ?? ""))
     fail("the message should reach the picture: " + srcMsg);
-  // Layout is a real structural choice again: six visible coordinated styles,
+
+  // Style is a real structural choice: six visible coordinated styles,
   // all accepted by the image route, and the chosen id rides the preview URL.
-  await p.locator(".shctrl", { hasText: "Layout" }).click();
+  await p.locator(".sheditor-tool", { hasText: "Style" }).click();
   const layoutIds = await p.locator(".layoutpick").evaluateAll((els) =>
     els.map((e) => e.getAttribute("data-layout")),
   );
@@ -508,12 +473,12 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
   const srcLayout = await p.locator(".shprev-week").getAttribute("src");
   if (!/style=party/.test(srcLayout ?? "") || !/theme=blush/.test(srcLayout ?? "") || !/type=friendly/.test(srcLayout ?? "") || !/hs=90/.test(srcLayout ?? "") || !/deco=double/.test(srcLayout ?? ""))
     fail("the picked style should apply its coordinated defaults: " + srcLayout);
-  await p.locator(".shctrl", { hasText: "Dates" }).click();
+  await p.locator(".sheditor-tool", { hasText: "Dates" }).click();
   await p.locator(".shday", { hasText: /^3$/ }).click();
   await p.locator(".shpick .btn", { hasText: "Done" }).click();
   const src1 = await p.locator(".shprev-week").getAttribute("src");
   if (!/days=3/.test(src1 ?? "")) fail("the range should reach the picture: " + src1);
-  await p.locator(".shctrl", { hasText: "Classes" }).click();
+  await p.locator(".sheditor-tool", { hasText: "Classes" }).click();
   const first = p.locator(".shpick .setrow").first();
   if (await first.count()) {
     await first.click();
@@ -524,11 +489,9 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
   }
 }
-// No door to the old composer any more: the hub is the whole share screen.
-if (await p.locator(".shedit").count()) fail("the editor link should be gone");
-if (!(await p.locator(".shcta .btn", { hasText: "Share" }).count() + await p.locator(".shcta a", { hasText: "Save" }).count()))
-  fail("the week segment should offer its image");
-console.log("the Share tab lands on the hub, and the hub is the whole screen");
+if (!(await p.locator(".shcta .btn", { hasText: /Share|Preparing|Try sharing/ }).count()))
+  fail("the image studio should offer its poster");
+console.log("the Share tab is one focused schedule image studio");
 // The header magnifier opens the search screen.
 await p.goto(BASE + "/calendar");
 await p.locator('.brandbar-actions [aria-label="Search"]').click();
