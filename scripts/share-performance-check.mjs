@@ -18,6 +18,7 @@ import { planStory } from "../src/lib/storyplan.ts";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 const shareHubPath = join(root, "src/components/ShareHubScreen.tsx");
+const livePreviewPath = join(root, "src/components/ShareLivePreview.tsx");
 const obsoleteSharePaths = [
   join(root, "src/components/ShareWeekSheet.tsx"),
   join(root, "src/components/StoryPreview.tsx"),
@@ -99,6 +100,13 @@ assert.ok(
 );
 
 const shareHub = readFileSync(shareHubPath, "utf8");
+const livePreview = readFileSync(livePreviewPath, "utf8");
+
+assert.match(
+  livePreview,
+  /<svg[\s\S]*?width=\{WIDTH\}[\s\S]*?height=\{HEIGHT\}[\s\S]*?viewBox=/,
+  "the live SVG must declare its 1080x1920 intrinsic ratio so Safari cannot size it as the default 300x150 SVG",
+);
 
 for (const obsoletePath of obsoleteSharePaths) {
   assert.equal(

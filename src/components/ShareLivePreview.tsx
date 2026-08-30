@@ -688,6 +688,8 @@ function ShareLivePreviewComponent({
       className="shprev shprev-week shlive-preview"
       data-preview-kind="dom"
       data-config-key={configKey}
+      width={WIDTH}
+      height={HEIGHT}
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       preserveAspectRatio="xMidYMid meet"
       role="img"
