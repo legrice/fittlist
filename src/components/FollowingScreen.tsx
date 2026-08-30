@@ -935,7 +935,7 @@ export function FollowingScreen({
                           const relation = calendarRelation(item, meId);
                           const ownedByYou = item.shift || (!!meId && item.coachId === meId);
                           const isYourItem = item.saved || item.shift || (!!meId && item.coachId === meId);
-                          const displaySourceName = ownedByYou ? "You" : sourceName;
+                          const displaySourceName = ownedByYou ? meFace.name : sourceName;
                           const displaySourcePhoto = ownedByYou ? meFace.photo : sourcePhoto;
                           const displaySourceColor = ownedByYou ? meFace.color : sourceColor;
                           const showSourceAvatar = Boolean(displaySourceName);
@@ -943,8 +943,8 @@ export function FollowingScreen({
                             <button type="button" className={`cash-class-main ${relation.tone}${showSourceAvatar ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               {showSourceAvatar && displaySourceName && <span className={`cash-class-avatar${!ownedByYou && !coach && studio ? " studio" : ""}`} style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
                               <span className="cash-class-copy">
-                                {(displaySourceName || isYourItem) && <span className={`cash-class-coachline${ownedByYou ? " own" : ""}`}>{displaySourceName && !ownedByYou && <small>{displaySourceName}</small>}{!ownedByYou && coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{isYourItem && <span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}
-                                <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
+                                {displaySourceName && <span className="cash-class-coachline"><small>{displaySourceName}</small>{ownedByYou && <span className="cash-you-tag">You</span>}{!ownedByYou && coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}</span>}
+                                <span className="cash-class-title-row"><strong>{item.name}</strong>{isYourItem ? <span className="cash-class-time-stack"><span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span> : <strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong>}</span>
                                 <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
                               </span>
                             </button>
