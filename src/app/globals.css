@@ -9160,7 +9160,7 @@ select.editinput.placekind-select {
 .cash-day > div { content-visibility:auto; contain-intrinsic-size:380px; }
 .cash-days-more { height:2px; }
 .cash-rail-more { flex:0 0 2px; align-self:stretch; }
-.cash-day > h2 { margin:0 0 14px; font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
+.cash-day > h2 { margin:0 0 14px; padding-bottom:12px; border-bottom:1px solid var(--line); font-size:24px; line-height:1.1; font-weight:600; letter-spacing:-.025em; }
 @media (max-width:1099px) {
   .cash-day > h2 {
     position:sticky; top:66px; z-index:6;
