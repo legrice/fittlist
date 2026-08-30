@@ -713,6 +713,12 @@ export function FollowingScreen({
           {calendarFilter === "you" ? <PersonalCalendarSheetTrigger className="feedfilter-link" ariaLabel="Manage calendar">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></PersonalCalendarSheetTrigger> : selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></Link>}
         </div>
       )}
+      {isHome && !firstRun && calendarFilter === "all" && (
+        <div className="feedfilterbar following-coach-context">
+          <span className="feedfilter-txt">All calendars</span>
+          <span className="calendar-context-meta">{calendarCount} {calendarCount === 1 ? "calendar" : "calendars"}</span>
+        </div>
+      )}
       {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{soleSelectedCoach ? `${soleSelectedCoach.name.split(/\s+/)[0]}’s calendar` : `${selectedPeople.size + Number(includeYou)} calendars selected`}</span>
