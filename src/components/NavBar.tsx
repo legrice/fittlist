@@ -87,7 +87,7 @@ export function NavBar({
                   face.photo ? <img className="navav" src={face.photo} alt="" /> : (
                     <span className="navav navav-empty" style={{ background: face.color }}>{face.initial}</span>
                   )
-                ) : <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={32} />}
+                ) : <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={30} />}
                 {t.id === "calendar" && unread && <i className="nav-profile-dot" aria-hidden="true" />}
               </span>
               <span className="navlabel">{t.label}</span>
