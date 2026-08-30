@@ -95,8 +95,8 @@ await coach.locator(".clline").first().waitFor();
   const tabs = (await coach.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/\s+/g, " ").trim(),
   );
-  if (tabs.join("|") !== "Calendar|Search|Profile")
-    fail("the destination dock should be Calendar, Search, Profile: " + tabs.join("|"));
+  if (tabs.join("|") !== "Calendar|Discover|Profile")
+    fail("the destination dock should be Calendar, Discover, Profile: " + tabs.join("|"));
   if ((await coach.locator("button.navshare").count()) !== 1)
     fail("Share should be the separate circle");
   if (await coach.locator(".wkshare").count()) fail("the floating Share pill should be gone");

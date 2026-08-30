@@ -13,7 +13,7 @@ const requiredWebFragments = [
   'id: "following" as const',
   'href: "/feed"',
   'label: "Calendar"',
-  '{ id: "discover", href: "/discover", icon: "search", label: "Search" }',
+  '{ id: "discover", href: "/discover", icon: "search", label: "Discover" }',
   'id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile"',
   '{ id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" }',
 ];
@@ -21,7 +21,7 @@ const requiredSwiftFragments = [
   'private let tabIDs = ["following", "discover", "calendar", "share"]',
   'private let fallbackRoutes = ["/feed", "/discover", "/you", "/membershare"]',
   'item("Calendar", "calendar", 0)',
-  'item("Search", "magnifyingglass", 1)',
+  'item("Discover", "magnifyingglass", 1)',
   'item("Profile", "person.crop.circle", 2)',
   'item("Share", "arrowshape.turn.up.right", 3)',
   'navigate(tabID: "following", fallback: "/feed")',

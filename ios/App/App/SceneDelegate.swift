@@ -88,7 +88,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.scrollEdgeAppearance = appearance
         tabBar.items = [
             item("Calendar", "calendar", 0),
-            item("Search", "magnifyingglass", 1),
+            item("Discover", "magnifyingglass", 1),
             item("Profile", "person.crop.circle", 2),
             item("Share", "arrowshape.turn.up.right", 3),
         ]

@@ -414,8 +414,8 @@ await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 await p.goto(BASE + "/calendar");
 {
   const labels = (await p.locator(".navbar .navtab .navlabel").allInnerTexts()).map((text) => text.trim());
-  if (labels.join("|") !== "Calendar|Search|Profile")
-    fail("the dock should be Calendar, Search, Profile: " + labels.join("|"));
+  if (labels.join("|") !== "Calendar|Discover|Profile")
+    fail("the dock should be Calendar, Discover, Profile: " + labels.join("|"));
   if (await p.locator(".navsearch").count()) fail("Search should no longer be the separate circle");
   if ((await p.locator('button.navshare[data-tab="share"]').count()) !== 1)
     fail("Share should be the separate circular action");
