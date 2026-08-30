@@ -1,7 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { getDb, schema } from "@/db";
-import { INSTAGRAM_HANDLE } from "@/lib/brand";
 import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
@@ -231,7 +230,6 @@ export async function GET(req: Request) {
     // stays Delight.
     typeface: typeFaceOf(qs.get("type") ?? y.typeface),
     deco: decoOf(qs.get("deco") ?? y.decoration),
-    instagramTag: qs.get("tag") === "1" ? INSTAGRAM_HANDLE : null,
     cacheControl: qs.has("v") ? "private, max-age=31536000, immutable" : "no-store",
   });
 }

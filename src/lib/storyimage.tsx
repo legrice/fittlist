@@ -95,8 +95,6 @@ export type StoryModel = {
   typeface?: { family: string; file: string | null; italic?: boolean; track?: number } | null;
   /** The dressing: a frame, day dividers, both, or nothing. */
   deco?: DecoId;
-  /** A small optional Instagram credit in the footer. */
-  instagramTag?: string | null;
   /** Editor URLs carry a content revision and are safe in the private browser cache. */
   cacheControl?: string;
 };
@@ -213,7 +211,6 @@ export function renderStory(model: StoryModel) {
     // On by default, by Matt's call: the thick brand stripe is back on
     // every share image, and Clean is the pick that takes it off.
     deco = "top",
-    instagramTag,
     cacheControl = "no-store",
   } = model;
   const framed = deco === "frame" || deco === "framed";
@@ -452,23 +449,7 @@ export function renderStory(model: StoryModel) {
               background: "#020D08",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 13,
-                maxWidth: 610,
-                fontSize: 30,
-                fontWeight: 600,
-              }}
-            >
-              {instagramTag && (
-                <span style={{ display: "flex", color: "#9FE870", fontSize: 25 }}>
-                  {instagramTag}
-                </span>
-              )}
-              <span style={{ display: "block", lineClamp: 1 }}>{url}</span>
-            </div>
+            <span style={{ fontSize: 30, fontWeight: 600 }}>{url}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photoMark} alt="" width={52} height={52} />
@@ -1179,7 +1160,7 @@ export function renderStory(model: StoryModel) {
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontWeight: 600, fontSize: px(30), color: t.faint, letterSpacing: 1 }}>
-              {instagramTag ? `${instagramTag} · See my schedule at` : "See my schedule at"}
+              See my schedule at
             </span>
             <span style={{ fontWeight: 600, fontSize: px(40) }}>{url}</span>
           </div>

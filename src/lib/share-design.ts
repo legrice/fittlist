@@ -25,7 +25,6 @@ export type ShareDesign = {
   photoY: number;
   /** Darkness over a background photo, as a whole percentage. */
   overlay: number;
-  showInstagramTag: boolean;
 };
 
 export type SavedStoryLook = {
@@ -48,7 +47,6 @@ export const DEFAULT_SHARE_DESIGN: ShareDesign = Object.freeze({
   photoX: 50,
   photoY: 50,
   overlay: 24,
-  showInstagramTag: false,
 });
 
 export const DEFAULT_SAVED_STORY_LOOKS: SavedStoryLook[] = [];
@@ -109,7 +107,6 @@ export function sanitizeShareDesign(
     photoX: wholeNumber(raw.photoX, fallback.photoX, 0, 100),
     photoY: wholeNumber(raw.photoY, fallback.photoY, 0, 100),
     overlay: wholeNumber(raw.overlay, fallback.overlay, 0, 60),
-    showInstagramTag: booleanOf(raw.showInstagramTag, fallback.showInstagramTag),
   };
 }
 

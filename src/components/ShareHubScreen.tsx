@@ -189,7 +189,6 @@ export function ShareHubScreen({
   const [draftPhotoX, setDraftPhotoX] = useState(startingDesign.photoX);
   const [draftPhotoY, setDraftPhotoY] = useState(startingDesign.photoY);
   const [draftPhotoOverlay, setDraftPhotoOverlay] = useState(startingDesign.overlay);
-  const [showInstagramTag, setShowInstagramTag] = useState(startingDesign.showInstagramTag);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
@@ -536,7 +535,6 @@ export function ShareHubScreen({
       photoX,
       photoY,
       overlay:photoOverlay,
-      showInstagramTag,
     }),
     [
       background,
@@ -547,7 +545,6 @@ export function ShareHubScreen({
       photoOverlay,
       photoX,
       photoY,
-      showInstagramTag,
       styleId,
       themeId,
       typeId,
@@ -592,7 +589,6 @@ export function ShareHubScreen({
     setPhotoX(safe.photoX);
     setPhotoY(safe.photoY);
     setPhotoOverlay(safe.overlay);
-    setShowInstagramTag(safe.showInstagramTag);
   };
 
   const restoreSnapshot = (snapshot: EditorSnapshot) => {
@@ -643,7 +639,7 @@ export function ShareHubScreen({
   const rawWeekImgUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
-    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bo=${photoOverlay}&tag=${showInstagramTag ? 1 : 0}` +
+    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bo=${photoOverlay}` +
     `${featuredKey ? `&feature=${encodeURIComponent(featuredKey)}` : ""}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const rawCardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
@@ -1119,17 +1115,6 @@ export function ShareHubScreen({
                   <span className="shctrl-v">
                     {hatRows.length === 0 ? "None in range" : `${shown} of ${hatRows.length} showing`}
                   </span>
-                </button>
-                <button
-                  className="shctrl"
-                  aria-pressed={showInstagramTag}
-                  onClick={() => {
-                    pushUndo();
-                    setShowInstagramTag((shown) => !shown);
-                  }}
-                >
-                  <span className="shctrl-k">Image tag</span>
-                  <span className="shctrl-v">{showInstagramTag ? "@fittlist on" : "@fittlist off"}</span>
                 </button>
                 <button className="shctrl" onClick={() => { setDraftFrom(from); setDraftDays(days); setPick("dates"); }}>
                   <span className="shctrl-k">Dates</span>
