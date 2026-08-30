@@ -13,6 +13,7 @@ import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
+import { BodyPortal } from "@/components/BodyPortal";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -269,6 +270,18 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarSelectorOpen, setCalendarSelectorOpen] = useState(false);
+  useEffect(() => {
+    if (!calendarSelectorOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setCalendarSelectorOpen(false); };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [calendarSelectorOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
@@ -692,13 +705,16 @@ export function FollowingScreen({
       )}
       {isHome && !firstRun && (
         <header className="following-head">
-          <div className="tray following-rail" aria-label="Calendars">
+          <button type="button" className="calendar-selector-trigger" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => setCalendarSelectorOpen(true)}>
+            <span><Icon name="calendar_month" size={19} />{selectedCalendar?.label ?? `${calendarCount} calendars`}</span><Icon name="expand_more" size={20} />
+          </button>
+          {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose a calendar</h2><button type="button" aria-label="Close calendar selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><div className="tray following-rail" aria-label="Calendars">
             <div className="tray-scroll" ref={followingRailRef}>
-              <button className={`trayitem${calendarFilter === "all" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => setCalendarFilter("all")}>
+              <button className={`trayitem${calendarFilter === "all" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "all"} onClick={() => { setCalendarFilter("all"); setCalendarSelectorOpen(false); }}>
                 <span className="trayav trayav-all"><Icon name="calendar_month" size={30} /></span>
                 <span className="trayitem-nm">All</span>
               </button>
-              <button className={`trayitem${calendarFilter === "you" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => setCalendarFilter(calendarFilter === "you" ? "all" : "you")}>
+              <button className={`trayitem${calendarFilter === "you" ? " selected" : ""}`} type="button" aria-pressed={calendarFilter === "you"} onClick={() => { setCalendarFilter("you"); setCalendarSelectorOpen(false); }}>
                 <span className="trayav" style={{ background: meFace.color }}>
                   {meFace.photo ? <img src={meFace.photo} alt="" /> : (
                     <span className="trayav-ini">{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
@@ -708,13 +724,13 @@ export function FollowingScreen({
               </button>
               {pinnedStudioOptions.map((studio) => {
                 const filter = `studio:${studio.id}` as const;
-                return <div className="cash-rail-item" key={studio.id}><button type="button" aria-pressed={calendarFilter === filter} className={`trayitem social-place-item${calendarFilter === filter ? " selected" : ""}`} onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button><span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span></div>;
+                return <div className="cash-rail-item" key={studio.id}><button type="button" aria-pressed={calendarFilter === filter} className={`trayitem social-place-item${calendarFilter === filter ? " selected" : ""}`} onClick={() => { setCalendarFilter(filter); setCalendarSelectorOpen(false); }}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button><span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span></div>;
               })}
               {railCoachOptions.map((coach) => {
                 const filter = `coach:${coach.id}` as const;
                 return (
                 <div className="cash-rail-item" key={coach.id}>
-                  <button type="button" aria-pressed={calendarFilter === filter} className={`trayitem${calendarFilter === filter ? " selected" : ""}`} onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}>
+                  <button type="button" aria-pressed={calendarFilter === filter} className={`trayitem${calendarFilter === filter ? " selected" : ""}`} onClick={() => { setCalendarFilter(filter); setCalendarSelectorOpen(false); }}>
                     <span className="trayav" style={{ background: coach.color }}>
                       {coach.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -731,7 +747,7 @@ export function FollowingScreen({
               {!railCoachesComplete && <span className="cash-rail-more" ref={railMoreRef} aria-hidden="true" />}
               {railCoachesComplete && railStudioOptions.map((studio) => {
                 const filter = `studio:${studio.id}` as const;
-                return <div className="cash-rail-item" key={studio.id}><button type="button" aria-pressed={calendarFilter === filter} className={`trayitem social-place-item${calendarFilter === filter ? " selected" : ""}`} onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span>}</div>})}
+                return <div className="cash-rail-item" key={studio.id}><button type="button" aria-pressed={calendarFilter === filter} className={`trayitem social-place-item${calendarFilter === filter ? " selected" : ""}`} onClick={() => { setCalendarFilter(filter); setCalendarSelectorOpen(false); }}><span className="trayav social-place-av" style={{ background: studio.color }}>{studio.photo ? <img src={studio.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="storefront" size={22} />}</span><span className="trayitem-nm">{studio.name}</span></button>{pins.has(`studio:${studio.id}`) && <span className="cash-pin on" aria-label="Pinned"><Icon name="star_filled" size={16} /></span>}</div>})}
               {railCoachesComplete && railGroupOptions.map((group) => {
                 const filter = `group:${group.id}` as const;
                 return <button
@@ -739,7 +755,7 @@ export function FollowingScreen({
                 type="button"
                 aria-pressed={calendarFilter === filter}
                 className={`trayitem${calendarFilter === filter ? " selected" : ""}`}
-                onClick={() => setCalendarFilter(calendarFilter === filter ? "all" : filter)}
+                onClick={() => { setCalendarFilter(filter); setCalendarSelectorOpen(false); }}
               >
                 <span className="trayav">
                   {group.photo ? <img src={group.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <Icon name="groups" size={22} />}
@@ -752,10 +768,10 @@ export function FollowingScreen({
               </Link>}
             </div>
             <RailArrows railRef={followingRailRef} />
-          </div>
+          </div></section></div></BodyPortal>}
         </header>
       )}
-      {isHome && selectedCalendar && (
+      {isHome && selectedCalendar && calendarFilter !== "all" && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{selectedCalendar.label}</span>
           {calendarFilter === "you" ? <PersonalCalendarSheetTrigger className="feedfilter-link" ariaLabel="Manage calendar">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></PersonalCalendarSheetTrigger> : selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></Link>}
