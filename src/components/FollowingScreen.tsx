@@ -12,7 +12,6 @@ import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
-import { BodyPortal } from "@/components/BodyPortal";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -271,20 +270,7 @@ export function FollowingScreen({
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | "people" | `coach:${string}` | `studio:${string}` | `group:${string}`>("you");
   const [includeYou, setIncludeYou] = useState(true);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(() => new Set());
-  const [calendarSelectorOpen, setCalendarSelectorOpen] = useState(false);
-  const [calendarPeopleQuery, setCalendarPeopleQuery] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  useEffect(() => {
-    if (!calendarSelectorOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setCalendarSelectorOpen(false); };
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [calendarSelectorOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
@@ -364,14 +350,12 @@ export function FollowingScreen({
   );
   const groupOptions = useMemo(() => socialGroups, [socialGroups]);
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
-  const quickCoachOptions = sortedCoachOptions.slice(0, 5);
   const togglePerson = (id: string) => {
     const next = new Set(selectedPeople);
     if (next.has(id)) next.delete(id); else next.add(id);
     setSelectedPeople(next);
     setCalendarFilter(next.size || !includeYou ? "people" : "you");
   };
-  const filteredCoachOptions = sortedCoachOptions.filter((coach) => coach.name.toLocaleLowerCase().includes(calendarPeopleQuery.trim().toLocaleLowerCase()));
   const soleSelectedCoach = !includeYou && selectedPeople.size === 1
     ? coachOptions.find((coach) => selectedPeople.has(coach.id)) ?? null
     : null;
@@ -717,10 +701,9 @@ export function FollowingScreen({
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
             <button type="button" className={`calendar-person-chip${includeYou ? " on" : ""}`} aria-pressed={includeYou} onClick={() => { const next = !includeYou; setIncludeYou(next); setCalendarFilter(next && selectedPeople.size === 0 ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
-            {quickCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
-            <button type="button" className="calendar-person-chip calendar-selector-trigger" aria-label="Choose more people" aria-haspopup="dialog" aria-expanded={calendarSelectorOpen} onClick={() => { setCalendarPeopleQuery(""); setCalendarSelectorOpen(true); }}><span className="calendar-person-face"><Icon name="expand_more" size={22} /></span><small>More</small></button>
+            {sortedCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
+            <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>
           </div>
-          {calendarSelectorOpen && <BodyPortal><div className="calendar-selector-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSelectorOpen(false); }}><section className="calendar-selector-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-selector-title" onMouseDown={(event) => event.stopPropagation()}><div className="calendar-selector-head"><h2 id="calendar-selector-title">Choose coaches</h2><button type="button" aria-label="Close coach selector" onClick={() => setCalendarSelectorOpen(false)}><Icon name="close" size={22} /></button></div><label className="calendar-selector-search"><Icon name="search" size={20} /><input type="search" value={calendarPeopleQuery} onChange={(event) => setCalendarPeopleQuery(event.target.value)} placeholder="Search coaches" autoFocus /></label><div className="calendar-selector-grid" aria-label="Coaches">{filteredCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={12} />}</span><small>{coach.name}</small></button>)}{filteredCoachOptions.length === 0 && <p className="calendar-selector-empty">No coaches found.</p>}</div></section></div></BodyPortal>}
         </header>
       )}
       {isHome && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && calendarFilter !== "people" && (
