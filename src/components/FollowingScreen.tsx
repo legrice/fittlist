@@ -18,6 +18,7 @@ import { BodyPortal } from "@/components/BodyPortal";
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
 const DiscoverSheet = dynamic(() => import("@/components/DiscoverSheet").then((module) => module.DiscoverSheet));
+const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
 
 export type FeedCoach = {
   id: string;
@@ -273,6 +274,7 @@ export function FollowingScreen({
   const [includeYou, setIncludeYou] = useState(true);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(() => new Set());
   const [calendarSelectorOpen, setCalendarSelectorOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   useEffect(() => {
     if (!calendarSelectorOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -729,7 +731,7 @@ export function FollowingScreen({
       {isHome && (
         <header className="calendar-tab-header">
           <h1>Calendar</h1>
-          <PersonalCalendarSheetTrigger className="calendar-tab-add" ariaLabel="Add to your calendar" openAdder><Icon name="add" size={20} /><span>Add</span></PersonalCalendarSheetTrigger>
+          <button type="button" className="tab-page-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button>
         </header>
       )}
       {isHome && !firstRun && (
@@ -989,6 +991,7 @@ export function FollowingScreen({
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
+      {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
 
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
