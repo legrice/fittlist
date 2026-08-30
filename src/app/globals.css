@@ -9712,7 +9712,7 @@ html[data-mode="dark"],
   width: 100%; max-width: none; height: 100dvh; max-height: none; overflow-y: auto;
   overscroll-behavior: contain;
   margin: 0;
-  padding: calc(max(16px, env(safe-area-inset-top)) + var(--tap-size) + 12px) var(--page-gutter)
+  padding: calc(max(16px, env(safe-area-inset-top)) + var(--tap-size) + 6px) var(--page-gutter)
     calc(32px + env(safe-area-inset-bottom));
   background:var(--color-surface-muted);
 }
@@ -9725,8 +9725,8 @@ html[data-mode="dark"],
   position:fixed;
   inset:0 0 auto;
   z-index:5;
-  min-height:calc(max(16px, env(safe-area-inset-top)) + var(--tap-size) + 12px);
-  padding:max(16px, env(safe-area-inset-top)) var(--page-gutter) 12px;
+  min-height:calc(max(16px, env(safe-area-inset-top)) + var(--tap-size) + 6px);
+  padding:max(16px, env(safe-area-inset-top)) var(--page-gutter) 6px;
   display:flex;
   align-items:center;
   gap:12px;
@@ -12787,32 +12787,36 @@ a.clspeek-by:active { opacity: .6; }
 .sheditor-tool:active { background:var(--sheditor-active); }
 .sheditor-tool:disabled { cursor:default; opacity:.42; }
 .sheditor-tool:focus-visible,
-.sheditor-dock .shdesign-actions button:focus-visible {
+.calendar-share-sheet .shdesign-actions button:focus-visible {
   outline:2px solid var(--si);
   outline-offset:2px;
 }
 
-.sheditor-dock .shdesign-actions {
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
+.calendar-share-sheet .shdesign-actions {
+  position:fixed;
+  top:max(16px, env(safe-area-inset-top));
+  right:var(--page-gutter);
+  z-index:8;
+  display:flex;
   gap:0;
-  margin:2px 0 0;
+  height:var(--tap-size);
+  margin:0;
   padding:2px;
   border:1px solid var(--sheditor-border);
-  border-radius:14px;
+  border-radius:var(--radius-pill);
   background:var(--sheditor-soft);
 }
-.sheditor-dock .shdesign-actions button {
-  min-height:44px;
-  padding:0 8px;
+.calendar-share-sheet .shdesign-actions button {
+  min-height:38px;
+  padding:0 10px;
   color:var(--sheditor-text);
-  font-size:13px;
+  font-size:12.5px;
 }
-.sheditor-dock .shdesign-actions button + button {
+.calendar-share-sheet .shdesign-actions button + button {
   border-left:1px solid var(--sheditor-border);
 }
-.sheditor-dock .shdesign-actions button:last-child { color:var(--si-ink); }
-.sheditor-dock .shdesign-actions button:disabled { color:var(--sheditor-muted); }
+.calendar-share-sheet .shdesign-actions button:last-child { color:var(--si-ink); }
+.calendar-share-sheet .shdesign-actions button:disabled { color:var(--sheditor-muted); }
 .sheditor-share-action { margin-top:10px; }
 .sheditor-share-action .shheader-share { width:100%; }
 @media (max-width:939px) {
@@ -12827,6 +12831,7 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-share-sheet .shpage-embedded .sheditor-shell {
     flex:1 1 auto;
     min-height:0;
+    margin-top:2px;
   }
   .calendar-share-sheet .shpage-embedded .sheditor-stage {
     flex:1 1 auto;
@@ -12836,15 +12841,30 @@ a.clspeek-by:active { opacity: .6; }
     padding-bottom:calc(98px + env(safe-area-inset-bottom));
   }
   .calendar-share-sheet .shsingle-preview {
-    height:clamp(330px, 46dvh, 500px);
+    height:100%;
+    min-height:0;
+    padding:0 max(5vw, 18px) 8px;
+    place-items:start center;
+  }
+  .calendar-share-sheet .shsingle-preview .shprev-wrap {
+    flex:1 1 auto;
+    width:100%;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    max-height:100%;
+    align-items:flex-start;
   }
   .calendar-share-sheet .shsingle-preview .shprev {
-    height:calc(100% - 8px);
+    width:auto;
+    height:auto;
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
   }
 }
 @media (max-height:700px) and (max-width:939px) {
-  .shsingle-preview,
-  .calendar-share-sheet .shsingle-preview {
+  .shsingle-preview {
     height:clamp(290px, 40dvh, 330px);
   }
 }

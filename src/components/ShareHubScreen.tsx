@@ -132,7 +132,7 @@ export function ShareHubScreen({
   lastUsed: LastUsed;
   /** Server-created once per screen load so SSR and hydration use one image URL. */
   initialRevision: number;
-  /** The account-level default chosen with Save this look. */
+  /** The account-level default chosen with Save style. */
   initialDesign: ShareDesign | null;
   /** Reusable named looks, such as Teaching week or Weekend plans. */
   savedLooks: SavedStoryLook[];
@@ -865,6 +865,14 @@ export function ShareHubScreen({
         )}
         {!building && (
           <section className="sheditor-shell sheditor-week" aria-label="Share image editor">
+            <div className="shdesign-actions" aria-label="Design actions">
+              <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
+              <button type="button" onClick={resetDesign}>Reset</button>
+              <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
+                {designSaving ? "Saving..." : "Save style"}
+              </button>
+            </div>
+
             {/* One preview is the center of the studio. The quiet stage gives
                 the artwork a canvas without making other formats compete. */}
             <div className="sheditor-stage">
@@ -957,13 +965,6 @@ export function ShareHubScreen({
                 }}
               />
 
-              <div className="shdesign-actions" aria-label="Design actions">
-                <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
-                <button type="button" onClick={resetDesign}>Reset</button>
-                <button type="button" disabled={designSaving || backgroundBusy} onClick={() => void saveCurrentDesign()}>
-                  {designSaving ? "Saving..." : "Save this look"}
-                </button>
-              </div>
               <div className="sheditor-share-action">{imageShareAction()}</div>
             </div>
           </section>

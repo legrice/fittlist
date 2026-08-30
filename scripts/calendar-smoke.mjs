@@ -469,12 +469,27 @@ if (p.url() !== shareOriginUrl) fail("Share should not change the current route:
 // are not hidden tabs or pre-rendered slides behind the schedule poster.
 await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
 {
-  const dock = await p.locator(".sheditor-dock").evaluate((element) => {
-    const box = element.getBoundingClientRect();
-    return { position:getComputedStyle(element).position, bottom:box.bottom, viewport:innerHeight };
+  const layout = await shareDialog.evaluate((dialog) => {
+    const box = (selector) => {
+      const bounds = dialog.querySelector(selector).getBoundingClientRect();
+      return { top:bounds.top, bottom:bounds.bottom };
+    };
+    const dock = dialog.querySelector(".sheditor-dock");
+    return {
+      close:box(".calendar-share-close"),
+      actions:box(".shdesign-actions"),
+      preview:box(".shprev"),
+      dock:box(".sheditor-dock"),
+      dockPosition:getComputedStyle(dock).position,
+      viewport:innerHeight,
+    };
   });
-  if (dock.position !== "sticky" || Math.abs(dock.bottom - dock.viewport) > 2)
-    fail("the editing circles and Share action should stay pinned to the viewport bottom: " + JSON.stringify(dock));
+  if (layout.dockPosition !== "sticky" || Math.abs(layout.dock.bottom - layout.viewport) > 2)
+    fail("the editing circles and Share action should stay pinned to the viewport bottom: " + JSON.stringify(layout));
+  if (Math.abs(layout.close.top - layout.actions.top) > 1 || Math.abs(layout.close.bottom - layout.actions.bottom) > 1)
+    fail("Undo, Reset, and Save style should align across from Close: " + JSON.stringify(layout));
+  if (layout.preview.top - layout.close.bottom > 12 || layout.preview.bottom > layout.dock.top + 1)
+    fail("the complete preview should fit tightly between the header and editor dock: " + JSON.stringify(layout));
 }
 {
   if (await p.locator('[aria-label="What to share"]').count())
@@ -519,7 +534,7 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   if (!rail.aligned || !rail.circles)
     fail("the editor tool circles should share one horizontal line: " + JSON.stringify(rail));
   const designActions = (await p.locator(".shdesign-actions button").allInnerTexts()).map((t) => t.trim());
-  if (designActions.join("|") !== "Undo|Reset|Save this look")
+  if (designActions.join("|") !== "Undo|Reset|Save style")
     fail("the design actions should sit beneath the tool rail in order: " + designActions.join("|"));
 
   // Headline rewrites the poster's words, and the picture is asked for
