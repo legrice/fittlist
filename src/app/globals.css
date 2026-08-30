@@ -9014,13 +9014,14 @@ select.editinput.placekind-select {
 .following-head {
   padding: 4px 0 0;
 }
-.calendar-scope-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)) 44px; gap:6px; }
+.calendar-scope-row { display:flex; gap:6px; overflow-x:auto; padding:1px 0 3px; scrollbar-width:none; }
+.calendar-scope-row::-webkit-scrollbar { display:none; }
 .calendar-scope-row > button {
-  min-width:0; min-height:44px; padding:0 12px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
+  flex:0 0 auto; min-width:68px; min-height:44px; padding:0 13px; display:inline-flex; align-items:center; justify-content:center; gap:5px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
   background:var(--color-surface); color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; cursor:pointer;
 }
 .calendar-scope-row > button.on { border-color:var(--color-lime); background:var(--color-lime); color:var(--color-black); }
-.calendar-scope-row .calendar-selector-trigger { width:44px; padding:0; display:grid; place-items:center; border-radius:50%; }
+.calendar-scope-row .calendar-selector-trigger { min-width:44px; width:44px; padding:0; display:grid; place-items:center; border-radius:50%; }
 .calendar-selector-scrim { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end; background:rgba(0,0,0,.34); }
 .calendar-selector-sheet {
   width:100%; padding:22px 0 calc(28px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0;
