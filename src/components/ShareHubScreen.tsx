@@ -1107,16 +1107,6 @@ export function ShareHubScreen({
                   value={draftPhotoX}
                   onChange={(event) => setDraftPhotoX(Number(event.target.value))}
                 />
-                <label className="flabel" htmlFor="shPhotoY">Move up or down</label>
-                <input
-                  id="shPhotoY"
-                  className="shslider"
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={draftPhotoY}
-                  onChange={(event) => setDraftPhotoY(Number(event.target.value))}
-                />
                 <label className="flabel" htmlFor="shPhotoOverlay">
                   Darken photo <span>· {draftPhotoOverlay}%</span>
                 </label>
