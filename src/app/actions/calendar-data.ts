@@ -112,6 +112,9 @@ export async function loadCalendarComposerData(includeSubscriberCount = true): P
 }
 
 export type CalendarShareData = {
+  handle: string;
+  coach: boolean;
+  today: string;
   items: HubItem[];
   defaultFrom: string;
   savedHeadline: string;
@@ -129,6 +132,8 @@ export async function loadCalendarShareData(): Promise<CalendarShareData | null>
   const [userRows, days] = await Promise.all([
     db
       .select({
+        handle: schema.users.handle,
+        kind: schema.users.kind,
         storyPrefs: schema.users.storyPrefs,
       })
       .from(schema.users)
@@ -136,8 +141,11 @@ export async function loadCalendarShareData(): Promise<CalendarShareData | null>
     shareWeek(userId, today, 14),
   ]);
   const [me] = userRows;
-  if (!me) return null;
+  if (!me?.handle) return null;
   return {
+    handle: me.handle,
+    coach: me.kind !== "fan",
+    today,
     items: days.flatMap((day) => day.items.map((item) => ({ key:item.key, iso:item.iso, time:item.time, name:item.name, own:item.own, coaching:item.coaching }))),
     defaultFrom: days[0]?.iso ?? today,
     savedHeadline: me.storyPrefs?.headline ?? "",

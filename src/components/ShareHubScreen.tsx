@@ -98,6 +98,7 @@ export function ShareHubScreen({
   initialDesign,
   savedLooks: initialSavedLooks,
   deferAdderData = false,
+  onRefreshWeek,
 }: {
   /** Render inside another surface (the calendar's share sheet). The sheet
    *  owns dismissal, so the editor does not add a second back control. */
@@ -137,6 +138,9 @@ export function ShareHubScreen({
   savedLooks: SavedStoryLook[];
   /** Route tabs defer member-only class tools until Add or Edit is used. */
   deferAdderData?: boolean;
+  /** An embedded host owns its data loader, so mutations ask that host for a
+   *  fresh week instead of refreshing the unrelated route underneath it. */
+  onRefreshWeek?: () => void | Promise<void>;
 }) {
   const router = useRouter();
   const rememberedDesign = useRef(
@@ -206,6 +210,12 @@ export function ShareHubScreen({
   // picture the moment a class lands, and a cached preview of the week
   // before is a lie waiting to be posted.
   const [bust, setBust] = useState(initialRevision);
+  useEffect(() => {
+    // A warm embedded canvas can paint from memory while its host refreshes.
+    // Move only the cache buster when that response arrives: live edits to
+    // the current look stay under the user's fingers.
+    setBust(initialRevision);
+  }, [initialRevision]);
   const backgroundPreviewUrl = photoAvailable ? `/api/story/background?v=${bust}` : null;
   // The member's build flow: the adder, and the "that class is on fittlist"
   // offer that comes back from it.
@@ -399,6 +409,15 @@ export function ShareHubScreen({
   // redraws the picture.
   const refreshWeek = () => {
     setBust(Date.now());
+    // A personal-calendar takeover keeps its own cached client copy rather
+    // than reading the route again. Clear that copy and let any open origin
+    // reload itself before Share closes back onto it.
+    invalidateClientMemory("personal-calendar");
+    window.dispatchEvent(new CustomEvent("fittlist:calendar-data-changed"));
+    if (onRefreshWeek) void onRefreshWeek();
+    // The takeover owns the poster data, but the route underneath still owns
+    // the Calendar rows the user returns to. Refresh both without navigation;
+    // Next preserves the origin screen's client state and scroll position.
     router.refresh();
   };
 

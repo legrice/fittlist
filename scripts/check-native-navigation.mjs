@@ -13,25 +13,30 @@ const requiredWebFragments = [
   'id: "following" as const',
   'href: "/feed"',
   'label: "Calendar"',
-  '{ id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" }',
   '{ id: "discover", href: "/discover", icon: "search", label: "Search" }',
   'id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile"',
+  '{ id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" }',
 ];
 const requiredSwiftFragments = [
-  'private let tabIDs = ["following", "share", "calendar", "discover"]',
-  'private let fallbackRoutes = ["/feed", "/membershare", "/you", "/discover"]',
+  'private let tabIDs = ["following", "discover", "calendar", "share"]',
+  'private let fallbackRoutes = ["/feed", "/discover", "/you", "/membershare"]',
   'item("Calendar", "calendar", 0)',
-  'item("Share", "arrowshape.turn.up.right", 1)',
+  'item("Search", "magnifyingglass", 1)',
   'item("Profile", "person.crop.circle", 2)',
-  'item("Search", "magnifyingglass", 3)',
+  'item("Share", "arrowshape.turn.up.right", 3)',
   'navigate(tabID: "following", fallback: "/feed")',
-  'let activeTags = ["following": 0, "share": 1, "calendar": 2, "discover": 3]',
+  'let activeTags = ["following": 0, "discover": 1, "calendar": 2, "share": 3]',
   'headerView.isHidden = true',
   'tabBar.isHidden = true',
 ];
 
 for (const fragment of requiredWebFragments) {
   if (!web.includes(fragment)) fail(`web navigation is missing ${fragment}`);
+}
+const orderedWebIDs = ['id: "following"', 'id: "discover"', 'id: "calendar"', 'id: "share"'];
+for (let index = 1; index < orderedWebIDs.length; index += 1) {
+  if (web.indexOf(orderedWebIDs[index - 1]) >= web.indexOf(orderedWebIDs[index]))
+    fail(`web navigation order should be following, discover, calendar, share`);
 }
 for (const fragment of requiredSwiftFragments) {
   if (!swift.includes(fragment)) fail(`SceneDelegate is missing ${fragment}`);

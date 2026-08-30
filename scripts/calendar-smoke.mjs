@@ -409,21 +409,62 @@ console.log("Profile opens your page, and the gear slides settings up over it");
 await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
-// Discover and the header magnifier are two shortcuts to the same coach
-// search. Share remains its own place in the bar.
+// Search joins the three-destination dock. Share takes the separate circular
+// action and opens over the exact calendar state rather than navigating.
 await p.goto(BASE + "/calendar");
-if (!(await p.locator('.navtab[data-tab="search"]', { hasText: "Discover" }).count()))
-  fail("Discover should open coach search from the tab bar");
+{
+  const labels = (await p.locator(".navbar .navtab .navlabel").allInnerTexts()).map((text) => text.trim());
+  if (labels.join("|") !== "Calendar|Search|Profile")
+    fail("the dock should be Calendar, Search, Profile: " + labels.join("|"));
+  if (await p.locator(".navsearch").count()) fail("Search should no longer be the separate circle");
+  if ((await p.locator('button.navshare[data-tab="share"]').count()) !== 1)
+    fail("Share should be the separate circular action");
+}
 await p.locator('.brandbar-actions [aria-label="Search"]').waitFor();
-await p.locator('.navtab[data-tab="search"]').click();
-await p.waitForURL(/\/search/);
-await p.locator('input[placeholder="Search coaches"]').waitFor();
-if ((await p.locator('.navtab[data-tab="search"][aria-current="page"]').count()) !== 1)
-  fail("Discover should stay selected on coach search");
+await p.locator('.navtab[data-tab="discover"]').click();
+await p.waitForURL(/\/discover/);
+await p.getByRole("heading", { name: "Discover" }).waitFor();
+if ((await p.locator('.navtab[data-tab="discover"][aria-current="page"]').count()) !== 1)
+  fail("Search should stay selected on Discover");
 await p.goto(BASE + "/calendar");
-await p.locator('.navtab[data-tab="share"]').click();
-await p.waitForURL(/\/coachshare/);
-if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
+await p.locator(".dayblock").first().waitFor();
+await p.evaluate(() => window.scrollTo(0, 260));
+const shareOriginUrl = p.url();
+const shareOriginScroll = await p.evaluate(() => window.scrollY);
+await p.locator('button.navshare[data-tab="share"]').click();
+const shareDialog = p.getByRole("dialog", { name: "Share" });
+await shareDialog.waitFor();
+await p.waitForFunction(() => document.activeElement?.id === "share-takeover");
+await p.keyboard.press("Tab");
+if ((await p.evaluate(() => document.activeElement?.getAttribute("aria-label"))) !== "Close share editor")
+  fail("the Share takeover should move first-tab focus to Close");
+await p.waitForFunction(() => {
+  const dialog = document.querySelector(".share-takeover-sheet");
+  return !!dialog && Math.abs(dialog.getBoundingClientRect().top) <= 1;
+});
+if (p.url() !== shareOriginUrl) fail("Share should not change the current route: " + p.url());
+{
+  const geometry = await shareDialog.evaluate((dialog) => {
+    const box = dialog.getBoundingClientRect();
+    const nav = document.querySelector(".navwrap")?.getBoundingClientRect();
+    return {
+      top:box.top,
+      left:box.left,
+      width:box.width,
+      height:box.height,
+      viewport:[innerWidth, innerHeight],
+      coversNav:!!nav && box.bottom >= nav.bottom,
+      z:Number(getComputedStyle(dialog.parentElement).zIndex),
+    };
+  });
+  if (geometry.top > 1 || geometry.left > 1 || Math.abs(geometry.width - geometry.viewport[0]) > 2 || Math.abs(geometry.height - geometry.viewport[1]) > 2)
+    fail("Share should fill the viewport: " + JSON.stringify(geometry));
+  if (!geometry.coversNav || geometry.z < 46)
+    fail("Share should cover the bottom navigation: " + JSON.stringify(geometry));
+  const head = shareDialog.locator(".share-takeover-head");
+  if ((await head.getByRole("button", { name: "Close share editor" }).count()) !== 1 || (await head.getByRole("heading", { name: "Share" }).count()) !== 1)
+    fail("the takeover header should put Close immediately left of Share");
+}
 // Share is one focused image studio. Profile cards, QR codes and plain text
 // are not hidden tabs or pre-rendered slides behind the schedule poster.
 await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
@@ -517,7 +558,7 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
   }
 }
-const headerShare = p.locator(".share-tab-header").getByRole("button", { name: "Share image" });
+const headerShare = p.locator(".shpage-embedded-action").getByRole("button", { name: "Share image" });
 if ((await headerShare.count()) !== 1)
   fail("the image studio should put Share in the top-right header");
 {
@@ -530,7 +571,33 @@ if ((await headerShare.count()) !== 1)
 }
 if (await p.locator(".sheditor-dock").getByRole("button", { name: "Share image" }).count())
   fail("the image studio should not duplicate Share at the bottom");
-console.log("the Share tab is one focused schedule image studio");
+await shareDialog.getByRole("button", { name: "Close share editor" }).click();
+await shareDialog.waitFor({ state:"detached" });
+await p.waitForTimeout(40);
+if (p.url() !== shareOriginUrl) fail("closing Share should preserve its origin route");
+const restoredScroll = await p.evaluate(() => window.scrollY);
+if (Math.abs(restoredScroll - shareOriginScroll) > 2)
+  fail(`closing Share should restore scroll ${shareOriginScroll}, got ${restoredScroll}`);
+if (!(await p.locator('button.navshare[data-tab="share"]:focus').count()))
+  fail("closing Share should return focus to its exact trigger");
+
+// A reopened studio should paint from its account-scoped memory immediately,
+// then refresh quietly in the background instead of flashing a loader again.
+await p.locator('button.navshare[data-tab="share"]').click();
+await shareDialog.waitFor();
+if (await shareDialog.locator(".share-takeover-loading").count())
+  fail("a warm Share reopen should not show the loading state");
+await shareDialog.getByRole("button", { name: "Close share editor" }).click();
+await shareDialog.waitFor({ state:"detached" });
+
+// Browser swipe / Android hardware Back consumes Share's temporary history
+// entry before it can move the screen underneath the takeover.
+await p.locator('button.navshare[data-tab="share"]').click();
+await shareDialog.waitFor();
+await p.evaluate(() => window.history.back());
+await shareDialog.waitFor({ state:"detached" });
+if (p.url() !== shareOriginUrl) fail("Back should dismiss Share before navigating its origin");
+console.log("Share is a full-screen image studio that returns to its exact origin");
 // The header magnifier opens the search screen.
 await p.goto(BASE + "/calendar");
 await p.locator('.brandbar-actions [aria-label="Search"]').click();

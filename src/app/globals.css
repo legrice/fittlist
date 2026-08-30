@@ -9692,8 +9692,26 @@ html[data-mode="dark"],
   from { transform:translateY(100dvh); }
   to { transform:translateY(0); }
 }
+@keyframes calendar-share-down {
+  from { transform:translateY(0); }
+  to { transform:translateY(100dvh); }
+}
+@keyframes share-scrim-out {
+  to { opacity:0; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .calendar-share-sheet { animation:none; }
+  .calendar-share-sheet,
+  .calendar-share-sheet.is-closing,
+  .calendar-share-scrim.is-closing { animation:none; }
+}
+.calendar-share-sheet.is-closing {
+  animation:calendar-share-down 260ms var(--motion-ease-standard) both;
+  pointer-events:none;
+}
+.share-takeover-sheet:focus { outline:none; }
+.calendar-share-scrim.is-closing {
+  animation:share-scrim-out 260ms var(--motion-ease-standard) both;
+  pointer-events:none;
 }
 .calendar-share-sheet .shpage-embedded {
   flex: 1 1 auto; min-height: 0;
@@ -9709,8 +9727,75 @@ html[data-mode="dark"],
   top: max(16px, env(safe-area-inset-top)); left: var(--page-gutter); right: auto;
   z-index: 3;
 }
+.share-takeover-head {
+  position:fixed;
+  inset:0 0 auto;
+  z-index:5;
+  min-height:calc(max(16px, env(safe-area-inset-top)) + var(--tap-size) + 12px);
+  padding:max(16px, env(safe-area-inset-top)) calc(var(--page-gutter) + 104px) 12px var(--page-gutter);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:var(--color-background);
+  color:var(--color-text-primary);
+}
+.share-takeover-head .calendar-share-close {
+  position:static;
+  inset:auto;
+  flex:0 0 var(--tap-size);
+}
+.share-takeover-head h1 {
+  min-width:0;
+  margin:0;
+  overflow:hidden;
+  color:var(--color-text-primary);
+  font-size:30px;
+  line-height:1.05;
+  font-weight:700;
+  letter-spacing:-.025em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.calendar-share-sheet .shpage-embedded-action { z-index:7; }
 .calendar-share-sheet .sheetclose {
   background:var(--color-surface); border:1px solid var(--color-border);
+}
+.share-takeover-loading,
+.share-takeover-error {
+  flex:1 1 auto;
+  min-height:100dvh;
+  padding:calc(max(16px, env(safe-area-inset-top)) + var(--tap-size) + 28px) var(--page-gutter)
+    calc(32px + env(safe-area-inset-bottom));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:var(--color-background);
+  color:var(--color-text-secondary);
+  text-align:center;
+}
+.share-takeover-loading i {
+  width:24px;
+  height:24px;
+  border:2px solid var(--color-border-strong);
+  border-top-color:var(--color-text-primary);
+  border-radius:50%;
+  animation:shspin .8s linear infinite;
+}
+.share-takeover-error strong { color:var(--color-text-primary); font-size:18px; }
+.share-takeover-error span { font-size:14px; }
+.share-takeover-error button {
+  min-height:42px;
+  margin-top:4px;
+  padding:0 18px;
+  border:0;
+  border-radius:var(--radius-pill);
+  background:var(--color-lime);
+  color:var(--color-black);
+  font:inherit;
+  font-size:14px;
+  font-weight:700;
 }
 .calendar-share-sheet .shctrl,
 .calendar-share-sheet .btn.ghost {
@@ -12534,7 +12619,7 @@ a.clspeek-by:active { opacity: .6; }
     backdrop-filter:blur(18px) saturate(160%);
     box-shadow:0 5px 20px rgba(0,0,0,.1);
   }
-  .screen.hasnav > .navwrap > .navsearch {
+  .screen.hasnav > .navwrap > .navshare {
     position:relative;
     width:64px; height:64px; flex:0 0 64px;
     display:grid; place-items:center;
@@ -12544,9 +12629,11 @@ a.clspeek-by:active { opacity: .6; }
     -webkit-backdrop-filter:blur(18px) saturate(160%);
     backdrop-filter:blur(18px) saturate(160%);
     box-shadow:0 5px 20px rgba(0,0,0,.1);
+    font:inherit;
+    cursor:pointer;
   }
-  .screen.hasnav > .navwrap > .navsearch.on { background:var(--color-surface-muted); }
-  .screen.hasnav > .navwrap > .navsearch:active { transform:scale(.96); }
+  .screen.hasnav > .navwrap > .navshare.on { background:var(--color-surface-muted); }
+  .screen.hasnav > .navwrap > .navshare:active { transform:scale(.96); }
   .screen.hasnav .navtab {
     min-width:0; min-height:58px; flex:1;
     padding:4px 0; overflow:hidden;
@@ -12606,7 +12693,8 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shpage-editor .share-tab-header h1 { color:var(--sheditor-text); }
 .shpage-editor .share-page-close,
-.calendar-share-sheet:has(.shpage-editor) > .calendar-share-close {
+.calendar-share-sheet:has(.shpage-editor) > .calendar-share-close,
+.calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close {
   border-color:var(--color-border);
   background:var(--color-surface);
   color:var(--color-text-primary);

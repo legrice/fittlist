@@ -88,22 +88,27 @@ await coach.waitForTimeout(1300);
 await coach.locator(".sheetclose").first().click().catch(() => {});
 console.log("a coach put a week up ok");
 
-// ---- Share is a tab in the bar, and the hub behind it reaches the editor
+// ---- Share is the separate circular action and opens over the current screen
 await coach.goto(BASE + "/calendar");
 await coach.locator(".clline").first().waitFor();
 {
   const tabs = (await coach.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/\s+/g, " ").trim(),
   );
-  // Share is a tab now, by Matt's call: it is the half of "build a calendar,
-  // share a calendar" the app is for, and the tab opens the hub of every way
-  // to do it rather than navigating.
-  if (!tabs.some((t) => /Share/.test(t))) fail("Share should be a tab: " + tabs.join("|"));
+  if (tabs.join("|") !== "Calendar|Search|Profile")
+    fail("the destination dock should be Calendar, Search, Profile: " + tabs.join("|"));
+  if ((await coach.locator("button.navshare").count()) !== 1)
+    fail("Share should be the separate circle");
   if (await coach.locator(".wkshare").count()) fail("the floating Share pill should be gone");
 }
-await coach.locator('.navtab[data-tab="share"]').click();
-await coach.waitForURL(/\/coachshare/);
-if (await coach.locator(".shedit").count()) fail("the hub should carry no editor link");
+const shareOrigin = coach.url();
+await coach.locator('button.navshare[data-tab="share"]').click();
+const takeover = coach.getByRole("dialog", { name:"Share" });
+await takeover.waitFor();
+if (coach.url() !== shareOrigin) fail("the Share takeover should preserve the current route");
+await takeover.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
+await takeover.getByRole("button", { name:"Close share editor" }).click();
+await takeover.waitFor({ state:"detached" });
 // The composer survives at its route with nothing linking to it; the rest
 // of this suite holds it there so it cannot rot unnoticed.
 await coach.goto(BASE + "/share");

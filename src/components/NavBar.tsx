@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
+import { ShareTakeover } from "@/components/ShareTakeover";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 
 export type { NavTab };
@@ -33,12 +34,49 @@ export function NavBar({
 }) {
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
-  const dockTabs = tabs.filter((tab) => tab.id !== "discover");
-  const searchTab = tabs.find((tab) => tab.id === "discover")!;
+  const dockTabs = tabs.filter((tab) => tab.id !== "share");
+  const shareTab = tabs.find((tab) => tab.id === "share")!;
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareButton = useRef<HTMLButtonElement>(null);
+  const shareOpener = useRef<HTMLElement | null>(null);
+  const restoreShareFocus = useRef(false);
+
+  const openShare = useCallback((opener?: HTMLElement | null) => {
+    const activeElement = document.activeElement;
+    shareOpener.current = opener
+      ?? (activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : shareButton.current);
+    setShareOpen(true);
+  }, []);
+  const openShareEvent = useCallback((event: Event) => {
+    const detail = (event as CustomEvent<{ opener?: HTMLElement }>).detail;
+    openShare(detail?.opener);
+  }, [openShare]);
+  const finishClose = useCallback(() => {
+    // The takeover restores inert/aria-hidden during its passive cleanup.
+    // Wait for that unmount to commit before focusing the exact opener.
+    restoreShareFocus.current = true;
+    setShareOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (shareOpen || !restoreShareFocus.current) return;
+    const frame = requestAnimationFrame(() => {
+      const target = shareOpener.current?.isConnected ? shareOpener.current : shareButton.current;
+      target?.focus();
+      shareOpener.current = null;
+      restoreShareFocus.current = false;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [shareOpen]);
+
+  useEffect(() => {
+    window.addEventListener("fittlist:open-share", openShareEvent);
+    return () => window.removeEventListener("fittlist:open-share", openShareEvent);
+  }, [openShareEvent]);
 
   return (
-    <div className="navwrap">
-      <nav className="navbar" aria-label="Main">
+    <nav className="navwrap" aria-label="Main">
+      <div className="navbar">
         {dockTabs.map((t) => {
           const on = here === t.id;
           const cls = `navtab${on ? " on" : ""}`;
@@ -62,16 +100,27 @@ export function NavBar({
             </Link>
           );
         })}
-      </nav>
-      <Link
-        className={`navsearch${here === "discover" ? " on" : ""}`}
-        href={searchTab.href}
-        aria-label={searchTab.label}
-        aria-current={here === "discover" ? "page" : undefined}
+      </div>
+      <button
+        ref={shareButton}
+        type="button"
+        className={`navshare${here === "share" || shareOpen ? " on" : ""}`}
+        data-tab={shareTab.id}
+        aria-label={shareTab.label}
+        aria-current={here === "share" ? "page" : undefined}
+        aria-haspopup={here === "share" ? undefined : "dialog"}
+        aria-controls={here === "share" ? undefined : "share-takeover"}
+        aria-expanded={here === "share" ? undefined : shareOpen}
+        onClick={() => {
+          // Legacy direct Share URLs still render the same studio. Treat an
+          // already-active action like any current tab instead of stacking a
+          // second editor over it.
+          if (here !== "share") openShare(shareButton.current);
+        }}
       >
-        <Icon name="search" size={27} />
-        <LinkPending className="tapspin-tab" />
-      </Link>
-    </div>
+        <Icon name={shareTab.icon} className="share-arrow-forward" size={27} />
+      </button>
+      {shareOpen && <ShareTakeover onClosed={finishClose} />}
+    </nav>
   );
 }

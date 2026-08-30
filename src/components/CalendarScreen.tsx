@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -29,16 +29,13 @@ import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
 import {
   loadCalendarComposerData,
-  loadCalendarShareData,
   type CalendarComposerData,
-  type CalendarShareData,
 } from "@/app/actions/calendar-data";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) => module.PlanSheet));
-const ShareHubScreen = dynamic(() => import("@/components/ShareHubScreen").then((module) => module.ShareHubScreen));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -164,10 +161,8 @@ export function CalendarScreen({
   const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
-  const [shareOpen, setShareOpen] = useState(false);
   const [composerData, setComposerData] = useState<CalendarComposerData | null>(null);
   const [composerError, setComposerError] = useState<string | null>(null);
-  const [shareData, setShareData] = useState<CalendarShareData | null>(null);
   const composerLoadingRef = useRef(false);
   const [loadingTools, startTools] = useTransition();
   const [calendarStateLoaded, setCalendarStateLoaded] = useState(false);
@@ -217,13 +212,11 @@ export function CalendarScreen({
   useEffect(() => {
     if (addChoice) ensureComposer();
   }, [addChoice, ensureComposer]);
-  const openShare = () => {
-    setShareOpen(true);
-    if (!shareData) startTools(async () => {
-      const data = await loadCalendarShareData();
-      if (data) setShareData(data);
-    });
-  };
+  // Share belongs to the persistent app shell. Opening it there preserves
+  // this calendar's exact scroll, filter, view, and any sheets underneath.
+  const openShare = (event: ReactMouseEvent<HTMLButtonElement>) => window.dispatchEvent(new CustomEvent("fittlist:open-share", {
+    detail: { opener:event.currentTarget },
+  }));
   useEffect(() => {
     try {
       const stored: unknown = JSON.parse(localStorage.getItem(calendarStateKey) ?? "null");
@@ -245,22 +238,6 @@ export function CalendarScreen({
     if (!calendarStateLoaded) return;
     try { localStorage.setItem(calendarStateKey, JSON.stringify({ view, filter })); } catch { /* private mode */ }
   }, [calendarStateKey, calendarStateLoaded, filter, view]);
-
-  useEffect(() => {
-    if (!shareOpen) return;
-    document.body.classList.add("sheet-open");
-    window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setShareOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.classList.remove("sheet-open");
-      window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: false }));
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [shareOpen]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const savedByIso = useMemo(() => {
@@ -521,7 +498,7 @@ export function CalendarScreen({
             {sheet ? <button type="button" className="calendar-page-back" aria-label="Back" onClick={onClose}><Icon name="arrow_back" size={23} /></button> : <Link className="calendar-page-back" href="/you" aria-label="Back to You"><Icon name="arrow_back" size={23} /></Link>}
             <h1>Your calendar</h1>
           </div>
-          <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare} disabled={loadingTools && shareOpen}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
+          <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         </div>
         <div className="calendar-desktop-controls">
           <label className="calendar-desktop-filter">
@@ -591,52 +568,6 @@ export function CalendarScreen({
         </>
       )}
       </div>
-
-      {shareOpen && (
-        <BodyPortal>
-          <div
-            className="sheet-scrim calendar-share-scrim"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setShareOpen(false);
-            }}
-          >
-            <section
-              className="sheet calendar-share-sheet"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Share your week"
-            >
-              <button
-                type="button"
-                className="sheetclose calendar-share-close"
-                aria-label="Close share editor"
-                onClick={() => setShareOpen(false)}
-              >
-                <Icon name="close" size={24} />
-              </button>
-              {shareData ? <ShareHubScreen
-                embedded
-                coach={!member}
-                handle={handle ?? ""}
-                items={shareData.items}
-                defaultFrom={shareData.defaultFrom}
-                today={todayIso}
-                savedHeadline={shareData.savedHeadline}
-                hasBackground={shareData.hasBackground}
-                studios={studios}
-                templates={composerData?.templates ?? []}
-                customTypes={composerData?.customTypes ?? []}
-                lastUsed={composerData?.lastUsed ?? { startTime:"06:00", durationMin:50, studioId:studios[0]?.id ?? null }}
-                initialRevision={shareData.initialRevision}
-                initialDesign={shareData.initialDesign}
-                savedLooks={shareData.savedLooks}
-                deferAdderData={member && !composerData}
-              /> : <div className="calendar-tool-loading" aria-busy="true">Loading your share options…</div>}
-            </section>
-          </div>
-        </BodyPortal>
-      )}
 
       {/* Month view needs its weekday rail fixed above the grid. Day view
           uses the real date bands as sticky headers so there is only one

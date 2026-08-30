@@ -33,8 +33,15 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     const enterFrame = window.requestAnimationFrame(() => setVisible(true));
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") goBack(); };
-    const closeOnPop = () => beginClose();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      // Share can open from this calendar's own header. Its editor and child
+      // sheets are then the topmost surface, so Escape must never pop this
+      // exact origin out from underneath them.
+      if (event.key === "Escape" && !document.querySelector(".share-takeover-scrim")) goBack();
+    };
+    const closeOnPop = () => {
+      if (!document.querySelector(".share-takeover-scrim")) beginClose();
+    };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
     window.addEventListener("popstate", closeOnPop);
@@ -47,6 +54,18 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
   }, [open]);
   useEffect(() => () => {
     if (exitTimer.current) clearTimeout(exitTimer.current);
+  }, []);
+  useEffect(() => {
+    let current = true;
+    const refreshCalendarMemory = () => startTransition(async () => {
+      const fresh = await loadClientMemory(PERSONAL_CALENDAR_KEY, loadPersonalCalendarData);
+      if (fresh && current) setData(fresh);
+    });
+    window.addEventListener("fittlist:calendar-data-changed", refreshCalendarMemory);
+    return () => {
+      current = false;
+      window.removeEventListener("fittlist:calendar-data-changed", refreshCalendarMemory);
+    };
   }, []);
   const openCalendar = (next: PersonalCalendarData) => {
     originScrollY.current = window.scrollY;
