@@ -83,7 +83,7 @@ export function YouDashboard({
   me,
   managed,
   isAdmin,
-  unread: _unread,
+  unread,
   people = [],
   places = [],
   yourGroups = [],
@@ -195,6 +195,23 @@ export function YouDashboard({
           </Link>
         )}
       </div>
+
+      <AccountGroup title="Updates">
+        <AccountRow
+          icon="chat_bubble"
+          title="Messages"
+          detail={unread.messages > 0 ? `${unread.messages} unread` : "Conversations and class questions"}
+          href="/inbox"
+          count={unread.messages}
+        />
+        <AccountRow
+          icon="notifications"
+          title="Notifications"
+          detail={unread.notifications > 0 ? `${unread.notifications} unread` : "Follows, saves, and account activity"}
+          href="/notifications"
+          count={unread.notifications}
+        />
+      </AccountGroup>
 
       <AccountGroup title="Your calendars">
         <AccountRow

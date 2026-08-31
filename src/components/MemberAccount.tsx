@@ -19,6 +19,7 @@ import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { TimeZoneSetting } from "@/components/TimeZoneSetting";
+import { TeachingToggle } from "@/components/TeachingToggle";
 import { clearClientMemory } from "@/lib/client-memory";
 
 type MView = "profile" | "calendar" | "reach" | "account";
@@ -145,7 +146,7 @@ export function MemberAccount({
           <span className="setrow-ic"><Icon name="lock" size={24} /></span>
           <span className="setrow-txt">
             <span className="t">Account &amp; preferences</span>
-            <span className="s">Notifications, appearance</span>
+            <span className="s">Not a coach · notifications, appearance</span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </button>
@@ -279,6 +280,7 @@ export function MemberAccount({
             {view === "account" && (
               <>
                 <div className="settingslist">
+                  <TeachingToggle initialOn={false} />
                   <NotificationPrefs />
                   <DarkModeToggle initialOn={look === "dark"} />
                 </div>

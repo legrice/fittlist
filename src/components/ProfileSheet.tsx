@@ -32,6 +32,7 @@ import { myWeekText } from "@/app/actions/weektext";
 import { Toast, useToast } from "@/components/Toast";
 import { forgetLocalPasskey, rememberLocalPasskey } from "@/lib/passkey-device";
 import { TimeZoneSetting } from "@/components/TimeZoneSetting";
+import { TeachingToggle } from "@/components/TeachingToggle";
 
 // The four the spec's settings list opens, plus the leaves each of those
 // holds. A leaf is still reachable on its own, because the sub-screen is a
@@ -437,7 +438,7 @@ export function ProfileSheet({
             <span className="setrow-ic"><Icon name="lock" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Account &amp; preferences</span>
-              <span className="s">Login, notifications, appearance</span>
+              <span className="s">Coach · login, notifications, appearance</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
           </button>
@@ -646,6 +647,7 @@ export function ProfileSheet({
 
           {view === "account" && (
             <div className="settingslist">
+              <TeachingToggle initialOn />
               <button className="setrow" onClick={() => openView("security")}>
                 <span className="setrow-ic"><Icon name="lock" size={24} /></span>
                 <span className="setrow-txt">
