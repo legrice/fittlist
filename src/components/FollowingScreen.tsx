@@ -898,8 +898,9 @@ export function FollowingScreen({
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
         firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="calendar-member-empty-figure" src="/illustrations/following-empty.png" alt="" width={356} height={600} />
             <h2 id="calendar-empty-title">There&rsquo;s nothing on your calendar yet</h2>
-            <p>{meKind === "member" ? "Add a class or find a calendar to follow." : "Add your first class to get started."}</p>
             <div className="calendar-member-empty-actions">
               <PersonalCalendarSheetTrigger className="btn si" ariaLabel={meKind === "member" ? "Add a class" : "Add your first class"} openAdder>{meKind === "member" ? "Add a class" : "Add your first class"}</PersonalCalendarSheetTrigger>
               {meKind === "member" && <Link className="btn ghost" href="/discover">Find a calendar to follow</Link>}

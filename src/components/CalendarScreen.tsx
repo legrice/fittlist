@@ -536,19 +536,11 @@ export function CalendarScreen({
       {bare ? (
         <WeekEmpty
           first
-          title="This is your calendar"
-          body={member
-            ? "Follow a coach to find classes and start building your calendar."
-            : "Follow people whose classes you want to see, or add the first class you teach."
-          }
-          actions={member ? (
-            <div className="calendar-empty-actions calendar-empty-actions-member">
-              <Link className="btn si" href="/discover">Find a coach to follow</Link>
-            </div>
-          ) : (
+          title="Your calendar is empty"
+          body="Add a class you&rsquo;re taking or teaching."
+          actions={(
             <div className="calendar-empty-actions">
-              <Link className="btn ghost" href="/discover">Find someone to follow</Link>
-              <button className="btn si" type="button" onClick={openAdd}>Add your first class</button>
+              <button className="btn si" type="button" onClick={openAdd}>Add a class</button>
             </div>
           )}
         />

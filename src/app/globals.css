@@ -9355,11 +9355,11 @@ html[data-mode="dark"],
 .calendar-selection-empty h2 { margin:0; font-size:24px; line-height:1.15; letter-spacing:-.02em; }
 .calendar-selection-empty p { max-width:290px; margin:9px 0 0; color:var(--color-text-secondary); font-size:15px; line-height:1.4; }
 .calendar-member-empty {
-  min-height:420px; padding:92px 24px 120px; display:flex; flex-direction:column; align-items:center;
+  min-height:520px; padding:54px 24px 120px; display:flex; flex-direction:column; align-items:center;
   text-align:center;
 }
+.calendar-member-empty-figure { width:auto; height:190px; margin:0 0 28px; object-fit:contain; }
 .calendar-member-empty h2 { max-width:330px; margin:0; font-size:28px; line-height:1.15; letter-spacing:-.025em; }
-.calendar-member-empty > p { max-width:300px; margin:10px 0 0; color:var(--color-text-secondary); font-size:16px; line-height:1.45; }
 .calendar-member-empty-actions { width:min(100%,360px); margin-top:26px; display:grid; gap:10px; }
 .calendar-member-empty-actions .btn { width:100%; min-height:52px; margin:0; display:inline-flex; align-items:center; justify-content:center; }
 .cash-day + .cash-day { margin-top:34px; }
@@ -10754,7 +10754,7 @@ html[data-mode="dark"],
 .wkempty-actions .btn { width: 100%; margin: 0; }
 .wkempty-actions.single { grid-template-columns: 1fr; }
 .calendar-empty-actions {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px;
+  display:grid; grid-template-columns:1fr; gap:10px; margin-top:22px;
 }
 .calendar-empty-actions .btn {
   min-width: 0; min-height: 50px; border-radius: var(--button-radius);
@@ -10763,7 +10763,6 @@ html[data-mode="dark"],
 .calendar-empty-actions .btn.ghost {
   background: var(--card); color: var(--ink); border: 1px solid var(--div);
 }
-.calendar-empty-actions-member { grid-template-columns: 1fr; }
 .calendar-empty-actions .btn.si { background: var(--ink); color: var(--paper); }
 /* The one filled control on the calendar: adding a class. It floats bottom
    right, where a thumb already is, and it is the only thing on this screen

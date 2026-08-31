@@ -786,11 +786,10 @@ export function ShareHubScreen({
     return () => window.removeEventListener("fittlist:native-share-result", receive);
   }, [toast]);
 
-  // A member with nothing anywhere yet is building, not sharing: the screen
-  // becomes the start block alone, because an empty poster pushed the one
-  // button that fixes it below the fold. The first add flips this off and
-  // the picture appears with the class on it.
-  const building = !coach && items.length === 0;
+  // An empty week is for building, not sharing, whether the person is taking
+  // classes or coaching them. The first add replaces this block with the
+  // editor and its populated preview.
+  const building = items.length === 0;
 
   // What the picked range holds, and what of it is showing: the control says
   // "4 of 5" and the picture has to be those four, which is why both read
@@ -1323,11 +1322,8 @@ export function ShareHubScreen({
             and the feedback link came off, also by Matt's call. */}
         {building && (
           <div className="shstart">
-            <h2>Add the classes you&rsquo;re taking this week</h2>
-            <p>
-              We&rsquo;ll turn them into a shareable schedule and keep them on your profile
-              until they&rsquo;re over.
-            </p>
+            <h2>Add a class before sharing your week</h2>
+            <p>Once it&rsquo;s on your calendar, we&rsquo;ll turn your week into a shareable schedule.</p>
             <button className="btn si" disabled={adderBusy} onClick={() => void openAdder()}>
               {adderBusy ? "Loading class tools..." : "Add a class"}
             </button>
@@ -2108,8 +2104,8 @@ export function ShareHubScreen({
           customTypes={adderData?.customTypes ?? []}
           lastUsed={adderData?.lastUsed ?? lastUsed}
           subsCount={0}
-          firstPublish={false}
-          personal={{ canCoach: false, oneOff: true }}
+          firstPublish={coach && items.length === 0}
+          personal={coach ? undefined : { canCoach: false, oneOff: true }}
           onClose={() => setAddOpen(false)}
           onToast={toast}
           onPublished={() => {

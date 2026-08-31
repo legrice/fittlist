@@ -73,7 +73,7 @@ export async function hubPage(address: "member" | "coach") {
       })}
       initialDesign={me.storyPrefs?.design ? sanitizeShareDesign(me.storyPrefs.design) : null}
       savedLooks={sanitizeSavedStoryLooks(me.storyPrefs?.savedLooks)}
-      deferAdderData={!coach}
+      deferAdderData
     />
   );
 }
