@@ -10,8 +10,26 @@ import { getSessionUserId } from "@/lib/session";
 import { myStaffStudios } from "@/app/actions/gym";
 import { MemberAccount } from "@/components/MemberAccount";
 import { ProfileSheet } from "@/components/ProfileSheet";
+import { BackLink } from "@/components/BackLink";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
+
+function SettingsHeader() {
+  return (
+    <header className="settings-route-head">
+      <BackLink
+        href="/you"
+        anywhere
+        className="iconbtn settings-route-back"
+        label="Back to profile"
+      >
+        <Icon name="arrow_back" size={23} />
+      </BackLink>
+      <h1>Settings</h1>
+    </header>
+  );
+}
 
 // Settings, for both kinds: a member gets their account rows, a coach the
 // fuller set. It was the You tab for a while, which put a list of switches
@@ -67,26 +85,28 @@ export default async function SettingsPage({
 
     return (
       <div className="cardwrap">
-      <MemberAccount
-        runs={fanRuns}
-        name={me.name}
-        email={me.email}
-        handle={me.handle}
-        title={me.title ?? ""}
-        about={me.about ?? ""}
-        location={me.location ?? ""}
-        photo={me.photo}
-        color={avatarColor(me)}
-        look={me.look}
-        timeZone={me.timeZone}
-        followingCount={fanFollowing.length}
-        followerCount={fanFollowers.length}
-        openEditor={edit === "1"}
-        canSendFeedback={canSendFeedback}
-        discoverable={me.discoverable}
-        approveFollowers={me.approveFollowers}
-        messagesOpen={me.messagesOpen}
-      />
+        <SettingsHeader />
+        <MemberAccount
+          runs={fanRuns}
+          name={me.name}
+          email={me.email}
+          handle={me.handle}
+          title={me.title ?? ""}
+          about={me.about ?? ""}
+          location={me.location ?? ""}
+          photo={me.photo}
+          color={avatarColor(me)}
+          look={me.look}
+          timeZone={me.timeZone}
+          followingCount={fanFollowing.length}
+          followerCount={fanFollowers.length}
+          openEditor={edit === "1"}
+          canSendFeedback={canSendFeedback}
+          discoverable={me.discoverable}
+          approveFollowers={me.approveFollowers}
+          messagesOpen={me.messagesOpen}
+          showHeading={false}
+        />
       </div>
     );
   }
@@ -141,42 +161,44 @@ export default async function SettingsPage({
 
   return (
     <div className="cardwrap">
-    <ProfileSheet
-      page
-      anim="none"
-      handle={me.handle}
-      name={me.name}
-      title={me.title ?? ""}
-      photo={me.photo}
-      subsCount={subRows.length}
-      followingCount={followingRows.filter((r) => r.id).length}
-      requestCount={requestCount}
-      email={me.email}
-      instagram={me.instagram ?? ""}
-      website={me.website ?? ""}
-      contactEmail={me.contactEmail ?? ""}
-      phone={me.phone ?? ""}
-      whatsapp={me.whatsapp ?? ""}
-      about={me.about ?? ""}
-      availability={me.availability ?? null}
-      googleConfigured={googleConfigured()}
-      googleConnected={gconn.connected}
-      googleEmail={gconn.email}
-      hasPassword={!!me.passwordHash}
-      passkeyCount={passkeyRows.length}
-      isAdmin={adminEmails().includes(me.email.toLowerCase())}
-      canSendFeedback={canSendFeedback}
-      runs={runRows}
-      shiftCount={shiftRows.length}
-      shiftsPublic={me.shiftsPublic}
-      avatarColor={avatarColor(me)}
-      showFanView={await fansVisible()}
-      discoverable={me.discoverable}
-      approveFollowers={me.approveFollowers}
-      messagesOpen={me.messagesOpen}
-      look={me.look}
-      timeZone={me.timeZone}
-    />
+      <SettingsHeader />
+      <ProfileSheet
+        page
+        anim="none"
+        handle={me.handle}
+        name={me.name}
+        title={me.title ?? ""}
+        photo={me.photo}
+        subsCount={subRows.length}
+        followingCount={followingRows.filter((r) => r.id).length}
+        requestCount={requestCount}
+        email={me.email}
+        instagram={me.instagram ?? ""}
+        website={me.website ?? ""}
+        contactEmail={me.contactEmail ?? ""}
+        phone={me.phone ?? ""}
+        whatsapp={me.whatsapp ?? ""}
+        about={me.about ?? ""}
+        availability={me.availability ?? null}
+        googleConfigured={googleConfigured()}
+        googleConnected={gconn.connected}
+        googleEmail={gconn.email}
+        hasPassword={!!me.passwordHash}
+        passkeyCount={passkeyRows.length}
+        isAdmin={adminEmails().includes(me.email.toLowerCase())}
+        canSendFeedback={canSendFeedback}
+        runs={runRows}
+        shiftCount={shiftRows.length}
+        shiftsPublic={me.shiftsPublic}
+        avatarColor={avatarColor(me)}
+        showFanView={await fansVisible()}
+        discoverable={me.discoverable}
+        approveFollowers={me.approveFollowers}
+        messagesOpen={me.messagesOpen}
+        look={me.look}
+        timeZone={me.timeZone}
+        showHeading={false}
+      />
     </div>
   );
 }

@@ -5932,6 +5932,18 @@ html[data-mode="dark"],
    inside the card that room is the card's own, or the two stack into a
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
+.settings-route-head {
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 0 20px;
+}
+.settings-route-head h1 {
+  margin: 0;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 30px; line-height: 1; font-weight: 600;
+}
+.settings-route-back {
+  background: var(--card); color: var(--ink);
+}
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
 /* No per-card fade any more: the screen's gradient runs behind clear
    cards, so there is nothing to splice. */

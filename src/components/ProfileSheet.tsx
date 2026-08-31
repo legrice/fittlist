@@ -91,6 +91,7 @@ export function ProfileSheet({
   onClose,
   initialView = "home",
   detailOnly = false,
+  showHeading = true,
 }: {
   handle: string;
   anim?: "up" | "left" | "none";
@@ -142,6 +143,8 @@ export function ProfileSheet({
   onClose?: () => void;
   initialView?: View;
   detailOnly?: boolean;
+  /** A standalone route can supply its own navigation-aware page header. */
+  showHeading?: boolean;
 }) {
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
@@ -405,7 +408,7 @@ export function ProfileSheet({
           </div>
         )}
 
-        {page && <h3 className="setgroup-h">Settings</h3>}
+        {page && showHeading && <h3 className="setgroup-h">Settings</h3>}
         <div className="settingslist">
           <button className="setrow" onClick={() => openView("calendar")}>
             <span className="setrow-ic"><Icon name="event" size={24} /></span>
