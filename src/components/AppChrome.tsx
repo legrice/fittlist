@@ -8,6 +8,7 @@ import { DesktopChrome } from "@/components/DesktopChrome";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { currentUser } from "@/lib/current-user";
 import { ClientCacheScope } from "@/components/ClientCacheScope";
+import { managedCalendarsForUser } from "@/lib/managed-calendars";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
@@ -46,10 +47,11 @@ export async function AppChrome({
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, adminAttention, adminActivityFresh] = await Promise.all([
+  const [unread, adminAttention, adminActivityFresh, managedCalendars] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
     isAdmin ? adminAttentionCount() : Promise.resolve(0),
     isAdmin ? adminActivityFreshSince(me.adminActivityAt) : Promise.resolve(false),
+    managedCalendarsForUser(userId),
   ]);
   const adminActivity = adminActivityFresh ? 1 : 0;
   // One calendar, at one address. This forked by kind for months, back when a
@@ -95,6 +97,7 @@ export async function AppChrome({
         adminAttention={adminAttention}
         adminActivity={adminActivity}
         active={active}
+        managedCalendars={managedCalendars}
         person={{
           name: me.name.trim() || me.email.split("@")[0],
           location: me.location,

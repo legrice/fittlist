@@ -17,6 +17,7 @@ import { inviteBannerCountFor } from "@/lib/invite-banner";
 import { passwordPromptPending } from "@/lib/session";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 import { ClientCacheScope } from "@/components/ClientCacheScope";
+import { managedCalendarsForUser } from "@/lib/managed-calendars";
 
 export const dynamic = "force-dynamic";
 
@@ -65,10 +66,11 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // switch, so awaiting them one by one would stack extra round trips onto every
   // tap of the bar.
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, adminAttention, adminActivityFresh] = await Promise.all([
+  const [unread, adminAttention, adminActivityFresh, managedCalendars] = await Promise.all([
     unreadHeaderCounts(userId, me.email),
     isAdmin ? adminAttentionCount() : Promise.resolve(0),
     isAdmin ? adminActivityFreshSince(me.adminActivityAt) : Promise.resolve(false),
+    managedCalendarsForUser(userId),
   ]);
   // The chrome only needs to advertise that something is new. Computing the
   // exact total required six COUNT queries on every navigation for the admin;
@@ -124,6 +126,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           admin={isAdmin}
           adminAttention={adminAttention}
           adminActivity={adminActivity}
+          managedCalendars={managedCalendars}
           person={{
             name: me.name.trim() || me.email.split("@")[0],
             location: me.location,
