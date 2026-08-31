@@ -704,8 +704,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   .ob .obwelcome-title h1 { max-width:520px; font-size:clamp(38px,9.5vw,50px); line-height:1; }
   .obwelcome-copy { max-width:680px; margin-top:38px; }
   .ob .obwelcome-copy > p { margin:0; font-size:clamp(19px,5vw,25px); line-height:1.4; }
-  .obwelcome-device { order:3; width:100%; height:680px; margin-top:68px; overflow:hidden; }
-  .obwelcome-phone { width:min(100%,390px); height:690px; min-height:690px; border-radius:52px 52px 0 0; }
+  .obwelcome-device {
+    order:3; position:relative; z-index:1; width:100%; height:690px; margin-top:68px;
+    overflow:visible;
+  }
+  .obwelcome-phone {
+    width:min(100%,390px); height:690px; min-height:690px; flex:0 0 auto;
+    border-radius:52px 52px 0 0;
+  }
   .obwelcome-email {
     position:fixed; left:14px; right:14px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:8;
     width:auto; min-height:68px; padding-left:16px; box-shadow:0 0 0 8px rgba(255,255,255,.92),0 14px 34px rgba(0,0,0,.18);
