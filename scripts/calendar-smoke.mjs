@@ -487,7 +487,7 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   if (layout.dockPosition !== "sticky" || Math.abs(layout.dock.bottom - layout.viewport) > 2)
     fail("the editing circles and Share action should stay pinned to the viewport bottom: " + JSON.stringify(layout));
   if (Math.abs(layout.close.top - layout.actions.top) > 1 || Math.abs(layout.close.bottom - layout.actions.bottom) > 1)
-    fail("Undo, Reset, and Save style should align across from Close: " + JSON.stringify(layout));
+    fail("Undo and Redo should align across from Close: " + JSON.stringify(layout));
   if (layout.preview.top - layout.close.bottom > 12 || layout.preview.bottom > layout.dock.top + 1)
     fail("the complete preview should fit tightly between the header and editor dock: " + JSON.stringify(layout));
 }
@@ -508,7 +508,7 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   if ((await toolRail.count()) !== 1)
     fail("the image editor should have one tool rail");
   const tools = (await toolRail.locator(".sheditor-tool-label").allInnerTexts()).map((t) => t.trim());
-  if (tools.join("|") !== "Random|Background|Style|Classes|Dates|Headline")
+  if (tools.join("|") !== "Random|Color|Photo|Style|Classes|Dates|Headline")
     fail("the coach's image tools should share one rail: " + tools.join("|"));
   if (await p.locator(".shstyle-rail, .shstyle-option").count())
     fail("styles should live behind the Style tool, not in a second rail");
@@ -536,7 +536,7 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   if (!rail.aligned || !rail.circles)
     fail("the editor tool circles should share one horizontal line: " + JSON.stringify(rail));
   const designActions = (await p.locator(".shdesign-actions button").allInnerTexts()).map((t) => t.trim());
-  if (designActions.join("|") !== "Undo|Reset")
+  if (designActions.join("|") !== "Undo|Redo")
     fail("the compact design actions should align across from Close: " + designActions.join("|"));
 
   // Headline rewrites the poster's words, and the picture is asked for

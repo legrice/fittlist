@@ -181,7 +181,6 @@ export function ShareHubScreen({
       },
     ),
   ).current;
-  const resetDesignRef = useRef(startingDesign);
   const [themeId, setThemeId] = useState<StoryThemeId>(startingDesign.themeId);
   const [styleId, setStyleId] = useState<StoryStyleId>(startingDesign.styleId);
   const [from, setFrom] = useState(defaultFrom);
@@ -298,6 +297,7 @@ export function ShareHubScreen({
   const [lookName, setLookName] = useState("");
   const [designSaving, setDesignSaving] = useState(false);
   const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<EditorSnapshot[]>([]);
 
   useEffect(() => () => {
     sharingRef.current = false;
@@ -717,6 +717,7 @@ export function ShareHubScreen({
   const pushUndo = () => {
     const snapshot = captureSnapshot();
     setUndoStack((current) => [...current.slice(-19), snapshot]);
+    setRedoStack([]);
     return snapshot;
   };
 
@@ -761,15 +762,20 @@ export function ShareHubScreen({
     const previous = undoStack[undoStack.length - 1];
     if (!previous) return;
     beginPreviewUpdate("undo");
+    const current = captureSnapshot();
     setUndoStack((current) => current.slice(0, -1));
+    setRedoStack((stack) => [...stack.slice(-19), current]);
     restoreSnapshot(previous);
   };
 
-  const resetDesign = () => {
-    beginPreviewUpdate("reset");
-    pushUndo();
-    applyDesign(resetDesignRef.current);
-    setFeaturedKey(null);
+  const redoLast = () => {
+    const next = redoStack[redoStack.length - 1];
+    if (!next) return;
+    beginPreviewUpdate("redo");
+    const current = captureSnapshot();
+    setRedoStack((stack) => stack.slice(0, -1));
+    setUndoStack((stack) => [...stack.slice(-19), current]);
+    restoreSnapshot(next);
   };
 
   const applyCompleteStyle = (id: StoryStyleId) => {
@@ -1088,7 +1094,7 @@ export function ShareHubScreen({
           <section className="sheditor-shell sheditor-week" aria-label="Share image editor">
             <div className="shdesign-actions" aria-label="Design actions">
               <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
-              <button type="button" onClick={resetDesign}>Reset</button>
+              <button type="button" disabled={redoStack.length === 0} onClick={redoLast}>Redo</button>
             </div>
 
             {/* One preview is the center of the studio. The quiet stage gives
