@@ -373,6 +373,14 @@ export function AuthFlow({
                 {error && <div className="errorcopy">{error}</div>}
               </div>
             </div>
+            <footer className="obwelcome-footer">
+              <Wordmark variant="ink" className="obwelcome-footer-mark" />
+              <span>&copy; {new Date().getFullYear()} FittList</span>
+              <a href="mailto:hello@fittlist.co">Contact</a>
+              <button type="button" onClick={() => { setError(""); setSheet("signup"); }}>
+                Sign up
+              </button>
+            </footer>
           </div>
         )}
 
