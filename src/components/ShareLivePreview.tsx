@@ -637,13 +637,24 @@ function ShareLivePreviewComponent({
     const preview = previewRef.current;
     if (!preview) return undefined;
     const fit = () => {
-      const next = Math.min(preview.clientWidth / WIDTH, preview.clientHeight / HEIGHT);
+      const parent = preview.parentElement;
+      const availableWidth = preview.clientWidth || parent?.clientWidth || 0;
+      const availableHeight = preview.clientHeight || parent?.clientHeight || 0;
+      if (!availableWidth || !availableHeight) return;
+      const next = Math.min(availableWidth / WIDTH, availableHeight / HEIGHT);
       setPreviewScale((current) => Math.abs(current - next) > 0.0001 ? next : current);
     };
     fit();
+    const frame = requestAnimationFrame(fit);
     const observer = new ResizeObserver(fit);
     observer.observe(preview);
-    return () => observer.disconnect();
+    if (preview.parentElement) observer.observe(preview.parentElement);
+    window.addEventListener("resize", fit);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", fit);
+    };
   }, []);
 
   useEffect(() => {

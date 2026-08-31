@@ -12827,8 +12827,8 @@ a.clspeek-by:active { opacity: .6; }
   height:100%;
   max-width:100%;
   min-width:0;
-  display:grid;
-  place-items:center;
+  display:flex;
+  justify-content:center;
   overflow:hidden;
   align-items:center;
 }
@@ -12844,10 +12844,13 @@ a.clspeek-by:active { opacity: .6; }
 .shsingle-preview .shlive-preview {
   position:relative;
   display:block;
-  width:auto;
-  aspect-ratio:9 / 16;
+  flex:1 1 auto;
+  width:100%;
+  min-width:0;
+  max-width:none;
+  height:100%;
   overflow:hidden;
-  background:var(--color-surface);
+  background:transparent;
 }
 
 .sheditor-dock {
