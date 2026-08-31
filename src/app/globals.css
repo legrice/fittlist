@@ -12917,6 +12917,10 @@ a.clspeek-by:active { opacity: .6; }
   overflow:hidden;
   background:transparent;
 }
+.shsingle-preview .shlive-canvas {
+  overflow:hidden;
+  border-radius:56px;
+}
 
 .sheditor-dock {
   position:sticky;
