@@ -5812,10 +5812,10 @@ html[data-mode="dark"],
 }
 .adderhead h2 { margin: 0; padding-right: 0; }
 .adderhead .sheetclose { position: static; flex-shrink: 0; }
-/* Desktop keeps the centered-modal feel. */
+/* The class composer stays full-height at every breakpoint and from every
+   entry point. Other full sheets keep the compact desktop modal treatment. */
 @media (min-width: 940px) {
-  .sheet.adder, .sheet.sheet-full { height: auto; max-height: 94%; border-radius: 16px; }
-  .sheet.adder.adder-step { height:auto; max-height:88%; border-radius:16px; padding-top:16px; }
+  .sheet.sheet-full { height:auto; max-height:94%; border-radius:16px; }
   .sheet.sheet-full { display: block; }
   .adderhead { padding-top: 20px; }
 }
