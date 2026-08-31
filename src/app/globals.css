@@ -609,7 +609,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obwelcome-head nav { display:flex; align-items:center; gap:8px; }
 .obwelcome-head button {
   min-height:52px; padding:0 22px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  border-radius:var(--radius-pill); font:inherit; font-size:15px; font-weight:700;
+  border-radius:var(--radius-pill); font:inherit; font-size:15px; font-weight:700; letter-spacing:.012em;
 }
 .obwelcome-signup-button { background:var(--color-white); color:var(--color-black); }
 .obwelcome-login-button { background:var(--color-black); color:var(--color-white); }
