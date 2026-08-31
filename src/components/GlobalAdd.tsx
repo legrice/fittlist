@@ -441,10 +441,10 @@ export function GlobalAdd({
                     ? { canCoach: false, event: false, oneOff: true }
                     : undefined
               }
-              onClose={() => {
-                setMode(null);
-                setClassRole(null);
-              }}
+              // The class editor is the whole Calendar add flow. Clearing
+              // only its mode left the parent open and exposed the generic
+              // class/group/studio chooser underneath when X was tapped.
+              onClose={close}
               onToast={toast}
               onPublished={(message, _planId, _live, focus) => {
                 close();
