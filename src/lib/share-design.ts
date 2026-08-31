@@ -27,6 +27,8 @@ export type ShareDesign = {
   photoZoom: number;
   /** Darkness over a background photo, as a whole percentage. */
   overlay: number;
+  /** Vertical position of the schedule block in 1080x1920 canvas pixels. */
+  scheduleY: number;
 };
 
 export type SavedStoryLook = {
@@ -50,6 +52,7 @@ export const DEFAULT_SHARE_DESIGN: ShareDesign = Object.freeze({
   photoY: 50,
   photoZoom: 100,
   overlay: 24,
+  scheduleY: 0,
 });
 
 export const DEFAULT_SAVED_STORY_LOOKS: SavedStoryLook[] = [];
@@ -111,6 +114,7 @@ export function sanitizeShareDesign(
     photoY: wholeNumber(raw.photoY, fallback.photoY, 0, 100),
     photoZoom: wholeNumber(raw.photoZoom, fallback.photoZoom, 100, 300),
     overlay: wholeNumber(raw.overlay, fallback.overlay, 0, 60),
+    scheduleY: wholeNumber(raw.scheduleY, fallback.scheduleY, -240, 360),
   };
 }
 

@@ -66,6 +66,7 @@ export function buildShareStoryLayout({
   showPhoto,
   showStudio,
   featuredKey,
+  scheduleY = 0,
   style,
   format = "story",
 }: {
@@ -77,6 +78,7 @@ export function buildShareStoryLayout({
   showPhoto: boolean;
   showStudio: boolean;
   featuredKey: string | null;
+  scheduleY?: number;
   style: StoryStyle;
   format?: StoryFormat;
 }): ShareStoryLayout {
@@ -120,7 +122,9 @@ export function buildShareStoryLayout({
     .filter((day) => day.items.length > 0);
   const scheduleBudget = Math.max(
     0,
-    listBudget(headlineHeight, format) - (feature ? storyFeatureBudget(format) : 0),
+    listBudget(headlineHeight, format) -
+      (feature ? storyFeatureBudget(format) : 0) -
+      Math.max(0, scheduleY),
   );
   const plan = planStory(
     regularDays.map(({ day, items }) => ({

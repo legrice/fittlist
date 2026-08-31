@@ -117,6 +117,7 @@ export async function GET(req: Request) {
   const backgroundY = boundedNumber(qs.get("by"), 50, 0, 100);
   const backgroundZoom = boundedNumber(qs.get("bz"), 100, 100, 300);
   const backgroundOverlay = boundedNumber(qs.get("bo"), 24, 0, 60);
+  const scheduleY = boundedNumber(qs.get("sy"), 0, -240, 360);
   const featureKey = (qs.get("feature") ?? "").trim();
   const layout = buildShareStoryLayout({
     days:byDay,
@@ -127,6 +128,7 @@ export async function GET(req: Request) {
     showPhoto,
     showStudio,
     featuredKey:featureKey || null,
+    scheduleY,
     style:y,
     format,
   });
@@ -144,6 +146,7 @@ export async function GET(req: Request) {
     backgroundY,
     backgroundZoom,
     backgroundOverlay,
+    scheduleY,
     feature:layout.feature,
     plan:layout.plan,
     empty:layout.empty,

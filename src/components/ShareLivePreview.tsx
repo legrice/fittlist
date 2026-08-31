@@ -1,6 +1,15 @@
 "use client";
 
-import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type WheelEvent as ReactWheelEvent,
+} from "react";
 import {
   STORY_STYLES,
   STORY_THEMES,
@@ -27,11 +36,15 @@ export type ShareLivePreviewProps = {
   backgroundY?: number;
   backgroundZoom?: number;
   backgroundOverlay?: number;
+  scheduleY?: number;
   handle: string;
   /** A stable identity for the exact configuration currently on screen. */
   configKey: string;
   emptyLine?: string;
   onRendered?: (configKey: string) => void;
+  onBackgroundChange?: (next: { x: number; y: number; zoom: number }) => void;
+  onScheduleYChange?: (next: number) => void;
+  onDirectEditStart?: (kind: "background" | "classes") => void;
 };
 
 type PreviewDay = {
@@ -623,10 +636,14 @@ function ShareLivePreviewComponent({
   backgroundY = 50,
   backgroundZoom = 100,
   backgroundOverlay = 24,
+  scheduleY = 0,
   handle,
   configKey,
   emptyLine = "Nothing on the calendar for these days yet.",
   onRendered,
+  onBackgroundChange,
+  onScheduleYChange,
+  onDirectEditStart,
 }: ShareLivePreviewProps) {
   const theme = STORY_THEMES[themeId];
   const style = STORY_STYLES[styleId];
@@ -636,7 +653,55 @@ function ShareLivePreviewComponent({
   const url = `fittlist.co/${handle.replace(/^@/, "")}`;
   const editorialInk = style.layout === "swiss" || style.layout === "cowboy";
   const previewRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(0);
+  const photoPointers = useRef(new Map<number, { x: number; y: number }>());
+  const photoGesture = useRef({ x:backgroundX, y:backgroundY, zoom:backgroundZoom, centerX:0, centerY:0, distance:0 });
+  const scheduleGesture = useRef<{ pointerId:number; startY:number; value:number } | null>(null);
+  const wheelGestureTimer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (wheelGestureTimer.current !== null) window.clearTimeout(wheelGestureTimer.current);
+  }, []);
+
+  const beginPhotoGesture = () => {
+    const points = [...photoPointers.current.values()];
+    const a = points[0];
+    const b = points[1] ?? a;
+    photoGesture.current = {
+      x:backgroundX,
+      y:backgroundY,
+      zoom:backgroundZoom,
+      centerX:(a.x + b.x) / 2,
+      centerY:(a.y + b.y) / 2,
+      distance:Math.hypot(a.x - b.x, a.y - b.y),
+    };
+  };
+  const movePhoto = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!onBackgroundChange || !photoPointers.current.has(event.pointerId)) return;
+    photoPointers.current.set(event.pointerId, { x:event.clientX, y:event.clientY });
+    const points = [...photoPointers.current.values()];
+    const a = points[0];
+    const b = points[1] ?? a;
+    const centerX = (a.x + b.x) / 2;
+    const centerY = (a.y + b.y) / 2;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect?.width || !rect.height) return;
+    const start = photoGesture.current;
+    const nextZoom = points.length > 1 && start.distance > 0
+      ? clamped(start.zoom * (Math.hypot(a.x - b.x, a.y - b.y) / start.distance), 100, 300, 100)
+      : start.zoom;
+    const zoomFactor = Math.max(1, nextZoom / 100);
+    onBackgroundChange({
+      x:clamped(start.x - ((centerX - start.centerX) / rect.width) * (100 / zoomFactor), 0, 100, 50),
+      y:clamped(start.y - ((centerY - start.centerY) / rect.height) * (100 / zoomFactor), 0, 100, 50),
+      zoom:Math.round(nextZoom),
+    });
+  };
+  const endPhoto = (event: ReactPointerEvent<HTMLDivElement>) => {
+    photoPointers.current.delete(event.pointerId);
+    if (photoPointers.current.size) beginPhotoGesture();
+  };
 
   useLayoutEffect(() => {
     const preview = previewRef.current;
@@ -722,6 +787,7 @@ function ShareLivePreviewComponent({
       aria-label="Your week as a share image"
     >
       <div
+        ref={canvasRef}
         className="shlive-canvas"
         style={{
           position:"absolute",
@@ -732,6 +798,29 @@ function ShareLivePreviewComponent({
           transform:`translate(-50%, -50%) scale(${previewScale})`,
           transformOrigin:"center",
           visibility:previewScale > 0 ? "visible" : "hidden",
+          touchAction:onPhoto && onBackgroundChange ? "none" : undefined,
+        }}
+        onPointerDown={(event) => {
+          if (!onPhoto || !onBackgroundChange) return;
+          if (photoPointers.current.size === 0) onDirectEditStart?.("background");
+          event.currentTarget.setPointerCapture(event.pointerId);
+          photoPointers.current.set(event.pointerId, { x:event.clientX, y:event.clientY });
+          beginPhotoGesture();
+        }}
+        onPointerMove={movePhoto}
+        onPointerUp={endPhoto}
+        onPointerCancel={endPhoto}
+        onWheel={(event: ReactWheelEvent<HTMLDivElement>) => {
+          if (!onPhoto || !onBackgroundChange) return;
+          event.preventDefault();
+          if (wheelGestureTimer.current === null) onDirectEditStart?.("background");
+          if (wheelGestureTimer.current !== null) window.clearTimeout(wheelGestureTimer.current);
+          wheelGestureTimer.current = window.setTimeout(() => { wheelGestureTimer.current = null; }, 180);
+          onBackgroundChange({
+            x:backgroundX,
+            y:backgroundY,
+            zoom:Math.round(clamped(backgroundZoom - event.deltaY * 0.2, 100, 300, 100)),
+          });
         }}
       >
         <div
@@ -823,6 +912,39 @@ function ShareLivePreviewComponent({
               </div>
             )}
 
+            <div
+              data-share-schedule="true"
+              aria-label="Schedule position. Drag up or down to move it."
+              style={{
+                position:"relative",
+                top:clamped(scheduleY, -240, 360, 0),
+                flex:"0 0 auto",
+                touchAction:onScheduleYChange ? "none" : undefined,
+                cursor:onScheduleYChange ? "grab" : undefined,
+              }}
+              onPointerDown={(event) => {
+                if (!onScheduleYChange) return;
+                event.stopPropagation();
+                event.currentTarget.setPointerCapture(event.pointerId);
+                scheduleGesture.current = { pointerId:event.pointerId, startY:event.clientY, value:scheduleY };
+                onDirectEditStart?.("classes");
+              }}
+              onPointerMove={(event) => {
+                const gesture = scheduleGesture.current;
+                if (!onScheduleYChange || !gesture || gesture.pointerId !== event.pointerId) return;
+                event.stopPropagation();
+                const scale = previewScale || 1;
+                onScheduleYChange(Math.round(clamped(gesture.value + (event.clientY - gesture.startY) / scale, -240, 360, 0)));
+              }}
+              onPointerUp={(event) => {
+                if (scheduleGesture.current?.pointerId === event.pointerId) scheduleGesture.current = null;
+                event.stopPropagation();
+              }}
+              onPointerCancel={(event) => {
+                if (scheduleGesture.current?.pointerId === event.pointerId) scheduleGesture.current = null;
+                event.stopPropagation();
+              }}
+            >
             {layout.empty ? (
               <div
                 style={{
@@ -859,6 +981,7 @@ function ShareLivePreviewComponent({
                 + {layout.plan.moreDays} more {layout.plan.moreDays === 1 ? "day" : "days"} at {url}
               </div>
             )}
+            </div>
 
             <div
               style={{

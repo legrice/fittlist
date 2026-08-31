@@ -12870,6 +12870,7 @@ a.clspeek-by:active { opacity: .6; }
   place-items:center;
 }
 .shsingle-preview .shprev-wrap {
+  position:relative;
   width:min(84vw, 520px);
   height:100%;
   max-width:100%;
@@ -12878,6 +12879,23 @@ a.clspeek-by:active { opacity: .6; }
   justify-content:center;
   overflow:hidden;
   align-items:center;
+}
+.shpreview-gesture-hint {
+  position:absolute;
+  left:50%;
+  bottom:8px;
+  z-index:2;
+  max-width:calc(100% - 20px);
+  padding:5px 9px;
+  border-radius:var(--radius-pill);
+  background:rgba(2,13,8,.74);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  line-height:1;
+  white-space:nowrap;
+  transform:translateX(-50%);
+  pointer-events:none;
 }
 .shsingle-preview .shprev {
   width:100%;

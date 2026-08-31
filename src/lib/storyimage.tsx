@@ -82,6 +82,8 @@ export type StoryModel = {
   backgroundY?: number;
   backgroundZoom?: number;
   backgroundOverlay?: number;
+  /** Vertical schedule offset in canvas pixels. */
+  scheduleY?: number;
   /** One occurrence promoted above the rest of the week. */
   feature?: StoryFeature | null;
   plan: StoryPlan;
@@ -205,6 +207,7 @@ export function renderStory(model: StoryModel) {
     backgroundY,
     backgroundZoom,
     backgroundOverlay,
+    scheduleY,
     feature,
     plan,
     empty,
@@ -226,6 +229,7 @@ export function renderStory(model: StoryModel) {
   const bgY = finiteClamp(backgroundY, 0, 100, 50);
   const bgZoom = finiteClamp(backgroundZoom, 100, 300, 100) / 100;
   const bgShade = finiteClamp(backgroundOverlay, 0, 60, 24) / 100;
+  const scheduleTop = finiteClamp(scheduleY, -240, 360, 0);
   const layout = y.layout;
   const editorialInk = layout === "swiss" || layout === "cowboy";
   // A square is a little over half the height, so the furniture comes down
@@ -360,6 +364,8 @@ export function renderStory(model: StoryModel) {
               flexDirection: "column",
               gap: compact ? 22 : 30,
               width: "100%",
+              position: "relative",
+              top: px(scheduleTop),
             }}
           >
             {empty ? (
@@ -681,6 +687,14 @@ export function renderStory(model: StoryModel) {
           </div>
         )}
 
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+            top: px(scheduleTop),
+          }}
+        >
         {empty ? (
           <div style={{ display: "flex", color: t.faint, fontSize: px(44) }}>{emptyLine}</div>
         ) : layout === "swiss" ? (
@@ -1155,6 +1169,7 @@ export function renderStory(model: StoryModel) {
             ))}
           </div>
         )}
+        </div>
 
         <div
           style={{

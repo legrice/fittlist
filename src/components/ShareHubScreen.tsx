@@ -339,10 +339,12 @@ export function ShareHubScreen({
   const [photoY, setPhotoY] = useState(startingDesign.photoY);
   const [photoZoom, setPhotoZoom] = useState(startingDesign.photoZoom);
   const [photoOverlay, setPhotoOverlay] = useState(startingDesign.overlay);
+  const [scheduleY, setScheduleY] = useState(startingDesign.scheduleY);
   const [draftPhotoX, setDraftPhotoX] = useState(startingDesign.photoX);
   const [draftPhotoY, setDraftPhotoY] = useState(startingDesign.photoY);
   const [draftPhotoZoom, setDraftPhotoZoom] = useState(startingDesign.photoZoom);
   const [draftPhotoOverlay, setDraftPhotoOverlay] = useState(startingDesign.overlay);
+  const [draftScheduleY, setDraftScheduleY] = useState(startingDesign.scheduleY);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
@@ -815,6 +817,7 @@ export function ShareHubScreen({
       photoY,
       photoZoom,
       overlay:photoOverlay,
+      scheduleY,
     }),
     [
       background,
@@ -826,6 +829,7 @@ export function ShareHubScreen({
       photoX,
       photoY,
       photoZoom,
+      scheduleY,
       styleId,
       themeId,
       typeId,
@@ -886,6 +890,7 @@ export function ShareHubScreen({
     setPhotoY(safe.photoY);
     setPhotoZoom(safe.photoZoom);
     setPhotoOverlay(safe.overlay);
+    setScheduleY(safe.scheduleY);
   };
 
   const restoreSnapshot = (snapshot: EditorSnapshot) => {
@@ -962,9 +967,10 @@ export function ShareHubScreen({
       showPhoto:false,
       showStudio:true,
       featuredKey,
+      scheduleY,
       style:STORY_STYLES[styleId],
     }),
-    [coach, featuredKey, headline, hsize, noHead, previewDays, styleId],
+    [coach, featuredKey, headline, hsize, noHead, previewDays, scheduleY, styleId],
   );
   const previewConfigKey = useMemo(
     () => [
@@ -981,6 +987,7 @@ export function ShareHubScreen({
       photoY,
       photoZoom,
       photoOverlay,
+      scheduleY,
       featuredKey ?? "",
       hideParam,
       from,
@@ -1001,6 +1008,7 @@ export function ShareHubScreen({
       photoX,
       photoY,
       photoZoom,
+      scheduleY,
       styleId,
       themeId,
       typeId,
@@ -1009,7 +1017,7 @@ export function ShareHubScreen({
   const exportUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
-    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bz=${photoZoom}&bo=${photoOverlay}` +
+    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bz=${photoZoom}&bo=${photoOverlay}&sy=${scheduleY}` +
     `${featuredKey ? `&feature=${encodeURIComponent(featuredKey)}` : ""}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const fileName = `fittlist-${handle}-week-${styleId}.png`;
@@ -1279,13 +1287,27 @@ export function ShareHubScreen({
                     backgroundY={photoY}
                     backgroundZoom={photoZoom}
                     backgroundOverlay={photoOverlay}
+                    scheduleY={scheduleY}
                     handle={handle}
                     configKey={previewConfigKey}
                     emptyLine={coach
                       ? "Nothing on the calendar for these days yet."
                       : "Nothing on the week yet."}
                     onRendered={previewRendered}
+                    onDirectEditStart={(kind) => {
+                      beginPreviewUpdate(kind);
+                      pushUndo();
+                    }}
+                    onBackgroundChange={background ? (next) => {
+                      setPhotoX(next.x);
+                      setPhotoY(next.y);
+                      setPhotoZoom(next.zoom);
+                    } : undefined}
+                    onScheduleYChange={setScheduleY}
                   />
+                  <span className="shpreview-gesture-hint" aria-hidden="true">
+                    {background ? "Drag photo · Pinch to zoom · Drag classes" : "Drag classes up or down"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1330,6 +1352,7 @@ export function ShareHubScreen({
                     setDraftHide(new Set(hide));
                     setDraftHat(hat);
                     setDraftFeaturedKey(featuredKey);
+                    setDraftScheduleY(scheduleY);
                     setPick("classes");
                   }}
                 />
@@ -1843,6 +1866,19 @@ export function ShareHubScreen({
                 ))}
               </div>
             )}
+            <label className="flabel" htmlFor="shScheduleY">
+              Schedule position <span>· {draftScheduleY === 0 ? "Default" : draftScheduleY < 0 ? `${Math.abs(draftScheduleY)} up` : `${draftScheduleY} down`}</span>
+            </label>
+            <input
+              id="shScheduleY"
+              className="shslider"
+              type="range"
+              min={-240}
+              max={360}
+              step={20}
+              value={draftScheduleY}
+              onChange={(event) => setDraftScheduleY(Number(event.target.value))}
+            />
             <div className="settingslist shpick-list">
               {draftHatRows.length === 0 && <p className="empty">Nothing in this range yet.</p>}
               {draftHatRows.map((it) => {
@@ -1928,6 +1964,7 @@ export function ShareHubScreen({
                 pushUndo();
                 setHide(new Set(draftHide));
                 setHat(draftHat);
+                setScheduleY(draftScheduleY);
                 setFeaturedKey(
                   draftFeaturedKey && draftHatRows.some((item) => item.key === draftFeaturedKey) && !draftHide.has(draftFeaturedKey)
                     ? draftFeaturedKey

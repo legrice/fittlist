@@ -50,6 +50,8 @@ const response = renderStory({
   line2: "with me",
   headlineSize: 100,
   photo: null,
+  // Exercise the editor's movable schedule path, not only its default zero.
+  scheduleY: 180,
   feature: {
     day: "TODAY",
     time: "5:00p",
