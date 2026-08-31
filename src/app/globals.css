@@ -620,8 +620,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .obwelcome-title { align-self:center; }
 .ob .obwelcome-title h1 {
-  max-width:620px; margin:0; color:var(--color-black);
-  font-size:clamp(52px,5.35vw,94px); font-weight:500; line-height:.96; letter-spacing:-.055em;
+  max-width:520px; margin:0; color:var(--color-black);
+  font-size:clamp(42px,3.8vw,64px); font-weight:500; line-height:1; letter-spacing:-.05em;
 }
 .obwelcome-copy { align-self:center; max-width:460px; }
 .ob .obwelcome-copy > p {
@@ -701,7 +701,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   .obwelcome-logo .wm-ico { width:43px; height:43px; padding:10px; box-sizing:border-box; border-radius:11px; background:var(--color-black); color:var(--si); }
   .obwelcome-head button { min-height:48px; padding:0 17px; font-size:14px; }
   .obwelcome-grid { min-height:100dvh; padding:142px 24px 122px; display:flex; flex-direction:column; align-items:stretch; gap:0; }
-  .ob .obwelcome-title h1 { max-width:680px; font-size:clamp(45px,12vw,72px); line-height:.96; }
+  .ob .obwelcome-title h1 { max-width:520px; font-size:clamp(38px,9.5vw,50px); line-height:1; }
   .obwelcome-copy { max-width:680px; margin-top:38px; }
   .ob .obwelcome-copy > p { margin:0; font-size:clamp(19px,5vw,25px); line-height:1.4; }
   .obwelcome-device { order:3; width:100%; height:680px; margin-top:68px; overflow:hidden; }
