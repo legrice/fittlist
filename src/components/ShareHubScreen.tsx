@@ -313,9 +313,15 @@ export function ShareHubScreen({
   ).current;
   const startingDesign = useRef(
     sanitizeShareDesign(
-      rememberedDesign ?? initialDesign ?? {
-        ...DEFAULT_SHARE_DESIGN,
-        useBackgroundPhoto: hasBackground,
+      {
+        ...(rememberedDesign ?? initialDesign ?? {
+          ...DEFAULT_SHARE_DESIGN,
+          useBackgroundPhoto: hasBackground,
+        }),
+        // Every editor session begins ready to write. A prior draft may have
+        // hidden the headline, but that is a per-edit choice rather than the
+        // next session's starting mode.
+        noHead:false,
       },
     ),
   ).current;
