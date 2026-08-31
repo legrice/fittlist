@@ -327,7 +327,8 @@ export function renderStory(model: StoryModel) {
                 width: square ? 780 : 840,
                 padding: compact ? "30px 42px" : "38px 48px",
                 borderRadius: 28,
-                background: "#020D08",
+                background: t.bg,
+                color: t.fg,
                 textAlign: "left",
                 fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
                 fontStyle: guest?.italic ? "italic" : "normal",
@@ -343,7 +344,11 @@ export function renderStory(model: StoryModel) {
               }}
             >
               <span>{line1}</span>
-              {line2 && <span>{line2}</span>}
+              {line2 && (
+                <span style={{ color: y.layout === "party" || y.layout === "brutalist" ? t.accent : undefined }}>
+                  {line2}
+                </span>
+              )}
             </div>
           )}
 

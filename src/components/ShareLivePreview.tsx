@@ -697,8 +697,8 @@ function ShareLivePreviewComponent({
         width: 840,
         padding: "38px 48px",
         borderRadius: 28,
-        background: "#020D08",
-        color: "#fff",
+        background: theme.bg,
+        color: theme.fg,
       }
     : {
         maxWidth: 908,
@@ -808,7 +808,7 @@ function ShareLivePreviewComponent({
               >
                 <span>{layout.line1}</span>
                 {layout.line2 && (
-                  <span style={{ color: !onPhoto && (style.layout === "party" || style.layout === "brutalist") ? theme.accent : undefined }}>
+                  <span style={{ color: (style.layout === "party" || style.layout === "brutalist") ? theme.accent : undefined }}>
                     {layout.line2}
                   </span>
                 )}

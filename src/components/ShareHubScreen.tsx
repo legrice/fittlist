@@ -904,6 +904,7 @@ export function ShareHubScreen({
     setTypeId(style.typeface);
     setDecoId(style.decoration);
     setHsize(style.headlineSize);
+    setNoHead(false);
     setBackground(false);
   };
 
@@ -915,6 +916,7 @@ export function ShareHubScreen({
     setTypeId(randomOther(TYPEFACES.map((typeface) => typeface.id), typeId));
     setDecoId(randomOther(DECOS.map((decoration) => decoration.id), decoId));
     setHsize(randomOther([80, 90, 100, 110, 120, 130, 140] as const, hsize));
+    setNoHead(false);
   };
 
   const hideParam = useMemo(() => [...effHide].join(","), [effHide]);
