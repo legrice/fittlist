@@ -13223,6 +13223,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .sheditor-tools-all { margin:0 -16px; padding-inline:16px; }
 .sheditor-tools::-webkit-scrollbar { display:none; }
+.sheditor-dock-heading { display:none; }
 .sheditor-tool {
   flex:0 0 72px;
   min-width:72px;
@@ -13260,6 +13261,7 @@ a.clspeek-by:active { opacity: .6; }
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+.sheditor-tool-detail { display:none; }
 .sheditor-tool:active { background:var(--sheditor-active); }
 .sheditor-tool:disabled { cursor:default; opacity:.42; }
 .sheditor-tool:focus-visible,
@@ -13448,4 +13450,142 @@ a.clspeek-by:active { opacity: .6; }
   }
   .sheditor-shell { margin-inline:calc(-1 * var(--page-gutter)); }
   .sheditor-dock { padding-inline:24px; }
+}
+
+/* The wide Share route is an editing workspace, not a phone layout floating
+   in the middle of the browser. Keep the artwork large and visually primary,
+   with all controls gathered into one persistent panel beside it. Embedded
+   takeovers keep their existing full-screen composition. */
+@media (min-width:1100px) {
+  .cardwrap.shpage-editor:not(.shpage-embedded) {
+    width:100%;
+    max-width:1088px;
+    margin:0 auto;
+    padding:0;
+    border-radius:0;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-shell {
+    width:100%;
+    min-height:calc(100dvh - 32px);
+    margin:0;
+    padding:28px 0;
+    display:grid;
+    grid-template-columns:minmax(430px, 1fr) minmax(330px, 390px);
+    grid-template-rows:auto 1fr;
+    gap:14px 28px;
+    align-items:start;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-stage {
+    grid-column:1;
+    grid-row:1 / 3;
+    width:100%;
+    height:calc(100dvh - 56px);
+    min-height:650px;
+    border:1px solid var(--sheditor-border);
+    border-radius:28px;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(159,232,112,.1), transparent 50%),
+      var(--sheditor-soft);
+  }
+  .shpage-editor:not(.shpage-embedded) .shsingle-preview {
+    width:100%;
+    height:100%;
+    padding:30px;
+  }
+  .shpage-editor:not(.shpage-embedded) .shsingle-preview .shprev-wrap {
+    width:100%;
+    height:100%;
+    max-width:520px;
+  }
+  .shpage-editor:not(.shpage-embedded) .shsingle-preview .shprev {
+    filter:drop-shadow(0 24px 34px rgba(2,13,8,.18));
+  }
+  .shpage-editor:not(.shpage-embedded) .shtop-controls {
+    grid-column:2;
+    grid-row:1;
+    justify-content:flex-end;
+    margin:0;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-dock {
+    position:sticky;
+    top:28px;
+    grid-column:2;
+    grid-row:2;
+    padding:22px;
+    border:1px solid var(--sheditor-border);
+    border-radius:24px;
+    background:var(--sheditor-panel);
+    box-shadow:0 18px 44px rgba(2,13,8,.08);
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-dock-heading {
+    display:block;
+    margin-bottom:18px;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-dock-heading h2 {
+    margin:0;
+    font-size:24px;
+    line-height:1.05;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-dock-heading p {
+    margin:7px 0 0;
+    color:var(--sheditor-muted);
+    font-size:13px;
+    line-height:1.4;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-tools,
+  .shpage-editor:not(.shpage-embedded) .sheditor-tools-all {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+    margin:0;
+    padding:0 0 16px;
+    overflow:visible;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-tool {
+    width:100%;
+    min-width:0;
+    min-height:68px;
+    padding:9px;
+    grid-template-columns:42px minmax(0, 1fr);
+    grid-template-rows:auto auto;
+    justify-items:start;
+    align-content:center;
+    column-gap:10px;
+    row-gap:2px;
+    border:1px solid var(--sheditor-border);
+    border-radius:16px;
+    background:var(--sheditor-soft);
+    text-align:left;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-tool:hover {
+    border-color:var(--color-border-strong);
+    background:var(--sheditor-active);
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-tool-icon {
+    width:42px;
+    height:42px;
+    grid-column:1;
+    grid-row:1 / 3;
+    border:0;
+    background:var(--sheditor-panel);
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-tool-label {
+    align-self:end;
+    max-width:100%;
+    font-size:14px;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-tool-detail {
+    display:block;
+    align-self:start;
+    width:100%;
+    overflow:hidden;
+    color:var(--sheditor-muted);
+    font-size:11px;
+    line-height:1.2;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .shpage-editor:not(.shpage-embedded) .sheditor-share-action {
+    margin-top:2px;
+  }
 }

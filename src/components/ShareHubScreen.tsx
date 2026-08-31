@@ -1436,6 +1436,10 @@ export function ShareHubScreen({
             {/* Every editor option stays in one horizontal tool rail. Detailed
                 editing still opens the familiar focused sheets. */}
             <div className="sheditor-dock sheditor-dock-week">
+              <div className="sheditor-dock-heading">
+                <h2>Edit your share</h2>
+                <p>Choose a tool, then make changes directly on the preview.</p>
+              </div>
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="auto_awesome" label="Random" detail="New look" onClick={remix} />
                 <StudioTool
@@ -2263,6 +2267,7 @@ function StudioTool({
     >
       <span className="sheditor-tool-icon"><Icon name={icon} size={23} /></span>
       <span className="sheditor-tool-label">{label}</span>
+      {detail && <span className="sheditor-tool-detail">{detail}</span>}
     </button>
   );
 }
