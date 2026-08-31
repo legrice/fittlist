@@ -9821,6 +9821,7 @@ html[data-mode="dark"],
   border-radius:20px; background:var(--color-surface); color:var(--ink);
   display:flex; flex-direction:column; align-items:flex-start; text-align:left; font:inherit;
 }
+.shbackground-choice:only-child { grid-column:1 / -1; }
 .shbackground-choice.on { border:2px solid var(--ink); padding:15px; }
 .shbackground-choice:active { background:var(--color-surface-hover); }
 .shbackground-choice-top {

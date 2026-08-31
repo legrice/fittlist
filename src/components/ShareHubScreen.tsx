@@ -221,7 +221,7 @@ export function ShareHubScreen({
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>(startingDesign.decoId);
   const [pick, setPick] = useState<
-    null | "dates" | "classes" | "message" | "layout" | "color"
+    null | "dates" | "classes" | "message" | "layout" | "color" | "photo"
   >(null);
   const [styleSection, setStyleSection] = useState<"presets" | "saved">("presets");
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -505,7 +505,7 @@ export function ShareHubScreen({
     beginPreviewUpdate("background");
     pushUndo();
     setThemeId(id);
-    setBackground(false);
+    setColorMenuOpen(false);
     setPick(null);
   };
 
@@ -1123,15 +1123,23 @@ export function ShareHubScreen({
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="auto_awesome" label="Random" detail="New look" onClick={remix} />
                 <StudioTool
+                  icon="palette"
+                  label="Color"
+                  detail={STORY_THEMES[themeId].label}
+                  onClick={() => {
+                    setPick("color");
+                    setColorMenuOpen(true);
+                  }}
+                />
+                <StudioTool
                   icon="image"
-                  label="Background"
-                  detail={background ? "Photo" : STORY_THEMES[themeId].label}
+                  label="Photo"
+                  detail={background ? "Selected" : photoAvailable ? "Saved" : "None"}
                   onClick={() => {
                     setDraftPhotoX(photoX);
                     setDraftPhotoY(photoY);
                     setDraftPhotoOverlay(photoOverlay);
-                    setColorMenuOpen(false);
-                    setPick("color");
+                    setPick("photo");
                   }}
                 />
                 <StudioTool
@@ -1264,7 +1272,7 @@ export function ShareHubScreen({
         </div>
       )}
 
-      {pick === "color" && (
+      {pick === "photo" && (
         <div
           className="sheet-scrim"
           onClick={(e) => {
@@ -1275,31 +1283,16 @@ export function ShareHubScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Background</h2>
-            <p className="lead">Choose a color or use one of your photos.</p>
+            <h2>Photo</h2>
+            <p className="lead">Add a photo, then position and darken it behind your schedule.</p>
             <div className="shbackground-choices">
-              <button
-                type="button"
-                className={`shbackground-choice${!background ? " on" : ""}`}
-                aria-pressed={!background}
-                aria-haspopup="dialog"
-                disabled={backgroundBusy}
-                onClick={() => setColorMenuOpen(true)}
-              >
-                <span className="shbackground-choice-top">
-                  <span className="shcolor-preview shbackground-preview" style={{ background: STORY_THEMES[themeId].bg }} />
-                  {!background && <Icon name="check" size={20} />}
-                </span>
-                <strong>Color</strong>
-                <span>{STORY_THEMES[themeId].label}</span>
-              </button>
               <button
                 type="button"
                 className={`shbackground-choice${background ? " on" : ""}`}
                 aria-pressed={!!background}
                 disabled={backgroundBusy}
                 onClick={() => {
-                  if (!photoAvailable) {
+                  if (!photoAvailable || background) {
                     backgroundRef.current?.click();
                     return;
                   }
@@ -1313,7 +1306,7 @@ export function ShareHubScreen({
                     {background && <Icon name="check" size={20} />}
                 </span>
                 <strong>Photo</strong>
-                <span>{photoAvailable ? (background ? "Photo selected" : "Use saved photo") : "Choose from photos"}</span>
+                <span>{photoAvailable ? (background ? "Change photo" : "Use saved photo") : "Choose from photos"}</span>
               </button>
             </div>
             {background && (
@@ -1390,11 +1383,14 @@ export function ShareHubScreen({
         <div
           className="sheet-scrim shcolor-sheet-scrim"
           onClick={(event) => {
-            if (event.target === event.currentTarget) setColorMenuOpen(false);
+            if (event.target === event.currentTarget) {
+              setColorMenuOpen(false);
+              setPick(null);
+            }
           }}
         >
           <div className="sheet shcolor-sheet" role="dialog" aria-modal="true" aria-labelledby="shcolor-title">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setColorMenuOpen(false)}>
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => { setColorMenuOpen(false); setPick(null); }}>
               <Icon name="close" size={18} />
             </button>
             <h2 id="shcolor-title">Choose a color</h2>
