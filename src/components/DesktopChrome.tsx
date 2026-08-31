@@ -47,7 +47,10 @@ export function DesktopChrome({
 }) {
   const pathname = usePathname();
   const here = activeTab(pathname, active);
-  const links = navTabs(coach, scheduleHref, profileHref).filter((item) => item.id !== "calendar" && item.id !== "share");
+  // Profile is anchored to the bottom of the desktop rail. Every other
+  // primary destination, including Share, stays in the main navigation so
+  // removing the secondary right rail never removes a capability.
+  const links = navTabs(coach, scheduleHref, profileHref).filter((item) => item.id !== "calendar");
 
   return (
     <>
