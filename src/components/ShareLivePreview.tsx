@@ -25,6 +25,7 @@ export type ShareLivePreviewProps = {
   backgroundPhotoUrl?: string | null;
   backgroundX?: number;
   backgroundY?: number;
+  backgroundZoom?: number;
   backgroundOverlay?: number;
   handle: string;
   /** A stable identity for the exact configuration currently on screen. */
@@ -620,6 +621,7 @@ function ShareLivePreviewComponent({
   backgroundPhotoUrl = null,
   backgroundX = 50,
   backgroundY = 50,
+  backgroundZoom = 100,
   backgroundOverlay = 24,
   handle,
   configKey,
@@ -754,9 +756,10 @@ function ShareLivePreviewComponent({
                 decoding="async"
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
+                  width: `${clamped(backgroundZoom, 100, 300, 100)}%`,
+                  height: `${clamped(backgroundZoom, 100, 300, 100)}%`,
+                  left: `${-((clamped(backgroundZoom, 100, 300, 100) - 100) * clamped(backgroundX, 0, 100, 50)) / 100}%`,
+                  top: `${-((clamped(backgroundZoom, 100, 300, 100) - 100) * clamped(backgroundY, 0, 100, 50)) / 100}%`,
                   objectFit: "cover",
                   objectPosition: `${clamped(backgroundX, 0, 100, 50)}% ${clamped(backgroundY, 0, 100, 50)}%`,
                 }}

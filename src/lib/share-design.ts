@@ -23,6 +23,8 @@ export type ShareDesign = {
   /** Horizontal and vertical focal points, as whole percentages. */
   photoX: number;
   photoY: number;
+  /** Crop zoom, where 100 is cover and 300 is the closest allowed crop. */
+  photoZoom: number;
   /** Darkness over a background photo, as a whole percentage. */
   overlay: number;
 };
@@ -46,6 +48,7 @@ export const DEFAULT_SHARE_DESIGN: ShareDesign = Object.freeze({
   useBackgroundPhoto: false,
   photoX: 50,
   photoY: 50,
+  photoZoom: 100,
   overlay: 24,
 });
 
@@ -106,6 +109,7 @@ export function sanitizeShareDesign(
     useBackgroundPhoto: booleanOf(raw.useBackgroundPhoto, fallback.useBackgroundPhoto),
     photoX: wholeNumber(raw.photoX, fallback.photoX, 0, 100),
     photoY: wholeNumber(raw.photoY, fallback.photoY, 0, 100),
+    photoZoom: wholeNumber(raw.photoZoom, fallback.photoZoom, 100, 300),
     overlay: wholeNumber(raw.overlay, fallback.overlay, 0, 60),
   };
 }

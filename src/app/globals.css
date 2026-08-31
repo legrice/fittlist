@@ -10934,12 +10934,19 @@ a.clspeek-by:active { opacity: .6; }
 .shphoto-sheet .shbackground-choices { margin-top:10px; }
 .shphoto-controls { margin-top:12px; padding-top:0; }
 .shphoto-position-preview {
-  position:relative; width:min(34%, 118px); aspect-ratio:9 / 16; margin:0 auto; overflow:hidden;
+  position:relative; width:min(42%, 150px); aspect-ratio:9 / 16; margin:0 auto; overflow:hidden;
   border:1px solid var(--line); border-radius:16px; background:var(--shell);
+  touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none;
 }
+.shphoto-position-preview:active { cursor:grabbing; }
 .shphoto-position-preview img,
 .shphoto-position-preview span { position:absolute; inset:0; width:100%; height:100%; }
-.shphoto-position-preview img { display:block; object-fit:cover; }
+.shphoto-position-preview img { display:block; object-fit:cover; pointer-events:none; will-change:transform; }
+.shphoto-position-preview em {
+  position:absolute; z-index:2; left:50%; bottom:8px; transform:translateX(-50%);
+  width:max-content; padding:4px 7px; border-radius:999px; background:rgba(0,0,0,.58);
+  color:#fff; font-size:10px; line-height:1; font-style:normal; font-weight:600; pointer-events:none;
+}
 .shphoto-controls .flabel { margin-top:10px; }
 .shphoto-controls .publishwrap { margin-top:12px; }
 .shstyle-tabs {

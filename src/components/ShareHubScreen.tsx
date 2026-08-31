@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -63,6 +63,107 @@ type EditorSnapshot = {
   hat: "coaching" | "saved";
   featuredKey: string | null;
 };
+
+const clampCrop = (value: number, min = 0, max = 100) => Math.max(min, Math.min(max, value));
+
+function PhotoCropSurface({
+  src,
+  x,
+  y,
+  zoom,
+  overlay,
+  onChange,
+}: {
+  src: string;
+  x: number;
+  y: number;
+  zoom: number;
+  overlay: number;
+  onChange: (next: { x: number; y: number; zoom: number }) => void;
+}) {
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef({ x, y, zoom, centerX: 0, centerY: 0, distance: 0 });
+
+  const beginGesture = () => {
+    const points = [...pointers.current.values()];
+    const a = points[0];
+    const b = points[1] ?? a;
+    gesture.current = {
+      x,
+      y,
+      zoom,
+      centerX: (a.x + b.x) / 2,
+      centerY: (a.y + b.y) / 2,
+      distance: Math.hypot(a.x - b.x, a.y - b.y),
+    };
+  };
+
+  const move = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.has(event.pointerId)) return;
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const points = [...pointers.current.values()];
+    const a = points[0];
+    const b = points[1] ?? a;
+    const centerX = (a.x + b.x) / 2;
+    const centerY = (a.y + b.y) / 2;
+    const rect = surfaceRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const start = gesture.current;
+    const nextZoom = points.length > 1 && start.distance > 0
+      ? clampCrop(start.zoom * (Math.hypot(a.x - b.x, a.y - b.y) / start.distance), 100, 300)
+      : start.zoom;
+    const zoomFactor = Math.max(1, nextZoom / 100);
+    onChange({
+      x: clampCrop(start.x - ((centerX - start.centerX) / rect.width) * (100 / zoomFactor)),
+      y: clampCrop(start.y - ((centerY - start.centerY) / rect.height) * (100 / zoomFactor)),
+      zoom: Math.round(nextZoom),
+    });
+  };
+
+  const end = (event: ReactPointerEvent<HTMLDivElement>) => {
+    pointers.current.delete(event.pointerId);
+    if (pointers.current.size) beginGesture();
+  };
+
+  return (
+    <div
+      ref={surfaceRef}
+      className="shphoto-position-preview"
+      role="group"
+      aria-label="Photo crop. Drag to reposition and pinch or scroll to zoom."
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        beginGesture();
+      }}
+      onPointerMove={move}
+      onPointerUp={end}
+      onPointerCancel={end}
+      onWheel={(event: ReactWheelEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        onChange({ x, y, zoom: Math.round(clampCrop(zoom - event.deltaY * 0.2, 100, 300)) });
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        draggable={false}
+        style={{
+          inset: "auto",
+          width: `${zoom}%`,
+          height: `${zoom}%`,
+          left: `${-((zoom - 100) * x) / 100}%`,
+          top: `${-((zoom - 100) * y) / 100}%`,
+          objectPosition: `${x}% ${y}%`,
+        }}
+      />
+      <span style={{ background: `rgba(0,0,0,${overlay / 100})` }} />
+      <em aria-hidden="true">Drag · Pinch to zoom</em>
+    </div>
+  );
+}
 
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
@@ -206,9 +307,11 @@ export function ShareHubScreen({
   const backgroundRef = useRef<HTMLInputElement>(null);
   const [photoX, setPhotoX] = useState(startingDesign.photoX);
   const [photoY, setPhotoY] = useState(startingDesign.photoY);
+  const [photoZoom, setPhotoZoom] = useState(startingDesign.photoZoom);
   const [photoOverlay, setPhotoOverlay] = useState(startingDesign.overlay);
   const [draftPhotoX, setDraftPhotoX] = useState(startingDesign.photoX);
   const [draftPhotoY, setDraftPhotoY] = useState(startingDesign.photoY);
+  const [draftPhotoZoom, setDraftPhotoZoom] = useState(startingDesign.photoZoom);
   const [draftPhotoOverlay, setDraftPhotoOverlay] = useState(startingDesign.overlay);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
@@ -414,6 +517,7 @@ export function ShareHubScreen({
         const previousLocalUrl = localBackgroundUrl;
         const previousPhotoX = photoX;
         const previousPhotoY = photoY;
+        const previousPhotoZoom = photoZoom;
         const previousPhotoOverlay = photoOverlay;
         // The resized local image is already the exact asset being uploaded.
         // Put it under the preview before the server round trip so choosing a
@@ -425,9 +529,11 @@ export function ShareHubScreen({
         setBackground(true);
         setPhotoX(50);
         setPhotoY(50);
+        setPhotoZoom(100);
         setPhotoOverlay(24);
         setDraftPhotoX(50);
         setDraftPhotoY(50);
+        setDraftPhotoZoom(100);
         setDraftPhotoOverlay(24);
         try {
           const result = await setStoryBackground(dataUrl);
@@ -437,9 +543,11 @@ export function ShareHubScreen({
             setBackground(previousBackground);
             setPhotoX(previousPhotoX);
             setPhotoY(previousPhotoY);
+            setPhotoZoom(previousPhotoZoom);
             setPhotoOverlay(previousPhotoOverlay);
             setDraftPhotoX(previousPhotoX);
             setDraftPhotoY(previousPhotoY);
+            setDraftPhotoZoom(previousPhotoZoom);
             setDraftPhotoOverlay(previousPhotoOverlay);
             setUndoStack((current) => current.filter((snapshot) => snapshot !== backgroundUndo));
             toast(result.error ?? "Couldn't add that background");
@@ -454,9 +562,11 @@ export function ShareHubScreen({
           setBackground(previousBackground);
           setPhotoX(previousPhotoX);
           setPhotoY(previousPhotoY);
+          setPhotoZoom(previousPhotoZoom);
           setPhotoOverlay(previousPhotoOverlay);
           setDraftPhotoX(previousPhotoX);
           setDraftPhotoY(previousPhotoY);
+          setDraftPhotoZoom(previousPhotoZoom);
           setDraftPhotoOverlay(previousPhotoOverlay);
           setUndoStack((current) => current.filter((snapshot) => snapshot !== backgroundUndo));
           toast("Couldn't add that background");
@@ -682,6 +792,7 @@ export function ShareHubScreen({
       useBackgroundPhoto:background && photoAvailable,
       photoX,
       photoY,
+      photoZoom,
       overlay:photoOverlay,
     }),
     [
@@ -693,6 +804,7 @@ export function ShareHubScreen({
       photoOverlay,
       photoX,
       photoY,
+      photoZoom,
       styleId,
       themeId,
       typeId,
@@ -751,6 +863,7 @@ export function ShareHubScreen({
     setBackground(photoAvailable && safe.useBackgroundPhoto);
     setPhotoX(safe.photoX);
     setPhotoY(safe.photoY);
+    setPhotoZoom(safe.photoZoom);
     setPhotoOverlay(safe.overlay);
   };
 
@@ -843,6 +956,7 @@ export function ShareHubScreen({
       background ? 1 : 0,
       photoX,
       photoY,
+      photoZoom,
       photoOverlay,
       featuredKey ?? "",
       hideParam,
@@ -863,6 +977,7 @@ export function ShareHubScreen({
       photoOverlay,
       photoX,
       photoY,
+      photoZoom,
       styleId,
       themeId,
       typeId,
@@ -871,7 +986,7 @@ export function ShareHubScreen({
   const exportUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
-    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bo=${photoOverlay}` +
+    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bz=${photoZoom}&bo=${photoOverlay}` +
     `${featuredKey ? `&feature=${encodeURIComponent(featuredKey)}` : ""}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const fileName = `fittlist-${handle}-week-${styleId}.png`;
@@ -1117,6 +1232,7 @@ export function ShareHubScreen({
                     backgroundPhotoUrl={background ? backgroundPreviewUrl : null}
                     backgroundX={photoX}
                     backgroundY={photoY}
+                    backgroundZoom={photoZoom}
                     backgroundOverlay={photoOverlay}
                     handle={handle}
                     configKey={previewConfigKey}
@@ -1150,6 +1266,7 @@ export function ShareHubScreen({
                   onClick={() => {
                     setDraftPhotoX(photoX);
                     setDraftPhotoY(photoY);
+                    setDraftPhotoZoom(photoZoom);
                     setDraftPhotoOverlay(photoOverlay);
                     setPick("photo");
                   }}
@@ -1325,26 +1442,19 @@ export function ShareHubScreen({
             {background && (
               <div className="shphoto-controls">
                 {backgroundPreviewUrl && (
-                  <div className="shphoto-position-preview" aria-hidden="true">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={backgroundPreviewUrl}
-                      alt=""
-                      style={{ objectPosition:`${draftPhotoX}% ${draftPhotoY}%` }}
-                    />
-                    <span style={{ background:`rgba(0,0,0,${draftPhotoOverlay / 100})` }} />
-                  </div>
+                  <PhotoCropSurface
+                    src={backgroundPreviewUrl}
+                    x={draftPhotoX}
+                    y={draftPhotoY}
+                    zoom={draftPhotoZoom}
+                    overlay={draftPhotoOverlay}
+                    onChange={(next) => {
+                      setDraftPhotoX(next.x);
+                      setDraftPhotoY(next.y);
+                      setDraftPhotoZoom(next.zoom);
+                    }}
+                  />
                 )}
-                <label className="flabel" htmlFor="shPhotoX">Move left or right</label>
-                <input
-                  id="shPhotoX"
-                  className="shslider"
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={draftPhotoX}
-                  onChange={(event) => setDraftPhotoX(Number(event.target.value))}
-                />
                 <label className="flabel" htmlFor="shPhotoOverlay">
                   Darken photo <span>· {draftPhotoOverlay}%</span>
                 </label>
@@ -1366,6 +1476,7 @@ export function ShareHubScreen({
                       pushUndo();
                       setPhotoX(draftPhotoX);
                       setPhotoY(draftPhotoY);
+                      setPhotoZoom(draftPhotoZoom);
                       setPhotoOverlay(draftPhotoOverlay);
                       setPick(null);
                     }}

@@ -115,6 +115,7 @@ export async function GET(req: Request) {
   const handle = (me.handle ?? "").trim();
   const backgroundX = boundedNumber(qs.get("bx"), 50, 0, 100);
   const backgroundY = boundedNumber(qs.get("by"), 50, 0, 100);
+  const backgroundZoom = boundedNumber(qs.get("bz"), 100, 100, 300);
   const backgroundOverlay = boundedNumber(qs.get("bo"), 24, 0, 60);
   const featureKey = (qs.get("feature") ?? "").trim();
   const layout = buildShareStoryLayout({
@@ -141,6 +142,7 @@ export async function GET(req: Request) {
     backgroundPhoto,
     backgroundX,
     backgroundY,
+    backgroundZoom,
     backgroundOverlay,
     feature:layout.feature,
     plan:layout.plan,

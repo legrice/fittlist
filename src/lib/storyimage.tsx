@@ -80,6 +80,7 @@ export type StoryModel = {
    * rely on one route having sanitised their input. */
   backgroundX?: number;
   backgroundY?: number;
+  backgroundZoom?: number;
   backgroundOverlay?: number;
   /** One occurrence promoted above the rest of the week. */
   feature?: StoryFeature | null;
@@ -202,6 +203,7 @@ export function renderStory(model: StoryModel) {
     backgroundPhoto,
     backgroundX,
     backgroundY,
+    backgroundZoom,
     backgroundOverlay,
     feature,
     plan,
@@ -222,6 +224,7 @@ export function renderStory(model: StoryModel) {
   const square = format === "square";
   const bgX = finiteClamp(backgroundX, 0, 100, 50);
   const bgY = finiteClamp(backgroundY, 0, 100, 50);
+  const bgZoom = finiteClamp(backgroundZoom, 100, 300, 100) / 100;
   const bgShade = finiteClamp(backgroundOverlay, 0, 60, 24) / 100;
   const layout = y.layout;
   const editorialInk = layout === "swiss" || layout === "cowboy";
@@ -298,9 +301,10 @@ export function renderStory(model: StoryModel) {
             height={storyHeight}
             style={{
               position: "absolute",
-              inset: 0,
-              width: 1080,
-              height: storyHeight,
+              width: 1080 * bgZoom,
+              height: storyHeight * bgZoom,
+              left: -1080 * (bgZoom - 1) * (bgX / 100),
+              top: -storyHeight * (bgZoom - 1) * (bgY / 100),
               objectFit: "cover",
               objectPosition: `${bgX}% ${bgY}%`,
             }}
