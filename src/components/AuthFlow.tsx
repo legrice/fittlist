@@ -39,28 +39,11 @@ const landingClasses = [
 
 function PhoneStatusIcons() {
   return (
-    <svg
-      className="obwelcome-status-icons"
-      viewBox="0 0 64 14"
-      aria-hidden="true"
-    >
-      <g fill="currentColor">
-        <rect x="0" y="9" width="3" height="5" rx="1" />
-        <rect x="5" y="6.5" width="3" height="7.5" rx="1" />
-        <rect x="10" y="3.5" width="3" height="10.5" rx="1" />
-        <rect x="15" y="0" width="3" height="14" rx="1" />
-      </g>
-      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2">
-        <path d="M24 5.1c4.1-3.8 10.6-3.8 14.7 0" />
-        <path d="M27.1 8.2c2.4-2.2 6.1-2.2 8.5 0" />
-        <path d="M30.2 11.3c.7-.7 1.6-.7 2.3 0" />
-      </g>
-      <g fill="none" stroke="currentColor" strokeWidth="1.6">
-        <rect x="44" y="1" width="17" height="12" rx="3" />
-        <path d="M63 5v4" strokeLinecap="round" />
-      </g>
-      <rect x="46" y="3" width="13" height="8" rx="1.5" fill="currentColor" />
-    </svg>
+    <span className="obwelcome-status-icons" aria-hidden="true">
+      <Icon name="signal_cellular_alt" size={15} />
+      <Icon name="wifi" size={15} />
+      <Icon name="battery_full" size={16} />
+    </span>
   );
 }
 

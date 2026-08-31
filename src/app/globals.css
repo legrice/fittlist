@@ -653,7 +653,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   box-shadow:0 28px 60px rgba(0,0,0,.13); text-align:left;
 }
 .obwelcome-status { padding:0 8px 26px; display:flex; align-items:center; justify-content:space-between; font-size:14px; letter-spacing:.04em; }
-.obwelcome-status-icons { display:block; width:64px; height:14px; color:var(--color-black); }
+.obwelcome-status-icons { display:flex; align-items:center; gap:5px; color:var(--color-black); }
 .obwelcome-phone-head { display:flex; align-items:center; justify-content:space-between; }
 .obwelcome-phone-head h2 { margin:0; font-size:35px; line-height:1; letter-spacing:-.04em; }
 .obwelcome-phone-head > span { width:42px; height:42px; display:grid; place-items:center; border:1px solid #e3e3e3; border-radius:50%; }
