@@ -324,7 +324,7 @@ export function AuthFlow({
               <Wordmark variant="ink" className="obwelcome-logo" />
               <nav aria-label="Account">
                 <button type="button" className="obwelcome-signup-button" onClick={() => { setError(""); setSheet("signup"); }}>
-                  Sign up <Icon name="arrow_forward" size={18} />
+                  Sign up
                 </button>
                 <button type="button" className="obwelcome-login-button" onClick={() => { setError(""); setSheet("login"); }}>
                   Log in
