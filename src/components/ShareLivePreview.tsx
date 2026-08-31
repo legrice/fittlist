@@ -56,6 +56,8 @@ export type ShareLivePreviewProps = {
   onHeadlineYChange?: (next: number) => void;
   onScheduleYChange?: (next: number) => void;
   onDirectEditStart?: (kind: "background" | "headline" | "classes") => void;
+  onHeadlineTap?: () => void;
+  onScheduleTap?: () => void;
 };
 
 type PreviewDay = {
@@ -673,6 +675,8 @@ function ShareLivePreviewComponent({
   onHeadlineYChange,
   onScheduleYChange,
   onDirectEditStart,
+  onHeadlineTap,
+  onScheduleTap,
 }: ShareLivePreviewProps) {
   const theme = STORY_THEMES[themeId];
   const style = STORY_STYLES[styleId];
@@ -688,17 +692,21 @@ function ShareLivePreviewComponent({
   const photoGesture = useRef({ x:backgroundX, y:backgroundY, zoom:backgroundZoom, centerX:0, centerY:0, distance:0 });
   const headlineGesture = useRef<{
     pointerId:number;
+    startX:number;
     startY:number;
     value:number;
     min:number;
     max:number;
+    moved:boolean;
   } | null>(null);
   const scheduleGesture = useRef<{
     pointerId:number;
+    startX:number;
     startY:number;
     value:number;
     min:number;
     max:number;
+    moved:boolean;
   } | null>(null);
   const wheelGestureTimer = useRef<number | null>(null);
 
@@ -923,7 +931,7 @@ function ShareLivePreviewComponent({
           >
             {(layout.line1 || layout.line2) && (
               <div
-                aria-label="Headline position. Drag up or down to move it."
+                aria-label="Headline. Tap to edit or drag up and down to move it."
                 style={{
                   position:"relative",
                   top:clamped(headlineY, SHARE_HEADLINE_Y_MIN, SHARE_HEADLINE_Y_MAX, 0),
@@ -957,17 +965,23 @@ function ShareLivePreviewComponent({
                     : SHARE_HEADLINE_Y_MAX;
                   headlineGesture.current = {
                     pointerId:event.pointerId,
+                    startX:event.clientX,
                     startY:event.clientY,
                     value:headlineY,
                     min:Math.max(SHARE_HEADLINE_Y_MIN, Math.round(Math.min(min, max))),
                     max:Math.min(SHARE_HEADLINE_Y_MAX, Math.round(Math.max(min, max))),
+                    moved:false,
                   };
-                  onDirectEditStart?.("headline");
                 }}
                 onPointerMove={(event) => {
                   const gesture = headlineGesture.current;
                   if (!onHeadlineYChange || !gesture || gesture.pointerId !== event.pointerId) return;
                   event.stopPropagation();
+                  if (!gesture.moved) {
+                    if (Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) < 6) return;
+                    gesture.moved = true;
+                    onDirectEditStart?.("headline");
+                  }
                   const scale = previewScale || 1;
                   onHeadlineYChange(Math.round(clamped(
                     gesture.value + (event.clientY - gesture.startY) / scale,
@@ -977,7 +991,11 @@ function ShareLivePreviewComponent({
                   )));
                 }}
                 onPointerUp={(event) => {
-                  if (headlineGesture.current?.pointerId === event.pointerId) headlineGesture.current = null;
+                  const gesture = headlineGesture.current;
+                  if (gesture?.pointerId === event.pointerId) {
+                    headlineGesture.current = null;
+                    if (!gesture.moved) onHeadlineTap?.();
+                  }
                   event.stopPropagation();
                 }}
                 onPointerCancel={(event) => {
@@ -1004,7 +1022,7 @@ function ShareLivePreviewComponent({
 
             <div
               data-share-schedule="true"
-              aria-label="Schedule position. Drag up or down to move it."
+              aria-label="Classes. Tap to edit or drag up and down to move them."
               style={{
                 position:"relative",
                 top:clamped(scheduleY, SHARE_SCHEDULE_Y_MIN, SHARE_SCHEDULE_Y_MAX, 0),
@@ -1027,17 +1045,23 @@ function ShareLivePreviewComponent({
                   : SHARE_SCHEDULE_Y_MAX;
                 scheduleGesture.current = {
                   pointerId:event.pointerId,
+                  startX:event.clientX,
                   startY:event.clientY,
                   value:scheduleY,
                   min:Math.max(SHARE_SCHEDULE_Y_MIN, Math.round(Math.min(min, max))),
                   max:Math.min(SHARE_SCHEDULE_Y_MAX, Math.round(Math.max(min, max))),
+                  moved:false,
                 };
-                onDirectEditStart?.("classes");
               }}
               onPointerMove={(event) => {
                 const gesture = scheduleGesture.current;
                 if (!onScheduleYChange || !gesture || gesture.pointerId !== event.pointerId) return;
                 event.stopPropagation();
+                if (!gesture.moved) {
+                  if (Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) < 6) return;
+                  gesture.moved = true;
+                  onDirectEditStart?.("classes");
+                }
                 const scale = previewScale || 1;
                 onScheduleYChange(Math.round(clamped(
                   gesture.value + (event.clientY - gesture.startY) / scale,
@@ -1047,7 +1071,11 @@ function ShareLivePreviewComponent({
                 )));
               }}
               onPointerUp={(event) => {
-                if (scheduleGesture.current?.pointerId === event.pointerId) scheduleGesture.current = null;
+                const gesture = scheduleGesture.current;
+                if (gesture?.pointerId === event.pointerId) {
+                  scheduleGesture.current = null;
+                  if (!gesture.moved) onScheduleTap?.();
+                }
                 event.stopPropagation();
               }}
               onPointerCancel={(event) => {

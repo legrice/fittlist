@@ -842,6 +842,21 @@ export function ShareHubScreen({
     [effHide, inRange],
   );
 
+  const openClassesEditor = useCallback(() => {
+    setDraftHide(new Set(hide));
+    setDraftHat(hat);
+    setDraftFeaturedKey(featuredKey);
+    setPick("classes");
+  }, [featuredKey, hat, hide]);
+
+  const openHeadlineEditor = useCallback(() => {
+    setDraftHeadline(headline);
+    setDraftNoHead(noHead);
+    setDraftTypeId(typeId);
+    setDraftSlider(hsize);
+    setPick("message");
+  }, [headline, hsize, noHead, typeId]);
+
   const currentDesign = useMemo(
     () => sanitizeShareDesign({
       styleId,
@@ -1405,6 +1420,8 @@ export function ShareHubScreen({
                     } : undefined}
                     onHeadlineYChange={setHeadlineY}
                     onScheduleYChange={setScheduleY}
+                    onHeadlineTap={openHeadlineEditor}
+                    onScheduleTap={openClassesEditor}
                   />
                 </div>
               </div>
@@ -1447,12 +1464,7 @@ export function ShareHubScreen({
                   icon="list"
                   label="Classes"
                   detail={hatRows.length === 0 ? "None" : `${shown} of ${hatRows.length}`}
-                  onClick={() => {
-                    setDraftHide(new Set(hide));
-                    setDraftHat(hat);
-                    setDraftFeaturedKey(featuredKey);
-                    setPick("classes");
-                  }}
+                  onClick={openClassesEditor}
                 />
                 <StudioTool
                   icon="calendar_month"
@@ -1468,13 +1480,7 @@ export function ShareHubScreen({
                   icon="edit"
                   label="Headline"
                   detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
-                  onClick={() => {
-                    setDraftHeadline(headline);
-                    setDraftNoHead(noHead);
-                    setDraftTypeId(typeId);
-                    setDraftSlider(hsize);
-                    setPick("message");
-                  }}
+                  onClick={openHeadlineEditor}
                 />
                 {!coach && (
                   <StudioTool
