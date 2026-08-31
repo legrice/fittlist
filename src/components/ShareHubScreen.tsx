@@ -344,7 +344,6 @@ export function ShareHubScreen({
   const [draftPhotoY, setDraftPhotoY] = useState(startingDesign.photoY);
   const [draftPhotoZoom, setDraftPhotoZoom] = useState(startingDesign.photoZoom);
   const [draftPhotoOverlay, setDraftPhotoOverlay] = useState(startingDesign.overlay);
-  const [draftScheduleY, setDraftScheduleY] = useState(startingDesign.scheduleY);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
@@ -967,10 +966,9 @@ export function ShareHubScreen({
       showPhoto:false,
       showStudio:true,
       featuredKey,
-      scheduleY,
       style:STORY_STYLES[styleId],
     }),
-    [coach, featuredKey, headline, hsize, noHead, previewDays, scheduleY, styleId],
+    [coach, featuredKey, headline, hsize, noHead, previewDays, styleId],
   );
   const previewConfigKey = useMemo(
     () => [
@@ -1354,7 +1352,6 @@ export function ShareHubScreen({
                     setDraftHide(new Set(hide));
                     setDraftHat(hat);
                     setDraftFeaturedKey(featuredKey);
-                    setDraftScheduleY(scheduleY);
                     setPick("classes");
                   }}
                 />
@@ -1868,19 +1865,6 @@ export function ShareHubScreen({
                 ))}
               </div>
             )}
-            <label className="flabel" htmlFor="shScheduleY">
-              Schedule position <span>· {draftScheduleY === 0 ? "Default" : draftScheduleY < 0 ? `${Math.abs(draftScheduleY)} up` : `${draftScheduleY} down`}</span>
-            </label>
-            <input
-              id="shScheduleY"
-              className="shslider"
-              type="range"
-              min={-240}
-              max={360}
-              step={20}
-              value={draftScheduleY}
-              onChange={(event) => setDraftScheduleY(Number(event.target.value))}
-            />
             <div className="settingslist shpick-list">
               {draftHatRows.length === 0 && <p className="empty">Nothing in this range yet.</p>}
               {draftHatRows.map((it) => {
@@ -1966,7 +1950,6 @@ export function ShareHubScreen({
                 pushUndo();
                 setHide(new Set(draftHide));
                 setHat(draftHat);
-                setScheduleY(draftScheduleY);
                 setFeaturedKey(
                   draftFeaturedKey && draftHatRows.some((item) => item.key === draftFeaturedKey) && !draftHide.has(draftFeaturedKey)
                     ? draftFeaturedKey

@@ -39,6 +39,11 @@ export type SavedStoryLook = {
 
 export const MAX_SAVED_STORY_LOOKS = 12;
 export const MAX_STORY_LOOK_NAME_LENGTH = 32;
+/** Broad persistence/export rails for vertical schedule positioning. The live
+ * editor applies an element-aware edge guard so the list stays recoverable. */
+export const SHARE_SCHEDULE_Y_MIN = -1600;
+export const SHARE_SCHEDULE_Y_MAX = 1600;
+export const SHARE_SCHEDULE_EDGE_PEEK = 96;
 
 export const DEFAULT_SHARE_DESIGN: ShareDesign = Object.freeze({
   styleId: "plain",
@@ -114,7 +119,7 @@ export function sanitizeShareDesign(
     photoY: wholeNumber(raw.photoY, fallback.photoY, 0, 100),
     photoZoom: wholeNumber(raw.photoZoom, fallback.photoZoom, 100, 300),
     overlay: wholeNumber(raw.overlay, fallback.overlay, 0, 60),
-    scheduleY: wholeNumber(raw.scheduleY, fallback.scheduleY, -240, 360),
+    scheduleY: wholeNumber(raw.scheduleY, fallback.scheduleY, SHARE_SCHEDULE_Y_MIN, SHARE_SCHEDULE_Y_MAX),
   };
 }
 

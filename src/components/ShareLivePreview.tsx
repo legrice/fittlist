@@ -21,6 +21,11 @@ import {
 import type { ShareStoryLayout } from "@/lib/share-story-layout";
 import { TYPEFACES, type TypeFace, type TypeFaceId } from "@/lib/typefaces";
 import type { DecoId } from "@/lib/decorations";
+import {
+  SHARE_SCHEDULE_EDGE_PEEK,
+  SHARE_SCHEDULE_Y_MAX,
+  SHARE_SCHEDULE_Y_MIN,
+} from "@/lib/share-design";
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
@@ -657,7 +662,13 @@ function ShareLivePreviewComponent({
   const [previewScale, setPreviewScale] = useState(0);
   const photoPointers = useRef(new Map<number, { x: number; y: number }>());
   const photoGesture = useRef({ x:backgroundX, y:backgroundY, zoom:backgroundZoom, centerX:0, centerY:0, distance:0 });
-  const scheduleGesture = useRef<{ pointerId:number; startY:number; value:number } | null>(null);
+  const scheduleGesture = useRef<{
+    pointerId:number;
+    startY:number;
+    value:number;
+    min:number;
+    max:number;
+  } | null>(null);
   const wheelGestureTimer = useRef<number | null>(null);
 
   useEffect(() => () => {
@@ -917,7 +928,7 @@ function ShareLivePreviewComponent({
               aria-label="Schedule position. Drag up or down to move it."
               style={{
                 position:"relative",
-                top:clamped(scheduleY, -240, 360, 0),
+                top:clamped(scheduleY, SHARE_SCHEDULE_Y_MIN, SHARE_SCHEDULE_Y_MAX, 0),
                 flex:"0 0 auto",
                 touchAction:onScheduleYChange ? "none" : undefined,
                 cursor:onScheduleYChange ? "grab" : undefined,
@@ -926,7 +937,22 @@ function ShareLivePreviewComponent({
                 if (!onScheduleYChange) return;
                 event.stopPropagation();
                 event.currentTarget.setPointerCapture(event.pointerId);
-                scheduleGesture.current = { pointerId:event.pointerId, startY:event.clientY, value:scheduleY };
+                const scale = previewScale || 1;
+                const canvasRect = canvasRef.current?.getBoundingClientRect();
+                const scheduleRect = event.currentTarget.getBoundingClientRect();
+                const min = canvasRect
+                  ? scheduleY + (canvasRect.top + SHARE_SCHEDULE_EDGE_PEEK * scale - scheduleRect.bottom) / scale
+                  : SHARE_SCHEDULE_Y_MIN;
+                const max = canvasRect
+                  ? scheduleY + (canvasRect.bottom - SHARE_SCHEDULE_EDGE_PEEK * scale - scheduleRect.top) / scale
+                  : SHARE_SCHEDULE_Y_MAX;
+                scheduleGesture.current = {
+                  pointerId:event.pointerId,
+                  startY:event.clientY,
+                  value:scheduleY,
+                  min:Math.max(SHARE_SCHEDULE_Y_MIN, Math.round(Math.min(min, max))),
+                  max:Math.min(SHARE_SCHEDULE_Y_MAX, Math.round(Math.max(min, max))),
+                };
                 onDirectEditStart?.("classes");
               }}
               onPointerMove={(event) => {
@@ -934,7 +960,12 @@ function ShareLivePreviewComponent({
                 if (!onScheduleYChange || !gesture || gesture.pointerId !== event.pointerId) return;
                 event.stopPropagation();
                 const scale = previewScale || 1;
-                onScheduleYChange(Math.round(clamped(gesture.value + (event.clientY - gesture.startY) / scale, -240, 360, 0)));
+                onScheduleYChange(Math.round(clamped(
+                  gesture.value + (event.clientY - gesture.startY) / scale,
+                  gesture.min,
+                  gesture.max,
+                  0,
+                )));
               }}
               onPointerUp={(event) => {
                 if (scheduleGesture.current?.pointerId === event.pointerId) scheduleGesture.current = null;

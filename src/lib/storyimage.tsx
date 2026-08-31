@@ -12,6 +12,7 @@ import {
 } from "@/lib/storyplan";
 import type { DecoId } from "@/lib/decorations";
 import { storyHeadline } from "@/lib/share-story-layout";
+import { SHARE_SCHEDULE_Y_MAX, SHARE_SCHEDULE_Y_MIN } from "@/lib/share-design";
 
 // One paint for every share image.
 //
@@ -229,7 +230,7 @@ export function renderStory(model: StoryModel) {
   const bgY = finiteClamp(backgroundY, 0, 100, 50);
   const bgZoom = finiteClamp(backgroundZoom, 100, 300, 100) / 100;
   const bgShade = finiteClamp(backgroundOverlay, 0, 60, 24) / 100;
-  const scheduleTop = finiteClamp(scheduleY, -240, 360, 0);
+  const scheduleTop = finiteClamp(scheduleY, SHARE_SCHEDULE_Y_MIN, SHARE_SCHEDULE_Y_MAX, 0);
   const layout = y.layout;
   const editorialInk = layout === "swiss" || layout === "cowboy";
   // A square is a little over half the height, so the furniture comes down
