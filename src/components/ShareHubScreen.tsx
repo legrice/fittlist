@@ -10,7 +10,7 @@ import {
   type StoryThemeId,
 } from "@/lib/format";
 import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
-import type { DecoId } from "@/lib/decorations";
+import { DECOS, type DecoId } from "@/lib/decorations";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
 import { loadCalendarComposerData, type CalendarComposerData } from "@/app/actions/calendar-data";
@@ -90,6 +90,12 @@ const short = (iso: string) => shortFormatter.format(new Date(`${iso}T00:00:00Z`
 const wday = (iso: string) => weekdayFormatter.format(new Date(`${iso}T00:00:00Z`));
 const plusDays = (iso: string, n: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+
+function randomOther<T>(values: readonly T[], current: T): T {
+  const choices = values.filter((value) => value !== current);
+  const pool = choices.length > 0 ? choices : values;
+  return pool[Math.floor(Math.random() * pool.length)] ?? current;
+}
 
 /** Reusing the last couple of completed exports makes a second Share tap
  * instant without retaining an unbounded collection of multi-megabyte Files.
@@ -789,13 +795,13 @@ export function ShareHubScreen({
   };
 
   const remix = () => {
-    const choices = (Object.keys(STORY_STYLES) as StoryStyleId[]).filter(
-      (id) => id !== "cowboy" && id !== styleId,
-    );
-    const next = choices[Math.floor(Math.random() * choices.length)] ?? "plain";
     beginPreviewUpdate("random");
     pushUndo();
-    applyCompleteStyle(next);
+    setStyleId(randomOther(Object.keys(STORY_STYLES) as StoryStyleId[], styleId));
+    setThemeId(randomOther(Object.keys(STORY_THEMES) as StoryThemeId[], themeId));
+    setTypeId(randomOther(TYPEFACES.map((typeface) => typeface.id), typeId));
+    setDecoId(randomOther(DECOS.map((decoration) => decoration.id), decoId));
+    setHsize(randomOther([80, 90, 100, 110, 120, 130, 140] as const, hsize));
   };
 
   const hideParam = useMemo(() => [...effHide].join(","), [effHide]);
