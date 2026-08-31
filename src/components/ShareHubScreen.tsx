@@ -202,6 +202,7 @@ function randomOther<T>(values: readonly T[], current: T): T {
  * instant without retaining an unbounded collection of multi-megabyte Files.
  * The key contains the stable content revision plus the complete design. */
 const exportFileCache = new Map<string, File>();
+const exportFilePromises = new Map<string, Promise<File>>();
 const EXPORT_FILE_CACHE_LIMIT = 2;
 
 function rememberExportFile(url: string, file: File) {
@@ -212,6 +213,35 @@ function rememberExportFile(url: string, file: File) {
     if (!oldest) break;
     exportFileCache.delete(oldest);
   }
+}
+
+function browserCanShareFiles(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    typeof navigator.share === "function" &&
+    typeof navigator.canShare === "function"
+  );
+}
+
+/** One render request per exact design, shared by the Safari prewarm and the
+ *  button tap. Without this, a tap during the warm-up starts a second PNG job
+ *  and can still outlive iOS's short-lived user activation. */
+function prepareExportFile(url: string, fileName: string, signal?: AbortSignal): Promise<File> {
+  const cached = exportFileCache.get(url);
+  if (cached) return Promise.resolve(cached);
+  const pending = exportFilePromises.get(url);
+  if (pending) return pending;
+  const request = fetch(url, { signal })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Share image returned ${response.status}`);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type:blob.type || "image/png" });
+      rememberExportFile(url, file);
+      return file;
+    })
+    .finally(() => exportFilePromises.delete(url));
+  exportFilePromises.set(url, request);
+  return request;
 }
 
 export function ShareHubScreen({
@@ -333,7 +363,6 @@ export function ShareHubScreen({
   >(null);
   const [styleSection, setStyleSection] = useState<"presets" | "saved">("presets");
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
-  const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const sharingRef = useRef(false);
   const exportAbort = useRef<AbortController | null>(null);
@@ -656,14 +685,6 @@ export function ShareHubScreen({
     } catch {
       // Private mode: no ring was stored, so there is nothing to explain.
     }
-  }, []);
-
-  useEffect(() => {
-    setCanShareFiles(
-      typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function",
-    );
   }, []);
 
   // The route version is opened from your circle and owns the whole mobile
@@ -993,6 +1014,23 @@ export function ShareHubScreen({
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const fileName = `fittlist-${handle}-week-${styleId}.png`;
 
+  // Safari requires navigator.share() to remain connected to a recent user
+  // gesture. A cold server render could outlast that window, so prepare the
+  // currently visible design shortly after edits settle. The final image is
+  // still generated only once, stale designs are cancelled, and the Share tap
+  // joins an in-flight request rather than starting over.
+  useEffect(() => {
+    if (backgroundBusy || !browserCanShareFiles() || exportFileCache.has(exportUrl)) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void prepareExportFile(exportUrl, fileName, controller.signal).catch(() => undefined);
+    }, 180);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [backgroundBusy, exportUrl, fileName]);
+
   const rangeLabel = useMemo(
     () => days === 1
       ? `${wday(from)}, ${short(from)}`
@@ -1080,16 +1118,19 @@ export function ShareHubScreen({
         sharePerformance.captureCompleted(operation);
         sharePerformance.encodingCompleted(operation);
       } else {
-        const response = await fetch(snapshotUrl, { signal:controller.signal });
-        if (!response.ok) throw new Error(`Share image returned ${response.status}`);
-        const blob = await response.blob();
+        file = await prepareExportFile(snapshotUrl, snapshotFileName, controller.signal);
         sharePerformance.captureCompleted(operation);
-        file = new File([blob], snapshotFileName, { type:blob.type || "image/png" });
-        rememberExportFile(snapshotUrl, file);
         sharePerformance.encodingCompleted(operation);
       }
 
-      if (canShareFiles && navigator.canShare({ files:[file] })) {
+      if (browserCanShareFiles()) {
+        if (!navigator.canShare({ files:[file] })) {
+          // A browser exposing file sharing must never silently reinterpret
+          // this button as Download. Keep the image ready and report the
+          // platform limitation instead.
+          toast("This browser couldn't open the image share sheet");
+          return;
+        }
         sharePerformance.shareReady(operation);
         try {
           await navigator.share({
@@ -1100,15 +1141,17 @@ export function ShareHubScreen({
           return;
         } catch (error) {
           if ((error as Error)?.name === "AbortError") return;
-          // Some iOS Safari versions expire transient activation while the
-          // final PNG request is in flight. The completed file must remain
-          // available even when Web Share refuses to open after that await.
-          downloadFile(file, snapshotFileName);
-          shared();
-          toast("Your image was downloaded because the share sheet couldn't open");
+          // Keep the prepared file cached, but never turn a Share tap into an
+          // unexpected Files download. The prewarm above makes this path rare;
+          // if WebKit still refuses, another tap can open the already-ready
+          // file immediately.
+          toast("Couldn't open the share sheet. Tap Share again");
           return;
         }
       }
+      // Desktop browsers without file sharing retain the deliberate download
+      // fallback. On iPhone, where file sharing exists, every path above ends
+      // in the native share sheet or a clear error—never an unexpected save.
       sharePerformance.shareReady(operation);
       downloadFile(file, snapshotFileName);
       shared();
