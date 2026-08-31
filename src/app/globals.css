@@ -12587,7 +12587,6 @@ a.clspeek-by:active { opacity: .6; }
    datum; the action changes without shifting the title or page content. */
 .tab-page-header { display:none; }
 .calendar-tab-header { display:none; }
-.calendar-nav-add { display:none; }
 @media (max-width:939px) {
   .youaccount-head {
     align-items:flex-start;
@@ -12628,6 +12627,27 @@ a.clspeek-by:active { opacity: .6; }
     color:var(--color-text-muted);
   }
   .calendar-tab-view button.on { background:var(--color-surface-muted); color:var(--ink); }
+  .calendar-tab-actions {
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .calendar-header-add {
+    width:44px;
+    height:44px;
+    flex:0 0 44px;
+    padding:0;
+    display:grid;
+    place-items:center;
+    border:0;
+    border-radius:50%;
+    background:var(--color-lime);
+    color:var(--color-black);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.48);
+    cursor:pointer;
+  }
+  .calendar-header-add:active { transform:scale(.96); background:var(--color-lime-pressed); }
+  .calendar-header-add > .icon { width:30px; height:30px; }
   .calendar-tab-add {
     min-height:40px; padding:0 16px 0 13px; display:inline-flex; align-items:center; justify-content:center; gap:5px;
     border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black);
@@ -12743,25 +12763,6 @@ a.clspeek-by:active { opacity: .6; }
     background:linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,255,255,.38));
   }
   .screen.hasnav > .navwrap > .navshare:active { transform:scale(.96); }
-  .calendar-nav-add {
-    position:fixed;
-    right:max(16px, calc((100vw - 352px) / 2));
-    bottom:calc(82px + env(safe-area-inset-bottom));
-    z-index:44;
-    width:64px;
-    height:64px;
-    display:grid;
-    place-items:center;
-    padding:0;
-    border:0;
-    border-radius:50%;
-    background:var(--color-lime);
-    color:var(--color-black);
-    box-shadow:0 8px 26px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.48);
-    cursor:pointer;
-  }
-  .calendar-nav-add:active { transform:scale(.96); background:var(--color-lime-pressed); }
-  .calendar-nav-add > .icon { width:30px; height:30px; }
   .screen.hasnav .navtab {
     min-width:0; min-height:58px; flex:1;
     padding:4px 0; overflow:hidden;
