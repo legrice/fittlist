@@ -1275,7 +1275,9 @@ export function ShareHubScreen({
                 the artwork a canvas without making other formats compete. */}
             <div className="sheditor-stage">
               <span className="shpreview-gesture-hint" aria-hidden="true">
-                {background ? "Drag photo · Pinch to zoom · Drag classes" : "Drag classes up or down"}
+                {background
+                  ? "Drag the class list to move it · Drag elsewhere to move the photo · Pinch to zoom"
+                  : "Drag the class list up or down"}
               </span>
               <div className="shsingle-preview">
                 <div className="shprev-wrap">

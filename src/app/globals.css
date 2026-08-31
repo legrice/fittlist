@@ -12886,12 +12886,14 @@ a.clspeek-by:active { opacity: .6; }
   left:50%;
   top:8px;
   z-index:2;
+  width:max-content;
   max-width:calc(100% - 32px);
   color:var(--sheditor-muted);
   font-size:12px;
   font-weight:700;
-  line-height:1.2;
-  white-space:nowrap;
+  line-height:1.25;
+  text-align:center;
+  white-space:normal;
   transform:translateX(-50%);
   pointer-events:none;
 }
