@@ -51,16 +51,19 @@ function previewDays(layout: ShareStoryLayout): PreviewDay[] {
 }
 
 function BrandMark({ color }: { color: string }) {
-  const bar: CSSProperties = { display: "block", height: 9, borderRadius: 2, background: color };
   return (
-    <span
+    <svg
+      className="shbrand-mark"
       aria-hidden="true"
-      style={{ width: 54, display: "flex", flexDirection: "column", gap: 6, transform: "skewY(-1deg)" }}
+      viewBox="0 0 108 103"
+      width="54"
+      height="52"
+      fill={color}
     >
-      <span style={{ ...bar, width: 54 }} />
-      <span style={{ ...bar, width: 38 }} />
-      <span style={{ ...bar, width: 25 }} />
-    </span>
+      <rect width="108" height="27" rx="4" />
+      <rect y="38" width="72" height="27" rx="4" />
+      <rect y="76" width="36" height="27" rx="4" />
+    </svg>
   );
 }
 
