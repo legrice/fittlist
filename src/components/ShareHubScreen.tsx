@@ -1308,7 +1308,7 @@ export function ShareHubScreen({
   return (
     <>
       {/* `shpage` is the marker the gradient opt-out keys on. */}
-      <div className={`cardwrap shpage${!building ? " shpage-editor" : ""}${embedded ? " shpage-embedded" : ""}${tabbed ? " shpage-tabbed" : ""}`}>
+      <div className={`cardwrap shpage shpage-editor${embedded ? " shpage-embedded" : ""}${tabbed ? " shpage-tabbed" : ""}`}>
         {!embedded && !tabbed && (
           <div className="shpage-back">
             <BackLink className="evback share-page-close" href="/calendar" anywhere label="Close share screen">
@@ -1316,21 +1316,8 @@ export function ShareHubScreen({
             </BackLink>
           </div>
         )}
-        {/* The start block, in place of an empty poster, by Matt's call:
-            the picture of nothing pushed the one button that fixes it
-            below the fold. Two lines and the button; the experiment talk
-            and the feedback link came off, also by Matt's call. */}
-        {building && (
-          <div className="shstart">
-            <h2>Add a class before sharing your week</h2>
-            <p>Once it&rsquo;s on your calendar, we&rsquo;ll turn your week into a shareable schedule.</p>
-            <button className="btn si" disabled={adderBusy} onClick={() => void openAdder()}>
-              {adderBusy ? "Loading class tools..." : "Add a class"}
-            </button>
-          </div>
-        )}
-        {!building && (
-          <section className="sheditor-shell sheditor-week" aria-label="Share image editor">
+        <section className={`sheditor-shell sheditor-week${building ? " is-building" : ""}`} aria-label="Share image editor">
+          <div className="sheditor-disabled-layer" inert={building ? true : undefined} aria-hidden={building || undefined}>
             <div className="shtop-controls">
               <button
                 type="button"
@@ -1513,8 +1500,17 @@ export function ShareHubScreen({
 
               <div className="sheditor-share-action">{imageShareAction()}</div>
             </div>
-          </section>
-        )}
+          </div>
+          {building && (
+            <div className="shstart" role="region" aria-labelledby="share-empty-title">
+              <h2 id="share-empty-title">Add a class before sharing your week</h2>
+              <p>Once it&rsquo;s on your calendar, we&rsquo;ll turn your week into a shareable schedule.</p>
+              <button className="btn si" disabled={adderBusy} onClick={() => void openAdder()}>
+                {adderBusy ? "Loading class tools..." : "Add a class"}
+              </button>
+            </div>
+          )}
+        </section>
       </div>
 
       {pick === "dates" && (

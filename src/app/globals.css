@@ -7065,12 +7065,20 @@ html[data-mode="dark"],
 .shcuts { margin: 0 0 12px; }
 .shcuts .shday { font-size: 13px; height: 38px; padding: 0 4px; }
 
-/* The member hub's start block: in place of an empty poster, so the one
-   button that fixes the emptiness is never below the fold. */
-.shstart { padding: 34px 10px 20px; text-align: center; }
+/* An empty share keeps the editor visible as context, but makes the first
+   required action unmistakable. Adding stays inside this flow; the refreshed
+   week removes the overlay and reveals the populated editor beneath it. */
+.sheditor-shell.is-building { position:relative; min-height:calc(100dvh - 110px); overflow:hidden; }
+.sheditor-disabled-layer { display:flex; min-width:0; flex-direction:column; }
+.sheditor-shell.is-building .sheditor-disabled-layer { filter:blur(7px); opacity:.42; pointer-events:none; user-select:none; }
+.shstart {
+  position:absolute; inset:0; z-index:20; padding:clamp(118px,22dvh,210px) 24px 40px;
+  display:flex; flex-direction:column; align-items:center;
+  background:rgba(247,247,247,.48); text-align:center;
+}
 .shstart h2 { font-size: 24px; line-height: 1.15; margin: 0 0 12px; }
 .shstart p { font-size: 14px; line-height: 1.55; color: var(--ol); margin: 0 auto 10px; max-width: 320px; }
-.shstart .btn { width: 100%; margin-top: 14px; background: var(--si); color: var(--color-black); }
+.shstart .btn { width:min(100%,420px); margin-top:14px; background:var(--si); color:var(--color-black); }
 
 /* the photo picker inside the member profile sheet */
 .mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }
