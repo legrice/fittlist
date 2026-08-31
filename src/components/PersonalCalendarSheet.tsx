@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode, type Ref } from "react";
 import { BodyPortal } from "@/components/BodyPortal";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { loadPersonalCalendarData, type PersonalCalendarData } from "@/app/actions/calendar-data";
@@ -8,7 +8,7 @@ import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 
 const PERSONAL_CALENDAR_KEY = "personal-calendar";
 
-export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, openAdder = false }: { children:ReactNode; className?:string; ariaLabel?:string; openAdder?:boolean }) {
+export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, openAdder = false, buttonRef }: { children:ReactNode; className?:string; ariaLabel?:string; openAdder?:boolean; buttonRef?:Ref<HTMLButtonElement> }) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
   const [data, setData] = useState<PersonalCalendarData | null>(() => readClientMemory(PERSONAL_CALENDAR_KEY));
@@ -93,7 +93,7 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
     });
   };
   return <>
-    <button type="button" className={className} aria-label={ariaLabel} aria-busy={pending} disabled={pending} onClick={show}>{children}</button>
+    <button ref={buttonRef} type="button" className={className} aria-label={ariaLabel} aria-busy={pending} disabled={pending} onClick={show}>{children}</button>
     {open && data && <BodyPortal><div className="personal-calendar-scrim"><section className={`personal-calendar-sheet${visible ? " is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Your calendar"><CalendarScreen {...data} sheet openAdder={openAdder} onClose={goBack} /></section></div></BodyPortal>}
   </>;
 }

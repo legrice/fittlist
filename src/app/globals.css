@@ -12795,6 +12795,8 @@ a.clspeek-by:active { opacity: .6; }
    datum; the action changes without shifting the title or page content. */
 .tab-page-header { display:none; }
 .calendar-tab-header { display:none; }
+.mobile-calendar-switcher-scrim { display:none; }
+.mobile-calendar-personal-trigger { display:none; }
 @media (max-width:939px) {
   .youaccount-head {
     align-items:flex-start;
@@ -12824,6 +12826,13 @@ a.clspeek-by:active { opacity: .6; }
   .screen.hasnav .discover-title-row h1 {
     margin:0; font-size:30px; line-height:1.05; letter-spacing:-.025em;
   }
+  .calendar-tab-title {
+    min-width:0; min-height:44px; margin:0; padding:0; display:inline-flex;
+    align-items:center; gap:5px; border:0; background:transparent; color:var(--ink);
+    cursor:pointer;
+  }
+  .calendar-tab-title > .icon { flex:0 0 auto; transition:transform var(--motion-fast) var(--motion-ease-standard); }
+  .calendar-tab-title[aria-expanded="true"] > .icon { transform:rotate(180deg); }
   .calendar-tab-view {
     display:flex; padding:3px; flex:0 0 auto;
     border:1px solid var(--color-border); border-radius:var(--radius-pill);
@@ -12884,6 +12893,62 @@ a.clspeek-by:active { opacity: .6; }
     border:2px solid var(--color-surface);
     border-radius:50%;
     background:var(--color-danger, #e52b32);
+  }
+  .mobile-calendar-switcher-scrim {
+    position:fixed; inset:0; z-index:150; padding:16px 0 0;
+    display:flex; align-items:flex-end; justify-content:center;
+    background:rgba(18, 20, 15, .36); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+  }
+  .mobile-calendar-switcher {
+    width:100%; max-width:560px; max-height:min(74dvh, 620px); overflow-y:auto;
+    padding:8px 16px calc(16px + env(safe-area-inset-bottom));
+    border-radius:28px 28px 0 0; background:var(--paper); color:var(--ink);
+    box-shadow:0 -16px 44px rgba(16, 18, 13, .16);
+    animation:mobile-calendar-sheet-in var(--motion-base) var(--motion-ease-out) both;
+  }
+  .mobile-calendar-switcher-handle {
+    width:38px; height:5px; margin:2px auto 10px; border-radius:999px;
+    background:var(--color-border-strong);
+  }
+  .mobile-calendar-switcher > header {
+    min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .mobile-calendar-switcher > header h2 { margin:0; font-size:27px; line-height:1.1; letter-spacing:var(--headline-tracking); }
+  .mobile-calendar-switcher > header button {
+    width:42px; height:42px; padding:0; display:grid; place-items:center;
+    border:0; border-radius:50%; background:var(--color-surface-muted); color:var(--ink);
+  }
+  .mobile-calendar-switcher-list { margin-top:8px; display:grid; gap:4px; }
+  .mobile-calendar-switcher-list > a,
+  .mobile-calendar-switcher-list > button,
+  .mobile-calendar-switcher-row {
+    width:100%; min-width:0; min-height:66px; padding:8px 10px;
+    display:grid; grid-template-columns:44px minmax(0, 1fr) 22px; align-items:center; gap:12px;
+    border:0; border-radius:14px; background:transparent; color:var(--ink);
+    text-align:left; text-decoration:none; font:inherit;
+  }
+  .mobile-calendar-switcher-list > button.selected { background:var(--color-surface-muted); }
+  .mobile-calendar-switcher-list > a:active,
+  .mobile-calendar-switcher-list > button:active,
+  .mobile-calendar-switcher-row:active { background:var(--cl); }
+  .mobile-calendar-switcher-list > div { min-width:0; }
+  .mobile-calendar-switcher-list strong,
+  .mobile-calendar-switcher-list small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mobile-calendar-switcher-list strong { font-size:16px; line-height:1.2; }
+  .mobile-calendar-switcher-list small { margin-top:3px; color:var(--muted); font-size:12.5px; line-height:1.25; }
+  .mobile-calendar-switcher-list > p {
+    margin:10px 10px 3px; color:var(--muted); font-size:11px;
+    font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  }
+  .mobile-calendar-switcher-icon {
+    width:44px; height:44px; display:grid; place-items:center; overflow:hidden;
+    border-radius:12px; background:var(--cl); color:var(--ink);
+  }
+  .mobile-calendar-switcher-icon.group { border-radius:50%; }
+  .mobile-calendar-switcher-icon img { width:100%; height:100%; object-fit:cover; }
+  @keyframes mobile-calendar-sheet-in {
+    from { opacity:0; transform:translateY(24px); }
+    to { opacity:1; transform:translateY(0); }
   }
   .screen.hasnav .calendar-page-header { display:none; }
 

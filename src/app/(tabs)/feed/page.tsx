@@ -6,6 +6,7 @@ import { buildDiscoverFeed } from "@/lib/discoverfeed";
 import { avatarColor } from "@/lib/avatar";
 import { FollowingScreen } from "@/components/FollowingScreen";
 import { todayIso } from "@/lib/format";
+import { managedCalendarsForUser } from "@/lib/managed-calendars";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function DiscoverPage() {
   // The feed is the expensive branch. Studio saves, groups and pins are
   // independent, so don't make them wait for every schedule and occurrence
   // to finish before their first query even starts.
-  const [feed, savedStudioRows, groupData, pinRows] = await Promise.all([
+  const [feed, savedStudioRows, groupData, pinRows, managedCalendars] = await Promise.all([
     // First paint is deliberately only today + tomorrow and the visible
     // portion of the rail. The remaining exact 31-day calendar streams from
     // the client after this page is already usable.
@@ -82,6 +83,7 @@ export default async function DiscoverPage() {
     db.select({ entityType: schema.calendarPins.entityType, entityId: schema.calendarPins.entityId })
       .from(schema.calendarPins)
       .where(eq(schema.calendarPins.userId, userId)),
+    managedCalendarsForUser(userId),
   ]);
   const classKeysByGroup = new Map<string, string[]>();
   for (const row of groupData.classRows) {
@@ -118,6 +120,7 @@ export default async function DiscoverPage() {
         classKeys: classKeysByGroup.get(group.id) ?? [],
       }))}
       initialPins={pinRows.map((pin) => `${pin.entityType}:${pin.entityId}`)}
+      managedCalendars={managedCalendars}
     />
   );
 }

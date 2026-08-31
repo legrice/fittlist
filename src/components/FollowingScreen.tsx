@@ -15,6 +15,7 @@ import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
+import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const CoachPeek = dynamic(() => import("@/components/CoachPeek").then((module) => module.CoachPeek));
@@ -170,6 +171,7 @@ export function FollowingScreen({
   savedStudios = [],
   socialGroups = [],
   initialPins = [],
+  managedCalendars = [],
   mode = "home",
 }: {
   items: FeedItem[];
@@ -196,6 +198,7 @@ export function FollowingScreen({
   savedStudios?: SocialStudio[];
   socialGroups?: SocialGroup[];
   initialPins?: string[];
+  managedCalendars?: ManagedCalendarDestination[];
   /** Following is the combined schedule; Upcoming is the filtered browser. */
   mode?: "home" | "upcoming";
 }) {
@@ -205,7 +208,18 @@ export function FollowingScreen({
   const [cats, setCats] = useState(initialCats);
   const [myRail, setMyRail] = useState(initialMyRail);
   const [calendarPending, setCalendarPending] = useState(mode === "home");
+  const [calendarSwitcherOpen, setCalendarSwitcherOpen] = useState(false);
+  const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
   const streamGeneration = useRef(0);
+
+  useEffect(() => {
+    if (!calendarSwitcherOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCalendarSwitcherOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [calendarSwitcherOpen]);
 
   // Give the browser the useful screen first. The network request for days
   // 3–31 begins only after hydration, then merges without replacing today's
@@ -823,7 +837,10 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="calendar-tab-header">
-          <h1>Calendar</h1>
+          <button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}>
+            <h1>Calendar</h1>
+            <Icon name="expand_more" size={23} />
+          </button>
           <div className="calendar-tab-actions">
             <button type="button" className="tab-page-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button>
             <GlobalAdd
@@ -843,6 +860,7 @@ export function FollowingScreen({
           </div>
         </header>
       )}
+      {isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
       {isHome && !firstRun && (
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
@@ -1074,6 +1092,41 @@ export function FollowingScreen({
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
       {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCalendarDirectory(); }}><section className={`calendar-directory-sheet${calendarDirectoryDragging ? " is-pulling" : ""}`} style={{ transform:`translateY(${calendarDirectoryDragY}px)` }} role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()} onTouchStart={startCalendarDirectoryPull} onTouchMove={moveCalendarDirectoryPull} onTouchEnd={endCalendarDirectoryPull} onTouchCancel={endCalendarDirectoryPull}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={closeCalendarDirectory}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list" ref={calendarDirectoryListRef}>{calendarDirectoryItems.map((item) => { const key=`${item.kind}:${item.id}`; const following=calendarDirectoryFollowing[key] ?? true; return <div className="calendar-directory-row" key={key}><Link href={item.href} onClick={closeCalendarDirectory}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong></Link><button type="button" className={following ? "on" : ""} disabled={calendarDirectoryBusy === key} onClick={() => void toggleDirectoryFollow(item)}>{following ? "Following" : "Follow"}</button></div>})}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
+      {isHome && calendarSwitcherOpen && <BodyPortal>
+        <div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSwitcherOpen(false); }}>
+          <section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="mobile-calendar-switcher-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="mobile-calendar-switcher-handle" aria-hidden="true" />
+            <header>
+              <h2 id="mobile-calendar-switcher-title">Calendars</h2>
+              <button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarSwitcherOpen(false)}><Icon name="close" size={21} /></button>
+            </header>
+            <div className="mobile-calendar-switcher-list">
+              <button type="button" className="selected" aria-current="page" onClick={() => setCalendarSwitcherOpen(false)}>
+                <span className="mobile-calendar-switcher-icon"><Icon name="calendar_view_day" size={21} /></span>
+                <span><strong>My week</strong><small>You and calendars you follow</small></span>
+                <Icon name="check" size={19} />
+              </button>
+              <button type="button" className="mobile-calendar-switcher-row" aria-label="Open personal calendar" onClick={() => { personalCalendarTriggerRef.current?.click(); setCalendarSwitcherOpen(false); }}>
+                <span className="mobile-calendar-switcher-icon"><Icon name="person" size={21} /></span>
+                <span><strong>Personal calendar</strong><small>Your classes and shifts</small></span>
+                <Icon name="chevron_right" size={19} />
+              </button>
+              {managedCalendars.length > 0 && <p>Managed calendars</p>}
+              {managedCalendars.map((calendar) => {
+                const href = calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`;
+                return <Link href={href} onClick={() => setCalendarSwitcherOpen(false)} key={`${calendar.kind}:${calendar.id}`}>
+                  <span className={`mobile-calendar-switcher-icon ${calendar.kind}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={21} />}
+                  </span>
+                  <span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span>
+                  <Icon name="chevron_right" size={19} />
+                </Link>;
+              })}
+            </div>
+          </section>
+        </div>
+      </BodyPortal>}
 
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
