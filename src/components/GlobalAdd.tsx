@@ -37,6 +37,7 @@ export function GlobalAdd({
   classOnly = false,
   triggerClassName,
   triggerLabel,
+  triggerIconSize,
   onCalendarChange,
 }: {
   floating?: boolean;
@@ -45,6 +46,7 @@ export function GlobalAdd({
    * phone headers keep the compact plus button. */
   triggerClassName?: string;
   triggerLabel?: string;
+  triggerIconSize?: number;
   /** Lets a calendar reveal and highlight the exact occurrence just added. */
   onCalendarChange?: (focus?: { id: string; iso: string }) => void;
 } = {}) {
@@ -539,7 +541,7 @@ export function GlobalAdd({
         disabled={pending}
         onClick={openChooser}
       >
-        <Icon name="add" size={classOnly ? 30 : 24} />
+        <Icon name="add" size={triggerIconSize ?? (classOnly ? 30 : 24)} />
         {triggerLabel && <span>{triggerLabel}</span>}
       </button>
       {composer}
