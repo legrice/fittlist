@@ -9,7 +9,12 @@ import { typeFaceOf } from "@/lib/typefaces";
 import { decoOf } from "@/lib/decorations";
 import type { StoryFormat } from "@/lib/storyplan";
 import { shareRange, shareWeek } from "@/lib/shareweek";
-import { SHARE_SCHEDULE_Y_MAX, SHARE_SCHEDULE_Y_MIN } from "@/lib/share-design";
+import {
+  SHARE_HEADLINE_Y_MAX,
+  SHARE_HEADLINE_Y_MIN,
+  SHARE_SCHEDULE_Y_MAX,
+  SHARE_SCHEDULE_Y_MIN,
+} from "@/lib/share-design";
 
 // The composer's picture. One route for both hats and both canvases, because
 // the composer is one screen: a second route per combination is four routes
@@ -118,6 +123,8 @@ export async function GET(req: Request) {
   const backgroundY = boundedNumber(qs.get("by"), 50, 0, 100);
   const backgroundZoom = boundedNumber(qs.get("bz"), 100, 100, 300);
   const backgroundOverlay = boundedNumber(qs.get("bo"), 24, 0, 60);
+  const photoPanels = qs.get("panels") !== "0";
+  const headlineY = boundedNumber(qs.get("hy"), 0, SHARE_HEADLINE_Y_MIN, SHARE_HEADLINE_Y_MAX);
   const scheduleY = boundedNumber(qs.get("sy"), 0, SHARE_SCHEDULE_Y_MIN, SHARE_SCHEDULE_Y_MAX);
   const featureKey = (qs.get("feature") ?? "").trim();
   const layout = buildShareStoryLayout({
@@ -146,6 +153,8 @@ export async function GET(req: Request) {
     backgroundY,
     backgroundZoom,
     backgroundOverlay,
+    photoPanels,
+    headlineY,
     scheduleY,
     feature:layout.feature,
     plan:layout.plan,

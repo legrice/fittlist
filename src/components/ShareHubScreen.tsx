@@ -339,11 +339,14 @@ export function ShareHubScreen({
   const [photoY, setPhotoY] = useState(startingDesign.photoY);
   const [photoZoom, setPhotoZoom] = useState(startingDesign.photoZoom);
   const [photoOverlay, setPhotoOverlay] = useState(startingDesign.overlay);
+  const [photoPanels, setPhotoPanels] = useState(startingDesign.photoPanels);
+  const [headlineY, setHeadlineY] = useState(startingDesign.headlineY);
   const [scheduleY, setScheduleY] = useState(startingDesign.scheduleY);
   const [draftPhotoX, setDraftPhotoX] = useState(startingDesign.photoX);
   const [draftPhotoY, setDraftPhotoY] = useState(startingDesign.photoY);
   const [draftPhotoZoom, setDraftPhotoZoom] = useState(startingDesign.photoZoom);
   const [draftPhotoOverlay, setDraftPhotoOverlay] = useState(startingDesign.overlay);
+  const [draftPhotoPanels, setDraftPhotoPanels] = useState(startingDesign.photoPanels);
   // Off means no headline at all, by Matt's call: the picture is the week
   // alone. Its own switch rather than an empty field, because an empty
   // field falls back to the stock words on purpose.
@@ -816,15 +819,19 @@ export function ShareHubScreen({
       photoY,
       photoZoom,
       overlay:photoOverlay,
+      photoPanels,
+      headlineY,
       scheduleY,
     }),
     [
       background,
       decoId,
       hsize,
+      headlineY,
       noHead,
       photoAvailable,
       photoOverlay,
+      photoPanels,
       photoX,
       photoY,
       photoZoom,
@@ -889,6 +896,8 @@ export function ShareHubScreen({
     setPhotoY(safe.photoY);
     setPhotoZoom(safe.photoZoom);
     setPhotoOverlay(safe.overlay);
+    setPhotoPanels(safe.photoPanels);
+    setHeadlineY(safe.headlineY);
     setScheduleY(safe.scheduleY);
   };
 
@@ -985,6 +994,8 @@ export function ShareHubScreen({
       photoY,
       photoZoom,
       photoOverlay,
+      photoPanels ? 1 : 0,
+      headlineY,
       scheduleY,
       featuredKey ?? "",
       hideParam,
@@ -1001,8 +1012,10 @@ export function ShareHubScreen({
       headline,
       hideParam,
       hsize,
+      headlineY,
       noHead,
       photoOverlay,
+      photoPanels,
       photoX,
       photoY,
       photoZoom,
@@ -1015,7 +1028,8 @@ export function ShareHubScreen({
   const exportUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
-    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bz=${photoZoom}&bo=${photoOverlay}&sy=${scheduleY}` +
+    `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bz=${photoZoom}&bo=${photoOverlay}` +
+    `&panels=${photoPanels ? 1 : 0}&hy=${headlineY}&sy=${scheduleY}` +
     `${featuredKey ? `&feature=${encodeURIComponent(featuredKey)}` : ""}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}-${styleId}-${background ? "photo" : "plain"}`;
   const fileName = `fittlist-${handle}-week-${styleId}.png`;
@@ -1274,8 +1288,8 @@ export function ShareHubScreen({
             <div className="sheditor-stage">
               <span className="shpreview-gesture-hint" aria-hidden="true">
                 {background
-                  ? "Drag the class list to move it · Drag elsewhere to move the photo · Pinch to zoom"
-                  : "Drag the class list up or down"}
+                  ? "Drag headline or classes to move them · Drag the photo elsewhere · Pinch to zoom"
+                  : "Drag the headline or class list up and down"}
               </span>
               <div className="shsingle-preview">
                 <div className="shprev-wrap">
@@ -1290,6 +1304,8 @@ export function ShareHubScreen({
                     backgroundY={photoY}
                     backgroundZoom={photoZoom}
                     backgroundOverlay={photoOverlay}
+                    photoPanels={photoPanels}
+                    headlineY={headlineY}
                     scheduleY={scheduleY}
                     handle={handle}
                     configKey={previewConfigKey}
@@ -1306,6 +1322,7 @@ export function ShareHubScreen({
                       setPhotoY(next.y);
                       setPhotoZoom(next.zoom);
                     } : undefined}
+                    onHeadlineYChange={setHeadlineY}
                     onScheduleYChange={setScheduleY}
                   />
                 </div>
@@ -1335,6 +1352,7 @@ export function ShareHubScreen({
                     setDraftPhotoY(photoY);
                     setDraftPhotoZoom(photoZoom);
                     setDraftPhotoOverlay(photoOverlay);
+                    setDraftPhotoPanels(photoPanels);
                     setPick("photo");
                   }}
                 />
@@ -1522,6 +1540,27 @@ export function ShareHubScreen({
                     }}
                   />
                 )}
+                <fieldset className="shphoto-panels">
+                  <legend>Text background</legend>
+                  <div>
+                    <button
+                      type="button"
+                      className={draftPhotoPanels ? "on" : ""}
+                      aria-pressed={draftPhotoPanels}
+                      onClick={() => setDraftPhotoPanels(true)}
+                    >
+                      Boxes
+                    </button>
+                    <button
+                      type="button"
+                      className={!draftPhotoPanels ? "on" : ""}
+                      aria-pressed={!draftPhotoPanels}
+                      onClick={() => setDraftPhotoPanels(false)}
+                    >
+                      Transparent
+                    </button>
+                  </div>
+                </fieldset>
                 <label className="flabel" htmlFor="shPhotoOverlay">
                   Darken photo <span>· {draftPhotoOverlay}%</span>
                 </label>
@@ -1545,6 +1584,7 @@ export function ShareHubScreen({
                       setPhotoY(draftPhotoY);
                       setPhotoZoom(draftPhotoZoom);
                       setPhotoOverlay(draftPhotoOverlay);
+                      setPhotoPanels(draftPhotoPanels);
                       setPick(null);
                     }}
                   >

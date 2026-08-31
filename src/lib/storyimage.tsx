@@ -12,7 +12,12 @@ import {
 } from "@/lib/storyplan";
 import type { DecoId } from "@/lib/decorations";
 import { storyHeadline } from "@/lib/share-story-layout";
-import { SHARE_SCHEDULE_Y_MAX, SHARE_SCHEDULE_Y_MIN } from "@/lib/share-design";
+import {
+  SHARE_HEADLINE_Y_MAX,
+  SHARE_HEADLINE_Y_MIN,
+  SHARE_SCHEDULE_Y_MAX,
+  SHARE_SCHEDULE_Y_MIN,
+} from "@/lib/share-design";
 
 // One paint for every share image.
 //
@@ -73,8 +78,8 @@ export type StoryModel = {
   headlineSize: number;
   /** A data URL, or null for no face. */
   photo: string | null;
-  /** A full-bleed user-picked image. The schedule stays on solid panels so
-   * arbitrary photography can never make the class details illegible. */
+  /** A full-bleed user-picked image. Solid text panels are the safe default;
+   * the editor can deliberately remove them for a cleaner composition. */
   backgroundPhoto?: string | null;
   /** Focal point and shade for a full-bleed background, in percentages.
    * Values are clamped again here because public render helpers should not
@@ -83,6 +88,10 @@ export type StoryModel = {
   backgroundY?: number;
   backgroundZoom?: number;
   backgroundOverlay?: number;
+  /** Solid theme panels behind text on a full-bleed photo. */
+  photoPanels?: boolean;
+  /** Vertical headline offset in canvas pixels. */
+  headlineY?: number;
   /** Vertical schedule offset in canvas pixels. */
   scheduleY?: number;
   /** One occurrence promoted above the rest of the week. */
@@ -116,11 +125,13 @@ function FeaturedClass({
   theme,
   format,
   onPhoto,
+  photoPanels = true,
 }: {
   feature: StoryFeature;
   theme: StoryTheme;
   format: StoryFormat;
   onPhoto: boolean;
+  photoPanels?: boolean;
 }) {
   const scale = format === "square" ? 0.68 : 1;
   const px = (n: number) => Math.round(n * scale);
@@ -136,12 +147,12 @@ function FeaturedClass({
         height: metrics.height,
         marginBottom: metrics.gap,
         padding: `${px(24)}px ${px(28)}px`,
-        borderWidth: px(4),
+        borderWidth: onPhoto && !photoPanels ? 0 : px(4),
         borderStyle: "solid",
         borderColor: theme.accent,
-        borderRadius: px(20),
-        background: onPhoto ? theme.bg : `${theme.accent}14`,
-        color: theme.fg,
+        borderRadius: onPhoto && !photoPanels ? 0 : px(20),
+        background: onPhoto ? (photoPanels ? theme.bg : "transparent") : `${theme.accent}14`,
+        color: onPhoto && !photoPanels ? "#fff" : theme.fg,
       }}
     >
       <div
@@ -184,7 +195,7 @@ function FeaturedClass({
             fontSize: px(29),
             fontWeight: 600,
             lineHeight: 1.1,
-            color: theme.faint,
+            color: onPhoto && !photoPanels ? "rgba(255,255,255,.86)" : theme.faint,
           }}
         >
           {feature.sub}
@@ -208,6 +219,8 @@ export function renderStory(model: StoryModel) {
     backgroundY,
     backgroundZoom,
     backgroundOverlay,
+    photoPanels = true,
+    headlineY,
     scheduleY,
     feature,
     plan,
@@ -230,6 +243,7 @@ export function renderStory(model: StoryModel) {
   const bgY = finiteClamp(backgroundY, 0, 100, 50);
   const bgZoom = finiteClamp(backgroundZoom, 100, 300, 100) / 100;
   const bgShade = finiteClamp(backgroundOverlay, 0, 60, 24) / 100;
+  const headlineTop = finiteClamp(headlineY, SHARE_HEADLINE_Y_MIN, SHARE_HEADLINE_Y_MAX, 0);
   const scheduleTop = finiteClamp(scheduleY, SHARE_SCHEDULE_Y_MIN, SHARE_SCHEDULE_Y_MAX, 0);
   const layout = y.layout;
   const editorialInk = layout === "swiss" || layout === "cowboy";
@@ -330,10 +344,10 @@ export function renderStory(model: StoryModel) {
                 flexDirection: "column",
                 alignSelf: "flex-start",
                 width: square ? 780 : 840,
-                padding: compact ? "30px 42px" : "38px 48px",
-                borderRadius: 28,
-                background: t.bg,
-                color: t.fg,
+                padding: photoPanels ? (compact ? "30px 42px" : "38px 48px") : 0,
+                borderRadius: photoPanels ? 28 : 0,
+                background: photoPanels ? t.bg : "transparent",
+                color: photoPanels ? t.fg : "#fff",
                 textAlign: "left",
                 fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
                 fontStyle: guest?.italic ? "italic" : "normal",
@@ -346,6 +360,8 @@ export function renderStory(model: StoryModel) {
                 lineHeight: 0.98,
                 letterSpacing: guest ? Math.round((guest.track ?? 0) * hSize) : -2,
                 marginBottom: compact ? 24 : 34,
+                position: "relative",
+                top: px(headlineTop),
               }}
             >
               <span>{line1}</span>
@@ -357,7 +373,7 @@ export function renderStory(model: StoryModel) {
             </div>
           )}
 
-          {feature && <FeaturedClass feature={feature} theme={t} format={format} onPhoto />}
+          {feature && <FeaturedClass feature={feature} theme={t} format={format} onPhoto photoPanels={photoPanels} />}
 
           <div
             style={{
@@ -375,8 +391,8 @@ export function renderStory(model: StoryModel) {
                   display: "flex",
                   padding: "28px 32px",
                   borderRadius: 18,
-                  background: t.bg,
-                  color: t.fg,
+                  background: photoPanels ? t.bg : "transparent",
+                  color: photoPanels ? t.fg : "#fff",
                   fontSize: 36,
                   fontWeight: 600,
                 }}
@@ -401,10 +417,10 @@ export function renderStory(model: StoryModel) {
                     gap: compact ? 20 : 28,
                     height: panelHeight,
                     padding: compact ? "16px 22px" : "20px 26px",
-                    borderRadius: 18,
-                    background: t.bg,
-                    color: t.fg,
-                    borderWidth: 2,
+                    borderRadius: photoPanels ? 18 : 0,
+                    background: photoPanels ? t.bg : "transparent",
+                    color: photoPanels ? t.fg : "#fff",
+                    borderWidth: photoPanels ? 2 : 0,
                     borderStyle: "solid",
                     borderColor: t.accent,
                   }}
@@ -447,7 +463,7 @@ export function renderStory(model: StoryModel) {
                                 fontSize: compact ? 23 : 27,
                                 fontWeight: 600,
                                 lineHeight: 1.1,
-                                color: t.muted,
+                                color: photoPanels ? t.muted : "rgba(255,255,255,.86)",
                               }}
                             >
                               {row.sub}
@@ -635,6 +651,8 @@ export function renderStory(model: StoryModel) {
             fontStyle: guest?.italic ? "italic" : "normal",
             textTransform: y.upper ? "uppercase" : "none",
             color: layout === "neon" || editorialInk ? t.accent : t.fg,
+            position: "relative",
+            top: px(headlineTop),
             marginBottom: px(78),
             maxWidth: photo ? 646 : 908,
             ...(layout === "split"

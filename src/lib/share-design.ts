@@ -27,6 +27,10 @@ export type ShareDesign = {
   photoZoom: number;
   /** Darkness over a background photo, as a whole percentage. */
   overlay: number;
+  /** Whether headline and schedule cards use solid theme panels over a photo. */
+  photoPanels: boolean;
+  /** Vertical position of the headline in 1080x1920 canvas pixels. */
+  headlineY: number;
   /** Vertical position of the schedule block in 1080x1920 canvas pixels. */
   scheduleY: number;
 };
@@ -44,6 +48,9 @@ export const MAX_STORY_LOOK_NAME_LENGTH = 32;
 export const SHARE_SCHEDULE_Y_MIN = -1600;
 export const SHARE_SCHEDULE_Y_MAX = 1600;
 export const SHARE_SCHEDULE_EDGE_PEEK = 96;
+export const SHARE_HEADLINE_Y_MIN = -1600;
+export const SHARE_HEADLINE_Y_MAX = 1600;
+export const SHARE_HEADLINE_EDGE_PEEK = 96;
 
 export const DEFAULT_SHARE_DESIGN: ShareDesign = Object.freeze({
   styleId: "plain",
@@ -57,6 +64,8 @@ export const DEFAULT_SHARE_DESIGN: ShareDesign = Object.freeze({
   photoY: 50,
   photoZoom: 100,
   overlay: 24,
+  photoPanels: true,
+  headlineY: 0,
   scheduleY: 0,
 });
 
@@ -119,6 +128,8 @@ export function sanitizeShareDesign(
     photoY: wholeNumber(raw.photoY, fallback.photoY, 0, 100),
     photoZoom: wholeNumber(raw.photoZoom, fallback.photoZoom, 100, 300),
     overlay: wholeNumber(raw.overlay, fallback.overlay, 0, 60),
+    photoPanels: booleanOf(raw.photoPanels, fallback.photoPanels),
+    headlineY: wholeNumber(raw.headlineY, fallback.headlineY, SHARE_HEADLINE_Y_MIN, SHARE_HEADLINE_Y_MAX),
     scheduleY: wholeNumber(raw.scheduleY, fallback.scheduleY, SHARE_SCHEDULE_Y_MIN, SHARE_SCHEDULE_Y_MAX),
   };
 }

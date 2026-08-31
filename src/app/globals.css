@@ -11085,6 +11085,17 @@ a.clspeek-by:active { opacity: .6; }
   width:max-content; padding:4px 7px; border-radius:999px; background:rgba(0,0,0,.58);
   color:#fff; font-size:10px; line-height:1; font-style:normal; font-weight:600; pointer-events:none;
 }
+.shphoto-panels { margin:12px 0 0; padding:0; border:0; }
+.shphoto-panels legend { margin-bottom:7px; color:var(--ink); font-size:14px; font-weight:600; }
+.shphoto-panels > div {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:3px; padding:3px;
+  border-radius:var(--radius-pill); background:var(--shell);
+}
+.shphoto-panels button {
+  min-height:38px; border:0; border-radius:var(--radius-pill); background:transparent;
+  color:var(--muted); font:inherit; font-size:14px; font-weight:600;
+}
+.shphoto-panels button.on { background:var(--card); color:var(--ink); box-shadow:0 1px 3px rgba(25,21,2,.1); }
 .shphoto-controls .flabel { margin-top:10px; }
 .shphoto-controls .publishwrap { margin-top:12px; }
 .shstyle-tabs {

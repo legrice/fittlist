@@ -22,6 +22,9 @@ import type { ShareStoryLayout } from "@/lib/share-story-layout";
 import { TYPEFACES, type TypeFace, type TypeFaceId } from "@/lib/typefaces";
 import type { DecoId } from "@/lib/decorations";
 import {
+  SHARE_HEADLINE_EDGE_PEEK,
+  SHARE_HEADLINE_Y_MAX,
+  SHARE_HEADLINE_Y_MIN,
   SHARE_SCHEDULE_EDGE_PEEK,
   SHARE_SCHEDULE_Y_MAX,
   SHARE_SCHEDULE_Y_MIN,
@@ -41,6 +44,8 @@ export type ShareLivePreviewProps = {
   backgroundY?: number;
   backgroundZoom?: number;
   backgroundOverlay?: number;
+  photoPanels?: boolean;
+  headlineY?: number;
   scheduleY?: number;
   handle: string;
   /** A stable identity for the exact configuration currently on screen. */
@@ -48,8 +53,9 @@ export type ShareLivePreviewProps = {
   emptyLine?: string;
   onRendered?: (configKey: string) => void;
   onBackgroundChange?: (next: { x: number; y: number; zoom: number }) => void;
+  onHeadlineYChange?: (next: number) => void;
   onScheduleYChange?: (next: number) => void;
-  onDirectEditStart?: (kind: "background" | "classes") => void;
+  onDirectEditStart?: (kind: "background" | "headline" | "classes") => void;
 };
 
 type PreviewDay = {
@@ -90,10 +96,12 @@ function FeatureCard({
   layout,
   theme,
   onPhoto,
+  panels,
 }: {
   layout: ShareStoryLayout;
   theme: StoryTheme;
   onPhoto: boolean;
+  panels: boolean;
 }) {
   const feature = layout.feature;
   if (!feature) return null;
@@ -103,10 +111,11 @@ function FeatureCard({
         flex: "0 0 auto",
         marginBottom: 30,
         padding: "24px 28px",
-        border: `4px solid ${theme.accent}`,
-        borderRadius: 20,
-        background: onPhoto ? theme.bg : `${theme.accent}14`,
-        color: theme.fg,
+        border: onPhoto && !panels ? "4px solid transparent" : `4px solid ${theme.accent}`,
+        borderRadius: onPhoto && !panels ? 0 : 20,
+        background: onPhoto ? (panels ? theme.bg : "transparent") : `${theme.accent}14`,
+        color: onPhoto && !panels ? "#fff" : theme.fg,
+        textShadow: onPhoto && !panels ? "0 3px 18px rgba(0,0,0,.92)" : undefined,
       }}
     >
       <div
@@ -142,7 +151,7 @@ function FeatureCard({
           style={{
             overflow: "hidden",
             marginTop: 10,
-            color: theme.faint,
+            color: onPhoto && !panels ? "rgba(255,255,255,.86)" : theme.faint,
             fontSize: 29,
             fontWeight: 600,
             lineHeight: 1.1,
@@ -157,7 +166,18 @@ function FeatureCard({
   );
 }
 
-function PhotoSchedule({ days, theme, compact }: { days: PreviewDay[]; theme: StoryTheme; compact: boolean }) {
+function PhotoSchedule({
+  days,
+  theme,
+  compact,
+  panels,
+}: {
+  days: PreviewDay[];
+  theme: StoryTheme;
+  compact: boolean;
+  panels: boolean;
+}) {
+  const photoTextShadow = panels ? undefined : "0 3px 18px rgba(0,0,0,.92), 0 1px 3px rgba(0,0,0,1)";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: compact ? 22 : 30 }}>
       {days.map(({ day, rows }) => {
@@ -170,10 +190,11 @@ function PhotoSchedule({ days, theme, compact }: { days: PreviewDay[]; theme: St
               gridTemplateColumns: `${compact ? 104 : 116}px minmax(0, 1fr)`,
               gap: compact ? 20 : 28,
               padding: compact ? "16px 22px" : "20px 26px",
-              border: `2px solid ${theme.accent}`,
-              borderRadius: 18,
-              background: theme.bg,
-              color: theme.fg,
+              border: panels ? `2px solid ${theme.accent}` : "2px solid transparent",
+              borderRadius: panels ? 18 : 0,
+              background: panels ? theme.bg : "transparent",
+              color: panels ? theme.fg : "#fff",
+              textShadow: photoTextShadow,
             }}
           >
             <div style={{ display: "flex", flexDirection: "column", fontWeight: 700 }}>
@@ -213,7 +234,7 @@ function PhotoSchedule({ days, theme, compact }: { days: PreviewDay[]; theme: St
                           display: "block",
                           overflow: "hidden",
                           marginTop: 3,
-                          color: theme.muted,
+                          color: panels ? theme.muted : "rgba(255,255,255,.86)",
                           fontSize: compact ? 23 : 27,
                           fontWeight: 600,
                           lineHeight: 1.1,
@@ -641,12 +662,15 @@ function ShareLivePreviewComponent({
   backgroundY = 50,
   backgroundZoom = 100,
   backgroundOverlay = 24,
+  photoPanels = true,
+  headlineY = 0,
   scheduleY = 0,
   handle,
   configKey,
   emptyLine = "Nothing on the calendar for these days yet.",
   onRendered,
   onBackgroundChange,
+  onHeadlineYChange,
   onScheduleYChange,
   onDirectEditStart,
 }: ShareLivePreviewProps) {
@@ -662,6 +686,13 @@ function ShareLivePreviewComponent({
   const [previewScale, setPreviewScale] = useState(0);
   const photoPointers = useRef(new Map<number, { x: number; y: number }>());
   const photoGesture = useRef({ x:backgroundX, y:backgroundY, zoom:backgroundZoom, centerX:0, centerY:0, distance:0 });
+  const headlineGesture = useRef<{
+    pointerId:number;
+    startY:number;
+    value:number;
+    min:number;
+    max:number;
+  } | null>(null);
   const scheduleGesture = useRef<{
     pointerId:number;
     startY:number;
@@ -771,10 +802,11 @@ function ShareLivePreviewComponent({
     ? {
         alignSelf: "flex-start",
         width: 840,
-        padding: "38px 48px",
-        borderRadius: 28,
-        background: theme.bg,
-        color: theme.fg,
+        padding: photoPanels ? "38px 48px" : 0,
+        borderRadius: photoPanels ? 28 : 0,
+        background: photoPanels ? theme.bg : "transparent",
+        color: photoPanels ? theme.fg : "#fff",
+        textShadow: photoPanels ? undefined : "0 4px 22px rgba(0,0,0,.92), 0 1px 4px rgba(0,0,0,1)",
       }
     : {
         maxWidth: 908,
@@ -891,7 +923,10 @@ function ShareLivePreviewComponent({
           >
             {(layout.line1 || layout.line2) && (
               <div
+                aria-label="Headline position. Drag up or down to move it."
                 style={{
+                  position:"relative",
+                  top:clamped(headlineY, SHARE_HEADLINE_Y_MIN, SHARE_HEADLINE_Y_MAX, 0),
                   display: "flex",
                   flexDirection: "column",
                   flex: "0 0 auto",
@@ -903,7 +938,51 @@ function ShareLivePreviewComponent({
                   letterSpacing: `${typeface.track ?? (typeface.id === "standard" ? -0.02 : 0)}em`,
                   lineHeight: style.layout === "cowboy" ? 0.84 : 0.98,
                   textTransform: style.upper ? "uppercase" : undefined,
+                  touchAction:onHeadlineYChange ? "none" : undefined,
+                  cursor:onHeadlineYChange ? "grab" : undefined,
                   ...headlineStyle,
+                }}
+                onPointerDown={(event) => {
+                  if (!onHeadlineYChange) return;
+                  event.stopPropagation();
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  const scale = previewScale || 1;
+                  const canvasRect = canvasRef.current?.getBoundingClientRect();
+                  const headlineRect = event.currentTarget.getBoundingClientRect();
+                  const min = canvasRect
+                    ? headlineY + (canvasRect.top + SHARE_HEADLINE_EDGE_PEEK * scale - headlineRect.bottom) / scale
+                    : SHARE_HEADLINE_Y_MIN;
+                  const max = canvasRect
+                    ? headlineY + (canvasRect.bottom - SHARE_HEADLINE_EDGE_PEEK * scale - headlineRect.top) / scale
+                    : SHARE_HEADLINE_Y_MAX;
+                  headlineGesture.current = {
+                    pointerId:event.pointerId,
+                    startY:event.clientY,
+                    value:headlineY,
+                    min:Math.max(SHARE_HEADLINE_Y_MIN, Math.round(Math.min(min, max))),
+                    max:Math.min(SHARE_HEADLINE_Y_MAX, Math.round(Math.max(min, max))),
+                  };
+                  onDirectEditStart?.("headline");
+                }}
+                onPointerMove={(event) => {
+                  const gesture = headlineGesture.current;
+                  if (!onHeadlineYChange || !gesture || gesture.pointerId !== event.pointerId) return;
+                  event.stopPropagation();
+                  const scale = previewScale || 1;
+                  onHeadlineYChange(Math.round(clamped(
+                    gesture.value + (event.clientY - gesture.startY) / scale,
+                    gesture.min,
+                    gesture.max,
+                    0,
+                  )));
+                }}
+                onPointerUp={(event) => {
+                  if (headlineGesture.current?.pointerId === event.pointerId) headlineGesture.current = null;
+                  event.stopPropagation();
+                }}
+                onPointerCancel={(event) => {
+                  if (headlineGesture.current?.pointerId === event.pointerId) headlineGesture.current = null;
+                  event.stopPropagation();
                 }}
               >
                 <span>{layout.line1}</span>
@@ -915,7 +994,7 @@ function ShareLivePreviewComponent({
               </div>
             )}
 
-            <FeatureCard layout={layout} theme={theme} onPhoto={onPhoto} />
+            <FeatureCard layout={layout} theme={theme} onPhoto={onPhoto} panels={photoPanels} />
 
             {layout.plan.lifted && (
               <div style={{ marginBottom: 30, color: onPhoto ? "#fff" : theme.faint, fontSize: 36 }}>
@@ -981,8 +1060,9 @@ function ShareLivePreviewComponent({
                 style={{
                   padding: onPhoto ? "28px 32px" : 0,
                   borderRadius: onPhoto ? 18 : 0,
-                  background: onPhoto ? theme.bg : undefined,
-                  color: onPhoto ? theme.fg : theme.faint,
+                background: onPhoto && photoPanels ? theme.bg : undefined,
+                color: onPhoto ? (photoPanels ? theme.fg : "#fff") : theme.faint,
+                textShadow:onPhoto && !photoPanels ? "0 3px 18px rgba(0,0,0,.92)" : undefined,
                   fontSize: 40,
                   fontWeight: 600,
                 }}
@@ -990,7 +1070,7 @@ function ShareLivePreviewComponent({
                 {emptyLine}
               </div>
             ) : onPhoto ? (
-              <PhotoSchedule days={days} theme={theme} compact={layout.plan.tier !== 1} />
+              <PhotoSchedule days={days} theme={theme} compact={layout.plan.tier !== 1} panels={photoPanels} />
             ) : style.layout === "swiss" ? (
               <SwissSchedule days={days} theme={theme} />
             ) : style.layout === "cowboy" ? (

@@ -78,4 +78,38 @@ while (true) {
 if (bytes < 10_000) fail(`rendered PNG was unexpectedly small (${bytes} bytes)`);
 
 const elapsed = Math.round((performance.now() - started) * 10) / 10;
-console.log(`storyimage tier-3 ok (${bytes} bytes, ${elapsed}ms)`);
+
+// The photo editor can remove every text panel and move the headline without
+// changing the class-list position. Consume that branch too so a live-preview
+// gesture can never produce an export configuration Satori cannot render.
+const photoBackground = `data:image/svg+xml;base64,${Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920"><rect width="1080" height="1920" fill="#315f4d"/></svg>',
+).toString("base64")}`;
+const photoResponse = renderStory({
+  theme: STORY_THEMES.paper,
+  style: STORY_STYLES.plain,
+  format: "story",
+  line1: "Come train",
+  line2: "with me",
+  headlineSize: 100,
+  photo: null,
+  backgroundPhoto: photoBackground,
+  photoPanels: false,
+  headlineY: 220,
+  scheduleY: -180,
+  plan,
+  empty: false,
+  emptyLine: "Nothing on the calendar yet.",
+  url: "fittlist.co/performance-check",
+});
+if (!photoResponse.body) fail("transparent photo render did not expose a body stream");
+const photoReader = photoResponse.body.getReader();
+let photoBytes = 0;
+while (true) {
+  const { done, value } = await photoReader.read();
+  if (done) break;
+  photoBytes += value.byteLength;
+}
+if (photoBytes < 10_000) fail(`transparent photo PNG was unexpectedly small (${photoBytes} bytes)`);
+
+console.log(`storyimage tier-3 ok (${bytes} bytes, ${elapsed}ms; transparent photo ${photoBytes} bytes)`);
