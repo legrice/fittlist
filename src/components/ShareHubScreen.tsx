@@ -1274,6 +1274,9 @@ export function ShareHubScreen({
             {/* One preview is the center of the studio. The quiet stage gives
                 the artwork a canvas without making other formats compete. */}
             <div className="sheditor-stage">
+              <span className="shpreview-gesture-hint" aria-hidden="true">
+                {background ? "Drag photo · Pinch to zoom · Drag classes" : "Drag classes up or down"}
+              </span>
               <div className="shsingle-preview">
                 <div className="shprev-wrap">
                   <ShareLivePreview
@@ -1305,9 +1308,6 @@ export function ShareHubScreen({
                     } : undefined}
                     onScheduleYChange={setScheduleY}
                   />
-                  <span className="shpreview-gesture-hint" aria-hidden="true">
-                    {background ? "Drag photo · Pinch to zoom · Drag classes" : "Drag classes up or down"}
-                  </span>
                 </div>
               </div>
             </div>

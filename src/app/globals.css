@@ -12854,6 +12854,7 @@ a.clspeek-by:active { opacity: .6; }
   flex-direction:column;
 }
 .sheditor-stage {
+  position:relative;
   min-width:0;
   display:grid;
   place-items:center;
@@ -12865,7 +12866,7 @@ a.clspeek-by:active { opacity: .6; }
 .shsingle-preview {
   width:100%;
   height:clamp(330px, 46dvh, 500px);
-  padding:12px max(7vw, 24px) 24px;
+  padding:32px max(7vw, 24px) 24px;
   display:grid;
   place-items:center;
 }
@@ -12883,16 +12884,13 @@ a.clspeek-by:active { opacity: .6; }
 .shpreview-gesture-hint {
   position:absolute;
   left:50%;
-  bottom:8px;
+  top:8px;
   z-index:2;
-  max-width:calc(100% - 20px);
-  padding:5px 9px;
-  border-radius:var(--radius-pill);
-  background:rgba(2,13,8,.74);
-  color:#fff;
-  font-size:11px;
+  max-width:calc(100% - 32px);
+  color:var(--sheditor-muted);
+  font-size:12px;
   font-weight:700;
-  line-height:1;
+  line-height:1.2;
   white-space:nowrap;
   transform:translateX(-50%);
   pointer-events:none;
@@ -13037,7 +13035,7 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-share-sheet .shsingle-preview {
     height:100%;
     min-height:0;
-    padding:0 max(5vw, 18px) 8px;
+    padding:24px max(5vw, 18px) 8px;
     place-items:start center;
   }
   .calendar-share-sheet .shsingle-preview .shprev-wrap {
