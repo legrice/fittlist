@@ -652,10 +652,10 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   border-radius:62px 62px 0 0; background:var(--color-white); color:var(--color-black);
   box-shadow:0 28px 60px rgba(0,0,0,.13); text-align:left;
 }
-.obwelcome-status { padding:0 8px 26px; display:flex; align-items:center; justify-content:space-between; font-size:12px; letter-spacing:.04em; }
+.obwelcome-status { padding:0 8px 26px; display:flex; align-items:center; justify-content:space-between; font-size:14px; letter-spacing:.04em; }
 .obwelcome-status-icons { display:block; width:64px; height:14px; color:var(--color-black); }
 .obwelcome-phone-head { display:flex; align-items:center; justify-content:space-between; }
-.obwelcome-phone-head h2 { margin:0; font-size:31px; line-height:1; letter-spacing:-.04em; }
+.obwelcome-phone-head h2 { margin:0; font-size:35px; line-height:1; letter-spacing:-.04em; }
 .obwelcome-phone-head > span { width:42px; height:42px; display:grid; place-items:center; border:1px solid #e3e3e3; border-radius:50%; }
 .obwelcome-calendars { margin:27px -8px 20px; display:flex; justify-content:space-between; gap:8px; }
 .obwelcome-calendars > div { width:64px; display:flex; flex-direction:column; align-items:center; gap:7px; }
@@ -665,7 +665,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .obwelcome-calendars > div > span { width:54px; height:54px; border:2px solid transparent; color:var(--color-black); }
 .obwelcome-calendars > div:first-child > span { border-color:var(--color-black); }
-.obwelcome-calendars small { width:100%; overflow:hidden; color:var(--color-black); font-size:11px; font-weight:700; text-align:center; text-overflow:ellipsis; white-space:nowrap; }
+.obwelcome-calendars small { width:100%; overflow:hidden; color:var(--color-black); font-size:13px; font-weight:700; text-align:center; text-overflow:ellipsis; white-space:nowrap; }
 .obwelcome-phone [data-tone="neutral"] { background:#f1f1f1; }
 .obwelcome-phone [data-tone="rose"] { background:#b9427a; color:#fff; }
 .obwelcome-phone [data-tone="blue"] { background:#386f91; color:#fff; }
@@ -673,18 +673,18 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obwelcome-phone [data-tone="mint"] { background:#398463; color:#fff; }
 .obwelcome-context {
   min-height:48px; padding:0 15px; display:flex; align-items:center; justify-content:space-between;
-  border-radius:15px; background:#f1f1f1; font-size:12px; font-weight:700;
+  border-radius:15px; background:#f1f1f1; font-size:14px; font-weight:700;
 }
 .obwelcome-schedule { padding-top:7px; }
-.obwelcome-class-wrap h3 { margin:18px 0 6px; font-size:19px; letter-spacing:-.03em; }
+.obwelcome-class-wrap h3 { margin:18px 0 6px; font-size:22px; letter-spacing:-.03em; }
 .obwelcome-class { min-height:59px; display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:center; gap:11px; }
 .obwelcome-class > i { width:38px; height:38px; font-size:11px; }
 .obwelcome-class > span { min-width:0; display:flex; flex-direction:column; gap:1px; }
 .obwelcome-class :is(small,strong,em) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.obwelcome-class small { font-size:10px; }
-.obwelcome-class strong { font-size:15px; line-height:1.12; }
-.obwelcome-class em { color:#737373; font-size:11px; font-style:normal; }
-.obwelcome-class time { align-self:center; font-size:14px; font-weight:700; }
+.obwelcome-class small { font-size:12px; }
+.obwelcome-class strong { font-size:17px; line-height:1.12; }
+.obwelcome-class em { color:#737373; font-size:13px; font-style:normal; }
+.obwelcome-class time { align-self:center; font-size:16px; font-weight:700; }
 .obwelcome-phone-nav {
   position:absolute; left:22px; right:22px; bottom:22px; height:58px; padding:5px;
   display:grid; grid-template-columns:repeat(4,1fr); border:1px solid #e2e2e2; border-radius:var(--radius-pill);
