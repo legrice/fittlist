@@ -8313,7 +8313,7 @@ html[data-mode="dark"],
 .youquickactions .icon { flex:0 0 auto; }
 .youquickactions > :first-child { background:var(--card); color:var(--ink); }
 .profile-following { margin-top:30px; }
-.profile-following h2 { margin:0 0 12px; font-size:20px; line-height:1.15; letter-spacing:-.025em; }
+.profile-following h2 { margin:0 0 12px; font-size:28px; line-height:1.08; font-weight:600; letter-spacing:-.025em; }
 .profile-following-rail { display:flex; gap:12px; margin:0 -18px; padding:0 18px 5px; overflow-x:auto; scrollbar-width:none; }
 .profile-following-rail::-webkit-scrollbar { display:none; }
 .profile-following-item { width:112px; flex:0 0 112px; display:flex; flex-direction:column; align-items:center; gap:9px; color:var(--ink); text-decoration:none; text-align:center; }
@@ -8333,7 +8333,7 @@ html[data-mode="dark"],
   border-top:1px solid var(--line);
 }
 .savedsection { scroll-margin-top:90px; }
-.yougroup-title { margin: 0 0 12px; font-size: 20px; line-height: 1.15; letter-spacing: -.025em; }
+.yougroup-title { margin:0 0 12px; font-size:28px; line-height:1.08; font-weight:600; letter-spacing:-.025em; }
 .youfavorites-title { margin-top: 34px; margin-bottom: -12px; }
 .yousection { margin-top: 26px; }
 .yousection-head { display: flex; align-items: baseline; justify-content: space-between; }
@@ -12580,6 +12580,11 @@ a.clspeek-by:active { opacity: .6; }
     margin-bottom:10px;
     padding-top:6px;
     padding-bottom:7px;
+  }
+  .profile-following h2,
+  .yougroup-title {
+    font-size:24px;
+    line-height:1.12;
   }
   .tab-page-header { display:none; }
   .calendar-tab-header,
