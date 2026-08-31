@@ -829,7 +829,7 @@ export function FollowingScreen({
             <GlobalAdd
               classOnly
               triggerClassName="calendar-header-add"
-              triggerIconSize={26}
+              triggerIconSize={24}
               onCalendarChange={(focus) => {
                 if (!focus) return;
                 setIncludeYou(true);

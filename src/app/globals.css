@@ -12647,7 +12647,7 @@ a.clspeek-by:active { opacity: .6; }
     cursor:pointer;
   }
   .calendar-header-add:active { transform:scale(.96); background:var(--color-lime-pressed); }
-  .calendar-header-add > .icon { width:26px; height:26px; }
+  .calendar-header-add > .icon { width:24px; height:24px; }
   .calendar-tab-add {
     min-height:40px; padding:0 16px 0 13px; display:inline-flex; align-items:center; justify-content:center; gap:5px;
     border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black);
