@@ -12,6 +12,7 @@ import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
+import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 
@@ -339,6 +340,7 @@ export function FollowingScreen({
   const [pins, setPins] = useState(() => new Set(initialPins));
   const [visibleHomeDayCount, setVisibleHomeDayCount] = useState(2);
   const homeMoreRef = useRef<HTMLDivElement>(null);
+  const [addedFocus, setAddedFocus] = useState<{ id: string; iso: string } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
   const notify = (msg: string, highlight?: string) => {
@@ -346,6 +348,33 @@ export function FollowingScreen({
     toast(msg);
   };
   const router = useRouter();
+
+  useEffect(() => {
+    if (!addedFocus) return;
+    let stopped = false;
+    let clear: ReturnType<typeof setTimeout> | null = null;
+    const deadline = Date.now() + 8000;
+    const reveal = () => {
+      if (stopped) return;
+      const selector = `[data-cid="${CSS.escape(addedFocus.id)}"][data-d="${CSS.escape(addedFocus.iso)}"]`;
+      const row = document.querySelector<HTMLElement>(selector);
+      if (!row) {
+        if (Date.now() < deadline) requestAnimationFrame(reveal);
+        return;
+      }
+      row.classList.add("ps-hl");
+      row.scrollIntoView({ block: "center", behavior: "smooth" });
+      clear = setTimeout(() => {
+        row.classList.remove("ps-hl");
+        setAddedFocus(null);
+      }, 3000);
+    };
+    requestAnimationFrame(reveal);
+    return () => {
+      stopped = true;
+      if (clear) clearTimeout(clear);
+    };
+  }, [addedFocus]);
 
   const closeFind = () => {
     setFind(false);
@@ -977,7 +1006,7 @@ export function FollowingScreen({
                           const displaySourcePhoto = ownedByYou ? meFace.photo : sourcePhoto;
                           const displaySourceColor = ownedByYou ? meFace.color : sourceColor;
                           const showSourceAvatar = Boolean(displaySourceName);
-                          return <article className="cash-class-row" key={item.key}>
+                          return <article className="cash-class-row" key={item.key} data-cid={item.classId} data-d={item.iso}>
                             <button type="button" className={`cash-class-main ${relation.tone}${showSourceAvatar ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               {showSourceAvatar && displaySourceName && <span className={`cash-class-avatar${!ownedByYou && !coach && studio ? " studio" : ""}`} style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
                               <span className="cash-class-copy">
@@ -1027,6 +1056,21 @@ export function FollowingScreen({
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
+      {isHome && (
+        <GlobalAdd
+          classOnly
+          triggerClassName="calendar-nav-add"
+          onCalendarChange={(focus) => {
+            if (!focus) return;
+            setIncludeYou(true);
+            setSelectedPeople(new Set());
+            setCalendarFilter("you");
+            setCalendarView("day");
+            setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER);
+            setAddedFocus(focus);
+          }}
+        />
+      )}
       {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCalendarDirectory(); }}><section className={`calendar-directory-sheet${calendarDirectoryDragging ? " is-pulling" : ""}`} style={{ transform:`translateY(${calendarDirectoryDragY}px)` }} role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()} onTouchStart={startCalendarDirectoryPull} onTouchMove={moveCalendarDirectoryPull} onTouchEnd={endCalendarDirectoryPull} onTouchCancel={endCalendarDirectoryPull}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={closeCalendarDirectory}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list" ref={calendarDirectoryListRef}>{calendarDirectoryItems.map((item) => { const key=`${item.kind}:${item.id}`; const following=calendarDirectoryFollowing[key] ?? true; return <div className="calendar-directory-row" key={key}><Link href={item.href} onClick={closeCalendarDirectory}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong></Link><button type="button" className={following ? "on" : ""} disabled={calendarDirectoryBusy === key} onClick={() => void toggleDirectoryFollow(item)}>{following ? "Following" : "Follow"}</button></div>})}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
 

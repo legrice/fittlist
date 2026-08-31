@@ -37,6 +37,7 @@ export function GlobalAdd({
   classOnly = false,
   triggerClassName,
   triggerLabel,
+  onCalendarChange,
 }: {
   floating?: boolean;
   classOnly?: boolean;
@@ -44,6 +45,8 @@ export function GlobalAdd({
    * phone headers keep the compact plus button. */
   triggerClassName?: string;
   triggerLabel?: string;
+  /** Lets a calendar reveal and highlight the exact occurrence just added. */
+  onCalendarChange?: (focus?: { id: string; iso: string }) => void;
 } = {}) {
   const [open, setOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
@@ -413,8 +416,13 @@ export function GlobalAdd({
                 setMode("class");
               }}
               onEvent={() => setMode("personal")}
-              onNotice={(message) => {
+              onNotice={(message, highlight) => {
                 toast(message);
+                if (highlight) {
+                  const dot = highlight.lastIndexOf(".");
+                  if (dot > 0) onCalendarChange?.({ id: highlight.slice(0, dot), iso: highlight.slice(dot + 1) });
+                  close();
+                }
                 router.refresh();
               }}
             />
@@ -438,9 +446,10 @@ export function GlobalAdd({
                 setClassRole(null);
               }}
               onToast={toast}
-              onPublished={(message) => {
+              onPublished={(message, _planId, _live, focus) => {
                 close();
                 toast(message);
+                onCalendarChange?.(focus);
                 router.refresh();
               }}
               onDeleted={(message) => {
@@ -556,6 +565,7 @@ export function GlobalAdd({
                     return;
                   }
                   toast(`${match.name} was saved to your calendar`);
+                  onCalendarChange?.({ id: match.classId, iso: match.iso });
                   setMatch(null);
                   setOpen(false);
                   router.refresh();
