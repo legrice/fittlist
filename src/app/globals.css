@@ -1097,6 +1097,11 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   display: flex; align-items: flex-end;
   animation: scrim-in var(--motion-fast) var(--motion-ease-standard) both;
 }
+.sheet-scrim:has(> .sheet.adder) {
+  background:rgba(23,26,31,.68);
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+}
 .sheet {
   /* One place to set the sheet's bottom padding. The sticky footer offsets
      against this so it sits flush on the sheet's edge instead of floating
@@ -5776,12 +5781,12 @@ html[data-mode="dark"],
 /* The New class sheet takes the whole screen; a sticky title bar keeps the
    heading + close in reach while the form scrolls. */
 .sheet.adder, .sheet.sheet-full { height: 100%; max-height: 100%; border-radius: 0; padding-top: 0; }
-/* The stepped stages (studio, class list, new studio) are a bottom sheet
-   sized to the ask, not a takeover: type it, tap it, and the page is still
-   there behind you. Only the form takes the screen. */
+/* The stepped stages use the full mobile canvas too. Place and class choices
+   need breathing room, and hiding the action behind the composer keeps the
+   person in this one focused flow. */
 .sheet.adder.adder-step {
-  height: auto; max-height: 88%;
-  border-radius: 22px 22px 0 0; padding-top: 16px;
+  height:100%; max-height:100%;
+  border-radius:0; padding-top:calc(16px + env(safe-area-inset-top));
 }
 .adder-step .studio-list { height: auto; max-height: 40vh; }
 /* The step header: the profile pages' circled back arrow beside the title,
@@ -5810,6 +5815,7 @@ html[data-mode="dark"],
 /* Desktop keeps the centered-modal feel. */
 @media (min-width: 940px) {
   .sheet.adder, .sheet.sheet-full { height: auto; max-height: 94%; border-radius: 16px; }
+  .sheet.adder.adder-step { height:auto; max-height:88%; border-radius:16px; padding-top:16px; }
   .sheet.sheet-full { display: block; }
   .adderhead { padding-top: 20px; }
 }
