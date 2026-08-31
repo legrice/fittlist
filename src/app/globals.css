@@ -12911,12 +12911,6 @@ a.clspeek-by:active { opacity: .6; }
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.sheditor-tool.is-accent .sheditor-tool-icon {
-  border-color:var(--si);
-  background:var(--si);
-  color:var(--color-black);
-}
-.sheditor-tool.is-accent .sheditor-tool-label { color:var(--sheditor-text); }
 .sheditor-tool:active { background:var(--sheditor-active); }
 .sheditor-tool:disabled { cursor:default; opacity:.42; }
 .sheditor-tool:focus-visible,

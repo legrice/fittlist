@@ -1121,7 +1121,7 @@ export function ShareHubScreen({
                 editing still opens the familiar focused sheets. */}
             <div className="sheditor-dock sheditor-dock-week">
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
-                <StudioTool icon="auto_awesome" label="Random" detail="New look" accent onClick={remix} />
+                <StudioTool icon="auto_awesome" label="Random" detail="New look" onClick={remix} />
                 <StudioTool
                   icon="image"
                   label="Background"
@@ -1926,19 +1926,17 @@ function StudioTool({
   detail,
   onClick,
   disabled = false,
-  accent = false,
 }: {
   icon: string;
   label: string;
   detail?: string;
   onClick: () => void;
   disabled?: boolean;
-  accent?: boolean;
 }) {
   return (
     <button
       type="button"
-      className={`sheditor-tool${accent ? " is-accent" : ""}`}
+      className="sheditor-tool"
       aria-label={detail ? `${label}: ${detail}` : label}
       disabled={disabled}
       onClick={onClick}
