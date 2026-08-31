@@ -104,8 +104,8 @@ const livePreview = readFileSync(livePreviewPath, "utf8");
 
 assert.match(
   livePreview,
-  /<svg[\s\S]*?width=\{WIDTH\}[\s\S]*?height=\{HEIGHT\}[\s\S]*?viewBox=/,
-  "the live SVG must declare its 1080x1920 intrinsic ratio so Safari cannot size it as the default 300x150 SVG",
+  /className="shlive-canvas"[\s\S]*?transform:`translate\(-50%, -50%\) scale\(\$\{previewScale\}\)`/,
+  "the live preview must explicitly scale its DOM canvas instead of relying on Safari foreignObject sizing",
 );
 
 for (const obsoletePath of obsoleteSharePaths) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, type CSSProperties } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import {
   STORY_STYLES,
   STORY_THEMES,
@@ -630,7 +630,21 @@ function ShareLivePreviewComponent({
   const onPhoto = !!backgroundPhotoUrl;
   const url = `fittlist.co/${handle.replace(/^@/, "")}`;
   const editorialInk = style.layout === "swiss" || style.layout === "cowboy";
-  const previewRef = useRef<SVGSVGElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(0);
+
+  useLayoutEffect(() => {
+    const preview = previewRef.current;
+    if (!preview) return undefined;
+    const fit = () => {
+      const next = Math.min(preview.clientWidth / WIDTH, preview.clientHeight / HEIGHT);
+      setPreviewScale((current) => Math.abs(current - next) > 0.0001 ? next : current);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(preview);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!onRendered) return;
@@ -683,20 +697,27 @@ function ShareLivePreviewComponent({
       };
 
   return (
-    <svg
+    <div
       ref={previewRef}
       className="shprev shprev-week shlive-preview"
       data-preview-kind="dom"
       data-config-key={configKey}
-      width={WIDTH}
-      height={HEIGHT}
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Your week as a share image"
     >
-      <title>Your week as a share image</title>
-      <foreignObject x="0" y="0" width={WIDTH} height={HEIGHT}>
+      <div
+        className="shlive-canvas"
+        style={{
+          position:"absolute",
+          left:"50%",
+          top:"50%",
+          width:WIDTH,
+          height:HEIGHT,
+          transform:`translate(-50%, -50%) scale(${previewScale})`,
+          transformOrigin:"center",
+          visibility:previewScale > 0 ? "visible" : "hidden",
+        }}
+      >
         <div
           style={{
             position: "relative",
@@ -862,8 +883,8 @@ function ShareLivePreviewComponent({
             </div>
           </div>
         </div>
-      </foreignObject>
-    </svg>
+      </div>
+    </div>
   );
 }
 

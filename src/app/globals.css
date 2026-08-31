@@ -12842,9 +12842,11 @@ a.clspeek-by:active { opacity: .6; }
   box-shadow:none;
 }
 .shsingle-preview .shlive-preview {
+  position:relative;
   display:block;
   width:auto;
   aspect-ratio:9 / 16;
+  overflow:hidden;
   background:var(--color-surface);
 }
 
