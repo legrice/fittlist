@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { googleConfigured } from "@/lib/gcal";
-import { appleConfigured } from "@/lib/apple";
 import { fansEnabled, landingHref } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
@@ -20,12 +18,6 @@ export default async function Home({
   const viaHandle = via?.trim() || null;
   // Arrived from a beta invite email rather than stumbling on the site.
   const wasInvited = invited === "1";
-  // Google login is off the door for the beta, by Matt's call: the credentials
-  // are live in production for the Calendar sync, which is why "configured"
-  // stopped being the right gate. Flip this back to googleConfigured() when
-  // the beta opens up.
-  const providers = { google: false, apple: appleConfigured() };
-  void googleConfigured;
   // Or on somebody's share link, which /j/{code} left in a cookie on the way
   // through. Same gate, and this is who opened it for them. A link from the
   // admin lands as a plain "you're invited" with no name on it: a coach
@@ -63,7 +55,6 @@ export default async function Home({
           startStage="claim"
           claimAs={user.kind === "fan" ? "fan" : "coach"}
           via={viaHandle}
-          providers={providers}
           inviteOnly={false}
           invited={wasInvited || viaAdmin}
           invitedByLink={viaAdmin && !wasInvited}
@@ -81,7 +72,6 @@ export default async function Home({
     return (
       <AuthFlow
         startStage="email"
-        providers={providers}
         inviteOnly={false}
         fans={fansEnabled()}
         landing={await landingHref()}
@@ -92,7 +82,6 @@ export default async function Home({
     <AuthFlow
       startStage="email"
       via={viaHandle}
-      providers={providers}
       inviteOnly={false}
       invited={wasInvited || viaAdmin}
       invitedByLink={viaAdmin && !wasInvited}

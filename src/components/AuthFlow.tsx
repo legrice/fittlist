@@ -23,130 +23,64 @@ import { hasLocalPasskeyHistory, rememberLocalPasskey } from "@/lib/passkey-devi
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
 
-const landingSlides = [
-  {
-    title: "Fit all of your fitness into one calendar.",
-    art: "calendar",
-  },
-  {
-    title: "Share it. Post it. Send it to your mom.",
-    art: "share",
-  },
-  {
-    title: "Save the calendars you actually use.",
-    art: "favorites",
-  },
-  {
-    title: "Keep everyone on the same schedule…",
-    art: "groups",
-  },
-  {
-    title: "…even Jordan",
-    art: "messages",
-  },
+const landingCalendars = [
+  ["All", "calendar_month", "neutral"],
+  ["You", "Y", "rose"],
+  ["Maya", "M", "blue"],
+  ["Theo", "T", "gold"],
 ] as const;
 
-const OnboardingCalendarArt = () => (
-  <div className="obcalendar-art" role="img" aria-label="Three classes arranged on a FittList calendar">
-    {([
-      ["6:30 AM", "Morning yoga", "Yoga studio", "Your coach", "C", "Saved", "saved"],
-      ["5:00 PM", "Kettlebell strength", "Strength studio", "You", "Y", "Coaching", "coaching"],
-      ["6:00 PM", "Run club", "Outdoor space", "A friend", "F", "Going", "going"],
-    ] as const).map(([time, name, studio, person, initials, tag, tone], index) => (
-      <div className={`obcalendar-card obcalendar-card-${index + 1}`} key={name}>
-        <div className="obcalendar-card-top"><span>{time}</span><span className={`obcalendar-tag ${tone}`}>{tag}</span></div>
-        <strong>{name}</strong>
-        <small>{studio}</small>
-        <div className="obcalendar-person"><span className={`obcalendar-avatar avatar-${index + 1}`}>{initials}</span><span>{person}</span></div>
+const landingClasses = [
+  ["Today", "Maya Ortiz", "Sunrise Flow", "Northline Yoga", "7:00am", "M", "blue"],
+  ["Today", "Theo Brooks", "Strength Lab", "Iron House", "5:30pm", "T", "gold"],
+  ["Tomorrow", "You", "Waterfront Run Club", "Pier Track", "6:00pm", "Y", "rose"],
+  ["Sat, Sep 5", "Lena Park", "Reformer Basics", "Studio Arc", "9:00am", "L", "mint"],
+] as const;
+
+function LandingCalendarMockup() {
+  let priorDay = "";
+  return (
+    <div className="obwelcome-phone" role="img" aria-label="A sample FittList calendar with fictional coaches, classes, and studios">
+      <div className="obwelcome-status"><b>9:41</b><span>● ● ▰</span></div>
+      <div className="obwelcome-phone-head"><h2>Calendar</h2><span><Icon name="notifications" size={18} /></span></div>
+      <div className="obwelcome-calendars">
+        {landingCalendars.map(([name, mark, tone]) => (
+          <div key={name}>
+            <span data-tone={tone}>{mark === "calendar_month" ? <Icon name={mark} size={20} /> : mark}</span>
+            <small>{name}</small>
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
-);
-
-const OnboardingShareArt = () => (
-  <div className="obfeature-art obshare-art" role="img" aria-label="A FittList week ready to share by link or image">
-    <div className="obshare-card obart-float float-a">
-      <div className="obshare-accent" />
-      <div className="obshare-headline"><span>Train</span><span>with me.</span></div>
-      <div className="obshare-head">This week</div>
-      <div className="obshare-day"><b>MON</b><span><strong>Morning yoga</strong><small>6:30 AM</small></span></div>
-      <div className="obshare-day"><b>WED</b><span><strong>Kettlebell strength</strong><small>5:00 PM</small></span></div>
-      <div className="obshare-day"><b>SAT</b><span><strong>Run club</strong><small>9:00 AM</small></span></div>
-    </div>
-  </div>
-);
-
-const OnboardingFavoritesArt = () => (
-  <div className="obfeature-art obfavorites-art" role="img" aria-label="A favorite yoga coach and her classes at three studios">
-    <div className="obfavorites-rail">
-      {([['Y','You'],['M','Maya'],['F','Friend']] as const).map(([initials,name],index)=><div className={`obfavorite-person obart-float float-${index===1?'c':'a'}`} key={name}><span className={`obfavorite-face face-${index+1}${index===1?' is-coach':''}`}>{initials}</span><strong>{name}</strong></div>)}
-    </div>
-    <div className="obfavorite-classes">
-      {([
-        ["Mon • 6:30 AM", "Morning Flow", "Open Form Studio"],
-        ["Wed • 5:00 PM", "Power Yoga", "Harbor Yoga"],
-        ["Sat • 7:00 PM", "Candlelight Yin", "Studio Arc"],
-      ] as const).map(([time, name, studio], index) => (
-        <div className={`obfavorite-class obart-float float-${index === 0 ? "a" : index === 1 ? "b" : "c"}`} key={name}>
-          <span><b>{time}</b><strong>{name}</strong><small>{studio}</small></span>
-          <span className="obfavorite-coach">Maya</span>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const OnboardingGroupsArt = () => (
-  <div className="obfeature-art obgroups-art" role="img" aria-label="The Foldy Friends group planning upcoming yoga classes together">
-    <div className="obgroup-profile obart-float float-a">
-      <div className="obgroup-cover"><span>FF</span></div>
-      <strong>Foldy Friends</strong>
-      <small>Yoga?? I barely knew ‘er!</small>
-      <div className="obgroup-tabs"><b>Upcoming</b><span>Updates</span><span>Members</span></div>
-      <div className="obgroup-classes">
-        <div className="obgroup-class"><span><b>Tomorrow · 10:00 AM</b><strong>Morning Flow</strong></span><span className="obgroup-members"><i>YC</i><i>J</i><i>+2</i></span></div>
-        <div className="obgroup-class"><span><b>Sunday · 4:00 PM</b><strong>Hot Yoga</strong></span><span className="obgroup-members"><i>FF</i><i>+3</i></span></div>
+      <div className="obwelcome-context"><span>Following 4 calendars</span><b>View all</b></div>
+      <div className="obwelcome-schedule">
+        {landingClasses.map(([day, person, name, studio, time, initial, tone]) => {
+          const heading = day !== priorDay;
+          priorDay = day;
+          return (
+            <div className="obwelcome-class-wrap" key={`${day}-${name}`}>
+              {heading && <h3>{day}</h3>}
+              <div className="obwelcome-class">
+                <i data-tone={tone}>{initial}</i>
+                <span><small>{person}</small><strong>{name}</strong><em>{studio}</em></span>
+                <time>{time}</time>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="obwelcome-phone-nav" aria-hidden="true">
+        <span className="on"><Icon name="calendar_month" size={20} /></span>
+        <span><Icon name="search" size={20} /></span>
+        <span><Icon name="account_circle" size={20} /></span>
+        <span><Icon name="reply" size={20} /></span>
       </div>
     </div>
-  </div>
-);
-
-const OnboardingMessagesArt = () => (
-  <div className="obfeature-art obmessages-art" role="img" aria-label="A text conversation where Jordan is reminded that the yoga studio is listed in FittList">
-    <div className="obchat-message from-you obart-float float-a"><span>Yo, see you at yoga?</span></div>
-    <div className="obchat-message from-jordan obart-float float-b"><span>Wait, which studio you teaching at again?</span><small>Jordan</small></div>
-    <div className="obchat-message from-you punchline obart-float float-c"><span>bro… it’s on my FittList 😉🥴.</span></div>
-  </div>
-);
-
-const OnboardingArt = ({ art }: { art: typeof landingSlides[number]["art"] }) => {
-  if (art === "calendar") return <OnboardingCalendarArt />;
-  if (art === "share") return <OnboardingShareArt />;
-  if (art === "favorites") return <OnboardingFavoritesArt />;
-  if (art === "groups") return <OnboardingGroupsArt />;
-  if (art === "messages") return <OnboardingMessagesArt />;
-  return null;
-};
-
-const GoogleG = () => (
-  <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
-    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.7 9.5 24 9.5z" />
-    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.9 37.9 46.5 31.8 46.5 24.5z" />
-    <path fill="#FBBC05" d="M10.4 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.9-6.1z" />
-    <path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.7l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.3 0-11.7-3.7-13.6-9.9l-7.9 6.1C6.4 42.6 14.6 48 24 48z" />
-  </svg>
-);
-
-const AppleLogo = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M17.05 12.04c-.03-2.4 1.96-3.55 2.05-3.61-1.12-1.64-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.62.02-3.11.94-3.94 2.39-1.68 2.91-.43 7.22 1.21 9.58.8 1.15 1.76 2.45 3.02 2.4 1.21-.05 1.67-.78 3.13-.78 1.46 0 1.87.78 3.14.76 1.3-.02 2.12-1.17 2.91-2.33.92-1.34 1.3-2.64 1.32-2.71-.03-.01-2.53-.97-2.56-3.85zM14.63 4.84c.67-.81 1.12-1.94.99-3.06-.96.04-2.12.64-2.81 1.45-.62.72-1.16 1.87-1.02 2.97 1.07.08 2.17-.55 2.84-1.36z" />
-  </svg>
-);
+  );
+}
 
 export function AuthFlow({
   startStage,
   via = null,
-  providers = { google: false, apple: false },
   inviteOnly = false,
   invited = false,
   invitedByLink = false,
@@ -157,7 +91,6 @@ export function AuthFlow({
 }: {
   startStage: "email" | "claim";
   via?: string | null;
-  providers?: { google: boolean; apple: boolean };
   inviteOnly?: boolean;
   /** They got here from a beta invite email, so they're already through the
    *  gate — say so, and don't ask them to queue for what they already have. */
@@ -184,9 +117,6 @@ export function AuthFlow({
     startStage === "claim" ? "claim" : "landing",
   );
   const [sheet, setSheet] = useState<SheetMode | null>(null);
-  const [landingSlide, setLandingSlide] = useState(0);
-  const [enteredSlides, setEnteredSlides] = useState<Set<number>>(() => new Set([0]));
-  const landingTrackRef = useRef<HTMLDivElement>(null);
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
   const [role, setRole] = useState<"coach" | "fan">(claimAs);
   const [bio, setBio] = useState(false);
@@ -206,8 +136,6 @@ export function AuthFlow({
   );
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
-  const [nativeIOS, setNativeIOS] = useState(false);
-  const [nativeApplePending, setNativeApplePending] = useState(false);
   const [knownPasskey, setKnownPasskey] = useState(false);
   const [passkeyLabel, setPasskeyLabel] = useState("Log in with a passkey");
   // "Request an invite" modal (invite-only beta).
@@ -218,79 +146,14 @@ export function AuthFlow({
   const [reqSent, setReqSent] = useState(false);
   const pendingProfile = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
-  const viaQ = via ? `?via=${encodeURIComponent(via)}` : "";
 
   useEffect(() => {
-    setNativeIOS(document.documentElement.dataset.native === "ios");
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
     setKnownPasskey(hasLocalPasskeyHistory());
     const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
       || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (appleMobile) setPasskeyLabel("Log in with Face ID");
   }, []);
-  useEffect(() => {
-    if (!nativeIOS) return;
-    const finish = (raw: Event) => {
-      const detail = (raw as CustomEvent<{
-        identityToken?: string;
-        givenName?: string;
-        familyName?: string;
-        error?: string;
-      }>).detail;
-      if (detail?.error) {
-        setNativeApplePending(false);
-        if (detail.error !== "cancelled") setError("Apple sign-in didn't finish. Try again.");
-        return;
-      }
-      if (!detail?.identityToken) {
-        setNativeApplePending(false);
-        setError("Apple sign-in didn't finish. Try again.");
-        return;
-      }
-      void (async () => {
-        try {
-          const res = await fetch("/api/apple/native/complete", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(detail),
-          });
-          const result = await res.json() as { ok?: boolean; href?: string; error?: string };
-          if (!res.ok || !result.ok || !result.href) {
-            setError(result.error === "invite_required"
-              ? "This beta still needs an invitation."
-              : "Apple sign-in didn't finish. Try again.");
-            return;
-          }
-          window.location.assign(result.href);
-        } catch {
-          setError("Apple sign-in needs a connection. Try again when you're online.");
-        } finally {
-          setNativeApplePending(false);
-        }
-      })();
-    };
-    window.addEventListener("fittlist:native-apple-result", finish);
-    return () => window.removeEventListener("fittlist:native-apple-result", finish);
-  }, [nativeIOS]);
-
-  const startNativeApple = async () => {
-    if (nativeApplePending) return;
-    setError("");
-    setNativeApplePending(true);
-    try {
-      const res = await fetch(`/api/apple/native/challenge${viaQ}`, { method: "POST" });
-      const result = await res.json() as { ok?: boolean; nonce?: string };
-      const nativeWindow = window as Window & {
-        webkit?: { messageHandlers?: { fittlistApple?: { postMessage: (body: unknown) => void } } };
-      };
-      if (!res.ok || !result.ok || !result.nonce || !nativeWindow.webkit?.messageHandlers?.fittlistApple)
-        throw new Error("native_apple_unavailable");
-      nativeWindow.webkit.messageHandlers.fittlistApple.postMessage({ nonce: result.nonce });
-    } catch {
-      setNativeApplePending(false);
-      setError("Apple sign-in isn't available right now. You can continue with email.");
-    }
-  };
   // Arriving from a coach's page with a door already chosen: "?join=login"
   // opens the sign-in sheet, "?join=signup" the sign-up one. Tapping Sign in on
   // a profile and landing on the marketing page would just be a second tap.
@@ -307,15 +170,6 @@ export function AuthFlow({
   useEffect(() => {
     if (stage === "claim") nameRef.current?.focus();
   }, [stage]);
-  useEffect(() => {
-    setEnteredSlides((current) => {
-      if (current.has(landingSlide)) return current;
-      const next = new Set(current);
-      next.add(landingSlide);
-      return next;
-    });
-  }, [landingSlide]);
-
   const pendingFan = useRef(claimAs === "fan");
   // Everyone claims a name and a link, then lands on the same calendar.
   const proceed = (needsProfile: boolean, fan = false) => {
@@ -444,12 +298,6 @@ export function AuthFlow({
   };
 
   const urlPreview = slug(handle.trim() || name) || "yourname";
-  const advanceLanding = () => {
-    const next = Math.min(landingSlides.length - 1, landingSlide + 1);
-    const track = landingTrackRef.current;
-    setLandingSlide(next);
-    track?.scrollTo({ left: next * track.clientWidth, behavior: "smooth" });
-  };
   // Which side the claim step is serving. `role` covers the signup sheet; the
   // ref covers arriving here from a login or a magic link, where the sheet was
   // never opened.
@@ -461,79 +309,44 @@ export function AuthFlow({
         <Wordmark variant="ink" className="mark" />
 
         {stage === "landing" && (
-          <>
-            <div className="oblanding-mark">
-              <Wordmark variant="ink" className="oblanding-logo" />
-              <span className="oblanding-progress-track" aria-hidden="true">
-                {landingSlides.map((slide, index) => <span className={index <= landingSlide ? "is-on" : ""} key={slide.art} />)}
-              </span>
-            </div>
-            <div
-              ref={landingTrackRef}
-              className="oblanding-track"
-              onScroll={(event) => {
-                const track = event.currentTarget;
-                if (!track.clientWidth) return;
-                setLandingSlide(Math.max(0, Math.min(landingSlides.length - 1, Math.round(track.scrollLeft / track.clientWidth))));
-              }}
-            >
-              {landingSlides.map((slide, index) => (
-                <article className={`oblanding-slide${enteredSlides.has(index) ? " has-entered" : ""}`} key={slide.title}>
-                  <div className="oblanding-shot has-art">
-                    <OnboardingArt art={slide.art} />
-                  </div>
-                  <h1>{slide.title}</h1>
-                </article>
-              ))}
-            </div>
-            <div className="oblanding-footer">
-              {landingSlide < landingSlides.length - 1 ? (
-                <>
-                  <button className="btn obcontinue" onClick={advanceLanding}>
-                    Continue
+          <div className="obwelcome">
+            <header className="obwelcome-head">
+              <Wordmark variant="ink" className="obwelcome-logo" />
+              <nav aria-label="Account">
+                <button type="button" className="obwelcome-signup-button" onClick={() => { setError(""); setSheet("signup"); }}>
+                  Sign up <Icon name="arrow_forward" size={18} />
+                </button>
+                <button type="button" className="obwelcome-login-button" onClick={() => { setError(""); setSheet("login"); }}>
+                  Log in
+                </button>
+              </nav>
+            </header>
+            <div className="obwelcome-grid">
+              <div className="obwelcome-title">
+                <h1>Your whole week in fitness. One calendar.</h1>
+              </div>
+              <div className="obwelcome-device"><LandingCalendarMockup /></div>
+              <div className="obwelcome-copy">
+                <p>See your classes, coaches, and studios in one live week. Keep it current and share it anywhere.</p>
+                <form className="obwelcome-email" onSubmit={(event) => { event.preventDefault(); sendLink(false, true); }}>
+                  <span><Icon name="mail" size={18} /></span>
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    aria-label="Email address"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                  <button type="submit" disabled={pending}>
+                    {pending ? "Sending…" : "Get started"} <Icon name="arrow_forward" size={18} />
                   </button>
-                  {landingSlide === 0 && (
-                    <button className="obfirst-login" onClick={() => { setError(""); setSheet("login"); }}>
-                      Already have an account? <b>Log in</b>
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="oblanding-actions">
-                  <button className="btn obsignup" onClick={() => { setError(""); setSheet("signup"); }}>
-                    Sign up
-                  </button>
-                  <button className="btn oblogin" onClick={() => { setError(""); setSheet("login"); }}>
-                    Log in
-                  </button>
-                </div>
-              )}
-              {landingSlide === landingSlides.length - 1 && (providers.google || providers.apple) && (
-                <div className="obalts" style={{ marginTop: 16 }}>
-                  {providers.google && (
-                    <a className="obalt google" href={`/api/google/login${viaQ}`}>
-                      <GoogleG /> Continue with Google
-                    </a>
-                  )}
-                  {providers.apple && (nativeIOS ? (
-                    <button
-                      type="button"
-                      className="obalt apple"
-                      onClick={startNativeApple}
-                      disabled={nativeApplePending}
-                    >
-                      <AppleLogo /> {nativeApplePending ? "Continuing…" : "Continue with Apple"}
-                    </button>
-                  ) : (
-                    <a className="obalt apple" href={`/api/apple/login${viaQ}`}>
-                      <AppleLogo /> Continue with Apple
-                    </a>
-                  ))}
-                </div>
-              )}
-              {error && <div className="errorcopy">{error}</div>}
+                </form>
+                {error && <div className="errorcopy">{error}</div>}
+              </div>
             </div>
-          </>
+          </div>
         )}
 
         {stage === "sent" && (
