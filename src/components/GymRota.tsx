@@ -21,6 +21,7 @@ import {
 import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
+import { BackLink } from "@/components/BackLink";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
 import { studioPlannerColorLabel } from "@/lib/studio-planner";
@@ -543,14 +544,14 @@ export function GymRota({
       <div className="pad">
         <div className="studio-manage-top pagetop">
           <div className="studio-manage-topbar">
-            <Link
+            <BackLink
               className="evback studio-manage-back"
               href={dashboardHref}
-              aria-label="Back to studio dashboard"
-              replace
+              anywhere
+              label="Back"
             >
               <Icon name="arrow_back" size={23} />
-            </Link>
+            </BackLink>
             <h1 className="studio-calendar-title">Calendar</h1>
             <span aria-hidden="true" />
           </div>
@@ -693,14 +694,14 @@ export function GymRota({
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
       <div className="studio-manage-top pagetop">
         <div className="studio-manage-topbar">
-          <Link
+          <BackLink
             className="evback studio-manage-back"
             href={dashboardHref}
-            aria-label="Back to studio dashboard"
-            replace
+            anywhere
+            label="Back"
           >
             <Icon name="arrow_back" size={23} />
-          </Link>
+          </BackLink>
           <h1 className="studio-calendar-title">{shiftFilter === "open" ? "Open shifts" : "Calendar"}</h1>
           <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
             <Icon name="tune" size={23} />
