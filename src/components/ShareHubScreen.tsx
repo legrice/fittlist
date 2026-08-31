@@ -1291,12 +1291,11 @@ export function ShareHubScreen({
             if (e.target === e.currentTarget) setPick(null);
           }}
         >
-          <div className="sheet shpick">
+          <div className="sheet shpick shphoto-sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
             <h2>Photo</h2>
-            <p className="lead">Add a photo, then position and darken it behind your schedule.</p>
             <div className="shbackground-choices">
               <button
                 type="button"
@@ -1313,12 +1312,14 @@ export function ShareHubScreen({
                   setBackground(true);
                 }}
               >
-                  <span className="shbackground-choice-top">
+                <span className="shbackground-choice-top">
                     <span className="shbackground-image-preview"><Icon name="image" size={24} /></span>
-                    {background && <Icon name="check" size={20} />}
                 </span>
-                <strong>Photo</strong>
-                <span>{photoAvailable ? (background ? "Change photo" : "Use saved photo") : "Choose from photos"}</span>
+                <span className="shbackground-choice-copy">
+                  <strong>Photo</strong>
+                  <span>{photoAvailable ? (background ? "Change photo" : "Use saved photo") : "Choose from photos"}</span>
+                </span>
+                {background && <Icon name="check" size={20} />}
               </button>
             </div>
             {background && (
