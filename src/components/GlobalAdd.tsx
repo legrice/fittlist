@@ -539,7 +539,7 @@ export function GlobalAdd({
         disabled={pending}
         onClick={openChooser}
       >
-        <Icon name="add" size={24} />
+        <Icon name="add" size={classOnly ? 30 : 24} />
         {triggerLabel && <span>{triggerLabel}</span>}
       </button>
       {composer}
