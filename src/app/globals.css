@@ -621,7 +621,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obwelcome-title { align-self:center; }
 .ob .obwelcome-title h1 {
   max-width:520px; margin:0; color:var(--color-black);
-  font-size:clamp(42px,3.8vw,64px); font-weight:500; line-height:1; letter-spacing:-.05em;
+  font-size:clamp(42px,3.8vw,64px); font-weight:500; line-height:1; letter-spacing:-.025em;
 }
 .obwelcome-copy { align-self:center; max-width:460px; }
 .ob .obwelcome-copy > p {
