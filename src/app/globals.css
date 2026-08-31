@@ -9091,7 +9091,7 @@ html[data-mode="dark"],
 .calendar-person-chip { flex:0 0 86px; width:86px; padding:0; display:flex; flex-direction:column; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink); font:inherit; cursor:pointer; }
 .calendar-person-face { position:relative; width:80px; min-width:80px; max-width:80px; height:80px; min-height:80px; max-height:80px; flex:0 0 80px; display:grid; place-items:center; overflow:visible; border-radius:50%; background:var(--color-surface-muted); color:var(--ink); font-size:20px; font-weight:700; }
 .calendar-person-face > img { position:absolute; inset:0; display:block; width:80px; height:80px; border-radius:50%; object-fit:cover; }
-.calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 2px var(--ground),0 0 0 5px var(--color-lime); }
+.calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 2px var(--ground),0 0 0 5px var(--color-black); }
 .calendar-person-chip small { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.1; font-weight:600; }
 .calendar-person-star { position:absolute; right:-5px; bottom:-4px; width:30px; height:30px; padding:4px; border:2px solid var(--ground); border-radius:50%; background:var(--color-black); color:var(--color-white); }
 .calendar-discover-chip { color:var(--ink); text-decoration:none; }
