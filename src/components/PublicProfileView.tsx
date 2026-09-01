@@ -477,18 +477,21 @@ export async function PublicProfileView({
           // lesser layout. The owner's colour hero carries the image
           // icon into the editor (?edit=1, which ProfileOwnerBar reads).
           avatar={
-            <AvatarZoom
-              className="profav"
-              handle={handle}
-              name={user.name}
-              photo={user.photo}
-              color={avatarColor(user)}
-              follow={!isOwner && account ? account : null}
-              isOwner={isOwner}
-              availability={user.availability}
-              canMessage={canMessage}
-              signedIn={signedIn}
-            />
+            <div className="profile-avatar-favorite">
+              <AvatarZoom
+                className="profav"
+                handle={handle}
+                name={user.name}
+                photo={user.photo}
+                color={avatarColor(user)}
+                follow={!isOwner && account ? account : null}
+                isOwner={isOwner}
+                availability={user.availability}
+                canMessage={canMessage}
+                signedIn={signedIn}
+              />
+              {!isOwner && viewerId ? <CalendarPinButton entityType="person" entityId={user.id} entityName={user.name} className="calendar-pin-button profile-photo-favorite"/> : null}
+            </div>
           }
           // The same two slots for everybody. A visitor gets Message and
           // Follow; the owner gets Share and Edit profile, which are the two
@@ -539,7 +542,7 @@ export async function PublicProfileView({
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
-          ownerTop={!isOwner && viewerId ? <><ProfileOverflow profileId={user.id} path={`/${handle}`} name={user.name}/><CalendarPinButton entityType="person" entityId={user.id} entityName={user.name}/></> : null}
+          ownerTop={!isOwner && viewerId ? <ProfileOverflow profileId={user.id} path={`/${handle}`} name={user.name}/> : null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.

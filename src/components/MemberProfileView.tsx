@@ -200,21 +200,24 @@ export async function MemberProfileView({
           title={user.title ?? ""}
           location={user.location ?? ""}
           avatar={
-            <AvatarZoom
-              className="profav"
-              handle={user.handle ?? ""}
-              name={name}
-              photo={user.photo}
-              color={avatarColor(user)}
-              isOwner={isOwner}
-            />
+            <div className="profile-avatar-favorite">
+              <AvatarZoom
+                className="profav"
+                handle={user.handle ?? ""}
+                name={name}
+                photo={user.photo}
+                color={avatarColor(user)}
+                isOwner={isOwner}
+              />
+              {!isOwner&&viewerId?<CalendarPinButton entityType="person" entityId={user.id} entityName={name} className="calendar-pin-button profile-photo-favorite"/>:null}
+            </div>
           }
           backTo={backTo}
           // Nothing above the name; see PublicProfileView.
           badges={null}
           // Settings lives in the shared app header; floating it here as well
           // made the owner's page carry two doors to the same place.
-          ownerTop={!isOwner&&viewerId?<><ProfileOverflow profileId={user.id} path={`/${user.handle!}`} name={name}/><CalendarPinButton entityType="person" entityId={user.id} entityName={name}/></>:null}
+          ownerTop={!isOwner&&viewerId?<ProfileOverflow profileId={user.id} path={`/${user.handle!}`} name={name}/>:null}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />

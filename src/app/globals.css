@@ -3884,7 +3884,7 @@ button.ps-card { cursor: pointer; }
 .viewmore:active { transform: scale(.97); }
 [data-mode="dark"] .viewmore { background: var(--card); border: 1px solid var(--line); }
 
-.pubhead .evback { flex-shrink:0; width:42px; height:42px; margin-bottom:0; }
+.pubhead .evback { flex-shrink:0; width:42px; height:42px; margin-bottom:0; border:1px solid var(--line); background:var(--color-white); }
 /* Bigger, and lifted off the paper. It is the first thing on the page and the
    only photograph on it, so it can carry the weight. */
 .profav {
@@ -4720,13 +4720,15 @@ select.editinput.placekind-select {
 .pubhero-media .ownertop { top: calc(var(--head-top, 0px) + 14px); right: 18px; z-index: 2; }
 .pubbelow { width: 100%; padding-top: 16px; }
 .profile-identity-lead { width:100%; display:flex; align-items:flex-start; justify-content:center; gap:18px; }
+.profile-avatar-favorite { position:relative; width:128px; }
+.profile-photo-favorite { position:absolute; top:4px; right:-8px; z-index:2; background:var(--color-white); box-shadow:0 3px 12px rgba(0,0,0,.1); }
 .profile-top-actions { gap:8px; }
 .profile-top-name {
   position:absolute; top:6px; left:58px; right:58px; height:42px;
   display:flex; align-items:center; justify-content:center; overflow:hidden;
   font-size:22px; font-weight:700; text-align:center; text-overflow:ellipsis; white-space:nowrap;
 }
-.pubidentity:has(.profile-top-actions) .profile-top-name { right:108px; }
+.pubidentity:has(.profile-top-actions) .profile-top-name { right:58px; }
 .profile-about-trigger { flex:0 0 auto; min-height:40px; padding:0 15px; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--ink); font:inherit; font-size:13.5px; font-weight:600; }
 .profile-action-cluster { width:100%; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
 .profile-action-cluster>.profacts { display:contents; }
