@@ -40,9 +40,22 @@ const landingClasses = [
 function PhoneStatusIcons() {
   return (
     <span className="obwelcome-status-icons" aria-hidden="true">
-      <Icon name="signal_cellular_alt" size={15} />
-      <Icon name="wifi" size={15} />
-      <Icon name="battery_full" size={16} />
+      <svg className="obwelcome-iphone-cellular" viewBox="0 0 18 12">
+        <rect x="0" y="8" width="3" height="4" rx="1" />
+        <rect x="5" y="6" width="3" height="6" rx="1" />
+        <rect x="10" y="3" width="3" height="9" rx="1" />
+        <rect x="15" y="0" width="3" height="12" rx="1" />
+      </svg>
+      <svg className="obwelcome-iphone-wifi" viewBox="0 0 17 12">
+        <path d="M1 3.7C5.35-.15 11.65-.15 16 3.7L14.45 5.4C11 2.42 6 2.42 2.55 5.4L1 3.7Z" />
+        <path d="M4 7C6.58 4.76 10.42 4.76 13 7L11.45 8.7C9.75 7.28 7.25 7.28 5.55 8.7L4 7Z" />
+        <circle cx="8.5" cy="10.7" r="1.3" />
+      </svg>
+      <svg className="obwelcome-iphone-battery" viewBox="0 0 25 12">
+        <rect className="obwelcome-iphone-battery-case" x=".75" y=".75" width="20.5" height="10.5" rx="3" />
+        <rect x="2.5" y="2.5" width="17" height="7" rx="1.6" />
+        <path d="M22.3 4V8C23.55 7.58 24.25 6.88 24.25 6S23.55 4.42 22.3 4Z" />
+      </svg>
     </span>
   );
 }
