@@ -518,7 +518,7 @@ export function CalendarScreen({
           </label>
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
-            <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_view_month" size={21} /></button>
+            <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
           </div>
         </div>
       </header>
