@@ -191,11 +191,11 @@ export function ProfileOwnerBar({
           does instead. Share leads because it's the weekly habit; editing your
           bio is a thing you do twice a year. */}
       <div className="profacts">
-        <button className="actpill actpill-primary" onClick={() => setShareMenu(true)}>
+        <button className="actpill" onClick={() => setShareMenu(true)}>
           <Icon name="reply" className="share-arrow-forward" size={18} />
           <span>Share profile</span>
         </button>
-        <button className="actpill" onClick={openEdit}>
+        <button className="actpill profile-owner-primary" onClick={openEdit}>
           <Icon name="edit" size={18} />
           <span>Edit profile</span>
         </button>

@@ -542,7 +542,7 @@ export async function PublicProfileView({
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
-          ownerTop={!isOwner && account?.following ? <CalendarPinButton entityType="person" entityId={user.id} entityName={user.name} /> : null}
+          ownerTop={!isOwner && viewerId ? <CalendarPinButton entityType="person" entityId={user.id} entityName={user.name} /> : null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.

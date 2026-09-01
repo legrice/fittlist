@@ -286,7 +286,8 @@ export function ProfileTabs({
             </BackLink>
           </div>
         ) : null}
-        {(infoSheet||ownerTop)&&<div className="ownertop profile-top-actions">{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}{ownerTop}</div>}
+        {ownerTop&&<div className="ownertop profile-top-actions">{ownerTop}</div>}
+        <h1 className="profile-top-name">{name}</h1>
           </div>
         )}
         <div className="pubidentity pubidentity-paper">
@@ -294,9 +295,11 @@ export function ProfileTabs({
             {!heroPhoto && !heroColor && (
               <>
             {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
-            {(infoSheet||ownerTop)&&<div className="ownertop profile-top-actions">{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}{ownerTop}</div>}
+            {ownerTop&&<div className="ownertop profile-top-actions">{ownerTop}</div>}
+            <h1 className="profile-top-name">{name}</h1>
               </>
             )}
+            {handle ? <p className="profhandle">@{handle}</p> : null}
             {(title.trim() || location.trim()) && (
               <div className="profile-eyebrow">
                 <span>{title.trim()}</span>
@@ -304,11 +307,9 @@ export function ProfileTabs({
               </div>
             )}
             {badges && <div className="profbadges-top">{badges}</div>}
-            <div className="profname-row"><h1 className="profname">{name}</h1></div>
-            {handle ? <p className="profhandle">@{handle}</p> : null}
         </div>
         <div className="pubbelow">
-        {actions}
+        <div className="profile-action-cluster">{actions}{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}</div>
         {summary?.trim() ? <ProfileAbout text={summary.trim()} className="profile-summary" /> : null}
         {endorsement}
         </div>

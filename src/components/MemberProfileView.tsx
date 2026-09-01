@@ -25,6 +25,7 @@ import { ClassOpener } from "@/components/ClassOpener";
 import { ScheduleNudge } from "@/components/ScheduleNudge";
 import { ReportContentButton } from "@/components/ReportContentButton";
 import { hiddenFrom } from "@/lib/blocks";
+import { CalendarPinButton } from "@/components/CalendarPinButton";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -214,7 +215,7 @@ export async function MemberProfileView({
           badges={null}
           // Settings lives in the shared app header; floating it here as well
           // made the owner's page carry two doors to the same place.
-          ownerTop={null}
+          ownerTop={!isOwner&&viewerId?<CalendarPinButton entityType="person" entityId={user.id} entityName={name}/>:null}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />

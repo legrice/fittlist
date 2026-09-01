@@ -4717,9 +4717,25 @@ select.editinput.placekind-select {
 .pubhero-media .profback { top: calc(var(--head-top, 0px) + 14px); left: 18px; z-index: 2; }
 .pubhero-media .ownertop { top: calc(var(--head-top, 0px) + 14px); right: 18px; z-index: 2; }
 .pubbelow { width: 100%; padding-top: 16px; }
-.profile-identity-lead { width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
+.profile-identity-lead { width:100%; display:flex; align-items:flex-start; justify-content:center; gap:18px; }
 .profile-top-actions { gap:8px; }
+.profile-top-name {
+  position:absolute; top:14px; left:58px; right:58px; height:42px;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  font-size:16px; font-weight:700; text-align:center; text-overflow:ellipsis; white-space:nowrap;
+}
 .profile-about-trigger { flex:0 0 auto; min-height:40px; padding:0 15px; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--ink); font:inherit; font-size:13.5px; font-weight:600; }
+.profile-action-cluster { width:100%; display:flex; flex-wrap:wrap; gap:8px; }
+.profile-action-cluster>.profacts { display:contents; }
+.profile-action-cluster :is(.actpill,.profile-report-button) { order:1; }
+.profile-action-cluster>.profile-about-trigger { order:1; }
+.profile-action-cluster .followpill,
+.profile-action-cluster .profile-owner-primary {
+  order:2; width:100%; min-height:52px; flex:1 0 100%;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:0; border-radius:var(--button-radius); background:var(--ink); color:var(--paper);
+  font-size:16px; font-weight:700;
+}
 .profile-summary {
   margin: 0; color: var(--ink); font-size: 15px; line-height: 1.45;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
@@ -4822,16 +4838,16 @@ select.editinput.placekind-select {
 .profile-info-close { position:fixed; right:var(--page-gutter); bottom:calc(min(82dvh,760px) - 58px); z-index:72; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:50%; background:var(--cl); color:var(--ink); }
 .profile-info-sheet>p { margin:14px 0 0; color:var(--muted); font-size:16px; line-height:1.5; }
 .profile-eyebrow {
-  width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+  width:100%; display:flex; flex-direction:column; align-items:center; gap:3px;
   margin-bottom: 10px; color: var(--ol); opacity: .72;
   font-family: inherit;
   font-size: 14.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
 }
-.profile-eyebrow span:last-child { text-align:left; }
+.profile-eyebrow span:last-child { text-align:center; }
 .pubidentity-paper .profbadges-top { margin: 0 0 8px; }
 .pubidentity-paper .profname { font-size: 38px; line-height: 1; }
 .profhandle {
-  width:max-content; max-width:100%; margin:9px 0 0; padding:6px 10px;
+  width:max-content; max-width:100%; margin:0 auto 12px; padding:6px 10px;
   overflow:hidden; border-radius:var(--radius-pill); background:var(--color-lime-soft);
   color:var(--color-olive); font-size:14px; font-weight:600; line-height:1.1;
   text-overflow:ellipsis; white-space:nowrap;
@@ -4869,6 +4885,12 @@ select.editinput.placekind-select {
 .pubhead.pubhead-hero .profacts .actpill-primary { border: 1px solid var(--color-border); background: var(--color-surface); }
 .pubhead.pubhead-hero .profacts .followpill.on,
 .profacts .followpill.on { border: 0; background: var(--ink); color: var(--paper); }
+.profile-action-cluster .followpill,
+.profile-action-cluster .profile-owner-primary {
+  width:100%; height:52px; min-height:52px; flex:1 0 100%; padding:0 18px;
+  border:0; border-radius:var(--button-radius); background:var(--ink); color:var(--paper);
+  font-size:16px; font-weight:700;
+}
 .profacts .studio-been-here.on { border:1px solid var(--line); background:var(--paper); color:var(--ink); }
 .profacts .studio-been-here.on .icon { color:var(--color-favorite); }
 .pubhead.pubhead-hero .profacts .followpill.favorite.on,
