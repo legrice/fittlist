@@ -4616,6 +4616,8 @@ select.editinput.placekind-select {
   padding: 0 0 14px;
   background: var(--shell);
 }
+.pubhead:not(.pubhead-hero),
+.pubhead:not(.pubhead-hero):not(:has(.profback)) { padding-top:0; }
 .pubhero-media {
   position: relative;
   align-self: stretch;
