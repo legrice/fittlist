@@ -4846,7 +4846,7 @@ select.editinput.placekind-select {
 .profile-overflow-items { margin-top:14px; }
 .profile-overflow-items .profile-share-pill,
 .profile-overflow-item { width:100%; min-height:52px; margin-top:14px; padding:0 4px; display:flex; align-items:center; gap:12px; border:0; border-top:1px solid var(--line); background:none; color:var(--ink); font:inherit; font-size:15px; font-weight:600; text-align:left; }
-.profile-overflow-items .profile-share-pill { height:52px; margin-top:0; border-radius:0; box-shadow:none; cursor:pointer; }
+.profile-overflow-items .profile-share-pill { height:52px; margin-top:0; justify-content:flex-start; border-radius:0; box-shadow:none; cursor:pointer; text-align:left; }
 .profile-eyebrow {
   width:100%; display:flex; flex-direction:column; align-items:center; gap:3px;
   margin-bottom: 10px; color: var(--ol); opacity: .72;
