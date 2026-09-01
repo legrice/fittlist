@@ -5151,6 +5151,7 @@ select.editinput.placekind-select {
   padding: 6px 12px; border-radius: 999px; background: var(--card); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12px;
 }
+.profile-teaches-tags .studiotype { background:var(--color-lime-soft); color:var(--color-olive); }
 /* A studio row on a coach's page opens the studio, so it gets a chevron. */
 .profstudio-chev { flex-shrink: 0; color: var(--ol); display: flex; align-items: center; }
 .typepick { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }

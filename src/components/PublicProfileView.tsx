@@ -237,7 +237,7 @@ export async function PublicProfileView({
       {user.disciplines.length > 0 && (
         <div className="profsec">
           <h2 className="prof-sec-h">Teaches</h2>
-          <div className="studiotypes">
+          <div className="studiotypes profile-teaches-tags">
             {user.disciplines.map((d) => (
               <span key={d} className="studiotype">
                 {d}
