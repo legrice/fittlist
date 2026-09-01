@@ -346,11 +346,11 @@ export function AuthFlow({
             </header>
             <div className="obwelcome-grid">
               <div className="obwelcome-title">
-                <h1>Your whole week in fitness in one place.</h1>
+                <h1>Your whole fitness week, all in one place.</h1>
               </div>
               <div className="obwelcome-device"><LandingCalendarMockup /></div>
               <div className="obwelcome-copy">
-                <p>See your classes, coaches, and studios in one live week. Keep it current and share it anywhere.</p>
+                <p>Keep up with your classes, coaches, and studios. Share your week anywhere.</p>
                 <form className="obwelcome-email" onSubmit={(event) => { event.preventDefault(); sendLink(false, true); }}>
                   <span><Icon name="mail" size={18} /></span>
                   <input
