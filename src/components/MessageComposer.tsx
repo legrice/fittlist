@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { sendInquiry } from "@/app/actions/inquiries";
+import { useEffect, useState, useTransition } from "react";
+import { messagingAwayStatus, sendInquiry } from "@/app/actions/inquiries";
 import { Icon } from "@/components/Icon";
 
 // The composer itself, without a sheet around it. `ContactSheet` renders it
@@ -33,7 +33,16 @@ export function MessageComposer({
   const [message, setMessage] = useState(initialMessage);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const [awayMessage, setAwayMessage] = useState("");
   const first = coachName.trim().split(/\s+/)[0] || coachName;
+
+  useEffect(() => {
+    let active = true;
+    messagingAwayStatus(handle).then((status) => {
+      if (active) setAwayMessage(status.away ? status.message : "");
+    });
+    return () => { active = false; };
+  }, [handle]);
 
   const submit = () => {
     setError("");
@@ -57,12 +66,14 @@ export function MessageComposer({
             ? `${first} has it. Their reply lands in your inbox here and in your email.`
             : `${first} got your message and will reply to your email. You can keep the conversation going right from there.`}
         </p>
+        {awayMessage && <div className="message-away-note"><strong>{first} is away</strong><span>{awayMessage}</span></div>}
       </>
     );
   }
 
   return (
     <>
+      {awayMessage && <div className="message-away-note"><strong>{first} is away</strong><span>{awayMessage}</span></div>}
       {!signedIn && (
         <>
           <label className="flabel" htmlFor="rqName">

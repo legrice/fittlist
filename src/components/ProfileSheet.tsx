@@ -11,7 +11,7 @@ import {
   removePasskeys,
   setPassword as setPasswordAction,
 } from "@/app/actions/auth";
-import { updateProfile } from "@/app/actions/profile";
+import { updateAwayStatus, updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -47,7 +47,8 @@ type View =
   | "contact"
   | "gcal"
   | "embed"
-  | "availability";
+  | "availability"
+  | "away";
 
 // The trainer's account. Home shows the profile tile, the share cards, and
 // the settings lists; each settings row opens a bottom sheet. As `page` it is
@@ -72,6 +73,9 @@ export function ProfileSheet({
   whatsapp,
   about,
   availability,
+  away = false,
+  awayBanner = "",
+  awayMessage = "",
   googleConfigured,
   googleConnected,
   googleEmail,
@@ -113,6 +117,9 @@ export function ProfileSheet({
   whatsapp: string;
   about: string;
   availability: string | null;
+  away?: boolean;
+  awayBanner?: string;
+  awayMessage?: string;
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
@@ -185,6 +192,10 @@ export function ProfileSheet({
   // switch, a separate question. Saves on the tap.
   const [avail, setAvail] = useState<string | null>(availability);
   const [availSaving, setAvailSaving] = useState(false);
+  const [isAway, setIsAway] = useState(away);
+  const [awayPublic, setAwayPublic] = useState(awayBanner);
+  const [awayReply, setAwayReply] = useState(awayMessage);
+  const [awaySaving, setAwaySaving] = useState(false);
 
   useEffect(() => {
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
@@ -332,6 +343,20 @@ export function ProfileSheet({
     })();
   };
 
+  const saveAway = () => {
+    if (awaySaving) return;
+    setAwaySaving(true);
+    (async () => {
+      const res = await updateAwayStatus({ away: isAway, banner: awayPublic, message: awayReply });
+      if (res.ok) {
+        toast(isAway ? "Away status saved" : "Away status turned off");
+        router.refresh();
+        goBack();
+      } else toast(res.error ?? "Couldn't save");
+      setAwaySaving(false);
+    })();
+  };
+
   // The plainest of the five ways to hand the page on, and the one people
   // reach for most: the URL itself.
   const copyLink = async () => {
@@ -384,6 +409,7 @@ export function ProfileSheet({
     security: "Login & security",
     contact: "Contact info",
     availability: "Availability",
+    away: "Away status",
     gcal: "Google Calendar",
     embed: "Embed your schedule",
   };
@@ -559,6 +585,14 @@ export function ProfileSheet({
                 <span className="setrow-txt">
                   <span className="t">Availability</span>
                   <span className="s">{availLabel}</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </button>
+              <button className="setrow" onClick={() => openView("away")}>
+                <span className="setrow-ic"><Icon name="schedule" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Away status</span>
+                  <span className="s">{isAway ? "Away message is on" : "Let people know when replies may be slower"}</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
@@ -758,6 +792,24 @@ export function ProfileSheet({
                   );
                 })}
               </div>
+            </>
+          )}
+
+          {view === "away" && (
+            <>
+              <p className="lead">Mark yourself away without closing messages or changing your availability.</p>
+              <button className="setrow away-switch-row" type="button" onClick={() => setIsAway((value) => !value)} aria-pressed={isAway}>
+                <span className="setrow-ic"><Icon name={isAway ? "schedule" : "check_circle"} size={24}/></span>
+                <span className="setrow-txt"><span className="t">I&rsquo;m away</span><span className="s">{isAway ? "People will see your away reply" : "Your profile behaves normally"}</span></span>
+                <span className={`switch${isAway ? " on" : ""}`} aria-hidden="true"><span className="switch-knob"/></span>
+              </button>
+              <label className="flabel" htmlFor="awayReply">Outgoing away message</label>
+              <textarea id="awayReply" className="editinput reqmsg" rows={3} maxLength={300} value={awayReply} onChange={(event)=>setAwayReply(event.target.value)} placeholder="I’m away until Monday and will reply when I’m back." />
+              <p className="hint">Shown when someone opens a message to you.</p>
+              <label className="flabel" htmlFor="awayBanner">Profile banner <span>&middot; optional</span></label>
+              <input id="awayBanner" className="editinput" maxLength={140} value={awayPublic} onChange={(event)=>setAwayPublic(event.target.value)} placeholder="Away through September 8" />
+              <p className="hint">Leave blank if you only want the message reply.</p>
+              <div className="publishwrap"><button className="btn si" type="button" onClick={saveAway} disabled={awaySaving || (isAway && !awayReply.trim())}>{awaySaving ? "Saving…" : "Save away status"}</button></div>
             </>
           )}
 

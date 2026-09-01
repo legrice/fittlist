@@ -53,6 +53,31 @@ export async function nudgeProfileInfo(handle: string) {
   return { ok: true, alreadySent: false };
 }
 
+export async function updateAwayStatus(input: {
+  away: boolean;
+  banner: string;
+  message: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const banner = input.banner.trim().replace(/\s+/g, " ").slice(0, 140);
+  const message = input.message.trim().replace(/\s+/g, " ").slice(0, 300);
+  const safetyError = objectionableContentError(banner, message);
+  if (safetyError) return { ok: false, error: safetyError };
+  if (input.away && !message) return { ok: false, error: "Add an away message." };
+
+  const db = await getDb();
+  const [user] = await db
+    .update(schema.users)
+    .set({ away: input.away, awayBanner: banner || null, awayMessage: message || null })
+    .where(eq(schema.users.id, userId))
+    .returning({ handle: schema.users.handle });
+  if (!user) return { ok: false, error: "Account not found." };
+  revalidatePath("/settings");
+  if (user.handle) revalidatePath(`/${user.handle}`);
+  return { ok: true };
+}
+
 // Instagram: accept a handle, an @handle, or a full URL - store the bare handle.
 function normalizeInstagram(raw: string): string | null {
   const v = raw.trim();

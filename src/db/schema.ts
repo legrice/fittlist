@@ -54,6 +54,12 @@ export const users = pgTable("users", {
   highlights: jsonb("highlights").$type<string[]>().notNull().default([]),
   // Taking new private clients? "accepting" | "waitlist" | null (not shown).
   availability: text("availability"),
+  // A temporary presence state, independent of client availability and of
+  // whether messages are open. The public note is optional; the message is
+  // shown when somebody opens the composer so expectations are clear.
+  away: boolean("away").notNull().default(false),
+  awayBanner: text("away_banner"),
+  awayMessage: text("away_message"),
   // Optional contact + social links surfaced as buttons on the public profile.
   instagram: text("instagram"),
   website: text("website"),

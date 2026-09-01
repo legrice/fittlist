@@ -542,7 +542,7 @@ export async function PublicProfileView({
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
           ownerTop={!isOwner && viewerId ? <ProfileOverflow profileId={user.id} path={`/${handle}`} name={user.name}/> : null}
-          badges={null}
+          badges={user.away && user.awayBanner ? <div className="profile-away-banner"><Icon name="schedule" size={19}/><span>{user.awayBanner}</span></div> : null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
           stickAction={

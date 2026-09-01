@@ -180,6 +180,9 @@ export default async function SettingsPage({
         whatsapp={me.whatsapp ?? ""}
         about={me.about ?? ""}
         availability={me.availability ?? null}
+        away={me.away}
+        awayBanner={me.awayBanner ?? ""}
+        awayMessage={me.awayMessage ?? ""}
         googleConfigured={googleConfigured()}
         googleConnected={gconn.connected}
         googleEmail={gconn.email}

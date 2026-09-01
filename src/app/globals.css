@@ -5152,6 +5152,17 @@ select.editinput.placekind-select {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12px;
 }
 .profile-teaches-tags .studiotype { background:var(--color-lime-soft); color:var(--color-olive); }
+.profile-away-banner {
+  width:100%; margin-top:12px; padding:12px 14px; display:flex; align-items:flex-start; justify-content:center; gap:8px;
+  border-radius:14px; background:var(--color-lime-soft); color:var(--color-olive); font-size:14px; font-weight:600; line-height:1.35; text-align:left;
+}
+.profile-away-banner .icon { flex:0 0 auto; }
+.message-away-note {
+  margin:12px 0 18px; padding:13px 14px; display:flex; flex-direction:column; gap:3px;
+  border-radius:14px; background:var(--color-lime-soft); color:var(--color-olive); font-size:14px; line-height:1.4;
+}
+.message-away-note strong { font-size:15px; }
+.away-switch-row { margin:14px 0 20px; border:1px solid var(--line); border-radius:16px; }
 /* A studio row on a coach's page opens the studio, so it gets a chevron. */
 .profstudio-chev { flex-shrink: 0; color: var(--ol); display: flex; align-items: center; }
 .typepick { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }

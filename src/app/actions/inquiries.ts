@@ -27,6 +27,17 @@ type Result = { ok: boolean; error?: string };
 
 type Database = Awaited<ReturnType<typeof getDb>>;
 
+export async function messagingAwayStatus(handle: string): Promise<{ away: boolean; message: string }> {
+  const db = await getDb();
+  const [user] = await db
+    .select({ away: schema.users.away, message: schema.users.awayMessage, messagesOpen: schema.users.messagesOpen })
+    .from(schema.users)
+    .where(eq(schema.users.handle, handle));
+  return user?.messagesOpen && user.away
+    ? { away: true, message: user.message?.trim() || "I am away right now and may take a little longer to reply." }
+    : { away: false, message: "" };
+}
+
 // Initial messages need both distributed and single-sender brakes. A target
 // is a coach; subject is the normalized anonymous email or stable account id.
 // These are deliberately independent so changing an IP does not reset the
