@@ -188,26 +188,12 @@ export async function MemberProfileView({
             that makes the other two read as the same app. */}
         <ProfileTabs
           base={`/${user.handle ?? ""}`}
-          tab={tab === "schedule" ? "schedule" : "about"}
-          tabs={[
-            { key: "schedule", label: "Schedule" },
-            { key: "about", label: "Info" },
-          ]}
-          sectionToggle
+          tab="schedule"
+          tabs={[]}
+          infoSheet
           /* The coach page's full-bleed hero, by Matt's call: the photo when
              there is one, the person's own colour when there isn't, so a
              member's page is the same page rather than a lesser layout. */
-          heroPhoto={user.photo}
-          heroColor={avatarColor(user)}
-          heroCta={
-            isOwner && !user.photo ? (
-              <Link className="herocta hero-photo-prompt" href="/settings?edit=1">
-                <strong>Put a face to the name</strong>
-                <span>Profiles feel more personal when people know who they&rsquo;re following.</span>
-                <b>Add a photo</b>
-              </Link>
-            ) : undefined
-          }
           name={name}
           summary={null}
           title={user.title ?? ""}

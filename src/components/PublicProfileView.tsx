@@ -457,12 +457,9 @@ export async function PublicProfileView({
         >
         <ProfileTabs
           base={`/${handle}`}
-          tab={tab === "schedule" ? "schedule" : "about"}
-          tabs={[
-            { key: "schedule", label: "Schedule" },
-            { key: "about", label: "Info" },
-          ]}
-          sectionToggle
+          tab="schedule"
+          tabs={[]}
+          infoSheet
           name={user.name}
           handle={handle}
           summary={null}
@@ -479,17 +476,6 @@ export async function PublicProfileView({
           // the same rule the member page follows, so no photo is never a
           // lesser layout. The owner's colour hero carries the image
           // icon into the editor (?edit=1, which ProfileOwnerBar reads).
-          heroPhoto={user.photo}
-          heroColor={avatarColor(user)}
-          heroCta={
-            isOwner && !user.photo ? (
-              <Link className="herocta hero-photo-prompt" href={`/${handle}?edit=1`}>
-                <strong>Put a face to the name</strong>
-                <span>Profiles feel more personal when people know who they&rsquo;re following.</span>
-                <b>Add a photo</b>
-              </Link>
-            ) : undefined
-          }
           avatar={
             <AvatarZoom
               className="profav"

@@ -61,6 +61,7 @@ export function ProfileTabs({
   stickAction,
   sectionToggle = false,
   closingContent,
+  infoSheet = false,
   children,
 }: {
   /** The page's own URL: "/matt" for a person, "/s/ironbound" for a studio.
@@ -120,9 +121,13 @@ export function ProfileTabs({
   /** Social proof that closes a person's profile after its useful content
    *  and share prompt. */
   closingContent?: ReactNode;
+  /** Move the existing profile-about section into an About sheet instead of
+   *  making profile information compete with functional section navigation. */
+  infoSheet?: boolean;
   children: ReactNode;
 }) {
   const [activeSection, setActiveSection] = useState(tab);
+  const [infoOpen,setInfoOpen]=useState(false);
   const tracked = useRef(false);
   const stickRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
@@ -303,7 +308,10 @@ export function ProfileTabs({
             {handle ? <p className="profhandle">@{handle}</p> : null}
         </div>
         <div className="pubbelow">
-        {actions}
+        <div className="pubbelow-actions">
+          {actions}
+          {infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}
+        </div>
         {summary?.trim() ? <ProfileAbout text={summary.trim()} className="profile-summary" /> : null}
         {endorsement}
         </div>
@@ -326,7 +334,8 @@ export function ProfileTabs({
           </div>
         )}
       </div>
-      <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}`} data-active={sectionToggle ? activeSection : undefined}>{children}</div>
+      <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}${infoSheet?" has-info-sheet":""}${infoOpen?" info-open":""}`} data-active={sectionToggle ? activeSection : undefined}>{children}</div>
+      {infoOpen&&<><div className="profile-info-scrim" onClick={()=>setInfoOpen(false)}/><button type="button" className="profile-info-close" aria-label="Close About" onClick={()=>setInfoOpen(false)}><Icon name="close" size={20}/></button></>}
       {sharePrompt && (
         <section className="profile-share-cta">
           <h2>{sharePrompt}</h2>

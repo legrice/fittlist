@@ -3898,6 +3898,14 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 50px;
 }
+.profile-photo-zoom-trigger { padding:0; border:0; overflow:hidden; color:#fff; font:inherit; cursor:pointer; }
+.profile-photo-zoom-trigger>img,.profile-photo-zoom-trigger>span { width:100%; height:100%; display:grid; place-items:center; border-radius:inherit; object-fit:cover; }
+.profile-photo-zoom {
+  position:fixed; inset:0; z-index:90; padding:72px 20px 28px; display:grid; place-items:center;
+  background:rgba(0,0,0,.88); backdrop-filter:blur(10px);
+}
+.profile-photo-zoom>button { position:absolute; top:calc(18px + env(safe-area-inset-top)); right:20px; width:48px; height:48px; display:grid; place-items:center; border:0; border-radius:50%; background:rgba(255,255,255,.16); color:#fff; }
+.profile-photo-zoom>img,.profile-photo-zoom>span { width:min(92vw,720px); max-height:78dvh; aspect-ratio:1; display:grid; place-items:center; border-radius:50%; object-fit:cover; color:#fff; font-size:clamp(64px,18vw,150px); }
 /* A studio's photo, as the wide rectangle its old page led with: a place
    reads as a room, not a face, and the shape is what tells a studio apart
    from a person before a word is read. Full bleed now: to both edges and up
@@ -4711,6 +4719,9 @@ select.editinput.placekind-select {
 .pubhero-media .profback { top: calc(var(--head-top, 0px) + 14px); left: 18px; z-index: 2; }
 .pubhero-media .ownertop { top: calc(var(--head-top, 0px) + 14px); right: 18px; z-index: 2; }
 .pubbelow { width: 100%; padding-top: 16px; }
+.pubbelow-actions { width:100%; display:flex; align-items:center; gap:8px; }
+.pubbelow-actions>.profacts { min-width:0; flex:1; width:auto; }
+.profile-about-trigger { flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; }
 .profile-summary {
   margin: 0; color: var(--ink); font-size: 15px; line-height: 1.45;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
@@ -4804,6 +4815,14 @@ select.editinput.placekind-select {
 .pubpanel-toggle[data-active="schedule"] > #profile-schedule,
 .pubpanel-toggle[data-active="about"] > #profile-about,
 .pubpanel-toggle[data-active="coaches"] > #profile-coaches { display:block; }
+.pubpanel.has-info-sheet>#profile-about { display:none; }
+.profile-info-scrim { position:fixed; inset:0; z-index:70; background:rgba(23,26,31,.55); backdrop-filter:blur(8px); }
+.pubpanel.has-info-sheet.info-open>#profile-about {
+  position:fixed; inset:auto 0 0; z-index:71; width:100%; height:min(82dvh,760px); max-height:min(82dvh,760px); margin:0; padding:28px var(--page-gutter) calc(28px + env(safe-area-inset-bottom)); display:block; overflow-y:auto;
+  border:0; border-radius:26px 26px 0 0; background:var(--card);
+}
+.profile-info-close { position:fixed; right:var(--page-gutter); bottom:calc(min(82dvh,760px) - 58px); z-index:72; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:50%; background:var(--cl); color:var(--ink); }
+.profile-info-sheet>p { margin:14px 0 0; color:var(--muted); font-size:16px; line-height:1.5; }
 .profile-eyebrow {
   width: 100%; display: flex; align-items: baseline; justify-content: space-between; gap: 18px;
   margin-bottom: 10px; color: var(--ol); opacity: .72;
@@ -6623,14 +6642,15 @@ html[data-mode="dark"],
   padding-left:var(--page-gutter); padding-right:var(--page-gutter);
 }
 .group-main { padding:0 0 calc(110px + env(safe-area-inset-bottom)); }
-.group-hero { padding:0 0 var(--space-3); border-bottom:1px solid var(--line); }
+.group-hero { position:relative; padding:68px 0 var(--space-3); border-bottom:1px solid var(--line); }
 .group-hero-media { position:relative; margin:0 calc(50% - 50vw) 20px; aspect-ratio:4/3; max-height:340px; overflow:hidden; background:var(--cl); }
 .group-hero-media>img,.group-hero-media>span:first-child { width:100%; height:100%; display:block; object-fit:cover; }
 .group-hero-dim { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.22),transparent 38%,rgba(0,0,0,.18)); pointer-events:none; }
-.group-hero-back { position:absolute; top:calc(70px + env(safe-area-inset-top)); left:var(--page-gutter); border-color:transparent; background:rgba(255,255,255,.92); color:#000; }
+.group-hero-back { position:absolute; top:14px; left:0; border-color:var(--line); background:var(--card); color:var(--ink); }
+.group-profile-photo { width:128px; height:128px; margin:0 0 18px; border-radius:50%; background:var(--cl); }
 .group-hero-copy { max-width:620px; }
 .group-hero-copy>p+.profacts { margin-top:12px; }
-@media(max-width:939px){ .group-page.pub-hero .group-main { margin-top:calc(-66px - env(safe-area-inset-top)); } }
+@media(max-width:939px){ .group-page .group-main { margin-top:0; } }
 .group-tabs { display:flex; gap:28px; border-bottom:1px solid var(--line); }
 .group-tabs button { min-height:52px; padding:0; border:0; border-bottom:3px solid transparent; background:transparent; color:var(--muted); font:inherit; font-size:17px; font-weight:700; }
 .group-tabs button.on { color:var(--ink); border-bottom-color:var(--ink); }

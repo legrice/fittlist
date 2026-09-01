@@ -19,12 +19,12 @@ import { CommunityNote } from "@/components/CommunityNote";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioMenu } from "@/components/StudioMenu";
-import { StudioPhotoCta } from "@/components/StudioPhotoCta";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
+import { ProfilePhotoZoom } from "@/components/ProfilePhotoZoom";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { StudioBeenHere } from "@/components/StudioBeenHere";
 import { CalendarPinButton } from "@/components/CalendarPinButton";
@@ -289,7 +289,7 @@ export async function StudioView({
   // Schedule leads (it is what the link is for, and an empty one is the
   // pitch), About is the categories and the words, Coaches is who teaches
   // here. One layout to learn, however small the studio.
-  const tab: StudioTab = wanted === "auto" ? "schedule" : wanted;
+  const tab: StudioTab = wanted === "auto" || wanted === "about" ? "schedule" : wanted;
   const backTo = backToFor(from, signedIn);
 
   const hasContact = !!(s.contactEmail || s.phone || s.website || s.instagram);
@@ -374,10 +374,10 @@ export async function StudioView({
               key: "schedule",
               label: "Schedule",
             },
-            { key: "about", label: "Info" },
             { key: "coaches", label: "Coaches" },
           ]}
           sectionToggle
+          infoSheet
           name={s.name}
           summary={null}
           sharePrompt="Know someone who would love this place?"
@@ -392,14 +392,7 @@ export async function StudioView({
           // allowed through the editor the way to fix the emptiness: a
           // coach who teaches there is exactly who has a picture of the
           // room.
-          heroPhoto={s.photo}
-          heroColor={avatarColor({ id: s.id })}
-          heroCta={
-            canEdit && !s.photo ? <StudioPhotoCta studio={editProps} /> : undefined
-          }
-          // The hero always renders (photo or colour), so the circle-avatar
-          // slot has nothing to draw: a place has no face.
-          avatar={null}
+          avatar={<ProfilePhotoZoom photo={s.photo} name={s.name} color={avatarColor({id:s.id})} className="profav"/>}
           backTo={backTo}
           badges={null}
           ownerTop={viewerId ? <CalendarPinButton entityType="studio" entityId={s.id} /> : null}
