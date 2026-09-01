@@ -4643,11 +4643,11 @@ select.editinput.placekind-select {
   width: 100%;
   padding-top: 58px;
 }
-.pubhead:not(.pubhead-hero) .pubidentity { padding-top: 78px; }
-.pubhead:not(.pubhead-hero):not(:has(.profback)) .pubidentity { padding-top: 26px; }
+.pubhead:not(.pubhead-hero) .pubidentity,
+.pubhead:not(.pubhead-hero):not(:has(.profback)) .pubidentity { padding-top: 0; }
 .pubhead .profback,
 .pubhead .ownertop {
-  top: 14px;
+  top: 6px;
 }
 .pubhead.pubhead-hero .profname,
 .pubhead.pubhead-hero .profmeta,
@@ -4720,13 +4720,13 @@ select.editinput.placekind-select {
 .profile-identity-lead { width:100%; display:flex; align-items:flex-start; justify-content:center; gap:18px; }
 .profile-top-actions { gap:8px; }
 .profile-top-name {
-  position:absolute; top:14px; left:58px; right:58px; height:42px;
+  position:absolute; top:6px; left:58px; right:58px; height:42px;
   display:flex; align-items:center; justify-content:center; overflow:hidden;
-  font-size:16px; font-weight:700; text-align:center; text-overflow:ellipsis; white-space:nowrap;
+  font-size:22px; font-weight:700; text-align:center; text-overflow:ellipsis; white-space:nowrap;
 }
 .pubidentity:has(.profile-top-actions) .profile-top-name { right:108px; }
 .profile-about-trigger { flex:0 0 auto; min-height:40px; padding:0 15px; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--ink); font:inherit; font-size:13.5px; font-weight:600; }
-.profile-action-cluster { width:100%; display:flex; flex-wrap:wrap; gap:8px; }
+.profile-action-cluster { width:100%; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
 .profile-action-cluster>.profacts { display:contents; }
 .profile-action-cluster :is(.actpill,.profile-report-button) { order:1; }
 .profile-action-cluster>.profile-about-trigger { order:1; }
@@ -4823,8 +4823,8 @@ select.editinput.placekind-select {
 .pubidentity-paper {
   padding-top: 20px;
 }
-.pubhead:not(.pubhead-hero) .pubidentity-paper { padding-top: 58px; }
-.pubhead:not(.pubhead-hero):not(:has(.profback)) .pubidentity-paper { padding-top: 20px; }
+.pubhead:not(.pubhead-hero) .pubidentity-paper,
+.pubhead:not(.pubhead-hero):not(:has(.profback)) .pubidentity-paper { padding-top: 78px; }
 .pubpanel-toggle > .profile-anchor-section { display:none; }
 .pubpanel-toggle > :is(#profile-about,#profile-coaches) { margin-top:0; padding-top:0; border-top:0; }
 .pubpanel-toggle[data-active="schedule"] > #profile-schedule,
@@ -4839,7 +4839,10 @@ select.editinput.placekind-select {
 .profile-info-close { position:fixed; right:var(--page-gutter); bottom:calc(min(82dvh,760px) - 58px); z-index:72; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:50%; background:var(--cl); color:var(--ink); }
 .profile-info-sheet>p { margin:14px 0 0; color:var(--muted); font-size:16px; line-height:1.5; }
 .profile-overflow-sheet { max-height:min(54dvh,420px); }
+.profile-overflow-items { margin-top:14px; }
+.profile-overflow-items .profile-share-pill,
 .profile-overflow-item { width:100%; min-height:52px; margin-top:14px; padding:0 4px; display:flex; align-items:center; gap:12px; border:0; border-top:1px solid var(--line); background:none; color:var(--ink); font:inherit; font-size:15px; font-weight:600; text-align:left; }
+.profile-overflow-items .profile-share-pill { height:52px; margin-top:0; border-radius:0; box-shadow:none; cursor:pointer; }
 .profile-eyebrow {
   width:100%; display:flex; flex-direction:column; align-items:center; gap:3px;
   margin-bottom: 10px; color: var(--ol); opacity: .72;

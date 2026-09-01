@@ -15,7 +15,6 @@ import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
-import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
@@ -215,7 +214,7 @@ export async function MemberProfileView({
           badges={null}
           // Settings lives in the shared app header; floating it here as well
           // made the owner's page carry two doors to the same place.
-          ownerTop={!isOwner&&viewerId?<><ProfileOverflow profileId={user.id}/><CalendarPinButton entityType="person" entityId={user.id} entityName={name}/></>:null}
+          ownerTop={!isOwner&&viewerId?<><ProfileOverflow profileId={user.id} path={`/${user.handle!}`} name={name}/><CalendarPinButton entityType="person" entityId={user.id} entityName={name}/></>:null}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />
@@ -239,7 +238,6 @@ export async function MemberProfileView({
                     ways={ways}
                   />
                 )}
-                <ProfileShare path={`/${user.handle!}`} name={name} pill />
               </div>
             )
           }

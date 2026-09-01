@@ -23,7 +23,6 @@ import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
-import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
@@ -533,7 +532,6 @@ export async function PublicProfileView({
                     ways={ways}
                   />
                 )}
-                <ProfileShare path={`/${handle}`} name={user.name} pill />
               </div>
             )
           }
@@ -541,7 +539,7 @@ export async function PublicProfileView({
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
-          ownerTop={!isOwner && viewerId ? <><ProfileOverflow profileId={user.id}/><CalendarPinButton entityType="person" entityId={user.id} entityName={user.name}/></> : null}
+          ownerTop={!isOwner && viewerId ? <><ProfileOverflow profileId={user.id} path={`/${handle}`} name={user.name}/><CalendarPinButton entityType="person" entityId={user.id} entityName={user.name}/></> : null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.

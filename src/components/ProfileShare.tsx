@@ -13,7 +13,7 @@ import { Toast, useToast } from "@/components/Toast";
 // Owners already have a Share pill under the name with the story image and the
 // QR code behind it. This is the one a visitor needs, and there was none: the
 // only way to send somebody a coach was to copy the address bar.
-export function ProfileShare({ path, name, pill = false, cta = false, ctaText = "Share profile" }: { path: string; name: string; pill?: boolean; cta?: boolean; ctaText?: string }) {
+export function ProfileShare({ path, name, pill = false, cta = false, ctaText = "Share profile", pillText = "Share" }: { path: string; name: string; pill?: boolean; cta?: boolean; ctaText?: string; pillText?: string }) {
   const [toastMsg, toastOn, toast] = useToast();
   const [open, setOpen] = useState(false);
 
@@ -21,7 +21,7 @@ export function ProfileShare({ path, name, pill = false, cta = false, ctaText = 
     <>
       <button className={cta ? "profile-share-cta-btn" : pill ? "actpill profile-share-pill" : "evback profshare-btn"} aria-label={`Share ${name}`} onClick={() => setOpen(true)}>
         <Icon name="reply" className="share-arrow-forward" size={21} />
-        {pill ? <span>Share</span> : cta ? <span>{ctaText}</span> : null}
+        {pill ? <span>{pillText}</span> : cta ? <span>{ctaText}</span> : null}
       </button>
       {open && (
         <FittlistShareSheet
