@@ -3884,9 +3884,7 @@ button.ps-card { cursor: pointer; }
 .viewmore:active { transform: scale(.97); }
 [data-mode="dark"] .viewmore { background: var(--card); border: 1px solid var(--line); }
 
-.pubhead .evback {
-  flex-shrink: 0; width: var(--tap-size); height: var(--tap-size); margin-bottom: 14px;
-}
+.pubhead .evback { flex-shrink:0; width:42px; height:42px; margin-bottom:0; }
 /* Bigger, and lifted off the paper. It is the first thing on the page and the
    only photograph on it, so it can carry the weight. */
 .profav {
@@ -4720,6 +4718,7 @@ select.editinput.placekind-select {
 .pubhero-media .ownertop { top: calc(var(--head-top, 0px) + 14px); right: 18px; z-index: 2; }
 .pubbelow { width: 100%; padding-top: 16px; }
 .profile-identity-lead { width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
+.profile-top-actions { gap:8px; }
 .profile-about-trigger { flex:0 0 auto; min-height:40px; padding:0 15px; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--ink); font:inherit; font-size:13.5px; font-weight:600; }
 .profile-summary {
   margin: 0; color: var(--ink); font-size: 15px; line-height: 1.45;

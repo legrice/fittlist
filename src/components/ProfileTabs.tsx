@@ -286,15 +286,15 @@ export function ProfileTabs({
             </BackLink>
           </div>
         ) : null}
-        {ownerTop && <div className="ownertop">{ownerTop}</div>}
+        {(infoSheet||ownerTop)&&<div className="ownertop profile-top-actions">{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}{ownerTop}</div>}
           </div>
         )}
         <div className="pubidentity pubidentity-paper">
-            {!heroPhoto && !heroColor && <div className="profile-identity-lead">{avatar}{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}</div>}
+            {!heroPhoto && !heroColor && <div className="profile-identity-lead">{avatar}</div>}
             {!heroPhoto && !heroColor && (
               <>
             {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
-            {ownerTop && <div className="ownertop">{ownerTop}</div>}
+            {(infoSheet||ownerTop)&&<div className="ownertop profile-top-actions">{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}{ownerTop}</div>}
               </>
             )}
             {(title.trim() || location.trim()) && (

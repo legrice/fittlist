@@ -24,6 +24,7 @@ export async function AppChrome({
   headerNav,
   active,
   social = false,
+  mobileHeader = true,
 }: {
   userId: string;
   bar?: boolean;
@@ -38,6 +39,8 @@ export async function AppChrome({
   active?: NavTab;
   /** Use the current calendar shell: create left, wordmark centered, alerts right. */
   social?: boolean;
+  /** Keep desktop navigation while omitting the phone header on visited profiles. */
+  mobileHeader?: boolean;
 }) {
   // AppChrome and an enclosing route layout often need the same viewer. The
   // cached identity loader keeps that to one small projection instead of two
@@ -106,7 +109,7 @@ export async function AppChrome({
           initial: face.initial,
         }}
       />
-      <AppHeader
+      {mobileHeader&&<AppHeader
         notificationUnread={unread.notifications}
         messageUnread={unread.messages}
         // The shared calendar feed is the signed-in front door. Keeping this
@@ -119,7 +122,7 @@ export async function AppChrome({
         profileHref={profileHref}
         accountData={accountData}
         social={social}
-      />
+      />}
     </>
   );
   if (!bar) return header;
