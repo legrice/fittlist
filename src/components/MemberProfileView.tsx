@@ -23,9 +23,9 @@ import { ProfileAbout } from "@/components/ProfileAbout";
 import { CalendarList, type WeekDayRows } from "@/components/WeekView";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ScheduleNudge } from "@/components/ScheduleNudge";
-import { ReportContentButton } from "@/components/ReportContentButton";
 import { hiddenFrom } from "@/lib/blocks";
 import { CalendarPinButton } from "@/components/CalendarPinButton";
+import { ProfileOverflow } from "@/components/ProfileOverflow";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -215,7 +215,7 @@ export async function MemberProfileView({
           badges={null}
           // Settings lives in the shared app header; floating it here as well
           // made the owner's page carry two doors to the same place.
-          ownerTop={!isOwner&&viewerId?<CalendarPinButton entityType="person" entityId={user.id} entityName={name}/>:null}
+          ownerTop={!isOwner&&viewerId?<><ProfileOverflow profileId={user.id}/><CalendarPinButton entityType="person" entityId={user.id} entityName={name}/></>:null}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />
@@ -240,7 +240,6 @@ export async function MemberProfileView({
                   />
                 )}
                 <ProfileShare path={`/${user.handle!}`} name={name} pill />
-                {viewerId && <ReportContentButton contentType="profile" contentId={user.id} label="Report profile" canBlock className="btn ghost profile-report-button" />}
               </div>
             )
           }

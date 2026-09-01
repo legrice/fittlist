@@ -16,6 +16,7 @@ import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
 import { CalendarPinButton } from "@/components/CalendarPinButton";
+import { ProfileOverflow } from "@/components/ProfileOverflow";
 import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
@@ -30,7 +31,6 @@ import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
 import { ScheduleNudge } from "@/components/ScheduleNudge";
-import { ReportContentButton } from "@/components/ReportContentButton";
 import { hiddenFrom } from "@/lib/blocks";
 
 // A continuous forward window, long enough that even a one-class-a-week
@@ -534,7 +534,6 @@ export async function PublicProfileView({
                   />
                 )}
                 <ProfileShare path={`/${handle}`} name={user.name} pill />
-                {viewerId && <ReportContentButton contentType="profile" contentId={user.id} label="Report profile" canBlock className="btn ghost profile-report-button" />}
               </div>
             )
           }
@@ -542,7 +541,7 @@ export async function PublicProfileView({
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
-          ownerTop={!isOwner && viewerId ? <CalendarPinButton entityType="person" entityId={user.id} entityName={user.name} /> : null}
+          ownerTop={!isOwner && viewerId ? <><ProfileOverflow profileId={user.id}/><CalendarPinButton entityType="person" entityId={user.id} entityName={user.name}/></> : null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
