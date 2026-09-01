@@ -290,7 +290,7 @@ export function ProfileTabs({
           </div>
         )}
         <div className="pubidentity pubidentity-paper">
-            {!heroPhoto && !heroColor && avatar}
+            {!heroPhoto && !heroColor && <div className="profile-identity-lead">{avatar}{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}</div>}
             {!heroPhoto && !heroColor && (
               <>
             {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
@@ -308,10 +308,7 @@ export function ProfileTabs({
             {handle ? <p className="profhandle">@{handle}</p> : null}
         </div>
         <div className="pubbelow">
-        <div className="pubbelow-actions">
-          {actions}
-          {infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}
-        </div>
+        {actions}
         {summary?.trim() ? <ProfileAbout text={summary.trim()} className="profile-summary" /> : null}
         {endorsement}
         </div>
