@@ -35,6 +35,8 @@ export type WeekRow = {
   name: string;
   /** The studio, or the class's own location when it names one. */
   where: string | null;
+  /** Profile schedules use this stable identity for their studio filter. */
+  studio?: { id: string; name: string } | null;
   /** "6:00" and "pm", kept apart so the meridiem can ride small. */
   hm: string;
   ap: string;

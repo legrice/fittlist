@@ -10,14 +10,14 @@ import { classAddress, publicSchedule } from "@/lib/coachweek";
 
 import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
-import { CalendarList, type WeekDayRows } from "@/components/WeekView";
+import { type WeekDayRows } from "@/components/WeekView";
+import { ProfileSchedule } from "@/components/ProfileSchedule";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
 import { CalendarPinButton } from "@/components/CalendarPinButton";
 import { ProfileOverflow } from "@/components/ProfileOverflow";
-import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
@@ -373,6 +373,7 @@ export async function PublicProfileView({
                       key: `${d.iso}-${c.id}`,
                       name: c.name,
                       where: where ?? null,
+                      studio: s ? { id: s.id, name: s.name } : null,
                       hm: start.hm,
                       ap: start.ap,
                       dur: `${c.durationMin} min`,
@@ -384,33 +385,7 @@ export async function PublicProfileView({
                     };
                   }),
             }));
-            let remaining = 8;
-            const preview: typeof days = [];
-            const later: typeof days = [];
-            for (const day of days) {
-              const first = day.items.slice(0, remaining);
-              const rest = day.items.slice(remaining);
-              if (first.length) preview.push({ ...day, items: first });
-              if (rest.length) later.push({ ...day, items: rest });
-              remaining = Math.max(0, remaining - first.length);
-              if (!remaining && !rest.length && day.items.length) {
-                // Later days remain intact once the eight-entry preview fills.
-                const at = days.indexOf(day);
-                later.push(...days.slice(at + 1));
-                break;
-              }
-            }
-            return (
-              <>
-                <CalendarList days={listDays(preview)} className="profile-calendar-list" />
-                {later.length > 0 && (
-                  <ScheduleMore
-                    label="See more schedule"
-                    chunks={[<CalendarList key="more-schedule" days={listDays(later)} className="profile-calendar-list" />]}
-                  />
-                )}
-              </>
-            );
+            return <ProfileSchedule days={listDays(days)} />;
           })()}
         </>
         </MaybeOpener>
