@@ -89,9 +89,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // a member has no calendar at all, so there is nothing to fork on and the
   // tab is not drawn for them in the first place.
   const scheduleHref = "/calendar";
-  // You is the private account dashboard. The public page remains available
-  // from Preview profile inside it; mixing those two surfaces made editing,
-  // favorites and settings feel like public-profile content.
+  // You is the private account dashboard. Editing, organizing and sharing
+  // live there without turning the tab into a visitor preview of yourself.
   const profileHref = "/you";
   const face = {
     photo: me.photoThumb ?? me.photo,

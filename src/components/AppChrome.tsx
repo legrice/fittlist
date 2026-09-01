@@ -64,7 +64,7 @@ export async function AppChrome({
   // layout, which is most of them.
   const scheduleHref = "/calendar";
   // The header avatar is the private You/account door. Public profiles stay
-  // available from Preview profile inside that screen.
+  // available through the profile's own sharing tools.
   const profileHref = "/you";
   const face = {
     photo: me.photoThumb ?? me.photo,

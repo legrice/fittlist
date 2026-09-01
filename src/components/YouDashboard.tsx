@@ -179,10 +179,6 @@ export function YouDashboard({
       </section>
 
       <div className="youquickactions" aria-label="Profile actions">
-        <Link href={`/${me.handle}?from=profile`}>
-          <Icon name="account_circle" size={18} />
-          <span>View profile</span>
-        </Link>
         {onOpenSettings ? (
           <button type="button" onClick={() => onOpenSettings("page")}>
             <Icon name="edit" size={18} />
