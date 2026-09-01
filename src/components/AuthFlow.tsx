@@ -350,7 +350,7 @@ export function AuthFlow({
               </div>
               <div className="obwelcome-device"><LandingCalendarMockup /></div>
               <div className="obwelcome-copy">
-                <p>Build your week, keep it up to date, share it.</p>
+                <p>Build your week, keep it up to date, share it any which way you&rsquo;d like.</p>
                 <form className="obwelcome-email" onSubmit={(event) => { event.preventDefault(); sendLink(false, true); }}>
                   <span><Icon name="mail" size={18} /></span>
                   <input
