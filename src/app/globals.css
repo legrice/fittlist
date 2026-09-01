@@ -4903,12 +4903,12 @@ select.editinput.placekind-select {
 }
 .profile-action-cluster:has(.followpill) { flex-wrap:nowrap; }
 .profile-action-cluster:has(.followpill) :is(.followpill,.actpill,.profile-about-trigger) {
-  order:1; width:0; height:46px; min-height:46px; flex:1 1 0; padding:0 10px;
+  order:1; width:0; height:40px; min-height:40px; flex:1 1 0; padding:0 10px;
   justify-content:center; border:1px solid var(--color-surface-muted); border-radius:12px;
   background:var(--color-surface-muted); color:var(--ink); font-size:14px; font-weight:600; white-space:nowrap;
 }
 .profile-action-cluster:has(.followpill) :is(.actpill,.profile-about-trigger) .icon { display:none; }
-.profile-action-cluster:has(.followpill) .followpill.on { border-color:var(--color-surface-muted); background:var(--color-surface-muted); color:var(--ink); }
+.profile-action-cluster:has(.followpill) .followpill.on { border-color:var(--ink); background:var(--ink); color:var(--paper); }
 .profacts .studio-been-here.on { border:1px solid var(--line); background:var(--paper); color:var(--ink); }
 .profacts .studio-been-here.on .icon { color:var(--color-favorite); }
 .pubhead.pubhead-hero .profacts .followpill.favorite.on,
