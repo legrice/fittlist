@@ -4831,7 +4831,12 @@ select.editinput.placekind-select {
 .profile-eyebrow span:last-child { text-align:left; }
 .pubidentity-paper .profbadges-top { margin: 0 0 8px; }
 .pubidentity-paper .profname { font-size: 38px; line-height: 1; }
-.profhandle { margin: 7px 0 0; color: var(--ol); font-size: 15px; line-height: 1.2; }
+.profhandle {
+  width:max-content; max-width:100%; margin:9px 0 0; padding:6px 10px;
+  overflow:hidden; border-radius:var(--radius-pill); background:var(--color-lime-soft);
+  color:var(--color-olive); font-size:14px; font-weight:600; line-height:1.1;
+  text-overflow:ellipsis; white-space:nowrap;
+}
 .pubbelow { padding-top: 18px; }
 .profacts .actpill,
 .profacts .followpill {
