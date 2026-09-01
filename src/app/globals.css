@@ -2645,7 +2645,7 @@ button.ps-card { cursor: pointer; }
 
 /* Certifications (public): same bullet-list style as Coaching focus, ruled off
    underneath to close the section. */
-.certsec { border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+.certsec { padding-bottom: 24px; }
 
 /* "Coaching focus" list (public), ruled off above and below */
 .focussec {
