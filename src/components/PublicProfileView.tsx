@@ -484,7 +484,6 @@ export async function PublicProfileView({
                 name={user.name}
                 photo={user.photo}
                 color={avatarColor(user)}
-                follow={!isOwner && account ? account : null}
                 isOwner={isOwner}
                 availability={user.availability}
                 canMessage={canMessage}

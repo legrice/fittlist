@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
-import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { MessageComposer } from "@/components/MessageComposer";
 import { QrSheet } from "@/components/QrSheet";
@@ -11,7 +9,7 @@ import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // Tap a face, see the face. The avatar blows up over a blurred page with the
-// things you'd want to do with a person under it: follow them, share or copy
+// things you'd want to do with a person under it: share or copy
 // their link, and their QR code. Everything here is about the profile being
 // looked at, never the viewer's own.
 export function AvatarZoom({
@@ -20,8 +18,6 @@ export function AvatarZoom({
   photo,
   color,
   className,
-  /** null hides the Follow action: the owner, or nobody signed in. */
-  follow = null,
   isOwner = false,
   availability = null,
   canMessage = false,
@@ -34,7 +30,6 @@ export function AvatarZoom({
   /** The avatar's existing class on this page, so the trigger looks identical
    *  to the plain avatar it replaces. */
   className: string;
-  follow?: { following: boolean; requested?: boolean } | null;
   /** The person looking is the person shown; the QR sheet says "Your". */
   isOwner?: boolean;
   /** Worn as a dot on the photo itself: green accepting, yellow waitlist.
@@ -45,16 +40,12 @@ export function AvatarZoom({
   canMessage?: boolean;
   signedIn?: boolean;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
-  const [following, setFollowing] = useState(follow?.following ?? false);
-  const [requested, setRequested] = useState(follow?.requested ?? false);
   const [availOpen, setAvailOpen] = useState(false);
   const [availWriting, setAvailWriting] = useState(false);
   const [availSent, setAvailSent] = useState(false);
-  const [pending, start] = useTransition();
   const [mounted, setMounted] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   useEffect(() => setMounted(true), []);
@@ -67,31 +58,6 @@ export function AvatarZoom({
     setAvailOpen(false);
     setAvailWriting(false);
     setAvailSent(false);
-  };
-
-  const toggleFollow = () => {
-    if (pending) return;
-    start(async () => {
-      if (following || requested) {
-        const res = await unfollowTrainer(handle);
-        if (!res.ok) {
-          toast(res.error ?? "Something went wrong.");
-          return;
-        }
-        setFollowing(false);
-        setRequested(false);
-        window.dispatchEvent(new Event("calendar-pins-changed"));
-      } else {
-        const res = await followTrainer(handle);
-        if (!res.ok) {
-          toast(res.error ?? "Something went wrong.");
-          return;
-        }
-        if (res.requested) setRequested(true);
-        else setFollowing(true);
-      }
-      router.refresh();
-    });
   };
 
   const copy = async () => {
@@ -186,13 +152,6 @@ export function AvatarZoom({
             </div>
             <div className="avoverlay-bottom">
             <div className="avoverlay-acts">
-              {follow && (
-                <button className="avact save-ribbon-only" disabled={pending} onClick={toggleFollow} aria-label={following ? "Remove saved calendar" : requested ? "Cancel calendar request" : "Save calendar"}>
-                  <span className={`avact-ic${following ? " on" : ""}`}>
-                    <Icon name={following ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={24} />
-                  </span>
-                </button>
-              )}
               <button className="avact" onClick={share}>
                 <span className="avact-ic">
                   <Icon name="reply" className="share-arrow-forward" size={24} />
