@@ -19,7 +19,7 @@ export function CalendarPinButton({
 }) {
   const [pinned, setPinned] = useState(false);
   const [pending, start] = useTransition();
-  const [toastMsg, toastOn, , dismissToast, toastFor] = useToast();
+  const [toastMsg, toastOn, , , toastFor] = useToast();
   useEffect(() => { calendarPinState(entityType, entityId).then(setPinned); }, [entityId, entityType]);
   return (
     <>
@@ -41,7 +41,8 @@ export function CalendarPinButton({
             setPinned(result.pinned);
             window.dispatchEvent(new Event("calendar-pins-changed"));
             if (result.pinned && entityType === "person" && entityName) {
-              toastFor(`You favorited ${entityName}. Their calendar will appear near the front.`, 5200);
+              const firstName = entityName.trim().split(/\s+/)[0];
+              toastFor(`${firstName} was added to your favorites.`, 3200);
             }
           });
         }}
@@ -49,7 +50,7 @@ export function CalendarPinButton({
         <Icon name={pinned ? "star_filled" : "star"} size={23} />
       </button>
       <BodyPortal>
-        <Toast msg={toastMsg} on={toastOn} dismiss={{ label: "Great, thanks", onClick: dismissToast }} />
+        <Toast msg={toastMsg} on={toastOn} />
       </BodyPortal>
     </>
   );
