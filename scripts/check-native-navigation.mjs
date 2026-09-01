@@ -1,9 +1,11 @@
 import { readFile } from "node:fs/promises";
 
-const [swift, web, shareHub] = await Promise.all([
+const [swift, web, shareHub, styles, navBar] = await Promise.all([
   readFile(new URL("../ios/App/App/SceneDelegate.swift", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/nav.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ShareHubScreen.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/NavBar.tsx", import.meta.url), "utf8"),
 ]);
 
 const fail = (message) => {
@@ -44,6 +46,10 @@ const requiredShareHubFragments = [
   'dataset.nativeShareProtocol === "2"',
   'nativeExportRequestId.current = requestId',
 ];
+const requiredMobileDockFragments = [
+  'className="navwrap"',
+  ':is(.screen.hasnav, .screen.hasnav > .pad, .pub.hasnav .profwrap) > .navwrap',
+];
 
 for (const fragment of requiredWebFragments) {
   if (!web.includes(fragment)) fail(`web navigation is missing ${fragment}`);
@@ -58,6 +64,10 @@ for (const fragment of requiredSwiftFragments) {
 }
 for (const fragment of requiredShareHubFragments) {
   if (!shareHub.includes(fragment)) fail(`Share editor is missing ${fragment}`);
+}
+for (const fragment of requiredMobileDockFragments) {
+  if (!`${navBar}\n${styles}`.includes(fragment))
+    fail(`mobile dock shell coverage is missing ${fragment}`);
 }
 
 console.log("Native navigation/share contract: web dock aligned and export lifecycle guarded");
