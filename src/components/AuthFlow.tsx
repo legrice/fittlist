@@ -106,7 +106,7 @@ function LandingShareMockup() {
       <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
       <div className="obwelcome-share-toolbar" aria-hidden="true">
         <span><Icon name="close" size={21} /></span>
-        <div><span><Icon name="help" size={19} /></span><b>Undo</b><b>Redo</b></div>
+        <div><span><Icon name="info" size={19} /></span><b>Undo</b><b>Redo</b></div>
       </div>
       <div className="obwelcome-share-canvas">
         <div className="obwelcome-share-accent" />
