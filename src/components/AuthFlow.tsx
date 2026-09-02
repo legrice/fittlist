@@ -231,6 +231,7 @@ export function AuthFlow({
   const [reqEmail, setReqEmail] = useState("");
   const [reqErr, setReqErr] = useState("");
   const [reqSent, setReqSent] = useState(false);
+  const landingStoriesRef = useRef<HTMLDivElement>(null);
   const pendingProfile = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
 
@@ -256,6 +257,34 @@ export function AuthFlow({
   }, []);
   useEffect(() => {
     if (stage === "claim") nameRef.current?.focus();
+  }, [stage]);
+  useEffect(() => {
+    const stories = landingStoriesRef.current;
+    if (!stories) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (window.innerWidth <= 900) {
+        stories.style.removeProperty("--ob-story-progress");
+        return;
+      }
+      const scrolled = -stories.getBoundingClientRect().top;
+      const start = window.innerHeight * .42;
+      const distance = window.innerHeight * .42;
+      const progress = Math.max(0, Math.min(1, (scrolled - start) / distance));
+      stories.style.setProperty("--ob-story-progress", progress.toFixed(3));
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", scheduleUpdate, { passive:true });
+    window.addEventListener("resize", scheduleUpdate);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+    };
   }, [stage]);
   const pendingFan = useRef(claimAs === "fan");
   // Everyone claims a name and a link, then lands on the same calendar.
@@ -408,8 +437,9 @@ export function AuthFlow({
                 </button>
               </nav>
             </header>
-            <div className="obwelcome-stories">
-              <div className="obwelcome-grid">
+            <div className="obwelcome-stories" ref={landingStoriesRef}>
+              <div className="obwelcome-story-stage">
+                <div className="obwelcome-grid obwelcome-calendar-grid">
                 <div className="obwelcome-title">
                   <h1>Fit all your fitness into one calendar.</h1>
                 </div>
@@ -433,14 +463,15 @@ export function AuthFlow({
                   </form>
                   {error && <div className="errorcopy">{error}</div>}
                 </div>
-              </div>
-              <div className="obwelcome-grid obwelcome-share-grid">
-                <div className="obwelcome-title">
-                  <h1>Share your week your way.</h1>
                 </div>
-                <div className="obwelcome-device"><LandingShareMockup /></div>
-                <div className="obwelcome-copy">
-                  <p>Send your classes as an image, share a link, or post them anywhere you&rsquo;d like.</p>
+                <div className="obwelcome-grid obwelcome-share-grid">
+                  <div className="obwelcome-title">
+                    <h1>Share your week your way.</h1>
+                  </div>
+                  <div className="obwelcome-device"><LandingShareMockup /></div>
+                  <div className="obwelcome-copy">
+                    <p>Send your classes as an image, share a link, or post them anywhere you&rsquo;d like.</p>
+                  </div>
                 </div>
               </div>
             </div>
