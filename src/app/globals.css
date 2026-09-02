@@ -9642,6 +9642,49 @@ html[data-mode="dark"],
    schedule card up one grid step so its first date stays connected to it. */
 .following-head + .home-listregion .home-schedule { margin-top: 0; }
 .cash-activity-list { padding:0; }
+.home-listregion:has(.activity-card) {
+  margin-inline:calc(-1 * var(--page-gutter)); padding:24px var(--page-gutter) 56px;
+  background:var(--color-surface-muted);
+}
+.cash-day > div:has(.activity-card) { display:grid; gap:16px; }
+.activity-card {
+  padding:22px; overflow:hidden; border:1px solid rgba(2,13,8,.045); border-radius:30px;
+  background:var(--color-surface); box-shadow:0 8px 28px rgba(2,13,8,.035);
+}
+.activity-card-main {
+  width:100%; padding:0; display:flex; align-items:flex-start; gap:14px;
+  border:0; background:transparent; color:var(--color-text-primary); font:inherit; text-align:left; cursor:pointer;
+}
+.activity-card-avatar {
+  width:44px; height:44px; flex:0 0 44px; display:grid; place-items:center; overflow:hidden;
+  border-radius:50%; color:var(--color-white); font-size:16px; font-weight:700;
+}
+.activity-card-avatar img { width:100%; height:100%; object-fit:cover; }
+.activity-card-body { min-width:0; padding-top:2px; display:flex; flex-direction:column; gap:8px; }
+.activity-card-story { font-size:18px; line-height:1.35; }
+.activity-card-story strong,
+.activity-card-story b { font-weight:700; }
+.activity-card-meta { color:var(--color-text-secondary); font-size:14px; line-height:1.35; }
+.activity-card-actions { margin-top:20px; display:flex; align-items:center; gap:8px; }
+.activity-card-actions button {
+  min-width:42px; min-height:42px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary);
+  font:inherit; font-size:13px; font-weight:600; cursor:pointer;
+}
+.activity-card-actions button.on { background:var(--color-lime-soft); }
+.activity-card-actions .activity-card-join { margin-left:auto; padding-inline:20px; background:var(--color-lime); }
+.activity-comment { margin-top:14px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+.activity-comment input {
+  min-width:0; height:44px; padding:0 15px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
+  background:var(--color-background); color:var(--color-text-primary); font:inherit; font-size:14px; outline:none;
+}
+.activity-comment input:focus { border-color:var(--color-black); }
+.activity-comment button { padding:0 16px; border:0; border-radius:var(--radius-pill); background:var(--color-black); color:var(--color-white); font:inherit; font-weight:700; }
+@media (max-width:520px) {
+  .activity-card { padding:20px; border-radius:26px; }
+  .activity-card-actions button span { display:none; }
+  .activity-card-actions .activity-card-join { min-width:76px; }
+}
 .calendar-stream-loading {
   min-height: 180px;
   display: grid;

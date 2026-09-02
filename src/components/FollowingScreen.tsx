@@ -391,6 +391,8 @@ export function FollowingScreen({
     };
   }, [calendarDirectoryOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
+  const [likedActivities, setLikedActivities] = useState(() => new Set<string>());
+  const [commentingActivity, setCommentingActivity] = useState<string | null>(null);
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -1059,26 +1061,36 @@ export function FollowingScreen({
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
                           const studio = item.whereHref ? studioOptions.find((option) => `/s/${option.slug}` === item.whereHref) : null;
+                          const group = socialGroups.find((option) => option.classKeys.includes(item.key));
                           const coachName = item.assignedCoachName ?? (coach && !sameCalendarIdentity(coach, item.where) ? coach.name : null);
                           const sourceName = coachName ?? studio?.name ?? null;
                           const sourcePhoto = coach?.photo ?? studio?.photo ?? null;
                           const sourceColor = coach?.color ?? studio?.color ?? "var(--color-olive)";
-                          const relation = calendarRelation(item, meId);
                           const ownedByYou = item.shift || (!!meId && item.coachId === meId);
-                          const isYourItem = item.saved || item.shift || (!!meId && item.coachId === meId);
                           const displaySourceName = ownedByYou ? meFace.name : sourceName;
                           const displaySourcePhoto = ownedByYou ? meFace.photo : sourcePhoto;
                           const displaySourceColor = ownedByYou ? meFace.color : sourceColor;
-                          const showSourceAvatar = Boolean(displaySourceName);
-                          return <article className="cash-class-row" key={item.key} data-cid={item.classId} data-d={item.iso}>
-                            <button type="button" className={`cash-class-main ${relation.tone}${showSourceAvatar ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
-                              {showSourceAvatar && displaySourceName && <span className={`cash-class-avatar${!ownedByYou && !coach && studio ? " studio" : ""}`} style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
-                              <span className="cash-class-copy">
-                                {displaySourceName && <span className="cash-class-coachline"><small>{displaySourceName}</small>{ownedByYou && <span className="cash-you-tag">You</span>}{!ownedByYou && coachName && !item.assignedCoachName && pins.has(`person:${item.coachId}`) && <Icon name="star_filled" className="cash-class-favorite" size={15} />}{isYourItem && <span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}
-                                <span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span>
-                                <span className="cash-class-studio-row"><span className="cash-class-studio">{item.where || "Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span>
+                          const going = item.saved && !ownedByYou;
+                          const activityName = going ? meFace.name : group?.name ?? displaySourceName ?? studio?.name ?? "Someone";
+                          const activityPhoto = going ? meFace.photo : group?.photo ?? displaySourcePhoto;
+                          const activityColor = going ? meFace.color : group ? "var(--color-olive)" : displaySourceColor;
+                          const activityVerb = going ? "are going to" : group || (!sourceName && studio) ? "has" : ownedByYou ? (item.shift ? "is working" : "is coaching") : "is coaching";
+                          const liked = likedActivities.has(item.key);
+                          return <article className="activity-card" key={item.key} data-cid={item.classId} data-d={item.iso}>
+                            <button type="button" className="activity-card-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
+                              <span className="activity-card-avatar" style={{ background:activityColor }}>{activityPhoto ? <img src={activityPhoto} alt="" /> : <span>{(activityName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>
+                              <span className="activity-card-body">
+                                <span className="activity-card-story"><strong>{going ? "You" : activityName}</strong> {activityVerb} <b>{item.name}</b></span>
+                                <span className="activity-card-meta">{item.where || "Location to come"} · {item.hm}{item.ap.toLowerCase()} · {item.durationMin} min</span>
                               </span>
                             </button>
+                            <div className="activity-card-actions">
+                              <button type="button" className={liked ? "on" : ""} aria-pressed={liked} onClick={() => setLikedActivities((current) => { const next=new Set(current); if(next.has(item.key)) next.delete(item.key); else next.add(item.key); return next; })}><Icon name="favorite" size={20} /><span>{liked ? "Liked" : "Like"}</span></button>
+                              <button type="button" className={commentingActivity === item.key ? "on" : ""} aria-expanded={commentingActivity === item.key} onClick={() => setCommentingActivity((current) => current === item.key ? null : item.key)}><Icon name="chat_bubble" size={19} /><span>Comment</span></button>
+                              <button type="button" className={item.saved ? "on" : ""} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}><Icon name="bookmark" size={20} /><span>{item.saved ? "Saved" : "Save"}</span></button>
+                              <button type="button" className="activity-card-join" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>{item.saved ? "Going" : "Join"}</button>
+                            </div>
+                            {commentingActivity === item.key && <form className="activity-comment" onSubmit={(event) => { event.preventDefault(); setCommentingActivity(null); toast("Comment added"); }}><input aria-label={`Comment on ${item.name}`} placeholder="Add a comment" autoFocus /><button type="submit">Post</button></form>}
                           </article>;
                         })}
                       </div>
