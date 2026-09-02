@@ -91,12 +91,6 @@ function LandingCalendarMockup() {
           );
         })}
       </div>
-      <div className="obwelcome-phone-nav" aria-hidden="true">
-        <span className="on"><Icon name="calendar_month" size={20} /></span>
-        <span><Icon name="search" size={20} /></span>
-        <span><Icon name="account_circle" size={20} /></span>
-        <span><Icon name="reply" size={20} /></span>
-      </div>
     </div>
   );
 }

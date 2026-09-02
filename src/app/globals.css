@@ -648,7 +648,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obwelcome-device { min-height:760px; align-self:end; display:flex; align-items:flex-end; justify-content:center; overflow:visible; }
 .obwelcome-phone {
   width:min(100%,460px); height:760px; min-height:760px; position:relative; overflow:hidden;
-  padding:25px 24px 92px; border:1px solid rgba(0,0,0,.14);
+  padding:25px 24px 30px; border:1px solid rgba(0,0,0,.14);
   border-radius:62px; background:var(--color-white); color:var(--color-black);
   box-shadow:0 24px 44px -26px rgba(0,0,0,.3),0 8px 18px -12px rgba(0,0,0,.16); text-align:left;
 }
@@ -692,13 +692,6 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obwelcome-class strong { font-size:19px; line-height:1.16; }
 .obwelcome-class em { color:#737373; font-size:14px; font-style:normal; }
 .obwelcome-class time { align-self:start; padding-top:16px; font-size:17px; line-height:1.2; font-weight:600; }
-.obwelcome-phone-nav {
-  position:absolute; left:22px; right:22px; bottom:22px; height:58px; padding:5px;
-  display:grid; grid-template-columns:repeat(4,1fr); border:1px solid #e2e2e2; border-radius:var(--radius-pill);
-  background:rgba(255,255,255,.94); box-shadow:0 10px 24px rgba(0,0,0,.08);
-}
-.obwelcome-phone-nav span { display:grid; place-items:center; border-radius:var(--radius-pill); }
-.obwelcome-phone-nav span.on { background:#eeeeee; }
 .obwelcome-footer {
   min-height:78px; padding:18px clamp(28px,4vw,64px); display:flex; align-items:center; gap:22px;
   border-top:1px solid rgba(0,0,0,.16); color:var(--color-black); font-size:13px;
