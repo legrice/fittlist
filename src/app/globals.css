@@ -13008,7 +13008,10 @@ a.clspeek-by:active { opacity: .6; }
     border-radius:28px 28px 0 0; background:var(--paper); color:var(--ink);
     box-shadow:0 -16px 44px rgba(16, 18, 13, .16);
     animation:mobile-calendar-sheet-in var(--motion-base) var(--motion-ease-out) both;
+    transition:transform var(--motion-base) var(--motion-ease-out);
+    touch-action:pan-y;
   }
+  .mobile-calendar-switcher.is-pulling { animation:none; transition:none; }
   .mobile-calendar-switcher-handle {
     width:38px; height:5px; margin:2px auto 10px; border-radius:999px;
     background:var(--color-border-strong);

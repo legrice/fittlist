@@ -209,13 +209,55 @@ export function FollowingScreen({
   const [myRail, setMyRail] = useState(initialMyRail);
   const [calendarPending, setCalendarPending] = useState(mode === "home");
   const [calendarSwitcherOpen, setCalendarSwitcherOpen] = useState(false);
+  const calendarSwitcherRef = useRef<HTMLElement>(null);
+  const calendarSwitcherDragStartY = useRef<number | null>(null);
+  const calendarSwitcherDragDistance = useRef(0);
+  const [calendarSwitcherDragY, setCalendarSwitcherDragY] = useState(0);
+  const [calendarSwitcherDragging, setCalendarSwitcherDragging] = useState(false);
   const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
   const streamGeneration = useRef(0);
+
+  const closeCalendarSwitcher = () => {
+    setCalendarSwitcherOpen(false);
+    setCalendarSwitcherDragY(0);
+    setCalendarSwitcherDragging(false);
+    calendarSwitcherDragStartY.current = null;
+    calendarSwitcherDragDistance.current = 0;
+  };
+  const startCalendarSwitcherPull = (event: TouchEvent<HTMLElement>) => {
+    if ((calendarSwitcherRef.current?.scrollTop ?? 0) > 0) return;
+    calendarSwitcherDragStartY.current = event.touches[0]?.clientY ?? null;
+    calendarSwitcherDragDistance.current = 0;
+  };
+  const moveCalendarSwitcherPull = (event: TouchEvent<HTMLElement>) => {
+    if (calendarSwitcherDragStartY.current === null) return;
+    const currentY = event.touches[0]?.clientY ?? calendarSwitcherDragStartY.current;
+    if ((calendarSwitcherRef.current?.scrollTop ?? 0) > 0) {
+      calendarSwitcherDragStartY.current = currentY;
+      return;
+    }
+    const distance = Math.max(0, currentY - calendarSwitcherDragStartY.current);
+    if (!distance) return;
+    event.preventDefault();
+    calendarSwitcherDragDistance.current = distance;
+    setCalendarSwitcherDragging(true);
+    setCalendarSwitcherDragY(distance);
+  };
+  const endCalendarSwitcherPull = () => {
+    if (calendarSwitcherDragDistance.current > 90) {
+      closeCalendarSwitcher();
+      return;
+    }
+    setCalendarSwitcherDragY(0);
+    setCalendarSwitcherDragging(false);
+    calendarSwitcherDragStartY.current = null;
+    calendarSwitcherDragDistance.current = 0;
+  };
 
   useEffect(() => {
     if (!calendarSwitcherOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setCalendarSwitcherOpen(false);
+      if (event.key === "Escape") closeCalendarSwitcher();
     };
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
@@ -1081,20 +1123,20 @@ export function FollowingScreen({
       {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCalendarDirectory(); }}><section className={`calendar-directory-sheet${calendarDirectoryDragging ? " is-pulling" : ""}`} style={{ transform:`translateY(${calendarDirectoryDragY}px)` }} role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()} onTouchStart={startCalendarDirectoryPull} onTouchMove={moveCalendarDirectoryPull} onTouchEnd={endCalendarDirectoryPull} onTouchCancel={endCalendarDirectoryPull}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={closeCalendarDirectory}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list" ref={calendarDirectoryListRef}>{calendarDirectoryItems.map((item) => { const key=`${item.kind}:${item.id}`; const following=calendarDirectoryFollowing[key] ?? true; return <div className="calendar-directory-row" key={key}><Link href={item.href} onClick={closeCalendarDirectory}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong></Link><button type="button" className={following ? "on" : ""} disabled={calendarDirectoryBusy === key} onClick={() => void toggleDirectoryFollow(item)}>{following ? "Following" : "Follow"}</button></div>})}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
       {isHome && calendarSwitcherOpen && <BodyPortal>
-        <div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarSwitcherOpen(false); }}>
-          <section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="mobile-calendar-switcher-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCalendarSwitcher(); }}>
+          <section ref={calendarSwitcherRef} className={`mobile-calendar-switcher${calendarSwitcherDragging ? " is-pulling" : ""}`} style={{ transform:`translateY(${calendarSwitcherDragY}px)` }} role="dialog" aria-modal="true" aria-labelledby="mobile-calendar-switcher-title" onMouseDown={(event) => event.stopPropagation()} onTouchStart={startCalendarSwitcherPull} onTouchMove={moveCalendarSwitcherPull} onTouchEnd={endCalendarSwitcherPull} onTouchCancel={endCalendarSwitcherPull}>
             <div className="mobile-calendar-switcher-handle" aria-hidden="true" />
             <header>
               <h2 id="mobile-calendar-switcher-title">Calendars</h2>
-              <button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarSwitcherOpen(false)}><Icon name="close" size={21} /></button>
+              <button type="button" aria-label="Close calendar chooser" onClick={closeCalendarSwitcher}><Icon name="close" size={21} /></button>
             </header>
             <div className="mobile-calendar-switcher-list">
-              <button type="button" className="selected" aria-current="page" onClick={() => setCalendarSwitcherOpen(false)}>
+              <button type="button" className="selected" aria-current="page" onClick={closeCalendarSwitcher}>
                 <span className="mobile-calendar-switcher-icon"><Icon name="calendar_view_day" size={21} /></span>
                 <span><strong>My week</strong><small>You and calendars you follow</small></span>
                 <Icon name="check" size={19} />
               </button>
-              <button type="button" className="mobile-calendar-switcher-row" aria-label="Open personal calendar" onClick={() => { personalCalendarTriggerRef.current?.click(); setCalendarSwitcherOpen(false); }}>
+              <button type="button" className="mobile-calendar-switcher-row" aria-label="Open personal calendar" onClick={() => { personalCalendarTriggerRef.current?.click(); closeCalendarSwitcher(); }}>
                 <span className="mobile-calendar-switcher-icon"><Icon name="person" size={21} /></span>
                 <span><strong>Personal calendar</strong><small>Your classes and shifts</small></span>
                 <Icon name="chevron_right" size={19} />
@@ -1102,7 +1144,7 @@ export function FollowingScreen({
               {managedCalendars.length > 0 && <p>Managed calendars</p>}
               {managedCalendars.map((calendar) => {
                 const href = calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`;
-                return <Link href={href} onClick={() => setCalendarSwitcherOpen(false)} key={`${calendar.kind}:${calendar.id}`}>
+                return <Link href={href} onClick={closeCalendarSwitcher} key={`${calendar.kind}:${calendar.id}`}>
                   <span className={`mobile-calendar-switcher-icon ${calendar.kind}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={21} />}
