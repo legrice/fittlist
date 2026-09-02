@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -62,6 +61,7 @@ const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) =
 
 type View = "list" | "month";
 type CalendarFilter = "all" | "coaching" | "saved" | "personal";
+type ManagedCalendarView = ManagedCalendarDestination & { days: WeekDayRows[] };
 
 const prefillFromTemplate = (template: TemplateDto): AdderPrefill => ({
   ...template,
@@ -106,6 +106,7 @@ export function CalendarScreen({
   sheet = false,
   onClose,
   managedCalendars = [],
+  managedCalendarViews = [],
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -126,11 +127,14 @@ export function CalendarScreen({
   sheet?: boolean;
   onClose?: () => void;
   managedCalendars?: ManagedCalendarDestination[];
+  managedCalendarViews?: ManagedCalendarView[];
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
+  const [selectedCalendarId, setSelectedCalendarId] = useState("personal");
+  const activeManagedCalendar = managedCalendarViews.find((calendar) => calendar.id === selectedCalendarId) ?? null;
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -415,6 +419,18 @@ export function CalendarScreen({
     }
     return m;
   }, [classes, todayIso, studioById, visible.coaching, visible.personal, visible.saved, savedByIso, monthHorizon]);
+  const managedMonthItems = useMemo(() => {
+    const mapped = new Map<string, MonthCellItem[]>();
+    for (const day of activeManagedCalendar?.days ?? []) {
+      mapped.set(day.iso, day.rows.map((row) => ({
+        kind:row.tagTone === "shift" ? "shift" as const : "coaching" as const,
+        name:row.name,
+        at:atOf(row),
+      })));
+    }
+    return mapped;
+  }, [activeManagedCalendar]);
+  const displayedMonthItems = activeManagedCalendar ? managedMonthItems : monthItems;
 
   useEffect(() => {
     if (view !== "list") return;
@@ -433,7 +449,8 @@ export function CalendarScreen({
   // answers "what does the month look like"; a day is a list of classes, and
   // that is a thing the list already draws well.
   const openDay = useCallback((iso: string) => {
-    if (!monthItems.has(iso)) {
+    if (!displayedMonthItems.has(iso)) {
+      if (activeManagedCalendar) return;
       ensureComposer();
       setQuickPrefill(null);
       setAddDate(iso);
@@ -448,7 +465,7 @@ export function CalendarScreen({
     requestAnimationFrame(() => {
       document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start" });
     });
-  }, [ensureComposer, monthItems, todayIso, dayHorizon]);
+  }, [ensureComposer, displayedMonthItems, activeManagedCalendar, todayIso, dayHorizon]);
 
   // Whether this coach has published anything at all, not whether the next
   // eight weeks do: the empty state offers the thing to do only when there is
@@ -506,7 +523,7 @@ export function CalendarScreen({
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
             {sheet && <button type="button" className="calendar-page-back" aria-label="Back" onClick={onClose}><Icon name="arrow_back" size={23} /></button>}
-            {sheet ? <h1>Personal</h1> : <button type="button" className="calendar-context-title" aria-haspopup="dialog" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)}><span>Personal</span><Icon name="expand_more" size={24} /></button>}
+            {sheet ? <h1>Personal</h1> : <button type="button" className="calendar-context-title" aria-haspopup="dialog" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)} title={activeManagedCalendar?.name ?? "Personal"}><span>{activeManagedCalendar?.name ?? "Personal"}</span><Icon name="expand_more" size={24} /></button>}
           </div>
           <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         </div>
@@ -527,7 +544,7 @@ export function CalendarScreen({
         </div>
       </header>
 
-      {calendarChooserOpen && <BodyPortal><div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarChooserOpen(false); }}><section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="your-calendars-title" onMouseDown={(event) => event.stopPropagation()}><div className="mobile-calendar-switcher-handle" aria-hidden="true" /><header><h2 id="your-calendars-title">Your calendars</h2><button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarChooserOpen(false)}><Icon name="close" size={21} /></button></header><div className="mobile-calendar-switcher-list"><button type="button" className="selected" aria-current="page" onClick={() => setCalendarChooserOpen(false)}><span className="mobile-calendar-switcher-icon group" style={{ background:viewer.color }}>{viewer.photo ? <img src={viewer.photo} alt="" /> : (viewer.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>Personal calendar</strong><small>Your classes and shifts</small></span><Icon name="check" size={19} /></button>{managedCalendars.length > 0 && <p>Managed calendars</p>}{managedCalendars.map((calendar) => <Link href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`} key={`${calendar.kind}:${calendar.id}`} onClick={() => setCalendarChooserOpen(false)}><span className={`mobile-calendar-switcher-icon${calendar.kind === "group" ? " group" : ""}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : (calendar.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={19} /></Link>)}</div></section></div></BodyPortal>}
+      {calendarChooserOpen && <BodyPortal><div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarChooserOpen(false); }}><section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="your-calendars-title" onMouseDown={(event) => event.stopPropagation()}><div className="mobile-calendar-switcher-handle" aria-hidden="true" /><header><h2 id="your-calendars-title">Your calendars</h2><button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarChooserOpen(false)}><Icon name="close" size={21} /></button></header><div className="mobile-calendar-switcher-list"><button type="button" className={selectedCalendarId === "personal" ? "selected" : ""} aria-current={selectedCalendarId === "personal" ? "page" : undefined} onClick={() => { setSelectedCalendarId("personal"); setCalendarChooserOpen(false); }}><span className="mobile-calendar-switcher-icon group" style={{ background:viewer.color }}>{viewer.photo ? <img src={viewer.photo} alt="" /> : (viewer.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>Personal calendar</strong><small>Your classes and shifts</small></span>{selectedCalendarId === "personal" ? <Icon name="check" size={19} /> : <span />}</button>{managedCalendars.length > 0 && <p>Managed calendars</p>}{managedCalendars.map((calendar) => <button type="button" className={selectedCalendarId === calendar.id ? "selected" : ""} aria-current={selectedCalendarId === calendar.id ? "page" : undefined} key={`${calendar.kind}:${calendar.id}`} onClick={() => { setSelectedCalendarId(calendar.id); setCalendarChooserOpen(false); }}><span className={`mobile-calendar-switcher-icon${calendar.kind === "group" ? " group" : ""}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : (calendar.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span>{selectedCalendarId === calendar.id ? <Icon name="check" size={19} /> : <span />}</button>)}</div></section></div></BodyPortal>}
 
       <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
@@ -539,7 +556,13 @@ export function CalendarScreen({
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
-      {bare ? (
+      {activeManagedCalendar ? view === "month" ? (
+        <MonthScroll todayIso={todayIso} items={displayedMonthItems} onDay={openDay} onMonthInView={setYmInView} monthsAhead={monthHorizon} onNeedMore={() => setMonthHorizon((value) => value + 12)} />
+      ) : activeManagedCalendar.days.length ? (
+        <CalendarList className="personal-calendar-list" days={activeManagedCalendar.days} />
+      ) : (
+        <WeekEmpty first title="Nothing showing" body={`Nothing is scheduled on ${activeManagedCalendar.name} yet.`} />
+      ) : bare ? (
         <WeekEmpty
           first
           title="Your calendar is empty"
@@ -553,7 +576,7 @@ export function CalendarScreen({
       ) : view === "month" ? (
         <MonthScroll
           todayIso={todayIso}
-          items={monthItems}
+          items={displayedMonthItems}
           onDay={openDay}
           onMonthInView={setYmInView}
           monthsAhead={monthHorizon}

@@ -1,13 +1,16 @@
 import { redirect } from "next/navigation";
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mySchedule } from "@/lib/coachweek";
-import { todayIso } from "@/lib/format";
+import { clockParts, dayBandLabel, todayIso } from "@/lib/format";
 import type { ClassDto, StudioDto } from "@/lib/types";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { myWeek } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
 import { currentUser } from "@/lib/current-user";
 import { managedCalendarsForUser } from "@/lib/managed-calendars";
+import { gymSchedule } from "@/app/actions/gym";
+import type { WeekDayRows } from "@/components/WeekView";
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +92,61 @@ export default async function CalendarPage({
     name: s.name,
     address: s.address,
   }));
+  const groupIds = managedCalendars.filter((calendar) => calendar.kind === "group").map((calendar) => calendar.id);
+  const groupThroughDate = new Date(`${today}T00:00:00Z`);
+  groupThroughDate.setUTCDate(groupThroughDate.getUTCDate() + 56);
+  const groupRows = groupIds.length ? await db.select({
+    groupId:schema.groupClasses.groupId,
+    classId:schema.classes.id,
+    iso:schema.groupClasses.occurrenceDate,
+    name:schema.classes.name,
+    startTime:schema.classes.startTime,
+    durationMin:schema.classes.durationMin,
+    location:schema.classes.location,
+    studioName:schema.studios.name,
+    coachId:schema.users.id,
+    coachName:schema.users.name,
+    coachPhoto:sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+    coachColor:schema.users.avatarColor,
+  }).from(schema.groupClasses)
+    .innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId))
+    .leftJoin(schema.studios, eq(schema.studios.id, schema.classes.studioId))
+    .leftJoin(schema.users, eq(schema.users.id, schema.classes.userId))
+    .where(and(inArray(schema.groupClasses.groupId, groupIds), gte(schema.groupClasses.occurrenceDate, today), lte(schema.groupClasses.occurrenceDate, groupThroughDate.toISOString().slice(0,10)))) : [];
+  const managedCalendarViews = await Promise.all(managedCalendars.map(async (calendar) => {
+    if (calendar.kind === "group") {
+      const byDay = new Map<string, WeekDayRows["rows"]>();
+      for (const item of groupRows.filter((row) => row.groupId === calendar.id)) {
+        const time = clockParts(item.startTime);
+        const rows = byDay.get(item.iso) ?? [];
+        rows.push({ key:`${calendar.id}|${item.classId}|${item.iso}`, classId:item.classId, iso:item.iso, name:item.name, where:item.studioName ?? item.location, hm:time.hm, ap:time.ap, dur:`${item.durationMin} min`, coach:item.coachId ? { id:item.coachId, name:item.coachName ?? "Coach", photo:item.coachPhoto, color:avatarColor({ id:item.coachId, avatarColor:item.coachColor }) } : null, tag:"Group", tagTone:"attending" });
+        byDay.set(item.iso, rows);
+      }
+      const days = [...byDay.entries()].sort(([a],[b]) => a.localeCompare(b)).map(([iso,rows]) => ({ iso, label:dayBandLabel(iso,today), today:iso === today, rows }));
+      return { ...calendar, days };
+    }
+    const week = await gymSchedule(calendar.id, 0);
+    const days: WeekDayRows[] = (week?.days ?? []).flatMap((day) => {
+      const rows = day.items.map((item) => {
+        const time = clockParts(item.startTime);
+        return {
+          key:`${calendar.id}|${item.id}|${day.iso}`,
+          classId:item.id,
+          iso:day.iso,
+          name:item.name,
+          where:calendar.name,
+          hm:time.hm,
+          ap:time.ap,
+          dur:`${item.durationMin} min`,
+          coach:item.onName ? { id:item.onUserId ?? item.id, name:item.onName, photo:null, color:"var(--color-olive)" } : null,
+          tag:item.onName || "Open shift",
+          tagTone:item.onName ? "coaching" as const : "shift" as const,
+        };
+      });
+      return rows.length ? [{ iso:day.iso, label:dayBandLabel(day.iso, today), today:day.iso === today, rows }] : [];
+    });
+    return { ...calendar, days };
+  }));
   return (
     <CalendarScreen
       savedDays={savedDays}
@@ -105,6 +163,7 @@ export default async function CalendarPage({
       openAdder={add === "1"}
       member={member}
       managedCalendars={managedCalendars}
+      managedCalendarViews={managedCalendarViews}
     />
   );
 }
