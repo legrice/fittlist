@@ -550,9 +550,8 @@ export function CalendarScreen({
             {sheet ? <h1>Personal</h1> : <button type="button" className="calendar-context-title" aria-haspopup="dialog" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)} title={isFollowingCalendar ? "Following" : activeManagedCalendar?.name ?? "Personal"}><span>{isFollowingCalendar ? "Following" : activeManagedCalendar?.name ?? "Personal"}</span><Icon name="expand_more" size={24} /></button>}
           </div>
           <div className="calendar-title-actions">
-            <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
-              <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
-              <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
+            <div className="calendar-desktop-view calendar-view-toggle">
+              <button type="button" className="on" aria-label={`Switch to ${view === "list" ? "month" : "day"} view`} title={view === "list" ? "Day view" : "Month view"} onClick={() => setView((current) => current === "list" ? "month" : "list")}><Icon name={view === "list" ? "calendar_view_day" : "calendar_month"} size={21} /></button>
             </div>
             <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
           </div>
