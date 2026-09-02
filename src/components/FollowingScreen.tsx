@@ -14,6 +14,7 @@ import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/Cale
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
+import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 
@@ -620,6 +621,7 @@ export function FollowingScreen({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds, selectedPeople, includeYou]);
+  const activityFeedItems = useMemo(() => shown.filter((item) => !(item.saved || item.shift || (!!meId && item.coachId === meId))), [shown, meId]);
 
   // A brand-new account has no useful calendar identity to put in the rail
   // yet. Showing a lone “You” circle above an empty state makes the circle
@@ -679,12 +681,12 @@ export function FollowingScreen({
   const homeRows: FeedItem[] = useMemo(
     () => {
       const monthEnd = plusDays(todayIso, 30);
-      return [...shown]
+      return [...(activity ? activityFeedItems : shown)]
         .filter((item) => item.iso >= todayIso && item.iso <= monthEnd)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, todayIso],
+    [activity, activityFeedItems, shown, todayIso],
   );
   const homeDays = useMemo(() => {
     const days = new Map<string, FeedItem[]>();
@@ -721,7 +723,7 @@ export function FollowingScreen({
     return sentences.length ? `${sentences.join(". ")} today.` : "Nothing is on your calendar today. See what everyone else is up to below.";
   }, [items, meId, todayIso]);
   const todayHeading = useMemo(() => new Intl.DateTimeFormat("en-US", { weekday:"short" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
-  const todayDate = useMemo(() => new Intl.DateTimeFormat("en-US", { month:"long", day:"numeric" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
+  const todayDate = useMemo(() => new Intl.DateTimeFormat("en-US", { month:"short", day:"numeric" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
   const monthItems = useMemo(() => {
     const mapped = new Map<string, MonthCellItem[]>();
     for (const item of homeRows) {
@@ -903,7 +905,7 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className={`calendar-tab-header${activity ? " activity-feed-header" : ""}`}>
-          {activity ? <div className="activity-today-hero"><div className="activity-today-date"><h1>{todayHeading}</h1><span>{todayDate}</span></div><p>{todaySummary}</p><button type="button" onClick={(event) => window.dispatchEvent(new CustomEvent("fittlist:open-share", { detail:{ opener:event.currentTarget } }))}><Icon name="reply" className="share-arrow-forward" size={19} /><span>Share your week</span></button></div> : <><button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button><div className="calendar-tab-actions"><GlobalAdd classOnly triggerClassName="calendar-header-add" triggerIconSize={24} onCalendarChange={(focus) => { if (!focus) return; setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarView("day"); setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER); setAddedFocus(focus); }} /></div></>}
+          {activity ? <div className="activity-today-hero"><div className="activity-today-date"><div><h1>{todayHeading}</h1><span>{todayDate}</span></div><HeaderAccountButton className="activity-today-avatar" unread={unread} face={{ photo:meFace.photo, color:meFace.color, initial:(meFace.name.trim().charAt(0) || "?").toUpperCase() }} /></div><p>{todaySummary}</p><div className="activity-today-actions"><button type="button" onClick={(event) => window.dispatchEvent(new CustomEvent("fittlist:open-share", { detail:{ opener:event.currentTarget } }))}><Icon name="reply" className="share-arrow-forward" size={19} /><span>Share</span></button><Link href="/calendar"><Icon name="calendar_month" size={18} /><span>Manage calendar</span></Link></div></div> : <><button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button><div className="calendar-tab-actions"><GlobalAdd classOnly triggerClassName="calendar-header-add" triggerIconSize={24} onCalendarChange={(focus) => { if (!focus) return; setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarView("day"); setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER); setAddedFocus(focus); }} /></div></>}
         </header>
       )}
       {!activity && isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
@@ -916,8 +918,10 @@ export function FollowingScreen({
         <div className="calendar-selection-empty"><h2>No calendars selected</h2><p>Tap a person above to see what’s on their calendar.</p></div>
       ) : isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
-      ) : (isHome ? shown.length === 0 : items.length === 0) ? (
-        firstRun ? (
+      ) : (isHome ? (activity ? activityFeedItems.length === 0 : shown.length === 0) : items.length === 0) ? (
+        activity ? (
+          <section className="activity-feed-empty"><h2>You’re all caught up</h2><p>Updates from people, studios, and groups you follow will show up here.</p><Link href="/discover">Find people to follow</Link></section>
+        ) : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="calendar-member-empty-figure" src="/illustrations/following-empty.png" alt="" width={356} height={600} />
