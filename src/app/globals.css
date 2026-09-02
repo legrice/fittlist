@@ -5187,7 +5187,16 @@ select.editinput.placekind-select {
 .away-fields { padding-top:2px; }
 .away-fields .flabel { margin-top:18px; }
 .away-date-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-.away-date-fields .editinput { min-width:0; }
+.away-date-fields > div { min-width:0; }
+.away-date-fields input[type="date"] {
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+}
+@media (max-width:520px) {
+  .away-date-fields { grid-template-columns:minmax(0,1fr); gap:0; }
+}
 .away-fields .hint {
   margin:6px 2px 0;
   color:var(--ol);
