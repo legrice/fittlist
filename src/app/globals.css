@@ -12747,7 +12747,14 @@ a.clspeek-by:active { opacity: .6; }
    row supplies 22px above it; twelve pixels of gap plus the next row's ten
    pixels of top padding supplies 22px below it. */
 .personal-calendar-list .dayrows { gap: 12px; }
-.personal-calendar-list .clline { --row-rail-bottom:22px; padding-bottom: 22px; }
+.personal-calendar-list .clline {
+  --row-rail-bottom:0;
+  padding:18px;
+  border:0;
+  border-radius:24px;
+  background:var(--color-surface);
+}
+.personal-calendar-list .clline::before { display:none; }
 
 /* Profiles used the occurrence grid before CalendarList became text-led.
    Keep their hierarchy explicit so older grid coordinates cannot indent the
@@ -13452,6 +13459,13 @@ a.clspeek-by:active { opacity: .6; }
     .navglass-indicator { transition:none; }
   }
   .calendar-bottom-actions .calendar-bottom-add { display:none; }
+  .calendar-bottom-actions.calendar-tab-add-actions {
+    left:auto; right:calc(50% - 176px); bottom:calc(86px + env(safe-area-inset-bottom));
+  }
+  .calendar-bottom-actions.calendar-tab-add-actions .calendar-bottom-add {
+    display:inline-flex;
+    box-shadow:none;
+  }
   .cardwrap.shpage-tabbed {
     margin-top:0;
     padding-top:0;
