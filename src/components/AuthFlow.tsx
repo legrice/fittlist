@@ -316,8 +316,8 @@ export function AuthFlow({
         return;
       }
       const scrolled = -stories.getBoundingClientRect().top;
-      const chapter = Math.max(0, Math.min(3, Math.floor(scrolled / window.innerHeight + .44)));
-      stories.dataset.story = ["calendar", "share", "groups", "studio"][chapter];
+      const chapter = Math.max(0, Math.min(4, Math.floor(scrolled / window.innerHeight + .44)));
+      stories.dataset.story = ["calendar", "share", "groups", "studio", "cta"][chapter];
     };
     const scheduleUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
@@ -536,12 +536,12 @@ export function AuthFlow({
                     <p>Your coaches become a marketing network, sharing classes and sending people back to your studio.</p>
                   </div>
                 </div>
+                <section className="obwelcome-final-cta" aria-labelledby="obwelcome-final-title">
+                  <h2 id="obwelcome-final-title">Ready to build your week?</h2>
+                  <button type="button" onClick={() => { setError(""); setSheet("signup"); }}>Get started</button>
+                </section>
               </div>
             </div>
-            <section className="obwelcome-final-cta" aria-labelledby="obwelcome-final-title">
-              <h2 id="obwelcome-final-title">Ready to build your week?</h2>
-              <button type="button" onClick={() => { setError(""); setSheet("signup"); }}>Get started</button>
-            </section>
             <footer className="obwelcome-footer">
               <Wordmark variant="ink" className="obwelcome-footer-mark" />
               <span>&copy; {new Date().getFullYear()} FittList</span>
