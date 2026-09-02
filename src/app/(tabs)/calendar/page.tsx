@@ -7,6 +7,7 @@ import { CalendarScreen } from "@/components/CalendarScreen";
 import { myWeek } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
 import { currentUser } from "@/lib/current-user";
+import { managedCalendarsForUser } from "@/lib/managed-calendars";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function CalendarPage({
   const member = me.kind === "fan";
   const today = todayIso();
 
-  const [classRows, studioRows, savedDays] = await Promise.all([
+  const [classRows, studioRows, savedDays, managedCalendars] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym
     // shifts folded in, because a coach who is on Thursday at seven has to be
     // able to see that they are on Thursday at seven.
@@ -54,6 +55,7 @@ export default async function CalendarPage({
       .from(schema.studios)
       .orderBy(schema.studios.seq),
     myWeek(userId, { email: me.email }),
+    managedCalendarsForUser(userId),
   ]);
 
   const studioById = new Map(studioRows.map((st) => [st.id, st]));
@@ -102,6 +104,7 @@ export default async function CalendarPage({
       studios={studios}
       openAdder={add === "1"}
       member={member}
+      managedCalendars={managedCalendars}
     />
   );
 }

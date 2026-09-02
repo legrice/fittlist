@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ import {
   type CalendarComposerData,
 } from "@/app/actions/calendar-data";
 import { invalidateClientMemory } from "@/lib/client-memory";
+import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -103,6 +105,7 @@ export function CalendarScreen({
   member = false,
   sheet = false,
   onClose,
+  managedCalendars = [],
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -122,10 +125,12 @@ export function CalendarScreen({
   openAdder?: boolean;
   sheet?: boolean;
   onClose?: () => void;
+  managedCalendars?: ManagedCalendarDestination[];
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
+  const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -501,10 +506,11 @@ export function CalendarScreen({
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
             {sheet && <button type="button" className="calendar-page-back" aria-label="Back" onClick={onClose}><Icon name="arrow_back" size={23} /></button>}
-            <h1>Your calendar</h1>
+            <h1>Your calendars</h1>
           </div>
           <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         </div>
+        {!sheet && <button type="button" className="personal-calendar-picker" aria-haspopup="dialog" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)}><span><Icon name="person" size={19} /><strong>Personal calendar</strong></span><Icon name="expand_more" size={21} /></button>}
         <div className="calendar-desktop-controls">
           <label className="calendar-desktop-filter">
             <span className="sr-only">View calendar</span>
@@ -521,6 +527,8 @@ export function CalendarScreen({
           </div>
         </div>
       </header>
+
+      {calendarChooserOpen && <BodyPortal><div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarChooserOpen(false); }}><section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="your-calendars-title" onMouseDown={(event) => event.stopPropagation()}><div className="mobile-calendar-switcher-handle" aria-hidden="true" /><header><h2 id="your-calendars-title">Your calendars</h2><button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarChooserOpen(false)}><Icon name="close" size={21} /></button></header><div className="mobile-calendar-switcher-list"><button type="button" className="selected" aria-current="page" onClick={() => setCalendarChooserOpen(false)}><span className="mobile-calendar-switcher-icon group" style={{ background:viewer.color }}>{viewer.photo ? <img src={viewer.photo} alt="" /> : (viewer.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>Personal calendar</strong><small>Your classes and shifts</small></span><Icon name="check" size={19} /></button>{managedCalendars.length > 0 && <p>Managed calendars</p>}{managedCalendars.map((calendar) => <Link href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`} key={`${calendar.kind}:${calendar.id}`} onClick={() => setCalendarChooserOpen(false)}><span className={`mobile-calendar-switcher-icon${calendar.kind === "group" ? " group" : ""}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : (calendar.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={19} /></Link>)}</div></section></div></BodyPortal>}
 
       <div className="cardwrap calendar-cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
