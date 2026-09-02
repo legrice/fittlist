@@ -35,8 +35,52 @@ export type ScheduleRow = typeof schema.classes.$inferSelect & {
   duplicateOf: string | null;
 };
 
-type Who = { id: string; shiftsPublic: boolean };
+type Who = {
+  id: string;
+  shiftsPublic: boolean;
+  away?: boolean;
+  awayStartsOn?: string | null;
+  awayEndsOn?: string | null;
+  awayHideClasses?: boolean;
+};
 type ScheduleWindow = { start: string; end: string };
+
+async function awaySettingsFor(who: Who[]): Promise<Who[]> {
+  const missing = who.filter((person) => person.awayHideClasses === undefined).map((person) => person.id);
+  if (!missing.length) return who;
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id:schema.users.id,
+      away:schema.users.away,
+      awayStartsOn:schema.users.awayStartsOn,
+      awayEndsOn:schema.users.awayEndsOn,
+      awayHideClasses:schema.users.awayHideClasses,
+    })
+    .from(schema.users)
+    .where(inArray(schema.users.id, missing));
+  const settings = new Map(rows.map((row) => [row.id, row]));
+  return who.map((person) => ({ ...person, ...settings.get(person.id) }));
+}
+
+function hideAwayDates(rows: ScheduleRow[], who: Who[]): ScheduleRow[] {
+  const datesByOwner = new Map<string, string[]>();
+  for (const person of who) {
+    if (!person.away || !person.awayHideClasses || !person.awayStartsOn || !person.awayEndsOn) continue;
+    const start = new Date(`${person.awayStartsOn}T00:00:00Z`);
+    const end = new Date(`${person.awayEndsOn}T00:00:00Z`);
+    const dates: string[] = [];
+    for (const day = new Date(start); day <= end; day.setUTCDate(day.getUTCDate() + 1)) {
+      dates.push(day.toISOString().slice(0, 10));
+    }
+    datesByOwner.set(person.id, dates);
+  }
+  if (!datesByOwner.size) return rows;
+  return rows.map((row) => {
+    const dates = datesByOwner.get(row.ownerUserId);
+    return dates?.length ? { ...row, skipDates:[...new Set([...row.skipDates, ...dates])].sort() } : row;
+  });
+}
 
 const own = (r: typeof schema.classes.$inferSelect): ScheduleRow => ({
   ...r,
@@ -64,15 +108,16 @@ const slotKey = (r: {
  * only thing a caller needs, and no surface has to learn what a swap is.
  */
 export async function publicSchedules(who: Who[]): Promise<ScheduleRow[]> {
+  const resolvedWho = await awaySettingsFor(who);
   const ids = [...new Set(who.map((w) => w.id))];
   if (!ids.length) return [];
   const rows = await build(
     ids,
-    who.filter((w) => w.shiftsPublic).map((w) => w.id),
+    resolvedWho.filter((w) => w.shiftsPublic).map((w) => w.id),
   );
   // The gym's row is the one people see. Showing both is the double listing
   // this whole flag exists to stop.
-  return rows.filter((r) => !r.duplicateOf);
+  return hideAwayDates(rows.filter((r) => !r.duplicateOf), resolvedWho);
 }
 
 /**
@@ -90,15 +135,16 @@ export async function publicFeedSchedules(
   who: Who[],
   window?: ScheduleWindow,
 ): Promise<ScheduleRow[]> {
+  const resolvedWho = await awaySettingsFor(who);
   const ids = [...new Set(who.map((w) => w.id))];
   if (!ids.length) return [];
   const rows = await build(
     ids,
-    who.filter((w) => w.shiftsPublic).map((w) => w.id),
+    resolvedWho.filter((w) => w.shiftsPublic).map((w) => w.id),
     true,
     window,
   );
-  return rows.filter((r) => !r.duplicateOf);
+  return hideAwayDates(rows.filter((r) => !r.duplicateOf), resolvedWho);
 }
 
 /**
@@ -282,7 +328,7 @@ export async function whoFor(ids: string[]): Promise<Who[]> {
   if (!ids.length) return [];
   const db = await getDb();
   const rows = await db
-    .select({ id: schema.users.id, shiftsPublic: schema.users.shiftsPublic })
+    .select({ id: schema.users.id, shiftsPublic: schema.users.shiftsPublic, away:schema.users.away, awayStartsOn:schema.users.awayStartsOn, awayEndsOn:schema.users.awayEndsOn, awayHideClasses:schema.users.awayHideClasses })
     .from(schema.users)
     .where(inArray(schema.users.id, ids));
   return rows;

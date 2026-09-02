@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "away_hide_classes" boolean DEFAULT false NOT NULL;

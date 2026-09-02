@@ -62,6 +62,7 @@ export const users = pgTable("users", {
   awayMessage: text("away_message"),
   awayStartsOn: date("away_starts_on", { mode: "string" }),
   awayEndsOn: date("away_ends_on", { mode: "string" }),
+  awayHideClasses: boolean("away_hide_classes").notNull().default(false),
   // Optional contact + social links surfaced as buttons on the public profile.
   instagram: text("instagram"),
   website: text("website"),

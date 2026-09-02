@@ -59,6 +59,7 @@ export async function updateAwayStatus(input: {
   message: string;
   startsOn: string;
   endsOn: string;
+  hideClasses: boolean;
 }): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
@@ -71,6 +72,8 @@ export async function updateAwayStatus(input: {
   if (input.away && !message) return { ok: false, error: "Add an away message." };
   if (input.away && (!startsOn || !endsOn)) return { ok: false, error: "Choose your away dates." };
   if (startsOn && endsOn && startsOn > endsOn) return { ok: false, error: "The end date must be after the start date." };
+  if (startsOn && endsOn && (Date.parse(`${endsOn}T00:00:00Z`) - Date.parse(`${startsOn}T00:00:00Z`)) / 86_400_000 > 366)
+    return { ok: false, error: "Choose an away period of one year or less." };
 
   const db = await getDb();
   const [user] = await db
@@ -81,6 +84,7 @@ export async function updateAwayStatus(input: {
       awayMessage: message || null,
       awayStartsOn: startsOn || null,
       awayEndsOn: endsOn || null,
+      awayHideClasses: input.hideClasses,
     })
     .where(eq(schema.users.id, userId))
     .returning({ handle: schema.users.handle });

@@ -15,3 +15,8 @@ export function isAwayActive(window: AwayWindow, now = new Date()): boolean {
   if (window.awayEndsOn && today > window.awayEndsOn) return false;
   return true;
 }
+
+export function isDateInAwayWindow(window: AwayWindow, iso: string): boolean {
+  if (!window.away || !window.awayStartsOn || !window.awayEndsOn) return false;
+  return iso >= window.awayStartsOn && iso <= window.awayEndsOn;
+}

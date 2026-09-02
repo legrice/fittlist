@@ -78,6 +78,7 @@ export function ProfileSheet({
   awayMessage = "",
   awayStartsOn = "",
   awayEndsOn = "",
+  awayHideClasses = false,
   googleConfigured,
   googleConnected,
   googleEmail,
@@ -124,6 +125,7 @@ export function ProfileSheet({
   awayMessage?: string;
   awayStartsOn?: string;
   awayEndsOn?: string;
+  awayHideClasses?: boolean;
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
@@ -201,6 +203,7 @@ export function ProfileSheet({
   const [awayReply, setAwayReply] = useState(awayMessage);
   const [awayStart, setAwayStart] = useState(awayStartsOn);
   const [awayEnd, setAwayEnd] = useState(awayEndsOn);
+  const [hideClassesWhileAway, setHideClassesWhileAway] = useState(awayHideClasses);
   const [awaySaving, setAwaySaving] = useState(false);
 
   useEffect(() => {
@@ -353,7 +356,7 @@ export function ProfileSheet({
     if (awaySaving) return;
     setAwaySaving(true);
     (async () => {
-      const res = await updateAwayStatus({ away: isAway, banner: awayPublic, message: awayReply, startsOn: awayStart, endsOn: awayEnd });
+      const res = await updateAwayStatus({ away: isAway, banner: awayPublic, message: awayReply, startsOn: awayStart, endsOn: awayEnd, hideClasses: hideClassesWhileAway });
       if (res.ok) {
         toast(isAway ? "Away status saved" : "Away status turned off");
         router.refresh();
@@ -817,6 +820,11 @@ export function ProfileSheet({
                   <span className="setrow-ic"><Icon name="schedule" size={24}/></span>
                   <span className="setrow-txt"><span className="t">Away</span><span className="s">{isAway ? "On during the dates below" : "Off, your profile behaves normally"}</span></span>
                   <span className={`switch${isAway ? " on" : ""}`} aria-hidden="true"><span className="switch-knob"/></span>
+                </button>
+                <button className="setrow" type="button" onClick={() => setHideClassesWhileAway((value) => !value)} aria-pressed={hideClassesWhileAway}>
+                  <span className="setrow-ic"><Icon name="calendar_month" size={24}/></span>
+                  <span className="setrow-txt"><span className="t">Hide classes during these dates</span><span className="s">They stay saved and reappear afterward</span></span>
+                  <span className={`switch${hideClassesWhileAway ? " on" : ""}`} aria-hidden="true"><span className="switch-knob"/></span>
                 </button>
               </div>
               <div className="away-fields">
