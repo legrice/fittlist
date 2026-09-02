@@ -9681,12 +9681,13 @@ html[data-mode="dark"],
 .activity-card-meta { display:flex; flex-direction:column; gap:2px; color:var(--color-text-secondary); font-size:14px; line-height:1.35; }
 .activity-card-actions { margin-top:20px; display:flex; align-items:center; gap:8px; }
 .activity-card-actions button {
-  min-width:42px; min-height:42px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; gap:7px;
-  border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary);
+  min-width:38px; min-height:38px; padding:0; display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  border:0; border-radius:0; background:transparent; color:var(--color-black);
   font:inherit; font-size:13px; font-weight:600; cursor:pointer;
 }
-.activity-card-actions button.on { background:var(--color-lime-soft); }
-.activity-card-actions .activity-card-join { margin-left:auto; padding-inline:18px; background:var(--color-lime); }
+.activity-card-actions button:not(.activity-card-join) span { display:none; }
+.activity-card-actions button.on { background:transparent; color:var(--color-black); }
+.activity-card-actions .activity-card-join { margin-left:auto; padding-inline:18px; border-radius:var(--radius-pill); background:var(--color-lime); }
 .activity-card-actions .activity-card-join .icon { order:2; }
 .activity-comment { margin-top:14px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
 .activity-comment input {
@@ -9697,7 +9698,6 @@ html[data-mode="dark"],
 .activity-comment button { padding:0 16px; border:0; border-radius:var(--radius-pill); background:var(--color-black); color:var(--color-white); font:inherit; font-weight:700; }
 @media (max-width:520px) {
   .activity-card { padding:20px; border-radius:26px; }
-  .activity-card-actions button:not(.activity-card-join) span { display:none; }
   .activity-card-actions .activity-card-join { min-width:76px; }
 }
 .calendar-stream-loading {
