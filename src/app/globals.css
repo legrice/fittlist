@@ -597,7 +597,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 /* One signed-out promise, one product view, one door in. The prior front door
    was a five-slide onboarding story; the product now explains itself in one
    Cash App-like field with a real, code-native calendar mockup. */
-.ob:has(.obwelcome) { display:block; min-height:100dvh; overflow:auto; background:var(--si); color:var(--color-black); }
+.ob:has(.obwelcome) { display:block; min-height:100dvh; overflow:visible; background:var(--si); color:var(--color-black); }
+body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
 .ob:has(.obwelcome) > .pad { width:100%; max-width:none; min-height:100dvh; margin:0; padding:0; }
 .ob:has(.obwelcome) > .pad > .mark { display:none; }
 .obwelcome { min-height:100dvh; position:relative; background:var(--si); color:var(--color-black); }
@@ -799,7 +800,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obwelcome-footer button:hover { text-decoration:underline; text-underline-offset:3px; }
 
 @media (max-width:900px) {
-  .ob:has(.obwelcome) { overflow:auto; }
+  .ob:has(.obwelcome) { overflow:visible; }
   .obwelcome-head { position:absolute; inset:22px 20px auto; }
   .obwelcome-logo .wm-text { display:none; }
   .obwelcome-logo { --wm-mark:var(--si); }
