@@ -51,6 +51,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
       startDay: 0,
       endDay: 1,
       initialRailLimit: 16,
+      retainTodayForUser: true,
     }),
     db.select({
       id: schema.studios.id,

@@ -44,6 +44,9 @@ export type DiscoverFeedOptions = {
   calendarOnly?: boolean;
   /** Keep first-paint identity data to the faces that can actually be seen. */
   initialRailLimit?: number;
+  /** Home is a day hub, so its viewer can still review their own classes
+   * after they finish. Discovery and everybody else's schedules stay future-only. */
+  retainTodayForUser?: boolean;
 };
 
 /** How far ahead a face has to have something for the rail to carry it:
@@ -277,7 +280,7 @@ export async function buildDiscoverFeed(
     (c) => c.isPublic || (options.calendarOnly && c.shift && c.ownerUserId === userId),
   );
   const followedStudioClassIds = classRows
-    .filter((row) => !!row.studioId && followedStudioIds.has(row.studioId!))
+    .filter((row) => !!row.studioId && (followedStudioIds.has(row.studioId!) || options.retainTodayForUser))
     .map((row) => row.id);
   const followedStudioNaming = await shiftNaming(followedStudioClassIds, { includePrivate: true });
   const coaches = coachRows.filter((c) => c.kind !== "gym" && !!c.handle);
@@ -298,8 +301,14 @@ export async function buildDiscoverFeed(
     const dow = (d.getUTCDay() + 6) % 7;
     for (const c of classRows) {
       if (!runsOn(c, iso, dow)) continue;
+      const assignedCoach = c.studioId && (followedStudioIds.has(c.studioId) || options.retainTodayForUser)
+        ? shiftCoach(followedStudioNaming, c.id, iso)
+        : null;
       // Been and gone is not an answer to "when can I train next".
-      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
+      const belongsToViewerToday = options.retainTodayForUser && iso === today && (
+        c.ownerUserId === userId || assignedCoach?.id === userId || mineMarks.has(`${c.id}|${iso}`)
+      );
+      if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone) && !belongsToViewerToday) continue;
       // A shift is owned by the gym and shown under the coach, so the person
       // this row is about is ownerUserId, never userId.
       const coach = coachById.get(c.ownerUserId);
@@ -315,9 +324,6 @@ export async function buildDiscoverFeed(
         : classAddress(c, coach.handle, studioSlug);
       if (!at) continue;
       const t = clockParts(c.startTime);
-      const assignedCoach = c.studioId && followedStudioIds.has(c.studioId)
-        ? shiftCoach(followedStudioNaming, c.id, iso)
-        : null;
       items.push({
         key: `${c.id}|${iso}`,
         week: w,
