@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
@@ -34,8 +34,7 @@ export function NavBar({
   profileFace?: { photo: string | null; color: string; initial: string };
 }) {
   const pathname = usePathname();
-  const calendarFeed = useSearchParams().get("calendar") === "1";
-  const here = calendarFeed && pathname.startsWith("/feed") ? "calendar" : activeTab(pathname, active);
+  const here = activeTab(pathname, active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
   const dockTabs = tabs.filter((tab) => tab.id !== "share");
   const shareTab = tabs.find((tab) => tab.id === "share")!;

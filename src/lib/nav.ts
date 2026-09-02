@@ -31,7 +31,7 @@ export function navTabs(
       icon: "home",
       label: "Home",
     },
-    { id: "calendar", href: "/feed?calendar=1", icon: "calendar_month", label: "Calendar" },
+    { id: "calendar", href: "/calendar", icon: "calendar_month", label: "Calendar" },
     { id: "discover", href: "/discover", icon: "search", label: "Search" },
     { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" },
   ];

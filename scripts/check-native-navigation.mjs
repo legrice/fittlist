@@ -16,13 +16,13 @@ const requiredWebFragments = [
   'id: "following" as const',
   'href: "/feed"',
   'label: "Home"',
-  '{ id: "calendar", href: "/feed?calendar=1", icon: "calendar_month", label: "Calendar" }',
+  '{ id: "calendar", href: "/calendar", icon: "calendar_month", label: "Calendar" }',
   '{ id: "discover", href: "/discover", icon: "search", label: "Search" }',
   '{ id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" }',
 ];
 const requiredSwiftFragments = [
   'private let tabIDs = ["following", "calendar", "discover", "share"]',
-  'private let fallbackRoutes = ["/feed", "/feed?calendar=1", "/discover", "/membershare"]',
+  'private let fallbackRoutes = ["/feed", "/calendar", "/discover", "/membershare"]',
   'item("Home", "house", 0)',
   'item("Calendar", "calendar", 1)',
   'item("Search", "magnifyingglass", 2)',
