@@ -313,8 +313,20 @@ export function AuthFlow({
       frame = 0;
       if (window.innerWidth <= 900) {
         stories.removeAttribute("data-story");
+        const chapters = Array.from(stories.querySelectorAll<HTMLElement>(".obwelcome-grid, .obwelcome-final-cta"));
+        const colors = [[159,232,112],[216,198,180],[200,195,219],[175,207,236],[159,232,112]];
+        const viewportCenter = window.scrollY + window.innerHeight / 2;
+        const centers = chapters.map((chapter) => chapter.getBoundingClientRect().top + window.scrollY + chapter.offsetHeight / 2);
+        let index = centers.findIndex((center) => center >= viewportCenter);
+        if (index < 0) index = centers.length - 1;
+        const from = Math.max(0,index - 1);
+        const distance = Math.max(1,centers[index] - centers[from]);
+        const progress = from === index ? 0 : Math.max(0,Math.min(1,(viewportCenter - centers[from]) / distance));
+        const color = colors[from].map((channel,i) => Math.round(channel + (colors[index][i] - channel) * progress));
+        stories.style.backgroundColor = `rgb(${color.join(",")})`;
         return;
       }
+      stories.style.removeProperty("background-color");
       const scrolled = -stories.getBoundingClientRect().top;
       const chapter = Math.max(0, Math.min(4, Math.floor(scrolled / window.innerHeight + .44)));
       stories.dataset.story = ["calendar", "share", "groups", "studio", "cta"][chapter];

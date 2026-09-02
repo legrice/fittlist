@@ -857,6 +857,7 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
 
 @media (max-width:900px) {
   .ob:has(.obwelcome) { overflow:visible; }
+  .obwelcome-stories { background:var(--color-lime); }
   .obwelcome-head { position:absolute; inset:22px 20px auto; }
   .obwelcome-logo .wm-text { display:none; }
   .obwelcome-logo { --wm-mark:var(--si); }
@@ -871,9 +872,7 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
     overflow:visible;
   }
   :is(.obwelcome-share-grid,.obwelcome-groups-grid,.obwelcome-studio-grid) { padding-top:88px; border-top:0; }
-  .obwelcome-share-grid { background:linear-gradient(to bottom,var(--color-lime),var(--color-personal) 112px); }
-  .obwelcome-groups-grid { background:linear-gradient(to bottom,var(--color-personal),var(--color-attending) 112px); }
-  .obwelcome-studio-grid { background:linear-gradient(to bottom,var(--color-attending),var(--color-coaching) 112px); }
+  :is(.obwelcome-calendar-grid,.obwelcome-share-grid,.obwelcome-groups-grid,.obwelcome-studio-grid) { background:transparent; }
   .obwelcome-phone {
     width:min(100%,390px); min-height:0; flex:0 0 auto;
     border-radius:52px;
@@ -882,7 +881,7 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
   .obwelcome-email { display:none; }
   .obwelcome-final-cta {
     min-height:520px; padding:104px 20px 92px; gap:24px;
-    background:linear-gradient(to bottom,var(--color-coaching),var(--color-lime) 112px);
+    background:transparent;
   }
   .obwelcome-final-cta h2 { max-width:360px; font-size:clamp(30px,8vw,40px); }
   .obwelcome-final-cta button { width:min(100%,240px); min-height:52px; font-size:15px; }
