@@ -730,11 +730,13 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   border-radius:22px 22px 4px 4px; background:#fff; box-shadow:0 8px 24px rgba(0,0,0,.06);
 }
 .obwelcome-share-accent { position:absolute; inset:0 0 auto; height:6px; background:var(--si); }
-.obwelcome-share-canvas h2 { margin:0 0 34px; font-size:39px; line-height:.95; letter-spacing:-.045em; }
-.obwelcome-share-day { margin-top:20px; display:grid; grid-template-columns:45px 1fr; gap:8px 14px; }
+.obwelcome-share-canvas h2 { margin:0 0 28px; font-size:39px; line-height:.95; letter-spacing:-.045em; }
+.obwelcome-share-day { margin-top:17px; display:grid; grid-template-columns:45px 1fr; gap:8px 14px; }
 .obwelcome-share-day > strong { grid-row:1 / span 3; padding-top:3px; color:#777; font-size:11px; letter-spacing:.08em; }
 .obwelcome-share-day > span { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.obwelcome-share-day > span > i { min-width:0; display:flex; flex-direction:column; font-style:normal; }
 .obwelcome-share-day b { font-size:14px; }
+.obwelcome-share-day em { overflow:hidden; color:#777; font-size:10px; font-style:normal; text-overflow:ellipsis; white-space:nowrap; }
 .obwelcome-share-day small { color:#6e6e6e; font-size:11px; white-space:nowrap; }
 .obwelcome-share-signoff { position:absolute; left:30px; bottom:25px; display:flex; flex-direction:column; font-size:10px; }
 .obwelcome-share-controls {

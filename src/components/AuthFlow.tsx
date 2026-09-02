@@ -22,21 +22,29 @@ import { hasLocalPasskeyHistory, rememberLocalPasskey } from "@/lib/passkey-devi
 
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
-type LandingCalendar = "All" | "Ava" | "Maya" | "Northline" | "Striders";
+type LandingCalendar = "All" | "You" | "Maya" | "Theo" | "Lena";
 
 const landingCalendars = [
   ["All", "calendar_month", "neutral"],
-  ["Ava", "A", "rose"],
+  ["You", "Y", "rose"],
   ["Maya", "M", "blue"],
-  ["Northline", "N", "gold"],
-  ["Striders", "S", "mint"],
+  ["Theo", "T", "gold"],
+  ["Lena", "L", "mint"],
 ] as const satisfies ReadonlyArray<readonly [LandingCalendar, string, string]>;
 
 const landingClasses = [
   ["Today", "Maya Ortiz", "Morning Flow", "Northline Yoga", "7:00am", "M", "blue", "Maya"],
-  ["Today", "Northline Yoga", "Strength Lab", "Northline Yoga", "5:30pm", "N", "gold", "Northline"],
-  ["Tomorrow", "Ava Chen", "Run Club", "Pier Track", "6:00pm", "A", "rose", "Ava"],
-  ["Sat, Sep 5", "Striders Run Club", "Weekend Miles", "Riverside Park", "9:00am", "S", "mint", "Striders"],
+  ["Today", "Theo Brooks", "Strength Lab", "Iron House", "5:30pm", "T", "gold", "Theo"],
+  ["Today", "You", "Waterfront Run", "Pier Track", "6:00pm", "Y", "rose", "You"],
+  ["Tue, Sep 3", "Lena Park", "Mat Pilates", "Studio Arc", "8:00am", "L", "mint", "Lena"],
+  ["Wed, Sep 4", "Maya Ortiz", "Reformer Basics", "Studio Arc", "9:00am", "M", "blue", "Maya"],
+  ["Wed, Sep 4", "You", "Mobility Reset", "Northline Yoga", "6:30pm", "Y", "rose", "You"],
+  ["Thu, Sep 5", "Theo Brooks", "Conditioning", "The Fieldhouse", "6:00pm", "T", "gold", "Theo"],
+  ["Thu, Sep 5", "Lena Park", "Sculpt", "House of Movement", "7:00pm", "L", "mint", "Lena"],
+  ["Fri, Sep 6", "Maya Ortiz", "Evening Yoga", "Harbor Room", "5:30pm", "M", "blue", "Maya"],
+  ["Sat, Sep 7", "Theo Brooks", "Open Gym", "The Foundry", "11:00am", "T", "gold", "Theo"],
+  ["Sat, Sep 7", "You", "Weekend Miles", "Riverside Park", "9:00am", "Y", "rose", "You"],
+  ["Sun, Sep 8", "Lena Park", "Recovery Flow", "Northline Yoga", "10:00am", "L", "mint", "Lena"],
 ] as const;
 
 function PhoneStatusIcons() {
@@ -109,21 +117,21 @@ function LandingShareMockup() {
         <h2>Move<br />with me.</h2>
         <div className="obwelcome-share-day">
           <strong>MON</strong>
-          <span><b>Morning Flow</b><small>7:00 AM</small></span>
-          <span><b>Strength Class</b><small>5:30 PM</small></span>
+          <span><i><b>Morning Flow</b><em>Northline Yoga</em></i><small>7:00 AM</small></span>
+          <span><i><b>Strength Class</b><em>Iron House</em></i><small>5:30 PM</small></span>
         </div>
         <div className="obwelcome-share-day">
           <strong>WED</strong>
-          <span><b>Run Club</b><small>6:00 PM</small></span>
+          <span><i><b>Run Club</b><em>Pier Track</em></i><small>6:00 PM</small></span>
         </div>
         <div className="obwelcome-share-day">
           <strong>FRI</strong>
-          <span><b>Power Pilates</b><small>8:30 AM</small></span>
-          <span><b>Open Gym</b><small>4:00 PM</small></span>
+          <span><i><b>Power Pilates</b><em>Studio Arc</em></i><small>8:30 AM</small></span>
+          <span><i><b>Open Gym</b><em>The Foundry</em></i><small>4:00 PM</small></span>
         </div>
         <div className="obwelcome-share-day">
           <strong>SAT</strong>
-          <span><b>Weekend Miles</b><small>9:00 AM</small></span>
+          <span><i><b>Weekend Miles</b><em>Riverside Park</em></i><small>9:00 AM</small></span>
         </div>
         <div className="obwelcome-share-signoff"><small>See my week at</small><b>fittlist.co/yourname</b></div>
       </div>
