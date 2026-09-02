@@ -9667,7 +9667,7 @@ html[data-mode="dark"],
 .activity-card-story { font-size:18px; line-height:1.35; }
 .activity-card-story strong,
 .activity-card-story b { font-weight:700; }
-.activity-card-meta { color:var(--color-text-secondary); font-size:14px; line-height:1.35; }
+.activity-card-meta { display:flex; flex-direction:column; gap:2px; color:var(--color-text-secondary); font-size:14px; line-height:1.35; }
 .activity-card-actions { margin-top:20px; display:flex; align-items:center; gap:8px; }
 .activity-card-actions button {
   min-width:42px; min-height:42px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; gap:7px;
