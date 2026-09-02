@@ -140,7 +140,7 @@ export function CalendarScreen({
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const [selectedCalendarId, setSelectedCalendarId] = useState("personal");
   const [managedFilter, setManagedFilter] = useState<"all" | "mine" | "open">("all");
-  const [followingPersonId, setFollowingPersonId] = useState("all");
+  const [followingDayIso, setFollowingDayIso] = useState(todayIso);
   const activeManagedCalendar = managedCalendarViews.find((calendar) => calendar.id === selectedCalendarId) ?? null;
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
@@ -445,10 +445,12 @@ export function CalendarScreen({
       return rows.length ? [{ ...day, rows }] : [];
     });
   }, [activeManagedCalendar, managedFilter, viewer.id]);
-  const filteredFollowingDays = useMemo(() => followingDays.flatMap((day) => {
-    const rows = followingPersonId === "all" ? day.rows : day.rows.filter((row) => row.coach?.id === followingPersonId);
-    return rows.length ? [{ ...day, rows }] : [];
-  }), [followingDays, followingPersonId]);
+  const followingDateOptions = useMemo(() => Array.from({ length:14 }, (_, index) => {
+    const date = new Date(`${todayIso}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + index);
+    return date.toISOString().slice(0,10);
+  }), [todayIso]);
+  const filteredFollowingDays = useMemo(() => followingDays.filter((day) => day.iso === followingDayIso), [followingDays, followingDayIso]);
   const followingMonthItems = useMemo(() => new Map(filteredFollowingDays.map((day) => [day.iso, day.rows.map((row) => ({
     kind:"coaching" as const,
     name:row.name,
@@ -555,7 +557,7 @@ export function CalendarScreen({
           </div>
         </div>
         {!isFollowingCalendar && <div className="calendar-filter-pills" role="group" aria-label="Calendar filters">{activeManagedCalendar?.kind === "studio" ? <>{([['all','All'],['mine','My shifts'],['open','Open shifts']] as const).map(([value,label]) => <button type="button" className={managedFilter === value ? "on" : ""} aria-pressed={managedFilter === value} key={value} onClick={() => setManagedFilter(value)}>{label}</button>)}</> : activeManagedCalendar ? <button type="button" className="on" aria-pressed="true">All</button> : <>{([['all','All'],['coaching','Coaching'],['saved','Attending']] as const).map(([value,label]) => <button type="button" className={filter === value ? "on" : ""} aria-pressed={filter === value} key={value} onClick={() => setFilter(value)}>{label}</button>)}</>}</div>}
-        {isFollowingCalendar && <div className="calendar-following-rail" role="group" aria-label="Followed calendars"><button type="button" className={followingPersonId === "all" ? "on" : ""} aria-pressed={followingPersonId === "all"} onClick={() => setFollowingPersonId("all")}><span><Icon name="calendar_month" size={20} /></span><small>All</small></button>{followingPeople.map((person) => <button type="button" className={followingPersonId === person.id ? "on" : ""} aria-pressed={followingPersonId === person.id} key={person.id} onClick={() => setFollowingPersonId(person.id)}><span style={{ background:person.color }}>{person.photo ? <img src={person.photo} alt="" /> : (person.name.trim().charAt(0) || "?").toUpperCase()}</span><small>{person.name.trim().split(/\s+/)[0]}</small></button>)}</div>}
+        {isFollowingCalendar && view === "list" && <div className="calendar-following-dates" role="group" aria-label="Following calendar dates">{followingDateOptions.map((iso) => { const date=new Date(`${iso}T12:00:00Z`); return <button type="button" className={followingDayIso === iso ? "on" : ""} aria-pressed={followingDayIso === iso} key={iso} onClick={() => setFollowingDayIso(iso)}><span>{new Intl.DateTimeFormat("en-US", { weekday:"short" }).format(date)}</span><small>{new Intl.DateTimeFormat("en-US", { day:"numeric" }).format(date)}</small></button>; })}</div>}
       </header>
 
       {calendarChooserOpen && <BodyPortal><div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarChooserOpen(false); }}><section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="your-calendars-title" onMouseDown={(event) => event.stopPropagation()}><div className="mobile-calendar-switcher-handle" aria-hidden="true" /><header><h2 id="your-calendars-title">Calendars</h2><button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarChooserOpen(false)}><Icon name="close" size={21} /></button></header><div className="mobile-calendar-switcher-list"><button type="button" className={selectedCalendarId === "personal" ? "selected" : ""} aria-current={selectedCalendarId === "personal" ? "page" : undefined} onClick={() => { setSelectedCalendarId("personal"); setCalendarChooserOpen(false); }}><span className="mobile-calendar-switcher-icon group" style={{ background:viewer.color }}>{viewer.photo ? <img src={viewer.photo} alt="" /> : (viewer.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>Personal calendar</strong><small>Your classes and shifts</small></span>{selectedCalendarId === "personal" ? <Icon name="check" size={19} /> : <span />}</button><button type="button" className={selectedCalendarId === "following" ? "selected" : ""} aria-current={selectedCalendarId === "following" ? "page" : undefined} onClick={() => { setSelectedCalendarId("following"); setCalendarChooserOpen(false); }}><span className="mobile-calendar-switcher-icon group"><Icon name="group" size={22} /></span><span><strong>Following calendar</strong><small>People you follow</small></span>{selectedCalendarId === "following" ? <Icon name="check" size={19} /> : <span />}</button>{managedCalendars.length > 0 && <p>Managed calendars</p>}{managedCalendars.map((calendar) => <button type="button" className={selectedCalendarId === calendar.id ? "selected" : ""} aria-current={selectedCalendarId === calendar.id ? "page" : undefined} key={`${calendar.kind}:${calendar.id}`} onClick={() => { setSelectedCalendarId(calendar.id); setManagedFilter("all"); setCalendarChooserOpen(false); }}><span className={`mobile-calendar-switcher-icon${calendar.kind === "group" ? " group" : ""}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : (calendar.name.trim().charAt(0) || "?").toUpperCase()}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span>{selectedCalendarId === calendar.id ? <Icon name="check" size={19} /> : <span />}</button>)}</div></section></div></BodyPortal>}
