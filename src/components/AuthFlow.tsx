@@ -541,7 +541,7 @@ export function AuthFlow({
                 </div>
                 <div className="obwelcome-grid obwelcome-studio-grid">
                   <div className="obwelcome-title">
-                    <h1>Manage your studio&rsquo;s calendar.</h1>
+                    <h1>Manage your studio&rsquo;s schedule.</h1>
                   </div>
                   <div className="obwelcome-device"><LandingStudioMockup /></div>
                   <div className="obwelcome-copy">
