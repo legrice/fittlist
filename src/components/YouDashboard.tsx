@@ -153,15 +153,6 @@ export function YouDashboard({
             )}
             <span><Icon name="image" size={15} /></span>
           </button>
-          <div className="youprofile-corner-actions" role="group" aria-label="Profile tools">
-            <button type="button" aria-label="Show your QR code" onClick={() => setQrOpen(true)}>
-              <Icon name="qr_code_2" size={22} />
-            </button>
-            <Link className="youprofile-corner-link" href="/settings" aria-label="Settings">
-              <Icon name="settings" size={22} />
-            </Link>
-            <ProfileShare path={`/${me.handle}`} name={me.name} />
-          </div>
         </div>
         <input ref={fileRef} className="sr-only" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) savePhoto(file); event.currentTarget.value = ""; }} />
         <div className="youaccount-identity">
@@ -184,6 +175,15 @@ export function YouDashboard({
             <span>Edit profile</span>
           </Link>
         )}
+        <div className="youprofile-corner-actions" role="group" aria-label="Profile tools">
+          <button type="button" aria-label="Show your QR code" onClick={() => setQrOpen(true)}>
+            <Icon name="qr_code_2" size={22} />
+          </button>
+          <Link className="youprofile-corner-link" href="/settings" aria-label="Settings">
+            <Icon name="settings" size={22} />
+          </Link>
+          <ProfileShare path={`/${me.handle}`} name={me.name} />
+        </div>
       </div>
 
       <AccountGroup title="Updates">

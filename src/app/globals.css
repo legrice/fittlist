@@ -8785,6 +8785,11 @@ html[data-mode="dark"],
 }
 .youquickactions .icon { flex:0 0 auto; }
 .youquickactions > :first-child { background:var(--card); color:var(--ink); }
+.youquickactions .youprofile-corner-actions { flex:0 0 auto; gap:8px; }
+.youquickactions .youprofile-corner-actions > :is(button,a) {
+  width:40px; height:40px; min-height:40px; flex:0 0 40px; padding:0;
+  display:grid; place-items:center; border-radius:50%;
+}
 .profile-following { margin-top:30px; }
 .profile-following h2 { margin:0 0 12px; font-size:28px; line-height:1.08; font-weight:600; letter-spacing:-.025em; }
 .profile-following-rail { display:flex; gap:12px; margin:0 -18px; padding:0 18px 5px; overflow-x:auto; scrollbar-width:none; }
