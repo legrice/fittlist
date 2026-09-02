@@ -194,14 +194,20 @@ function LandingStudioMockup() {
     <div className="obwelcome-phone obwelcome-feature-phone" role="img" aria-label="A sample FittList studio calendar">
       <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
       <div className="obwelcome-feature-head"><span data-tone="gold">N</span><div><small>STUDIO</small><h2>Northline Yoga</h2></div></div>
-      <div className="obwelcome-studio-stats"><span><b>18</b><small>Classes</small></span><span><b>6</b><small>Coaches</small></span><span><b>142</b><small>Followers</small></span></div>
+      <div className="obwelcome-studio-stats"><span><b>18</b><small>Classes</small></span><span><b>3</b><small>Open classes</small></span><span><b>6</b><small>Coaches</small></span></div>
       <div className="obwelcome-feature-actions"><b>Manage</b><span>Preview</span><span>Share</span></div>
-      <div className="obwelcome-feature-section"><h3>Today</h3>
+      <div className="obwelcome-feature-section"><h3>Studio schedule</h3>
         <article><i data-tone="blue">M</i><span><strong>Morning Flow</strong><small>Maya Ortiz · 7:00 AM</small></span></article>
         <article><i data-tone="mint">L</i><span><strong>Power Pilates</strong><small>Lena Park · 12:00 PM</small></span></article>
         <article><i data-tone="gold">T</i><span><strong>Strength Lab</strong><small>Theo Brooks · 5:30 PM</small></span></article>
+        <article><i data-tone="rose">O</i><span><strong>Evening Sculpt</strong><small>Open class · 6:30 PM</small></span></article>
+        <article><i data-tone="mint">J</i><span><strong>Slow Flow</strong><small>Jordan Lee · 7:30 PM</small></span></article>
+        <article><i data-tone="blue">A</i><span><strong>Sunrise Pilates</strong><small>Avery Chen · 6:30 AM</small></span></article>
+        <article><i data-tone="gold">O</i><span><strong>Lunch Express</strong><small>Open class · 12:30 PM</small></span></article>
+        <article><i data-tone="rose">N</i><span><strong>Restorative Yoga</strong><small>Nina Patel · 5:00 PM</small></span></article>
+        <article><i data-tone="mint">M</i><span><strong>Mobility Lab</strong><small>Maya Ortiz · 6:00 PM</small></span></article>
+        <article><i data-tone="blue">O</i><span><strong>Weekend Flow</strong><small>Open class · 9:00 AM</small></span></article>
       </div>
-      <div className="obwelcome-feature-note"><Icon name="groups" size={20} /><span><strong>Your coaches spread the word</strong><small>Every schedule links back to the studio calendar.</small></span></div>
     </div>
   );
 }
