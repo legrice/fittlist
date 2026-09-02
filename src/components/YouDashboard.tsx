@@ -157,15 +157,9 @@ export function YouDashboard({
             <button type="button" aria-label="Show your QR code" onClick={() => setQrOpen(true)}>
               <Icon name="qr_code_2" size={22} />
             </button>
-            {onOpenSettings ? (
-              <button type="button" aria-label="Settings" onClick={() => onOpenSettings("account")}>
-                <Icon name="settings" size={22} />
-              </button>
-            ) : (
-              <Link className="youprofile-corner-link" href="/settings" aria-label="Settings">
-                <Icon name="settings" size={22} />
-              </Link>
-            )}
+            <Link className="youprofile-corner-link" href="/settings" aria-label="Settings">
+              <Icon name="settings" size={22} />
+            </Link>
             <ProfileShare path={`/${me.handle}`} name={me.name} />
           </div>
         </div>
@@ -179,11 +173,11 @@ export function YouDashboard({
       </section>
 
       <div className="youquickactions" aria-label="Profile actions">
-        {onOpenSettings ? (
-          <button type="button" onClick={() => onOpenSettings("page")}>
+        {me.coaching ? (
+          <Link href={`/${me.handle}?edit=1`}>
             <Icon name="edit" size={18} />
             <span>Edit profile</span>
-          </button>
+          </Link>
         ) : (
           <Link href="/settings?edit=1">
             <Icon name="edit" size={18} />

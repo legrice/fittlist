@@ -437,6 +437,14 @@ export function ProfileSheet({
 
         {page && showHeading && <h3 className="setgroup-h">Settings</h3>}
         <div className="settingslist">
+          <button className="setrow" onClick={() => openView("away")}>
+            <span className="setrow-ic"><Icon name="schedule" size={24} /></span>
+            <span className="setrow-txt">
+              <span className="t">Set yourself as away</span>
+              <span className="s">{isAway ? "Your away status is on" : "Add a profile note and message for people who contact you"}</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+          </button>
           <button className="setrow" onClick={() => openView("calendar")}>
             <span className="setrow-ic"><Icon name="event" size={24} /></span>
             <span className="setrow-txt">
