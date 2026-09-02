@@ -894,6 +894,11 @@ export function FollowingScreen({
           </div>
         </header>
       )}
+      {activity && isHome && <nav className="activity-home-actions" aria-label="Home shortcuts">
+        <Link href="/calendar"><Icon name="calendar_month" size={18} /><span>Manage calendar</span></Link>
+        <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}><Icon name="groups" size={18} /><span>Following</span></button>
+        <Link href="/discover?half=people"><Icon name="person_add" size={18} /><span>Find people</span></Link>
+      </nav>}
       {!activity && isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
       {!activity && isHome && !firstRun && <header className="following-head"><div className="calendar-scope-row" aria-label="Calendar scope">
         <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>

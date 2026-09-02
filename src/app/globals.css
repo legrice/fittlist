@@ -9649,9 +9649,20 @@ html[data-mode="dark"],
 .screen.hasnav:has(.activity-card),
 .screen.hasnav:has(.activity-card) > .pad { background:var(--color-background); }
 .screen.hasnav:has(.activity-card) .cash-day > h2 { background:var(--color-background); }
+.activity-home-actions {
+  margin:8px 0 20px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;
+}
+.activity-home-actions::-webkit-scrollbar { display:none; }
+.activity-home-actions :is(a,button) {
+  min-height:42px; padding:0 15px; flex:0 0 auto; display:inline-flex; align-items:center; gap:7px;
+  border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary);
+  font:inherit; font-size:13px; font-weight:700; text-decoration:none; white-space:nowrap; cursor:pointer;
+  box-shadow:0 3px 12px rgba(2,13,8,.025);
+}
+.activity-home-actions :is(a,button):active { background:var(--color-surface-hover); }
 .cash-day > div:has(.activity-card) { display:grid; gap:16px; }
 .activity-card {
-  padding:22px; overflow:hidden; border:1px solid var(--color-border); border-radius:30px;
+  padding:22px; overflow:hidden; border:0; border-radius:30px;
   background:var(--color-surface); box-shadow:0 6px 20px rgba(2,13,8,.025);
 }
 .activity-card-main {
