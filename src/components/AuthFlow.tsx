@@ -179,8 +179,12 @@ function LandingGroupMockup() {
         <article><i data-tone="mint">S</i><span><strong>Wednesday Miles</strong><small>Riverside Park · 6:30 PM</small></span></article>
         <article><i data-tone="rose">Y</i><span><strong>Saturday Long Run</strong><small>Pier Track · 9:00 AM</small></span></article>
         <article><i data-tone="blue">M</i><span><strong>Post-run Mobility</strong><small>Northline Yoga · 10:30 AM</small></span></article>
+        <article><i data-tone="gold">T</i><span><strong>Tempo Tuesday</strong><small>Hamilton Park · 6:00 PM</small></span></article>
+        <article><i data-tone="mint">L</i><span><strong>Easy Five</strong><small>Liberty Loop · 7:00 AM</small></span></article>
+        <article><i data-tone="rose">A</i><span><strong>Hill Repeats</strong><small>Reservoir Steps · 6:30 PM</small></span></article>
+        <article><i data-tone="blue">M</i><span><strong>Sunday Social Run</strong><small>Harbor Walk · 9:30 AM</small></span></article>
+        <article><i data-tone="gold">T</i><span><strong>Track Night</strong><small>Lincoln Field · 7:00 PM</small></span></article>
       </div>
-      <div className="obwelcome-feature-note"><Icon name="chat" size={19} /><span><strong>Keep everyone together</strong><small>Plans, updates, and the full group schedule in one place.</small></span></div>
     </div>
   );
 }
@@ -510,7 +514,7 @@ export function AuthFlow({
                 </div>
                 <div className="obwelcome-grid obwelcome-groups-grid">
                   <div className="obwelcome-title">
-                    <h1>Organize groups and keep everyone on the same page.</h1>
+                    <h1>Organize group calendars.</h1>
                   </div>
                   <div className="obwelcome-device"><LandingGroupMockup /></div>
                   <div className="obwelcome-copy">
