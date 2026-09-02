@@ -22,21 +22,21 @@ import { hasLocalPasskeyHistory, rememberLocalPasskey } from "@/lib/passkey-devi
 
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
-type LandingCalendar = "All" | "You" | "Friend" | "Studio" | "Group";
+type LandingCalendar = "All" | "Ava" | "Maya" | "Northline" | "Striders";
 
 const landingCalendars = [
   ["All", "calendar_month", "neutral"],
-  ["You", "Y", "rose"],
-  ["Friend", "F", "blue"],
-  ["Studio", "S", "gold"],
-  ["Group", "G", "mint"],
+  ["Ava", "A", "rose"],
+  ["Maya", "M", "blue"],
+  ["Northline", "N", "gold"],
+  ["Striders", "S", "mint"],
 ] as const satisfies ReadonlyArray<readonly [LandingCalendar, string, string]>;
 
 const landingClasses = [
-  ["Today", "Friend", "Morning Flow", "Local studio", "7:00am", "F", "blue", "Friend"],
-  ["Today", "Studio", "Strength Class", "Training space", "5:30pm", "S", "gold", "Studio"],
-  ["Tomorrow", "You", "Run Club", "Meetup point", "6:00pm", "Y", "rose", "You"],
-  ["Sat, Sep 5", "Group", "Movement Class", "Local park", "9:00am", "G", "mint", "Group"],
+  ["Today", "Maya Ortiz", "Morning Flow", "Northline Yoga", "7:00am", "M", "blue", "Maya"],
+  ["Today", "Northline Yoga", "Strength Lab", "Northline Yoga", "5:30pm", "N", "gold", "Northline"],
+  ["Tomorrow", "Ava Chen", "Run Club", "Pier Track", "6:00pm", "A", "rose", "Ava"],
+  ["Sat, Sep 5", "Striders Run Club", "Weekend Miles", "Riverside Park", "9:00am", "S", "mint", "Striders"],
 ] as const;
 
 function PhoneStatusIcons() {
