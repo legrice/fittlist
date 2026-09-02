@@ -13295,7 +13295,8 @@ a.clspeek-by:active { opacity: .6; }
   .activity-today-avatar img,
   .activity-today-avatar > span { width:40px; height:40px; display:grid; place-items:center; overflow:hidden; border-radius:50%; object-fit:cover; }
   .activity-today-avatar i { position:absolute; top:-1px; right:-1px; width:9px; height:9px; border:2px solid var(--color-black); border-radius:50%; background:var(--color-danger, #e52b32); }
-  .activity-today-hero > p { max-width:31ch; margin:22px 0 20px; color:rgba(255,255,255,.84); font-size:19px; line-height:1.35; }
+  .activity-today-hero > p { max-width:31ch; margin:22px 0 20px; color:rgba(255,255,255,.84); font-size:22px; line-height:1.3; }
+  .activity-today-hero > p strong { color:var(--color-lime); font-weight:700; }
   .activity-today-actions { display:flex; align-items:center; gap:8px; }
   .activity-today-actions :is(button,a) {
     min-width:0; min-height:44px; padding:0 14px; flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:var(--radius-pill);
@@ -13306,6 +13307,14 @@ a.clspeek-by:active { opacity: .6; }
   .activity-feed-empty h2 { margin:0; font-size:26px; }
   .activity-feed-empty p { max-width:30ch; margin:10px auto 22px; color:var(--color-text-secondary); line-height:1.45; }
   .activity-feed-empty a { min-height:44px; padding:0 18px; display:inline-flex; align-items:center; border-radius:var(--radius-pill); background:var(--color-surface); font-size:14px; font-weight:700; text-decoration:none; }
+  .activity-date-rail { position:relative; z-index:3; margin:-28px calc(-1 * var(--page-gutter)) 0; padding:28px var(--page-gutter) 10px; display:flex; gap:8px; overflow-x:auto; border-radius:30px 30px 0 0; scrollbar-width:none; background:var(--color-background); }
+  .activity-date-rail::-webkit-scrollbar { display:none; }
+  .activity-date-rail button { min-width:66px; min-height:60px; padding:8px 12px; flex:0 0 auto; border:0; border-radius:18px; background:var(--color-surface); color:var(--color-text-primary); font:inherit; }
+  .activity-date-rail button.on { background:var(--color-black); color:var(--color-white); }
+  .activity-date-rail span,
+  .activity-date-rail small { display:block; }
+  .activity-date-rail span { font-size:12px; font-weight:700; }
+  .activity-date-rail small { margin-top:3px; color:inherit; font-size:17px; font-weight:700; }
   .activity-feed-header + .home-listregion:has(.activity-card) {
     position:relative; z-index:3; margin-top:-28px; padding-top:28px;
     border-radius:30px 30px 0 0; background:var(--color-background);

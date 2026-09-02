@@ -323,6 +323,7 @@ export function FollowingScreen({
   const [f, setF] = useState<Filters>(NO_FILTERS);
   const [sheet, setSheet] = useState<null | "all" | "time" | "dist" | "cat" | "place">(null);
   const [day, setDay] = useState<string>(() => {
+    if (activity) return todayIso;
     if (items.some((i) => i.iso === todayIso)) return todayIso;
     let first: string | null = null;
     for (const i of items) if (i.iso > todayIso && (!first || i.iso < first)) first = i.iso;
@@ -622,6 +623,7 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, f, geo, isHome, meId, calendarFilter, coachOptions, studioOptions, groupOptions, favoriteIds, selectedPeople, includeYou]);
   const activityFeedItems = useMemo(() => shown.filter((item) => !(item.saved || item.shift || (!!meId && item.coachId === meId))), [shown, meId]);
+  const activityDayItems = useMemo(() => activityFeedItems.filter((item) => item.iso === day), [activityFeedItems, day]);
 
   // A brand-new account has no useful calendar identity to put in the rail
   // yet. Showing a lone “You” circle above an empty state makes the circle
@@ -681,12 +683,12 @@ export function FollowingScreen({
   const homeRows: FeedItem[] = useMemo(
     () => {
       const monthEnd = plusDays(todayIso, 30);
-      return [...(activity ? activityFeedItems : shown)]
+      return [...(activity ? activityDayItems : shown)]
         .filter((item) => item.iso >= todayIso && item.iso <= monthEnd)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activity, activityFeedItems, shown, todayIso],
+    [activity, activityDayItems, shown, todayIso],
   );
   const homeDays = useMemo(() => {
     const days = new Map<string, FeedItem[]>();
@@ -714,13 +716,9 @@ export function FollowingScreen({
     const coaching = [...new Map(mine.map((item) => [item.where ?? "your studio", [] as FeedItem[]])).entries()]
       .map(([where]) => {
         const rows = mine.filter((item) => (item.where ?? "your studio") === where);
-        return `You’re ${rows.every((item) => item.shift) ? "working" : "coaching"} at ${where} at ${naturalTimes(rows)}`;
+        return { verb:rows.every((item) => item.shift) ? "working" : "coaching", where, times:naturalTimes(rows) };
       });
-    const plans = attending.length
-      ? [`You’re going to ${attending.length === 1 ? attending[0].name : `${attending.length} classes`} at ${naturalTimes(attending)}`]
-      : [];
-    const sentences = [...coaching, ...plans];
-    return sentences.length ? `${sentences.join(". ")} today.` : "Nothing is on your calendar today. See what everyone else is up to below.";
+    return { coaching, attending:attending.length ? { label:attending.length === 1 ? attending[0].name : `${attending.length} classes`, times:naturalTimes(attending) } : null };
   }, [items, meId, todayIso]);
   const todayHeading = useMemo(() => new Intl.DateTimeFormat("en-US", { weekday:"short" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
   const todayDate = useMemo(() => new Intl.DateTimeFormat("en-US", { month:"short", day:"numeric" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
@@ -905,9 +903,10 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className={`calendar-tab-header${activity ? " activity-feed-header" : ""}`}>
-          {activity ? <div className="activity-today-hero"><div className="activity-today-date"><div><h1>{todayHeading}</h1><span>{todayDate}</span></div><HeaderAccountButton className="activity-today-avatar" unread={unread} face={{ photo:meFace.photo, color:meFace.color, initial:(meFace.name.trim().charAt(0) || "?").toUpperCase() }} /></div><p>{todaySummary}</p><div className="activity-today-actions"><button type="button" onClick={(event) => window.dispatchEvent(new CustomEvent("fittlist:open-share", { detail:{ opener:event.currentTarget } }))}><Icon name="reply" className="share-arrow-forward" size={19} /><span>Share</span></button><Link href="/calendar"><Icon name="calendar_month" size={18} /><span>Manage calendar</span></Link></div></div> : <><button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button><div className="calendar-tab-actions"><GlobalAdd classOnly triggerClassName="calendar-header-add" triggerIconSize={24} onCalendarChange={(focus) => { if (!focus) return; setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarView("day"); setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER); setAddedFocus(focus); }} /></div></>}
+          {activity ? <div className="activity-today-hero"><div className="activity-today-date"><div><h1>{todayHeading}</h1><span>{todayDate}</span></div><HeaderAccountButton className="activity-today-avatar" unread={unread} face={{ photo:meFace.photo, color:meFace.color, initial:(meFace.name.trim().charAt(0) || "?").toUpperCase() }} /></div><p>{todaySummary.coaching.length === 0 && !todaySummary.attending ? <>Nothing is on your calendar today. See what everyone else is up to below.</> : <>{todaySummary.coaching.map((commitment, index) => <span key={`${commitment.where}-${commitment.times}`}>{index > 0 && " "}You’re {commitment.verb} at <strong>{commitment.where}</strong> at <strong>{commitment.times}</strong> today.</span>)}{todaySummary.attending && <span> You’re going to <strong>{todaySummary.attending.label}</strong> at <strong>{todaySummary.attending.times}</strong>.</span>}</>}</p><div className="activity-today-actions"><button type="button" onClick={(event) => window.dispatchEvent(new CustomEvent("fittlist:open-share", { detail:{ opener:event.currentTarget } }))}><Icon name="reply" className="share-arrow-forward" size={19} /><span>Share</span></button><Link href="/calendar"><Icon name="calendar_month" size={18} /><span>Manage calendar</span></Link></div></div> : <><button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button><div className="calendar-tab-actions"><GlobalAdd classOnly triggerClassName="calendar-header-add" triggerIconSize={24} onCalendarChange={(focus) => { if (!focus) return; setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarView("day"); setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER); setAddedFocus(focus); }} /></div></>}
         </header>
       )}
+      {activity && isHome && <nav className="activity-date-rail" aria-label="Upcoming days">{dayTabs.map((tab, index) => { const date=new Date(`${tab.iso}T12:00:00Z`); const label=index === 0 ? "Today" : index === 1 ? "Tomorrow" : new Intl.DateTimeFormat("en-US", { weekday:"short" }).format(date); const number=new Intl.DateTimeFormat("en-US", { day:"numeric" }).format(date); return <button type="button" className={day === tab.iso ? "on" : ""} aria-pressed={day === tab.iso} key={tab.iso} onClick={() => setDay(tab.iso)}><span>{label}</span><small>{number}</small></button>; })}</nav>}
       {!activity && isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
       {!activity && isHome && !firstRun && <header className="following-head"><div className="calendar-scope-row" aria-label="Calendar scope">
         <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
@@ -918,7 +917,7 @@ export function FollowingScreen({
         <div className="calendar-selection-empty"><h2>No calendars selected</h2><p>Tap a person above to see what’s on their calendar.</p></div>
       ) : isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
-      ) : (isHome ? (activity ? activityFeedItems.length === 0 : shown.length === 0) : items.length === 0) ? (
+      ) : (isHome ? (activity ? activityDayItems.length === 0 : shown.length === 0) : items.length === 0) ? (
         activity ? (
           <section className="activity-feed-empty"><h2>You’re all caught up</h2><p>Updates from people, studios, and groups you follow will show up here.</p><Link href="/discover">Find people to follow</Link></section>
         ) : firstRun ? (
@@ -1037,7 +1036,7 @@ export function FollowingScreen({
                 <div className="cash-activity-list">
                   {visibleHomeDays.map((section) => (
                     <section className="cash-day" id={`feed-day-${section.iso}`} key={section.iso}>
-                      <h2>{section.label}</h2>
+                      {!activity && <h2>{section.label}</h2>}
                       <div>
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
