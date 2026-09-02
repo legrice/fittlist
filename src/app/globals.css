@@ -868,8 +868,8 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
   .obwelcome-copy { width:100%; max-width:520px; margin-top:8px; }
   .ob .obwelcome-copy > p { margin:0; font-size:clamp(19px,5vw,25px); line-height:1.4; }
   .obwelcome-device {
-    order:3; position:relative; z-index:1; width:100%; min-height:844px; margin-top:16px;
-    overflow:visible;
+    order:3; position:relative; z-index:1; width:100%; min-height:0; margin-top:16px;
+    align-items:flex-start; overflow:visible;
   }
   :is(.obwelcome-share-grid,.obwelcome-groups-grid,.obwelcome-studio-grid) { padding-top:88px; border-top:0; }
   :is(.obwelcome-calendar-grid,.obwelcome-share-grid,.obwelcome-groups-grid,.obwelcome-studio-grid) { background:transparent; }
