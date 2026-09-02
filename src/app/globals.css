@@ -13266,8 +13266,8 @@ a.clspeek-by:active { opacity: .6; }
   }
   .activity-feed-profile img,
   .activity-feed-profile > span { width:36px; height:36px; }
-  .activity-feed-header {
-    position:sticky; top:max(6px, env(safe-area-inset-top)); z-index:35; gap:10px;
+.activity-feed-header {
+    position:relative; z-index:2; display:block; margin-bottom:18px;
   }
   .activity-feed-search {
     min-width:0; height:44px; padding:0 16px; flex:1; display:flex; align-items:center; gap:10px;
@@ -13280,6 +13280,17 @@ a.clspeek-by:active { opacity: .6; }
   }
   .activity-feed-search .icon { flex:0 0 auto; color:var(--color-black); }
   .activity-feed-search span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .activity-today-hero {
+    width:100%; padding:22px; border-radius:28px; background:var(--color-black); color:var(--color-white);
+  }
+  .activity-today-date { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+  .activity-today-date h1 { margin:0; color:inherit; font-size:30px; line-height:1; }
+  .activity-today-date > span { padding-top:2px; color:rgba(255,255,255,.66); font-size:14px; font-weight:600; }
+  .activity-today-hero > p { max-width:31ch; margin:22px 0 20px; color:rgba(255,255,255,.84); font-size:19px; line-height:1.35; }
+  .activity-today-hero > button {
+    min-height:44px; padding:0 17px; display:inline-flex; align-items:center; gap:8px; border:0; border-radius:var(--radius-pill);
+    background:var(--color-lime); color:var(--color-black); font:inherit; font-size:14px; font-weight:700;
+  }
   .mobile-calendar-switcher-scrim {
     position:fixed; inset:0; z-index:150; padding:16px 0 0;
     display:flex; align-items:flex-end; justify-content:center;

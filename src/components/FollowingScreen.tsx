@@ -14,7 +14,6 @@ import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/Cale
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
-import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 
@@ -702,6 +701,27 @@ export function FollowingScreen({
     }));
   }, [homeRows, todayIso]);
   const visibleHomeDays = homeDays.slice(0, visibleHomeDayCount);
+  const todaySummary = useMemo(() => {
+    const mine = items
+      .filter((item) => item.iso === todayIso && (item.shift || (!!meId && item.coachId === meId)))
+      .sort((a, b) => a.mins - b.mins);
+    const attending = items
+      .filter((item) => item.iso === todayIso && item.saved && !item.shift && item.coachId !== meId)
+      .sort((a, b) => a.mins - b.mins);
+    const naturalTimes = (rows: FeedItem[]) => rows.map((item) => `${item.hm.replace(":00", "")}${item.ap.toLowerCase()}`).join(", ").replace(/, ([^,]*)$/, " and $1");
+    const coaching = [...new Map(mine.map((item) => [item.where ?? "your studio", [] as FeedItem[]])).entries()]
+      .map(([where]) => {
+        const rows = mine.filter((item) => (item.where ?? "your studio") === where);
+        return `You’re ${rows.every((item) => item.shift) ? "working" : "coaching"} at ${where} at ${naturalTimes(rows)}`;
+      });
+    const plans = attending.length
+      ? [`You’re going to ${attending.length === 1 ? attending[0].name : `${attending.length} classes`} at ${naturalTimes(attending)}`]
+      : [];
+    const sentences = [...coaching, ...plans];
+    return sentences.length ? `${sentences.join(". ")} today.` : "Nothing is on your calendar today. See what everyone else is up to below.";
+  }, [items, meId, todayIso]);
+  const todayHeading = useMemo(() => new Intl.DateTimeFormat("en-US", { weekday:"long" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
+  const todayDate = useMemo(() => new Intl.DateTimeFormat("en-US", { month:"long", day:"numeric" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
   const monthItems = useMemo(() => {
     const mapped = new Map<string, MonthCellItem[]>();
     for (const item of homeRows) {
@@ -883,18 +903,9 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className={`calendar-tab-header${activity ? " activity-feed-header" : ""}`}>
-          {activity ? <Link className="activity-feed-search" href="/discover"><Icon name="search" size={22} /><span>Find coaches, studios, groups</span></Link> : <button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button>}
-          <div className="calendar-tab-actions">
-            {activity && <HeaderAccountButton className="activity-feed-profile" unread={unread} face={{ photo:meFace.photo, color:meFace.color, initial:(meFace.name.trim().charAt(0) || "?").toUpperCase() }} />}
-            {!activity && <GlobalAdd classOnly triggerClassName="calendar-header-add" triggerIconSize={24} onCalendarChange={(focus) => { if (!focus) return; setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarView("day"); setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER); setAddedFocus(focus); }} />}
-          </div>
+          {activity ? <div className="activity-today-hero"><div className="activity-today-date"><h1>{todayHeading}</h1><span>{todayDate}</span></div><p>{todaySummary}</p><button type="button" onClick={(event) => window.dispatchEvent(new CustomEvent("fittlist:open-share", { detail:{ opener:event.currentTarget } }))}><Icon name="reply" className="share-arrow-forward" size={19} /><span>Share your week</span></button></div> : <><button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button><div className="calendar-tab-actions"><GlobalAdd classOnly triggerClassName="calendar-header-add" triggerIconSize={24} onCalendarChange={(focus) => { if (!focus) return; setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarView("day"); setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER); setAddedFocus(focus); }} /></div></>}
         </header>
       )}
-      {activity && isHome && <nav className="activity-home-actions" aria-label="Home shortcuts">
-        <Link href="/calendar"><Icon name="calendar_month" size={18} /><span>Manage calendar</span></Link>
-        <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}><Icon name="groups" size={18} /><span>Following</span></button>
-        <Link href="/discover?half=people"><Icon name="person_add" size={18} /><span>Find people</span></Link>
-      </nav>}
       {!activity && isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
       {!activity && isHome && !firstRun && <header className="following-head"><div className="calendar-scope-row" aria-label="Calendar scope">
         <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
