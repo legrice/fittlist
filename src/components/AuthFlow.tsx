@@ -165,6 +165,43 @@ function LandingShareMockup() {
   );
 }
 
+function LandingGroupMockup() {
+  return (
+    <div className="obwelcome-phone obwelcome-feature-phone" role="img" aria-label="A sample FittList group calendar">
+      <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
+      <div className="obwelcome-feature-head"><span data-tone="mint">S</span><div><small>GROUP</small><h2>Striders Run Club</h2></div></div>
+      <div className="obwelcome-member-row" aria-hidden="true">
+        {[["A", "rose"], ["M", "blue"], ["T", "gold"], ["L", "mint"]].map(([initial,tone]) => <i data-tone={tone} key={initial}>{initial}</i>)}
+        <b>24 members</b>
+      </div>
+      <div className="obwelcome-feature-actions"><b>Following</b><span>Invite</span><span>Share</span></div>
+      <div className="obwelcome-feature-section"><h3>Coming up</h3>
+        <article><i data-tone="mint">S</i><span><strong>Wednesday Miles</strong><small>Riverside Park · 6:30 PM</small></span></article>
+        <article><i data-tone="rose">Y</i><span><strong>Saturday Long Run</strong><small>Pier Track · 9:00 AM</small></span></article>
+        <article><i data-tone="blue">M</i><span><strong>Post-run Mobility</strong><small>Northline Yoga · 10:30 AM</small></span></article>
+      </div>
+      <div className="obwelcome-feature-note"><Icon name="chat" size={19} /><span><strong>Keep everyone together</strong><small>Plans, updates, and the full group schedule in one place.</small></span></div>
+    </div>
+  );
+}
+
+function LandingStudioMockup() {
+  return (
+    <div className="obwelcome-phone obwelcome-feature-phone" role="img" aria-label="A sample FittList studio calendar">
+      <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
+      <div className="obwelcome-feature-head"><span data-tone="gold">N</span><div><small>STUDIO</small><h2>Northline Yoga</h2></div></div>
+      <div className="obwelcome-studio-stats"><span><b>18</b><small>Classes</small></span><span><b>6</b><small>Coaches</small></span><span><b>142</b><small>Followers</small></span></div>
+      <div className="obwelcome-feature-actions"><b>Manage</b><span>Preview</span><span>Share</span></div>
+      <div className="obwelcome-feature-section"><h3>Today</h3>
+        <article><i data-tone="blue">M</i><span><strong>Morning Flow</strong><small>Maya Ortiz · 7:00 AM</small></span></article>
+        <article><i data-tone="mint">L</i><span><strong>Power Pilates</strong><small>Lena Park · 12:00 PM</small></span></article>
+        <article><i data-tone="gold">T</i><span><strong>Strength Lab</strong><small>Theo Brooks · 5:30 PM</small></span></article>
+      </div>
+      <div className="obwelcome-feature-note"><Icon name="groups" size={20} /><span><strong>Your coaches spread the word</strong><small>Every schedule links back to the studio calendar.</small></span></div>
+    </div>
+  );
+}
+
 export function AuthFlow({
   startStage,
   via = null,
@@ -269,7 +306,8 @@ export function AuthFlow({
         return;
       }
       const scrolled = -stories.getBoundingClientRect().top;
-      stories.dataset.story = scrolled >= window.innerHeight * .56 ? "share" : "calendar";
+      const chapter = Math.max(0, Math.min(3, Math.floor(scrolled / window.innerHeight + .44)));
+      stories.dataset.story = ["calendar", "share", "groups", "studio"][chapter];
     };
     const scheduleUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
@@ -468,6 +506,24 @@ export function AuthFlow({
                   <div className="obwelcome-device"><LandingShareMockup /></div>
                   <div className="obwelcome-copy">
                     <p>Send your classes as an image, share a link, or post them anywhere you&rsquo;d like.</p>
+                  </div>
+                </div>
+                <div className="obwelcome-grid obwelcome-groups-grid">
+                  <div className="obwelcome-title">
+                    <h1>Organize groups and keep everyone on the same page.</h1>
+                  </div>
+                  <div className="obwelcome-device"><LandingGroupMockup /></div>
+                  <div className="obwelcome-copy">
+                    <p>Bring the schedule, updates, and everyone who&rsquo;s joining together in one shared calendar.</p>
+                  </div>
+                </div>
+                <div className="obwelcome-grid obwelcome-studio-grid">
+                  <div className="obwelcome-title">
+                    <h1>Manage your studio&rsquo;s calendar.</h1>
+                  </div>
+                  <div className="obwelcome-device"><LandingStudioMockup /></div>
+                  <div className="obwelcome-copy">
+                    <p>Your coaches become a marketing network, sharing classes and sending people back to your studio.</p>
                   </div>
                 </div>
               </div>
