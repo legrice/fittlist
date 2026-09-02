@@ -9685,7 +9685,7 @@ html[data-mode="dark"],
   border:0; border-radius:0; background:transparent; color:var(--color-black);
   font:inherit; font-size:13px; font-weight:600; cursor:pointer;
 }
-.activity-card-actions button:not(.activity-card-join) span { display:none; }
+.activity-card-actions button:not(.activity-card-join) span:not(.icon) { display:none; }
 .activity-card-actions button.on { background:transparent; color:var(--color-black); }
 .activity-card-actions .activity-card-join { margin-left:auto; padding-inline:18px; border-radius:var(--radius-pill); background:var(--color-lime); }
 .activity-card-actions .activity-card-join .icon { order:2; }
