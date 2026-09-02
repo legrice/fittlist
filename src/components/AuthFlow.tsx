@@ -372,7 +372,7 @@ export function AuthFlow({
             </header>
             <div className="obwelcome-grid">
               <div className="obwelcome-title">
-                <h1>Fit all your fitness in one calendar.</h1>
+                <h1>Fit all your fitness into one calendar.</h1>
               </div>
               <div className="obwelcome-device"><LandingCalendarMockup /></div>
               <div className="obwelcome-copy">
