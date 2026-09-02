@@ -173,7 +173,7 @@ export function FollowingScreen({
   initialPins = [],
   managedCalendars = [],
   unread = false,
-  mode = "home",
+  mode = "activity",
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
@@ -202,9 +202,10 @@ export function FollowingScreen({
   managedCalendars?: ManagedCalendarDestination[];
   unread?: boolean;
   /** Following is the combined schedule; Upcoming is the filtered browser. */
-  mode?: "home" | "upcoming";
+  mode?: "activity" | "home" | "upcoming";
 }) {
-  const isHome = mode === "home";
+  const isHome = mode !== "upcoming";
+  const activity = mode === "activity";
   const [items, setItems] = useState(initialItems);
   const [coaches, setCoaches] = useState(initialCoaches);
   const [cats, setCats] = useState(initialCats);
@@ -883,29 +884,22 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="calendar-tab-header">
-          <div className="calendar-tab-title"><h1>Home</h1></div>
+          {activity ? <div className="calendar-tab-title"><h1>Home</h1></div> : <button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button>}
           <div className="calendar-tab-actions">
             <button type="button" className="home-avatar-notifications" aria-label={unread ? "Open notifications, new activity" : "Open notifications"} onClick={() => setNotificationsOpen(true)}>
               <span style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : (meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
               {unread && <i aria-hidden="true" />}
             </button>
-            <GlobalAdd
-              classOnly
-              triggerClassName="calendar-header-add"
-              triggerIconSize={24}
-              onCalendarChange={(focus) => {
-                if (!focus) return;
-                setIncludeYou(true);
-                setSelectedPeople(new Set());
-                setCalendarFilter("you");
-                setCalendarView("day");
-                setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER);
-                setAddedFocus(focus);
-              }}
-            />
+            {!activity && <GlobalAdd classOnly triggerClassName="calendar-header-add" triggerIconSize={24} onCalendarChange={(focus) => { if (!focus) return; setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("you"); setCalendarView("day"); setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER); setAddedFocus(focus); }} />}
           </div>
         </header>
       )}
+      {!activity && isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
+      {!activity && isHome && !firstRun && <header className="following-head"><div className="calendar-scope-row" aria-label="Calendar scope">
+        <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
+        <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting=calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
+        {sortedCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={26} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
+      </div></header>}
       {isHome && calendarFilter === "people" && !includeYou && selectedPeople.size === 0 ? (
         <div className="calendar-selection-empty"><h2>No calendars selected</h2><p>Tap a person above to see what’s on their calendar.</p></div>
       ) : isHome && shown.length === 0 && calendarPending ? (
@@ -1041,6 +1035,14 @@ export function FollowingScreen({
                           const displaySourceName = ownedByYou ? meFace.name : sourceName;
                           const displaySourcePhoto = ownedByYou ? meFace.photo : sourcePhoto;
                           const displaySourceColor = ownedByYou ? meFace.color : sourceColor;
+                          if (!activity) {
+                            const relation=calendarRelation(item,meId);
+                            const isYourItem=item.saved||ownedByYou;
+                            return <article className="cash-class-row" key={item.key} data-cid={item.classId} data-d={item.iso}><button type="button" className={`cash-class-main ${relation.tone}${displaySourceName ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item,coach ?? null,favoriteIds.has(item.coachId)))}>
+                              {displaySourceName && <span className={`cash-class-avatar${!ownedByYou&&!coach&&studio ? " studio" : ""}`} style={{background:displaySourceColor}}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0)||"?").toUpperCase()}</span>}</span>}
+                              <span className="cash-class-copy">{displaySourceName && <span className="cash-class-coachline"><small>{displaySourceName}</small>{ownedByYou&&<span className="cash-you-tag">You</span>}{isYourItem&&<span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}<span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span><span className="cash-class-studio-row"><span className="cash-class-studio">{item.where||"Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span></span>
+                            </button></article>;
+                          }
                           const going = item.saved && !ownedByYou;
                           const activityName = going ? meFace.name : group?.name ?? displaySourceName ?? studio?.name ?? "Someone";
                           const activityPhoto = going ? meFace.photo : group?.photo ?? displaySourcePhoto;
@@ -1059,7 +1061,7 @@ export function FollowingScreen({
                               <button type="button" className={liked ? "on" : ""} aria-pressed={liked} onClick={() => setLikedActivities((current) => { const next=new Set(current); if(next.has(item.key)) next.delete(item.key); else next.add(item.key); return next; })}><Icon name="favorite" size={20} /><span>{liked ? "Liked" : "Like"}</span></button>
                               <button type="button" className={commentingActivity === item.key ? "on" : ""} aria-expanded={commentingActivity === item.key} onClick={() => setCommentingActivity((current) => current === item.key ? null : item.key)}><Icon name="chat_bubble" size={19} /><span>Comment</span></button>
                               <button type="button" className={item.saved ? "on" : ""} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}><Icon name="bookmark" size={20} /><span>{item.saved ? "Saved" : "Save"}</span></button>
-                              <button type="button" className="activity-card-join" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>{item.saved ? "Going" : "Join"}</button>
+                              <button type="button" className="activity-card-join" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}><Icon name="chevron_right" size={18} /><span>Details</span></button>
                             </div>
                             {commentingActivity === item.key && <form className="activity-comment" onSubmit={(event) => { event.preventDefault(); setCommentingActivity(null); toast("Comment added"); }}><input aria-label={`Comment on ${item.name}`} placeholder="Add a comment" autoFocus /><button type="submit">Post</button></form>}
                           </article>;

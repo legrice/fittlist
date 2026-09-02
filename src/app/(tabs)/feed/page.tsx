@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic";
 // Discover: classes near you, your favorite coaches as a rail on top. The
 // builder lives in discoverfeed.ts, shared with the Add screen's browse
 // list, so the two can never disagree about what is near you.
-export default async function DiscoverPage() {
+export default async function DiscoverPage({ searchParams }: { searchParams: Promise<{ calendar?: string }> }) {
+  const { calendar } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -124,6 +125,7 @@ export default async function DiscoverPage() {
       initialPins={pinRows.map((pin) => `${pin.entityType}:${pin.entityId}`)}
       managedCalendars={managedCalendars}
       unread={unread.notifications > 0 || unread.messages > 0}
+      mode={calendar === "1" ? "home" : "activity"}
     />
   );
 }

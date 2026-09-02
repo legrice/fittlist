@@ -9644,12 +9644,15 @@ html[data-mode="dark"],
 .cash-activity-list { padding:0; }
 .home-listregion:has(.activity-card) {
   margin-inline:calc(-1 * var(--page-gutter)); padding:24px var(--page-gutter) 56px;
-  background:var(--color-surface-muted);
+  background:transparent;
 }
+.screen.hasnav:has(.activity-card),
+.screen.hasnav:has(.activity-card) > .pad { background:var(--color-background); }
+.screen.hasnav:has(.activity-card) .cash-day > h2 { background:var(--color-background); }
 .cash-day > div:has(.activity-card) { display:grid; gap:16px; }
 .activity-card {
-  padding:22px; overflow:hidden; border:1px solid rgba(2,13,8,.045); border-radius:30px;
-  background:var(--color-surface); box-shadow:0 8px 28px rgba(2,13,8,.035);
+  padding:22px; overflow:hidden; border:1px solid var(--color-border); border-radius:30px;
+  background:var(--color-surface); box-shadow:0 6px 20px rgba(2,13,8,.025);
 }
 .activity-card-main {
   width:100%; padding:0; display:flex; align-items:flex-start; gap:14px;
@@ -9672,7 +9675,8 @@ html[data-mode="dark"],
   font:inherit; font-size:13px; font-weight:600; cursor:pointer;
 }
 .activity-card-actions button.on { background:var(--color-lime-soft); }
-.activity-card-actions .activity-card-join { margin-left:auto; padding-inline:20px; background:var(--color-lime); }
+.activity-card-actions .activity-card-join { margin-left:auto; padding-inline:18px; background:var(--color-lime); }
+.activity-card-actions .activity-card-join .icon { order:2; }
 .activity-comment { margin-top:14px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
 .activity-comment input {
   min-width:0; height:44px; padding:0 15px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
@@ -9682,7 +9686,7 @@ html[data-mode="dark"],
 .activity-comment button { padding:0 16px; border:0; border-radius:var(--radius-pill); background:var(--color-black); color:var(--color-white); font:inherit; font-weight:700; }
 @media (max-width:520px) {
   .activity-card { padding:20px; border-radius:26px; }
-  .activity-card-actions button span { display:none; }
+  .activity-card-actions button:not(.activity-card-join) span { display:none; }
   .activity-card-actions .activity-card-join { min-width:76px; }
 }
 .calendar-stream-loading {

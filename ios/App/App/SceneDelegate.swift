@@ -29,7 +29,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     // hidden in the native shell, so a mismatch here removes the only working
     // route to a primary destination.
     private let tabIDs = ["following", "calendar", "discover", "share"]
-    private let fallbackRoutes = ["/feed", "/calendar", "/discover", "/membershare"]
+    private let fallbackRoutes = ["/feed", "/feed?calendar=1", "/discover", "/membershare"]
     private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
     private let shareFileQueue = DispatchQueue(label: "co.fittlist.share-file-cache", qos: .userInitiated)
     private let shareFileCacheLimit = 4
