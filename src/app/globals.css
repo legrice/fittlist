@@ -12269,8 +12269,8 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-desktop-view { height:44px; padding:3px; display:flex; align-items:center; gap:3px; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); }
 .calendar-desktop-view button { width:42px; min-width:42px; height:36px; padding:0; display:grid; place-items:center; border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); }
 .calendar-desktop-view button.on { background:var(--color-black); color:var(--color-white); }
-.calendar-desktop-view.calendar-view-toggle { padding:3px; }
-.calendar-desktop-view.calendar-view-toggle button { width:38px; min-width:38px; }
+.calendar-view-change { width:44px; height:44px; padding:0; display:grid; place-items:center; border:0; border-radius:50%; background:var(--color-surface); color:var(--color-text-primary); }
+.calendar-view-change:active { background:var(--color-surface-muted); transform:scale(.96); }
 .calendar-desktop-filter { height:44px; min-width:0; flex:1; padding:0 11px 0 14px; display:flex; align-items:center; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); }
 .calendar-desktop-filter select { width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; }
 .calendar-filter-pills { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
