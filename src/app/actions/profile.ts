@@ -57,19 +57,31 @@ export async function updateAwayStatus(input: {
   away: boolean;
   banner: string;
   message: string;
+  startsOn: string;
+  endsOn: string;
 }): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const banner = input.banner.trim().replace(/\s+/g, " ").slice(0, 140);
   const message = input.message.trim().replace(/\s+/g, " ").slice(0, 300);
+  const startsOn = /^\d{4}-\d{2}-\d{2}$/.test(input.startsOn) ? input.startsOn : "";
+  const endsOn = /^\d{4}-\d{2}-\d{2}$/.test(input.endsOn) ? input.endsOn : "";
   const safetyError = objectionableContentError(banner, message);
   if (safetyError) return { ok: false, error: safetyError };
   if (input.away && !message) return { ok: false, error: "Add an away message." };
+  if (input.away && (!startsOn || !endsOn)) return { ok: false, error: "Choose your away dates." };
+  if (startsOn && endsOn && startsOn > endsOn) return { ok: false, error: "The end date must be after the start date." };
 
   const db = await getDb();
   const [user] = await db
     .update(schema.users)
-    .set({ away: input.away, awayBanner: banner || null, awayMessage: message || null })
+    .set({
+      away: input.away,
+      awayBanner: banner || null,
+      awayMessage: message || null,
+      awayStartsOn: startsOn || null,
+      awayEndsOn: endsOn || null,
+    })
     .where(eq(schema.users.id, userId))
     .returning({ handle: schema.users.handle });
   if (!user) return { ok: false, error: "Account not found." };

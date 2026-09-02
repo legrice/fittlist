@@ -76,6 +76,8 @@ export function ProfileSheet({
   away = false,
   awayBanner = "",
   awayMessage = "",
+  awayStartsOn = "",
+  awayEndsOn = "",
   googleConfigured,
   googleConnected,
   googleEmail,
@@ -120,6 +122,8 @@ export function ProfileSheet({
   away?: boolean;
   awayBanner?: string;
   awayMessage?: string;
+  awayStartsOn?: string;
+  awayEndsOn?: string;
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
@@ -195,6 +199,8 @@ export function ProfileSheet({
   const [isAway, setIsAway] = useState(away);
   const [awayPublic, setAwayPublic] = useState(awayBanner);
   const [awayReply, setAwayReply] = useState(awayMessage);
+  const [awayStart, setAwayStart] = useState(awayStartsOn);
+  const [awayEnd, setAwayEnd] = useState(awayEndsOn);
   const [awaySaving, setAwaySaving] = useState(false);
 
   useEffect(() => {
@@ -347,7 +353,7 @@ export function ProfileSheet({
     if (awaySaving) return;
     setAwaySaving(true);
     (async () => {
-      const res = await updateAwayStatus({ away: isAway, banner: awayPublic, message: awayReply });
+      const res = await updateAwayStatus({ away: isAway, banner: awayPublic, message: awayReply, startsOn: awayStart, endsOn: awayEnd });
       if (res.ok) {
         toast(isAway ? "Away status saved" : "Away status turned off");
         router.refresh();
@@ -441,7 +447,7 @@ export function ProfileSheet({
             <span className="setrow-ic"><Icon name="schedule" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Set yourself as away</span>
-              <span className="s">{isAway ? "Your away status is on" : "Add a profile note and message for people who contact you"}</span>
+              <span className="s">{isAway ? "Your away dates are set" : "Add a profile note and message for people who contact you"}</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
           </button>
@@ -809,11 +815,16 @@ export function ProfileSheet({
               <div className="settingslist away-toggle-list">
                 <button className="setrow" type="button" onClick={() => setIsAway((value) => !value)} aria-pressed={isAway}>
                   <span className="setrow-ic"><Icon name="schedule" size={24}/></span>
-                  <span className="setrow-txt"><span className="t">Away</span><span className="s">{isAway ? "On, people will see your away details" : "Off, your profile behaves normally"}</span></span>
+                  <span className="setrow-txt"><span className="t">Away</span><span className="s">{isAway ? "On during the dates below" : "Off, your profile behaves normally"}</span></span>
                   <span className={`switch${isAway ? " on" : ""}`} aria-hidden="true"><span className="switch-knob"/></span>
                 </button>
               </div>
               <div className="away-fields">
+                <div className="away-date-fields">
+                  <div><label className="flabel" htmlFor="awayStart">Away from</label><input id="awayStart" className="editinput" type="date" value={awayStart} onChange={(event)=>setAwayStart(event.target.value)} /></div>
+                  <div><label className="flabel" htmlFor="awayEnd">Away through</label><input id="awayEnd" className="editinput" type="date" min={awayStart || undefined} value={awayEnd} onChange={(event)=>setAwayEnd(event.target.value)} /></div>
+                </div>
+                <p className="hint">Your away details only appear during these dates.</p>
                 <label className="flabel" htmlFor="awayReply">Away message</label>
                 <textarea id="awayReply" className="editinput reqmsg" rows={3} maxLength={300} value={awayReply} onChange={(event)=>setAwayReply(event.target.value)} placeholder="I’m away until Monday and will reply when I’m back." />
                 <p className="hint">People see this before they send you a message.</p>
@@ -821,7 +832,7 @@ export function ProfileSheet({
                 <input id="awayBanner" className="editinput" maxLength={140} value={awayPublic} onChange={(event)=>setAwayPublic(event.target.value)} placeholder="Away through September 8" />
                 <p className="hint">Shown on your public profile while you&rsquo;re away.</p>
               </div>
-              <div className="publishwrap"><button className="btn si" type="button" onClick={saveAway} disabled={awaySaving || (isAway && !awayReply.trim())}>{awaySaving ? "Saving…" : "Save away settings"}</button></div>
+              <div className="publishwrap"><button className="btn si" type="button" onClick={saveAway} disabled={awaySaving || (isAway && (!awayReply.trim() || !awayStart || !awayEnd))}>{awaySaving ? "Saving…" : "Save away settings"}</button></div>
             </>
           )}
 

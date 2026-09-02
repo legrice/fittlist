@@ -183,6 +183,8 @@ export default async function SettingsPage({
         away={me.away}
         awayBanner={me.awayBanner ?? ""}
         awayMessage={me.awayMessage ?? ""}
+        awayStartsOn={me.awayStartsOn ?? ""}
+        awayEndsOn={me.awayEndsOn ?? ""}
         googleConfigured={googleConfigured()}
         googleConnected={gconn.connected}
         googleEmail={gconn.email}

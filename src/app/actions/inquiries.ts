@@ -22,6 +22,7 @@ import {
   type AnonymousActionRateLimits,
 } from "@/lib/anonymous-rate-limit";
 import { requestIpAddress } from "@/lib/request-ip";
+import { isAwayActive } from "@/lib/away";
 
 type Result = { ok: boolean; error?: string };
 
@@ -30,10 +31,10 @@ type Database = Awaited<ReturnType<typeof getDb>>;
 export async function messagingAwayStatus(handle: string): Promise<{ away: boolean; message: string }> {
   const db = await getDb();
   const [user] = await db
-    .select({ away: schema.users.away, message: schema.users.awayMessage, messagesOpen: schema.users.messagesOpen })
+    .select({ away: schema.users.away, startsOn: schema.users.awayStartsOn, endsOn: schema.users.awayEndsOn, timeZone: schema.users.timeZone, message: schema.users.awayMessage, messagesOpen: schema.users.messagesOpen })
     .from(schema.users)
     .where(eq(schema.users.handle, handle));
-  return user?.messagesOpen && user.away
+  return user?.messagesOpen && isAwayActive({ away:user.away, awayStartsOn:user.startsOn, awayEndsOn:user.endsOn, timeZone:user.timeZone })
     ? { away: true, message: user.message?.trim() || "I am away right now and may take a little longer to reply." }
     : { away: false, message: "" };
 }
