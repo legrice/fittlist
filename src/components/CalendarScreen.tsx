@@ -506,11 +506,10 @@ export function CalendarScreen({
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
             {sheet && <button type="button" className="calendar-page-back" aria-label="Back" onClick={onClose}><Icon name="arrow_back" size={23} /></button>}
-            <h1>Your calendars</h1>
+            {sheet ? <h1>Personal</h1> : <button type="button" className="calendar-context-title" aria-haspopup="dialog" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)}><span>Personal</span><Icon name="expand_more" size={24} /></button>}
           </div>
           <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         </div>
-        {!sheet && <button type="button" className="personal-calendar-picker" aria-haspopup="dialog" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)}><span><Icon name="person" size={19} /><strong>Personal calendar</strong></span><Icon name="expand_more" size={21} /></button>}
         <div className="calendar-desktop-controls">
           <label className="calendar-desktop-filter">
             <span className="sr-only">View calendar</span>

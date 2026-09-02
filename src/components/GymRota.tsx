@@ -552,7 +552,7 @@ export function GymRota({
             >
               <Icon name="arrow_back" size={23} />
             </BackLink>
-            <h1 className="studio-calendar-title">Calendar</h1>
+            <h1 className="studio-calendar-title" title={studioName}>{studioName}</h1>
             <span aria-hidden="true" />
           </div>
         </div>
@@ -702,7 +702,7 @@ export function GymRota({
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
-          <h1 className="studio-calendar-title">{shiftFilter === "open" ? "Open shifts" : "Calendar"}</h1>
+          <h1 className="studio-calendar-title" title={studioName}>{studioName}</h1>
           <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
             <Icon name="tune" size={23} />
           </button>
