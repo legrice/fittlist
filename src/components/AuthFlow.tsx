@@ -95,6 +95,38 @@ function LandingCalendarMockup() {
   );
 }
 
+function LandingShareMockup() {
+  return (
+    <div className="obwelcome-phone obwelcome-share-phone" role="img" aria-label="A sample FittList share editor">
+      <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
+      <div className="obwelcome-share-toolbar" aria-hidden="true">
+        <span><Icon name="close" size={21} /></span>
+        <div><span><Icon name="help" size={19} /></span><b>Undo</b><b>Redo</b></div>
+      </div>
+      <div className="obwelcome-share-canvas">
+        <div className="obwelcome-share-accent" />
+        <h2>Move<br />with me.</h2>
+        <div className="obwelcome-share-day">
+          <strong>MON</strong>
+          <span><b>Morning Flow</b><small>7:00 AM</small></span>
+          <span><b>Strength Class</b><small>5:30 PM</small></span>
+        </div>
+        <div className="obwelcome-share-day">
+          <strong>WED</strong>
+          <span><b>Run Club</b><small>6:00 PM</small></span>
+        </div>
+        <div className="obwelcome-share-signoff"><small>See my week at</small><b>fittlist.co/yourname</b></div>
+      </div>
+      <div className="obwelcome-share-controls" aria-hidden="true">
+        {[["auto_awesome", "Random"], ["palette", "Color"], ["image", "Photo"], ["format_paint", "Style"], ["format_list_bulleted", "Classes"]].map(([icon, label]) => (
+          <span key={label}><i><Icon name={icon} size={18} /></i><b>{label}</b></span>
+        ))}
+        <strong>Share</strong>
+      </div>
+    </div>
+  );
+}
+
 export function AuthFlow({
   startStage,
   via = null,
@@ -361,6 +393,15 @@ export function AuthFlow({
                   </button>
                 </form>
                 {error && <div className="errorcopy">{error}</div>}
+              </div>
+            </div>
+            <div className="obwelcome-grid obwelcome-share-grid">
+              <div className="obwelcome-title">
+                <h1>Share your week your way.</h1>
+              </div>
+              <div className="obwelcome-device"><LandingShareMockup /></div>
+              <div className="obwelcome-copy">
+                <p>Send your classes as an image, share a link, or post them anywhere you&rsquo;d like.</p>
               </div>
             </div>
             <footer className="obwelcome-footer">
