@@ -14,6 +14,7 @@ import { Icon } from "@/components/Icon";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { ProfileActionGate } from "@/components/ProfileActionGate";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
@@ -187,6 +188,7 @@ export async function MemberProfileView({
         {/* The same header a coach and a studio wear. A member's page was the
             odd one out: a small circle, a centred name, and none of the shape
             that makes the other two read as the same app. */}
+        <ProfileActionGate enabled={!viewerId && !isOwner} next={`/${user.handle ?? ""}`} via={user.handle ?? undefined}>
         <ProfileTabs
           base={`/${user.handle ?? ""}`}
           tab="schedule"
@@ -289,6 +291,7 @@ export async function MemberProfileView({
           />
         </section>
         </ProfileTabs>
+        </ProfileActionGate>
       </div>
     </div>
   );

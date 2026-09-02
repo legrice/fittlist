@@ -17,6 +17,7 @@ import { Icon } from "@/components/Icon";
 import { InviteCoach } from "@/components/InviteCoach";
 import { CommunityNote } from "@/components/CommunityNote";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { ProfileActionGate } from "@/components/ProfileActionGate";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioMenu } from "@/components/StudioMenu";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -366,6 +367,7 @@ export async function StudioView({
         {/* The same header a person wears. A studio is a place rather than a
             face, but it is the same kind of page: a photograph, a badge, a
             name, where it is, and the two things you can do about it. */}
+        <ProfileActionGate enabled={!signedIn} next={base}>
         <ProfileTabs
           base={base}
           tab={tab}
@@ -575,6 +577,7 @@ export async function StudioView({
         </section>
 
         </ProfileTabs>
+        </ProfileActionGate>
 
         {!signedIn && (
           <div className="madewith">

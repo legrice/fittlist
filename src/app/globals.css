@@ -1092,7 +1092,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .pub .pubhero .gyms { font-size: 13px; color: color-mix(in srgb, var(--paper) 72%, var(--ink)); margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12px; font-weight: 600; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
-.madewith { text-align: center; font-size: 12px; color: var(--ol); padding: 26px 0 8px; }
+.madewith {
+  --wm-ink:var(--ink);
+  --wm-mark:var(--ink);
+  text-align:center;
+  font-size:12px;
+  color:var(--ol);
+  padding:26px 0 8px;
+}
 .madewith .mw-logo { display: inline-flex; vertical-align: -3px; font-size: 14px; }
 .madewith a { color: var(--si); font-weight: 600; font-size: 12px; text-decoration: underline; }
 
@@ -5165,6 +5172,7 @@ select.editinput.placekind-select {
   border-radius:14px; background:var(--color-lime-soft); color:var(--color-olive); font-size:14px; font-weight:600; line-height:1.35; text-align:left;
 }
 .profile-away-banner .icon { flex:0 0 auto; }
+.profile-action-gate { display:contents; }
 .profile-schedule-filters {
   width:100%; margin:0 0 18px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;
   scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;

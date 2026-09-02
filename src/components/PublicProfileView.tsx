@@ -27,6 +27,7 @@ import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
+import { ProfileActionGate } from "@/components/ProfileActionGate";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
@@ -424,6 +425,7 @@ export async function PublicProfileView({
         {/* The Follow control renders twice below (the header pill and the
             sticky bar's compact copy); this provider is the one place the
             answer lives, so tapping either updates both. */}
+        <ProfileActionGate enabled={!viewerId && !isOwner} next={`/${handle}`} via={handle}>
         <FollowSync
           initial={{
             following: account?.following ?? false,
@@ -583,6 +585,7 @@ export async function PublicProfileView({
           </section>
         </ProfileTabs>
         </FollowSync>
+        </ProfileActionGate>
         {/* No Add class here. This page is where you look at your week, and
             the Schedule tab is where you work on it: the plus lives on the
             calendar, under a thumb, next to the week it adds to. A second
