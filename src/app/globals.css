@@ -601,7 +601,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
 .ob:has(.obwelcome) > .pad { width:100%; max-width:none; min-height:100dvh; margin:0; padding:0; }
 .ob:has(.obwelcome) > .pad > .mark { display:none; }
-.obwelcome { min-height:100dvh; position:relative; background:var(--si); color:var(--color-black); }
+.obwelcome { --obwelcome-share:#F4C7A1; min-height:100dvh; position:relative; background:var(--si); color:var(--color-black); }
 .obwelcome-head {
   position:absolute; inset:24px 28px auto; z-index:3;
   display:flex; align-items:center; justify-content:space-between; gap:20px;
@@ -625,7 +625,7 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
     height:100dvh; position:sticky; top:0; overflow:hidden; background:var(--si);
     transition:background-color .55s cubic-bezier(.22,1,.36,1);
   }
-  .obwelcome-stories[data-story="share"] .obwelcome-story-stage { background:var(--color-personal); }
+  .obwelcome-stories[data-story="share"] .obwelcome-story-stage { background:var(--obwelcome-share); }
   .obwelcome-stories[data-story="groups"] .obwelcome-story-stage { background:var(--color-attending); }
   .obwelcome-stories[data-story="studio"] .obwelcome-story-stage { background:var(--color-coaching); }
   .obwelcome-stories[data-story="cta"] .obwelcome-story-stage { background:var(--color-lime); }
@@ -774,7 +774,7 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
 .obwelcome-class strong { font-size:19px; line-height:1.16; }
 .obwelcome-class em { color:#737373; font-size:14px; font-style:normal; }
 .obwelcome-class time { align-self:start; padding-top:16px; font-size:17px; line-height:1.2; font-weight:600; }
-.obwelcome-share-grid { border-top:1px solid rgba(0,0,0,.12); background:var(--color-personal); }
+.obwelcome-share-grid { border-top:1px solid rgba(0,0,0,.12); background:var(--obwelcome-share); }
 .obwelcome-groups-grid { border-top:1px solid rgba(0,0,0,.12); background:var(--color-attending); }
 .obwelcome-studio-grid { border-top:1px solid rgba(0,0,0,.12); background:var(--color-coaching); }
 .obwelcome-share-phone { padding-bottom:24px; background:var(--color-white); }

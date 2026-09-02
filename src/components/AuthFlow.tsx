@@ -314,7 +314,7 @@ export function AuthFlow({
       if (window.innerWidth <= 900) {
         stories.removeAttribute("data-story");
         const chapters = Array.from(stories.querySelectorAll<HTMLElement>(".obwelcome-grid, .obwelcome-final-cta"));
-        const colors = [[159,232,112],[216,198,180],[200,195,219],[175,207,236],[159,232,112]];
+        const colors = [[159,232,112],[244,199,161],[200,195,219],[175,207,236],[159,232,112]];
         const viewportCenter = window.scrollY + window.innerHeight / 2;
         const centers = chapters.map((chapter) => chapter.getBoundingClientRect().top + window.scrollY + chapter.offsetHeight / 2);
         let index = centers.findIndex((center) => center >= viewportCenter);
