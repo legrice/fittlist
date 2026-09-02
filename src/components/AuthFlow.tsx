@@ -156,7 +156,7 @@ function LandingShareMockup() {
         <div className="obwelcome-share-signoff"><small>See my week at</small><b>fittlist.co/yourname</b></div>
       </div>
       <div className="obwelcome-share-controls" aria-hidden="true">
-        {[["auto_awesome", "Random"], ["palette", "Color"], ["image", "Photo"], ["format_paint", "Style"], ["format_list_bulleted", "Classes"]].map(([icon, label]) => (
+        {[["auto_awesome", "Random"], ["palette", "Color"], ["image", "Photo"], ["tune", "Style"], ["list", "Classes"]].map(([icon, label]) => (
           <span key={label}><i><Icon name={icon} size={18} /></i><b>{label}</b></span>
         ))}
         <strong>Share</strong>
