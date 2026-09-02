@@ -22,20 +22,21 @@ import { hasLocalPasskeyHistory, rememberLocalPasskey } from "@/lib/passkey-devi
 
 type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
+type LandingCalendar = "All" | "You" | "Friend" | "Studio" | "Group";
 
 const landingCalendars = [
   ["All", "calendar_month", "neutral"],
   ["You", "Y", "rose"],
-  ["Coach", "C", "blue"],
+  ["Friend", "F", "blue"],
   ["Studio", "S", "gold"],
   ["Group", "G", "mint"],
-] as const;
+] as const satisfies ReadonlyArray<readonly [LandingCalendar, string, string]>;
 
 const landingClasses = [
-  ["Today", "Coach", "Morning Flow", "Local studio", "7:00am", "C", "blue"],
-  ["Today", "Coach", "Strength Class", "Training space", "5:30pm", "C", "gold"],
-  ["Tomorrow", "You", "Run Club", "Meetup point", "6:00pm", "Y", "rose"],
-  ["Sat, Sep 5", "Coach", "Movement Class", "Local studio", "9:00am", "C", "mint"],
+  ["Today", "Friend", "Morning Flow", "Local studio", "7:00am", "F", "blue", "Friend"],
+  ["Today", "Studio", "Strength Class", "Training space", "5:30pm", "S", "gold", "Studio"],
+  ["Tomorrow", "You", "Run Club", "Meetup point", "6:00pm", "Y", "rose", "You"],
+  ["Sat, Sep 5", "Group", "Movement Class", "Local park", "9:00am", "G", "mint", "Group"],
 ] as const;
 
 function PhoneStatusIcons() {
@@ -62,21 +63,25 @@ function PhoneStatusIcons() {
 }
 
 function LandingCalendarMockup() {
+  const [calendar, setCalendar] = useState<LandingCalendar>("All");
+  const visibleClasses = calendar === "All"
+    ? landingClasses
+    : landingClasses.filter((entry) => entry[7] === calendar);
   let priorDay = "";
   return (
-    <div className="obwelcome-phone" role="img" aria-label="A sample FittList calendar">
+    <div className="obwelcome-phone" aria-label="Interactive sample FittList calendar">
       <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
       <div className="obwelcome-phone-head"><h2>Calendar</h2><span><Icon name="notifications" size={18} /></span></div>
       <div className="obwelcome-calendars">
         {landingCalendars.map(([name, mark, tone]) => (
-          <div key={name}>
+          <button type="button" className={calendar === name ? "on" : ""} aria-pressed={calendar === name} onClick={() => setCalendar(name)} key={name}>
             <span data-tone={tone}>{mark === "calendar_month" ? <Icon name={mark} size={20} /> : mark}</span>
             <small>{name}</small>
-          </div>
+          </button>
         ))}
       </div>
-      <div className="obwelcome-schedule">
-        {landingClasses.map(([day, person, name, studio, time, initial, tone]) => {
+      <div className="obwelcome-schedule" key={calendar} aria-live="polite">
+        {visibleClasses.map(([day, person, name, studio, time, initial, tone]) => {
           const heading = day !== priorDay;
           priorDay = day;
           return (
