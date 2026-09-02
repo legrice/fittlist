@@ -26,15 +26,16 @@ type SheetMode = "signup" | "login";
 const landingCalendars = [
   ["All", "calendar_month", "neutral"],
   ["You", "Y", "rose"],
-  ["Maya", "M", "blue"],
-  ["Theo", "T", "gold"],
+  ["Coach", "C", "blue"],
+  ["Studio", "S", "gold"],
+  ["Group", "G", "mint"],
 ] as const;
 
 const landingClasses = [
-  ["Today", "Maya Ortiz", "Sunrise Flow", "Northline Yoga", "7:00am", "M", "blue"],
-  ["Today", "Theo Brooks", "Strength Lab", "Iron House", "5:30pm", "T", "gold"],
-  ["Tomorrow", "You", "Waterfront Run Club", "Pier Track", "6:00pm", "Y", "rose"],
-  ["Sat, Sep 5", "Lena Park", "Reformer Basics", "Studio Arc", "9:00am", "L", "mint"],
+  ["Today", "Coach", "Morning Flow", "Local studio", "7:00am", "C", "blue"],
+  ["Today", "Coach", "Strength Class", "Training space", "5:30pm", "C", "gold"],
+  ["Tomorrow", "You", "Run Club", "Meetup point", "6:00pm", "Y", "rose"],
+  ["Sat, Sep 5", "Coach", "Movement Class", "Local studio", "9:00am", "C", "mint"],
 ] as const;
 
 function PhoneStatusIcons() {
@@ -63,7 +64,7 @@ function PhoneStatusIcons() {
 function LandingCalendarMockup() {
   let priorDay = "";
   return (
-    <div className="obwelcome-phone" role="img" aria-label="A sample FittList calendar with fictional coaches, classes, and studios">
+    <div className="obwelcome-phone" role="img" aria-label="A sample FittList calendar">
       <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
       <div className="obwelcome-phone-head"><h2>Calendar</h2><span><Icon name="notifications" size={18} /></span></div>
       <div className="obwelcome-calendars">
@@ -74,7 +75,6 @@ function LandingCalendarMockup() {
           </div>
         ))}
       </div>
-      <div className="obwelcome-context"><span>Following 4 calendars</span><b>View all</b></div>
       <div className="obwelcome-schedule">
         {landingClasses.map(([day, person, name, studio, time, initial, tone]) => {
           const heading = day !== priorDay;
