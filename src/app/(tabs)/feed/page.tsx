@@ -100,7 +100,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
     .map(async (calendar) => {
       const schedule = await gymSchedule(calendar.id, 0);
       const items = schedule?.days.find((day) => day.iso === today)?.items ?? [];
-      return { id:calendar.id, name:calendar.name, total:items.length, open:items.filter((item) => !item.onUserId).length };
+      return { id:calendar.id, name:calendar.name, slug:calendar.slug, total:items.length, open:items.filter((item) => !item.onUserId).length };
     })))
     .filter((studio) => studio.total > 0);
   return (
