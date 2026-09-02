@@ -120,7 +120,7 @@ export function NavBar({
               <span className="navglyph">
                 <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={30} />
               </span>
-              <span className="navlabel">{t.label}</span>
+              {t.id !== "following" && <span className="navlabel">{t.label}</span>}
             </>
           );
           return (
