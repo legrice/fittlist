@@ -823,6 +823,18 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
 .obwelcome-studio-stats span { display:flex; flex-direction:column; align-items:center; gap:2px; }
 .obwelcome-studio-stats b { font-size:20px; }
 .obwelcome-studio-stats small { color:var(--color-text-secondary); font-size:10px; }
+.obwelcome-final-cta {
+  min-height:360px; padding:72px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:34px;
+  background:var(--color-black); color:var(--color-white); text-align:center;
+}
+.obwelcome-final-cta h2 { max-width:800px; margin:0; font-size:clamp(44px,6vw,84px); line-height:.95; letter-spacing:-.03em; }
+.obwelcome-final-cta button {
+  width:min(100%,720px); min-height:82px; padding:0 32px; border-radius:var(--radius-pill);
+  background:var(--color-lime); color:var(--color-black); font-size:22px; font-weight:700;
+  transition:transform .18s ease,background-color .18s ease;
+}
+.obwelcome-final-cta button:hover { background:var(--color-lime-pressed); transform:scale(1.015); }
+.obwelcome-final-cta button:active { transform:scale(.985); }
 .obwelcome-footer {
   min-height:78px; padding:18px clamp(28px,4vw,64px); display:flex; align-items:center; gap:22px;
   border-top:1px solid rgba(0,0,0,.16); color:var(--color-black); font-size:13px;
@@ -857,6 +869,9 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
   }
   .obwelcome-footer { padding:20px 24px calc(112px + env(safe-area-inset-bottom)); gap:18px; }
   .obwelcome-email { display:none; }
+  .obwelcome-final-cta { min-height:300px; padding:62px 20px; gap:28px; }
+  .obwelcome-final-cta h2 { font-size:clamp(40px,11vw,58px); }
+  .obwelcome-final-cta button { min-height:68px; font-size:19px; }
 }
 @media (max-width:430px) {
   .obwelcome-head nav { gap:6px; }

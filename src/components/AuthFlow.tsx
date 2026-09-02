@@ -528,6 +528,10 @@ export function AuthFlow({
                 </div>
               </div>
             </div>
+            <section className="obwelcome-final-cta" aria-labelledby="obwelcome-final-title">
+              <h2 id="obwelcome-final-title">Ready to build your week?</h2>
+              <button type="button" onClick={() => { setError(""); setSheet("signup"); }}>Get started</button>
+            </section>
             <footer className="obwelcome-footer">
               <Wordmark variant="ink" className="obwelcome-footer-mark" />
               <span>&copy; {new Date().getFullYear()} FittList</span>
