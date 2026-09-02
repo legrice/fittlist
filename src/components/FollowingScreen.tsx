@@ -720,7 +720,7 @@ export function FollowingScreen({
     const sentences = [...coaching, ...plans];
     return sentences.length ? `${sentences.join(". ")} today.` : "Nothing is on your calendar today. See what everyone else is up to below.";
   }, [items, meId, todayIso]);
-  const todayHeading = useMemo(() => new Intl.DateTimeFormat("en-US", { weekday:"long" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
+  const todayHeading = useMemo(() => new Intl.DateTimeFormat("en-US", { weekday:"short" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
   const todayDate = useMemo(() => new Intl.DateTimeFormat("en-US", { month:"long", day:"numeric" }).format(new Date(`${todayIso}T12:00:00Z`)), [todayIso]);
   const monthItems = useMemo(() => {
     const mapped = new Map<string, MonthCellItem[]>();
