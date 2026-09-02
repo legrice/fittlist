@@ -870,14 +870,20 @@ body:has(.obwelcome) { height:auto; overflow-x:clip; overflow-y:visible; }
     order:3; position:relative; z-index:1; width:100%; min-height:844px; margin-top:42px;
     overflow:visible;
   }
-  :is(.obwelcome-share-grid,.obwelcome-groups-grid,.obwelcome-studio-grid) { padding-top:88px; }
+  :is(.obwelcome-share-grid,.obwelcome-groups-grid,.obwelcome-studio-grid) { padding-top:88px; border-top:0; }
+  .obwelcome-share-grid { background:linear-gradient(to bottom,var(--color-lime),var(--color-personal) 112px); }
+  .obwelcome-groups-grid { background:linear-gradient(to bottom,var(--color-personal),var(--color-attending) 112px); }
+  .obwelcome-studio-grid { background:linear-gradient(to bottom,var(--color-attending),var(--color-coaching) 112px); }
   .obwelcome-phone {
     width:min(100%,390px); min-height:0; flex:0 0 auto;
     border-radius:52px;
   }
   .obwelcome-footer { padding:20px 24px calc(112px + env(safe-area-inset-bottom)); gap:18px; }
   .obwelcome-email { display:none; }
-  .obwelcome-final-cta { min-height:520px; padding:104px 20px 92px; gap:24px; }
+  .obwelcome-final-cta {
+    min-height:520px; padding:104px 20px 92px; gap:24px;
+    background:linear-gradient(to bottom,var(--color-coaching),var(--color-lime) 112px);
+  }
   .obwelcome-final-cta h2 { max-width:360px; font-size:clamp(30px,8vw,40px); }
   .obwelcome-final-cta button { width:min(100%,240px); min-height:52px; font-size:15px; }
 }
