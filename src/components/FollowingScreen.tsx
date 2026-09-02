@@ -883,8 +883,8 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && (
-        <header className="calendar-tab-header">
-          {activity ? <div className="calendar-tab-title"><h1>Home</h1></div> : <button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button>}
+        <header className={`calendar-tab-header${activity ? " activity-feed-header" : ""}`}>
+          {activity ? <Link className="activity-feed-search" href="/discover"><Icon name="search" size={22} /><span>Find coaches, studios, groups</span></Link> : <button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}><h1>Calendar</h1><Icon name="expand_more" size={23} /></button>}
           <div className="calendar-tab-actions">
             <button type="button" className="home-avatar-notifications" aria-label={unread ? "Open notifications, new activity" : "Open notifications"} onClick={() => setNotificationsOpen(true)}>
               <span style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : (meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>

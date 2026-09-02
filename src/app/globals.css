@@ -9682,11 +9682,11 @@ html[data-mode="dark"],
 .activity-card-actions { margin-top:20px; display:flex; align-items:center; gap:8px; }
 .activity-card-actions button {
   min-width:38px; min-height:38px; padding:0; display:inline-flex; align-items:center; justify-content:center; gap:7px;
-  border:0; border-radius:0; background:transparent; color:var(--color-black);
+  border:0; border-radius:50%; background:var(--color-surface-muted); color:var(--color-black);
   font:inherit; font-size:13px; font-weight:600; cursor:pointer;
 }
 .activity-card-actions button span:not(.icon) { display:none; }
-.activity-card-actions button.on { background:transparent; color:var(--color-black); }
+.activity-card-actions button.on { background:var(--color-lime-soft); color:var(--color-black); }
 .activity-comment { margin-top:14px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
 .activity-comment input {
   min-width:0; height:44px; padding:0 15px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
@@ -13220,7 +13220,7 @@ a.clspeek-by:active { opacity: .6; }
   }
   .home-avatar-notifications {
     position:relative; width:44px; height:44px; flex:0 0 44px; padding:0;
-    border:1px solid var(--color-border); border-radius:50%; background:var(--color-surface); cursor:pointer;
+    border:0; border-radius:0; background:transparent; cursor:pointer;
   }
   .home-avatar-notifications > span {
     width:36px; height:36px; margin:auto; display:grid; place-items:center; overflow:hidden;
@@ -13231,6 +13231,14 @@ a.clspeek-by:active { opacity: .6; }
     position:absolute; top:0; right:0; width:11px; height:11px;
     border:2px solid var(--color-surface); border-radius:50%; background:var(--color-danger, #e52b32);
   }
+  .activity-feed-header { gap:10px; }
+  .activity-feed-search {
+    min-width:0; height:44px; padding:0 16px; flex:1; display:flex; align-items:center; gap:10px;
+    border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted);
+    color:var(--color-text-secondary); font-size:15px; text-decoration:none;
+  }
+  .activity-feed-search .icon { flex:0 0 auto; color:var(--color-black); }
+  .activity-feed-search span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .mobile-calendar-switcher-scrim {
     position:fixed; inset:0; z-index:150; padding:16px 0 0;
     display:flex; align-items:flex-end; justify-content:center;
