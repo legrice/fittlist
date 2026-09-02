@@ -157,6 +157,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           scheduleHref={scheduleHref}
           profileHref={profileHref}
           unread={unread.notifications > 0 || unread.messages > 0}
+          profileFace={{ photo:face.photo, color:face.color, initial:face.initial }}
         />
         <Suspense fallback={null}>
           <DeferredFeedbackPrompt viewer={deferredViewer} />

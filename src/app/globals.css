@@ -12585,8 +12585,8 @@ a.clspeek-by:active { opacity: .6; }
 .navtab:active { background: var(--color-surface-hover); }
 .navface-photo,
 .navface-initial {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
 }
 

@@ -135,6 +135,7 @@ export async function AppChrome({
         profileHref={profileHref}
         active={active}
         unread={unread.notifications > 0 || unread.messages > 0}
+        profileFace={{ photo:face.photo, color:face.color, initial:face.initial }}
       />
     </>
   );

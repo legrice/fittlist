@@ -19,6 +19,7 @@ export function NavBar({
   scheduleHref,
   profileHref,
   unread = false,
+  profileFace,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
    *  A screen off the tabs that belongs to one passes it. */
@@ -30,6 +31,7 @@ export function NavBar({
   /** Where Profile goes: your own page. Defaults to /you, which redirects. */
   profileHref?: string;
   unread?: boolean;
+  profileFace?: { photo: string | null; color: string; initial: string };
 }) {
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
@@ -111,10 +113,15 @@ export function NavBar({
         {dockTabs.map((t) => {
           const on = here === t.id;
           const cls = `navtab${on ? " on" : ""}`;
+          const profileMark = t.id === "calendar" && profileFace
+            ? profileFace.photo
+              ? <img className="navface-photo" src={profileFace.photo} alt="" />
+              : <span className="navface-initial" style={{ background:profileFace.color }}>{profileFace.initial}</span>
+            : null;
           const inner = (
             <>
-              <span className="navglyph">
-                <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={30} />
+              <span className={`navglyph${profileMark ? " navglyph-face" : ""}`}>
+                {profileMark ?? <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={30} />}
                 {t.id === "calendar" && unread && <i className="nav-profile-dot" aria-hidden="true" />}
               </span>
               <span className="navlabel">{t.label}</span>
