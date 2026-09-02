@@ -11,6 +11,7 @@ import { currentUser } from "@/lib/current-user";
 import { managedCalendarsForUser } from "@/lib/managed-calendars";
 import { gymSchedule } from "@/app/actions/gym";
 import type { WeekDayRows } from "@/components/WeekView";
+import { buildDiscoverFeed } from "@/lib/discoverfeed";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function CalendarPage({
   const member = me.kind === "fan";
   const today = todayIso();
 
-  const [classRows, studioRows, savedDays, managedCalendars] = await Promise.all([
+  const [classRows, studioRows, savedDays, managedCalendars, followingFeed] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym
     // shifts folded in, because a coach who is on Thursday at seven has to be
     // able to see that they are on Thursday at seven.
@@ -59,6 +60,7 @@ export default async function CalendarPage({
       .orderBy(schema.studios.seq),
     myWeek(userId, { email: me.email }),
     managedCalendarsForUser(userId),
+    buildDiscoverFeed(userId, me, { calendarOnly:true, startDay:0, endDay:30 }),
   ]);
 
   const studioById = new Map(studioRows.map((st) => [st.id, st]));
@@ -147,6 +149,31 @@ export default async function CalendarPage({
     });
     return { ...calendar, days };
   }));
+  const followedIds = new Set(followingFeed.myRail.map((person) => person.id));
+  const followedById = new Map(followingFeed.myRail.map((person) => [person.id, person]));
+  const followingByDay = new Map<string, WeekDayRows["rows"]>();
+  for (const item of followingFeed.items) {
+    if (!followedIds.has(item.coachId)) continue;
+    const person = followedById.get(item.coachId);
+    const rows = followingByDay.get(item.iso) ?? [];
+    rows.push({
+      key:`following|${item.key}`,
+      classId:item.classId,
+      iso:item.iso,
+      name:item.name,
+      where:item.where,
+      hm:item.hm,
+      ap:item.ap,
+      dur:`${item.durationMin} min`,
+      coach:person ? { id:person.id, name:person.name, photo:person.photo, color:person.color } : null,
+      tag:"Coaching",
+      tagTone:"coaching",
+    });
+    followingByDay.set(item.iso, rows);
+  }
+  const followingDays = [...followingByDay.entries()]
+    .sort(([a],[b]) => a.localeCompare(b))
+    .map(([iso, rows]) => ({ iso, label:dayBandLabel(iso,today), today:iso === today, rows }));
   return (
     <CalendarScreen
       savedDays={savedDays}
@@ -164,6 +191,8 @@ export default async function CalendarPage({
       member={member}
       managedCalendars={managedCalendars}
       managedCalendarViews={managedCalendarViews}
+      followingPeople={followingFeed.myRail}
+      followingDays={followingDays}
     />
   );
 }

@@ -12181,6 +12181,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-page-header.calendar-page-actions { min-height:0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:4px 0 8px; }
 .calendar-page-title-row { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.calendar-title-actions { display:flex; align-items:center; gap:8px; }
 .calendar-page-title { min-width:0; display:flex; align-items:center; gap:12px; }
 .calendar-context-title {
   min-width:0; max-width:min(72vw, 520px); min-height:44px; padding:0; display:flex; align-items:center; gap:5px;
@@ -12270,6 +12271,17 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-desktop-view button.on { background:var(--color-black); color:var(--color-white); }
 .calendar-desktop-filter { height:44px; min-width:0; flex:1; padding:0 11px 0 14px; display:flex; align-items:center; border:1px solid var(--color-border); border-radius:var(--radius-pill); background:var(--color-surface); }
 .calendar-desktop-filter select { width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; }
+.calendar-filter-pills { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+.calendar-filter-pills::-webkit-scrollbar { display:none; }
+.calendar-filter-pills button { min-height:38px; padding:0 16px; flex:0 0 auto; border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; }
+.calendar-filter-pills button.on { background:var(--color-black); color:var(--color-white); }
+.calendar-following-rail { width:100%; display:flex; gap:12px; overflow-x:auto; scrollbar-width:none; }
+.calendar-following-rail::-webkit-scrollbar { display:none; }
+.calendar-following-rail button { width:58px; padding:0; flex:0 0 58px; border:0; background:transparent; color:var(--color-text-primary); font:inherit; }
+.calendar-following-rail button > span { width:52px; height:52px; margin:auto; display:grid; place-items:center; overflow:hidden; border:3px solid transparent; border-radius:50%; background:var(--color-surface-muted); font-weight:700; }
+.calendar-following-rail button.on > span { border-color:var(--color-black); }
+.calendar-following-rail img { width:100%; height:100%; object-fit:cover; }
+.calendar-following-rail small { display:block; margin-top:4px; overflow:hidden; text-overflow:ellipsis; font-size:11px; font-weight:700; white-space:nowrap; }
 @media (min-width: 760px) {
   .calendar-page-header.calendar-page-actions { display:flex; justify-content:space-between; gap:10px; }
   .calendar-desktop-controls { order:3; width:100%; gap:10px; }
