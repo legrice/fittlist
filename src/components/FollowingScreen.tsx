@@ -1052,13 +1052,14 @@ export function FollowingScreen({
                           const activityName = going ? meFace.name : group?.name ?? displaySourceName ?? studio?.name ?? "Someone";
                           const activityPhoto = going ? meFace.photo : group?.photo ?? displaySourcePhoto;
                           const activityColor = going ? meFace.color : group ? "var(--color-olive)" : displaySourceColor;
-                          const activityVerb = going ? "is going to" : group || (!sourceName && studio) ? "has" : ownedByYou ? (item.shift ? "is working" : "is coaching") : "is coaching";
+                          const selfActivity = going || ownedByYou;
+                          const activityVerb = going ? "are going to" : group || (!sourceName && studio) ? "has" : ownedByYou ? (item.shift ? "are working" : "are coaching") : "is coaching";
                           const liked = likedActivities.has(item.key);
                           return <article className="activity-card" key={item.key} data-cid={item.classId} data-d={item.iso}>
                             <button type="button" className="activity-card-main" onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               <span className="activity-card-avatar" style={{ background:activityColor }}>{activityPhoto ? <img src={activityPhoto} alt="" /> : <span>{(activityName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>
                               <span className="activity-card-body">
-                                <span className="activity-card-story"><strong>{activityName}</strong> {activityVerb} <b>{item.name}</b></span>
+                                <span className="activity-card-story"><strong>{selfActivity ? "You" : activityName}</strong> {activityVerb} <b>{item.name}</b></span>
                                 <span className="activity-card-meta"><span>{item.where || "Location to come"}</span><span>{item.hm}{item.ap.toLowerCase()} · {item.durationMin} min</span></span>
                               </span>
                             </button>
