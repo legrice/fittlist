@@ -545,7 +545,7 @@ export function AuthFlow({
                   </div>
                   <div className="obwelcome-device"><LandingStudioMockup /></div>
                   <div className="obwelcome-copy">
-                    <p>Your coaches become a marketing network, sharing classes and sending people back to your studio.</p>
+                    <p>Assign coaches, fill open shifts, and keep every class covered.</p>
                   </div>
                 </div>
                 <section className="obwelcome-final-cta" aria-labelledby="obwelcome-final-title">
