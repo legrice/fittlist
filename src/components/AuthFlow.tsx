@@ -265,14 +265,11 @@ export function AuthFlow({
     const update = () => {
       frame = 0;
       if (window.innerWidth <= 900) {
-        stories.style.removeProperty("--ob-story-progress");
+        stories.removeAttribute("data-story");
         return;
       }
       const scrolled = -stories.getBoundingClientRect().top;
-      const start = window.innerHeight * .42;
-      const distance = window.innerHeight * .42;
-      const progress = Math.max(0, Math.min(1, (scrolled - start) / distance));
-      stories.style.setProperty("--ob-story-progress", progress.toFixed(3));
+      stories.dataset.story = scrolled >= window.innerHeight * .56 ? "share" : "calendar";
     };
     const scheduleUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
@@ -437,7 +434,7 @@ export function AuthFlow({
                 </button>
               </nav>
             </header>
-            <div className="obwelcome-stories" ref={landingStoriesRef}>
+            <div className="obwelcome-stories" data-story="calendar" ref={landingStoriesRef}>
               <div className="obwelcome-story-stage">
                 <div className="obwelcome-grid obwelcome-calendar-grid">
                 <div className="obwelcome-title">
