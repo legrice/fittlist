@@ -409,7 +409,7 @@ export function ProfileSheet({
     security: "Login & security",
     contact: "Contact info",
     availability: "Availability",
-    away: "Away status",
+    away: "Set yourself as away",
     gcal: "Google Calendar",
     embed: "Embed your schedule",
   };
@@ -591,8 +591,8 @@ export function ProfileSheet({
               <button className="setrow" onClick={() => openView("away")}>
                 <span className="setrow-ic"><Icon name="schedule" size={24} /></span>
                 <span className="setrow-txt">
-                  <span className="t">Away status</span>
-                  <span className="s">{isAway ? "Away message is on" : "Let people know when replies may be slower"}</span>
+                  <span className="t">Set yourself as away</span>
+                  <span className="s">{isAway ? "Your away status is on" : "Add a profile note and message for people who contact you"}</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
@@ -797,19 +797,19 @@ export function ProfileSheet({
 
           {view === "away" && (
             <>
-              <p className="lead">Mark yourself away without closing messages or changing your availability.</p>
+              <p className="lead">Let people know you&rsquo;re away without closing messages or changing your availability.</p>
               <button className="setrow away-switch-row" type="button" onClick={() => setIsAway((value) => !value)} aria-pressed={isAway}>
                 <span className="setrow-ic"><Icon name={isAway ? "schedule" : "check_circle"} size={24}/></span>
-                <span className="setrow-txt"><span className="t">I&rsquo;m away</span><span className="s">{isAway ? "People will see your away reply" : "Your profile behaves normally"}</span></span>
+                <span className="setrow-txt"><span className="t">Set yourself as away</span><span className="s">{isAway ? "Your profile note and away message are active" : "Turn this on when you may be slower to reply"}</span></span>
                 <span className={`switch${isAway ? " on" : ""}`} aria-hidden="true"><span className="switch-knob"/></span>
               </button>
-              <label className="flabel" htmlFor="awayReply">Outgoing away message</label>
+              <label className="flabel" htmlFor="awayReply">Away message</label>
               <textarea id="awayReply" className="editinput reqmsg" rows={3} maxLength={300} value={awayReply} onChange={(event)=>setAwayReply(event.target.value)} placeholder="I’m away until Monday and will reply when I’m back." />
-              <p className="hint">Shown when someone opens a message to you.</p>
-              <label className="flabel" htmlFor="awayBanner">Profile banner <span>&middot; optional</span></label>
+              <p className="hint">People see this before they send you a message.</p>
+              <label className="flabel" htmlFor="awayBanner">Profile note <span>&middot; optional</span></label>
               <input id="awayBanner" className="editinput" maxLength={140} value={awayPublic} onChange={(event)=>setAwayPublic(event.target.value)} placeholder="Away through September 8" />
-              <p className="hint">Leave blank if you only want the message reply.</p>
-              <div className="publishwrap"><button className="btn si" type="button" onClick={saveAway} disabled={awaySaving || (isAway && !awayReply.trim())}>{awaySaving ? "Saving…" : "Save away status"}</button></div>
+              <p className="hint">Shown on your public profile while you&rsquo;re away.</p>
+              <div className="publishwrap"><button className="btn si" type="button" onClick={saveAway} disabled={awaySaving || (isAway && !awayReply.trim())}>{awaySaving ? "Saving…" : "Save away settings"}</button></div>
             </>
           )}
 
