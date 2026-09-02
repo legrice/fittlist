@@ -11,7 +11,7 @@ import { chromium } from "playwright";
 import fs from "node:fs";
 import { brandIcon } from "../src/lib/brand.ts";
 
-const LIME = "#9FE870";
+const LIME = "#8CF25F";
 const INK_COLOR = "#020D08";
 
 // brandIcon's ink fills its 108x103 viewBox exactly, so the centre is the box

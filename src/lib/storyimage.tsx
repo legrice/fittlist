@@ -296,7 +296,7 @@ export function renderStory(model: StoryModel) {
   if (backgroundPhoto) {
     const compact = plan.tier !== 1;
     const storyHeight = square ? 1080 : 1920;
-    const photoMark = iconUri("#9FE870");
+    const photoMark = iconUri("#8CF25F");
     return new ImageResponse(
       (
         <div

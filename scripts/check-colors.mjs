@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 
 const css = readFileSync("src/app/globals.css", "utf8");
 const bad = [];
-const limeBackground = /background(?:-color)?\s*:\s*(?:var\(--(?:si|color-lime|color-coaching)\)|#9fe870)(?:\s|;|$)/i;
+const limeBackground = /background(?:-color)?\s*:\s*(?:var\(--(?:si|color-lime|color-coaching)\)|#8cf25f)(?:\s|;|$)/i;
 const whiteForeground = /color\s*:\s*(?:#fff(?:fff)?|white|var\(--color-white\))(?:\s|;|$)/i;
 const inkBackground = /background(?:-color)?\s*:\s*var\(--ink\)(?:\s|;|$)/i;
 const oliveBackground = /background(?:-color)?\s*:\s*var\(--color-olive\)(?:\s|;|$)/i;

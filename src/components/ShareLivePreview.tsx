@@ -1146,7 +1146,7 @@ function ShareLivePreviewComponent({
                 <span style={{ fontSize: onPhoto ? 30 : 40, fontWeight: 600 }}>{url}</span>
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <BrandMark color={onPhoto ? "#9FE870" : theme.lockupAccent ?? theme.accent} />
+                <BrandMark color={onPhoto ? "#8CF25F" : theme.lockupAccent ?? theme.accent} />
                 <span
                   style={{
                     color: onPhoto ? "#fff" : editorialInk ? theme.accent : theme.fg,

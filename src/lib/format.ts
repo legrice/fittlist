@@ -155,7 +155,7 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   // The base card is the brand at its quietest: an open off-white canvas,
   // black type, and one lime edge. Olive carries small copy and the mark so
   // neither has to rely on lime for contrast at share-image scale.
-  paper: { label: "White and green", bg: "#FAFAF8", fg: "#000000", accent: "#9FE870", muted: "#405D16", faint: "#6B6B68", time: "#000000", lockup: "ink", lockupAccent: "#405D16" },
+  paper: { label: "White and green", bg: "#FAFAF8", fg: "#000000", accent: "#8CF25F", muted: "#405D16", faint: "#6B6B68", time: "#000000", lockup: "ink", lockupAccent: "#405D16" },
   iron: { label: "Brown and orange", bg: "#191502", fg: "#f4efe1", accent: "#C2410C", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
   moss: { label: "Olive and green", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
   pop: { label: "Orange and black", bg: "#C2410C", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
