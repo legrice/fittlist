@@ -53,6 +53,18 @@ const landingClasses = [
   ["Sun, Sep 8", "Lena Park", "Recovery Flow", "Northline Yoga", "10:00am", "L", "mint", "Lena"],
   ["Sun, Sep 8", "Theo Brooks", "Barbell Club", "Iron House", "12:00pm", "T", "gold", "Theo"],
   ["Sun, Sep 8", "You", "Restorative Yoga", "Harbor Room", "5:00pm", "Y", "rose", "You"],
+  ["Mon, Sep 9", "Maya Ortiz", "Sunrise Flow", "Northline Yoga", "7:00am", "M", "blue", "Maya"],
+  ["Mon, Sep 9", "Theo Brooks", "Strength Lab", "The Foundry", "5:30pm", "T", "gold", "Theo"],
+  ["Mon, Sep 9", "You", "Evening Run", "Pier Track", "6:00pm", "Y", "rose", "You"],
+  ["Mon, Sep 9", "Lena Park", "Mat Pilates", "Studio Arc", "7:00pm", "L", "mint", "Lena"],
+  ["Tue, Sep 10", "Maya Ortiz", "Power Vinyasa", "Harbor Room", "8:00am", "M", "blue", "Maya"],
+  ["Tue, Sep 10", "Theo Brooks", "Kettlebell Club", "Iron House", "6:00pm", "T", "gold", "Theo"],
+  ["Tue, Sep 10", "You", "Reformer Basics", "Studio Arc", "6:30pm", "Y", "rose", "You"],
+  ["Tue, Sep 10", "Lena Park", "Mobility Flow", "Northline Yoga", "7:30pm", "L", "mint", "Lena"],
+  ["Wed, Sep 11", "Maya Ortiz", "Candlelight Yoga", "House of Movement", "6:00pm", "M", "blue", "Maya"],
+  ["Wed, Sep 11", "Theo Brooks", "Athletic Conditioning", "The Fieldhouse", "6:30pm", "T", "gold", "Theo"],
+  ["Wed, Sep 11", "You", "Open Gym", "The Foundry", "7:00pm", "Y", "rose", "You"],
+  ["Wed, Sep 11", "Lena Park", "Pilates Sculpt", "Harbor Room", "7:30pm", "L", "mint", "Lena"],
 ] as const;
 
 function PhoneStatusIcons() {
