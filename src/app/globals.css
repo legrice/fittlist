@@ -5181,7 +5181,17 @@ select.editinput.placekind-select {
   border-radius:14px; background:var(--color-lime-soft); color:var(--color-olive); font-size:14px; line-height:1.4;
 }
 .message-away-note strong { font-size:15px; }
-.away-switch-row { margin:14px 0 20px; border:1px solid var(--line); border-radius:16px; }
+.sheet .away-lead { margin-bottom:6px; }
+.sheet .away-toggle-list { margin-top:0; }
+.sheet .away-toggle-list > .setrow { min-height:72px; padding-block:14px; }
+.away-fields { padding-top:2px; }
+.away-fields .flabel { margin-top:18px; }
+.away-fields .hint {
+  margin:6px 2px 0;
+  color:var(--ol);
+  font-size:12px;
+  line-height:1.4;
+}
 /* A studio row on a coach's page opens the studio, so it gets a chevron. */
 .profstudio-chev { flex-shrink: 0; color: var(--ol); display: flex; align-items: center; }
 .typepick { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
