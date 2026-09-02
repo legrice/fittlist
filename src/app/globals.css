@@ -678,6 +678,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   border-radius:62px; background:var(--color-white); color:var(--color-black);
   box-shadow:0 24px 44px -26px rgba(0,0,0,.3),0 8px 18px -12px rgba(0,0,0,.16); text-align:left;
 }
+.obwelcome-phone:not(.obwelcome-share-phone) { display:flex; flex-direction:column; }
 .obwelcome-status { padding:0 8px 26px; display:flex; align-items:center; justify-content:space-between; font-size:14px; letter-spacing:.04em; }
 .obwelcome-status-icons { display:flex; align-items:center; gap:5px; color:var(--color-black); }
 .obwelcome-status-icons svg { display:block; fill:currentColor; }
@@ -712,7 +713,11 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obwelcome-phone [data-tone="blue"] { background:#386f91; color:#fff; }
 .obwelcome-phone [data-tone="gold"] { background:#bd7b20; color:#fff; }
 .obwelcome-phone [data-tone="mint"] { background:#398463; color:#fff; }
-.obwelcome-schedule { padding-top:2px; animation:obwelcome-schedule-in .18s ease-out; }
+.obwelcome-schedule {
+  min-height:0; flex:1; padding:2px 2px 22px 0; overflow-y:auto; scrollbar-width:none;
+  animation:obwelcome-schedule-in .18s ease-out;
+}
+.obwelcome-schedule::-webkit-scrollbar { display:none; }
 @keyframes obwelcome-schedule-in { from { opacity:.25; transform:translateY(5px); } }
 .obwelcome-class-wrap h3 { margin:22px 0 10px; font-size:24px; line-height:1.12; letter-spacing:-.025em; }
 .obwelcome-class { min-height:80px; display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:12px; padding:8px 0; }
