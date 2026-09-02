@@ -104,10 +104,6 @@ function LandingShareMockup() {
   return (
     <div className="obwelcome-phone obwelcome-share-phone" role="img" aria-label="A sample FittList share editor">
       <div className="obwelcome-status"><b>9:41</b><PhoneStatusIcons /></div>
-      <div className="obwelcome-share-toolbar" aria-hidden="true">
-        <span><Icon name="close" size={21} /></span>
-        <div><span><Icon name="info" size={19} /></span><b>Undo</b><b>Redo</b></div>
-      </div>
       <div className="obwelcome-share-canvas">
         <div className="obwelcome-share-accent" />
         <h2>Move<br />with me.</h2>
@@ -119,6 +115,15 @@ function LandingShareMockup() {
         <div className="obwelcome-share-day">
           <strong>WED</strong>
           <span><b>Run Club</b><small>6:00 PM</small></span>
+        </div>
+        <div className="obwelcome-share-day">
+          <strong>FRI</strong>
+          <span><b>Power Pilates</b><small>8:30 AM</small></span>
+          <span><b>Open Gym</b><small>4:00 PM</small></span>
+        </div>
+        <div className="obwelcome-share-day">
+          <strong>SAT</strong>
+          <span><b>Weekend Miles</b><small>9:00 AM</small></span>
         </div>
         <div className="obwelcome-share-signoff"><small>See my week at</small><b>fittlist.co/yourname</b></div>
       </div>
@@ -375,38 +380,40 @@ export function AuthFlow({
                 </button>
               </nav>
             </header>
-            <div className="obwelcome-grid">
-              <div className="obwelcome-title">
-                <h1>Fit all your fitness into one calendar.</h1>
+            <div className="obwelcome-stories">
+              <div className="obwelcome-grid">
+                <div className="obwelcome-title">
+                  <h1>Fit all your fitness into one calendar.</h1>
+                </div>
+                <div className="obwelcome-device"><LandingCalendarMockup /></div>
+                <div className="obwelcome-copy">
+                  <p>Build your week, keep it up to date, share it any which way you&rsquo;d like.</p>
+                  <form className="obwelcome-email" onSubmit={(event) => { event.preventDefault(); sendLink(false, true); }}>
+                    <span><Icon name="mail" size={18} /></span>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      aria-label="Email address"
+                      placeholder="Email address"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                    <button type="submit" disabled={pending}>
+                      {pending ? "Sending…" : "Get started"} <Icon name="arrow_forward" size={18} />
+                    </button>
+                  </form>
+                  {error && <div className="errorcopy">{error}</div>}
+                </div>
               </div>
-              <div className="obwelcome-device"><LandingCalendarMockup /></div>
-              <div className="obwelcome-copy">
-                <p>Build your week, keep it up to date, share it any which way you&rsquo;d like.</p>
-                <form className="obwelcome-email" onSubmit={(event) => { event.preventDefault(); sendLink(false, true); }}>
-                  <span><Icon name="mail" size={18} /></span>
-                  <input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    aria-label="Email address"
-                    placeholder="Email address"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                  />
-                  <button type="submit" disabled={pending}>
-                    {pending ? "Sending…" : "Get started"} <Icon name="arrow_forward" size={18} />
-                  </button>
-                </form>
-                {error && <div className="errorcopy">{error}</div>}
-              </div>
-            </div>
-            <div className="obwelcome-grid obwelcome-share-grid">
-              <div className="obwelcome-title">
-                <h1>Share your week your way.</h1>
-              </div>
-              <div className="obwelcome-device"><LandingShareMockup /></div>
-              <div className="obwelcome-copy">
-                <p>Send your classes as an image, share a link, or post them anywhere you&rsquo;d like.</p>
+              <div className="obwelcome-grid obwelcome-share-grid">
+                <div className="obwelcome-title">
+                  <h1>Share your week your way.</h1>
+                </div>
+                <div className="obwelcome-device"><LandingShareMockup /></div>
+                <div className="obwelcome-copy">
+                  <p>Send your classes as an image, share a link, or post them anywhere you&rsquo;d like.</p>
+                </div>
               </div>
             </div>
             <footer className="obwelcome-footer">
