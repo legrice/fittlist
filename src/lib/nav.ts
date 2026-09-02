@@ -13,8 +13,8 @@ export type NavItem = {
 };
 
 /**
- * Three jobs, not three content types: use your calendar, find classes, and
- * manage the calendars that belong to you.
+ * Three primary places: the activity feed, your calendar, and search. Sharing
+ * remains the distinct action beside the dock.
  */
 export function navTabs(
   coach: boolean,
@@ -28,11 +28,11 @@ export function navTabs(
     {
       id: "following" as const,
       href: "/feed",
-      icon: "calendar_month",
-      label: "Calendar",
+      icon: "home",
+      label: "Home",
     },
-    { id: "discover", href: "/discover", icon: "search", label: "Discover" },
-    { id: "calendar", href: profileHref ?? "/you", icon: "account_circle", label: "Profile" },
+    { id: "calendar", href: scheduleHref ?? "/calendar", icon: "calendar_month", label: "Calendar" },
+    { id: "discover", href: "/discover", icon: "search", label: "Search" },
     { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" },
   ];
 }
@@ -44,7 +44,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // /week is retained only as an old address for the calendar.
   if (pathname.startsWith("/feed")) return "following";
   if (pathname.startsWith("/coachshare") || pathname.startsWith("/membershare")) return "share";
-  if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week") || pathname.startsWith("/you"))
+  if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week"))
     return "calendar";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
   return "none";

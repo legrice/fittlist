@@ -13206,6 +13206,19 @@ a.clspeek-by:active { opacity: .6; }
     border-radius:50%;
     background:var(--color-danger, #e52b32);
   }
+  .home-avatar-notifications {
+    position:relative; width:44px; height:44px; flex:0 0 44px; padding:0;
+    border:1px solid var(--color-border); border-radius:50%; background:var(--color-surface); cursor:pointer;
+  }
+  .home-avatar-notifications > span {
+    width:36px; height:36px; margin:auto; display:grid; place-items:center; overflow:hidden;
+    border-radius:50%; color:var(--color-white); font-size:14px; font-weight:700;
+  }
+  .home-avatar-notifications img { width:100%; height:100%; object-fit:cover; }
+  .home-avatar-notifications > i {
+    position:absolute; top:0; right:0; width:11px; height:11px;
+    border:2px solid var(--color-surface); border-radius:50%; background:var(--color-danger, #e52b32);
+  }
   .mobile-calendar-switcher-scrim {
     position:fixed; inset:0; z-index:150; padding:16px 0 0;
     display:flex; align-items:flex-end; justify-content:center;

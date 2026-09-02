@@ -7,6 +7,7 @@ import { avatarColor } from "@/lib/avatar";
 import { FollowingScreen } from "@/components/FollowingScreen";
 import { todayIso } from "@/lib/format";
 import { managedCalendarsForUser } from "@/lib/managed-calendars";
+import { unreadHeaderCounts } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export default async function DiscoverPage() {
   // The feed is the expensive branch. Studio saves, groups and pins are
   // independent, so don't make them wait for every schedule and occurrence
   // to finish before their first query even starts.
-  const [feed, savedStudioRows, groupData, pinRows, managedCalendars] = await Promise.all([
+  const [feed, savedStudioRows, groupData, pinRows, managedCalendars, unread] = await Promise.all([
     // First paint is deliberately only today + tomorrow and the visible
     // portion of the rail. The remaining exact 31-day calendar streams from
     // the client after this page is already usable.
@@ -84,6 +85,7 @@ export default async function DiscoverPage() {
       .from(schema.calendarPins)
       .where(eq(schema.calendarPins.userId, userId)),
     managedCalendarsForUser(userId),
+    unreadHeaderCounts(userId, me.email),
   ]);
   const classKeysByGroup = new Map<string, string[]>();
   for (const row of groupData.classRows) {
@@ -121,6 +123,7 @@ export default async function DiscoverPage() {
       }))}
       initialPins={pinRows.map((pin) => `${pin.entityType}:${pin.entityId}`)}
       managedCalendars={managedCalendars}
+      unread={unread.notifications > 0 || unread.messages > 0}
     />
   );
 }

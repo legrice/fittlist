@@ -172,6 +172,7 @@ export function FollowingScreen({
   socialGroups = [],
   initialPins = [],
   managedCalendars = [],
+  unread = false,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -199,6 +200,7 @@ export function FollowingScreen({
   socialGroups?: SocialGroup[];
   initialPins?: string[];
   managedCalendars?: ManagedCalendarDestination[];
+  unread?: boolean;
   /** Following is the combined schedule; Upcoming is the filtered browser. */
   mode?: "home" | "upcoming";
 }) {
@@ -881,12 +883,12 @@ export function FollowingScreen({
       )}
       {isHome && (
         <header className="calendar-tab-header">
-          <button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}>
-            <h1>Calendar</h1>
-            <Icon name="expand_more" size={23} />
-          </button>
+          <div className="calendar-tab-title"><h1>Home</h1></div>
           <div className="calendar-tab-actions">
-            <button type="button" className="tab-page-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button>
+            <button type="button" className="home-avatar-notifications" aria-label={unread ? "Open notifications, new activity" : "Open notifications"} onClick={() => setNotificationsOpen(true)}>
+              <span style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : (meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>
+              {unread && <i aria-hidden="true" />}
+            </button>
             <GlobalAdd
               classOnly
               triggerClassName="calendar-header-add"
@@ -903,37 +905,6 @@ export function FollowingScreen({
             />
           </div>
         </header>
-      )}
-      {isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
-      {isHome && !firstRun && (
-        <header className="following-head">
-          <div className="calendar-scope-row" aria-label="Calendar scope">
-            <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
-            <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
-            {sortedCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={26} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
-            <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>
-          </div>
-        </header>
-      )}
-      {isHome && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && calendarFilter !== "people" && (
-        <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">{selectedCalendar.label}</span>
-          {calendarFilter === "you" ? <PersonalCalendarSheetTrigger className="feedfilter-link" ariaLabel="Manage calendar">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></PersonalCalendarSheetTrigger> : selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></Link>}
-        </div>
-      )}
-      {isHome && !firstRun && calendarFilter === "all" && (
-        <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt calendar-following-summary">Following {calendarCount} {calendarCount === 1 ? "calendar" : "calendars"}</span>
-          <button type="button" className="feedfilter-link" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>View all <Icon name="chevron_right" size={17} /></button>
-        </div>
-      )}
-      {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
-        <div className="feedfilterbar following-coach-context">
-          <span className="feedfilter-txt">{soleSelectedCoach ? `${soleSelectedCoach.name.split(/\s+/)[0]}’s calendar` : `${selectedPeople.size + Number(includeYou)} calendars selected`}</span>
-          {soleSelectedCoach?.handle
-            ? <Link className="feedfilter-link" href={`/${soleSelectedCoach.handle}?from=feed`}>See profile <Icon name="chevron_right" size={17} /></Link>
-            : <button type="button" className="feedfilter-link" onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}>Reset</button>}
-        </div>
       )}
       {isHome && calendarFilter === "people" && !includeYou && selectedPeople.size === 0 ? (
         <div className="calendar-selection-empty"><h2>No calendars selected</h2><p>Tap a person above to see what’s on their calendar.</p></div>
