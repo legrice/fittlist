@@ -9682,11 +9682,15 @@ html[data-mode="dark"],
 .activity-card-actions { margin-top:20px; display:flex; align-items:center; gap:8px; }
 .activity-card-actions button {
   min-width:38px; min-height:38px; padding:0; display:inline-flex; align-items:center; justify-content:center; gap:7px;
-  border:0; border-radius:50%; background:var(--color-surface-muted); color:var(--color-black);
+  border:0; border-radius:50%;
+  background:color-mix(in srgb, var(--color-black) 9%, var(--color-surface)); color:var(--color-black);
   font:inherit; font-size:13px; font-weight:600; cursor:pointer;
 }
 .activity-card-actions button span:not(.icon) { display:none; }
 .activity-card-actions button.on { background:var(--color-lime-soft); color:var(--color-black); }
+[data-mode="dark"] .activity-card-actions button {
+  background:color-mix(in srgb, var(--color-white) 14%, var(--color-surface)); color:var(--color-white);
+}
 .activity-comment { margin-top:14px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
 .activity-comment input {
   min-width:0; height:44px; padding:0 15px; border:1px solid var(--color-border); border-radius:var(--radius-pill);
