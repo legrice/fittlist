@@ -472,7 +472,7 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
   const layout = await shareDialog.evaluate((dialog) => {
     const box = (selector) => {
       const bounds = dialog.querySelector(selector).getBoundingClientRect();
-      return { top:bounds.top, bottom:bounds.bottom };
+      return { top:bounds.top, bottom:bounds.bottom, height:bounds.height };
     };
     const dock = dialog.querySelector(".sheditor-dock");
     return {
@@ -490,6 +490,8 @@ await p.locator('.sheditor-shell[aria-label="Share image editor"]').waitFor();
     fail("Undo and Redo should align across from Close: " + JSON.stringify(layout));
   if (layout.preview.top - layout.close.bottom > 12 || layout.preview.bottom > layout.dock.top + 1)
     fail("the complete preview should fit tightly between the header and editor dock: " + JSON.stringify(layout));
+  if (layout.preview.height < 240)
+    fail("the share editor preview should not collapse: " + JSON.stringify(layout));
 }
 {
   if (await p.locator('[aria-label="What to share"]').count())
