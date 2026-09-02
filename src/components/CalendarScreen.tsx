@@ -575,7 +575,23 @@ export function CalendarScreen({
       {isFollowingCalendar ? view === "month" ? (
         <MonthScroll todayIso={todayIso} items={followingMonthItems} onDay={openDay} onMonthInView={setYmInView} monthsAhead={monthHorizon} onNeedMore={() => setMonthHorizon((value) => value + 12)} />
       ) : filteredFollowingDays.length ? (
-        <CalendarList className="personal-calendar-list" days={filteredFollowingDays} />
+        <div className="calendar-following-activity">
+          {filteredFollowingDays.map((day) => <section key={day.iso}>
+            <h2>{day.label}</h2>
+            <div>{day.rows.map((row) => {
+              const coachName=row.coach?.name ?? "Someone";
+              return <article className="activity-card" key={row.key}>
+                <div className="activity-card-main">
+                  <span className="activity-card-avatar" style={{ background:row.coach?.color ?? "var(--color-olive)" }}>{row.coach?.photo ? <img src={row.coach.photo} alt="" /> : <span>{(coachName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>
+                  <span className="activity-card-body">
+                    <span className="activity-card-story"><strong>{coachName}</strong> is coaching <b>{row.name}</b></span>
+                    <span className="activity-card-meta"><span>{row.where || "Location to come"}</span><span>{row.hm}{row.ap.toLowerCase()}{row.dur ? ` · ${row.dur}` : ""}</span></span>
+                  </span>
+                </div>
+              </article>;
+            })}</div>
+          </section>)}
+        </div>
       ) : (
         <WeekEmpty first title="Nothing showing" body="The people you follow have nothing scheduled yet." />
       ) : activeManagedCalendar ? view === "month" ? (

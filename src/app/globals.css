@@ -12285,6 +12285,10 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-following-dates small { display:block; }
 .calendar-following-dates span { font-size:12px; font-weight:700; }
 .calendar-following-dates small { margin-top:3px; color:inherit; font-size:17px; font-weight:700; }
+.calendar-following-activity { display:grid; gap:24px; }
+.calendar-following-activity section > h2 { margin:0 0 12px; font-size:24px; line-height:1.1; }
+.calendar-following-activity section > div { display:grid; gap:12px; }
+.calendar-following-activity .activity-card { padding:20px; border-radius:24px; }
 @media (min-width: 760px) {
   .calendar-page-header.calendar-page-actions { display:flex; justify-content:space-between; gap:10px; }
   .calendar-desktop-controls { order:3; width:100%; gap:10px; }
