@@ -20,11 +20,13 @@ export function HeaderAccountButton({
   unread = false,
   fallbackHref = "/you",
   initialData,
+  className,
 }: {
   face?: HeaderFace;
   unread?: boolean;
   fallbackHref?: string;
   initialData?: YouAccountData;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<YouAccountData | null>(() => initialData ?? readClientMemory("you-dashboard"));
@@ -105,7 +107,7 @@ export function HeaderAccountButton({
     <>
       <button
         type="button"
-        className="brandbar-avatar"
+        className={`brandbar-avatar${className ? ` ${className}` : ""}`}
         aria-label={`Open your profile${unread ? ", new activity" : ""}`}
         aria-expanded={open}
         onClick={show}
