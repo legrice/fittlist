@@ -11080,7 +11080,7 @@ html[data-mode="dark"],
 .calendar-mode-tabs a { position:relative; min-height:36px; padding:0; display:flex; align-items:center; justify-content:center; color:var(--color-text-secondary); font-size:16px; font-weight:700; text-decoration:none; }
 .calendar-mode-tabs a[aria-current="page"] { color:var(--color-text-primary); }
 .calendar-mode-tabs a[aria-current="page"]::after { content:""; position:absolute; right:0; bottom:0; left:0; height:2px; border-radius:2px; background:currentColor; }
-.calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-ink); color:var(--color-white); }
+.calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-black); color:var(--color-white); }
 .calendar-scope-hero .calendar-mode-tabs { margin-bottom:22px; }
 .calendar-scope-hero .calendar-mode-tabs a { color:color-mix(in srgb,var(--color-white) 72%,transparent); }
 .calendar-scope-hero .calendar-mode-tabs a[aria-current="page"] { color:var(--color-white); }
@@ -11100,11 +11100,11 @@ html[data-mode="dark"],
 .personal-summary-actions { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
 .personal-summary-actions::-webkit-scrollbar { display:none; }
 .personal-summary-actions > :is(a,button) { min-height:40px; padding:0 15px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
-.personal-summary-actions > button:first-child { background:var(--color-ink); color:var(--color-white); }
+.personal-summary-actions > button:first-child { background:var(--color-black); color:var(--color-white); }
 .calendar-following-filters { margin:0 0 22px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
 .calendar-following-filters::-webkit-scrollbar { display:none; }
 .calendar-following-filters button { min-height:38px; padding:0 15px; flex:0 0 auto; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
-.calendar-following-filters button.on { background:var(--color-ink); color:var(--color-white); }
+.calendar-following-filters button.on { background:var(--color-black); color:var(--color-white); }
 .calendar-following-card { margin:0 0 8px; padding:0; overflow:hidden; border:0; border-radius:20px; background:var(--color-surface); }
 .calendar-following-card .activity-card-main { width:100%; min-width:0; padding:16px; display:flex; align-items:flex-start; gap:13px; border:0; background:transparent; color:var(--color-text-primary); font:inherit; text-align:left; }
 .calendar-following-card .activity-card-avatar { width:48px; height:48px; flex:0 0 48px; display:grid; place-items:center; overflow:hidden; border-radius:50%; color:var(--color-white); font-size:16px; font-weight:700; }
