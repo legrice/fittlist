@@ -11085,6 +11085,7 @@ html[data-mode="dark"],
 .calendar-scope-top { position:relative; z-index:2; margin:0 0 18px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; }
 .calendar-scope-top .calendar-mode-tabs { margin:0; justify-self:center; }
 .calendar-scope-search { width:44px; height:44px; padding:0; display:grid; place-items:center; overflow:hidden; border:0; border-radius:50%; background:color-mix(in srgb,var(--color-surface) 62%,transparent); color:var(--color-text-primary); text-decoration:none; -webkit-backdrop-filter:blur(24px) saturate(170%); backdrop-filter:blur(24px) saturate(170%); box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-white) 72%,transparent); }
+.calendar-scope-search { box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-white) 72%,transparent),0 6px 18px rgba(0,0,0,.12); }
 .calendar-scope-top > .brandbar-avatar { width:44px; height:44px; margin:0; }
 .calendar-scope-current { justify-self:center; font-size:17px; }
 .calendar-scope-search:active,
@@ -11746,6 +11747,8 @@ a.clspeek-by:active { opacity: .6; }
 .dissheet .dischips { margin-left: -20px; margin-right: -20px; }
 .discover-full-sheet { overflow-y:auto; }
 .discover-full-sheet > .discover-searchrow { margin-top:4px; }
+.discover-full-sheet .sheetclose,
+.header-profile-close { box-shadow:0 5px 16px rgba(0,0,0,.12); }
 @media (max-width:939px) {
   .sheet.sheet-full.dissheet {
     height:min(88dvh,760px);
