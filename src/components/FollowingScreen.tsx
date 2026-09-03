@@ -549,7 +549,14 @@ export function FollowingScreen({
     ? coachOptions.find((coach) => selectedPeople.has(coach.id)) ?? null
     : null;
   const calendarCount = 1 + coachOptions.length + studioOptions.length + groupOptions.length;
-  const followedCalendarCount = coachOptions.length + studioOptions.length + groupOptions.length;
+  const followingSummary = [
+    coachOptions.length ? `${coachOptions.length} ${coachOptions.length === 1 ? "coach" : "coaches"}` : null,
+    studioOptions.length ? `${studioOptions.length} ${studioOptions.length === 1 ? "studio" : "studios"}` : null,
+    groupOptions.length ? `${groupOptions.length} ${groupOptions.length === 1 ? "group" : "groups"}` : null,
+  ].filter((value): value is string => !!value);
+  const followingSummaryText = followingSummary.length === 0
+    ? "You aren’t following any calendars yet."
+    : `You’re following ${followingSummary.length === 1 ? followingSummary[0] : `${followingSummary.slice(0,-1).join(", ")}${followingSummary.length > 2 ? "," : ""} and ${followingSummary.at(-1)}`}.`;
 
   const selectedCalendar = useMemo(() => {
     if (calendarFilter === "all") return {
@@ -878,9 +885,9 @@ export function FollowingScreen({
   return (
     <>
       {calendarFollowing && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">Personal</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>}
-      {calendarFollowing && <header className="calendar-following-head">
-        <div><h1>Following</h1><p>Upcoming classes from {followedCalendarCount} {followedCalendarCount === 1 ? "calendar" : "calendars"} you follow</p></div>
-        <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>Manage</button>
+      {calendarFollowing && <header className="calendar-section-summary calendar-following-head">
+        <div><p>{followingSummaryText}</p></div>
+        <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>Manage following</button>
       </header>}
       {calendarFollowing && <div className="calendar-following-filters" role="group" aria-label="Filter followed calendars">
         {(["all","coaches","studios","groups"] as const).map((type) => <button key={type} type="button" className={followingType === type ? "on" : ""} aria-pressed={followingType === type} onClick={() => setFollowingType(type)}>{type.charAt(0).toUpperCase() + type.slice(1)}</button>)}

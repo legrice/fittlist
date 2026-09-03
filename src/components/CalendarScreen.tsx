@@ -21,7 +21,7 @@ import { Icon } from "@/components/Icon";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
-import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
+import { clockParts, dayBandLabel, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
@@ -284,39 +284,19 @@ export function CalendarScreen({
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
-  const todayCoachingSummary = useMemo(() => {
+  const upcomingCoachingSummary = useMemo(() => {
     const start=Date.parse(`${todayIso}T00:00:00Z`);
     const coachingOn=(iso:string,date:Date) => uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById)
       .sort((a,b) => timeToMinutes(a.startTime)-timeToMinutes(b.startTime));
-    const rows=coachingOn(todayIso,new Date(start));
-    const studiosToday=[...new Set(rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location).filter((place): place is string => !!place))];
-    const naturalTimes=(items:ClassDto[]) => items.map((item) => {
-      const time=clockParts(item.startTime);
-      return `${time.hm.replace(":00","")}${time.ap.toLowerCase()}`;
-    }).join(", ").replace(/, ([^,]*)$/," and $1");
-    if (rows.length) {
-      if (!studiosToday.length) return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong> today.</p>;
-      if (studiosToday.length === 1) return <p>You’re coaching at <strong>{studiosToday[0]}</strong> at <strong>{naturalTimes(rows)}</strong> today.</p>;
-      return <p>You’re coaching <strong>{rows.length} classes</strong> across <strong>{studiosToday.length} studios</strong> today.</p>;
-    }
-    let next:{ offset:number; rows:ClassDto[] }|null=null;
-    for (let offset=1;offset<dayHorizon;offset++) {
+    const rows:ClassDto[]=[];
+    for (let offset=0;offset<dayHorizon;offset++) {
       const date=new Date(start+offset*864e5);
-      const upcoming=coachingOn(date.toISOString().slice(0,10),date);
-      if (upcoming.length) { next={ offset,rows:upcoming }; break; }
+      rows.push(...coachingOn(date.toISOString().slice(0,10),date));
     }
-    const todayCount=(savedByIso.get(todayIso) ?? []).length;
-    const todayLead=todayCount
-      ? <>You have <strong>{todayCount} {todayCount === 1 ? "class" : "classes"}</strong> on your calendar today. </>
-      : <>No classes today. </>;
-    if (!next) return <p>{todayLead}Nothing else is scheduled yet.</p>;
-    const nextDate=new Date(start+next.offset*864e5);
-    const when=next.offset === 1 ? "tomorrow" : `on ${nextDate.toLocaleDateString("en-US",{ weekday:"long",month:next.offset > 6 ? "short" : undefined,day:next.offset > 6 ? "numeric" : undefined,timeZone:"UTC" })}`;
-    if (next.rows.length > 1) return <p>{todayLead}You have <strong>{next.rows.length} classes</strong> coming up <strong>{when}</strong>.</p>;
-    const upcoming=next.rows[0];
-    const place=upcoming.studioId ? studioById.get(upcoming.studioId)?.name : upcoming.location;
-    return <p>{todayLead}You’re coaching <strong>{upcoming.name}</strong>{place ? <> at <strong>{place}</strong></> : null} <strong>{when}</strong> at <strong>{naturalTimes([upcoming])}</strong>.</p>;
-  },[classes,dayHorizon,savedByIso,studioById,todayIso]);
+    const studios=[...new Set(rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location).filter((place): place is string => !!place))];
+    if (!rows.length) return <p>You have no upcoming classes yet.</p>;
+    return <p>You have <strong>{rows.length} upcoming {rows.length === 1 ? "class" : "classes"}</strong>{studios.length ? <> at <strong>{studios.length} {studios.length === 1 ? "studio" : "studios"}</strong></> : null}.</p>;
+  },[classes,dayHorizon,studioById,todayIso]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -351,8 +331,8 @@ export function CalendarScreen({
             ap: t.ap,
             dur: `${c.durationMin} min`,
             coach: null,
+            tag: c.shift ? "Shift" : "Coaching",
             tagTone: c.shift ? "shift" as const : "coaching" as const,
-            semantic: <>{occurrenceEnded(iso,c.startTime,c.durationMin,c.timeZone) ? "You were coaching" : "You are coaching"} <strong>{c.name}</strong>{where ? <> at <strong>{where}</strong></> : null}.</>,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
@@ -372,10 +352,8 @@ export function CalendarScreen({
           : i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
+        tag: i.personal ? "Personal" : "Saved",
         tagTone: i.personal ? "personal" as const : "attending" as const,
-        semantic: i.personal
-          ? <>You added <strong>{i.name}</strong> to your calendar.</>
-          : <>You saved <strong>{i.name}</strong>{i.coachName ? <> from <strong>{i.coachName}</strong></> : null}.</>,
         onTap: i.personal
           ? () => setPlan(i.id)
           : () => setPeek(peekOfAdded(i)),
@@ -531,7 +509,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Personal</Link><Link href="/calendar/following">Following</Link></nav>}
-      {!sheet && !member && <section className="personal-calendar-summary" aria-label="Today’s coaching summary">{todayCoachingSummary}</section>}
+      {!sheet && !member && <section className="calendar-section-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><Link href="/you">Manage calendar</Link></section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
