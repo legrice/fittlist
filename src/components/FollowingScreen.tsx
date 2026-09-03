@@ -884,11 +884,11 @@ export function FollowingScreen({
 
   return (
     <>
-      {calendarFollowing && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">Personal</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>}
-      {calendarFollowing && <header className="calendar-section-summary calendar-following-head">
+      {calendarFollowing && <section className="calendar-scope-hero"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">Yours</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
+      <header className="calendar-section-summary calendar-following-head">
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>Manage following</button>
-      </header>}
+      </header></section>}
       {calendarFollowing && <div className="calendar-following-filters" role="group" aria-label="Filter followed calendars">
         {(["all","coaches","studios","groups"] as const).map((type) => <button key={type} type="button" className={followingType === type ? "on" : ""} aria-pressed={followingType === type} onClick={() => setFollowingType(type)}>{type.charAt(0).toUpperCase() + type.slice(1)}</button>)}
       </div>}

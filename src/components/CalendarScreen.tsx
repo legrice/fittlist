@@ -32,6 +32,7 @@ import {
   type CalendarComposerData,
 } from "@/app/actions/calendar-data";
 import { invalidateClientMemory } from "@/lib/client-memory";
+import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -104,6 +105,7 @@ export function CalendarScreen({
   member = false,
   sheet = false,
   onClose,
+  managedCalendars = [],
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -123,10 +125,12 @@ export function CalendarScreen({
   openAdder?: boolean;
   sheet?: boolean;
   onClose?: () => void;
+  managedCalendars?: ManagedCalendarDestination[];
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
+  const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -520,8 +524,11 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      {!sheet && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Personal</Link><Link href="/calendar/following">Following</Link></nav>}
-      {!sheet && !member && <section className="calendar-section-summary personal-upcoming-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><div className="personal-summary-actions"><Link href="/you">Manage calendar</Link><button type="button" onClick={openShare}>Share</button></div></section>}
+      {!sheet && <section className="calendar-scope-hero">
+        <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Yours</Link><Link href="/calendar/following">Following</Link></nav>
+        <button type="button" className="owned-calendar-selector" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)}><span>Personal calendar</span><Icon name="expand_more" size={22} /></button>
+        {!member && <section className="calendar-section-summary personal-upcoming-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>}
+      </section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
@@ -603,6 +610,7 @@ export function CalendarScreen({
       )}
 
       {sheet ? <div className="calendar-bottom-actions" aria-label="Schedule actions"><button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button></div> : <BodyPortal><div className="calendar-bottom-actions" aria-label="Schedule actions">{!bare && <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button>}</div></BodyPortal>}
+      {!sheet && calendarChooserOpen && <BodyPortal><div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarChooserOpen(false); }}><section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="owned-calendar-title" onMouseDown={(event) => event.stopPropagation()}><div className="mobile-calendar-switcher-handle" aria-hidden="true" /><header><h2 id="owned-calendar-title">Your calendars</h2><button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarChooserOpen(false)}><Icon name="close" size={21} /></button></header><div className="mobile-calendar-switcher-list"><button type="button" className="selected" aria-current="page" onClick={() => setCalendarChooserOpen(false)}><span className="mobile-calendar-switcher-icon"><Icon name="person" size={21} /></span><span><strong>Personal calendar</strong><small>Your classes, shifts, and saved classes</small></span><Icon name="check" size={19} /></button>{managedCalendars.length > 0 && <p>Calendars you manage</p>}{managedCalendars.map((calendar) => { const href=calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`; return <Link href={href} key={`${calendar.kind}:${calendar.id}`}><span className={`mobile-calendar-switcher-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={21} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={19} /></Link>; })}</div></section></div></BodyPortal>}
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
           <div className="sheet addrole-sheet" role="dialog" aria-modal="true" aria-labelledby="addrole-title">
