@@ -250,7 +250,10 @@ export function CalendarScreen({
     if (target === scopeTarget) return;
     setScopeTarget(target);
     sessionStorage.setItem("fl-calendar-scope-enter",target);
-    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 150);
+    // Keep the outgoing surface present while the prefetched route swaps in.
+    // A short cue is enough to communicate the change without exposing the
+    // page background if navigation takes a beat on a slower connection.
+    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 60);
   };
   const restoreActionSurface = () => {
     window.scrollTo({ top:0, behavior:"auto" });

@@ -461,7 +461,9 @@ export function FollowingScreen({
     if (target === scopeTarget) return;
     setScopeTarget(target);
     sessionStorage.setItem("fl-calendar-scope-enter",target);
-    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 150);
+    // Preserve the current surface until the prefetched destination takes
+    // over; this avoids a blank green frame between calendar scopes.
+    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 60);
   };
   const restoreActionSurface = () => {
     window.scrollTo({ top:0, behavior:"auto" });
