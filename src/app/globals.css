@@ -11146,7 +11146,7 @@ html[data-mode="dark"],
 .calendar-summary-copy > span { color:var(--color-text-secondary); font-size:13px; line-height:1.2; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
 .calendar-summary-copy > strong { max-width:18ch; color:var(--color-white); font-size:25px; line-height:1.08; font-weight:600; }
 .calendar-summary-copy > small { max-width:34ch; color:color-mix(in srgb,var(--color-white) 76%,transparent); font-size:15px; line-height:1.35; }
-.calendar-following-head p { max-width:18ch; margin-inline:auto; font-size:25px; line-height:1.08; font-weight:600; }
+.calendar-following-head p { max-width:25ch; margin-inline:auto; font-size:25px; line-height:1.08; font-weight:600; }
 .calendar-summary-share { min-width:104px; min-height:58px; padding:0 28px; border:0; border-radius:var(--radius-pill); background:var(--color-lime) !important; color:var(--color-black) !important; font:inherit; font-size:18px; font-weight:700; cursor:pointer; transition:transform var(--motion-fast) var(--motion-ease-out),background-color var(--motion-fast) var(--motion-ease-standard); }
 .calendar-summary-share:active { transform:scale(.985); background:var(--color-lime-pressed) !important; }
 .calendar-summary-reveal { width:44px; min-width:44px !important; height:36px; min-height:36px !important; padding:0 !important; border-radius:var(--radius-pill); background:color-mix(in srgb,var(--color-white) 14%,transparent) !important; color:var(--color-white) !important; }
