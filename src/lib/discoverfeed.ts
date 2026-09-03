@@ -370,8 +370,11 @@ export async function buildDiscoverFeed(
       const prior = seen.get(key);
       if (prior !== undefined) {
         // The studio and coach can both contribute the same occurrence. Keep
-        // one row, but never lose that it is the viewer's assigned shift.
+        // one row, but never lose the viewer's relationship to it. Attendance
+        // often arrives on the second copy because the saved class and the
+        // followed studio resolve the same real-world occurrence separately.
         if (i.shift) items[prior].shift = true;
+        if (i.saved) items[prior].saved = true;
         continue;
       }
       seen.set(key, w);
