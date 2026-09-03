@@ -252,6 +252,11 @@ export function CalendarScreen({
     sessionStorage.setItem("fl-calendar-scope-enter",target);
     window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 150);
   };
+  const restoreActionSurface = () => {
+    window.scrollTo({ top:0, behavior:"auto" });
+    setClassSheetDismissed(false);
+    requestAnimationFrame(() => window.scrollTo({ top:0, behavior:"auto" }));
+  };
   const startClassSheetPull = (event:ReactTouchEvent<HTMLDivElement>) => {
     if (window.scrollY > 4) return;
     classSheetPullStart.current=event.touches[0]?.clientY ?? null;
@@ -577,7 +582,7 @@ export function CalendarScreen({
       {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} style={{ "--sheet-pull-progress": Math.min(classSheetPullY / 120, 1), "--sheet-search-scale": 1 - (.12 * Math.min(classSheetPullY / 120, 1)) } as React.CSSProperties}>
           <HeaderAccountButton face={{ photo:viewer.photo, color:viewer.color, initial:viewer.name.charAt(0) }} />
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
-          <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button></span>
+          <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
         <section className="calendar-scope-hero"><section className={`calendar-section-summary personal-upcoming-summary${scopeTarget !== "you" ? " calendar-summary-leaving" : ""}${scopeSummaryEntering ? " calendar-summary-entering" : ""}`} aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section></section></>}
       {!sheet && !classSheetDismissed && <section className="calendar-action-sheet calendar-pull-sheet" style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Calendar actions">
