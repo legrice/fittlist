@@ -11,8 +11,9 @@ import { sharePerformance } from "@/lib/share-performance";
 
 export type { NavTab };
 
-// Calendar, discovery, and You live in one thumb-reach dock. Sharing is the
-// distinct action beside it, while still opening the persistent share canvas.
+// Calendar, discovery, and Profile live in one centered thumb-reach dock.
+// Sharing remains available contextually while this shell owns its persistent
+// share canvas.
 export function NavBar({
   active,
   coach = true,
@@ -36,10 +37,8 @@ export function NavBar({
   const here = activeTab(usePathname(), active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
   const dockTabs = tabs.filter((tab) => tab.id !== "share");
-  const shareTab = tabs.find((tab) => tab.id === "share")!;
   const activeDockIndex = dockTabs.findIndex((tab) => tab.id === here);
   const [shareOpen, setShareOpen] = useState(false);
-  const shareButton = useRef<HTMLButtonElement>(null);
   const shareOpener = useRef<HTMLElement | null>(null);
   const restoreShareFocus = useRef(false);
   const shareOpenRef = useRef(false);
@@ -54,7 +53,7 @@ export function NavBar({
     shareOpenRef.current = true;
     const activeElement = document.activeElement;
     shareOpener.current = opener
-      ?? (activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : shareButton.current);
+      ?? (activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : null);
     setShareOpen(true);
   }, []);
   const openShareEvent = useCallback((event: Event) => {
@@ -72,7 +71,7 @@ export function NavBar({
   useEffect(() => {
     if (shareOpen || !restoreShareFocus.current) return;
     const frame = requestAnimationFrame(() => {
-      const target = shareOpener.current?.isConnected ? shareOpener.current : shareButton.current;
+      const target = shareOpener.current?.isConnected ? shareOpener.current : null;
       target?.focus();
       shareOpener.current = null;
       restoreShareFocus.current = false;
@@ -121,7 +120,7 @@ export function NavBar({
           const inner = (
             <>
               <span className={`navglyph${profileMark ? " navglyph-face" : ""}`}>
-                {profileMark ?? <Icon name={t.icon} className={t.id === "share" ? "share-arrow-forward" : undefined} size={30} />}
+                {profileMark ?? <Icon name={t.icon} size={30} />}
                 {t.id === "calendar" && unread && <i className="nav-profile-dot" aria-hidden="true" />}
               </span>
               <span className="navlabel">{t.label}</span>
@@ -135,34 +134,6 @@ export function NavBar({
           );
         })}
       </div>
-      <button
-        ref={shareButton}
-        type="button"
-        className={`navshare${here === "share" || shareOpen ? " on" : ""}`}
-        data-tab={shareTab.id}
-        aria-label={shareTab.label}
-        aria-current={here === "share" ? "page" : undefined}
-        aria-haspopup={here === "share" ? undefined : "dialog"}
-        aria-controls={here === "share" ? undefined : "share-takeover"}
-        aria-expanded={here === "share" ? undefined : shareOpen}
-        onPointerEnter={() => {
-          if (here !== "share") void preloadShareEditor();
-        }}
-        onPointerDown={() => {
-          if (here !== "share") void preloadShareEditor();
-        }}
-        onFocus={() => {
-          if (here !== "share") void preloadShareEditor();
-        }}
-        onClick={() => {
-          // Legacy direct Share URLs still render the same studio. Treat an
-          // already-active action like any current tab instead of stacking a
-          // second editor over it.
-          if (here !== "share") openShare(shareButton.current);
-        }}
-      >
-        <Icon name={shareTab.icon} className="share-arrow-forward" size={30} />
-      </button>
       {shareOpen && <ShareTakeover onClosed={finishClose} />}
     </nav>
   );
