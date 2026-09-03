@@ -1757,6 +1757,34 @@ export async function giveUpShift(
   return { ok: true };
 }
 
+/** Ask the people who own a studio calendar to change an assigned shift.
+ * The coach can describe the correction, but only management can edit the
+ * underlying class or occurrence. */
+export async function requestShiftEdit(
+  classId: string,
+  occurrenceDate: string,
+  messageRaw: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await shiftFor(classId, occurrenceDate);
+  if ("error" in ctx) return { ok:false, error:ctx.error };
+  const { db, userId, me, cls, studio, on } = ctx;
+  if (on !== userId) return { ok:false, error:"You aren't assigned to that shift." };
+  const message=messageRaw.trim().slice(0,500);
+  if (message.length < 2) return { ok:false, error:"Tell management what needs to change." };
+  const safetyError=objectionableContentError(message);
+  if (safetyError) return { ok:false, error:safetyError };
+  const who=me?.name?.trim() || "A coach";
+  await tellTheGym(db,studio,[userId],{
+    type:"shift_request",
+    title:`${who} requested an edit to ${cls.name}`,
+    body:`${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)}: ${message}`,
+    href:`/s/${studio.slug ?? studio.id}/manage`,
+    actorUserId:userId,
+  },false);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  return { ok:true };
+}
+
 /** Take a date nobody is on. Only coaches who teach at this studio. */
 export async function claimShift(
   classId: string,

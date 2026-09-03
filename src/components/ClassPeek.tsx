@@ -8,7 +8,7 @@ import { adminClassEditor } from "@/app/actions/admin";
 import { deleteClass } from "@/app/actions/classes";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
-import { giveUpShift, sendShiftTo } from "@/app/actions/gym";
+import { giveUpShift, requestShiftEdit, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
 import { SavedClassShareSheet } from "@/components/SavedClassShareSheet";
@@ -213,6 +213,8 @@ export function ClassPeek({
   // answers rather than anything a calendar row knows.
   const [manage, setManage] = useState<ClassDetail["shift"] | null>(null);
   const [sending, setSending] = useState(false);
+  const [requestingEdit, setRequestingEdit] = useState(false);
+  const [editRequest, setEditRequest] = useState("");
   const [shiftErr, setShiftErr] = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -281,6 +283,19 @@ export function ClassPeek({
       onChanged();
       router.refresh();
     });
+
+  const sendEditRequest = () => start(async () => {
+    setShiftErr("");
+    const res=await requestShiftEdit(cls.id,cls.iso,editRequest);
+    if (!res.ok) {
+      setShiftErr(res.error ?? "Couldn't send that request");
+      return;
+    }
+    setRequestingEdit(false);
+    setEditRequest("");
+    closeManage();
+    onToast("Edit request sent to management");
+  });
 
   // The drawer pull works everywhere, not only on the handle: a downward
   // drag anywhere on the sheet (with its own scroll at the top) follows the
@@ -561,7 +576,7 @@ export function ClassPeek({
             >
               <Icon name="reply" className="share-arrow-forward" size={19} /> Share class
             </button>
-            {(cls.mine && onEdit || full.adminEdit) && (
+            {((cls.mine && !cls.shift && onEdit) || full.adminEdit) && (
               <button className="ovmenu-item" role="menuitem" onClick={editClass}>
                 <Icon name="edit" size={19} /> Edit class
               </button>
@@ -800,6 +815,13 @@ export function ClassPeek({
                 it straight onto somebody. Both are notices that go out the
                 moment they run, so both confirm first. */}
             <div className="settingslist" style={{ marginTop: 22 }}>
+              <button className="setrow" disabled={pending} onClick={() => setRequestingEdit(true)}>
+                <span className="setrow-txt">
+                  <span className="t">Request an edit</span>
+                  <span className="s">Ask management to change the time, class, or other details.</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </button>
               <button className="setrow" disabled={pending} onClick={() => runShift("give")}>
                 <span className="setrow-txt">
                   <span className="t">Give up this shift</span>
@@ -821,6 +843,22 @@ export function ClassPeek({
               )}
             </div>
             {shiftErr && <p className="err">{shiftErr}</p>}
+          </div>
+        </div>
+      )}
+
+      {requestingEdit && (
+        <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet clspeek">
+            <span className="clspeek-grab" aria-hidden="true" />
+            <div className="clspeek-head">
+              <div className="clspeek-titles"><h2 className="clspeek-nm">Request an edit</h2></div>
+              <button className="clspeek-x" aria-label="Close" onClick={() => { setRequestingEdit(false); setShiftErr(""); }}><Icon name="close" size={20} /></button>
+            </div>
+            <p className="lead">Tell management what needs to change for {cls.name} on {cls.when}.</p>
+            <label className="field"><span>Requested change</span><textarea value={editRequest} maxLength={500} rows={5} placeholder="For example, the start time should be 6:30pm." onChange={(event) => setEditRequest(event.target.value)} autoFocus /></label>
+            {shiftErr && <p className="err">{shiftErr}</p>}
+            <button className="btn si" type="button" disabled={pending || editRequest.trim().length < 2} onClick={sendEditRequest}>{pending ? "Sending…" : "Send request"}</button>
           </div>
         </div>
       )}
