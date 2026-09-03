@@ -302,7 +302,7 @@ export function CalendarScreen({
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
-  const todaySummary = useMemo(() => {
+  const calendarSummary = useMemo(() => {
     const start=Date.parse(`${todayIso}T00:00:00Z`);
     const coachingOn=(iso:string,date:Date) => uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById)
       .sort((a,b) => timeToMinutes(a.startTime)-timeToMinutes(b.startTime));
@@ -314,9 +314,9 @@ export function CalendarScreen({
       const added=savedByIso.get(iso) ?? [];
       if (rows.length || added.length) { next={ iso,offset,rows,added }; break; }
     }
-    if (!next) return <p>Your calendar is clear for now.</p>;
+    if (!next) return { eyebrow:"Your calendar", title:"Nothing coming up", detail:"Add something whenever you’re ready." };
     const { iso,offset,rows,added }=next;
-    const when=offset === 0 ? "today" : offset === 1 ? "tomorrow" : `on ${dayBandLabel(iso)}`;
+    const when=offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : dayBandLabel(iso);
     const attending=added.filter((item) => !item.personal);
     const personal=added.filter((item) => item.personal);
     const total=rows.length+added.length;
@@ -325,24 +325,31 @@ export function CalendarScreen({
     const addedTime=(item:WeekItem) => `${item.hm.replace(":00","")}${item.ap.toLowerCase()}`;
     if (total === 1 && rows.length === 1) {
       const place=coachingStudios[0];
-      return <p>You’re coaching <strong>{rows[0].name}</strong>{place ? <> at <strong>{place}</strong></> : null} at <strong>{naturalTimes}</strong> {when}.</p>;
+      return { eyebrow:"Up next", title:`${when} at ${naturalTimes}`, detail:[rows[0].name,place].filter(Boolean).join(" · ") };
     }
     if (total === 1 && attending.length === 1) {
       const item=attending[0];
-      return <p>You’re attending <strong>{item.name}</strong>{item.where ? <> at <strong>{item.where}</strong></> : null} at <strong>{addedTime(item)}</strong> {when}.</p>;
+      return { eyebrow:"Up next", title:`${when} at ${addedTime(item)}`, detail:[item.name,item.where].filter(Boolean).join(" · ") };
     }
     if (total === 1 && personal.length === 1) {
       const item=personal[0];
-      return <p>Your next class is <strong>{item.name}</strong> at <strong>{addedTime(item)}</strong> {when}.</p>;
+      return { eyebrow:"Up next", title:`${when} at ${addedTime(item)}`, detail:item.name };
     }
     if (!added.length && rows.length <= 3 && coachingStudios.length === 1)
-      return <p>You’re coaching at <strong>{coachingStudios[0]}</strong> at <strong>{naturalTimes}</strong> {when}.</p>;
-    const coachingCount=rows.length ? <><strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong>{coachingStudios.length > 1 ? <> across <strong>{coachingStudios.length} studios</strong></> : null}</> : null;
-    const attendingCount=attending.length ? <strong>{attending.length} {attending.length === 1 ? "class" : "classes"}</strong> : null;
-    const personalCount=personal.length ? <strong>{personal.length} personal {personal.length === 1 ? "class" : "classes"}</strong> : null;
-    if (rows.length) return <p>You’re coaching {coachingCount}{attendingCount ? <> and attending {attendingCount}</> : null}{personalCount ? <>, with {personalCount}</> : null} {when}.</p>;
-    if (attending.length) return <p>You’re attending {attendingCount}{personalCount ? <> and have {personalCount}</> : null} {when}.</p>;
-    return <p>You have {personalCount} {when}.</p>;
+      return { eyebrow:when, title:`${rows.length} classes to coach`, detail:`${coachingStudios[0]} · ${naturalTimes}` };
+    const parts:string[]=[];
+    if (rows.length) parts.push(`${rows.length} to coach`);
+    if (attending.length) parts.push(`${attending.length} to attend`);
+    if (personal.length) parts.push(`${personal.length} personal`);
+    const places=new Set([
+      ...coachingStudios,
+      ...added.map((item) => item.where).filter((place): place is string => Boolean(place)),
+    ]);
+    return {
+      eyebrow:when,
+      title:parts.join(" · "),
+      detail:places.size === 1 ? [...places][0] : places.size > 1 ? `Across ${places.size} places` : "Your upcoming schedule",
+    };
   },[classes,savedByIso,studioById,todayIso]);
 
   /** Every date from today that holds something, with its rows in time order.
@@ -557,7 +564,7 @@ export function CalendarScreen({
       <HighlightOnLand />
       {!sheet && <section className="calendar-scope-hero" onTouchStart={startScopeSwipe} onTouchEnd={endScopeSwipe}>
         <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav>
-        <section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div>{todaySummary}</div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
+        <section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><span>{calendarSummary.eyebrow}</span><strong>{calendarSummary.title}</strong><small>{calendarSummary.detail}</small></div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
