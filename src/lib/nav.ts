@@ -13,8 +13,8 @@ export type NavItem = {
 };
 
 /**
- * Three primary places: the activity feed, your calendar, and search. Sharing
- * remains the distinct action beside the dock.
+ * Calendar, discovery, and profile share the dock. Sharing remains the
+ * distinct action beside it.
  */
 export function navTabs(
   coach: boolean,
@@ -28,11 +28,11 @@ export function navTabs(
     {
       id: "following" as const,
       href: "/feed",
-      icon: "home",
-      label: "Home",
+      icon: "calendar_month",
+      label: "Calendar",
     },
-    { id: "calendar", href: "/calendar", icon: "calendar_month", label: "Calendar" },
-    { id: "discover", href: "/discover", icon: "search", label: "Search" },
+    { id: "discover", href: "/discover", icon: "search", label: "Discover" },
+    { id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile" },
     { id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" },
   ];
 }
@@ -45,7 +45,8 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (pathname.startsWith("/feed")) return "following";
   if (pathname.startsWith("/coachshare") || pathname.startsWith("/membershare")) return "share";
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week"))
-    return "calendar";
+    return "following";
+  if (pathname.startsWith("/you")) return "calendar";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
   return "none";
 }

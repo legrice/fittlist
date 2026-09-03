@@ -15,9 +15,9 @@ const fail = (message) => {
 const requiredWebFragments = [
   'id: "following" as const',
   'href: "/feed"',
-  'label: "Home"',
-  '{ id: "calendar", href: "/calendar", icon: "calendar_month", label: "Calendar" }',
-  '{ id: "discover", href: "/discover", icon: "search", label: "Search" }',
+  'label: "Calendar"',
+  '{ id: "discover", href: "/discover", icon: "search", label: "Discover" }',
+  'id: "calendar", href: profileHref ?? "/you", icon: "person", label: "Profile"',
   '{ id: "share", href: coach ? "/coachshare" : "/membershare", icon: "reply", label: "Share" }',
 ];
 const requiredSwiftFragments = [
@@ -54,10 +54,10 @@ const requiredMobileDockFragments = [
 for (const fragment of requiredWebFragments) {
   if (!web.includes(fragment)) fail(`web navigation is missing ${fragment}`);
 }
-const orderedWebIDs = ['id: "following"', 'id: "calendar"', 'id: "discover"', 'id: "share"'];
+const orderedWebIDs = ['id: "following"', 'id: "discover"', 'id: "calendar"', 'id: "share"'];
 for (let index = 1; index < orderedWebIDs.length; index += 1) {
   if (web.indexOf(orderedWebIDs[index - 1]) >= web.indexOf(orderedWebIDs[index]))
-    fail(`web navigation order should be following, calendar, discover, share`);
+    fail(`web navigation order should be calendar, discover, profile, share`);
 }
 for (const fragment of requiredSwiftFragments) {
   if (!swift.includes(fragment)) fail(`SceneDelegate is missing ${fragment}`);
