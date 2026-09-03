@@ -11721,6 +11721,13 @@ a.clspeek-by:active { opacity: .6; }
    auto` sets (see `.tray-scroll`). */
 .dissheet { overflow-x: clip; }
 .dissheet .dischips { margin-left: -20px; margin-right: -20px; }
+@media (max-width:939px) {
+  .sheet.sheet-full.dissheet {
+    height:min(88dvh,760px);
+    max-height:calc(100dvh - 56px);
+    border-radius:28px 28px 0 0;
+  }
+}
 
 /* Following is a list, not a week. Your calendar is a week you flip through
    because you are working on it; this is what is coming up, because you are
