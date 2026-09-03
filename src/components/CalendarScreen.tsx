@@ -127,6 +127,7 @@ export function CalendarScreen({
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
+  const [upcomingOpen, setUpcomingOpen] = useState(false);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -289,14 +290,20 @@ export function CalendarScreen({
     const coachingOn=(iso:string,date:Date) => uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById)
       .sort((a,b) => timeToMinutes(a.startTime)-timeToMinutes(b.startTime));
     const rows:ClassDto[]=[];
-    for (let offset=0;offset<dayHorizon;offset++) {
+    const added:WeekItem[]=[];
+    for (let offset=0;offset<7;offset++) {
       const date=new Date(start+offset*864e5);
-      rows.push(...coachingOn(date.toISOString().slice(0,10),date));
+      const iso=date.toISOString().slice(0,10);
+      rows.push(...coachingOn(iso,date));
+      added.push(...(savedByIso.get(iso) ?? []));
     }
-    const studios=[...new Set(rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location).filter((place): place is string => !!place))];
-    if (!rows.length) return <p>You have no upcoming classes yet.</p>;
-    return <p>You have <strong>{rows.length} upcoming {rows.length === 1 ? "class" : "classes"}</strong>{studios.length ? <> at <strong>{studios.length} {studios.length === 1 ? "studio" : "studios"}</strong></> : null}.</p>;
-  },[classes,dayHorizon,studioById,todayIso]);
+    const total=rows.length+added.length;
+    const studios=[...new Set([...rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location),...added.map((item) => item.where)].filter((place): place is string => !!place))];
+    if (!total) return <p>You have no classes coming up in the next 7 days.</p>;
+    if (!rows.length) return <p>You have <strong>{total} {total === 1 ? "class" : "classes"}</strong> coming up in the next 7 days{studios.length ? <> at <strong>{studios.length} {studios.length === 1 ? "studio" : "studios"}</strong></> : null}.</p>;
+    if (rows.length === total) return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong> in the next 7 days{studios.length ? <> at <strong>{studios.length} {studios.length === 1 ? "studio" : "studios"}</strong></> : null}.</p>;
+    return <p>You’re coaching <strong>{rows.length}</strong> of your <strong>{total} upcoming classes</strong> in the next 7 days{studios.length ? <> at <strong>{studios.length} {studios.length === 1 ? "studio" : "studios"}</strong></> : null}.</p>;
+  },[classes,savedByIso,studioById,todayIso]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -385,6 +392,12 @@ export function CalendarScreen({
     }
     return out;
   }, [classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer, dayHorizon]);
+  const upcomingDays = useMemo(() => {
+    const end = new Date(`${todayIso}T00:00:00Z`);
+    end.setUTCDate(end.getUTCDate() + 6);
+    const endIso = end.toISOString().slice(0,10);
+    return days.filter((day) => day.iso <= endIso);
+  },[days,todayIso]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -509,7 +522,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Personal</Link><Link href="/calendar/following">Following</Link></nav>}
-      {!sheet && !member && <section className="calendar-section-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><Link href="/you">Manage calendar</Link></section>}
+      {!sheet && !member && <section className="calendar-section-summary personal-upcoming-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><div className="personal-summary-actions">{upcomingDays.length > 0 && <button type="button" onClick={() => setUpcomingOpen((open) => !open)}>{upcomingOpen ? "Hide upcoming" : "See upcoming"}</button>}<Link href="/you">Manage calendar</Link><button type="button" onClick={openShare}>Share</button></div></section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
@@ -545,7 +558,7 @@ export function CalendarScreen({
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
-      {bare ? (
+      {!sheet && !upcomingOpen ? null : bare ? (
         <WeekEmpty
           first
           title="Your calendar is empty"
@@ -568,13 +581,13 @@ export function CalendarScreen({
       ) : (
         <>
           {days.length ? (
-            <CalendarList className="personal-calendar-list" days={days} />
+            <CalendarList className={`personal-calendar-list${!sheet ? " personal-calendar-upcoming" : ""}`} days={!sheet ? upcomingDays : days} />
           ) : (
             <WeekEmpty first title="Nothing showing" body="Keep looking ahead, choose another view, or add something to your calendar." />
           )}
-          <button ref={dayMoreRef} className="calendar-load-more" type="button" onClick={() => setDayHorizon((value) => value + 84)}>
+          {sheet && <button ref={dayMoreRef} className="calendar-load-more" type="button" onClick={() => setDayHorizon((value) => value + 84)}>
             Show more dates
-          </button>
+          </button>}
         </>
       )}
       </div>
