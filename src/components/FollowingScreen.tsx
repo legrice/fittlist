@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type TouchEvent } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { toggleCalendarPin } from "@/app/actions/pins";
 import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
+import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
@@ -219,51 +220,6 @@ export function FollowingScreen({
   const [calendarSwitcherDragging, setCalendarSwitcherDragging] = useState(false);
   const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
   const streamGeneration = useRef(0);
-  const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
-  const [scopeSwipe,setScopeSwipe]=useState({ progress:1,offset:0,dragging:false });
-
-  useEffect(() => {
-    if (!calendarFollowing) return;
-    const startSwipe:EventListener=(event) => {
-      const touch=(event as unknown as { touches:TouchList }).touches[0];
-      if (touch) {
-        scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
-        setScopeSwipe({ progress:1,offset:0,dragging:true });
-      }
-    };
-    const moveSwipe:EventListener=(event) => {
-      const start=scopeSwipeStart.current;
-      const touch=(event as unknown as { touches:TouchList }).touches[0];
-      if (!start || !touch) return;
-      const dx=touch.clientX-start.x;
-      const dy=touch.clientY-start.y;
-      if (dx <= 0 || Math.abs(dx) <= Math.abs(dy)) return;
-      setScopeSwipe({ progress:Math.max(0,1-dx/180),offset:Math.min(72,dx),dragging:true });
-    };
-    const finishSwipe:EventListener=(event) => {
-      const start=scopeSwipeStart.current;
-      const touch=(event as unknown as { changedTouches:TouchList }).changedTouches[0];
-      scopeSwipeStart.current=null;
-      if (!start || !touch) return;
-      const dx=touch.clientX-start.x;
-      const dy=touch.clientY-start.y;
-      if (dx > 64 && Math.abs(dx) > Math.abs(dy)*1.25) {
-        setScopeSwipe({ progress:0,offset:72,dragging:false });
-        router.push("/calendar");
-      } else setScopeSwipe({ progress:1,offset:0,dragging:false });
-    };
-    const cancelSwipe=() => { scopeSwipeStart.current=null; setScopeSwipe({ progress:1,offset:0,dragging:false }); };
-    document.addEventListener("touchstart",startSwipe,{ passive:true });
-    document.addEventListener("touchmove",moveSwipe,{ passive:true });
-    document.addEventListener("touchend",finishSwipe,{ passive:true });
-    document.addEventListener("touchcancel",cancelSwipe,{ passive:true });
-    return () => {
-      document.removeEventListener("touchstart",startSwipe);
-      document.removeEventListener("touchmove",moveSwipe);
-      document.removeEventListener("touchend",finishSwipe);
-      document.removeEventListener("touchcancel",cancelSwipe);
-    };
-  },[calendarFollowing,router]);
 
   const closeCalendarSwitcher = () => {
     setCalendarSwitcherOpen(false);
@@ -920,20 +876,18 @@ export function FollowingScreen({
     const p = f.place as string[];
     return p.length === 1 ? p[0] : `${p.length} places`;
   };
-  const scopeMotion={ "--calendar-scope-position":scopeSwipe.progress,"--calendar-swipe-offset":`${scopeSwipe.offset}px` } as CSSProperties;
-
   return (
     <>
-      {calendarFollowing && <section className={`calendar-scope-hero${scopeSwipe.dragging ? " is-swiping" : ""}`} style={scopeMotion}><div className="calendar-scope-top">
-        <Link href="/you" className="calendar-scope-avatar" aria-label="Open your profile">{meFace.photo ? <img src={meFace.photo} alt="" /> : <span style={{ background:meFace.color }}>{meFace.name.charAt(0)}</span>}</Link>
+      {calendarFollowing && <><div className="calendar-scope-top">
+        <HeaderAccountButton face={{ photo:meFace.photo, color:meFace.color, initial:meFace.name.charAt(0) }} />
         <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
-        <Link href="/discover" className="calendar-scope-search" aria-label="Discover coaches, studios, and groups"><Icon name="search" size={23} /></Link>
+        <button type="button" className="calendar-scope-search" aria-label="Discover coaches, studios, and groups" onClick={() => setFind(true)}><Icon name="search" size={23} /></button>
       </div>
-      <header className="calendar-section-summary calendar-following-head calendar-scope-motion">
+      <section className="calendar-scope-hero"><header className="calendar-section-summary calendar-following-head">
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>
-      </header></section>}
-      <div className={calendarFollowing ? `calendar-foreground-sheet calendar-scope-motion${scopeSwipe.dragging ? " is-swiping" : ""}` : undefined} style={calendarFollowing ? scopeMotion : undefined}>
+      </header></section></>}
+      <div className={calendarFollowing ? "calendar-foreground-sheet" : undefined}>
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
