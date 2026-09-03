@@ -11141,7 +11141,7 @@ html[data-mode="dark"],
 .calendar-section-summary > :is(a,button) { min-height:40px; padding:0 16px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
 .calendar-following-head,
 .personal-upcoming-summary { align-items:center; flex-direction:column; text-align:center; }
-.calendar-scope-hero:not(:has(.calendar-reveal-panel)) .calendar-section-summary { min-height:132px; justify-content:space-between; }
+.calendar-scope-hero:not(:has(.calendar-reveal-panel)) .calendar-section-summary { min-height:0; justify-content:flex-start; gap:10px; }
 .calendar-summary-copy { max-width:100%; display:grid; justify-items:center; gap:5px; }
 .calendar-summary-copy > span { color:var(--color-text-secondary); font-size:13px; line-height:1.2; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
 .calendar-summary-copy > strong { max-width:18ch; color:var(--color-white); font-size:25px; line-height:1.08; font-weight:600; }
@@ -11167,6 +11167,10 @@ html[data-mode="dark"],
 .calendar-reveal-icon { width:48px; height:48px; display:grid; place-items:center; overflow:hidden; border-radius:14px; background:var(--color-surface); color:var(--color-white); font-weight:700; }
 .calendar-reveal-icon.group { border-radius:50%; }
 .calendar-reveal-icon img { width:100%; height:100%; object-fit:cover; }
+.calendar-week-preview { min-height:0; display:flex; flex:1; flex-direction:column; align-items:center; gap:10px; }
+.calendar-week-preview h2 { width:100%; margin:0; color:var(--color-white); font-size:18px; text-align:left; }
+.calendar-week-preview > button { min-height:0; padding:0; border:0; border-radius:22px; overflow:hidden; background:transparent; box-shadow:0 14px 40px rgba(0,0,0,.2); cursor:pointer; }
+.calendar-week-preview img { display:block; width:auto; height:min(48dvh,460px); aspect-ratio:9/16; object-fit:cover; }
 .calendar-reveal-following { padding-bottom:48px; }
 .calendar-reveal-following .calendar-directory-list { max-height:none; overflow:visible; }
 .calendar-scope-hero .calendar-reveal-calendars h2,
