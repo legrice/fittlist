@@ -11220,6 +11220,7 @@ html[data-mode="dark"],
 .calendar-action-list small { color:var(--color-text-secondary); font-size:14px; line-height:1.3; }
 .calendar-action-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:16px; background:var(--color-surface-muted); }
 .calendar-following-actions .calendar-directory-list { overflow:visible; }
+.calendar-following-actions .calendar-directory-search { margin-top:0; }
 .calendar-revealed-add {
   position:fixed; z-index:44; right:var(--page-gutter); bottom:calc(18px + env(safe-area-inset-bottom)); left:var(--page-gutter);
   display:flex; justify-content:center; pointer-events:none;
