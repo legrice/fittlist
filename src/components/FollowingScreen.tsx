@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -218,6 +218,10 @@ export function FollowingScreen({
   const calendarSwitcherDragDistance = useRef(0);
   const [calendarSwitcherDragY, setCalendarSwitcherDragY] = useState(0);
   const [calendarSwitcherDragging, setCalendarSwitcherDragging] = useState(false);
+  const [scopeTarget, setScopeTarget] = useState<"you" | "following">("following");
+  const [classSheetDismissed, setClassSheetDismissed] = useState(false);
+  const classSheetPullStart = useRef<number | null>(null);
+  const [classSheetPullY, setClassSheetPullY] = useState(0);
   const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
   const streamGeneration = useRef(0);
 
@@ -438,6 +442,25 @@ export function FollowingScreen({
   const closeFind = () => {
     setFind(false);
     router.refresh();
+  };
+  const switchScope = (event:ReactMouseEvent<HTMLAnchorElement>, target:"you"|"following") => {
+    event.preventDefault();
+    if (target === scopeTarget) return;
+    setScopeTarget(target);
+    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 180);
+  };
+  const startClassSheetPull = (event:TouchEvent<HTMLDivElement>) => {
+    if (window.scrollY > 4) return;
+    classSheetPullStart.current=event.touches[0]?.clientY ?? null;
+  };
+  const moveClassSheetPull = (event:TouchEvent<HTMLDivElement>) => {
+    if (classSheetPullStart.current === null) return;
+    setClassSheetPullY(Math.max(0,(event.touches[0]?.clientY ?? classSheetPullStart.current)-classSheetPullStart.current));
+  };
+  const endClassSheetPull = () => {
+    if (classSheetPullY > 120) setClassSheetDismissed(true);
+    classSheetPullStart.current=null;
+    setClassSheetPullY(0);
   };
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
@@ -880,14 +903,15 @@ export function FollowingScreen({
     <>
       {calendarFollowing && <><div className="calendar-scope-top">
         <HeaderAccountButton face={{ photo:meFace.photo, color:meFace.color, initial:meFace.name.charAt(0) }} />
-        <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
-        <button type="button" className="calendar-scope-search" aria-label="Discover coaches, studios, and groups" onClick={() => setFind(true)}><Icon name="search" size={23} /></button>
+        {classSheetDismissed ? <strong className="calendar-scope-current">Following</strong> : <nav className="calendar-mode-tabs" data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Following</Link></nav>}
+        {classSheetDismissed ? <button type="button" className="calendar-scope-search" aria-label="Show classes" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button> : <button type="button" className="calendar-scope-search" aria-label="Discover coaches, studios, and groups" onClick={() => setFind(true)}><Icon name="search" size={23} /></button>}
       </div>
       <section className="calendar-scope-hero"><header className="calendar-section-summary calendar-following-head">
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>
       </header></section></>}
-      <div className={calendarFollowing ? "calendar-foreground-sheet" : undefined}>
+      {(!calendarFollowing || !classSheetDismissed) && <div className={calendarFollowing ? "calendar-foreground-sheet calendar-pull-sheet" : undefined} style={calendarFollowing ? { transform:`translateY(${classSheetPullY}px)` } : undefined} onTouchStart={calendarFollowing ? startClassSheetPull : undefined} onTouchMove={calendarFollowing ? moveClassSheetPull : undefined} onTouchEnd={calendarFollowing ? endClassSheetPull : undefined} onTouchCancel={calendarFollowing ? endClassSheetPull : undefined}>
+      {calendarFollowing && <div className="calendar-sheet-handle" aria-hidden="true" />}
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
@@ -1140,7 +1164,7 @@ export function FollowingScreen({
           </div>
         </>
       )}
-      </div>
+      </div>}
 
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
