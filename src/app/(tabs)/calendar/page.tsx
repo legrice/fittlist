@@ -30,12 +30,12 @@ export const dynamic = "force-dynamic";
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ add?: string; hl?: string }>;
+  searchParams: Promise<{ add?: string; hl?: string; scope?: string }>;
 }) {
   // `?add=1` opens the adder on arrival. It is /app's old parameter, carried
   // through its redirect, and it is what "Add a class" links out in the world
   // still say.
-  const { add, hl } = await searchParams;
+  const { add, hl, scope } = await searchParams;
   const me = await currentUser();
   if (!me) redirect("/");
   const userId = me.id;
@@ -193,6 +193,7 @@ export default async function CalendarPage({
       managedCalendarViews={managedCalendarViews}
       followingPeople={followingFeed.myRail}
       followingDays={followingDays}
+      initialCalendarId={scope === "following" || managedCalendars.some((calendar) => calendar.id === scope) ? scope : "personal"}
     />
   );
 }

@@ -110,6 +110,7 @@ export function CalendarScreen({
   managedCalendarViews = [],
   followingPeople = [],
   followingDays = [],
+  initialCalendarId = "personal",
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -133,12 +134,13 @@ export function CalendarScreen({
   managedCalendarViews?: ManagedCalendarView[];
   followingPeople?: FollowingPerson[];
   followingDays?: WeekDayRows[];
+  initialCalendarId?: string;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
-  const [selectedCalendarId, setSelectedCalendarId] = useState("personal");
+  const [selectedCalendarId, setSelectedCalendarId] = useState(initialCalendarId);
   const [managedFilter, setManagedFilter] = useState<"all" | "mine" | "open">("all");
   const [followingDayIso, setFollowingDayIso] = useState(todayIso);
   const activeManagedCalendar = managedCalendarViews.find((calendar) => calendar.id === selectedCalendarId) ?? null;
