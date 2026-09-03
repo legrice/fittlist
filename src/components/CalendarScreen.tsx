@@ -367,6 +367,44 @@ export function CalendarScreen({
     };
   },[classes,savedByIso,studioById,todayIso]);
 
+  const calendarWeekSummary = useMemo(() => {
+    const start=Date.parse(`${todayIso}T00:00:00Z`);
+    let coaching=0;
+    let attending=0;
+    let personal=0;
+    const studios=new Set<string>();
+    for (let offset=0; offset<7; offset+=1) {
+      const date=new Date(start+offset*864e5);
+      const iso=date.toISOString().slice(0,10);
+      const rows=uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById);
+      coaching+=rows.length;
+      rows.forEach((item) => {
+        const place=item.studioId ? studioById.get(item.studioId)?.name : item.location;
+        if (place) studios.add(place);
+      });
+      (savedByIso.get(iso) ?? []).forEach((item) => {
+        if (item.personal) personal+=1;
+        else attending+=1;
+      });
+    }
+    const classWord=(count:number) => count === 1 ? "class" : "classes";
+    let title="Your week is open.";
+    if (coaching && attending)
+      title=`You’re coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`;
+    else if (coaching)
+      title=`You’re coaching ${coaching} ${classWord(coaching)}${studios.size ? ` at ${studios.size} ${studios.size === 1 ? "studio" : "studios"}` : ""} this week.`;
+    else if (attending)
+      title=`You’re attending ${attending} ${classWord(attending)} this week.`;
+    else if (personal)
+      title=`You have ${personal} personal ${classWord(personal)} this week.`;
+    const details=[
+      coaching ? `${coaching} coaching` : "",
+      attending ? `${attending} attending` : "",
+      personal ? `${personal} personal` : "",
+    ].filter(Boolean).join(" · ");
+    return { title, detail:details || "Nothing scheduled in the next 7 days." };
+  },[classes,savedByIso,studioById,todayIso]);
+
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
    *  light week rather than as a wall of empty headings. */
@@ -581,7 +619,7 @@ export function CalendarScreen({
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show classes" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className="calendar-scope-hero"><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarSummary.title}</strong>{classSheetDismissed && <small>{calendarSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar details" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section>{classSheetDismissed && <section className="calendar-reveal-panel" aria-label="Your calendars"><div className="calendar-reveal-calendars"><h2>Your calendars</h2><button type="button" onClick={() => setCalendarChooserOpen(true)}><span className="calendar-reveal-icon" style={{ background:viewer.color }}>{viewer.photo ? <img src={viewer.photo} alt="" /> : viewer.name.charAt(0)}</span><span><strong>Personal calendar</strong><small>Your classes, shifts, and saved classes</small></span><Icon name="chevron_right" size={19} /></button>{managedCalendars.map((calendar) => <Link href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`} key={`${calendar.kind}:${calendar.id}`}><span className={`calendar-reveal-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={20} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={19} /></Link>)}</div><button type="button" className="calendar-summary-share" onClick={openShare}>Share</button></section>}</section></>}
+        <section className="calendar-scope-hero"><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{classSheetDismissed ? calendarWeekSummary.title : calendarSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar details" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section>{classSheetDismissed && <section className="calendar-reveal-panel" aria-label="Your calendars"><div className="calendar-reveal-calendars"><h2>Your calendars</h2><button type="button" onClick={() => setCalendarChooserOpen(true)}><span className="calendar-reveal-icon" style={{ background:viewer.color }}>{viewer.photo ? <img src={viewer.photo} alt="" /> : viewer.name.charAt(0)}</span><span><strong>Personal calendar</strong><small>Your classes, shifts, and saved classes</small></span><Icon name="chevron_right" size={19} /></button>{managedCalendars.map((calendar) => <Link href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`} key={`${calendar.kind}:${calendar.id}`}><span className={`calendar-reveal-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={20} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={19} /></Link>)}</div><button type="button" className="calendar-summary-share" onClick={openShare}>Share</button></section>}</section></>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
