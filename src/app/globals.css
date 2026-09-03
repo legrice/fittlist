@@ -12666,6 +12666,11 @@ a.clspeek-by:active { opacity: .6; }
 .personal-calendar-list .clline::before { display:none; }
 .personal-calendar-list .clline:active { background:var(--color-surface-hover); }
 .personal-calendar-list .clrow > :is(.clmore, .calendar-save-action, .calendar-attending-check, .following-add) { top:10px; right:8px; }
+.personal-calendar-list .clline-semantic-story { padding-right:30px; font-size:18px; line-height:1.32; overflow-wrap:anywhere; }
+.personal-calendar-list .clline-semantic-story strong { font-weight:700; }
+.personal-calendar-list .clline-semantic-meta { width:100%; min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; color:var(--color-text-secondary); font-size:14px; line-height:1.25; }
+.personal-calendar-list .clline-semantic-meta span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.personal-calendar-list .clline-semantic-meta span:last-child { text-align:right; }
 
 /* Profiles used the occurrence grid before CalendarList became text-led.
    Keep their hierarchy explicit so older grid coordinates cannot indent the

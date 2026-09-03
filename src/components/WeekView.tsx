@@ -52,6 +52,9 @@ export type WeekRow = {
   tag?: string;
   /** Optional relationship color for compact ownership badges. */
   tagTone?: "coaching" | "shift" | "attending" | "personal" | "attention";
+  /** A sentence-led rendering for a personal activity card, such as “You are
+   * coaching…” or “You saved…”. Other calendars keep the compact title rows. */
+  semantic?: ReactNode;
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
@@ -157,7 +160,16 @@ export function CalendarList({
 
 export function ClassLine({ row }: { row: WeekRow }) {
   const cls = `clline${row.hideCoachAvatar ? " clline-no-avatar" : ""}${row.tagTone ? ` clline-tone-${row.tagTone}` : ""}`;
-  const inner = (
+  const inner = row.semantic ? (
+    <>
+      <span className="clline-semantic-story">{row.semantic}</span>
+      <span className="clline-semantic-meta">
+        <span>{row.where || "Location to come"}</span>
+        <span>{row.hm}{row.ap.toLowerCase()}{row.dur ? ` · ${row.dur}` : ""}</span>
+      </span>
+      {row.extra && <span className="clline-extra">{row.extra}</span>}
+    </>
+  ) : (
     <>
       {(row.coach || row.tag) && (
         <span className="clline-by">

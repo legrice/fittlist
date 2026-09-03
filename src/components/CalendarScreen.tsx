@@ -334,9 +334,6 @@ export function CalendarScreen({
         classes.filter((c) => runsOn(c, iso, dow)),
         studioById,
       )
-        // Been and gone is not on a schedule. Today keeps the ones still to
-        // come and drops the six o'clock you already taught.
-        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
         .map((c) => {
           const t = clockParts(c.startTime);
@@ -354,8 +351,8 @@ export function CalendarScreen({
             ap: t.ap,
             dur: `${c.durationMin} min`,
             coach: null,
-            tag: c.shift ? "Shift" : "Coaching",
             tagTone: c.shift ? "shift" as const : "coaching" as const,
+            semantic: <>{occurrenceEnded(iso,c.startTime,c.durationMin,c.timeZone) ? "You were coaching" : "You are coaching"} <strong>{c.name}</strong>{where ? <> at <strong>{where}</strong></> : null}.</>,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
@@ -375,8 +372,10 @@ export function CalendarScreen({
           : i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
-        tag: i.personal ? "Personal" : "Saved",
         tagTone: i.personal ? "personal" as const : "attending" as const,
+        semantic: i.personal
+          ? <>You added <strong>{i.name}</strong> to your calendar.</>
+          : <>You saved <strong>{i.name}</strong>{i.coachName ? <> from <strong>{i.coachName}</strong></> : null}.</>,
         onTap: i.personal
           ? () => setPlan(i.id)
           : () => setPeek(peekOfAdded(i)),
