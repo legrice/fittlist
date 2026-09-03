@@ -393,6 +393,8 @@ export function FollowingScreen({
     };
   }, [calendarDirectoryOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
+  const [likedActivities, setLikedActivities] = useState(() => new Set<string>());
+  const [commentingActivity, setCommentingActivity] = useState<string | null>(null);
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -1075,7 +1077,16 @@ export function FollowingScreen({
                           const showSourceAvatar = Boolean(displaySourceName);
                           if (calendarFollowing) {
                             const storyName=coachName ?? sourceName ?? "Someone";
-                            return <article className="activity-card calendar-following-card" key={item.key} data-cid={item.classId} data-d={item.iso}><button type="button" className="activity-card-main" onClick={() => setPeek(peekOf(item,coach ?? null,favoriteIds.has(item.coachId)))}>{showSourceAvatar && displaySourceName && <span className="activity-card-avatar" style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0)||"?").toUpperCase()}</span>}</span>}<span className="activity-card-body"><span className="activity-card-story"><strong>{storyName}</strong> is coaching <b>{item.name}</b></span><span className="activity-card-meta"><span>{item.where || "Location to come"}</span><span>{item.hm}{item.ap.toLowerCase()} · {item.durationMin} min</span></span></span></button></article>;
+                            const liked=likedActivities.has(item.key);
+                            return <article className="activity-card calendar-following-card" key={item.key} data-cid={item.classId} data-d={item.iso}>
+                              <button type="button" className="activity-card-main" onClick={() => setPeek(peekOf(item,coach ?? null,favoriteIds.has(item.coachId)))}>{showSourceAvatar && displaySourceName && <span className="activity-card-avatar" style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0)||"?").toUpperCase()}</span>}</span>}<span className="activity-card-body"><span className="activity-card-story"><strong>{storyName}</strong> is coaching <b>{item.name}</b></span><span className="activity-card-meta"><span>{item.where || "Location to come"}</span><span>{item.hm}{item.ap.toLowerCase()} · {item.durationMin} min</span></span></span></button>
+                              <div className="activity-card-actions">
+                                <button type="button" className={liked ? "on" : ""} aria-label={liked ? "Unlike" : "Like"} aria-pressed={liked} onClick={() => setLikedActivities((current) => { const next=new Set(current); if(next.has(item.key)) next.delete(item.key); else next.add(item.key); return next; })}><Icon name={liked ? "favorite_filled" : "favorite"} size={20} /></button>
+                                <button type="button" className={commentingActivity === item.key ? "on" : ""} aria-label="Comment" aria-expanded={commentingActivity === item.key} onClick={() => setCommentingActivity((current) => current === item.key ? null : item.key)}><Icon name="chat_bubble" size={19} /></button>
+                                <button type="button" className={item.saved ? "on" : ""} aria-label={item.saved ? "Saved" : "Save"} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}><Icon name={item.saved ? "bookmark_added" : "bookmark"} size={20} /></button>
+                              </div>
+                              {commentingActivity === item.key && <form className="activity-comment" onSubmit={(event) => { event.preventDefault(); setCommentingActivity(null); toast("Comment added"); }}><input aria-label={`Comment on ${item.name}`} placeholder="Add a comment" autoFocus /><button type="submit">Post</button></form>}
+                            </article>;
                           }
                           return <article className="cash-class-row" key={item.key} data-cid={item.classId} data-d={item.iso}>
                             <button type="button" className={`cash-class-main ${relation.tone}${showSourceAvatar ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
