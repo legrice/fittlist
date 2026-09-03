@@ -400,6 +400,7 @@ export function FollowingScreen({
     };
   }, [calendarDirectoryOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
+  const [followingMonthHorizon, setFollowingMonthHorizon] = useState(12);
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -1111,7 +1112,7 @@ export function FollowingScreen({
             {isHome && calendarView === "month" ? (
               <>
                 <MonthHeadRow />
-                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={() => {}} monthsAhead={1} />
+                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={() => {}} monthsAhead={followingMonthHorizon} onNeedMore={() => setFollowingMonthHorizon((value) => value + 12)} />
               </>
             ) : isHome ? (
                 <div className="cash-activity-list">
@@ -1188,6 +1189,7 @@ export function FollowingScreen({
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
       {(calendarFollowing || isHome) && find && <DiscoverSheet full onClose={closeFind} />}
+      {calendarFollowing && classSheetDismissed && <BodyPortal><div className="calendar-revealed-controls single" aria-label="Calendar view"><button className="calendar-view-fab" type="button" aria-label={calendarView === "day" ? "Switch to month view" : "Switch to day view"} onClick={() => setCalendarView((current) => current === "day" ? "month" : "day")}><Icon key={calendarView} name={calendarView === "day" ? "calendar_month" : "calendar_view_day"} size={23} /></button></div></BodyPortal>}
       {isHome && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       {isHome && calendarDirectoryOpen && <BodyPortal><div className="calendar-directory-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCalendarDirectory(); }}><section className={`calendar-directory-sheet${calendarDirectoryDragging ? " is-pulling" : ""}`} style={{ transform:`translateY(${calendarDirectoryDragY}px)` }} role="dialog" aria-modal="true" aria-labelledby="calendar-directory-title" onMouseDown={(event) => event.stopPropagation()} onTouchStart={startCalendarDirectoryPull} onTouchMove={moveCalendarDirectoryPull} onTouchEnd={endCalendarDirectoryPull} onTouchCancel={endCalendarDirectoryPull}><div className="calendar-directory-head"><h2 id="calendar-directory-title">Following</h2><button type="button" aria-label="Close calendars" onClick={closeCalendarDirectory}><Icon name="close" size={21} /></button></div><label className="calendar-directory-search"><Icon name="search" size={20} /><input type="search" value={calendarDirectoryQuery} onChange={(event) => setCalendarDirectoryQuery(event.target.value)} placeholder={`Search ${calendarDirectoryTab}`} /></label><div className="calendar-directory-tabs" role="tablist" aria-label="Calendar type">{(["people","studios","groups"] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={calendarDirectoryTab === tab} className={calendarDirectoryTab === tab ? "on" : ""} onClick={() => setCalendarDirectoryTab(tab)}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div><div className="calendar-directory-list" ref={calendarDirectoryListRef}>{calendarDirectoryItems.map((item) => { const key=`${item.kind}:${item.id}`; const following=calendarDirectoryFollowing[key] ?? true; return <div className="calendar-directory-row" key={key}><Link href={item.href} onClick={closeCalendarDirectory}><span style={{ background:item.color }}>{item.photo ? <img src={item.photo} alt="" /> : (item.name.trim().charAt(0) || "?").toUpperCase()}</span><strong>{item.name}</strong></Link><button type="button" className={following ? "on" : ""} disabled={calendarDirectoryBusy === key} onClick={() => void toggleDirectoryFollow(item)}>{following ? "Following" : "Follow"}</button></div>})}{calendarDirectoryItems.length === 0 && <p>No {calendarDirectoryTab} found.</p>}</div></section></div></BodyPortal>}
       {isHome && calendarSwitcherOpen && <BodyPortal>

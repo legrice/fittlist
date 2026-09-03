@@ -11226,15 +11226,28 @@ html[data-mode="dark"],
 .calendar-action-icon img { width:100%; height:100%; object-fit:cover; }
 .calendar-following-actions .calendar-directory-list { overflow:visible; }
 .calendar-following-actions .calendar-directory-search { margin-top:0; }
-.calendar-revealed-add {
+.calendar-revealed-controls {
   position:fixed; z-index:44; right:var(--page-gutter); bottom:calc(18px + env(safe-area-inset-bottom)); left:var(--page-gutter);
-  display:flex; justify-content:center; pointer-events:none;
+  display:flex; align-items:center; justify-content:space-between; gap:12px; pointer-events:none;
 }
-.calendar-revealed-add > button {
-  width:min(100%,560px); min-height:60px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:9px;
-  border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black);
-  box-shadow:0 10px 30px rgba(0,0,0,.18); font:inherit; font-size:18px; font-weight:700; pointer-events:auto;
+.calendar-revealed-controls.single { justify-content:flex-start; }
+.calendar-revealed-controls > button {
+  height:56px; display:flex; align-items:center; justify-content:center; border:0; color:var(--color-black);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 10px 30px rgba(0,0,0,.16);
+  font:inherit; pointer-events:auto; cursor:pointer; transition:transform 140ms ease,box-shadow 140ms ease;
 }
+.calendar-revealed-controls > button:active { transform:scale(.96); box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 5px 16px rgba(0,0,0,.14); }
+.calendar-view-fab {
+  width:56px; flex:0 0 56px; border-radius:50%;
+  background:color-mix(in srgb,var(--color-surface) 72%,transparent);
+  -webkit-backdrop-filter:blur(24px) saturate(175%); backdrop-filter:blur(24px) saturate(175%);
+}
+.calendar-view-fab .icon { animation:calendar-control-pop 180ms cubic-bezier(.2,.8,.2,1); }
+.calendar-add-pill {
+  min-width:112px; padding:0 22px; gap:7px; border-radius:var(--radius-pill);
+  background:var(--color-lime); font-size:18px; font-weight:700;
+}
+@keyframes calendar-control-pop { from { opacity:0; transform:scale(.72) rotate(-8deg); } to { opacity:1; transform:none; } }
 .navwrap[data-calendar-hidden="true"] { display:none !important; }
 .personal-summary-actions { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
 .personal-summary-actions::-webkit-scrollbar { display:none; }
