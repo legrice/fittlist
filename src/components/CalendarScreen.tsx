@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent as ReactTouchEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -38,6 +38,7 @@ const Adder = dynamic(() => import("@/components/Adder").then((module) => module
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) => module.PlanSheet));
+const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -132,6 +133,7 @@ export function CalendarScreen({
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -228,19 +230,28 @@ export function CalendarScreen({
   const openShare = (event: ReactMouseEvent<HTMLButtonElement>) => window.dispatchEvent(new CustomEvent("fittlist:open-share", {
     detail: { opener:event.currentTarget },
   }));
-  const startScopeSwipe = (event: ReactTouchEvent<HTMLElement>) => {
-    const touch=event.touches[0];
-    if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
-  };
-  const endScopeSwipe = (event: ReactTouchEvent<HTMLElement>) => {
-    const start=scopeSwipeStart.current;
-    const touch=event.changedTouches[0];
-    scopeSwipeStart.current=null;
-    if (!start || !touch) return;
-    const dx=touch.clientX-start.x;
-    const dy=touch.clientY-start.y;
-    if (dx < -64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar/following");
-  };
+  useEffect(() => {
+    if (sheet) return;
+    const startSwipe:EventListener=(event) => {
+      const touch=(event as unknown as { touches:TouchList }).touches[0];
+      if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+    };
+    const finishSwipe:EventListener=(event) => {
+      const start=scopeSwipeStart.current;
+      const touch=(event as unknown as { changedTouches:TouchList }).changedTouches[0];
+      scopeSwipeStart.current=null;
+      if (!start || !touch) return;
+      const dx=touch.clientX-start.x;
+      const dy=touch.clientY-start.y;
+      if (dx < -64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar/following");
+    };
+    document.addEventListener("touchstart",startSwipe,{ passive:true });
+    document.addEventListener("touchend",finishSwipe,{ passive:true });
+    return () => {
+      document.removeEventListener("touchstart",startSwipe);
+      document.removeEventListener("touchend",finishSwipe);
+    };
+  },[router,sheet]);
   useEffect(() => {
     try {
       const stored: unknown = JSON.parse(localStorage.getItem(calendarStateKey) ?? "null");
@@ -562,8 +573,8 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      {!sheet && <section className="calendar-scope-hero" onTouchStart={startScopeSwipe} onTouchEnd={endScopeSwipe}>
-        <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav>
+      {!sheet && <section className="calendar-scope-hero">
+        <div className="calendar-scope-top"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav><button type="button" className="calendar-scope-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button></div>
         <section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><span>{calendarSummary.eyebrow}</span><strong>{calendarSummary.title}</strong><small>{calendarSummary.detail}</small></div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
@@ -961,6 +972,7 @@ export function CalendarScreen({
           </div>
         </div>
       )}
+      {!sheet && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

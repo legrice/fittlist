@@ -203,6 +203,7 @@ export function FollowingScreen({
   /** Following is the combined schedule; Upcoming is the filtered browser. */
   mode?: "home" | "upcoming";
 }) {
+  const router = useRouter();
   const isHome = mode === "home";
   const calendarFollowing = usePathname().startsWith("/calendar/following");
   const [items, setItems] = useState(initialItems);
@@ -220,19 +221,28 @@ export function FollowingScreen({
   const streamGeneration = useRef(0);
   const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
 
-  const startScopeSwipe = (event: TouchEvent<HTMLElement>) => {
-    const touch=event.touches[0];
-    if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
-  };
-  const endScopeSwipe = (event: TouchEvent<HTMLElement>) => {
-    const start=scopeSwipeStart.current;
-    const touch=event.changedTouches[0];
-    scopeSwipeStart.current=null;
-    if (!start || !touch) return;
-    const dx=touch.clientX-start.x;
-    const dy=touch.clientY-start.y;
-    if (dx > 64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar");
-  };
+  useEffect(() => {
+    if (!calendarFollowing) return;
+    const startSwipe:EventListener=(event) => {
+      const touch=(event as unknown as { touches:TouchList }).touches[0];
+      if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+    };
+    const finishSwipe:EventListener=(event) => {
+      const start=scopeSwipeStart.current;
+      const touch=(event as unknown as { changedTouches:TouchList }).changedTouches[0];
+      scopeSwipeStart.current=null;
+      if (!start || !touch) return;
+      const dx=touch.clientX-start.x;
+      const dy=touch.clientY-start.y;
+      if (dx > 64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar");
+    };
+    document.addEventListener("touchstart",startSwipe,{ passive:true });
+    document.addEventListener("touchend",finishSwipe,{ passive:true });
+    return () => {
+      document.removeEventListener("touchstart",startSwipe);
+      document.removeEventListener("touchend",finishSwipe);
+    };
+  },[calendarFollowing,router]);
 
   const closeCalendarSwitcher = () => {
     setCalendarSwitcherOpen(false);
@@ -420,7 +430,6 @@ export function FollowingScreen({
     setToastAction(highlight ? { label: "Show it", href: `/calendar?hl=${encodeURIComponent(highlight)}` } : null);
     toast(msg);
   };
-  const router = useRouter();
 
   useEffect(() => {
     if (!addedFocus) return;
@@ -893,7 +902,7 @@ export function FollowingScreen({
 
   return (
     <>
-      {calendarFollowing && <section className="calendar-scope-hero" onTouchStart={startScopeSwipe} onTouchEnd={endScopeSwipe}><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
+      {calendarFollowing && <section className="calendar-scope-hero"><div className="calendar-scope-top"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav><button type="button" className="calendar-scope-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button></div>
       <header className="calendar-section-summary calendar-following-head">
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>

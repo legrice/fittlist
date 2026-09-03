@@ -11081,7 +11081,11 @@ html[data-mode="dark"],
 .calendar-mode-tabs a[aria-current="page"] { color:var(--color-text-primary); }
 .calendar-mode-tabs a[aria-current="page"]::after { content:""; position:absolute; right:0; bottom:0; left:0; height:2px; border-radius:2px; background:currentColor; }
 .calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-shift); color:var(--color-white); touch-action:pan-y; }
-.calendar-scope-hero .calendar-mode-tabs { margin-bottom:22px; }
+.calendar-scope-top { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.calendar-scope-top .calendar-mode-tabs { margin:0; }
+.calendar-scope-notifications { width:42px; height:42px; flex:0 0 42px; display:grid; place-items:center; border:0; border-radius:50%; background:color-mix(in srgb,var(--color-white) 14%,transparent); color:var(--color-white); cursor:pointer; }
+.calendar-scope-notifications:active { transform:scale(.96); }
+.calendar-scope-top + .calendar-section-summary { margin-top:22px; }
 .calendar-scope-hero .calendar-mode-tabs a { color:color-mix(in srgb,var(--color-white) 72%,transparent); }
 .calendar-scope-hero .calendar-mode-tabs a[aria-current="page"] { color:var(--color-white); }
 .calendar-scope-hero .calendar-section-summary { margin-bottom:0; color:var(--color-white); }
