@@ -11115,6 +11115,13 @@ html[data-mode="dark"],
   .screen.hasnav .calendar-cardwrap,
   .calendar-foreground-sheet { position:relative; z-index:1; margin-top:-12px; margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); padding:22px var(--page-gutter) calc(92px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); box-shadow:0 -8px 24px rgba(0,0,0,.07); }
   .screen.hasnav .calendar-cardwrap { width:calc(100% + (2 * var(--page-gutter))); }
+  /* Following nests the shared schedule card inside its foreground sheet.
+     The sheet already owns this top inset, so repeating the card's margin
+     and padding pushed "Today" lower than the first date on You. */
+  .calendar-foreground-sheet .home-listregion > .home-schedule {
+    margin-top:0;
+    padding-top:0;
+  }
 }
 .calendar-section-summary { margin:4px 0 20px; display:flex; align-items:center; justify-content:space-between; gap:18px; color:var(--color-text-primary); }
 .calendar-section-summary p { max-width:31ch; margin:0; font-size:24px; line-height:1.25; }
