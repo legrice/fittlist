@@ -441,6 +441,15 @@ export function CalendarScreen({
     }
     return out;
   }, [classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer, dayHorizon]);
+  const weeklyPreviewDays = useMemo(() => {
+    const through=Date.parse(`${todayIso}T00:00:00Z`)+(6*864e5);
+    return days
+      .filter((day) => Date.parse(`${day.iso}T00:00:00Z`) <= through)
+      .map((day) => ({
+        ...day,
+        rows:day.rows.map((row) => ({ ...row, onTap:undefined, corner:undefined, menu:undefined, wrap:undefined })),
+      }));
+  },[days,todayIso]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -568,7 +577,7 @@ export function CalendarScreen({
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show classes" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className="calendar-scope-hero"><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar details" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section>{classSheetDismissed && <section className="calendar-reveal-panel" aria-label="Your weekly share preview"><div className="calendar-week-preview"><h2>Your week</h2><button type="button" aria-label="Open your weekly share preview" onClick={openShare}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/api/story/me?from=${todayIso}&days=7`} alt="Preview of your weekly schedule" /></button></div><button type="button" className="calendar-summary-share" onClick={openShare}>Share</button></section>}</section></>}
+        <section className="calendar-scope-hero"><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar details" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section>{classSheetDismissed && <section className="calendar-reveal-panel" aria-label="Your weekly schedule"><div className="calendar-week-list"><h2>Your week</h2>{weeklyPreviewDays.length ? <CalendarList days={weeklyPreviewDays} /> : <p>Nothing scheduled in the next 7 days.</p>}</div><button type="button" className="calendar-summary-share" onClick={openShare}>Share</button></section>}</section></>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
