@@ -608,7 +608,6 @@ export function CalendarScreen({
       </header>
 
       {!classSheetDismissed && <div className="cardwrap calendar-cardwrap calendar-pull-sheet" style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull}>
-      <div className="calendar-sheet-handle" aria-hidden="true" />
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
           where every day band underneath pins: one writer for that number,

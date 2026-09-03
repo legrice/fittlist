@@ -11154,7 +11154,6 @@ html[data-mode="dark"],
 .calendar-scope-hero .calendar-reveal-calendars > :is(a,button) { border-color:color-mix(in srgb,var(--color-white) 20%,transparent); }
 .calendar-scope-hero .calendar-reveal-calendars small { color:color-mix(in srgb,var(--color-white) 70%,transparent); }
 .calendar-scope-hero .calendar-reveal-following .calendar-directory-row { background:var(--color-surface); }
-.calendar-sheet-handle { width:44px; height:5px; margin:-10px auto 16px; border-radius:999px; background:var(--color-border); }
 .calendar-pull-sheet { transition:transform 220ms cubic-bezier(.2,.8,.2,1); will-change:transform; }
 .navwrap[data-calendar-hidden="true"] { display:none !important; }
 .personal-summary-actions { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
