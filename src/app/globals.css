@@ -13303,7 +13303,8 @@ a.clspeek-by:active { opacity: .6; }
   .activity-today-summary p { margin:0; }
   .activity-today-summary strong { color:var(--color-text-primary); font-weight:700; }
   .activity-week-label { display:block; color:var(--color-text-secondary); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-  .activity-restore-sheet { width:42px; height:42px; margin:0 0 14px; padding:0; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:50%; background:var(--color-surface); color:var(--color-text-primary); }
+  .activity-week-topbar { min-height:48px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .activity-restore-sheet { width:48px; height:48px; margin:0; padding:0; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:50%; background:var(--color-surface); color:var(--color-text-primary); }
   .activity-today-hub-actions { display:flex; align-items:center; gap:8px; }
   .activity-today-hub-actions :is(button,a) { min-width:0; min-height:42px; padding:0 14px; flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:13px; font-weight:700; text-decoration:none; white-space:nowrap; }
   .activity-today-hub-actions button { background:var(--color-black); color:var(--color-white); }
@@ -13317,7 +13318,7 @@ a.clspeek-by:active { opacity: .6; }
   .activity-following-sheet { position:fixed; top:178px; right:0; bottom:0; left:0; z-index:40; padding:0 var(--page-gutter) 130px; display:block; overflow-y:auto; border-radius:30px 30px 0 0; background:var(--color-background); box-shadow:0 -10px 32px rgba(2,13,8,.1); transition:top 320ms var(--motion-ease-out), border-radius 320ms var(--motion-ease-out), transform 280ms var(--motion-ease-out); touch-action:pan-y; overscroll-behavior:contain; }
   .activity-following-sheet.is-expanded { top:0; border-radius:0; }
   .activity-following-sheet.is-dismissed { pointer-events:none; }
-  .activity-week-tools { position:fixed; right:var(--page-gutter); bottom:calc(88px + env(safe-area-inset-bottom)); z-index:30; display:flex; gap:10px; }
+  .activity-week-tools { display:flex; align-items:center; gap:10px; }
   .activity-week-tools a { position:relative; width:48px; height:48px; display:grid; place-items:center; border-radius:50%; background:var(--color-surface); color:var(--color-text-primary); text-decoration:none; box-shadow:0 8px 24px rgba(2,13,8,.1); }
   .activity-week-tools i { position:absolute; top:8px; right:8px; width:8px; height:8px; border:2px solid var(--color-surface); border-radius:50%; background:var(--color-danger, #e52b32); }
   .activity-following-handle { position:sticky; top:0; z-index:2; width:100%; min-height:58px; padding:8px 0 6px; display:grid; place-items:center; gap:5px; border:0; background:var(--color-background); color:var(--color-text-secondary); font:inherit; }
