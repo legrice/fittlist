@@ -3446,8 +3446,6 @@ button.ps-card { cursor: pointer; }
   width: 100vw; max-width: 100vw;
 }
 
-/* The class photo, in the adder: the picture beside the two controls that set
-   it, so what you picked is what you see rather than a filename. */
 /* Also at: the extra start times a gym's class runs on the days picked. Sits
    under the start/end row because it is the same question asked again, and
    the count under it is the whole point of the control. */
@@ -3455,17 +3453,6 @@ button.ps-card { cursor: pointer; }
 .alsoat-row { display: flex; align-items: center; gap: 8px; }
 .alsoat-add { align-self: flex-start; }
 .alsoat-n { margin-top: 2px; }
-.classpho { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-.classpho-img {
-  width: 88px; height: 66px; border-radius: 12px; object-fit: cover;
-  display: block; flex-shrink: 0; background: var(--cl);
-}
-.classpho-empty {
-  display: flex; align-items: center; justify-content: center; color: var(--ol);
-  border: 1.5px dashed var(--line); background: none;
-}
-.classpho-acts { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-
 /* Your own class: the add sheet's day row and time/length pair. */
 .ownday { margin-top: 4px; }
 .ownday button { flex: 1; padding: 10px 0; }
@@ -11095,19 +11082,6 @@ html[data-mode="dark"],
    an X.
    --------------------------------------------------------------------------- */
 .clsfull { position: relative; }
-.clsfull-photo {
-  /* Air under the picture: without it the title sat flush against the
-     photograph's bottom edge. The top margin reaches past the sticky X's
-     flow box as well as the sheet's padding: adjoining negative margins
-     collapse to the more negative one, so -54 (the X's 42 plus the 12 of
-     padding) is what puts the picture at the sheet's very top edge, sliding
-     under the pinned circle. */
-  display: block;
-  margin: -54px calc(-1 * var(--page-gutter)) 20px;
-  width: calc(100% + var(--page-gutter) + var(--page-gutter));
-  height: 250px; object-fit: cover;
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-}
 /* Sticky, not absolute: the sheet is its own scroller, and an absolute X
    rode the photograph away, leaving a long class with no visible way off.
    It pulls its own height back so the photo starts where it always did and

@@ -595,11 +595,7 @@ export function ClassPeek({
             )}
           </div>
         )}
-        {full?.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="clsfull-photo" src={full.image} alt="" />
-        )}
-        {!full?.image && <span className="clspeek-grab" aria-hidden="true" />}
+        <span className="clspeek-grab" aria-hidden="true" />
 
         {classType && <p className="clsfull-kick">{classType}</p>}
         <h2 className="clspeek-nm">{cls.name}</h2>
@@ -786,7 +782,6 @@ export function ClassPeek({
 
       {cardOpen && (
         <ShareCardSheet
-          noThemes={!!full?.image}
           path={`/api/card/class/${cls.id}?d=${encodeURIComponent(cls.iso)}`}
           fileName={`fittlist-${cls.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
           title="Share this class"

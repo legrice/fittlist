@@ -53,7 +53,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ classId:
 
   return new ImageResponse(
     classCard({
-      image: c.image,
+      image:null,
       fallback: avatarColor(owner),
       theme: t,
       when: iso ? `${fmtDateLong(iso)} · ${fmtTime(c.startTime)}` : "",

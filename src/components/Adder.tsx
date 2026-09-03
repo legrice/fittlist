@@ -28,7 +28,6 @@ import {
 } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
-import { readPhoto } from "@/lib/photo";
 import {
   STUDIO_PLANNER_COLORS,
   type StudioPlannerColor,
@@ -226,7 +225,6 @@ export function Adder({
   const [name, setName] = useState(prefill?.name ?? "");
   const [classType, setClassType] = useState<string | null>(prefill?.classType ?? null);
   const [description, setDescription] = useState(prefill?.description ?? "");
-  const [image, setImage] = useState<string | null>(prefill?.image ?? null);
   // Extra start times, gym-only and add-only. A gym's week is a grid: the same
   // class runs at five times on Mon/Wed/Fri and four on Tue/Thu, which is 23
   // slots to type one at a time. Days times times is how that becomes two
@@ -234,7 +232,6 @@ export function Adder({
   // and fanning an edit out would delete and recreate rows that carry swaps
   // and members' plans.
   const [extraTimes, setExtraTimes] = useState<string[]>([]);
-  const imgRef = useRef<HTMLInputElement>(null);
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [mode, setMode] = useState<"weekly" | "date">(
     prefill?.specificDate || personal?.oneOff ? "date" : "weekly",
@@ -368,9 +365,6 @@ export function Adder({
     }
     setClassType(c.classType ?? null);
     setDescription(c.description ?? "");
-    // The photograph comes with the description: it belongs to the class, not
-    // to whoever happened to write it down first.
-    if (c.image) setImage(c.image);
     // So does the length, which moves the end time with it.
     if (c.durationMin && c.durationMin > 0) setEnd(minutesToTime(timeToMinutes(time) + c.durationMin));
     // The studio catalog is shared across coaches and deliberately carries no
@@ -420,7 +414,6 @@ export function Adder({
     setName(m.name);
     setClassType(m.classType ?? null);
     setDescription(m.description ?? "");
-    if (m.image) setImage(m.image);
     // The time comes back too: a thing you do again is usually a thing you
     // do again at the same time. The end follows the length, the way it does
     // everywhere else in this form.
@@ -523,7 +516,7 @@ export function Adder({
       studioId,
       classType,
       description,
-      image,
+      image:null,
       links,
       specificDate: oneTime ? date : null,
       endsOn: oneTime ? null : endsOn || null,
@@ -566,7 +559,7 @@ export function Adder({
         name,
         classType,
         description,
-        image,
+        image:null,
         days: [...days],
         specificDate: oneTime ? date : null,
         endsOn: oneTime ? null : endsOn || null,
@@ -1215,53 +1208,6 @@ export function Adder({
               </>
             )}
 
-            {/* A picture of the room, or the class. Optional forever: a
-                schedule with no photos has to stay a good schedule, so this
-                never becomes a field somebody has to answer. An event skips
-                it; nothing renders a picture for one. */}
-            {!isEvent && (
-            <>
-            <label className="flabel">
-              Photo{" "}
-              <span>
-                {mineOnly
-                  ? "· optional, and it stays with the class at this place"
-                  : "· optional, and it carries the share card"}
-              </span>
-            </label>
-            <div className="classpho">
-              {image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="classpho-img" src={image} alt="" />
-              ) : (
-                <div className="classpho-img classpho-empty" aria-hidden="true">
-                  <Icon name="image" size={24} />
-                </div>
-              )}
-              <div className="classpho-acts">
-                <button type="button" className="btn ghost" onClick={() => imgRef.current?.click()}>
-                  {image ? "Change photo" : "Add a photo"}
-                </button>
-                {image && (
-                  <button type="button" className="tertiary" onClick={() => setImage(null)}>
-                    Remove
-                  </button>
-                )}
-              </div>
-              <input
-                ref={imgRef}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) readPhoto(f, setImage);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-            </>
-            )}
             </div>
 
 

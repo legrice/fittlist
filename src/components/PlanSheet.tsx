@@ -112,12 +112,7 @@ export function PlanSheet({
         <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
           <Icon name="close" size={20} />
         </button>
-        {p?.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="clsfull-photo" src={p.image} alt="" />
-        ) : (
-          <span className="clspeek-grab" aria-hidden="true" />
-        )}
+        <span className="clspeek-grab" aria-hidden="true" />
 
         {missing ? (
           <p className="lead" style={{ textAlign: "center", margin: "56px 0" }}>
@@ -223,7 +218,6 @@ export function PlanSheet({
 
       {cardOpen && p && (
         <ShareCardSheet
-          noThemes={!!p.image}
           path={`/api/card/plan/${p.id}`}
           fileName={`fittlist-${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
           title="Share this class"
