@@ -903,10 +903,10 @@ export function FollowingScreen({
   };
   return (
     <>
-      {calendarFollowing && <><div className="calendar-scope-top">
+      {calendarFollowing && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} style={{ "--sheet-pull-progress": Math.min(classSheetPullY / 120, 1), "--sheet-search-scale": 1 - (.12 * Math.min(classSheetPullY / 120, 1)), "--sheet-close-scale": .82 + (.18 * Math.min(classSheetPullY / 120, 1)) } as React.CSSProperties}>
         <HeaderAccountButton face={{ photo:meFace.photo, color:meFace.color, initial:meFace.name.charAt(0) }} />
-        {classSheetDismissed ? <strong className="calendar-scope-current">Following</strong> : <nav className="calendar-mode-tabs" data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Following</Link></nav>}
-        {classSheetDismissed ? <button type="button" className="calendar-scope-search" aria-label="Show classes" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button> : <button type="button" className="calendar-scope-search" aria-label="Discover coaches, studios, and groups" onClick={() => setFind(true)}><Icon name="search" size={23} /></button>}
+        <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
+        <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setFind(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show classes" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button></span>
       </div>
       <section className="calendar-scope-hero"><header className="calendar-section-summary calendar-following-head">
         <div><p>{followingSummaryText}</p></div>
