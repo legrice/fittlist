@@ -349,6 +349,7 @@ export function CalendarScreen({
     if (!next) return { eyebrow:"Your calendar", title:"Nothing coming up", detail:"Add something whenever you’re ready." };
     const { iso,offset,rows,added }=next;
     const when=offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : dayBandLabel(iso);
+    const whenPhrase=offset === 0 ? "today" : offset === 1 ? "tomorrow" : `on ${dayBandLabel(iso)}`;
     const attending=added.filter((item) => !item.personal);
     const personal=added.filter((item) => item.personal);
     const total=rows.length+added.length;
@@ -357,18 +358,18 @@ export function CalendarScreen({
     const addedTime=(item:WeekItem) => `${item.hm.replace(":00","")}${item.ap.toLowerCase()}`;
     if (total === 1 && rows.length === 1) {
       const place=coachingStudios[0];
-      return { eyebrow:"Up next", title:`${when} at ${naturalTimes}`, detail:[rows[0].name,place].filter(Boolean).join(" · ") };
+      return { eyebrow:"Up next", title:`You’re coaching ${rows[0].name} at ${naturalTimes}.`, detail:[place,when].filter(Boolean).join(" · ") };
     }
     if (total === 1 && attending.length === 1) {
       const item=attending[0];
-      return { eyebrow:"Up next", title:`${when} at ${addedTime(item)}`, detail:[item.name,item.where].filter(Boolean).join(" · ") };
+      return { eyebrow:"Up next", title:`You’re attending ${item.name} at ${addedTime(item)}.`, detail:[item.where,when].filter(Boolean).join(" · ") };
     }
     if (total === 1 && personal.length === 1) {
       const item=personal[0];
-      return { eyebrow:"Up next", title:`${when} at ${addedTime(item)}`, detail:item.name };
+      return { eyebrow:"Up next", title:`Your next class is ${item.name} at ${addedTime(item)}.`, detail:when };
     }
     if (!added.length && rows.length <= 3 && coachingStudios.length === 1)
-      return { eyebrow:when, title:`${rows.length} classes to coach`, detail:`${coachingStudios[0]} · ${naturalTimes}` };
+      return { eyebrow:"Coming up", title:`You’re coaching ${rows.length} classes ${whenPhrase}.`, detail:`${coachingStudios[0]} · ${naturalTimes}` };
     const parts:string[]=[];
     if (rows.length) parts.push(`${rows.length} to coach`);
     if (attending.length) parts.push(`${attending.length} to attend`);
@@ -378,9 +379,9 @@ export function CalendarScreen({
       ...added.map((item) => item.where).filter((place): place is string => Boolean(place)),
     ]);
     return {
-      eyebrow:when,
-      title:parts.join(" · "),
-      detail:places.size === 1 ? [...places][0] : places.size > 1 ? `Across ${places.size} places` : "Your upcoming schedule",
+      eyebrow:"Coming up",
+      title:`You have ${total} classes ${whenPhrase}.`,
+      detail:[parts.join(" · "),places.size === 1 ? [...places][0] : places.size > 1 ? `${places.size} places` : ""].filter(Boolean).join(" · "),
     };
   },[classes,savedByIso,studioById,todayIso]);
 
