@@ -13249,7 +13249,7 @@ a.clspeek-by:active { opacity: .6; }
     right:auto;
     width:calc(100% - 32px);
     bottom:calc(10px + env(safe-area-inset-bottom));
-    max-width:352px;
+    max-width:280px;
     margin:0;
     transform:translateX(-50%);
     align-items:center;
