@@ -284,6 +284,21 @@ export function CalendarScreen({
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
+  const todayCoachingSummary = useMemo(() => {
+    const date=new Date(`${todayIso}T00:00:00Z`);
+    const dow=(date.getUTCDay()+6)%7;
+    const rows=uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,todayIso,dow)),studioById)
+      .sort((a,b) => timeToMinutes(a.startTime)-timeToMinutes(b.startTime));
+    const studiosToday=[...new Set(rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location).filter((place): place is string => !!place))];
+    const naturalTimes=(items:ClassDto[]) => items.map((item) => {
+      const time=clockParts(item.startTime);
+      return `${time.hm.replace(":00","")}${time.ap.toLowerCase()}`;
+    }).join(", ").replace(/, ([^,]*)$/," and $1");
+    if (!rows.length) return <p>You’re not coaching today.</p>;
+    if (!studiosToday.length) return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong> today.</p>;
+    if (studiosToday.length === 1) return <p>You’re coaching at <strong>{studiosToday[0]}</strong> at <strong>{naturalTimes(rows)}</strong> today.</p>;
+    return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong> across <strong>{studiosToday.length} studios</strong> today.</p>;
+  },[classes,studioById,todayIso]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -499,6 +514,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Personal</Link><Link href="/calendar/following">Following</Link></nav>}
+      {!sheet && !member && <section className="personal-calendar-summary" aria-label="Today’s coaching summary">{todayCoachingSummary}</section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
