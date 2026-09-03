@@ -306,16 +306,43 @@ export function CalendarScreen({
     const start=Date.parse(`${todayIso}T00:00:00Z`);
     const coachingOn=(iso:string,date:Date) => uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById)
       .sort((a,b) => timeToMinutes(a.startTime)-timeToMinutes(b.startTime));
-    const rows=coachingOn(todayIso,new Date(start));
-    const added=savedByIso.get(todayIso) ?? [];
+    let next:{ iso:string; offset:number; rows:ClassDto[]; added:WeekItem[] } | null=null;
+    for (let offset=0; offset<366; offset+=1) {
+      const date=new Date(start+offset*864e5);
+      const iso=date.toISOString().slice(0,10);
+      const rows=coachingOn(iso,date);
+      const added=savedByIso.get(iso) ?? [];
+      if (rows.length || added.length) { next={ iso,offset,rows,added }; break; }
+    }
+    if (!next) return <p>Your calendar is clear for now.</p>;
+    const { iso,offset,rows,added }=next;
+    const when=offset === 0 ? "today" : offset === 1 ? "tomorrow" : `on ${dayBandLabel(iso)}`;
+    const attending=added.filter((item) => !item.personal);
+    const personal=added.filter((item) => item.personal);
     const total=rows.length+added.length;
     const coachingStudios=[...new Set(rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location).filter((place): place is string => !!place))];
     const naturalTimes=rows.map((item) => { const time=clockParts(item.startTime); return `${time.hm.replace(":00","")}${time.ap.toLowerCase()}`; }).join(", ").replace(/, ([^,]*)$/," and $1");
-    if (!total) return <p>Nothing is on your calendar today.</p>;
-    if (!rows.length) return <p>You have <strong>{total} {total === 1 ? "class" : "classes"}</strong> on your calendar today.</p>;
-    const extra=added.length ? <> You also have <strong>{added.length} other {added.length === 1 ? "class" : "classes"}</strong> on your calendar.</> : null;
-    if (coachingStudios.length === 1) return <p>You’re coaching at <strong>{coachingStudios[0]}</strong> at <strong>{naturalTimes}</strong> today.{extra}</p>;
-    return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong>{coachingStudios.length ? <> across <strong>{coachingStudios.length} studios</strong></> : null} today.{extra}</p>;
+    const addedTime=(item:WeekItem) => `${item.hm.replace(":00","")}${item.ap.toLowerCase()}`;
+    if (total === 1 && rows.length === 1) {
+      const place=coachingStudios[0];
+      return <p>You’re coaching <strong>{rows[0].name}</strong>{place ? <> at <strong>{place}</strong></> : null} at <strong>{naturalTimes}</strong> {when}.</p>;
+    }
+    if (total === 1 && attending.length === 1) {
+      const item=attending[0];
+      return <p>You’re attending <strong>{item.name}</strong>{item.where ? <> at <strong>{item.where}</strong></> : null} at <strong>{addedTime(item)}</strong> {when}.</p>;
+    }
+    if (total === 1 && personal.length === 1) {
+      const item=personal[0];
+      return <p>Your next class is <strong>{item.name}</strong> at <strong>{addedTime(item)}</strong> {when}.</p>;
+    }
+    if (!added.length && rows.length <= 3 && coachingStudios.length === 1)
+      return <p>You’re coaching at <strong>{coachingStudios[0]}</strong> at <strong>{naturalTimes}</strong> {when}.</p>;
+    const coachingCount=rows.length ? <><strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong>{coachingStudios.length > 1 ? <> across <strong>{coachingStudios.length} studios</strong></> : null}</> : null;
+    const attendingCount=attending.length ? <strong>{attending.length} {attending.length === 1 ? "class" : "classes"}</strong> : null;
+    const personalCount=personal.length ? <strong>{personal.length} personal {personal.length === 1 ? "class" : "classes"}</strong> : null;
+    if (rows.length) return <p>You’re coaching {coachingCount}{attendingCount ? <> and attending {attendingCount}</> : null}{personalCount ? <>, with {personalCount}</> : null} {when}.</p>;
+    if (attending.length) return <p>You’re attending {attendingCount}{personalCount ? <> and have {personalCount}</> : null} {when}.</p>;
+    return <p>You have {personalCount} {when}.</p>;
   },[classes,savedByIso,studioById,todayIso]);
 
   /** Every date from today that holds something, with its rows in time order.
@@ -530,7 +557,7 @@ export function CalendarScreen({
       <HighlightOnLand />
       {!sheet && <section className="calendar-scope-hero" onTouchStart={startScopeSwipe} onTouchEnd={endScopeSwipe}>
         <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav>
-        <section className="calendar-section-summary personal-upcoming-summary" aria-label="Today’s calendar summary"><div>{todaySummary}</div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
+        <section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div>{todaySummary}</div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">

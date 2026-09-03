@@ -408,7 +408,6 @@ export function FollowingScreen({
     };
   }, [calendarDirectoryOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
-  const [followingType, setFollowingType] = useState<"all" | "coaches" | "studios" | "groups">("all");
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -616,11 +615,6 @@ export function FollowingScreen({
     return items.filter((item) => {
       if (!passes(item)) return false;
       if (!isHome) return true;
-      if (calendarFollowing && followingType !== "all") {
-        if (followingType === "coaches" && !favoriteIds.has(item.coachId)) return false;
-        if (followingType === "studios" && !(item.whereHref && studioHrefs.has(item.whereHref))) return false;
-        if (followingType === "groups" && !groupKeys.has(item.key)) return false;
-      }
       if (calendarFilter === "you") return item.saved || item.shift || (!!meId && item.coachId === meId);
       if (calendarFilter === "people") return (includeYou && (item.saved || item.shift || (!!meId && item.coachId === meId))) || selectedPeople.has(item.coachId);
       if (calendarFilter === "following") {
@@ -647,7 +641,7 @@ export function FollowingScreen({
       return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, isHome, meId, calendarFilter, calendarFollowing, followingType, coachOptions, studioOptions, groupOptions, favoriteIds, selectedPeople, includeYou]);
+  }, [items, f, geo, isHome, meId, calendarFilter, calendarFollowing, coachOptions, studioOptions, groupOptions, favoriteIds, selectedPeople, includeYou]);
 
   // A brand-new account has no useful calendar identity to put in the rail
   // yet. Showing a lone “You” circle above an empty state makes the circle
@@ -905,9 +899,6 @@ export function FollowingScreen({
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>
       </header></section>}
       <div className={calendarFollowing ? "calendar-foreground-sheet" : undefined}>
-      {calendarFollowing && <div className="calendar-following-filters" role="group" aria-label="Filter followed calendars">
-        {(["all","coaches","studios","groups"] as const).map((type) => <button key={type} type="button" className={followingType === type ? "on" : ""} aria-pressed={followingType === type} onClick={() => setFollowingType(type)}>{type.charAt(0).toUpperCase() + type.slice(1)}</button>)}
-      </div>}
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">

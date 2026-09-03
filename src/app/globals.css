@@ -11097,7 +11097,6 @@ html[data-mode="dark"],
   .screen.hasnav .calendar-cardwrap,
   .calendar-foreground-sheet { position:relative; z-index:1; margin-top:-20px; margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); padding:22px var(--page-gutter) calc(92px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); }
   .screen.hasnav .calendar-cardwrap { width:calc(100% + (2 * var(--page-gutter))); }
-  .calendar-foreground-sheet .calendar-following-filters { margin-bottom:22px; }
 }
 .calendar-section-summary { margin:4px 0 20px; display:flex; align-items:center; justify-content:space-between; gap:18px; color:var(--color-text-primary); }
 .calendar-section-summary p { max-width:31ch; margin:0; font-size:24px; line-height:1.25; }
@@ -11109,10 +11108,6 @@ html[data-mode="dark"],
 .personal-summary-actions::-webkit-scrollbar { display:none; }
 .personal-summary-actions > :is(a,button) { min-height:40px; padding:0 15px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
 .personal-summary-actions > button:first-child { background:var(--color-black); color:var(--color-white); }
-.calendar-following-filters { margin:0 0 22px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
-.calendar-following-filters::-webkit-scrollbar { display:none; }
-.calendar-following-filters button { min-height:38px; padding:0 15px; flex:0 0 auto; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-secondary); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
-.calendar-following-filters button.on { background:var(--color-black); color:var(--color-white); }
 .calendar-following-card { margin:0 0 8px; padding:0; overflow:hidden; border:0; border-radius:20px; background:var(--color-surface); }
 .calendar-following-card .activity-card-main { width:100%; min-width:0; padding:16px; display:flex; align-items:flex-start; gap:13px; border:0; background:transparent; color:var(--color-text-primary); font:inherit; text-align:left; }
 .calendar-following-card .activity-card-avatar { width:48px; height:48px; flex:0 0 48px; display:grid; place-items:center; overflow:hidden; border-radius:50%; color:var(--color-white); font-size:16px; font-weight:700; }
