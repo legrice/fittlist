@@ -127,7 +127,6 @@ export function CalendarScreen({
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
-  const [upcomingOpen, setUpcomingOpen] = useState(false);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -522,7 +521,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Personal</Link><Link href="/calendar/following">Following</Link></nav>}
-      {!sheet && !member && <section className="calendar-section-summary personal-upcoming-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><div className="personal-summary-actions">{upcomingDays.length > 0 && <button type="button" onClick={() => setUpcomingOpen((open) => !open)}>{upcomingOpen ? "Hide upcoming" : "See upcoming"}</button>}<Link href="/you">Manage calendar</Link><button type="button" onClick={openShare}>Share</button></div></section>}
+      {!sheet && !member && <section className="calendar-section-summary personal-upcoming-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><div className="personal-summary-actions"><Link href="/you">Manage calendar</Link><button type="button" onClick={openShare}>Share</button></div></section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
@@ -558,7 +557,7 @@ export function CalendarScreen({
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
-      {!sheet && !upcomingOpen ? null : bare ? (
+      {bare ? (
         <WeekEmpty
           first
           title="Your calendar is empty"
