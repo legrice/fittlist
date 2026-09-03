@@ -12885,7 +12885,10 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-scope-top.is-expanded + .calendar-scope-hero { position:relative; top:auto; }
   .calendar-scope-top.is-expanded .calendar-scope-actions {
     position:fixed;
-    top:calc(12px + env(safe-area-inset-top));
+    /* Match the search control's resting row. The expanded control leaves
+       that grid to remain available while the calendar scrolls, so carry
+       the row's 12px top padding with it instead of jumping upward. */
+    top:calc(24px + env(safe-area-inset-top));
     right:var(--page-gutter);
     z-index:30;
   }
