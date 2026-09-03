@@ -6554,12 +6554,6 @@ html[data-mode="dark"],
   display: inline-flex; align-items: center; justify-content: center;
 }
 .discover-tabs > :is(button, a).on { background: var(--si); color: var(--color-black); box-shadow: none; }
-.discover-page-title {
-  margin:18px 0 20px; font-size:34px; line-height:1.05; letter-spacing:-.025em;
-}
-.discover-title-row { min-height:64px; margin:4px 0; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.discover-title-row h1 { margin:0; font-size:34px; line-height:1.05; letter-spacing:-.025em; }
-.discover-title-row > button { width:44px; height:44px; padding:0; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:50%; background:var(--color-surface); color:var(--color-text-primary); }
 .discover-directory-tabs { display:flex; gap:22px; overflow-x:auto; border-bottom:1px solid var(--line); scrollbar-width:none; }
 .discover-directory-tabs::-webkit-scrollbar { display:none; }
 .discover-directory-tabs button { flex:0 0 auto; min-height:48px; padding:0; border:0; border-bottom:3px solid transparent; background:transparent; color:var(--muted); font:inherit; font-size:15px; font-weight:700; }
