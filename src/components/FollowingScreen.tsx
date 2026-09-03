@@ -455,7 +455,9 @@ export function FollowingScreen({
   };
   const moveClassSheetPull = (event:TouchEvent<HTMLDivElement>) => {
     if (classSheetPullStart.current === null) return;
-    setClassSheetPullY(Math.max(0,(event.touches[0]?.clientY ?? classSheetPullStart.current)-classSheetPullStart.current));
+    const distance=Math.max(0,(event.touches[0]?.clientY ?? classSheetPullStart.current)-classSheetPullStart.current);
+    if (distance > 0) event.preventDefault();
+    setClassSheetPullY(distance);
   };
   const endClassSheetPull = () => {
     if (classSheetPullY > 120) setClassSheetDismissed(true);

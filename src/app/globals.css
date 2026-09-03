@@ -11101,6 +11101,8 @@ html[data-mode="dark"],
   body:has(.calendar-scope-hero),
   .screen.hasnav:has(.calendar-scope-hero),
   .screen.hasnav:has(.calendar-scope-hero) > .pad { background:var(--color-background); }
+  html:has(.calendar-scope-hero),
+  body:has(.calendar-scope-hero) { overscroll-behavior-y:none; }
   .calendar-scope-top { margin:-8px calc(-1 * var(--page-gutter)) 14px; padding:12px var(--page-gutter) 8px; }
   .calendar-scope-hero { position:sticky; top:0; z-index:0; margin:0 calc(-1 * var(--page-gutter)); padding:12px var(--page-gutter) 40px; border-radius:0; }
   .screen.hasnav .calendar-cardwrap,
