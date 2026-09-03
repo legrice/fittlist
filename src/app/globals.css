@@ -11082,7 +11082,7 @@ html[data-mode="dark"],
 .calendar-mode-tabs a { position:relative; z-index:1; min-height:38px; padding:0 8px; display:flex; align-items:center; justify-content:center; color:var(--color-text-secondary); font-size:15px; font-weight:700; text-decoration:none; }
 .calendar-mode-tabs a[aria-current="page"] { color:var(--color-text-primary); }
 .calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-background); color:var(--color-text-primary); touch-action:pan-y; }
-.calendar-scope-top { position:sticky; top:0; z-index:12; margin:0 0 18px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; }
+.calendar-scope-top { position:relative; z-index:2; margin:0 0 18px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; }
 .calendar-scope-top .calendar-mode-tabs { margin:0; justify-self:center; }
 .calendar-scope-search { width:44px; height:44px; padding:0; display:grid; place-items:center; overflow:hidden; border:0; border-radius:50%; background:color-mix(in srgb,var(--color-surface) 62%,transparent); color:var(--color-text-primary); text-decoration:none; -webkit-backdrop-filter:blur(24px) saturate(170%); backdrop-filter:blur(24px) saturate(170%); box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-white) 72%,transparent); }
 .calendar-scope-top > .brandbar-avatar { width:44px; height:44px; margin:0; }
@@ -11101,8 +11101,8 @@ html[data-mode="dark"],
   body:has(.calendar-scope-hero),
   .screen.hasnav:has(.calendar-scope-hero),
   .screen.hasnav:has(.calendar-scope-hero) > .pad { background:var(--color-background); }
-  .calendar-scope-top { top:0; margin:-8px calc(-1 * var(--page-gutter)) 14px; padding:12px var(--page-gutter) 8px; }
-  .calendar-scope-hero { position:sticky; top:64px; z-index:0; margin:0 calc(-1 * var(--page-gutter)); padding:12px var(--page-gutter) 40px; border-radius:0; }
+  .calendar-scope-top { margin:-8px calc(-1 * var(--page-gutter)) 14px; padding:12px var(--page-gutter) 8px; }
+  .calendar-scope-hero { position:sticky; top:0; z-index:0; margin:0 calc(-1 * var(--page-gutter)); padding:12px var(--page-gutter) 40px; border-radius:0; }
   .screen.hasnav .calendar-cardwrap,
   .calendar-foreground-sheet { position:relative; z-index:1; margin-top:-20px; margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); padding:22px var(--page-gutter) calc(92px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); box-shadow:0 -8px 24px rgba(0,0,0,.07); }
   .screen.hasnav .calendar-cardwrap { width:calc(100% + (2 * var(--page-gutter))); }
