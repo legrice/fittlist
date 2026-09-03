@@ -12857,15 +12857,16 @@ a.clspeek-by:active { opacity: .6; }
   .screen.hasnav .calendar-cardwrap.calendar-surface-schedule,
   .calendar-foreground-sheet.calendar-surface-schedule {
     width:calc(100% + (2 * var(--page-gutter)));
-    margin-top:-12px;
+    margin-top:0;
     margin-right:calc(-1 * var(--page-gutter));
     margin-left:calc(-1 * var(--page-gutter));
     padding:24px var(--page-gutter) calc(104px + env(safe-area-inset-bottom));
-    border-radius:32px 32px 0 0;
+    border-radius:0;
     background:var(--color-shift);
-    box-shadow:0 -10px 30px rgba(0,0,0,.12);
+    box-shadow:none;
     color:var(--color-white);
   }
+  .calendar-scope-top.is-expanded { z-index:20; }
   .calendar-surface-schedule :is(.dayband-d,.cash-day > h2) { color:var(--color-white); }
   .calendar-surface-schedule .dayband,
   .calendar-surface-schedule .cash-day > h2 { background:transparent !important; }

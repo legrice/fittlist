@@ -8,7 +8,8 @@ import { buildDiscoverFeed } from "@/lib/discoverfeed";
 /**
  * The portion of Home's rolling calendar that is intentionally kept out of
  * the initial document. Today and tomorrow are already interactive before
- * this runs; the rest arrives after first paint and merges by occurrence key.
+ * this runs; the longer horizon arrives after first paint and merges by
+ * occurrence key.
  */
 export async function loadCalendarRemainder() {
   const userId = await getSessionUserId();
@@ -28,7 +29,7 @@ export async function loadCalendarRemainder() {
   const feed = await buildDiscoverFeed(userId, me, {
     calendarOnly: true,
     startDay: 2,
-    endDay: 30,
+    endDay: 180,
   });
   return {
     items: feed.items,

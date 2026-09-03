@@ -163,7 +163,7 @@ export function CalendarScreen({
   // Day view relies on its actual date bands as sticky headers instead of
   // rendering a second, competing overlay.
   const [ymInView, setYmInView] = useState<string | null>(null);
-  const [dayHorizon, setDayHorizon] = useState(56);
+  const [dayHorizon, setDayHorizon] = useState(180);
   const [monthHorizon, setMonthHorizon] = useState(12);
   const dayMoreRef = useRef<HTMLButtonElement>(null);
   const lastAutoDayCount = useRef(-1);

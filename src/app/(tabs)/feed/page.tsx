@@ -33,7 +33,7 @@ export default async function DiscoverPage() {
   if (!me) redirect("/");
   const today = todayIso();
   const throughDate = new Date(`${today}T00:00:00Z`);
-  throughDate.setUTCDate(throughDate.getUTCDate() + 30);
+  throughDate.setUTCDate(throughDate.getUTCDate() + 180);
   const through = throughDate.toISOString().slice(0, 10);
 
   // The feed is the expensive branch. Studio saves, groups and pins are
@@ -41,7 +41,7 @@ export default async function DiscoverPage() {
   // to finish before their first query even starts.
   const [feed, savedStudioRows, groupData, pinRows, managedCalendars] = await Promise.all([
     // First paint is deliberately only today + tomorrow and the visible
-    // portion of the rail. The remaining exact 31-day calendar streams from
+    // portion of the rail. The longer calendar horizon streams from
     // the client after this page is already usable.
     buildDiscoverFeed(userId, me, {
       calendarOnly: true,

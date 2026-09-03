@@ -272,8 +272,8 @@ export function FollowingScreen({
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [calendarSwitcherOpen]);
 
-  // Give the browser the useful screen first. The network request for days
-  // 3–31 begins only after hydration, then merges without replacing today's
+  // Give the browser the useful screen first. The longer schedule begins
+  // loading after hydration, then merges without replacing today's
   // already-interactive rows or resetting any filters/peek state.
   useEffect(() => {
     const generation = ++streamGeneration.current;
@@ -688,7 +688,7 @@ export function FollowingScreen({
     const out: { iso: string; label: string }[] = [];
     for (let iso = todayIso, n = 0; iso <= last || n < 14; iso = plusDays(iso, 1), n++) {
       out.push({ iso, label: n === 0 ? "Today" : tabLabel(iso) });
-      if (n > 30) break;
+      if (n > 180) break;
     }
     return out;
   }, [items, todayIso]);
@@ -719,12 +719,11 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Calendar is a rolling month: today plus the following thirty days. The
-  // server expands that exact range, independent of where today lands in its
-  // calendar week.
+  // Keep a generous rolling horizon so the semantic schedule feels continuous
+  // rather than stopping at an arbitrary month boundary.
   const homeRows: FeedItem[] = useMemo(
     () => {
-      const monthEnd = plusDays(todayIso, 30);
+      const monthEnd = plusDays(todayIso, 180);
       return [...shown]
         .filter((item) => item.iso >= todayIso && item.iso <= monthEnd)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
