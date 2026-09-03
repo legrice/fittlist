@@ -11131,8 +11131,9 @@ html[data-mode="dark"],
 .calendar-summary-share { min-width:104px; background:var(--color-lime) !important; color:var(--color-black) !important; }
 .calendar-summary-reveal { width:44px; min-width:44px !important; height:36px; min-height:36px !important; padding:0 !important; border-radius:var(--radius-pill); background:color-mix(in srgb,var(--color-white) 14%,transparent) !important; color:var(--color-white) !important; }
 .calendar-summary-reveal:active { transform:translateY(2px); }
-.calendar-scope-hero:has(.calendar-reveal-panel) { position:relative; top:auto; }
-.calendar-reveal-panel { width:min(100%,560px); margin:8px auto 0; display:grid; gap:20px; text-align:left; }
+.calendar-scope-hero:has(.calendar-reveal-panel) { position:relative; top:auto; min-height:calc(100dvh - 64px); display:flex; flex-direction:column; }
+.calendar-reveal-panel { width:min(100%,560px); margin:8px auto 0; flex:1; display:flex; flex-direction:column; gap:20px; text-align:left; }
+.calendar-reveal-panel > .calendar-summary-share { width:100%; min-height:54px; margin-top:auto; flex:0 0 auto; }
 .calendar-reveal-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .calendar-reveal-actions button { min-height:46px; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; }
 .calendar-reveal-actions button:last-child { background:var(--color-lime); color:var(--color-black); }
