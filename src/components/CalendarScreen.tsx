@@ -525,7 +525,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <section className="calendar-scope-hero">
-        <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Yours</Link><Link href="/calendar/following">Following</Link></nav>
+        <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav>
         <button type="button" className="owned-calendar-selector" aria-expanded={calendarChooserOpen} onClick={() => setCalendarChooserOpen(true)}><span>Personal calendar</span><Icon name="expand_more" size={22} /></button>
         {!member && <section className="calendar-section-summary personal-upcoming-summary" aria-label="Upcoming coaching summary"><div>{upcomingCoachingSummary}</div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>}
       </section>}
