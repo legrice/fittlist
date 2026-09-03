@@ -316,57 +316,6 @@ export function CalendarScreen({
     const [h, m] = r.hm.split(":").map(Number);
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
-  const calendarSummary = useMemo(() => {
-    const start=Date.parse(`${todayIso}T00:00:00Z`);
-    const coachingOn=(iso:string,date:Date) => uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById)
-      .sort((a,b) => timeToMinutes(a.startTime)-timeToMinutes(b.startTime));
-    let next:{ iso:string; offset:number; rows:ClassDto[]; added:WeekItem[] } | null=null;
-    for (let offset=0; offset<366; offset+=1) {
-      const date=new Date(start+offset*864e5);
-      const iso=date.toISOString().slice(0,10);
-      const rows=coachingOn(iso,date);
-      const added=savedByIso.get(iso) ?? [];
-      if (rows.length || added.length) { next={ iso,offset,rows,added }; break; }
-    }
-    if (!next) return { eyebrow:"Your calendar", title:"Nothing coming up", detail:"Add something whenever you’re ready." };
-    const { iso,offset,rows,added }=next;
-    const when=offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : dayBandLabel(iso);
-    const whenPhrase=offset === 0 ? "today" : offset === 1 ? "tomorrow" : `on ${dayBandLabel(iso)}`;
-    const attending=added.filter((item) => !item.personal);
-    const personal=added.filter((item) => item.personal);
-    const total=rows.length+added.length;
-    const coachingStudios=[...new Set(rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location).filter((place): place is string => !!place))];
-    const naturalTimes=rows.map((item) => { const time=clockParts(item.startTime); return `${time.hm.replace(":00","")}${time.ap.toLowerCase()}`; }).join(", ").replace(/, ([^,]*)$/," and $1");
-    const addedTime=(item:WeekItem) => `${item.hm.replace(":00","")}${item.ap.toLowerCase()}`;
-    if (total === 1 && rows.length === 1) {
-      const place=coachingStudios[0];
-      return { eyebrow:"Up next", title:`You’re coaching one class ${whenPhrase} at ${naturalTimes}.`, detail:[rows[0].name,place,when].filter(Boolean).join(" · ") };
-    }
-    if (total === 1 && attending.length === 1) {
-      const item=attending[0];
-      return { eyebrow:"Up next", title:`You’re attending ${item.name} at ${addedTime(item)}.`, detail:[item.where,when].filter(Boolean).join(" · ") };
-    }
-    if (total === 1 && personal.length === 1) {
-      const item=personal[0];
-      return { eyebrow:"Up next", title:`Your next class is ${item.name} at ${addedTime(item)}.`, detail:when };
-    }
-    if (!added.length && rows.length <= 3 && coachingStudios.length === 1)
-      return { eyebrow:"Coming up", title:`You’re coaching ${rows.length} classes ${whenPhrase}.`, detail:`${coachingStudios[0]} · ${naturalTimes}` };
-    const parts:string[]=[];
-    if (rows.length) parts.push(`${rows.length} to coach`);
-    if (attending.length) parts.push(`${attending.length} to attend`);
-    if (personal.length) parts.push(`${personal.length} personal`);
-    const places=new Set([
-      ...coachingStudios,
-      ...added.map((item) => item.where).filter((place): place is string => Boolean(place)),
-    ]);
-    return {
-      eyebrow:"Coming up",
-      title:`You have ${total} classes ${whenPhrase}.`,
-      detail:[parts.join(" · "),places.size === 1 ? [...places][0] : places.size > 1 ? `${places.size} places` : ""].filter(Boolean).join(" · "),
-    };
-  },[classes,savedByIso,studioById,todayIso]);
-
   const calendarWeekSummary = useMemo(() => {
     const start=Date.parse(`${todayIso}T00:00:00Z`);
     let coaching=0;
@@ -619,7 +568,7 @@ export function CalendarScreen({
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show classes" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className="calendar-scope-hero"><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{classSheetDismissed ? calendarWeekSummary.title : calendarSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar details" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section>{classSheetDismissed && <section className="calendar-reveal-panel" aria-label="Your weekly share preview"><div className="calendar-week-preview"><h2>Your week</h2><button type="button" aria-label="Open your weekly share preview" onClick={openShare}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/api/story/me?from=${todayIso}&days=7`} alt="Preview of your weekly schedule" /></button></div><button type="button" className="calendar-summary-share" onClick={openShare}>Share</button></section>}</section></>}
+        <section className="calendar-scope-hero"><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar details" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section>{classSheetDismissed && <section className="calendar-reveal-panel" aria-label="Your weekly share preview"><div className="calendar-week-preview"><h2>Your week</h2><button type="button" aria-label="Open your weekly share preview" onClick={openShare}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/api/story/me?from=${todayIso}&days=7`} alt="Preview of your weekly schedule" /></button></div><button type="button" className="calendar-summary-share" onClick={openShare}>Share</button></section>}</section></>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
