@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type CSSProperties, type MouseEvent as ReactMouseEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -133,6 +133,7 @@ export function CalendarScreen({
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
+  const [scopeSwipe,setScopeSwipe]=useState({ progress:0,offset:0,dragging:false });
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
@@ -234,7 +235,19 @@ export function CalendarScreen({
     if (sheet) return;
     const startSwipe:EventListener=(event) => {
       const touch=(event as unknown as { touches:TouchList }).touches[0];
-      if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+      if (touch) {
+        scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+        setScopeSwipe({ progress:0,offset:0,dragging:true });
+      }
+    };
+    const moveSwipe:EventListener=(event) => {
+      const start=scopeSwipeStart.current;
+      const touch=(event as unknown as { touches:TouchList }).touches[0];
+      if (!start || !touch) return;
+      const dx=touch.clientX-start.x;
+      const dy=touch.clientY-start.y;
+      if (dx >= 0 || Math.abs(dx) <= Math.abs(dy)) return;
+      setScopeSwipe({ progress:Math.min(1,-dx/180),offset:Math.max(-72,dx),dragging:true });
     };
     const finishSwipe:EventListener=(event) => {
       const start=scopeSwipeStart.current;
@@ -243,13 +256,21 @@ export function CalendarScreen({
       if (!start || !touch) return;
       const dx=touch.clientX-start.x;
       const dy=touch.clientY-start.y;
-      if (dx < -64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar/following");
+      if (dx < -64 && Math.abs(dx) > Math.abs(dy)*1.25) {
+        setScopeSwipe({ progress:1,offset:-72,dragging:false });
+        router.push("/calendar/following");
+      } else setScopeSwipe({ progress:0,offset:0,dragging:false });
     };
+    const cancelSwipe=() => { scopeSwipeStart.current=null; setScopeSwipe({ progress:0,offset:0,dragging:false }); };
     document.addEventListener("touchstart",startSwipe,{ passive:true });
+    document.addEventListener("touchmove",moveSwipe,{ passive:true });
     document.addEventListener("touchend",finishSwipe,{ passive:true });
+    document.addEventListener("touchcancel",cancelSwipe,{ passive:true });
     return () => {
       document.removeEventListener("touchstart",startSwipe);
+      document.removeEventListener("touchmove",moveSwipe);
       document.removeEventListener("touchend",finishSwipe);
+      document.removeEventListener("touchcancel",cancelSwipe);
     };
   },[router,sheet]);
   useEffect(() => {
@@ -568,14 +589,15 @@ export function CalendarScreen({
       setAddOpen(true);
     }
   };
+  const scopeMotion={ "--calendar-scope-position":scopeSwipe.progress,"--calendar-swipe-offset":`${scopeSwipe.offset}px` } as CSSProperties;
 
   return (
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      {!sheet && <section className="calendar-scope-hero">
+      {!sheet && <section className={`calendar-scope-hero${scopeSwipe.dragging ? " is-swiping" : ""}`} style={scopeMotion}>
         <div className="calendar-scope-top"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav><button type="button" className="calendar-scope-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button></div>
-        <section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><span>{calendarSummary.eyebrow}</span><strong>{calendarSummary.title}</strong><small>{calendarSummary.detail}</small></div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
+        <section className="calendar-section-summary personal-upcoming-summary calendar-scope-motion" aria-label="Calendar summary"><div className="calendar-summary-copy"><span>{calendarSummary.eyebrow}</span><strong>{calendarSummary.title}</strong><small>{calendarSummary.detail}</small></div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
@@ -602,7 +624,7 @@ export function CalendarScreen({
         </div>
       </header>
 
-      <div className="cardwrap calendar-cardwrap">
+      <div className={`cardwrap calendar-cardwrap calendar-scope-motion${scopeSwipe.dragging ? " is-swiping" : ""}`} style={scopeMotion}>
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
           where every day band underneath pins: one writer for that number,

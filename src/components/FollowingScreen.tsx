@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties, type TouchEvent } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -220,12 +220,25 @@ export function FollowingScreen({
   const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
   const streamGeneration = useRef(0);
   const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
+  const [scopeSwipe,setScopeSwipe]=useState({ progress:1,offset:0,dragging:false });
 
   useEffect(() => {
     if (!calendarFollowing) return;
     const startSwipe:EventListener=(event) => {
       const touch=(event as unknown as { touches:TouchList }).touches[0];
-      if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+      if (touch) {
+        scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+        setScopeSwipe({ progress:1,offset:0,dragging:true });
+      }
+    };
+    const moveSwipe:EventListener=(event) => {
+      const start=scopeSwipeStart.current;
+      const touch=(event as unknown as { touches:TouchList }).touches[0];
+      if (!start || !touch) return;
+      const dx=touch.clientX-start.x;
+      const dy=touch.clientY-start.y;
+      if (dx <= 0 || Math.abs(dx) <= Math.abs(dy)) return;
+      setScopeSwipe({ progress:Math.max(0,1-dx/180),offset:Math.min(72,dx),dragging:true });
     };
     const finishSwipe:EventListener=(event) => {
       const start=scopeSwipeStart.current;
@@ -234,13 +247,21 @@ export function FollowingScreen({
       if (!start || !touch) return;
       const dx=touch.clientX-start.x;
       const dy=touch.clientY-start.y;
-      if (dx > 64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar");
+      if (dx > 64 && Math.abs(dx) > Math.abs(dy)*1.25) {
+        setScopeSwipe({ progress:0,offset:72,dragging:false });
+        router.push("/calendar");
+      } else setScopeSwipe({ progress:1,offset:0,dragging:false });
     };
+    const cancelSwipe=() => { scopeSwipeStart.current=null; setScopeSwipe({ progress:1,offset:0,dragging:false }); };
     document.addEventListener("touchstart",startSwipe,{ passive:true });
+    document.addEventListener("touchmove",moveSwipe,{ passive:true });
     document.addEventListener("touchend",finishSwipe,{ passive:true });
+    document.addEventListener("touchcancel",cancelSwipe,{ passive:true });
     return () => {
       document.removeEventListener("touchstart",startSwipe);
+      document.removeEventListener("touchmove",moveSwipe);
       document.removeEventListener("touchend",finishSwipe);
+      document.removeEventListener("touchcancel",cancelSwipe);
     };
   },[calendarFollowing,router]);
 
@@ -899,15 +920,16 @@ export function FollowingScreen({
     const p = f.place as string[];
     return p.length === 1 ? p[0] : `${p.length} places`;
   };
+  const scopeMotion={ "--calendar-scope-position":scopeSwipe.progress,"--calendar-swipe-offset":`${scopeSwipe.offset}px` } as CSSProperties;
 
   return (
     <>
-      {calendarFollowing && <section className="calendar-scope-hero"><div className="calendar-scope-top"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav><button type="button" className="calendar-scope-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button></div>
-      <header className="calendar-section-summary calendar-following-head">
+      {calendarFollowing && <section className={`calendar-scope-hero${scopeSwipe.dragging ? " is-swiping" : ""}`} style={scopeMotion}><div className="calendar-scope-top"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav><button type="button" className="calendar-scope-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button></div>
+      <header className="calendar-section-summary calendar-following-head calendar-scope-motion">
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>
       </header></section>}
-      <div className={calendarFollowing ? "calendar-foreground-sheet" : undefined}>
+      <div className={calendarFollowing ? `calendar-foreground-sheet calendar-scope-motion${scopeSwipe.dragging ? " is-swiping" : ""}` : undefined} style={calendarFollowing ? scopeMotion : undefined}>
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
