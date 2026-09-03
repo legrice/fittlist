@@ -887,7 +887,7 @@ export function FollowingScreen({
       {calendarFollowing && <section className="calendar-scope-hero"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
       <header className="calendar-section-summary calendar-following-head">
         <div><p>{followingSummaryText}</p></div>
-        <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>Manage following</button>
+        <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>
       </header></section>}
       <div className={calendarFollowing ? "calendar-foreground-sheet" : undefined}>
       {calendarFollowing && <div className="calendar-following-filters" role="group" aria-label="Filter followed calendars">

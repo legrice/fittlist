@@ -11098,6 +11098,7 @@ html[data-mode="dark"],
 .calendar-section-summary p { max-width:31ch; margin:0; font-size:20px; line-height:1.3; }
 .calendar-section-summary strong { font-weight:700; }
 .calendar-section-summary > :is(a,button) { min-height:40px; padding:0 16px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
+.calendar-following-head { align-items:flex-start; flex-direction:column; }
 .personal-upcoming-summary { align-items:flex-start; flex-direction:column; }
 .personal-summary-actions { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
 .personal-summary-actions::-webkit-scrollbar { display:none; }
