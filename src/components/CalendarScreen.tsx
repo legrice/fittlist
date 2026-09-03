@@ -38,7 +38,6 @@ const Adder = dynamic(() => import("@/components/Adder").then((module) => module
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) => module.PlanSheet));
-const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -134,7 +133,6 @@ export function CalendarScreen({
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
   const [scopeSwipe,setScopeSwipe]=useState({ progress:0,offset:0,dragging:false });
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -597,8 +595,14 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <section className={`calendar-scope-hero${scopeSwipe.dragging ? " is-swiping" : ""}`} style={scopeMotion}>
-        <div className="calendar-scope-top"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav><button type="button" className="calendar-scope-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button></div>
-        <section className="calendar-section-summary personal-upcoming-summary calendar-scope-motion" aria-label="Calendar summary"><div className="calendar-summary-copy"><span>{calendarSummary.eyebrow}</span><strong>{calendarSummary.title}</strong><small>{calendarSummary.detail}</small></div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
+        <div className="calendar-scope-top">
+          <Link href="/you" className="calendar-scope-avatar" aria-label="Open your profile">
+            {viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}
+          </Link>
+          <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav>
+          <Link href="/discover" className="calendar-scope-search" aria-label="Discover coaches, studios, and groups"><Icon name="search" size={23} /></Link>
+        </div>
+        <section className="calendar-section-summary personal-upcoming-summary calendar-scope-motion" aria-label="Calendar summary"><div className="calendar-summary-copy"><span>{calendarSummary.eyebrow}</span><strong>{calendarSummary.title}</strong><small>{calendarSummary.detail}</small></div></section>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
@@ -680,7 +684,7 @@ export function CalendarScreen({
         />
       )}
 
-      {sheet ? <div className="calendar-bottom-actions" aria-label="Schedule actions"><button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button></div> : <BodyPortal><div className="calendar-bottom-actions" aria-label="Schedule actions">{!bare && <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button>}</div></BodyPortal>}
+      {sheet ? <div className="calendar-bottom-actions" aria-label="Schedule actions"><button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button></div> : <BodyPortal><div className="calendar-bottom-actions calendar-main-add" aria-label="Schedule actions">{!bare && <button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button>}</div></BodyPortal>}
       {!sheet && calendarChooserOpen && <BodyPortal><div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarChooserOpen(false); }}><section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="owned-calendar-title" onMouseDown={(event) => event.stopPropagation()}><div className="mobile-calendar-switcher-handle" aria-hidden="true" /><header><h2 id="owned-calendar-title">Your calendars</h2><button type="button" aria-label="Close calendar chooser" onClick={() => setCalendarChooserOpen(false)}><Icon name="close" size={21} /></button></header><div className="mobile-calendar-switcher-list"><button type="button" className="selected" aria-current="page" onClick={() => setCalendarChooserOpen(false)}><span className="mobile-calendar-switcher-icon"><Icon name="person" size={21} /></span><span><strong>Personal calendar</strong><small>Your classes, shifts, and saved classes</small></span><Icon name="check" size={19} /></button>{managedCalendars.length > 0 && <p>Calendars you manage</p>}{managedCalendars.map((calendar) => { const href=calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`; return <Link href={href} key={`${calendar.kind}:${calendar.id}`}><span className={`mobile-calendar-switcher-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={21} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={19} /></Link>; })}</div></section></div></BodyPortal>}
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>
@@ -995,7 +999,6 @@ export function CalendarScreen({
           </div>
         </div>
       )}
-      {!sheet && notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

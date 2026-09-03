@@ -34,7 +34,9 @@ export function NavBar({
   unread?: boolean;
   profileFace?: { photo: string | null; color: string; initial: string };
 }) {
-  const here = activeTab(usePathname(), active);
+  const pathname = usePathname();
+  const calendarSurface = pathname.startsWith("/calendar");
+  const here = activeTab(pathname, active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
   const dockTabs = tabs.filter((tab) => tab.id !== "share");
   const activeDockIndex = dockTabs.findIndex((tab) => tab.id === here);
@@ -102,7 +104,7 @@ export function NavBar({
   }, []);
 
   return (
-    <nav className="navwrap" aria-label="Main">
+    <nav className="navwrap" data-calendar-hidden={calendarSurface ? "true" : undefined} aria-label="Main">
       <div className="navbar">
         <span
           className={`navglass-indicator${activeDockIndex < 0 ? " is-hidden" : ""}`}

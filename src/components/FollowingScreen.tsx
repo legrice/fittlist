@@ -924,7 +924,11 @@ export function FollowingScreen({
 
   return (
     <>
-      {calendarFollowing && <section className={`calendar-scope-hero${scopeSwipe.dragging ? " is-swiping" : ""}`} style={scopeMotion}><div className="calendar-scope-top"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav><button type="button" className="calendar-scope-notifications" aria-label="Open notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={22} /></button></div>
+      {calendarFollowing && <section className={`calendar-scope-hero${scopeSwipe.dragging ? " is-swiping" : ""}`} style={scopeMotion}><div className="calendar-scope-top">
+        <Link href="/you" className="calendar-scope-avatar" aria-label="Open your profile">{meFace.photo ? <img src={meFace.photo} alt="" /> : <span style={{ background:meFace.color }}>{meFace.name.charAt(0)}</span>}</Link>
+        <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
+        <Link href="/discover" className="calendar-scope-search" aria-label="Discover coaches, studios, and groups"><Icon name="search" size={23} /></Link>
+      </div>
       <header className="calendar-section-summary calendar-following-head calendar-scope-motion">
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>
