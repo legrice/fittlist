@@ -1036,7 +1036,7 @@ export function FollowingScreen({
                 <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={() => {}} monthsAhead={1} />
               </>
             ) : isHome ? (
-                <div className="cash-activity-list">
+                <div className={`cash-activity-list${activity ? " activity-hub-list" : ""}`}>
                   {visibleHomeDays.map((section) => (
                     <section className="cash-day" id={`feed-day-${section.iso}`} key={section.iso}>
                       {!activity && <h2>{section.label}</h2>}
@@ -1056,8 +1056,9 @@ export function FollowingScreen({
                           if (isHome) {
                             const relation=calendarRelation(item,meId);
                             const isYourItem=item.saved||ownedByYou;
-                            return <article className="cash-class-row" key={item.key} data-cid={item.classId} data-d={item.iso}><button type="button" className={`cash-class-main ${relation.tone}${displaySourceName ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item,coach ?? null,favoriteIds.has(item.coachId)))}>
-                              {displaySourceName && <span className={`cash-class-avatar${!ownedByYou&&!coach&&studio ? " studio" : ""}`} style={{background:displaySourceColor}}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0)||"?").toUpperCase()}</span>}</span>}
+                            const showSourceAvatar=!activity&&!!displaySourceName;
+                            return <article className="cash-class-row" key={item.key} data-cid={item.classId} data-d={item.iso}><button type="button" className={`cash-class-main ${relation.tone}${showSourceAvatar ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item,coach ?? null,favoriteIds.has(item.coachId)))}>
+                              {showSourceAvatar && <span className={`cash-class-avatar${!ownedByYou&&!coach&&studio ? " studio" : ""}`} style={{background:displaySourceColor}}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0)||"?").toUpperCase()}</span>}</span>}
                               <span className="cash-class-copy">{displaySourceName && <span className="cash-class-coachline"><small>{displaySourceName}</small>{ownedByYou&&<span className="cash-you-tag">You</span>}{isYourItem&&<span className={`cash-relation-tag ${relation.tone}`}>{relation.label}</span>}</span>}<span className="cash-class-title-row"><strong>{item.name}</strong><strong className="cash-class-time">{item.hm}{item.ap.toLowerCase()}</strong></span><span className="cash-class-studio-row"><span className="cash-class-studio">{item.where||"Location to come"}</span><span className="cash-class-duration">{item.durationMin} min</span></span></span>
                             </button></article>;
                           }

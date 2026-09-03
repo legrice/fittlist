@@ -8,7 +8,6 @@ import { FollowingScreen } from "@/components/FollowingScreen";
 import { todayIso } from "@/lib/format";
 import { managedCalendarsForUser } from "@/lib/managed-calendars";
 import { unreadHeaderCounts } from "@/lib/notify";
-import { gymSchedule } from "@/app/actions/gym";
 
 export const dynamic = "force-dynamic";
 
@@ -96,14 +95,6 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
     keys.push(`${row.classId}|${row.iso}`);
     classKeysByGroup.set(row.groupId, keys);
   }
-  const adminToday = (await Promise.all(managedCalendars
-    .filter((calendar) => calendar.kind === "studio")
-    .map(async (calendar) => {
-      const schedule = await gymSchedule(calendar.id, 0);
-      const items = schedule?.days.find((day) => day.iso === today)?.items ?? [];
-      return { id:calendar.id, name:calendar.name, slug:calendar.slug, total:items.length, open:items.filter((item) => !item.onUserId).length };
-    })))
-    .filter((studio) => studio.total > 0);
   return (
     <FollowingScreen
       items={feed.items}
@@ -135,7 +126,6 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
       initialPins={pinRows.map((pin) => `${pin.entityType}:${pin.entityId}`)}
       managedCalendars={managedCalendars}
       unread={unread.notifications > 0 || unread.messages > 0}
-      adminToday={adminToday}
       mode={calendar === "1" ? "home" : "activity"}
     />
   );
