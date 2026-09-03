@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent as ReactTouchEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -131,6 +131,7 @@ export function CalendarScreen({
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
+  const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -227,6 +228,19 @@ export function CalendarScreen({
   const openShare = (event: ReactMouseEvent<HTMLButtonElement>) => window.dispatchEvent(new CustomEvent("fittlist:open-share", {
     detail: { opener:event.currentTarget },
   }));
+  const startScopeSwipe = (event: ReactTouchEvent<HTMLElement>) => {
+    const touch=event.touches[0];
+    if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+  };
+  const endScopeSwipe = (event: ReactTouchEvent<HTMLElement>) => {
+    const start=scopeSwipeStart.current;
+    const touch=event.changedTouches[0];
+    scopeSwipeStart.current=null;
+    if (!start || !touch) return;
+    const dx=touch.clientX-start.x;
+    const dy=touch.clientY-start.y;
+    if (dx < -64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar/following");
+  };
   useEffect(() => {
     try {
       const stored: unknown = JSON.parse(localStorage.getItem(calendarStateKey) ?? "null");
@@ -514,7 +528,7 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      {!sheet && <section className="calendar-scope-hero">
+      {!sheet && <section className="calendar-scope-hero" onTouchStart={startScopeSwipe} onTouchEnd={endScopeSwipe}>
         <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">You</Link><Link href="/calendar/following">Following</Link></nav>
         <section className="calendar-section-summary personal-upcoming-summary" aria-label="Today’s calendar summary"><div>{todaySummary}</div><div className="personal-summary-actions"><button type="button" onClick={() => setCalendarChooserOpen(true)}>Manage calendar</button><button type="button" onClick={openShare}>Share</button></div></section>
       </section>}

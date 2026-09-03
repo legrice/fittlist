@@ -218,6 +218,21 @@ export function FollowingScreen({
   const [calendarSwitcherDragging, setCalendarSwitcherDragging] = useState(false);
   const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
   const streamGeneration = useRef(0);
+  const scopeSwipeStart = useRef<{ x:number; y:number } | null>(null);
+
+  const startScopeSwipe = (event: TouchEvent<HTMLElement>) => {
+    const touch=event.touches[0];
+    if (touch) scopeSwipeStart.current={ x:touch.clientX,y:touch.clientY };
+  };
+  const endScopeSwipe = (event: TouchEvent<HTMLElement>) => {
+    const start=scopeSwipeStart.current;
+    const touch=event.changedTouches[0];
+    scopeSwipeStart.current=null;
+    if (!start || !touch) return;
+    const dx=touch.clientX-start.x;
+    const dy=touch.clientY-start.y;
+    if (dx > 64 && Math.abs(dx) > Math.abs(dy)*1.25) router.push("/calendar");
+  };
 
   const closeCalendarSwitcher = () => {
     setCalendarSwitcherOpen(false);
@@ -884,7 +899,7 @@ export function FollowingScreen({
 
   return (
     <>
-      {calendarFollowing && <section className="calendar-scope-hero"><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
+      {calendarFollowing && <section className="calendar-scope-hero" onTouchStart={startScopeSwipe} onTouchEnd={endScopeSwipe}><nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">You</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>
       <header className="calendar-section-summary calendar-following-head">
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>See all</button>
