@@ -40,6 +40,7 @@ const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) =
 const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) => module.ClassPeek));
 const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) => module.PlanSheet));
 const DiscoverSheet = dynamic(() => import("@/components/DiscoverSheet").then((module) => module.DiscoverSheet));
+const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => module.QrSheet));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -134,6 +135,7 @@ export function CalendarScreen({
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const [discoverOpen, setDiscoverOpen] = useState(false);
+  const [profileQrOpen, setProfileQrOpen] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
@@ -590,9 +592,14 @@ export function CalendarScreen({
         <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section></section></>}
       {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Calendar actions">
         <div className="calendar-action-hub">
-          <section><h3>Your schedule</h3><div className="calendar-action-list">
-            <button type="button" onClick={() => setCalendarChooserOpen(true)}><span className="calendar-action-icon"><Icon name="calendar_month" size={24} /></span><span><strong>Manage your calendars</strong><small>Personal, group, and studio calendars</small></span><Icon name="chevron_right" size={20} /></button>
-            <button type="button" onClick={openShare}><span className="calendar-action-icon"><Icon name="reply" className="share-arrow-forward" size={24} /></span><span><strong>Share your week</strong><small>Turn your schedule into a shareable image</small></span><Icon name="chevron_right" size={20} /></button>
+          <section className="calendar-quick-actions" aria-label="Quick actions"><div>
+            <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share your week</button>
+            {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share your profile</button>}
+            <Link href="/settings?section=calendar"><Icon name="event" size={20} />Sync calendar</Link>
+          </div></section>
+          <section><div className="calendar-action-section-head"><h3>Calendars you manage</h3><Link href="/saved"><Icon name="add" size={17} />New group</Link></div><div className="calendar-action-list">
+            {managedCalendars.map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`}><span className={`calendar-action-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={23} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
+            {managedCalendars.length === 0 && <Link href="/saved"><span className="calendar-action-icon group"><Icon name="groups" size={23} /></span><span><strong>Create a group calendar</strong><small>Plan classes and events together</small></span><Icon name="chevron_right" size={20} /></Link>}
           </div></section>
           <section><h3>Updates</h3><div className="calendar-action-list">
             <Link href="/inbox"><span className="calendar-action-icon"><Icon name="chat_bubble" size={23} /></span><span><strong>Messages</strong><small>Conversations and class questions</small></span><Icon name="chevron_right" size={20} /></Link>
@@ -602,7 +609,6 @@ export function CalendarScreen({
             <Link href="/settings?section=calendar"><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></Link>
             <Link href="/settings"><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></Link>
           </div></section>
-          {managedCalendars.length > 0 && <section><h3>Calendars you manage</h3><div className="calendar-action-list">{managedCalendars.map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`}><span className={`calendar-action-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={23} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Manage studio calendar" : "Manage group calendar"}</small></span><Icon name="chevron_right" size={20} /></Link>)}</div></section>}
         </div>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
@@ -1001,6 +1007,7 @@ export function CalendarScreen({
         </div>
       )}
       <Toast msg={toastMsg} on={toastOn} />
+      {handle && <QrSheet handle={handle} open={profileQrOpen} onClose={() => setProfileQrOpen(false)} onToast={toast} />}
       {!sheet && discoverOpen && <DiscoverSheet full onClose={() => setDiscoverOpen(false)} />}
     </>
   );
