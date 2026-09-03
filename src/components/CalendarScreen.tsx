@@ -979,7 +979,7 @@ export function CalendarScreen({
         </div>
       )}
       <Toast msg={toastMsg} on={toastOn} />
-      {!sheet && discoverOpen && <DiscoverSheet onClose={() => setDiscoverOpen(false)} />}
+      {!sheet && discoverOpen && <DiscoverSheet full onClose={() => setDiscoverOpen(false)} />}
     </>
   );
 }

@@ -11744,6 +11744,8 @@ a.clspeek-by:active { opacity: .6; }
    auto` sets (see `.tray-scroll`). */
 .dissheet { overflow-x: clip; }
 .dissheet .dischips { margin-left: -20px; margin-right: -20px; }
+.discover-full-sheet { overflow-y:auto; }
+.discover-full-sheet > .discover-searchrow { margin-top:4px; }
 @media (max-width:939px) {
   .sheet.sheet-full.dissheet {
     height:min(88dvh,760px);

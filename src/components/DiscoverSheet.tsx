@@ -6,6 +6,7 @@ import Link from "next/link";
 import { discoverPeople, type DiscoverData } from "@/app/actions/discover";
 import { searchDirectory, type SearchGroup } from "@/app/actions/search";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
+import { DiscoverList } from "@/components/DiscoverList";
 import { Icon } from "@/components/Icon";
 import { initials } from "@/components/WeekView";
 import {
@@ -44,7 +45,7 @@ type DiscoverSearchData = Awaited<ReturnType<typeof searchDirectory>>;
  * directory is a lot to send to a device on the chance somebody taps a
  * button, and this way Following costs what Following costs.
  */
-export function DiscoverSheet({ onClose }: { onClose: () => void }) {
+export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; full?: boolean }) {
   const [data, setData] = useState<DiscoverData | null>(() =>
     readClientMemory<DiscoverData>(DISCOVER_PEOPLE_MEMORY_KEY),
   );
@@ -137,6 +138,19 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
   const searching = q.trim().length >= MIN;
   const nothing =
     searching && !busy && !failed && asked === q.trim() && !people.length && !studios.length && !groups.length;
+
+  if (full) return createPortal(
+    <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="sheet sheet-full dissheet discover-full-sheet" role="dialog" aria-modal="true" aria-labelledby="discover-sheet-title">
+        <div className="adderhead">
+          <h2 id="discover-sheet-title">Discover</h2>
+          <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
+        </div>
+        {data ? <DiscoverList people={data.people} studios={[]} cities={data.cities} myCity={data.myCity} myLat={data.myLat} myLng={data.myLng} groups={[]} upcoming={[]} backHref="/calendar" hideBack /> : <p className="dissheet-wait">Loading Discover…</p>}
+      </section>
+    </div>,
+    document.body,
+  );
 
   return createPortal(
     <div

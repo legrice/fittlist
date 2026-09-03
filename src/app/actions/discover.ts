@@ -13,6 +13,8 @@ export type DiscoverData = {
   people: DirPerson[];
   cities: string[];
   myCity: string | null;
+  myLat: number | null;
+  myLng: number | null;
 };
 
 /**
@@ -34,7 +36,7 @@ const nearBounds = (lat: number | null, lng: number | null, miles?: number) => {
 
 export async function discoverPeople(distanceMiles?: number): Promise<DiscoverData> {
   const me = await currentUser();
-  if (!me) return { people: [], cities: [], myCity: null };
+  if (!me) return { people: [], cities: [], myCity: null, myLat: null, myLng: null };
   const userId = me.id;
   const db = await getDb();
   const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
@@ -162,7 +164,7 @@ export async function discoverPeople(distanceMiles?: number): Promise<DiscoverDa
     a.localeCompare(b),
   );
 
-  return { people, cities, myCity: me.location?.trim() || null };
+  return { people, cities, myCity: me.location?.trim() || null, myLat:me.locationLat, myLng:me.locationLng };
 }
 
 export type BrowseDay = {
