@@ -13302,10 +13302,11 @@ a.clspeek-by:active { opacity: .6; }
   .activity-today-summary { max-width:33ch; margin:20px 0 16px; display:grid; gap:10px; color:var(--color-text-primary); font-size:24px; line-height:1.25; }
   .activity-today-summary p { margin:0; }
   .activity-today-summary strong { color:var(--color-text-primary); font-weight:700; }
-  .activity-today-hub-actions { display:flex; align-items:center; gap:8px; }
+  .activity-today-hub-actions { display:none; }
   .activity-today-hub-actions :is(button,a) { min-width:0; min-height:42px; padding:0 14px; flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:13px; font-weight:700; text-decoration:none; white-space:nowrap; }
   .activity-today-hub-actions button { background:var(--color-black); color:var(--color-white); }
-  .activity-hub-list { display:grid; gap:12px; }
+  .activity-hub-list { display:grid; gap:16px; }
+  .activity-hub-list .cash-day > div { display:grid; gap:16px; }
   .activity-hub-list .cash-class-row { min-height:0; margin:0; padding:0; border:0; border-radius:24px; background:var(--color-surface); overflow:hidden; }
   .activity-hub-list .cash-class-row + .cash-class-row { margin-top:0; padding-top:0; border-top:0; }
   .activity-hub-list .cash-class-main { min-height:92px; padding:16px 18px; border-left:0; background:var(--color-surface); }
