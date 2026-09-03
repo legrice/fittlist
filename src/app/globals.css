@@ -11091,12 +11091,6 @@ html[data-mode="dark"],
 .calendar-following-card .activity-card-story :is(strong,b) { font-weight:700; }
 .calendar-following-card .activity-card-meta { display:grid; gap:3px; color:var(--color-text-secondary); font-size:14px; line-height:1.3; }
 .calendar-following-card .activity-card-meta span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.calendar-following-card .activity-card-actions { padding:0 18px 18px 79px; display:flex; align-items:center; gap:10px; }
-.calendar-following-card .activity-card-actions button { width:38px; height:38px; padding:0; display:grid; place-items:center; border:0; border-radius:50%; background:var(--color-background); color:var(--color-text-primary); cursor:pointer; }
-.calendar-following-card .activity-card-actions button.on { background:var(--color-lime-soft); }
-.calendar-following-card .activity-comment { margin:0 18px 18px 79px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
-.calendar-following-card .activity-comment input { min-width:0; height:42px; padding:0 14px; border:1px solid var(--color-border); border-radius:14px; background:var(--color-background); color:var(--color-text-primary); font:inherit; }
-.calendar-following-card .activity-comment button { padding:0 14px; border:0; border-radius:14px; background:var(--color-ink); color:var(--color-white); font:inherit; font-weight:700; }
 /* Sticky, not absolute: the sheet is its own scroller, and an absolute X
    rode the photograph away, leaving a long class with no visible way off.
    It pulls its own height back so the photo starts where it always did and
