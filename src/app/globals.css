@@ -11084,13 +11084,15 @@ html[data-mode="dark"],
 .calendar-scope-hero .calendar-mode-tabs { margin-bottom:22px; }
 .calendar-scope-hero .calendar-mode-tabs a { color:color-mix(in srgb,var(--color-white) 72%,transparent); }
 .calendar-scope-hero .calendar-mode-tabs a[aria-current="page"] { color:var(--color-white); }
-.owned-calendar-selector { width:100%; min-width:0; margin:0 0 18px; padding:0; display:flex; align-items:center; justify-content:space-between; gap:12px; border:0; background:transparent; color:var(--color-white); font:inherit; font-size:25px; font-weight:700; text-align:left; }
-.owned-calendar-selector span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .calendar-scope-hero .calendar-section-summary { margin-bottom:0; color:var(--color-white); }
 .calendar-scope-hero .calendar-section-summary > :is(a,button),
 .calendar-scope-hero .personal-summary-actions > :is(a,button) { background:color-mix(in srgb,var(--color-white) 14%,transparent); color:var(--color-white); }
 @media (max-width:939px) {
-  .calendar-scope-hero { margin:-8px calc(-1 * var(--page-gutter)) 24px; padding:18px var(--page-gutter) 24px; border-radius:0 0 32px 32px; }
+  .calendar-scope-hero { position:sticky; top:0; z-index:0; margin:-8px calc(-1 * var(--page-gutter)) 0; padding:18px var(--page-gutter) 40px; border-radius:0; }
+  .screen.hasnav .calendar-cardwrap,
+  .calendar-foreground-sheet { position:relative; z-index:1; margin-top:-20px; margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); padding:22px var(--page-gutter) calc(92px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); }
+  .screen.hasnav .calendar-cardwrap { width:calc(100% + (2 * var(--page-gutter))); }
+  .calendar-foreground-sheet .calendar-following-filters { margin-bottom:22px; }
 }
 .calendar-section-summary { margin:4px 0 20px; display:flex; align-items:center; justify-content:space-between; gap:18px; color:var(--color-text-primary); }
 .calendar-section-summary p { max-width:31ch; margin:0; font-size:20px; line-height:1.3; }

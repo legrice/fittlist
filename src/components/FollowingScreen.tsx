@@ -889,6 +889,7 @@ export function FollowingScreen({
         <div><p>{followingSummaryText}</p></div>
         <button type="button" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>Manage following</button>
       </header></section>}
+      <div className={calendarFollowing ? "calendar-foreground-sheet" : undefined}>
       {calendarFollowing && <div className="calendar-following-filters" role="group" aria-label="Filter followed calendars">
         {(["all","coaches","studios","groups"] as const).map((type) => <button key={type} type="button" className={followingType === type ? "on" : ""} aria-pressed={followingType === type} onClick={() => setFollowingType(type)}>{type.charAt(0).toUpperCase() + type.slice(1)}</button>)}
       </div>}
@@ -1144,6 +1145,7 @@ export function FollowingScreen({
           </div>
         </>
       )}
+      </div>
 
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
