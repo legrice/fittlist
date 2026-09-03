@@ -11127,6 +11127,8 @@ html[data-mode="dark"],
 .calendar-summary-copy > small { max-width:34ch; color:color-mix(in srgb,var(--color-white) 76%,transparent); font-size:15px; line-height:1.35; }
 .calendar-following-head p { margin-inline:auto; }
 .calendar-summary-share { min-width:104px; background:var(--color-lime) !important; color:var(--color-black) !important; }
+.calendar-summary-reveal { width:44px; min-width:44px !important; height:36px; min-height:36px !important; padding:0 !important; border-radius:var(--radius-pill); background:color-mix(in srgb,var(--color-white) 14%,transparent) !important; color:var(--color-white) !important; }
+.calendar-summary-reveal:active { transform:translateY(2px); }
 .calendar-scope-hero:has(.calendar-reveal-panel) { position:relative; top:auto; }
 .calendar-reveal-panel { width:min(100%,560px); margin:8px auto 0; display:grid; gap:20px; text-align:left; }
 .calendar-reveal-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
