@@ -219,6 +219,7 @@ export function FollowingScreen({
   const [calendarSwitcherDragY, setCalendarSwitcherDragY] = useState(0);
   const [calendarSwitcherDragging, setCalendarSwitcherDragging] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("following");
+  const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const classSheetPullStart = useRef<number | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
@@ -443,11 +444,23 @@ export function FollowingScreen({
     setFind(false);
     router.refresh();
   };
+  useEffect(() => {
+    if (!calendarFollowing) return;
+    router.prefetch("/calendar");
+  },[calendarFollowing,router]);
+  useEffect(() => {
+    if (!calendarFollowing) return;
+    if (sessionStorage.getItem("fl-calendar-scope-enter") !== "following") return;
+    sessionStorage.removeItem("fl-calendar-scope-enter");
+    setScopeSummaryEntering(true);
+    window.setTimeout(() => setScopeSummaryEntering(false),240);
+  },[calendarFollowing]);
   const switchScope = (event:ReactMouseEvent<HTMLAnchorElement>, target:"you"|"following") => {
     event.preventDefault();
     if (target === scopeTarget) return;
     setScopeTarget(target);
-    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 180);
+    sessionStorage.setItem("fl-calendar-scope-enter",target);
+    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 150);
   };
   const startClassSheetPull = (event:TouchEvent<HTMLDivElement>) => {
     if (window.scrollY > 4) return;
@@ -908,7 +921,7 @@ export function FollowingScreen({
         <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
         <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setFind(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show following actions" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button></span>
       </div>
-      <section className="calendar-scope-hero"><header className="calendar-section-summary calendar-following-head">
+      <section className="calendar-scope-hero"><header className={`calendar-section-summary calendar-following-head${scopeTarget !== "following" ? " calendar-summary-leaving" : ""}${scopeSummaryEntering ? " calendar-summary-entering" : ""}`}>
         <div><p>{followingSummaryText}</p></div>
         {!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show following calendar" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}
       </header></section></>}

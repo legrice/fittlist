@@ -135,6 +135,7 @@ export function CalendarScreen({
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
+  const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const classSheetPullStart = useRef<number | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
@@ -198,6 +199,16 @@ export function CalendarScreen({
   }, [openAdder]);
 
   useEffect(() => {
+    router.prefetch("/calendar/following");
+  },[router]);
+  useEffect(() => {
+    if (sessionStorage.getItem("fl-calendar-scope-enter") !== "you") return;
+    sessionStorage.removeItem("fl-calendar-scope-enter");
+    setScopeSummaryEntering(true);
+    window.setTimeout(() => setScopeSummaryEntering(false),240);
+  },[]);
+
+  useEffect(() => {
     const openFromDesktop = () => {
       setAddChoiceStep("role");
       setAddChoice(true);
@@ -238,7 +249,8 @@ export function CalendarScreen({
     event.preventDefault();
     if (target === scopeTarget) return;
     setScopeTarget(target);
-    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 180);
+    sessionStorage.setItem("fl-calendar-scope-enter",target);
+    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 150);
   };
   const startClassSheetPull = (event:ReactTouchEvent<HTMLDivElement>) => {
     if (window.scrollY > 4) return;
@@ -567,7 +579,7 @@ export function CalendarScreen({
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Discover coaches, studios, and groups" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={() => setClassSheetDismissed(false)}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className="calendar-scope-hero"><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section></section></>}
+        <section className="calendar-scope-hero"><section className={`calendar-section-summary personal-upcoming-summary${scopeTarget !== "you" ? " calendar-summary-leaving" : ""}${scopeSummaryEntering ? " calendar-summary-entering" : ""}`} aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section></section></>}
       {!sheet && !classSheetDismissed && <section className="calendar-action-sheet calendar-pull-sheet" style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Calendar actions">
         <h2>Your calendar</h2>
         <div className="calendar-action-list">
