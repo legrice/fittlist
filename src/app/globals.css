@@ -12693,6 +12693,7 @@ a.clspeek-by:active { opacity: .6; }
 .personal-calendar-list .clline:active { background:var(--color-surface-hover); }
 .personal-calendar-upcoming .dayrows { gap:8px; }
 .personal-calendar-upcoming .clline { min-height:78px; padding:12px 16px; border-radius:20px; }
+.calendar-load-sentinel { height:1px; margin:0; padding:0; overflow:hidden; border:0; opacity:0; pointer-events:none; }
 .personal-calendar-list .clrow > :is(.clmore, .calendar-save-action, .calendar-attending-check, .following-add) { top:10px; right:8px; }
 /* Profiles used the occurrence grid before CalendarList became text-led.
    Keep their hierarchy explicit so older grid coordinates cannot indent the
