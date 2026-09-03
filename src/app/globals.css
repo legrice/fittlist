@@ -11108,10 +11108,10 @@ html[data-mode="dark"],
   .screen.hasnav:has(.calendar-scope-hero) > .pad { background:var(--color-shift); }
   html:has(.calendar-scope-hero),
   body:has(.calendar-scope-hero) { overscroll-behavior-y:none; }
-  .calendar-scope-top { margin:-8px calc(-1 * var(--page-gutter)) 14px; padding:12px var(--page-gutter) 8px; }
-  .calendar-scope-hero { position:sticky; top:0; z-index:0; margin:0 calc(-1 * var(--page-gutter)); padding:12px var(--page-gutter) 40px; border-radius:0; }
+  .calendar-scope-top { margin:-8px calc(-1 * var(--page-gutter)) 0; padding:12px var(--page-gutter) 8px; }
+  .calendar-scope-hero { position:sticky; top:0; z-index:0; margin:0 calc(-1 * var(--page-gutter)); padding:8px var(--page-gutter) 24px; border-radius:0; }
   .screen.hasnav .calendar-cardwrap,
-  .calendar-foreground-sheet { position:relative; z-index:1; margin-top:-20px; margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); padding:22px var(--page-gutter) calc(92px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); box-shadow:0 -8px 24px rgba(0,0,0,.07); }
+  .calendar-foreground-sheet { position:relative; z-index:1; margin-top:-12px; margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); padding:22px var(--page-gutter) calc(92px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); box-shadow:0 -8px 24px rgba(0,0,0,.07); }
   .screen.hasnav .calendar-cardwrap::before,
   .calendar-foreground-sheet::before { content:""; position:absolute; left:0; right:0; top:-36px; height:52px; z-index:-1; background:var(--color-shift); }
   .screen.hasnav .calendar-cardwrap { width:calc(100% + (2 * var(--page-gutter))); }
