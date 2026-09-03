@@ -11076,13 +11076,14 @@ html[data-mode="dark"],
    an X.
    --------------------------------------------------------------------------- */
 .clsfull { position: relative; }
-.calendar-mode-tabs { width:fit-content; margin:0 0 20px; padding:4px; display:flex; gap:4px; border-radius:var(--radius-pill); background:var(--color-surface-muted); }
-.calendar-mode-tabs a { min-height:40px; padding:0 18px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-pill); color:var(--color-text-secondary); font-size:14px; font-weight:700; text-decoration:none; }
-.calendar-mode-tabs a[aria-current="page"] { background:var(--color-surface); color:var(--color-text-primary); box-shadow:0 2px 8px rgba(2,13,8,.08); }
+.calendar-mode-tabs { width:fit-content; margin:0 0 20px; display:flex; gap:24px; }
+.calendar-mode-tabs a { position:relative; min-height:36px; padding:0; display:flex; align-items:center; justify-content:center; color:var(--color-text-secondary); font-size:16px; font-weight:700; text-decoration:none; }
+.calendar-mode-tabs a[aria-current="page"] { color:var(--color-text-primary); }
+.calendar-mode-tabs a[aria-current="page"]::after { content:""; position:absolute; right:0; bottom:0; left:0; height:2px; border-radius:2px; background:currentColor; }
 .calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-ink); color:var(--color-white); }
-.calendar-scope-hero .calendar-mode-tabs { margin-bottom:22px; background:color-mix(in srgb,var(--color-white) 12%,transparent); }
+.calendar-scope-hero .calendar-mode-tabs { margin-bottom:22px; }
 .calendar-scope-hero .calendar-mode-tabs a { color:color-mix(in srgb,var(--color-white) 72%,transparent); }
-.calendar-scope-hero .calendar-mode-tabs a[aria-current="page"] { background:var(--color-white); color:var(--color-ink); box-shadow:none; }
+.calendar-scope-hero .calendar-mode-tabs a[aria-current="page"] { color:var(--color-white); }
 .owned-calendar-selector { width:100%; min-width:0; margin:0 0 18px; padding:0; display:flex; align-items:center; justify-content:space-between; gap:12px; border:0; background:transparent; color:var(--color-white); font:inherit; font-size:25px; font-weight:700; text-align:left; }
 .owned-calendar-selector span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .calendar-scope-hero .calendar-section-summary { margin-bottom:0; color:var(--color-white); }
