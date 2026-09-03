@@ -27,7 +27,7 @@ export function navTabs(
   return [
     {
       id: "following" as const,
-      href: "/feed",
+      href: "/calendar",
       icon: "calendar_month",
       label: "Calendar",
     },
@@ -42,9 +42,9 @@ export function navTabs(
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   // /week is retained only as an old address for the calendar.
-  if (pathname.startsWith("/feed")) return "following";
+  if (pathname.startsWith("/feed") || pathname.startsWith("/calendar")) return "following";
   if (pathname.startsWith("/coachshare") || pathname.startsWith("/membershare")) return "share";
-  if (pathname.startsWith("/calendar") || pathname.startsWith("/app") || pathname.startsWith("/week") || pathname.startsWith("/you"))
+  if (pathname.startsWith("/app") || pathname.startsWith("/week") || pathname.startsWith("/you"))
     return "calendar";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
   return "none";

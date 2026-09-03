@@ -498,6 +498,7 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
+      {!sheet && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar" aria-current="page">Personal</Link><Link href="/calendar/following">Following</Link></nav>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">

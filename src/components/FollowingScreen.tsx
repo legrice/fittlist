@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition, type TouchEvent } 
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { PeekClass } from "@/components/ClassPeek";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -203,6 +204,7 @@ export function FollowingScreen({
   mode?: "home" | "upcoming";
 }) {
   const isHome = mode === "home";
+  const calendarFollowing = usePathname().startsWith("/calendar/following");
   const [items, setItems] = useState(initialItems);
   const [coaches, setCoaches] = useState(initialCoaches);
   const [cats, setCats] = useState(initialCats);
@@ -330,7 +332,7 @@ export function FollowingScreen({
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
-  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | "people" | `coach:${string}` | `studio:${string}` | `group:${string}`>("all");
+  const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | "people" | `coach:${string}` | `studio:${string}` | `group:${string}`>(calendarFollowing ? "following" : "all");
   const [includeYou, setIncludeYou] = useState(true);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(() => new Set());
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -868,6 +870,7 @@ export function FollowingScreen({
 
   return (
     <>
+      {calendarFollowing && <nav className="calendar-mode-tabs" aria-label="Calendar view"><Link href="/calendar">Personal</Link><Link href="/calendar/following" aria-current="page">Following</Link></nav>}
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
@@ -877,7 +880,7 @@ export function FollowingScreen({
           <p>Browse classes by day, time, distance, type, or place.</p>
         </header>
       )}
-      {isHome && (
+      {isHome && !calendarFollowing && (
         <header className="calendar-tab-header">
           <button type="button" className="calendar-tab-title" aria-label="Choose a calendar" aria-expanded={calendarSwitcherOpen} onClick={() => setCalendarSwitcherOpen(true)}>
             <h1>Calendar</h1>
@@ -902,8 +905,8 @@ export function FollowingScreen({
           </div>
         </header>
       )}
-      {isHome && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
-      {isHome && !firstRun && (
+      {isHome && !calendarFollowing && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
+      {isHome && !calendarFollowing && !firstRun && (
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
             <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
@@ -913,13 +916,13 @@ export function FollowingScreen({
           </div>
         </header>
       )}
-      {isHome && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && calendarFilter !== "people" && (
+      {isHome && !calendarFollowing && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && calendarFilter !== "people" && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{selectedCalendar.label}</span>
           {calendarFilter === "you" ? <PersonalCalendarSheetTrigger className="feedfilter-link" ariaLabel="Manage calendar">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></PersonalCalendarSheetTrigger> : selectedCalendar.href && <Link href={`${selectedCalendar.href}?from=feed`} className="feedfilter-link">{selectedCalendar.action} <Icon name="chevron_right" size={17} /></Link>}
         </div>
       )}
-      {isHome && !firstRun && calendarFilter === "all" && (
+      {isHome && !calendarFollowing && !firstRun && calendarFilter === "all" && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt calendar-following-summary">Following {calendarCount} {calendarCount === 1 ? "calendar" : "calendars"}</span>
           <button type="button" className="feedfilter-link" onClick={() => { setCalendarDirectoryQuery(""); setCalendarDirectoryTab("people"); setCalendarDirectoryOpen(true); }}>View all <Icon name="chevron_right" size={17} /></button>
@@ -1070,6 +1073,10 @@ export function FollowingScreen({
                           const displaySourcePhoto = ownedByYou ? meFace.photo : sourcePhoto;
                           const displaySourceColor = ownedByYou ? meFace.color : sourceColor;
                           const showSourceAvatar = Boolean(displaySourceName);
+                          if (calendarFollowing) {
+                            const storyName=coachName ?? sourceName ?? "Someone";
+                            return <article className="activity-card calendar-following-card" key={item.key} data-cid={item.classId} data-d={item.iso}><button type="button" className="activity-card-main" onClick={() => setPeek(peekOf(item,coach ?? null,favoriteIds.has(item.coachId)))}>{showSourceAvatar && displaySourceName && <span className="activity-card-avatar" style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0)||"?").toUpperCase()}</span>}</span>}<span className="activity-card-body"><span className="activity-card-story"><strong>{storyName}</strong> is coaching <b>{item.name}</b></span><span className="activity-card-meta"><span>{item.where || "Location to come"}</span><span>{item.hm}{item.ap.toLowerCase()} · {item.durationMin} min</span></span></span></button></article>;
+                          }
                           return <article className="cash-class-row" key={item.key} data-cid={item.classId} data-d={item.iso}>
                             <button type="button" className={`cash-class-main ${relation.tone}${showSourceAvatar ? " has-source-avatar" : ""}`} onClick={() => setPeek(peekOf(item, coach ?? null, favoriteIds.has(item.coachId)))}>
                               {showSourceAvatar && displaySourceName && <span className={`cash-class-avatar${!ownedByYou && !coach && studio ? " studio" : ""}`} style={{ background:displaySourceColor }}>{displaySourcePhoto ? <img src={displaySourcePhoto} alt="" /> : <span>{(displaySourceName.trim().charAt(0) || "?").toUpperCase()}</span>}</span>}
