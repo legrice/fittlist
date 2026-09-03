@@ -285,20 +285,38 @@ export function CalendarScreen({
     return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
   const todayCoachingSummary = useMemo(() => {
-    const date=new Date(`${todayIso}T00:00:00Z`);
-    const dow=(date.getUTCDay()+6)%7;
-    const rows=uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,todayIso,dow)),studioById)
+    const start=Date.parse(`${todayIso}T00:00:00Z`);
+    const coachingOn=(iso:string,date:Date) => uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById)
       .sort((a,b) => timeToMinutes(a.startTime)-timeToMinutes(b.startTime));
+    const rows=coachingOn(todayIso,new Date(start));
     const studiosToday=[...new Set(rows.map((item) => item.studioId ? studioById.get(item.studioId)?.name : item.location).filter((place): place is string => !!place))];
     const naturalTimes=(items:ClassDto[]) => items.map((item) => {
       const time=clockParts(item.startTime);
       return `${time.hm.replace(":00","")}${time.ap.toLowerCase()}`;
     }).join(", ").replace(/, ([^,]*)$/," and $1");
-    if (!rows.length) return <p>You’re not coaching today.</p>;
-    if (!studiosToday.length) return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong> today.</p>;
-    if (studiosToday.length === 1) return <p>You’re coaching at <strong>{studiosToday[0]}</strong> at <strong>{naturalTimes(rows)}</strong> today.</p>;
-    return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong> across <strong>{studiosToday.length} studios</strong> today.</p>;
-  },[classes,studioById,todayIso]);
+    if (rows.length) {
+      if (!studiosToday.length) return <p>You’re coaching <strong>{rows.length} {rows.length === 1 ? "class" : "classes"}</strong> today.</p>;
+      if (studiosToday.length === 1) return <p>You’re coaching at <strong>{studiosToday[0]}</strong> at <strong>{naturalTimes(rows)}</strong> today.</p>;
+      return <p>You’re coaching <strong>{rows.length} classes</strong> across <strong>{studiosToday.length} studios</strong> today.</p>;
+    }
+    let next:{ offset:number; rows:ClassDto[] }|null=null;
+    for (let offset=1;offset<dayHorizon;offset++) {
+      const date=new Date(start+offset*864e5);
+      const upcoming=coachingOn(date.toISOString().slice(0,10),date);
+      if (upcoming.length) { next={ offset,rows:upcoming }; break; }
+    }
+    const todayCount=(savedByIso.get(todayIso) ?? []).length;
+    const todayLead=todayCount
+      ? <>You have <strong>{todayCount} {todayCount === 1 ? "class" : "classes"}</strong> on your calendar today. </>
+      : <>No classes today. </>;
+    if (!next) return <p>{todayLead}Nothing else is scheduled yet.</p>;
+    const nextDate=new Date(start+next.offset*864e5);
+    const when=next.offset === 1 ? "tomorrow" : `on ${nextDate.toLocaleDateString("en-US",{ weekday:"long",month:next.offset > 6 ? "short" : undefined,day:next.offset > 6 ? "numeric" : undefined,timeZone:"UTC" })}`;
+    if (next.rows.length > 1) return <p>{todayLead}You have <strong>{next.rows.length} classes</strong> coming up <strong>{when}</strong>.</p>;
+    const upcoming=next.rows[0];
+    const place=upcoming.studioId ? studioById.get(upcoming.studioId)?.name : upcoming.location;
+    return <p>{todayLead}You’re coaching <strong>{upcoming.name}</strong>{place ? <> at <strong>{place}</strong></> : null} <strong>{when}</strong> at <strong>{naturalTimes([upcoming])}</strong>.</p>;
+  },[classes,dayHorizon,savedByIso,studioById,todayIso]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
