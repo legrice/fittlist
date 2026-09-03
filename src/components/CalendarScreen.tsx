@@ -581,9 +581,20 @@ export function CalendarScreen({
         </div>
         <section className="calendar-scope-hero"><section className={`calendar-section-summary personal-upcoming-summary${scopeTarget !== "you" ? " calendar-summary-leaving" : ""}${scopeSummaryEntering ? " calendar-summary-entering" : ""}`} aria-label="Calendar summary"><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong>{classSheetDismissed && <small>{calendarWeekSummary.detail}</small>}</div>{!classSheetDismissed && <button type="button" className="calendar-summary-reveal" aria-label="Show your calendar" onClick={() => setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>}</section></section></>}
       {!sheet && !classSheetDismissed && <section className="calendar-action-sheet calendar-pull-sheet" style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Calendar actions">
-        <div className="calendar-action-list">
-          <button type="button" onClick={() => setCalendarChooserOpen(true)}><span className="calendar-action-icon"><Icon name="calendar_month" size={24} /></span><span><strong>Manage your calendars</strong><small>Personal, group, and studio calendars</small></span><Icon name="chevron_right" size={20} /></button>
-          <button type="button" onClick={openShare}><span className="calendar-action-icon"><Icon name="reply" className="share-arrow-forward" size={24} /></span><span><strong>Share your week</strong><small>Turn your schedule into a shareable image</small></span><Icon name="chevron_right" size={20} /></button>
+        <div className="calendar-action-hub">
+          <section><h3>Your schedule</h3><div className="calendar-action-list">
+            <button type="button" onClick={() => setCalendarChooserOpen(true)}><span className="calendar-action-icon"><Icon name="calendar_month" size={24} /></span><span><strong>Manage your calendars</strong><small>Personal, group, and studio calendars</small></span><Icon name="chevron_right" size={20} /></button>
+            <button type="button" onClick={openShare}><span className="calendar-action-icon"><Icon name="reply" className="share-arrow-forward" size={24} /></span><span><strong>Share your week</strong><small>Turn your schedule into a shareable image</small></span><Icon name="chevron_right" size={20} /></button>
+          </div></section>
+          <section><h3>Updates</h3><div className="calendar-action-list">
+            <Link href="/inbox"><span className="calendar-action-icon"><Icon name="chat_bubble" size={23} /></span><span><strong>Messages</strong><small>Conversations and class questions</small></span><Icon name="chevron_right" size={20} /></Link>
+            <Link href="/notifications"><span className="calendar-action-icon"><Icon name="notifications" size={23} /></span><span><strong>Notifications</strong><small>Follows, saves, and account activity</small></span><Icon name="chevron_right" size={20} /></Link>
+          </div></section>
+          <section><h3>Tools</h3><div className="calendar-action-list">
+            <Link href="/settings?section=calendar"><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></Link>
+            <Link href="/settings"><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></Link>
+          </div></section>
+          {managedCalendars.length > 0 && <section><h3>Calendars you manage</h3><div className="calendar-action-list">{managedCalendars.map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`}><span className={`calendar-action-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={23} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Manage studio calendar" : "Manage group calendar"}</small></span><Icon name="chevron_right" size={20} /></Link>)}</div></section>}
         </div>
       </section>}
       <header className="calendar-page-header calendar-page-actions">

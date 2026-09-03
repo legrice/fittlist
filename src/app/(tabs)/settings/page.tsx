@@ -39,9 +39,9 @@ function SettingsHeader() {
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ edit?: string }>;
+  searchParams: Promise<{ edit?: string; section?: string }>;
 }) {
-  const { edit } = await searchParams;
+  const { edit, section } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -105,6 +105,7 @@ export default async function SettingsPage({
           discoverable={me.discoverable}
           approveFollowers={me.approveFollowers}
           messagesOpen={me.messagesOpen}
+          initialView={section === "calendar" ? "calendar" : null}
           showHeading={false}
         />
       </div>
@@ -165,6 +166,7 @@ export default async function SettingsPage({
       <ProfileSheet
         page
         anim="none"
+        initialView={section === "calendar" ? "calendar" : "home"}
         handle={me.handle}
         name={me.name}
         title={me.title ?? ""}
