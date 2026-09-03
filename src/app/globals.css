@@ -12866,10 +12866,18 @@ a.clspeek-by:active { opacity: .6; }
     box-shadow:none;
     color:var(--color-white);
   }
-  .calendar-scope-top.is-expanded { z-index:20; }
+  /* Once the rear calendar is open, its identity row belongs to the content
+     and scrolls away. Only the escape hatch persists above the schedule. */
+  .calendar-scope-top.is-expanded { position:relative; z-index:auto; }
+  .calendar-scope-top.is-expanded .calendar-scope-actions {
+    position:fixed;
+    top:calc(12px + env(safe-area-inset-top));
+    right:var(--page-gutter);
+    z-index:30;
+  }
   .calendar-surface-schedule :is(.dayband-d,.cash-day > h2) { color:var(--color-white); }
   .calendar-surface-schedule .dayband,
-  .calendar-surface-schedule .cash-day > h2 { background:transparent !important; }
+  .calendar-surface-schedule .cash-day > h2 { background:var(--color-shift) !important; }
   .calendar-surface-schedule .calendar-following-card,
   .calendar-surface-schedule .personal-calendar-list .clline { box-shadow:0 6px 18px rgba(0,0,0,.08); }
   .calendar-surface-schedule .wkempty-t { color:var(--color-white); }
