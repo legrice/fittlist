@@ -13126,7 +13126,10 @@ a.clspeek-by:active { opacity: .6; }
 @media (max-width:939px) {
   .calendar-action-sheet {
     width:calc(100% + (2 * var(--page-gutter)));
-    min-height:calc(100dvh - 190px);
+    /* Continue beneath Safari's collapsing bottom chrome.  Sizing this to the
+       sheet's exact visual offset left a strip of the green rear surface
+       visible once the action layer reached the end of its content. */
+    min-height:calc(100dvh - 126px);
     margin-right:calc(-1 * var(--page-gutter));
     margin-left:calc(-1 * var(--page-gutter));
     padding:28px var(--page-gutter) calc(40px + env(safe-area-inset-bottom));
