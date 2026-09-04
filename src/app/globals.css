@@ -11245,7 +11245,7 @@ html[data-mode="dark"],
 }
 .calendar-revealed-controls > button:active { transform:scale(.96); box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 5px 16px rgba(0,0,0,.14); }
 .calendar-view-toggle {
-  position:relative; width:156px; height:56px; padding:4px; display:grid; grid-template-columns:1fr 1fr;
+  position:relative; width:120px; height:56px; padding:4px; display:grid; grid-template-columns:1fr 1fr;
   border-radius:var(--radius-pill); pointer-events:auto; overflow:hidden;
   background:color-mix(in srgb,var(--color-surface) 72%,transparent);
   -webkit-backdrop-filter:blur(24px) saturate(175%); backdrop-filter:blur(24px) saturate(175%);
@@ -11253,11 +11253,11 @@ html[data-mode="dark"],
 }
 .calendar-view-toggle::after { content:""; position:absolute; inset:4px auto 4px 4px; width:calc(50% - 4px); border-radius:var(--radius-pill); background:var(--color-surface); box-shadow:0 3px 12px rgba(0,0,0,.09); transition:transform 190ms cubic-bezier(.2,.8,.2,1); }
 .calendar-view-toggle[data-active="month"]::after { transform:translateX(100%); }
-.calendar-view-toggle button { position:relative; z-index:1; border:0; background:transparent; color:var(--color-text-secondary); font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+.calendar-view-toggle button { position:relative; z-index:1; display:grid; place-items:center; border:0; background:transparent; color:var(--color-text-secondary); font:inherit; cursor:pointer; }
 .calendar-view-toggle button[aria-pressed="true"] { color:var(--color-text-primary); }
 .calendar-add-pill {
-  min-width:104px; padding:0 18px; gap:7px; border-radius:var(--radius-pill);
-  background:var(--color-lime); font-size:20px; line-height:1; font-weight:700;
+  width:56px; min-width:56px; padding:0; border-radius:50%;
+  background:var(--color-black); color:var(--color-white) !important;
 }
 .navwrap[data-calendar-hidden="true"] { display:none !important; }
 .personal-summary-actions { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
@@ -12896,10 +12896,9 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-scope-top.is-expanded + .calendar-scope-hero { position:relative; top:auto; }
   .calendar-scope-top.is-expanded .calendar-scope-actions {
     position:fixed;
-    /* Match the search control's resting row. The expanded control leaves
-       that grid to remain available while the calendar scrolls, so carry
-       the row's 12px top padding with it instead of jumping upward. */
-    top:calc(24px + env(safe-area-inset-top));
+    /* Match the search control's resting centerline after the control leaves
+       the grid to remain available while the calendar scrolls. */
+    top:calc(18px + env(safe-area-inset-top));
     right:var(--page-gutter);
     z-index:30;
   }
