@@ -8,6 +8,7 @@ import { myWeek } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
 import { currentUser } from "@/lib/current-user";
 import { groupCalendarsForUser, managedCalendarsForUser } from "@/lib/managed-calendars";
+import { staffStudiosForUser } from "@/lib/staff-studios";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export default async function CalendarPage({
   const member = me.kind === "fan";
   const today = todayIso();
 
-  const [classRows, studioRows, savedDays, managedCalendars, groupCalendars] = await Promise.all([
+  const [classRows, studioRows, savedDays, managedCalendars, groupCalendars, studioRelationships] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym
     // shifts folded in, because a coach who is on Thursday at seven has to be
     // able to see that they are on Thursday at seven.
@@ -57,6 +58,7 @@ export default async function CalendarPage({
     myWeek(userId, { email: me.email }),
     managedCalendarsForUser(userId),
     groupCalendarsForUser(userId),
+    staffStudiosForUser(userId),
   ]);
 
   const studioById = new Map(studioRows.map((st) => [st.id, st]));
@@ -107,6 +109,7 @@ export default async function CalendarPage({
       member={member}
       managedCalendars={managedCalendars}
       groupCalendars={groupCalendars}
+      studioRelationships={studioRelationships}
     />
   );
 }
