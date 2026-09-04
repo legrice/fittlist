@@ -13172,6 +13172,7 @@ a.clspeek-by:active { opacity: .6; }
     margin-left:calc(-1 * var(--page-gutter));
     padding:0;
     background:var(--color-shift);
+    box-shadow:none;
   }
   .calendar-action-sheet .calendar-action-hub {
     position:relative;
@@ -13181,8 +13182,7 @@ a.clspeek-by:active { opacity: .6; }
     background:var(--color-background);
   }
   .calendar-action-sheet .calendar-community-footer {
-    position:sticky;
-    bottom:0;
+    position:relative;
     z-index:1;
     min-height:270px;
     margin:0;

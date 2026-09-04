@@ -170,6 +170,7 @@ export function CalendarScreen({
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [summaryVoice, setSummaryVoice] = useState<SummaryVoice>("straightforward");
   const [summaryVariant, setSummaryVariant] = useState(0);
+  const communityFooterRef = useRef<HTMLElement | null>(null);
   const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
   const classSheetPullStart = useRef<number | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
@@ -283,6 +284,21 @@ export function CalendarScreen({
     setScopeSummaryEntering(true);
     window.setTimeout(() => setScopeSummaryEntering(false),240);
   },[]);
+
+  useEffect(() => {
+    const footer=communityFooterRef.current;
+    if (!footer || !window.matchMedia("(max-width: 939px)").matches) return;
+    const metas=[...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+    const original=metas.map((meta) => meta.content);
+    const observer=new IntersectionObserver(([entry]) => {
+      metas.forEach((meta) => { meta.content=entry.isIntersecting ? "#F5F6F5" : "#1F5B3A"; });
+    },{ threshold:.12 });
+    observer.observe(footer);
+    return () => {
+      observer.disconnect();
+      metas.forEach((meta,index) => { meta.content=original[index] ?? "#1F5B3A"; });
+    };
+  },[classSheetDismissed]);
 
   useEffect(() => {
     const openFromDesktop = () => {
@@ -726,7 +742,7 @@ export function CalendarScreen({
             <button type="button" onClick={() => setSettingsView("account")}><span className="calendar-action-icon"><Icon name="lock" size={23} /></span><span><strong>Account &amp; preferences</strong><small>Login, notifications, and appearance</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
         </div>
-        <footer className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer>
+        <footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
         <div className="calendar-page-title-row">
