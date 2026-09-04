@@ -33,7 +33,7 @@ import {
   type CalendarComposerData,
 } from "@/app/actions/calendar-data";
 import { invalidateClientMemory } from "@/lib/client-memory";
-import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
+import type { GroupCalendarDestination, ManagedCalendarDestination } from "@/lib/managed-calendars";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -109,6 +109,7 @@ export function CalendarScreen({
   sheet = false,
   onClose,
   managedCalendars = [],
+  groupCalendars = [],
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -129,6 +130,7 @@ export function CalendarScreen({
   sheet?: boolean;
   onClose?: () => void;
   managedCalendars?: ManagedCalendarDestination[];
+  groupCalendars?: GroupCalendarDestination[];
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
@@ -597,9 +599,12 @@ export function CalendarScreen({
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share your profile</button>}
             <Link href="/settings?section=calendar"><Icon name="event" size={20} />Sync calendar</Link>
           </div></section>
-          <section><div className="calendar-action-section-head"><h3>Calendars you manage</h3><Link href="/saved"><Icon name="add" size={17} />New group</Link></div><div className="calendar-action-list">
-            {managedCalendars.map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`}><span className={`calendar-action-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={23} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
-            {managedCalendars.length === 0 && <Link href="/saved"><span className="calendar-action-icon group"><Icon name="groups" size={23} /></span><span><strong>Create a group calendar</strong><small>Plan classes and events together</small></span><Icon name="chevron_right" size={20} /></Link>}
+          {managedCalendars.some((calendar) => calendar.kind === "studio") && <section><h3>Calendars you manage</h3><div className="calendar-action-list">
+            {managedCalendars.filter((calendar) => calendar.kind === "studio").map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={`/s/${calendar.slug}/manage/calendar`}><span className="calendar-action-icon studio">{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{calendar.name}</strong><small>Studio calendar</small></span><Icon name="chevron_right" size={20} /></Link>)}
+          </div></section>}
+          <section><div className="calendar-action-section-head"><h3>Your groups</h3><Link href="/saved"><Icon name="add" size={17} />New group</Link></div><div className="calendar-action-list">
+            {groupCalendars.map((group) => <Link key={group.id} href={`/g/${group.slug}`}><span className="calendar-action-icon group">{group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={23} />}</span><span><strong>{group.name}</strong><small>{group.role === "owner" || group.role === "admin" ? "You manage this group" : "Group member"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
+            {groupCalendars.length === 0 && <Link href="/saved"><span className="calendar-action-icon group"><Icon name="groups" size={23} /></span><span><strong>Create or join a group</strong><small>Plan classes and events together</small></span><Icon name="chevron_right" size={20} /></Link>}
           </div></section>
           <section><h3>Updates</h3><div className="calendar-action-list">
             <Link href="/inbox"><span className="calendar-action-icon"><Icon name="chat_bubble" size={23} /></span><span><strong>Messages</strong><small>Conversations and class questions</small></span><Icon name="chevron_right" size={20} /></Link>
