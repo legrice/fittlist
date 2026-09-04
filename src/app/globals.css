@@ -120,6 +120,8 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --glass-control-highlight: color-mix(in srgb, var(--color-white) 42%, transparent);
   --glass-control-shadow: inset 0 1px 0 var(--glass-control-highlight);
   --glass-control-shadow-raised: inset 0 1px 0 var(--glass-control-highlight), 0 5px 16px rgba(0,0,0,.09);
+  --calendar-floating-control-size: 64px;
+  --calendar-view-toggle-width: 136px;
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
   --headline-tracking: .012em;
@@ -11364,7 +11366,7 @@ html[data-mode="dark"],
 }
 .calendar-revealed-controls > button:active { transform:scale(.96); box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 5px 16px rgba(0,0,0,.14); }
 .calendar-view-toggle {
-  position:relative; width:120px; height:56px; padding:4px; display:grid; grid-template-columns:1fr 1fr;
+  position:relative; width:var(--calendar-view-toggle-width); height:var(--calendar-floating-control-size); padding:4px; display:grid; grid-template-columns:1fr 1fr;
   border-radius:var(--radius-pill); pointer-events:auto; overflow:hidden;
   background:color-mix(in srgb,var(--color-surface) 72%,transparent);
   -webkit-backdrop-filter:blur(24px) saturate(175%); backdrop-filter:blur(24px) saturate(175%);
@@ -11375,8 +11377,8 @@ html[data-mode="dark"],
 .calendar-view-toggle button { position:relative; z-index:1; display:grid; place-items:center; border:0; background:transparent; color:var(--color-text-secondary); font:inherit; cursor:pointer; }
 .calendar-view-toggle button[aria-pressed="true"] { color:var(--color-text-primary); }
 .calendar-add-pill {
-  width:56px; min-width:56px; padding:0; border-radius:50%;
-  background:color-mix(in srgb,var(--color-lime) 88%,transparent); color:var(--color-black) !important;
+  width:var(--calendar-floating-control-size); min-width:var(--calendar-floating-control-size); height:var(--calendar-floating-control-size); padding:0; border-radius:50%;
+  background:color-mix(in srgb,var(--color-lime) 78%,transparent); color:var(--color-black) !important;
   -webkit-backdrop-filter:blur(24px) saturate(175%); backdrop-filter:blur(24px) saturate(175%);
 }
 .navwrap[data-calendar-hidden="true"] { display:none !important; }
@@ -14330,9 +14332,33 @@ a.clspeek-by:active { opacity: .6; }
   }
 
   .calendar-add-pill,
-  .personal-calendar-sheet .calendar-bottom-actions .calendar-bottom-add {
+  .calendar-bottom-actions .calendar-bottom-add {
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    flex-basis:var(--calendar-floating-control-size);
+    width:var(--calendar-floating-control-size);
+    min-width:var(--calendar-floating-control-size);
+    height:var(--calendar-floating-control-size);
+    background:color-mix(in srgb,var(--color-lime) 78%,transparent);
     -webkit-backdrop-filter:var(--glass-control-filter);
     backdrop-filter:var(--glass-control-filter);
     box-shadow:var(--glass-control-shadow-raised);
   }
+  .calendar-add-pill::after,
+  .calendar-bottom-actions .calendar-bottom-add::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--color-white) 30%,transparent),transparent 52%);
+  }
+  .calendar-add-pill > .icon,
+  .calendar-bottom-actions .calendar-bottom-add > .icon {
+    position:relative;
+    z-index:1;
+  }
+  .calendar-view-toggle button > .icon { width:24px; height:24px; }
 }
