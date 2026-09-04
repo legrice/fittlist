@@ -65,6 +65,7 @@ type EditorSnapshot = {
 };
 
 type ShareVoice = "straightforward" | "friendly" | "sassy" | "unfiltered" | "shakespearean";
+type SharePerspective = "first" | "third";
 const SHARE_VOICES: { value:ShareVoice; label:string; emoji:string }[] = [
   { value:"straightforward", label:"Straightforward", emoji:"😐" },
   { value:"friendly", label:"Friendly", emoji:"🙂" },
@@ -73,6 +74,7 @@ const SHARE_VOICES: { value:ShareVoice; label:string; emoji:string }[] = [
   { value:"shakespearean", label:"Shakespearean", emoji:"🧐" },
 ];
 const SHARE_VOICE_KEY = "fl-calendar-summary-voice";
+const SHARE_PERSPECTIVE_KEY = "fl-calendar-summary-perspective";
 
 const clampCrop = (value: number, min = 0, max = 100) => Math.max(min, Math.min(max, value));
 
@@ -259,6 +261,7 @@ export function ShareHubScreen({
   tabbed = false,
   coach,
   handle,
+  name,
   items,
   defaultFrom,
   today,
@@ -284,6 +287,8 @@ export function ShareHubScreen({
    *  flow. */
   coach: boolean;
   handle: string;
+  /** Display name used when a Words share is written in third person. */
+  name: string;
   /** A fortnight of occurrences for the pickers, oldest first. */
   items: HubItem[];
   /** The first day with something on it: the empty poster should never be
@@ -377,6 +382,7 @@ export function ShareHubScreen({
   const [hsize, setHsize] = useState(startingDesign.headlineSize);
   const [draftSlider, setDraftSlider] = useState(startingDesign.headlineSize);
   const [shareVoice, setShareVoice] = useState<ShareVoice>("straightforward");
+  const [sharePerspective, setSharePerspective] = useState<SharePerspective>("first");
   const [shareVoiceVariant, setShareVoiceVariant] = useState(() => Math.floor(Math.random()*5));
   // The dressing: the top bar (the default), frames and day dividers.
   // See decorations.ts.
@@ -402,6 +408,8 @@ export function ShareHubScreen({
   useEffect(() => {
     const stored=localStorage.getItem(SHARE_VOICE_KEY);
     if (SHARE_VOICES.some((voice) => voice.value === stored)) setShareVoice(stored as ShareVoice);
+    const storedPerspective=localStorage.getItem(SHARE_PERSPECTIVE_KEY);
+    if (storedPerspective === "first" || storedPerspective === "third") setSharePerspective(storedPerspective);
   },[]);
   useEffect(() => {
     // Move only the content revision when a host refresh arrives: live edits
@@ -1000,14 +1008,21 @@ export function ShareHubScreen({
     const classWord=count === 1 ? "class" : "classes";
     const placeWord=places.size === 1 ? "place" : "places";
     const activity=coach && (!twoHats || hat === "coaching") ? "coaching" : "going to";
-    const context=`I am ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
+    const firstName=name.trim().split(/\s+/)[0] || name;
+    const thirdPerson=sharePerspective === "third";
+    const subject=thirdPerson ? firstName : "I";
+    const context=`${subject} ${thirdPerson ? "is" : "am"} ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
     const variant=(lines:string[]) => lines[shareVoiceVariant%lines.length];
-    if (shareVoice === "friendly") return `${context} Look at me making the week count.`;
-    if (shareVoice === "sassy") return variant([`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I love this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
+    if (shareVoice === "friendly") return `${context} Look at ${thirdPerson ? firstName : "me"} making the week count.`;
+    if (shareVoice === "sassy") return variant(thirdPerson
+      ? [`${context} Wow, look at ${firstName} go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. ${firstName} loves this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally ${firstName} cast ${firstName} in every scene.`]
+      : [`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I love this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
     if (shareVoice === "unfiltered") return variant([`${context} Holy fucking shit, Wednesday just laid an egg and the egg is asking for your Wi-Fi password.`,`${context} The calendar is absolutely batshit and currently being audited by three lizards in a trench coat.`,`${context} Jesus tap-dancing Christ, the lasagna is screaming again and Thursday refuses to discuss it.`,`${context} A forklift-certified possum has seized control of the week and replaced every doorknob with soup.`,`${context} This schedule ate a protein bar sideways and challenged the concept of furniture to a duel.`]);
-    if (shareVoice === "shakespearean") return variant([`${context} Hark, my noble week awaits.`,`${context} Do I e’er rest? Verily, the evidence says no.`,`${context} Lo, behold my mighty calendar.`,`${context} By my troth, my week is stacked.`,`${context} Attend, good friends, for my schedule hath entered the chat.`]);
+    if (shareVoice === "shakespearean") return variant(thirdPerson
+      ? [`${context} Hark, ${firstName}'s noble week awaits.`,`${context} Doth ${firstName} e’er rest? Verily, the evidence says no.`,`${context} Lo, behold ${firstName}'s mighty calendar.`,`${context} By our troth, ${firstName}'s week is stacked.`,`${context} Attend, good friends, for ${firstName}'s schedule hath entered the chat.`]
+      : [`${context} Hark, my noble week awaits.`,`${context} Do I e’er rest? Verily, the evidence says no.`,`${context} Lo, behold my mighty calendar.`,`${context} By my troth, my week is stacked.`,`${context} Attend, good friends, for my schedule hath entered the chat.`]);
     return context;
-  },[coach,hat,previewDays,shareVoice,shareVoiceVariant,twoHats]);
+  },[coach,hat,name,previewDays,sharePerspective,shareVoice,shareVoiceVariant,twoHats]);
   const effectiveHeadline=styleId === "semantic" ? voiceHeadline : headline;
   const liveLayout = useMemo(
     () => buildShareStoryLayout({
@@ -1313,7 +1328,7 @@ export function ShareHubScreen({
               </div>
               <button type="button" className="shtop-undo" disabled={undoStack.length === 0} onClick={undoLast} aria-label="Undo last change"><Icon name="reply" size={24}/></button>
             </div>
-            {styleId === "semantic" && <div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div>}
+            {styleId === "semantic" && <div className="sheditor-words-controls"><div className="sheditor-perspective" role="group" aria-label="Sentence perspective"><button type="button" className={sharePerspective === "first" ? "selected" : ""} aria-pressed={sharePerspective === "first"} onClick={() => { setSharePerspective("first"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"first"); }}>I</button><button type="button" className={sharePerspective === "third" ? "selected" : ""} aria-pressed={sharePerspective === "third"} onClick={() => { setSharePerspective("third"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"third"); }}>{name.trim().split(/\s+/)[0] || name}</button></div><div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div></div>}
 
             {/* One preview is the center of the studio. The quiet stage gives
                 the artwork a canvas without making other formats compete. */}

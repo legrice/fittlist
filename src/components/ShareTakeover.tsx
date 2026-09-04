@@ -310,6 +310,7 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
               embedded
               coach={data.coach}
               handle={data.handle}
+              name={data.name}
               items={data.items}
               defaultFrom={data.defaultFrom}
               today={data.today}

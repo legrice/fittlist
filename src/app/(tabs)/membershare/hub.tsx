@@ -56,6 +56,7 @@ export async function hubPage(address: "member" | "coach") {
       tabbed
       coach={coach}
       handle={me.handle}
+      name={me.name}
       items={items}
       defaultFrom={defaultFrom}
       today={today}

@@ -114,6 +114,7 @@ export async function loadCalendarComposerData(includeSubscriberCount = true): P
 
 export type CalendarShareData = {
   handle: string;
+  name: string;
   coach: boolean;
   today: string;
   items: HubItem[];
@@ -134,6 +135,7 @@ export async function loadCalendarShareData(): Promise<CalendarShareData | null>
     db
       .select({
         handle: schema.users.handle,
+        name: schema.users.name,
         kind: schema.users.kind,
         storyPrefs: schema.users.storyPrefs,
       })
@@ -156,6 +158,7 @@ export async function loadCalendarShareData(): Promise<CalendarShareData | null>
   }));
   return {
     handle: me.handle,
+    name: me.name,
     coach: me.kind !== "fan",
     today,
     items,
