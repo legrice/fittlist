@@ -596,9 +596,9 @@ export function FollowingScreen({
     : null;
   const calendarCount = 1 + coachOptions.length + studioOptions.length + groupOptions.length;
   const followingSummary = [
-    coachOptions.length ? `${coachOptions.length} ${coachOptions.length === 1 ? "coach" : "coaches"}` : null,
-    studioOptions.length ? `${studioOptions.length} ${studioOptions.length === 1 ? "studio" : "studios"}` : null,
-    groupOptions.length ? `${groupOptions.length} ${groupOptions.length === 1 ? "group" : "groups"}` : null,
+    follows ? `${follows}\u00a0${follows === 1 ? "coach" : "coaches"}` : null,
+    studioOptions.length ? `${studioOptions.length}\u00a0${studioOptions.length === 1 ? "studio" : "studios"}` : null,
+    groupOptions.length ? `${groupOptions.length}\u00a0${groupOptions.length === 1 ? "group" : "groups"}` : null,
   ].filter((value): value is string => !!value);
   const followingSummaryText = followingSummary.length === 0
     ? "You aren’t following any calendars yet."

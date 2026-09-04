@@ -42,9 +42,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // The app's ground, so an installed launch has no seam between the status
-  // bar and the header. It was the ink colour, which read as a dark band.
-  themeColor: "#fdfcf7",
+  // Safari uses one theme colour for its top browser/status chrome. Keep it
+  // continuous with the app's green hero; the document canvas remains light
+  // gray so the translucent lower toolbar still samples the lighter surface.
+  themeColor: "#1F5B3A",
   // Deliberately not viewport-fit=cover. Without it the system keeps the page
   // clear of the notch and the home indicator, which is the safe default; with
   // it every screen has to carry its own insets and the tab bar would sit
