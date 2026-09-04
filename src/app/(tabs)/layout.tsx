@@ -10,7 +10,6 @@ import { InvitesBanner } from "@/components/InvitesBanner";
 import { lookMode } from "@/lib/darkmode";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { DesktopChrome } from "@/components/DesktopChrome";
-import { NavBar } from "@/components/NavBar";
 import { currentUser } from "@/lib/current-user";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { inviteBannerCountFor } from "@/lib/invite-banner";
@@ -152,13 +151,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           </Suspense>
           {children}
         </div>
-        <NavBar
-          coach={isCoach}
-          scheduleHref={scheduleHref}
-          profileHref={profileHref}
-          unread={unread.notifications > 0 || unread.messages > 0}
-          profileFace={{ photo:face.photo, color:face.color, initial:face.initial }}
-        />
         <Suspense fallback={null}>
           <DeferredFeedbackPrompt viewer={deferredViewer} />
         </Suspense>

@@ -702,7 +702,7 @@ export function GymRota({
           >
             <Icon name="arrow_back" size={23} />
           </BackLink>
-          <h1 className="studio-calendar-title">{shiftFilter === "open" ? "Open shifts" : "Calendar"}</h1>
+          <h1 className="studio-calendar-title">{shiftFilter === "open" ? "Open shifts" : studioName}</h1>
           <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
             <Icon name="tune" size={23} />
           </button>
@@ -1134,13 +1134,17 @@ export function GymRota({
       )}
 
       {!desktop && shiftFilter !== "open" && floatingAddDay && (
-        <div className="calendar-bottom-actions studio-calendar-add" aria-label="Calendar actions">
+        <div className="calendar-revealed-controls studio-calendar-controls" aria-label="Calendar controls">
+          <div className="calendar-view-toggle" data-active={mobileView} role="group" aria-label="Calendar view">
+            <button type="button" aria-label="Day view" aria-pressed={mobileView === "day"} onClick={() => setMobileView("day")}><Icon name="calendar_view_day" size={22} /></button>
+            <button type="button" aria-label="Month view" aria-pressed={mobileView === "month"} onClick={() => { setMobileView("month"); if (!month) void loadMonth(); }}><Icon name="calendar_month" size={22} /></button>
+          </div>
           <button
-            className="calendar-bottom-add"
+            className="calendar-add-pill"
             aria-label={`Add a class on ${fmtDay(floatingAddDay.iso)}`}
             onClick={() => show(floatingAddDay.iso, floatingAddDay.dayOfWeek, null, true)}
           >
-            <Icon name="add" size={28} />
+            <Icon name="add" size={27} />
           </button>
         </div>
       )}

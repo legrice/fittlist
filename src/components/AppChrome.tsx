@@ -2,7 +2,6 @@ import { avatarColor } from "@/lib/avatar";
 import { unreadHeaderCounts } from "@/lib/notify";
 import { adminAttentionCount, adminEmails } from "@/lib/admin";
 import { AppHeader } from "@/components/AppHeader";
-import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
 import { DesktopChrome } from "@/components/DesktopChrome";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
@@ -125,18 +124,5 @@ export async function AppChrome({
       />}
     </>
   );
-  if (!bar) return header;
-  return (
-    <>
-      {header}
-      <NavBar
-        coach={isCoach}
-        scheduleHref={scheduleHref}
-        profileHref={profileHref}
-        active={active}
-        unread={unread.notifications > 0 || unread.messages > 0}
-        profileFace={{ photo:face.photo, color:face.color, initial:face.initial }}
-      />
-    </>
-  );
+  return header;
 }
