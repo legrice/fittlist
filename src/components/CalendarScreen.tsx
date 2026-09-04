@@ -607,7 +607,7 @@ export function CalendarScreen({
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share profile</button>}
           </div></section>
           <section><h3>Profile</h3><div className="calendar-action-list">
-            <button type="button" onClick={() => setProfileActionsOpen(true)}><span className="calendar-action-icon profile">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><strong>{viewer.name}</strong><small>{handle ? `@${handle}` : "Personal profile"}</small></span><Icon name="chevron_right" size={20} /></button>
+            <button type="button" onClick={() => setProfileActionsOpen(true)}><span className="calendar-action-icon profile-avatar">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><strong>{viewer.name}</strong><small>{handle ? `@${handle}` : "Personal profile"}</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
           {studioRelationships.length > 0 && <section><h3>Studios</h3><div className="calendar-action-list">
             {studioRelationships.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{studio.name}</strong><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
