@@ -149,6 +149,7 @@ export function CalendarScreen({
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const [calendarSyncOpen, setCalendarSyncOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
   const classSheetPullStart = useRef<number | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
@@ -618,7 +619,7 @@ export function CalendarScreen({
           </div></section>
           <section><h3>Tools</h3><div className="calendar-action-list">
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
-            <Link href="/settings"><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></Link>
+            <button type="button" onClick={() => setSettingsOpen(true)}><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
         </div>
       </section>}
@@ -1023,6 +1024,7 @@ export function CalendarScreen({
       {createGroupOpen && <CreateGroupSheet onClose={() => setCreateGroupOpen(false)} />}
       {!sheet && discoverOpen && <SiteSearchSheet todayIso={todayIso} userId={viewer.id} onClose={() => setDiscoverOpen(false)} />}
       {calendarSyncOpen && <SettingsDetailSheet view="calendar" onClose={closeCalendarSync} />}
+      {settingsOpen && <SettingsDetailSheet view="home" onClose={() => setSettingsOpen(false)} />}
     </>
   );
 }

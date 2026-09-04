@@ -3038,6 +3038,38 @@ button.ps-card { cursor: pointer; }
   z-index: 3;
   background: var(--color-surface-muted);
 }
+.settings-index-sheet,
+.settings-account-sheet {
+  background:var(--color-background);
+}
+.settings-index-sheet .acctwrap,
+.settings-account-sheet .acctwrap {
+  padding-inline:var(--page-gutter);
+  background:var(--color-background);
+}
+.settings-index-sheet .settingslist,
+.settings-account-sheet .settingslist {
+  display:grid;
+  gap:12px;
+  margin:0;
+}
+.settings-index-sheet .settingslist > .setrow,
+.settings-account-sheet .settingslist > .setrow {
+  min-height:84px;
+  padding:16px;
+  border:0;
+  border-radius:var(--radius-card);
+  background:var(--color-surface);
+}
+.settings-index-sheet .settingslist > .setrow:active,
+.settings-account-sheet .settingslist > .setrow:active {
+  background:var(--color-surface-hover);
+}
+.settings-index-sheet .setrow-ic,
+.settings-account-sheet .setrow-ic {
+  border:0;
+  background:var(--color-surface-muted);
+}
 .brandbar-avatar img,
 .brandbar-avatar > span {
   display: grid;
