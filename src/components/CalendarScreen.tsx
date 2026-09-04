@@ -694,7 +694,7 @@ export function CalendarScreen({
       {/* Month view needs its weekday rail fixed above the grid. Day view
           uses the real date bands as sticky headers so there is only one
           date label competing for the top edge while scrolling. */}
-      {!bare && days.length > 0 && view === "month" && (
+      {(sheet || classSheetDismissed) && !bare && days.length > 0 && view === "month" && (
         <ScrollHead
           on={scrolled}
           label={ymInView ? monthLabel(ymInView, todayIso) : ""}
