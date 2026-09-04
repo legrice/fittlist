@@ -64,6 +64,16 @@ type EditorSnapshot = {
   featuredKey: string | null;
 };
 
+type ShareVoice = "straightforward" | "friendly" | "sassy" | "unfiltered" | "shakespearean";
+const SHARE_VOICES: { value:ShareVoice; label:string; emoji:string }[] = [
+  { value:"straightforward", label:"Straightforward", emoji:"😐" },
+  { value:"friendly", label:"Friendly", emoji:"🙂" },
+  { value:"sassy", label:"Roast me", emoji:"😏" },
+  { value:"unfiltered", label:"Unhinged", emoji:"🤪" },
+  { value:"shakespearean", label:"Shakespearean", emoji:"🧐" },
+];
+const SHARE_VOICE_KEY = "fl-calendar-summary-voice";
+
 const clampCrop = (value: number, min = 0, max = 100) => Math.max(min, Math.min(max, value));
 
 function PhotoCropSurface({
@@ -366,11 +376,13 @@ export function ShareHubScreen({
   // sheet; Done commits one lightweight preview configuration update.
   const [hsize, setHsize] = useState(startingDesign.headlineSize);
   const [draftSlider, setDraftSlider] = useState(startingDesign.headlineSize);
+  const [shareVoice, setShareVoice] = useState<ShareVoice>("straightforward");
+  const [shareVoiceVariant, setShareVoiceVariant] = useState(() => Math.floor(Math.random()*5));
   // The dressing: the top bar (the default), frames and day dividers.
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>(startingDesign.decoId);
   const [pick, setPick] = useState<
-    null | "dates" | "classes" | "message" | "layout" | "color" | "photo"
+    null | "dates" | "classes" | "message" | "layout" | "color" | "photo" | "voice"
   >(null);
   const [styleSection, setStyleSection] = useState<"presets" | "saved">("presets");
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -387,6 +399,10 @@ export function ShareHubScreen({
   // Stable while source content is unchanged, bumped after a mutation. It is
   // the cache identity for background assets and final exports, not for edits.
   const [bust, setBust] = useState(initialRevision);
+  useEffect(() => {
+    const stored=localStorage.getItem(SHARE_VOICE_KEY);
+    if (SHARE_VOICES.some((voice) => voice.value === stored)) setShareVoice(stored as ShareVoice);
+  },[]);
   useEffect(() => {
     // Move only the content revision when a host refresh arrives: live edits
     // to the current look stay under the user's fingers.
@@ -1021,11 +1037,26 @@ export function ShareHubScreen({
       items:dayItems,
     }));
   }, [effHide, inRange]);
+  const voiceHeadline = useMemo(() => {
+    const count=previewDays.reduce((total,day) => total+day.items.length,0);
+    const places=new Set(previewDays.flatMap((day) => day.items.map((item) => item.where).filter(Boolean)));
+    const classWord=count === 1 ? "class" : "classes";
+    const placeWord=places.size === 1 ? "place" : "places";
+    const activity=coach && (!twoHats || hat === "coaching") ? "coaching" : "attending";
+    const context=`You are ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
+    const variant=(lines:string[]) => lines[shareVoiceVariant%lines.length];
+    if (shareVoice === "friendly") return `${context} Look at you making the week count.`;
+    if (shareVoice === "sassy") return variant([`${context} Wow, look at you go, fitness royalty. Bow down, everyone.`,`${context} Slow down there, Rocky. Leave some classes for the rest of us.`,`${context} Okay, we getttt it. You love this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally you cast yourself in every scene.`]);
+    if (shareVoice === "unfiltered") return variant([`${context} Holy fucking shit, this week is built like a damn brick shithouse.`,`${context} This beautiful batshit schedule has absolutely no interest in calming the fuck down.`,`${context} Jesus tap-dancing Christ, save one goddamn time slot for resting.`,`${context} Somebody get this calendar a fire marshal and an exorcist.`,`${context} You absolute maniac. This week kicked down the door and demanded another fucking class.`]);
+    if (shareVoice === "shakespearean") return variant([`${context} Hark, thy noble week awaits.`,`${context} Dost thou ever rest? Verily, the evidence says no.`,`${context} Lo, behold the mighty calendar.`,`${context} By my troth, thy week is stacked.`,`${context} Attend, good friend, for thy schedule hath entered the chat.`]);
+    return context;
+  },[coach,hat,previewDays,shareVoice,shareVoiceVariant,twoHats]);
+  const effectiveHeadline=styleId === "semantic" ? voiceHeadline : headline;
   const liveLayout = useMemo(
     () => buildShareStoryLayout({
       days:previewDays,
       fan:!coach,
-      headline,
+      headline:effectiveHeadline,
       noHead,
       headlinePercent:hsize,
       showPhoto:false,
@@ -1033,7 +1064,7 @@ export function ShareHubScreen({
       featuredKey,
       style:STORY_STYLES[styleId],
     }),
-    [coach, featuredKey, headline, hsize, noHead, previewDays, styleId],
+    [coach, effectiveHeadline, featuredKey, hsize, noHead, previewDays, styleId],
   );
   const previewConfigKey = useMemo(
     () => [
@@ -1042,7 +1073,7 @@ export function ShareHubScreen({
       styleId,
       typeId,
       decoId,
-      headline,
+      effectiveHeadline,
       hsize,
       noHead ? 1 : 0,
       background ? 1 : 0,
@@ -1065,7 +1096,7 @@ export function ShareHubScreen({
       decoId,
       featuredKey,
       from,
-      headline,
+      effectiveHeadline,
       hideParam,
       hsize,
       headlineY,
@@ -1083,7 +1114,7 @@ export function ShareHubScreen({
   );
   const exportUrl =
     `/api/story/compose?theme=${themeId}&style=${styleId}&from=${from}&days=${days}&photo=0&bg=${background ? 1 : 0}` +
-    `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
+    `&headline=${encodeURIComponent(effectiveHeadline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `&nohead=${noHead ? 1 : 0}&bx=${photoX}&by=${photoY}&bz=${photoZoom}&bo=${photoOverlay}` +
     `&panels=${photoPanels ? 1 : 0}&hy=${headlineY}&sy=${scheduleY}` +
     `${featuredKey ? `&feature=${encodeURIComponent(featuredKey)}` : ""}` +
@@ -1425,12 +1456,12 @@ export function ShareHubScreen({
               </div>
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
-                <StudioTool
+                {styleId === "semantic" ? <StudioTool icon="campaign" label="Voice" detail={SHARE_VOICES.find((voice) => voice.value === shareVoice)?.label ?? "Straightforward"} onClick={() => setPick("voice")} /> : <StudioTool
                   icon="format_size"
                   label="Headline"
                   detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   onClick={openHeadlineEditor}
-                />
+                />}
                 <StudioTool
                   icon="palette"
                   label="Color"
@@ -1512,6 +1543,16 @@ export function ShareHubScreen({
           )}
         </section>
       </div>
+
+      {pick === "voice" && (
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
+          <div className="sheet shpick calendar-voice-sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
+            <h2>Voice</h2>
+            <div className="calendar-voice-options">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); setPick(null); }}><span className="calendar-voice-option-main"><span className="calendar-voice-emoji" aria-hidden="true">{voice.emoji}</span><strong>{voice.label}</strong></span><Icon name={shareVoice === voice.value ? "check_circle" : "radio_button_unchecked"} size={23} /></button>)}</div>
+          </div>
+        </div>
+      )}
 
       {pick === "dates" && (
         <div
