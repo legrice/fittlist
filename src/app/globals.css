@@ -14331,8 +14331,8 @@ a.clspeek-by:active { opacity: .6; }
     background:var(--glass-control-bg);
   }
 
-  .calendar-add-pill,
-  .calendar-bottom-actions .calendar-bottom-add {
+  .calendar-revealed-controls > .calendar-add-pill,
+  .calendar-bottom-actions > .calendar-bottom-add {
     position:relative;
     isolation:isolate;
     overflow:hidden;
@@ -14340,13 +14340,17 @@ a.clspeek-by:active { opacity: .6; }
     width:var(--calendar-floating-control-size);
     min-width:var(--calendar-floating-control-size);
     height:var(--calendar-floating-control-size);
+    min-height:var(--calendar-floating-control-size);
+    max-height:var(--calendar-floating-control-size);
+    aspect-ratio:1;
+    border-radius:50%;
     background:color-mix(in srgb,var(--color-lime) 78%,transparent);
     -webkit-backdrop-filter:var(--glass-control-filter);
     backdrop-filter:var(--glass-control-filter);
     box-shadow:var(--glass-control-shadow-raised);
   }
-  .calendar-add-pill::after,
-  .calendar-bottom-actions .calendar-bottom-add::after {
+  .calendar-revealed-controls > .calendar-add-pill::after,
+  .calendar-bottom-actions > .calendar-bottom-add::after {
     content:"";
     position:absolute;
     inset:0;
@@ -14355,8 +14359,8 @@ a.clspeek-by:active { opacity: .6; }
     pointer-events:none;
     background:linear-gradient(145deg,color-mix(in srgb,var(--color-white) 30%,transparent),transparent 52%);
   }
-  .calendar-add-pill > .icon,
-  .calendar-bottom-actions .calendar-bottom-add > .icon {
+  .calendar-revealed-controls > .calendar-add-pill > .icon,
+  .calendar-bottom-actions > .calendar-bottom-add > .icon {
     position:relative;
     z-index:1;
   }
