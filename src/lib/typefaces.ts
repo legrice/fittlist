@@ -17,7 +17,17 @@ export type TypeFaceId =
   | "psycho"
   | "friendly"
   | "eighties"
-  | "quality";
+  | "quality"
+  | "anton"
+  | "bebas"
+  | "bungee"
+  | "abril"
+  | "lilita"
+  | "monoton"
+  | "bangers"
+  | "alfa"
+  | "fascinate"
+  | "faster";
 
 export type TypeFace = {
   id: TypeFaceId;
@@ -43,6 +53,16 @@ export const TYPEFACES: TypeFace[] = [
   { id: "friendly", label: "Overly friendly", family: "Bagel Fat One", file: "bagel-fat-one.ttf" },
   { id: "eighties", label: "80s kid", family: "Righteous", file: "righteous.ttf" },
   { id: "quality", label: "Quality time", family: "Young Serif", file: "young-serif.ttf" },
+  { id: "anton", label: "Anton", family: "Anton", file: "anton-regular.ttf", track: -0.015 },
+  { id: "bebas", label: "Bebas Neue", family: "Bebas Neue", file: "bebas-neue-regular.ttf", track: 0.01 },
+  { id: "bungee", label: "Bungee", family: "Bungee", file: "bungee-regular.ttf", track: -0.02 },
+  { id: "abril", label: "Abril Fatface", family: "Abril Fatface", file: "abril-fatface-regular.ttf", track: -0.015 },
+  { id: "lilita", label: "Lilita One", family: "Lilita One", file: "lilita-one-regular.ttf", track: -0.01 },
+  { id: "monoton", label: "Monoton", family: "Monoton", file: "monoton-regular.ttf", track: -0.01 },
+  { id: "bangers", label: "Bangers", family: "Bangers", file: "bangers-regular.ttf", track: 0.01 },
+  { id: "alfa", label: "Alfa Slab One", family: "Alfa Slab One", file: "alfa-slab-one-regular.ttf", track: -0.015 },
+  { id: "fascinate", label: "Fascinate", family: "Fascinate", file: "fascinate-regular.ttf", track: -0.01 },
+  { id: "faster", label: "Faster One", family: "Faster One", file: "faster-one-regular.ttf" },
 ];
 
 export function typeFaceOf(id: string | null | undefined): TypeFace {

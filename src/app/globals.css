@@ -57,6 +57,16 @@ html[data-native="ios"] .screen.hasnav > .pad {
 @font-face { font-family: 'Bagel Fat One'; src: url('/fonts/bagel-fat-one.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Righteous'; src: url('/fonts/righteous.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Young Serif'; src: url('/fonts/young-serif.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Anton'; src: url('/fonts/anton-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Bebas Neue'; src: url('/fonts/bebas-neue-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Bungee'; src: url('/fonts/bungee-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Abril Fatface'; src: url('/fonts/abril-fatface-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Lilita One'; src: url('/fonts/lilita-one-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Monoton'; src: url('/fonts/monoton-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Bangers'; src: url('/fonts/bangers-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Alfa Slab One'; src: url('/fonts/alfa-slab-one-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Fascinate'; src: url('/fonts/fascinate-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Faster One'; src: url('/fonts/faster-one-regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
 
 /* fittlist design system - ported from design/fittlist-prototype-v10.html.
    The prototype renders inside a fake phone frame; here the viewport is the
