@@ -290,15 +290,13 @@ export function ProfileTabs({
         <h1 className="profile-top-name">{name}</h1>
           </div>
         )}
+        {!heroPhoto && !heroColor && <div className="profile-seam-top">
+          {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
+          <h1 className="profile-top-name">{name}</h1>
+          {ownerTop&&<div className="ownertop profile-top-actions">{ownerTop}</div>}
+        </div>}
         <div className="pubidentity pubidentity-paper">
             {!heroPhoto && !heroColor && <div className="profile-identity-lead">{avatar}</div>}
-            {!heroPhoto && !heroColor && (
-              <>
-            {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
-            {ownerTop&&<div className="ownertop profile-top-actions">{ownerTop}</div>}
-            <h1 className="profile-top-name">{name}</h1>
-              </>
-            )}
             {handle ? <p className="profhandle">@{handle}</p> : null}
             {(title.trim() || location.trim()) && (
               <div className="profile-eyebrow">
