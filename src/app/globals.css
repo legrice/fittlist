@@ -6945,7 +6945,15 @@ html[data-mode="dark"],
 .group-hero-media>img,.group-hero-media>span:first-child { width:100%; height:100%; display:block; object-fit:cover; }
 .group-hero-dim { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.22),transparent 38%,rgba(0,0,0,.18)); pointer-events:none; }
 .group-hero-back { position:absolute; top:14px; left:0; border-color:var(--line); background:var(--card); color:var(--ink); }
-.group-profile-photo { width:128px; height:128px; margin:0 0 18px; border-radius:50%; background:var(--cl); }
+.group-profile-photo {
+  position:relative; width:128px; height:128px; aspect-ratio:1; flex:0 0 128px;
+  margin:0 0 18px; overflow:hidden; border-radius:50%; background:var(--cl);
+}
+.group-profile-photo > img,
+.group-profile-photo > span {
+  position:absolute; inset:0; width:100%; height:100%; display:block;
+  border-radius:50%; object-fit:cover; object-position:center;
+}
 .group-hero-copy { max-width:620px; }
 .group-hero-copy>p+.profacts { margin-top:12px; }
 @media(max-width:939px){ .group-page .group-main { margin-top:0; } }
