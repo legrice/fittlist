@@ -1312,7 +1312,7 @@ export function ShareHubScreen({
   const startDays = useMemo(() => Array.from({ length: 14 }, (_, i) => plusDays(today, i)), [today]);
 
   return (
-    <>
+    <div className={`share-editor-root${pick ? " has-inspector" : ""}${embedded ? " is-embedded" : ""}`}>
       {/* `shpage` is the marker the gradient opt-out keys on. */}
       <div className={`cardwrap shpage shpage-editor${embedded ? " shpage-embedded" : ""}${tabbed ? " shpage-tabbed" : ""}`}>
         {!embedded && !tabbed && (
@@ -1477,7 +1477,7 @@ export function ShareHubScreen({
 
       {pick === "dates" && (
         <div
-          className="sheet-scrim"
+          className="sheet-scrim share-inspector-scrim"
           onClick={(e) => {
             if (e.target === e.currentTarget) setPick(null);
           }}
@@ -1539,7 +1539,7 @@ export function ShareHubScreen({
 
       {pick === "photo" && (
         <div
-          className="sheet-scrim"
+          className="sheet-scrim share-inspector-scrim"
           onClick={(e) => {
             if (e.target === e.currentTarget) setPick(null);
           }}
@@ -1662,7 +1662,7 @@ export function ShareHubScreen({
       )}
 
       {pick === "perspective" && (
-        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
+        <div className="sheet-scrim share-inspector-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
           <div className="sheet shpick" role="dialog" aria-modal="true" aria-labelledby="share-perspective-title">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
             <h2 id="share-perspective-title">Perspective</h2>
@@ -1677,7 +1677,7 @@ export function ShareHubScreen({
 
       {pick === "color" && colorMenuOpen && (
         <div
-          className="sheet-scrim shcolor-sheet-scrim"
+          className="sheet-scrim shcolor-sheet-scrim share-inspector-scrim"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               setColorMenuOpen(false);
@@ -1714,7 +1714,7 @@ export function ShareHubScreen({
 
       {pick === "layout" && (
         <div
-          className="sheet-scrim"
+          className="sheet-scrim share-inspector-scrim"
           onClick={(e) => {
             if (e.target === e.currentTarget) setPick(null);
           }}
@@ -1850,7 +1850,7 @@ export function ShareHubScreen({
 
       {pick === "message" && (
         <div
-          className="sheet-scrim"
+          className="sheet-scrim share-inspector-scrim"
           onClick={(e) => {
             if (e.target === e.currentTarget) setPick(null);
           }}
@@ -1941,7 +1941,7 @@ export function ShareHubScreen({
       )}
 
       {pick === "font" && (
-        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
+        <div className="sheet-scrim share-inspector-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
           <div className="sheet shpick" role="dialog" aria-modal="true" aria-labelledby="share-font-title">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
             <h2 id="share-font-title">Font</h2>
@@ -1954,7 +1954,7 @@ export function ShareHubScreen({
 
       {pick === "classes" && (
         <div
-          className="sheet-scrim"
+          className="sheet-scrim share-inspector-scrim"
           onClick={(e) => {
             if (e.target === e.currentTarget) setPick(null);
           }}
@@ -2227,7 +2227,7 @@ export function ShareHubScreen({
         onToast={toast}
       />
       <Toast msg={toastMsg} on={toastOn} />
-    </>
+    </div>
   );
 }
 

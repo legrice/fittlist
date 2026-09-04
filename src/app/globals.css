@@ -14617,6 +14617,86 @@ a.clspeek-by:active { opacity: .6; }
   }
 }
 
+/* Desktop is one workspace rather than a stack of mobile sheets: tools stay
+   left, the artwork owns the center, and the selected tool becomes a quiet
+   inspector on the right. The controls and state remain the same as mobile. */
+@media (min-width:900px) {
+  .share-editor-root { width:100%; min-height:100dvh; position:relative; }
+  .share-editor-root > .cardwrap.shpage-editor,
+  .share-editor-root > .cardwrap.shpage-editor:not(.shpage-embedded) {
+    width:100%; max-width:none; margin:0; padding:0 28px; transition:padding-right 180ms ease;
+  }
+  .share-editor-root.has-inspector > .cardwrap.shpage-editor { padding-right:348px; }
+  .share-editor-root .sheditor-shell,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .sheditor-shell {
+    width:min(100%, 1280px); min-height:100dvh; margin:0 auto; padding:24px 0;
+    display:block;
+  }
+  .share-editor-root .sheditor-disabled-layer {
+    width:100%; min-height:calc(100dvh - 48px);
+    display:grid; grid-template-columns:180px minmax(380px,1fr); grid-template-rows:auto auto minmax(0,1fr);
+    gap:14px 20px; align-items:start;
+  }
+  .share-editor-root .shtop-controls,
+  .calendar-share-sheet .share-editor-root .shtop-controls,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .shtop-controls {
+    position:relative; inset:auto; grid-column:1 / 3; grid-row:1; justify-content:center; margin:0; pointer-events:auto;
+  }
+  .share-editor-root .sheditor-words-controls { grid-column:2; grid-row:2; justify-content:center; }
+  .share-editor-root .sheditor-format-voices { width:auto; max-width:100%; margin:0; padding:0 0 2px; justify-content:center; }
+  .share-editor-root .sheditor-stage,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .sheditor-stage {
+    grid-column:2; grid-row:3; width:100%; height:calc(100dvh - 94px); min-height:620px;
+    border:1px solid var(--sheditor-border); border-radius:28px;
+    background:radial-gradient(circle at 50% 42%,rgba(159,232,112,.1),transparent 50%),var(--sheditor-soft);
+  }
+  .share-editor-root .sheditor-words-controls + .sheditor-stage { height:calc(100dvh - 144px); min-height:570px; }
+  .share-editor-root .shsingle-preview,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .shsingle-preview { width:100%; height:100%; padding:28px; }
+  .share-editor-root .shsingle-preview .shprev-wrap,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .shsingle-preview .shprev-wrap { width:100%; height:100%; max-width:560px; }
+  .share-editor-root .sheditor-dock,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .sheditor-dock {
+    position:sticky; top:24px; grid-column:1; grid-row:2 / 4; align-self:start; max-height:calc(100dvh - 86px);
+    padding:16px; overflow-y:auto; border:1px solid var(--sheditor-border); border-radius:22px;
+    background:var(--sheditor-panel); box-shadow:0 18px 44px rgba(2,13,8,.08);
+  }
+  .share-editor-root .sheditor-dock-heading { display:block; margin-bottom:14px; }
+  .share-editor-root .sheditor-dock-heading h2 { margin:0; font-size:21px; line-height:1.08; }
+  .share-editor-root .sheditor-dock-heading p { margin:6px 0 0; color:var(--sheditor-muted); font-size:12px; line-height:1.35; }
+  .share-editor-root .sheditor-tools,
+  .share-editor-root .sheditor-tools-all,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .sheditor-tools,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .sheditor-tools-all {
+    display:grid; grid-template-columns:1fr; gap:6px; margin:0; padding:0 0 14px; overflow:visible;
+  }
+  .share-editor-root .sheditor-tool,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .sheditor-tool {
+    width:100%; min-width:0; min-height:54px; padding:6px 8px; grid-template-columns:38px minmax(0,1fr);
+    grid-template-rows:auto auto; justify-items:start; align-content:center; column-gap:9px; row-gap:1px;
+    border:1px solid transparent; border-radius:14px; background:transparent; text-align:left;
+  }
+  .share-editor-root .sheditor-tool:hover { border-color:var(--sheditor-border); background:var(--sheditor-soft); }
+  .share-editor-root .sheditor-tool-icon,
+  .share-editor-root .shpage-editor:not(.shpage-embedded) .sheditor-tool-icon {
+    width:38px; height:38px; grid-column:1; grid-row:1 / 3; border:0; background:var(--sheditor-soft);
+  }
+  .share-editor-root .sheditor-tool-label { align-self:end; font-size:14px; }
+  .share-editor-root .sheditor-tool-detail { display:block; align-self:start; width:100%; overflow:hidden; color:var(--sheditor-muted); font-size:11px; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
+  .share-editor-root .sheditor-share-action { position:sticky; bottom:0; margin:0; padding-top:8px; background:var(--sheditor-panel); }
+  .share-editor-root > .share-inspector-scrim {
+    inset:0 0 0 auto; width:320px; padding:16px; align-items:stretch; justify-content:stretch;
+    background:transparent; animation:none; pointer-events:none;
+  }
+  .share-editor-root > .share-inspector-scrim > .sheet {
+    width:100%; height:calc(100dvh - 32px); max-height:none; padding:22px; overflow-y:auto; pointer-events:auto;
+    border:1px solid var(--color-border); border-radius:24px; box-shadow:0 18px 60px rgba(2,13,8,.16);
+    animation:share-inspector-in 180ms cubic-bezier(.16,1,.3,1) both;
+  }
+  .share-editor-root > .share-inspector-scrim > .sheet .publishwrap.nostick { position:static; margin-top:20px; }
+}
+@keyframes share-inspector-in { from { opacity:0; transform:translateX(18px); } }
+
 /* --------------------------------------------------------------------------
    Unified interactive glass
 
