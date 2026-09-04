@@ -1426,7 +1426,7 @@ export function ShareHubScreen({
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
                 <StudioTool
-                  icon="edit"
+                  icon="format_size"
                   label="Headline"
                   detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   onClick={openHeadlineEditor}
