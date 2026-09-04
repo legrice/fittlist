@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { MarkSeen } from "@/components/MarkSeen";
 import { NewMessage, type MessagePerson } from "@/components/NewMessage";
@@ -177,6 +178,7 @@ export function UpdatesScreen({
   header?: React.ReactNode;
   messagePeople?: MessagePerson[];
 }) {
+  const router = useRouter();
   return (
     <div className="pad">
       {header}
@@ -190,9 +192,9 @@ export function UpdatesScreen({
         </div>
         <div className="updates-actions">
           {mode === "messages" && <NewMessage people={messagePeople} />}
-          <Link className="iconbtn acctclose" aria-label="Close" href="/feed">
+          <button type="button" className="iconbtn acctclose" aria-label="Close" onClick={() => router.back()}>
             <Icon name="close" size={20} />
-          </Link>
+          </button>
         </div>
       </div>
 
