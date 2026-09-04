@@ -714,7 +714,7 @@ export function CalendarScreen({
           <section><h3>Profile</h3><div className="calendar-action-list">
             <button type="button" onClick={() => setProfileActionsOpen(true)}><span className="calendar-action-icon profile-avatar">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><small className="calendar-relationship-role">{handle ? `@${handle}` : "Personal profile"}</small><strong>{viewer.name}</strong></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
-          <section><div className="calendar-action-section-head"><h3>Places</h3><GlobalAdd placeOnly triggerLabel="Add" triggerIconSize={17} /></div><div className="calendar-action-list">
+          <section><div className="calendar-action-section-head"><h3>Places</h3><GlobalAdd placeOnly triggerClassName="calendar-section-add" triggerLabel="Add" triggerIconSize={17} /></div><div className="calendar-action-list">
             {studioRelationships.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small><strong>{studio.name}</strong></span><Icon name="chevron_right" size={20} /></Link>)}
           </div></section>
           <section><div className="calendar-action-section-head"><h3>Groups</h3><button type="button" onClick={() => setCreateGroupOpen(true)}><Icon name="add" size={17} />New group</button></div><div className="calendar-action-list">
