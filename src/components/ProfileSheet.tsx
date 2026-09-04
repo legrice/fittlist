@@ -14,7 +14,6 @@ import {
 import { updateAwayStatus, updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
-import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DeleteAccount } from "@/components/DeleteAccount";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ShiftsPublicToggle } from "@/components/ShiftsPublicToggle";
@@ -94,7 +93,6 @@ export function ProfileSheet({
   discoverable = true,
   approveFollowers = false,
   messagesOpen = true,
-  look,
   timeZone,
   onClose,
   initialView = "home",
@@ -708,7 +706,6 @@ export function ProfileSheet({
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <NotificationPrefs />
-              <DarkModeToggle initialOn={look === "dark"} />
             </div>
           )}
           {view === "account" && (

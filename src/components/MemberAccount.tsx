@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { MyCalendar } from "@/components/MyCalendar";
-import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DeleteAccount } from "@/components/DeleteAccount";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
@@ -47,7 +46,6 @@ export function MemberAccount({
   location,
   photo,
   color,
-  look,
   timeZone,
   followingCount,
   followerCount,
@@ -282,7 +280,6 @@ export function MemberAccount({
                 <div className="settingslist">
                   <TeachingToggle initialOn={false} />
                   <NotificationPrefs />
-                  <DarkModeToggle initialOn={look === "dark"} />
                 </div>
                 <DeleteAccount />
               </>
