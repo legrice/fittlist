@@ -11300,7 +11300,7 @@ html[data-mode="dark"],
 .calendar-mode-tabs.is-collapsed[data-active="you"] { grid-template-columns:1fr 0fr; }
 .calendar-mode-tabs.is-collapsed[data-active="following"] { grid-template-columns:0fr 1fr; }
 .calendar-mode-tabs.is-collapsed::after { width:calc(100% - 6px); transform:translateX(0); }
-.calendar-mode-tabs.is-collapsed a:not([aria-current="page"]) { padding:0; opacity:0; pointer-events:none; }
+.calendar-mode-tabs.is-collapsed a:not([aria-current="page"]) { min-width:0; padding:0; opacity:0; pointer-events:none; }
 .calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-shift); color:var(--color-white); touch-action:pan-y; }
 .calendar-scope-top { position:sticky; top:0; z-index:0; margin:0 0 18px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; background:var(--color-shift); }
 .calendar-scope-top .calendar-mode-tabs { margin:0; justify-self:center; }
