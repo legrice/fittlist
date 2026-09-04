@@ -14106,6 +14106,23 @@ a.clspeek-by:active { opacity: .6; }
     radial-gradient(circle at 50% 38%, rgba(159,232,112,.075), transparent 44%),
     var(--sheditor-bg);
 }
+.sheditor-format-switch {
+  position:relative; align-self:center; z-index:2;
+  min-height:42px; margin:10px auto 2px; padding:4px;
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  border-radius:var(--radius-pill); background:var(--sheditor-soft);
+}
+.sheditor-format-switch button {
+  min-width:104px; min-height:34px; padding:0 15px; border:0; border-radius:var(--radius-pill);
+  background:transparent; color:var(--sheditor-muted); font:inherit; font-size:14px; font-weight:700;
+}
+.sheditor-format-switch button[aria-pressed="true"] { background:var(--color-surface); color:var(--color-text-primary); box-shadow:0 3px 10px rgba(0,0,0,.1); }
+@media (max-width:939px) {
+  .calendar-share-sheet .sheditor-format-switch {
+    background:color-mix(in srgb,var(--color-white) 34%,transparent);
+    -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%);
+  }
+}
 .shsingle-preview {
   width:100%;
   height:clamp(360px, 52dvh, 560px);

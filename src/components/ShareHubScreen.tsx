@@ -337,6 +337,7 @@ export function ShareHubScreen({
   ).current;
   const [themeId, setThemeId] = useState<StoryThemeId>(startingDesign.themeId);
   const [styleId, setStyleId] = useState<StoryStyleId>(startingDesign.styleId);
+  const lastScheduleStyle = useRef<StoryStyleId>(startingDesign.styleId === "semantic" ? "plain" : startingDesign.styleId);
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
   const [hide, setHide] = useState<Set<string>>(new Set());
@@ -1005,6 +1006,7 @@ export function ShareHubScreen({
 
   const applyCompleteStyle = (id: StoryStyleId) => {
     const style = STORY_STYLES[id];
+    if (id !== "semantic") lastScheduleStyle.current=id;
     setStyleId(id);
     setThemeId(style.theme);
     setTypeId(style.typeface);
@@ -1017,7 +1019,12 @@ export function ShareHubScreen({
   const remix = () => {
     beginPreviewUpdate("random");
     pushUndo();
-    setStyleId(randomOther(Object.keys(STORY_STYLES) as StoryStyleId[], styleId));
+    if (styleId === "semantic") setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5);
+    else {
+      const nextStyle=randomOther((Object.keys(STORY_STYLES) as StoryStyleId[]).filter((id) => id !== "semantic"), styleId);
+      lastScheduleStyle.current=nextStyle;
+      setStyleId(nextStyle);
+    }
     setThemeId(randomOther(Object.keys(STORY_THEMES) as StoryThemeId[], themeId));
     setTypeId(randomOther(TYPEFACES.map((typeface) => typeface.id), typeId));
     setDecoId(randomOther(DECOS.map((decoration) => decoration.id), decoId));
@@ -1042,13 +1049,13 @@ export function ShareHubScreen({
     const places=new Set(previewDays.flatMap((day) => day.items.map((item) => item.where).filter(Boolean)));
     const classWord=count === 1 ? "class" : "classes";
     const placeWord=places.size === 1 ? "place" : "places";
-    const activity=coach && (!twoHats || hat === "coaching") ? "coaching" : "attending";
-    const context=`You are ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
+    const activity=coach && (!twoHats || hat === "coaching") ? "coaching" : "going to";
+    const context=`I am ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
     const variant=(lines:string[]) => lines[shareVoiceVariant%lines.length];
-    if (shareVoice === "friendly") return `${context} Look at you making the week count.`;
-    if (shareVoice === "sassy") return variant([`${context} Wow, look at you go, fitness royalty. Bow down, everyone.`,`${context} Slow down there, Rocky. Leave some classes for the rest of us.`,`${context} Okay, we getttt it. You love this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally you cast yourself in every scene.`]);
+    if (shareVoice === "friendly") return `${context} Look at me making the week count.`;
+    if (shareVoice === "sassy") return variant([`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I love this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
     if (shareVoice === "unfiltered") return variant([`${context} Holy fucking shit, Wednesday just laid an egg and the egg is asking for your Wi-Fi password.`,`${context} The calendar is absolutely batshit and currently being audited by three lizards in a trench coat.`,`${context} Jesus tap-dancing Christ, the lasagna is screaming again and Thursday refuses to discuss it.`,`${context} A forklift-certified possum has seized control of the week and replaced every doorknob with soup.`,`${context} This schedule ate a protein bar sideways and challenged the concept of furniture to a duel.`]);
-    if (shareVoice === "shakespearean") return variant([`${context} Hark, thy noble week awaits.`,`${context} Dost thou ever rest? Verily, the evidence says no.`,`${context} Lo, behold the mighty calendar.`,`${context} By my troth, thy week is stacked.`,`${context} Attend, good friend, for thy schedule hath entered the chat.`]);
+    if (shareVoice === "shakespearean") return variant([`${context} Hark, my noble week awaits.`,`${context} Do I e’er rest? Verily, the evidence says no.`,`${context} Lo, behold my mighty calendar.`,`${context} By my troth, my week is stacked.`,`${context} Attend, good friends, for my schedule hath entered the chat.`]);
     return context;
   },[coach,hat,previewDays,shareVoice,shareVoiceVariant,twoHats]);
   const effectiveHeadline=styleId === "semantic" ? voiceHeadline : headline;
@@ -1404,6 +1411,11 @@ export function ShareHubScreen({
               </div>
             )}
 
+            <div className="sheditor-format-switch" data-active={styleId === "semantic" ? "words" : "schedule"} role="group" aria-label="Share format">
+              <button type="button" aria-pressed={styleId !== "semantic"} onClick={() => { if (styleId === "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle(lastScheduleStyle.current); } }}>Schedule</button>
+              <button type="button" aria-pressed={styleId === "semantic"} onClick={() => { if (styleId !== "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle("semantic"); } }}>In words</button>
+            </div>
+
             {/* One preview is the center of the studio. The quiet stage gives
                 the artwork a canvas without making other formats compete. */}
             <div className="sheditor-stage">
@@ -1456,20 +1468,6 @@ export function ShareHubScreen({
               </div>
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
-                <StudioTool
-                  icon="format_size"
-                  label="In words"
-                  detail={styleId === "semantic" ? "Week in words selected" : "Share your week in a sentence"}
-                  onClick={() => {
-                    if (styleId === "semantic") {
-                      setPick("voice");
-                      return;
-                    }
-                    beginPreviewUpdate("style");
-                    pushUndo();
-                    applyCompleteStyle("semantic");
-                  }}
-                />
                 {styleId === "semantic" ? <StudioTool icon="campaign" label="Voice" detail={SHARE_VOICES.find((voice) => voice.value === shareVoice)?.label ?? "Straightforward"} onClick={() => setPick("voice")} /> : <StudioTool
                   icon="format_size"
                   label="Headline"
@@ -1828,7 +1826,7 @@ export function ShareHubScreen({
               <p className="lead">Choose a complete starting style. You can still change its color and type afterward.</p>
               <div className="settingslist layoutlist">
               {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).filter(
-                ([id]) => id !== "cowboy",
+                ([id]) => id !== "cowboy" && id !== "semantic",
               ).map(
                 ([id, style]) => {
                   const on = id === styleId;
