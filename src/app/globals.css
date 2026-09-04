@@ -11322,6 +11322,10 @@ html[data-mode="dark"],
 .calendar-mode-tabs[data-active="following"]::after { transform:translateX(100%); }
 .calendar-mode-tabs a { position:relative; z-index:1; min-width:0; min-height:38px; padding:0 8px; display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--color-text-secondary); font-size:15px; font-weight:700; text-decoration:none; transition:opacity 180ms ease,padding 420ms cubic-bezier(.2,1.35,.35,1); }
 .calendar-mode-tabs a[aria-current="page"] { color:var(--color-text-primary); }
+.sheditor-format-tabs::after { transform:translateX(0); }
+.sheditor-format-tabs[data-active="words"]::after { transform:translateX(100%); }
+.sheditor-format-tabs button { position:relative; z-index:1; min-width:0; min-height:38px; padding:0 8px; display:flex; align-items:center; justify-content:center; border:0; background:transparent; color:color-mix(in srgb,var(--color-black) 58%,transparent); font:inherit; font-size:15px; font-weight:700; }
+.sheditor-format-tabs button[aria-pressed="true"] { color:var(--color-black); }
 .calendar-mode-tabs.is-collapsed { width:96px; }
 .calendar-mode-tabs.is-collapsed[data-active="you"] { grid-template-columns:1fr 0fr; }
 .calendar-mode-tabs.is-collapsed[data-active="following"] { grid-template-columns:0fr 1fr; }
@@ -14106,17 +14110,6 @@ a.clspeek-by:active { opacity: .6; }
     radial-gradient(circle at 50% 38%, rgba(159,232,112,.075), transparent 44%),
     var(--sheditor-bg);
 }
-.sheditor-format-switch {
-  position:relative; align-self:center; z-index:2;
-  min-height:42px; margin:10px auto 2px; padding:4px;
-  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
-  border-radius:var(--radius-pill); background:var(--sheditor-soft);
-}
-.sheditor-format-switch button {
-  min-width:104px; min-height:34px; padding:0 15px; border:0; border-radius:var(--radius-pill);
-  background:transparent; color:var(--sheditor-muted); font:inherit; font-size:14px; font-weight:700;
-}
-.sheditor-format-switch button[aria-pressed="true"] { background:var(--color-surface); color:var(--color-text-primary); box-shadow:0 3px 10px rgba(0,0,0,.1); }
 .sheditor-format-voices {
   width:100%; margin:6px 0 2px; padding:4px max(var(--page-gutter),12px) 8px;
   display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; scroll-padding-inline:var(--page-gutter);
@@ -14131,10 +14124,6 @@ a.clspeek-by:active { opacity: .6; }
 .sheditor-format-voices button.selected { border-color:color-mix(in srgb,var(--color-white) 62%,transparent); background:var(--color-surface); color:var(--color-text-primary); }
 @keyframes sheditor-voices-in { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:translateX(0); } }
 @media (max-width:939px) {
-  .calendar-share-sheet .sheditor-format-switch {
-    background:color-mix(in srgb,var(--color-white) 34%,transparent);
-    -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%);
-  }
   .calendar-share-sheet .sheditor-format-voices button { background:color-mix(in srgb,var(--color-white) 28%,transparent); color:var(--color-white); }
   .calendar-share-sheet .sheditor-format-voices button.selected { background:var(--color-surface); color:var(--color-text-primary); }
 }
@@ -14249,12 +14238,13 @@ a.clspeek-by:active { opacity: .6; }
 .sheditor-tool:disabled { cursor:default; opacity:.42; }
 .sheditor-tool:focus-visible,
 .calendar-share-sheet .shdesign-actions button:focus-visible,
-.shtop-help:focus-visible {
+.shtop-undo:focus-visible {
   outline:2px solid var(--si);
   outline-offset:2px;
 }
 
 .shtop-controls {
+  position:relative;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -14296,10 +14286,15 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-share-sheet .shtop-controls {
   position:fixed;
   top:max(16px, env(safe-area-inset-top));
-  right:var(--page-gutter);
+  right:0;
+  left:0;
   z-index:8;
   margin:0;
+  pointer-events:none;
 }
+.calendar-share-sheet .shtop-controls > * { pointer-events:auto; }
+.shtop-undo { position:absolute; right:var(--page-gutter); width:var(--tap-size); height:var(--tap-size); padding:0; display:grid; place-items:center; border:1px solid var(--sheditor-border); border-radius:50%; background:var(--sheditor-soft); color:var(--sheditor-text); }
+.shtop-undo:disabled { opacity:.42; }
 .calendar-share-sheet .shdesign-actions button {
   min-height:38px;
   padding:0 10px;
@@ -14369,8 +14364,7 @@ a.clspeek-by:active { opacity: .6; }
     box-shadow:none;
   }
   .calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close,
-  .calendar-share-sheet:has(.shpage-editor) .shtop-help,
-  .calendar-share-sheet:has(.shpage-editor) .shdesign-actions {
+  .calendar-share-sheet:has(.shpage-editor) .shtop-undo {
     border-color:color-mix(in srgb,var(--color-white) 58%,transparent);
     background:color-mix(in srgb,var(--color-white) 66%,transparent);
     -webkit-backdrop-filter:blur(22px) saturate(165%);
@@ -14633,8 +14627,7 @@ a.clspeek-by:active { opacity: .6; }
   .group-hero-back,
   .group-overflow-trigger,
   .calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close,
-  .calendar-share-sheet:has(.shpage-editor) .shtop-help,
-  .calendar-share-sheet:has(.shpage-editor) .shdesign-actions,
+  .calendar-share-sheet:has(.shpage-editor) .shtop-undo,
   .calendar-share-sheet .shpage-embedded .sheditor-tool-icon,
   :is(.screen.hasnav, .screen.hasnav > .pad, .pub.hasnav .profwrap) > .navwrap > .navbar,
   :is(.screen.hasnav, .screen.hasnav > .pad, .pub.hasnav .profwrap) > .navwrap > .navshare {
@@ -14696,16 +14689,12 @@ a.clspeek-by:active { opacity: .6; }
      but do not let old editor borders make these controls look milkier. */
   .shpage-editor .share-page-close,
   .calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close,
-  .shpage-editor .shtop-help,
-  .shpage-editor .shdesign-actions,
+  .shpage-editor .shtop-undo,
   .shpage-editor .sheditor-tool-icon {
     border-color:var(--glass-control-highlight);
     background:var(--glass-control-bg);
     -webkit-backdrop-filter:var(--glass-control-filter);
     backdrop-filter:var(--glass-control-filter);
     box-shadow:var(--glass-control-shadow);
-  }
-  .shpage-editor .shdesign-actions button + button {
-    border-left-color:var(--glass-control-highlight);
   }
 }

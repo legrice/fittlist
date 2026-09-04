@@ -214,7 +214,6 @@ function randomOther<T>(values: readonly T[], current: T): T {
 const exportFileCache = new Map<string, File>();
 const exportFilePromises = new Map<string, Promise<File>>();
 const EXPORT_FILE_CACHE_LIMIT = 2;
-const SHARE_EDITOR_HELP_SEEN = "fittlist:share-editor-help-seen:v1";
 
 function rememberExportFile(url: string, file: File) {
   exportFileCache.delete(url);
@@ -463,42 +462,6 @@ export function ShareHubScreen({
   const [lookName, setLookName] = useState("");
   const [designSaving, setDesignSaving] = useState(false);
   const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([]);
-  const [redoStack, setRedoStack] = useState<EditorSnapshot[]>([]);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [helpIntro, setHelpIntro] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(SHARE_EDITOR_HELP_SEEN) !== "1") {
-        setHelpIntro(true);
-        setHelpOpen(true);
-      }
-    } catch {
-      // Contextual help still works when storage is unavailable; it simply
-      // cannot remember the first visit between sessions.
-      setHelpIntro(true);
-      setHelpOpen(true);
-    }
-  }, []);
-
-  const dismissHelp = useCallback(() => {
-    setHelpOpen(false);
-    setHelpIntro(false);
-    try {
-      window.localStorage.setItem(SHARE_EDITOR_HELP_SEEN, "1");
-    } catch {
-      // Dismissing help should never depend on storage permissions.
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!helpOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") dismissHelp();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [dismissHelp, helpOpen]);
 
   useEffect(() => () => {
     sharingRef.current = false;
@@ -939,7 +902,6 @@ export function ShareHubScreen({
   const pushUndo = () => {
     const snapshot = captureSnapshot();
     setUndoStack((current) => [...current.slice(-19), snapshot]);
-    setRedoStack([]);
     return snapshot;
   };
 
@@ -988,20 +950,8 @@ export function ShareHubScreen({
     const previous = undoStack[undoStack.length - 1];
     if (!previous) return;
     beginPreviewUpdate("undo");
-    const current = captureSnapshot();
     setUndoStack((current) => current.slice(0, -1));
-    setRedoStack((stack) => [...stack.slice(-19), current]);
     restoreSnapshot(previous);
-  };
-
-  const redoLast = () => {
-    const next = redoStack[redoStack.length - 1];
-    if (!next) return;
-    beginPreviewUpdate("redo");
-    const current = captureSnapshot();
-    setRedoStack((stack) => stack.slice(0, -1));
-    setUndoStack((stack) => [...stack.slice(-19), current]);
-    restoreSnapshot(next);
   };
 
   const applyCompleteStyle = (id: StoryStyleId) => {
@@ -1357,63 +1307,11 @@ export function ShareHubScreen({
         <section className={`sheditor-shell sheditor-week${building ? " is-building" : ""}`} aria-label="Share image editor">
           <div className="sheditor-disabled-layer" inert={building ? true : undefined} aria-hidden={building || undefined}>
             <div className="shtop-controls">
-              <button
-                type="button"
-                className={`shtop-help${helpIntro ? " is-intro" : ""}`}
-                aria-label="How to use the share editor"
-                aria-expanded={helpOpen}
-                aria-controls="share-editor-help"
-                onClick={() => {
-                  if (helpOpen) dismissHelp();
-                  else {
-                    setHelpIntro(false);
-                    setHelpOpen(true);
-                  }
-                }}
-              >
-                ?
-              </button>
-              <div className="shdesign-actions" aria-label="Design actions">
-                <button type="button" disabled={undoStack.length === 0} onClick={undoLast}>Undo</button>
-                <button type="button" disabled={redoStack.length === 0} onClick={redoLast}>Redo</button>
+              <div className="calendar-mode-tabs sheditor-format-tabs" data-active={styleId === "semantic" ? "words" : "image"} role="group" aria-label="Share format">
+                <button type="button" aria-pressed={styleId !== "semantic"} onClick={() => { if (styleId === "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle(lastScheduleStyle.current); } }}>Image</button>
+                <button type="button" aria-pressed={styleId === "semantic"} onClick={() => { if (styleId !== "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle("semantic"); } }}>Words</button>
               </div>
-            </div>
-
-            {helpOpen && (
-              <div className="shhelp-scrim" onPointerDown={(event) => {
-                if (event.target === event.currentTarget) dismissHelp();
-              }}>
-                <section
-                  id="share-editor-help"
-                  className="shhelp-panel"
-                  role="dialog"
-                  aria-labelledby="share-editor-help-title"
-                  aria-describedby="share-editor-help-description"
-                  onPointerDown={(event) => event.stopPropagation()}
-                >
-                  <div className="shhelp-grabber" aria-hidden="true" />
-                  <h2 id="share-editor-help-title">Make it yours</h2>
-                  <p id="share-editor-help-description">
-                    Customize your share before posting. Move things around, change the look,
-                    and choose exactly what you want to show.
-                  </p>
-                  <dl className="shhelp-list">
-                    <div><dt>Drag</dt><dd>Move your headline or classes around the image.</dd></div>
-                    <div><dt>Pinch</dt><dd>Resize and reposition your photo.</dd></div>
-                    <div><dt>Photo</dt><dd>Add or change your background photo.</dd></div>
-                    <div><dt>Style</dt><dd>Change colors and appearance.</dd></div>
-                    <div><dt>Classes &amp; Dates</dt><dd>Choose what appears on your share.</dd></div>
-                    <div><dt>Headline</dt><dd>Edit your message.</dd></div>
-                    <div><dt>Undo &amp; Redo</dt><dd>Quickly reverse or restore changes.</dd></div>
-                  </dl>
-                  <button type="button" className="shhelp-dismiss" onClick={dismissHelp}>Got it</button>
-                </section>
-              </div>
-            )}
-
-            <div className="sheditor-format-switch" data-active={styleId === "semantic" ? "words" : "schedule"} role="group" aria-label="Share format">
-              <button type="button" aria-pressed={styleId !== "semantic"} onClick={() => { if (styleId === "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle(lastScheduleStyle.current); } }}>Schedule</button>
-              <button type="button" aria-pressed={styleId === "semantic"} onClick={() => { if (styleId !== "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle("semantic"); } }}>In words</button>
+              <button type="button" className="shtop-undo" disabled={undoStack.length === 0} onClick={undoLast} aria-label="Undo last change"><Icon name="reply" size={24}/></button>
             </div>
             {styleId === "semantic" && <div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div>}
 
