@@ -198,7 +198,8 @@ export type StoryStyleId =
   | "editorial"
   | "retro"
   | "cyber"
-  | "synthwave";
+  | "synthwave"
+  | "semantic";
 
 export type StoryLayoutId = "plain" | "split" | "party" | "neon" | "brutalist" | "swiss" | "cowboy";
 
@@ -243,6 +244,8 @@ export type StoryStyle = {
    * somebody's Thursday.
    */
   rowScale: number;
+  /** Render the schedule as a natural-language rundown instead of rows. */
+  narrative?: boolean;
 };
 
 export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
@@ -420,6 +423,14 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     layout: "neon", theme: "laser", typeface: "monoton", decoration: "frame",
     headlineSize: 96, headline: .94, name: 1.03, upper: true, align: "left",
     rule: "none", chip: true, radius: 18, stackTime: false, dayTrack: .04, rowScale: 1.4,
+  },
+  semantic: {
+    label: "Week in words",
+    description: "A conversational rundown instead of a timetable",
+    layout: "plain", theme: "forest", typeface: "friendly", decoration: "none",
+    headlineSize: 96, headline: .96, name: 1, upper: false, align: "left",
+    rule: "none", chip: false, radius: 24, stackTime: false, dayTrack: .02, rowScale: 1.8,
+    narrative: true,
   },
 };
 

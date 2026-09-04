@@ -11978,6 +11978,10 @@ a.clspeek-by:active { opacity: .6; }
 .layoutmini-cyber > span { height:8px; border:1px solid currentColor; background:transparent; opacity:1; }
 .layoutmini-synthwave { background:linear-gradient(165deg,#120c2c,#241145,#071c38); color:#ff4fc8; border-color:#55e7ff; }
 .layoutmini-synthwave > span { height:8px; border:1px solid currentColor; border-radius:4px; background:transparent; opacity:1; }
+.layoutmini-semantic { background:#14312a; color:#eaf3ec; border-color:#8fd6a8; }
+.layoutmini-semantic > span { width:100%; height:5px; border-radius:999px; background:currentColor; opacity:1; }
+.layoutmini-semantic > span:nth-child(2) { width:82%; }
+.layoutmini-semantic > span:nth-child(3) { width:68%; }
 .shpick-titleline { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .shpick-titleline > .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .shpick-featurebtn {
@@ -14280,16 +14284,8 @@ a.clspeek-by:active { opacity: .6; }
   width:100%; min-height:44px; margin-top:20px; border-radius:var(--radius-pill);
   background:var(--si); color:var(--color-black); font:inherit; font-size:14px; font-weight:700;
 }
-.sheditor-share-action { margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sheditor-share-action { margin-top:10px; }
 .sheditor-share-action .shheader-share { width:100%; }
-.sheditor-share-action .sheditor-share-text {
-  border:1px solid color-mix(in srgb,var(--color-white) 44%,transparent);
-  background:var(--glass-control-bg);
-  color:var(--color-black);
-  box-shadow:var(--glass-control-shadow);
-  -webkit-backdrop-filter:var(--glass-control-filter);
-  backdrop-filter:var(--glass-control-filter);
-}
 @media (max-width:939px) {
   /* The mobile share studio is one immersive workspace. The green surround
      separates the editable artwork from the white, floating control dock and

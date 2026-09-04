@@ -716,6 +716,14 @@ export function renderStory(model: StoryModel) {
         >
         {empty ? (
           <div style={{ display: "flex", color: t.faint, fontSize: px(44) }}>{emptyLine}</div>
+        ) : y.narrative ? (
+          <div style={{ display:"flex", flexDirection:"column", width:908, gap:px(22) }}>
+            {editorialDays.map(({ day, rows }) => {
+              const rundown=rows.map((row) => `${row.name} at ${row.time}${row.sub ? ` (${row.sub})` : ""}`).join(rows.length === 2 ? " and " : "; ");
+              return <div key={day} style={{ display:"flex", flexDirection:"column", padding:`${px(24)}px ${px(28)}px`, borderRadius:px(24), background:"rgba(255,255,255,.94)", color:"#14312a" }}><span style={{ display:"flex", marginBottom:px(10), color:"#405d52", fontSize:px(25), lineHeight:1, fontWeight:700, letterSpacing:2, textTransform:"uppercase" }}>{day}</span><span style={{ display:"block", width:"100%", lineClamp:4, fontSize:px(plan.tier === 3 ? 34 : 40), lineHeight:1.18, fontWeight:650 }}>{`You’ve got ${rundown}.`}</span></div>;
+            })}
+            {plan.moreDays > 0 && <div style={{ display:"flex", fontSize:px(28), color:t.faint }}>And {plan.moreDays} more {plan.moreDays === 1 ? "day" : "days"} at {url}.</div>}
+          </div>
         ) : layout === "swiss" ? (
           <div style={{ display: "flex", flexWrap: "wrap", width: 908 }}>
             {editorialDays.map(({ day, rows }, di) => (

@@ -1099,6 +1099,13 @@ function ShareLivePreviewComponent({
               </div>
             ) : onPhoto ? (
               <PhotoSchedule days={days} theme={theme} compact={layout.plan.tier !== 1} panels={photoPanels} />
+            ) : style.narrative ? (
+              <div style={{ display:"flex", flexDirection:"column", width:"100%", gap:22 }}>
+                {days.map(({ day, rows }) => {
+                  const rundown=rows.map((row) => `${row.name} at ${row.time}${row.sub ? ` (${row.sub})` : ""}`).join(rows.length === 2 ? " and " : "; ");
+                  return <div key={day} style={{ display:"flex", flexDirection:"column", padding:"24px 28px", borderRadius:24, background:"rgba(255,255,255,.94)", color:"#14312a" }}><span style={{ marginBottom:10, color:"#405d52", fontSize:25, lineHeight:1, fontWeight:700, letterSpacing:2, textTransform:"uppercase" }}>{day}</span><span style={{ display:"-webkit-box", overflow:"hidden", WebkitBoxOrient:"vertical", WebkitLineClamp:4, fontSize:layout.plan.tier === 3 ? 34 : 40, lineHeight:1.18, fontWeight:650 }}>{`You’ve got ${rundown}.`}</span></div>;
+                })}
+              </div>
             ) : style.layout === "swiss" ? (
               <SwissSchedule days={days} theme={theme} />
             ) : style.layout === "cowboy" ? (
