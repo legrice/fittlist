@@ -1424,7 +1424,13 @@ export function ShareHubScreen({
                 <p>Choose a tool, then make changes directly on the preview.</p>
               </div>
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
-                <StudioTool icon="auto_awesome" label="Random" detail="New look" onClick={remix} />
+                <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
+                <StudioTool
+                  icon="edit"
+                  label="Headline"
+                  detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
+                  onClick={openHeadlineEditor}
+                />
                 <StudioTool
                   icon="palette"
                   label="Color"
@@ -1468,12 +1474,6 @@ export function ShareHubScreen({
                     setDraftDays(days);
                     setPick("dates");
                   }}
-                />
-                <StudioTool
-                  icon="edit"
-                  label="Headline"
-                  detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
-                  onClick={openHeadlineEditor}
                 />
                 {!coach && (
                   <StudioTool
