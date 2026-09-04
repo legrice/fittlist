@@ -69,7 +69,7 @@ type SharePerspective = "first" | "third";
 const SHARE_VOICES: { value:ShareVoice; label:string; emoji:string }[] = [
   { value:"straightforward", label:"Straightforward", emoji:"😐" },
   { value:"friendly", label:"Friendly", emoji:"🙂" },
-  { value:"sassy", label:"Roast me", emoji:"😏" },
+  { value:"sassy", label:"Roast me", emoji:"😎" },
   { value:"explicit", label:"Explicit", emoji:"🤬" },
   { value:"unfiltered", label:"Unhinged", emoji:"🤫" },
   { value:"shakespearean", label:"Shakespearean", emoji:"🧐" },

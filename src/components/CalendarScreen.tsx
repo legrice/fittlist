@@ -79,7 +79,7 @@ const SUMMARY_VARIANT_KEY = "fl-calendar-summary-variant";
 const SUMMARY_VOICES: { value:SummaryVoice; label:string; emoji:string }[] = [
   { value:"straightforward", label:"Straightforward", emoji:"😐" },
   { value:"friendly", label:"Friendly", emoji:"🙂" },
-  { value:"sassy", label:"Roast me", emoji:"😏" },
+  { value:"sassy", label:"Roast me", emoji:"😎" },
   { value:"explicit", label:"Explicit", emoji:"🤬" },
   { value:"unfiltered", label:"Unhinged", emoji:"🤫" },
   { value:"shakespearean", label:"Shakespearean", emoji:"🧐" },
