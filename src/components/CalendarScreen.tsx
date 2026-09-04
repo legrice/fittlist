@@ -43,6 +43,7 @@ const DiscoverSheet = dynamic(() => import("@/components/DiscoverSheet").then((m
 const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => module.QrSheet));
 const ShareTakeover = dynamic(() => import("@/components/ShareTakeover").then((module) => module.ShareTakeover));
 const CreateGroupSheet = dynamic(() => import("@/components/SavedScreen").then((module) => module.CreateGroupSheet));
+const SettingsDetailSheet = dynamic(() => import("@/components/SettingsDetailSheet").then((module) => module.SettingsDetailSheet));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -145,6 +146,8 @@ export function CalendarScreen({
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
+  const [calendarSyncOpen, setCalendarSyncOpen] = useState(false);
+  const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
   const classSheetPullStart = useRef<number | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
   const [addChoice, setAddChoice] = useState(openAdder);
@@ -612,7 +615,7 @@ export function CalendarScreen({
             <Link href="/notifications"><span className="calendar-action-icon"><Icon name="notifications" size={23} /></span><span><strong>Notifications</strong><small>Follows, saves, and account activity</small></span><Icon name="chevron_right" size={20} /></Link>
           </div></section>
           <section><h3>Tools</h3><div className="calendar-action-list">
-            <Link href="/settings?section=calendar"><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></Link>
+            <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
             <Link href="/settings"><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></Link>
           </div></section>
         </div>
@@ -1017,6 +1020,7 @@ export function CalendarScreen({
       {shareOpen && <ShareTakeover onClosed={() => setShareOpen(false)} />}
       {createGroupOpen && <CreateGroupSheet onClose={() => setCreateGroupOpen(false)} />}
       {!sheet && discoverOpen && <DiscoverSheet full onClose={() => setDiscoverOpen(false)} />}
+      {calendarSyncOpen && <SettingsDetailSheet view="calendar" onClose={closeCalendarSync} />}
     </>
   );
 }
