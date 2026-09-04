@@ -122,6 +122,8 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --glass-control-shadow-raised: inset 0 1px 0 var(--glass-control-highlight), 0 5px 16px rgba(0,0,0,.09);
   --calendar-floating-control-size: 64px;
   --calendar-view-toggle-width: 136px;
+  --calendar-view-icon-size: 29px;
+  --calendar-add-icon-size: 34px;
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
   --headline-tracking: .012em;
@@ -12488,8 +12490,8 @@ a.clspeek-by:active { opacity: .6; }
 .personal-calendar-sheet .calendar-bottom-actions .calendar-bottom-add .icon {
   position:relative;
   z-index:1;
-  width:32px;
-  height:32px;
+  width:var(--calendar-add-icon-size);
+  height:var(--calendar-add-icon-size);
 }
 .youaccount-row:is(button) { width:100%; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
 .calendar-desktop-controls { order:3; width:100%; margin-top:8px; display:flex; align-items:center; gap:8px; }
@@ -14378,11 +14380,14 @@ a.clspeek-by:active { opacity: .6; }
     position:relative;
     z-index:1;
   }
-  .calendar-view-toggle button > .icon { width:29px; height:29px; }
+  .calendar-view-toggle button > .icon {
+    width:var(--calendar-view-icon-size);
+    height:var(--calendar-view-icon-size);
+  }
   .calendar-revealed-controls > .calendar-add-pill > .icon,
   .calendar-bottom-actions > .calendar-bottom-add > .icon {
-    width:34px;
-    height:34px;
+    width:var(--calendar-add-icon-size);
+    height:var(--calendar-add-icon-size);
   }
 
   /* The share studio uses the same restrained glass recipe as the main
