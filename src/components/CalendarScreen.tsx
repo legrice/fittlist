@@ -401,7 +401,7 @@ export function CalendarScreen({
     else if (summaryVoice === "sassy")
       title=coaching ? `Look at you: coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attending ${attending}` : ""}. Casual.` : attending ? `${attending} ${classWord(attending)} on the books. Main character behavior.` : personal ? `${personal} personal ${classWord(personal)}. Very responsible of you.` : "Nothing booked. Mysterious. Powerful.";
     else if (summaryVoice === "unfiltered")
-      title=coaching ? `Hell yes. You’re coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attending ${attending}` : ""} this week.` : attending ? `You’re attending ${attending} damn good ${classWord(attending)} this week.` : personal ? `You handled your shit: ${personal} personal ${classWord(personal)} this week.` : "No plans. No bullshit. Your week is open.";
+      title=coaching ? `Holy shit, bro. You’re coaching ${coaching} fucking ${classWord(coaching)} this week${studioPhrase}${attending ? ` and attending ${attending}` : ""}.` : attending ? `Holy shit, bro. You’re attending ${attending} fucking ${classWord(attending)} this week.` : personal ? `You handled your shit: ${personal} personal ${classWord(personal)} this week.` : "No plans. No bullshit. Your week is open.";
     else if (summaryVoice === "shakespearean")
       title=coaching ? `Dost thou coach ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attend ${attending}` : ""} this week? Verily.` : attending ? `Hark! ${attending} ${classWord(attending)} await thee this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thy week lies open before thee.";
     const details=[
