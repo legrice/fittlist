@@ -11573,7 +11573,7 @@ html[data-mode="dark"],
 .calendar-following-card .activity-card-story :is(strong,b) { font-weight:700; }
 .calendar-following-card .activity-card-meta { display:grid; gap:3px; color:var(--color-text-secondary); font-size:14px; line-height:1.3; }
 .calendar-following-card .activity-card-meta span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.calendar-social-actions { padding:0 16px 14px 77px; display:flex; align-items:center; gap:8px; }
+.calendar-social-actions { padding:0 16px 14px; display:flex; align-items:center; gap:8px; }
 .calendar-social-actions button { min-width:42px; height:36px; padding:0 11px; display:flex; align-items:center; justify-content:center; gap:5px; border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary); font:inherit; font-size:13px; font-weight:700; }
 .calendar-social-actions button.liked { background:var(--color-lime-soft); color:var(--color-olive); }
 .calendar-activity-scrim { position:fixed; inset:0; z-index:150; display:flex; align-items:flex-end; background:rgba(0,0,0,.38); }
