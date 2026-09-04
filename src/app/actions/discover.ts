@@ -34,12 +34,12 @@ const nearBounds = (lat: number | null, lng: number | null, miles?: number) => {
   return { minLat:lat-latDelta, maxLat:lat+latDelta, minLng:lng-lngDelta, maxLng:lng+lngDelta };
 };
 
-export async function discoverPeople(distanceMiles?: number): Promise<DiscoverData> {
+export async function discoverPeople(distanceMiles?: number, center?: { lat:number; lng:number }): Promise<DiscoverData> {
   const me = await currentUser();
   if (!me) return { people: [], cities: [], myCity: null, myLat: null, myLng: null };
   const userId = me.id;
   const db = await getDb();
-  const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
+  const bounds = nearBounds(center?.lat ?? me.locationLat, center?.lng ?? me.locationLng, distanceMiles);
 
   // Blocked in either direction: not on the list. Discover is where someone
   // who was removed would go looking, so it has to be the same nothing the
@@ -198,11 +198,11 @@ export type AddBrowseData = {
   myLng: number | null;
 };
 
-export async function discoverStudios(distanceMiles?: number): Promise<DirStudio[]> {
+export async function discoverStudios(distanceMiles?: number, center?: { lat:number; lng:number }): Promise<DirStudio[]> {
   const me = await currentUser();
   if (!me) return [];
   const db = await getDb();
-  const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
+  const bounds = nearBounds(center?.lat ?? me.locationLat, center?.lng ?? me.locationLng, distanceMiles);
   const [studios, favoriteRows] = await Promise.all([
     db.select({
       id:schema.studios.id, slug:schema.studios.slug, name:schema.studios.name,
@@ -224,11 +224,11 @@ export async function discoverStudios(distanceMiles?: number): Promise<DirStudio
   }));
 }
 
-export async function discoverGroups(distanceMiles?: number) {
+export async function discoverGroups(distanceMiles?: number, center?: { lat:number; lng:number }) {
   const me = await currentUser();
   if (!me) return [];
   const db = await getDb();
-  const bounds = nearBounds(me.locationLat, me.locationLng, distanceMiles);
+  const bounds = nearBounds(center?.lat ?? me.locationLat, center?.lng ?? me.locationLng, distanceMiles);
   const [groups, favoriteRows, hidden] = await Promise.all([db
     .select({
       id:schema.groups.id,
