@@ -15,6 +15,7 @@ import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/Cale
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
+import { Wordmark } from "@/components/Wordmark";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 
@@ -222,9 +223,25 @@ export function FollowingScreen({
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const classSheetPullStart = useRef<number | null>(null);
+  const communityFooterRef = useRef<HTMLElement | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
   const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
   const streamGeneration = useRef(0);
+
+  useEffect(() => {
+    const footer=communityFooterRef.current;
+    if (!footer || !window.matchMedia("(max-width: 939px)").matches) return;
+    const metas=[...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+    const original=metas.map((meta) => meta.content);
+    const observer=new IntersectionObserver(([entry]) => {
+      metas.forEach((meta) => { meta.content=entry.isIntersecting ? "#F5F6F5" : "#1F5B3A"; });
+    },{ threshold:.12 });
+    observer.observe(footer);
+    return () => {
+      observer.disconnect();
+      metas.forEach((meta,index) => { meta.content=original[index] ?? "#1F5B3A"; });
+    };
+  },[calendarFollowing,classSheetDismissed]);
 
   const closeCalendarSwitcher = () => {
     setCalendarSwitcherOpen(false);
@@ -941,7 +958,7 @@ export function FollowingScreen({
         <div><p>{followingSummaryText}</p></div>
         <button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show Discover" : "Show following calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>
       </header></section></>}
-      {calendarFollowing && !classSheetDismissed && <section className={`calendar-action-sheet calendar-following-actions calendar-following-discover calendar-pull-sheet calendar-transition-surface${scopeTarget !== "following" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Discover coaches, studios, and groups"><div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack /></div></section>}
+      {calendarFollowing && !classSheetDismissed && <section className={`calendar-action-sheet calendar-following-actions calendar-following-discover calendar-pull-sheet calendar-transition-surface${scopeTarget !== "following" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Discover coaches, studios, and groups"><div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack /></div><footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer></section>}
       {(!calendarFollowing || classSheetDismissed) && <div className={calendarFollowing ? "calendar-foreground-sheet calendar-surface-schedule" : undefined}>
       {!isHome && (
         <header className="upcoming-head">
