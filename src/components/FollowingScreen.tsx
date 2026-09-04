@@ -753,7 +753,16 @@ export function FollowingScreen({
       rows,
     }));
   }, [homeRows, todayIso]);
-  const visibleHomeDays = homeDays.slice(0, visibleHomeDayCount);
+  // Following should feel like a calendar, not a two-day feed. Its first
+  // reveal includes every populated date in the coming month; the sentinel
+  // then continues adding days beyond that range as the viewer scrolls.
+  const followingMonthDayCount = useMemo(() => {
+    if (!calendarFollowing) return 0;
+    const monthEnd = plusDays(todayIso, 31);
+    return homeDays.filter((section) => section.iso <= monthEnd).length;
+  }, [calendarFollowing, homeDays, todayIso]);
+  const visibleHomeCount = Math.max(visibleHomeDayCount, followingMonthDayCount);
+  const visibleHomeDays = homeDays.slice(0, visibleHomeCount);
   const monthItems = useMemo(() => {
     const mapped = new Map<string, MonthCellItem[]>();
     for (const item of homeRows) {
@@ -775,7 +784,7 @@ export function FollowingScreen({
     window.setTimeout(() => document.getElementById(`feed-day-${iso}`)?.scrollIntoView({ block: "start" }), 0);
   };
   useEffect(() => {
-    if (!isHome || visibleHomeDayCount >= homeDays.length) return undefined;
+    if (!isHome || visibleHomeCount >= homeDays.length) return undefined;
     const target = homeMoreRef.current;
     if (!target) return undefined;
     if (typeof IntersectionObserver === "undefined") {
@@ -784,11 +793,11 @@ export function FollowingScreen({
     }
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
-      setVisibleHomeDayCount((count) => Math.min(homeDays.length, count + 4));
+      setVisibleHomeDayCount((count) => Math.min(homeDays.length, Math.max(count, followingMonthDayCount) + 4));
     }, { rootMargin: "800px 0px" });
     observer.observe(target);
     return () => observer.disconnect();
-  }, [homeDays.length, isHome, visibleHomeDayCount]);
+  }, [followingMonthDayCount, homeDays.length, isHome, visibleHomeCount]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -1154,7 +1163,7 @@ export function FollowingScreen({
                       </div>
                     </section>
                   ))}
-                  {visibleHomeDayCount < homeDays.length && <div className="cash-days-more" ref={homeMoreRef} aria-hidden="true" />}
+                  {visibleHomeCount < homeDays.length && <div className="cash-days-more" ref={homeMoreRef} aria-hidden="true" />}
                 </div>
               ) : (
                 <>
