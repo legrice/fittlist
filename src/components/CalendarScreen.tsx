@@ -18,7 +18,6 @@ import type { PeekClass } from "@/components/ClassPeek";
 import { BodyPortal } from "@/components/BodyPortal";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
-import { HeaderAccountButton } from "@/components/HeaderAccountButton";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
@@ -595,7 +594,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} style={{ "--sheet-pull-progress": Math.min(classSheetPullY / 120, 1), "--sheet-search-scale": 1 - (.12 * Math.min(classSheetPullY / 120, 1)) } as React.CSSProperties}>
-          <HeaderAccountButton face={{ photo:viewer.photo, color:viewer.color, initial:viewer.name.charAt(0) }} />
+          <Link className="calendar-scope-search calendar-scope-notifications" href="/notifications" aria-label="Notifications"><Icon name="notifications" size={23} /></Link>
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
@@ -608,6 +607,7 @@ export function CalendarScreen({
           </div></section>
           <section><h3>Profile</h3><div className="calendar-action-list">
             <Link href={handle ? `/${handle}?edit=1` : "/settings?edit=1"}><span className="calendar-action-icon profile">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><strong>Edit profile</strong><small>Update your photo and profile details</small></span><Icon name="chevron_right" size={20} /></Link>
+            {handle && <Link href={`/${handle}`}><span className="calendar-action-icon"><Icon name="person" size={23} /></span><span><strong>View public profile</strong><small>See what other people see</small></span><Icon name="chevron_right" size={20} /></Link>}
           </div></section>
           {studioRelationships.length > 0 && <section><h3>Studios</h3><div className="calendar-action-list">
             {studioRelationships.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{studio.name}</strong><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small></span><Icon name="chevron_right" size={20} /></Link>)}

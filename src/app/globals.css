@@ -11312,7 +11312,8 @@ html[data-mode="dark"],
 .calendar-scope-top .calendar-mode-tabs[data-active="following"] a:nth-child(2) { color:var(--color-black); }
 .calendar-scope-top .calendar-scope-current { color:var(--color-white); }
 .calendar-scope-search:active,
-.calendar-scope-top > .brandbar-avatar:active { transform:scale(.96); }
+.calendar-scope-top > .brandbar-avatar:active,
+.calendar-scope-notifications:active { transform:scale(.96); }
 .calendar-scope-top + .calendar-section-summary { margin-top:22px; }
 .calendar-scope-hero .calendar-mode-tabs a { color:var(--color-text-secondary); }
 .calendar-scope-hero .calendar-mode-tabs a[aria-current="page"] { color:var(--color-text-primary); }
