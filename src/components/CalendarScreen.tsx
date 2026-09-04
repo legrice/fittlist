@@ -70,6 +70,7 @@ type CalendarFilter = "all" | "coaching" | "saved" | "personal";
 type SummaryVoice = "straightforward" | "friendly" | "sassy" | "unfiltered" | "shakespearean";
 
 const SUMMARY_VOICE_KEY = "fl-calendar-summary-voice";
+const SUMMARY_VARIANT_KEY = "fl-calendar-summary-variant";
 const SUMMARY_VOICES: { value:SummaryVoice; label:string; description:string }[] = [
   { value:"straightforward", label:"Straightforward", description:"Clear, useful, and to the point." },
   { value:"friendly", label:"Friendly", description:"Warm encouragement without laying it on thick." },
@@ -162,6 +163,7 @@ export function CalendarScreen({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryVoiceOpen, setSummaryVoiceOpen] = useState(false);
   const [summaryVoice, setSummaryVoice] = useState<SummaryVoice>("straightforward");
+  const [summaryVariant, setSummaryVariant] = useState(0);
   const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
   const classSheetPullStart = useRef<number | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
@@ -231,6 +233,16 @@ export function CalendarScreen({
     const stored=localStorage.getItem(SUMMARY_VOICE_KEY);
     if (SUMMARY_VOICES.some((voice) => voice.value === stored)) setSummaryVoice(stored as SummaryVoice);
   },[]);
+  useEffect(() => {
+    const key=`${SUMMARY_VARIANT_KEY}:${summaryVoice}`;
+    const stored=localStorage.getItem(key);
+    const previous=stored === null ? -1 : Number.parseInt(stored,10);
+    const next=Number.isFinite(previous) && previous >= 0
+      ? (previous+1+Math.floor(Math.random()*4))%5
+      : Math.floor(Math.random()*5);
+    localStorage.setItem(key,String(next));
+    setSummaryVariant(next);
+  },[summaryVoice]);
   useEffect(() => {
     if (sessionStorage.getItem("fl-calendar-scope-enter") !== "you") return;
     sessionStorage.removeItem("fl-calendar-scope-enter");
@@ -386,6 +398,7 @@ export function CalendarScreen({
     }
     const classWord=(count:number) => count === 1 ? "class" : "classes";
     const studioPhrase=studios.size ? ` at ${studios.size} ${studios.size === 1 ? "studio" : "studios"}` : "";
+    const attendingPhrase=attending ? ` and attending ${attending} ${classWord(attending)}` : "";
     const plain=coaching && attending
       ? `You’re coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
       : coaching
@@ -395,22 +408,29 @@ export function CalendarScreen({
           : personal
             ? `You have ${personal} personal ${classWord(personal)} this week.`
             : "Your week is open.";
-    let title=plain;
+    const variant=(options:string[]) => options[summaryVariant%options.length];
+    let title=variant([
+      plain,
+      coaching ? `${coaching} ${classWord(coaching)} to coach this week${studioPhrase}${attending ? `, with ${attending} more to attend` : ""}.` : plain,
+      coaching ? `This week: ${coaching} coaching${attending ? `, ${attending} attending` : ""}${studioPhrase}.` : plain,
+      coaching ? `You have ${coaching} ${classWord(coaching)} to coach this week${studioPhrase}.` : plain,
+      plain,
+    ]);
     if (summaryVoice === "friendly")
-      title=coaching ? `Nice week ahead: ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attending ? `, plus ${attending} to attend` : ""}.` : attending ? `You’ve got ${attending} ${classWord(attending)} to look forward to this week.` : personal ? `You’ve made time for ${personal} personal ${classWord(personal)} this week.` : "A wide-open week. What sounds good?";
+      title=coaching ? variant([`Nice week ahead: ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attending ? `, plus ${attending} to attend` : ""}.`,`You’ve got this. ${coaching} ${classWord(coaching)} to coach this week${studioPhrase}.`,`A good week is taking shape: ${coaching} coaching${attending ? ` and ${attending} attending` : ""}.`,`Your week looks strong: ${coaching} ${classWord(coaching)} to coach${studioPhrase}.`,`Ready when you are. ${coaching} ${classWord(coaching)} are waiting for you this week.`]) : attending ? `You’ve got ${attending} ${classWord(attending)} to look forward to this week.` : personal ? `You’ve made time for ${personal} personal ${classWord(personal)} this week.` : "A wide-open week. What sounds good?";
     else if (summaryVoice === "sassy")
-      title=coaching ? `Oh, look at you. Coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attending ${attending}` : ""}. Iconic, honestly.` : attending ? `${attending} ${classWord(attending)} on the books. Main character behavior, obviously.` : personal ? `${personal} personal ${classWord(personal)}. Responsible looks good on you.` : "Nothing booked. Mysterious. Powerful. Slightly suspicious.";
+      title=coaching ? variant([`Oh, look at you. Coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attendingPhrase}. Iconic, honestly.`,`Booked and busy with ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attendingPhrase}. Try to act surprised.`,`You’re coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attendingPhrase}. Save some talent for the rest of us.`,`${coaching} ${classWord(coaching)} to coach${studioPhrase}${attendingPhrase}. Main character behavior, obviously.`,`Another week, another ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attendingPhrase}, carried entirely by your charisma.`]) : attending ? `${attending} ${classWord(attending)} on the books. Main character behavior, obviously.` : personal ? `${personal} personal ${classWord(personal)}. Responsible looks good on you.` : "Nothing booked. Mysterious. Powerful. Slightly suspicious.";
     else if (summaryVoice === "unfiltered")
-      title=coaching ? `Holy shit, bro. You’re coaching ${coaching} fucking ${classWord(coaching)} this week${studioPhrase}${attending ? ` and attending ${attending}` : ""}.` : attending ? `Holy shit, bro. You’re attending ${attending} fucking ${classWord(attending)} this week.` : personal ? `You handled your shit: ${personal} personal ${classWord(personal)} this week.` : "No plans. No bullshit. Your week is open.";
+      title=coaching ? variant([`Holy shit, bro. You’re coaching ${coaching} fucking ${classWord(coaching)} this week${studioPhrase}${attendingPhrase}.`,`Well, damn. ${coaching} ${classWord(coaching)} to coach this week${studioPhrase}${attendingPhrase}. You absolute machine.`,`Fuck me, you’re busy. ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attendingPhrase}.`,`Look at this badass schedule: ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attendingPhrase}.`,`Jesus, save some energy for the rest of us. You’re coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attendingPhrase}.`]) : attending ? `Holy shit, bro. You’re attending ${attending} fucking ${classWord(attending)} this week.` : personal ? `You handled your shit: ${personal} personal ${classWord(personal)} this week.` : "No plans. No bullshit. Your week is open.";
     else if (summaryVoice === "shakespearean")
-      title=coaching ? `Dost thou coach ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attend ${attending}` : ""} this week? Verily.` : attending ? `Hark! ${attending} ${classWord(attending)} await thee this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thy week lies open before thee.";
+      title=coaching ? variant([`Dost thou coach ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attend ${attending}` : ""} this week? Verily.`,`Hark! ${coaching} ${classWord(coaching)} await thy noble instruction${studioPhrase}${attendingPhrase}.`,`Lo, thy week bears ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attendingPhrase}.`,`By my troth, ${coaching} ${classWord(coaching)} summon thee this week${studioPhrase}${attendingPhrase}.`,`Attend, good coach! ${coaching} ${classWord(coaching)} stand upon thy calendar${studioPhrase}${attendingPhrase}.`]) : attending ? `Hark! ${attending} ${classWord(attending)} await thee this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thy week lies open before thee.";
     const details=[
       coaching ? `${coaching} coaching` : "",
       attending ? `${attending} attending` : "",
       personal ? `${personal} personal` : "",
     ].filter(Boolean).join(" · ");
     return { title, detail:details || "Nothing scheduled in the next 7 days." };
-  },[classes,savedByIso,studioById,todayIso,summaryVoice]);
+  },[classes,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
