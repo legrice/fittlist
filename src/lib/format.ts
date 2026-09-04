@@ -139,7 +139,10 @@ export type StoryThemeId =
   | "sand"
   | "plum"
   | "surf"
-  | "ember";
+  | "ember"
+  | "acid"
+  | "dawn"
+  | "laser";
 export type StoryTheme = {
   label: string;
   bg: string;
@@ -175,6 +178,9 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   plum: { label: "Purple and pink", bg: "#3b1c3f", fg: "#f6ecf5", accent: "#f0a3c8", muted: "#b79ab6", faint: "#9a7d9a", time: "#e6d6e5", lockup: "cloud", lockupAccent: "#f0a3c8" },
   surf: { label: "Teal", bg: "#cfe9e4", fg: "#10322e", accent: "#0f6b5c", muted: "#5c7f7a", faint: "#7c9b96", time: "#1d423d", lockup: "ink", lockupAccent: "#0f6b5c" },
   ember: { label: "Brown to orange", bg: "linear-gradient(165deg, #1a1005 0%, #6b2a0f 60%, #c2410c 100%)", fg: "#fdeee2", accent: "#ffb066", muted: "#d9b49c", faint: "#bd9a80", time: "#ffe0c6", lockup: "cloud", lockupAccent: "#ffb066" },
+  acid: { label: "Acid pop", bg: "#d8ff19", fg: "#18204f", accent: "#f24ca5", muted: "#37428e", faint: "#5861a0", time: "#18204f", lockup: "ink", lockupAccent: "#f24ca5" },
+  dawn: { label: "Quiet sunrise", bg: "linear-gradient(180deg, #f7f0df 0%, #f7f0df 70%, #efcda8 100%)", fg: "#425449", accent: "#c6785d", muted: "#8c6b5d", faint: "#728078", time: "#425449", lockup: "ink", lockupAccent: "#c6785d" },
+  laser: { label: "Laser night", bg: "linear-gradient(165deg, #120c2c 0%, #241145 58%, #071c38 100%)", fg: "#f7efff", accent: "#ff4fc8", muted: "#b99bce", faint: "#81719b", time: "#55e7ff", lockup: "cloud", lockupAccent: "#55e7ff" },
 };
 /** Complete starting art directions for the picture. Each style coordinates
  * structure, palette, headline face and decoration; the editor's individual
@@ -186,12 +192,20 @@ export type StoryStyleId =
   | "neon"
   | "brutalist"
   | "swiss"
-  | "cowboy";
+  | "cowboy"
+  | "y2k"
+  | "mindful"
+  | "editorial"
+  | "retro"
+  | "cyber"
+  | "synthwave";
+
+export type StoryLayoutId = "plain" | "split" | "party" | "neon" | "brutalist" | "swiss" | "cowboy";
 
 export type StoryStyle = {
   label: string;
   description: string;
-  layout: StoryStyleId;
+  layout: StoryLayoutId;
   /** Coordinated defaults applied when this style is selected. The separate
    * controls remain available as intentional overrides afterwards. */
   theme: StoryThemeId;
@@ -364,6 +378,48 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     stackTime: false,
     dayTrack: 0,
     rowScale: 1.5,
+  },
+  y2k: {
+    label: "Y2K bubble",
+    description: "Acid color, candy type, and bubbly class cards",
+    layout: "party", theme: "acid", typeface: "friendly", decoration: "double",
+    headlineSize: 108, headline: 1, name: 1.06, upper: true, align: "left",
+    rule: "none", chip: true, radius: 30, stackTime: false, dayTrack: .01, rowScale: 1.46,
+  },
+  mindful: {
+    label: "Mindful practice",
+    description: "A quiet, centered retreat for a busy week",
+    layout: "plain", theme: "dawn", typeface: "quality", decoration: "none",
+    headlineSize: 92, headline: .94, name: .98, upper: false, align: "center",
+    rule: "none", chip: false, radius: 0, stackTime: true, dayTrack: .08, rowScale: 1.3,
+  },
+  editorial: {
+    label: "Fashion editorial",
+    description: "High-contrast type and a structured magazine grid",
+    layout: "split", theme: "paper", typeface: "anchor", decoration: "framed",
+    headlineSize: 118, headline: 1.04, name: 1, upper: true, align: "left",
+    rule: "hair", chip: false, radius: 0, stackTime: false, dayTrack: .02, rowScale: 1.34,
+  },
+  retro: {
+    label: "Retro groove",
+    description: "Warm seventies color with a loud display headline",
+    layout: "cowboy", theme: "sand", typeface: "bungee", decoration: "double",
+    headlineSize: 112, headline: 1, name: 1, upper: false, align: "left",
+    rule: "bold", chip: false, radius: 18, stackTime: false, dayTrack: .02, rowScale: 1.48,
+  },
+  cyber: {
+    label: "Cyberpunk",
+    description: "Technical framing and electric terminal color",
+    layout: "neon", theme: "midnight", typeface: "fascinate", decoration: "framed",
+    headlineSize: 104, headline: 1, name: 1.02, upper: true, align: "left",
+    rule: "none", chip: true, radius: 4, stackTime: false, dayTrack: .12, rowScale: 1.34,
+  },
+  synthwave: {
+    label: "Dark synthwave",
+    description: "Neon glow, nightclub color, and futuristic type",
+    layout: "neon", theme: "laser", typeface: "monoton", decoration: "frame",
+    headlineSize: 96, headline: .94, name: 1.03, upper: true, align: "left",
+    rule: "none", chip: true, radius: 18, stackTime: false, dayTrack: .04, rowScale: 1.4,
   },
 };
 
