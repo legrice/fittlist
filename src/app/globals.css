@@ -13217,7 +13217,8 @@ a.clspeek-by:active { opacity: .6; }
     background:var(--color-shift);
     box-shadow:none;
   }
-  .calendar-action-sheet .calendar-action-hub {
+  .calendar-action-sheet .calendar-action-hub,
+  .calendar-following-surface {
     position:relative;
     z-index:2;
     padding:28px var(--page-gutter) 44px;
@@ -13232,6 +13233,7 @@ a.clspeek-by:active { opacity: .6; }
     padding:72px var(--page-gutter) calc(42px + env(safe-area-inset-bottom));
   }
   .calendar-following-actions { display:flex; flex-direction:column; }
+  .calendar-following-surface { min-height:calc(100dvh - 126px); }
   .calendar-following-actions .calendar-directory-list { flex:0 0 auto; }
 
   .screen.hasnav .calendar-cardwrap.calendar-surface-schedule,
