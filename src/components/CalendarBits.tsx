@@ -868,14 +868,17 @@ function MonthBlock({
   const lead = first.getUTCDay(); // days shown before the 1st, Sunday-led
   const start = new Date(first);
   start.setUTCDate(first.getUTCDate() - lead);
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  // Render only the week rows this month actually occupies. The previous
+  // boundary check could keep a fifth-row February open for a sixth blank
+  // row, which made short months look conspicuously unfinished.
+  const cellCount = Math.ceil((lead + daysInMonth) / 7) * 7;
   const cells: { iso: string; day: number; inMonth: boolean }[] = [];
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < cellCount; i++) {
     const d = new Date(start);
     d.setUTCDate(start.getUTCDate() + i);
     const iso = d.toISOString().slice(0, 10);
     cells.push({ iso, day: d.getUTCDate(), inMonth: d.getUTCMonth() === m - 1 });
-    // Stop once the month has ended at a week boundary.
-    if (i >= 27 && (i + 1) % 7 === 0 && d.getUTCMonth() !== m - 1 && d.getUTCDate() >= 7) break;
   }
   const MAX = 3;
   return (

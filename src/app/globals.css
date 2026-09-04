@@ -11323,7 +11323,8 @@ html[data-mode="dark"],
 .calendar-view-toggle button[aria-pressed="true"] { color:var(--color-text-primary); }
 .calendar-add-pill {
   width:56px; min-width:56px; padding:0; border-radius:50%;
-  background:var(--color-black); color:var(--color-white) !important;
+  background:color-mix(in srgb,var(--color-lime) 88%,transparent); color:var(--color-black) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(175%); backdrop-filter:blur(24px) saturate(175%);
 }
 .navwrap[data-calendar-hidden="true"] { display:none !important; }
 .personal-summary-actions { width:100%; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
@@ -12986,6 +12987,12 @@ a.clspeek-by:active { opacity: .6; }
     box-shadow:0 6px 18px rgba(0,0,0,.08);
   }
   .calendar-surface-schedule .monthblock-h { color:var(--color-text-primary); }
+  .calendar-surface-schedule .calsticky:not(:empty) {
+    margin:0 0 10px; padding:12px 14px 10px; border-radius:18px;
+    background:var(--color-surface); color:var(--color-text-primary);
+    box-shadow:0 6px 18px rgba(0,0,0,.08);
+  }
+  .calendar-surface-schedule .calsticky .monthhead { margin:0; padding:0; border-bottom:0; color:var(--color-text-secondary); }
   .calendar-surface-schedule .wkempty-t { color:var(--color-white); }
   .calendar-surface-schedule .wkempty-b { color:color-mix(in srgb,var(--color-white) 72%,transparent); }
   .calendar-surface-schedule .wkempty-actions .ghost { background:var(--color-surface); color:var(--color-text-primary); }
