@@ -30,6 +30,7 @@ export type ShareStoryLayout = {
   plan: StoryPlan;
   empty: boolean;
   mixed: boolean;
+  narrativePlaces: Array<{ name: string; count: number }>;
 };
 
 /**
@@ -93,6 +94,11 @@ export function buildShareStoryLayout({
     : headlineSize * 0.98 * (split.line2 ? 2 : 1) + 78;
 
   const flat = days.flatMap((day) => day.items);
+  const placeCounts = new Map<string, number>();
+  for (const item of flat) {
+    const place = item.where.trim() || "Location to be decided";
+    placeCounts.set(place, (placeCounts.get(place) ?? 0) + 1);
+  }
   const mixed = flat.some((item) => item.coaching) && flat.some((item) => !item.coaching);
   const featured = featuredKey
     ? days
@@ -146,5 +152,6 @@ export function buildShareStoryLayout({
     plan,
     empty: days.length === 0,
     mixed,
+    narrativePlaces:[...placeCounts].map(([name,count]) => ({ name,count })),
   };
 }

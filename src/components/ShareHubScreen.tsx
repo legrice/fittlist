@@ -388,7 +388,7 @@ export function ShareHubScreen({
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>(startingDesign.decoId);
   const [pick, setPick] = useState<
-    null | "dates" | "classes" | "message" | "layout" | "color" | "photo" | "voice"
+    null | "dates" | "classes" | "message" | "layout" | "color" | "photo" | "voice" | "perspective"
   >(null);
   const [styleSection, setStyleSection] = useState<"presets" | "saved">("presets");
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -1015,8 +1015,8 @@ export function ShareHubScreen({
     const variant=(lines:string[]) => lines[shareVoiceVariant%lines.length];
     if (shareVoice === "friendly") return `${context} Look at ${thirdPerson ? firstName : "me"} making the week count.`;
     if (shareVoice === "sassy") return variant(thirdPerson
-      ? [`${context} Wow, look at ${firstName} go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. ${firstName} loves this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally ${firstName} cast ${firstName} in every scene.`]
-      : [`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I love this.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
+      ? [`${context} Wow, look at ${firstName} go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. ${firstName} really loves coaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally ${firstName} cast ${firstName} in every scene.`]
+      : [`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I really love coaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
     if (shareVoice === "unfiltered") return variant([`${context} Holy fucking shit, Wednesday just laid an egg and the egg is asking for your Wi-Fi password.`,`${context} The calendar is absolutely batshit and currently being audited by three lizards in a trench coat.`,`${context} Jesus tap-dancing Christ, the lasagna is screaming again and Thursday refuses to discuss it.`,`${context} A forklift-certified possum has seized control of the week and replaced every doorknob with soup.`,`${context} This schedule ate a protein bar sideways and challenged the concept of furniture to a duel.`]);
     if (shareVoice === "shakespearean") return variant(thirdPerson
       ? [`${context} Hark, ${firstName}'s noble week awaits.`,`${context} Doth ${firstName} e’er rest? Verily, the evidence says no.`,`${context} Lo, behold ${firstName}'s mighty calendar.`,`${context} By our troth, ${firstName}'s week is stacked.`,`${context} Attend, good friends, for ${firstName}'s schedule hath entered the chat.`]
@@ -1328,7 +1328,7 @@ export function ShareHubScreen({
               </div>
               <button type="button" className="shtop-undo" disabled={undoStack.length === 0} onClick={undoLast} aria-label="Undo last change"><Icon name="reply" size={24}/></button>
             </div>
-            {styleId === "semantic" && <div className="sheditor-words-controls"><div className="sheditor-perspective" role="group" aria-label="Sentence perspective"><button type="button" className={sharePerspective === "first" ? "selected" : ""} aria-pressed={sharePerspective === "first"} onClick={() => { setSharePerspective("first"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"first"); }}>I</button><button type="button" className={sharePerspective === "third" ? "selected" : ""} aria-pressed={sharePerspective === "third"} onClick={() => { setSharePerspective("third"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"third"); }}>{name.trim().split(/\s+/)[0] || name}</button></div><div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div></div>}
+            {styleId === "semantic" && <div className="sheditor-words-controls"><div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div></div>}
 
             {/* One preview is the center of the studio. The quiet stage gives
                 the artwork a canvas without making other formats compete. */}
@@ -1382,6 +1382,7 @@ export function ShareHubScreen({
               </div>
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
+                {styleId === "semantic" && <StudioTool icon="person" label="Perspective" detail={sharePerspective === "first" ? "Written as me" : `Written as ${name.trim().split(/\s+/)[0] || name}`} onClick={() => setPick("perspective")} />}
                 {styleId !== "semantic" && <StudioTool
                   icon="format_size"
                   label="Headline"
@@ -1652,6 +1653,20 @@ export function ShareHubScreen({
                 Delete saved photo
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {pick === "perspective" && (
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
+          <div className="sheet shpick" role="dialog" aria-modal="true" aria-labelledby="share-perspective-title">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
+            <h2 id="share-perspective-title">Perspective</h2>
+            <p className="lead">Who should the sentence sound like it is about?</p>
+            <div className="settingslist">
+              <button className="setrow" aria-pressed={sharePerspective === "first"} onClick={() => { setSharePerspective("first"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"first"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write as me</span><span className="s">“I am coaching...”</span></span>{sharePerspective === "first" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
+              <button className="setrow" aria-pressed={sharePerspective === "third"} onClick={() => { setSharePerspective("third"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"third"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write about me</span><span className="s">“{name.trim().split(/\s+/)[0] || name} is coaching...”</span></span>{sharePerspective === "third" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
+            </div>
           </div>
         </div>
       )}

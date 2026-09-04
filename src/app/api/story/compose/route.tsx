@@ -158,6 +158,7 @@ export async function GET(req: Request) {
     scheduleY,
     feature:layout.feature,
     plan:layout.plan,
+    narrativePlaces:layout.narrativePlaces,
     empty:layout.empty,
     emptyLine: fan
       ? "Nothing on the week yet."
