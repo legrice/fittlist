@@ -19,15 +19,21 @@ const BADGE = 212;
 const MARK_W = 118;
 const MARK_H = Math.round((MARK_W * 136) / 134);
 
-export async function brandedQr(target: string): Promise<ImageResponse> {
+export async function brandedQr(
+  target: string,
+  palette: "light" | "dark-green" = "light",
+): Promise<ImageResponse> {
+  const darkGreen = palette === "dark-green";
+  const background = darkGreen ? "#1F5B3A" : "#ffffff";
+  const foreground = darkGreen ? "#ffffff" : "#191502";
   const qrDataUrl = await QRCode.toDataURL(target, {
     type: "image/png",
     width: SIZE,
     margin: 2,
     errorCorrectionLevel: "H",
-    color: { dark: "#191502", light: "#ffffff" },
+    color: { dark: foreground, light: background },
   });
-  const markDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(brandIcon())}`;
+  const markDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(brandIcon(foreground))}`;
 
   return new ImageResponse(
     (
@@ -53,7 +59,7 @@ export async function brandedQr(target: string): Promise<ImageResponse> {
           style={{
             width: BADGE,
             height: BADGE,
-            background: "#ffffff",
+            background,
             borderRadius: 40,
             display: "flex",
             alignItems: "center",

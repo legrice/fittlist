@@ -10,7 +10,7 @@ import { brandedQr } from "@/lib/qrimage";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ handle: string }> },
 ) {
   const { handle } = await params;
@@ -21,5 +21,8 @@ export async function GET(
     .where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  return brandedQr(`${siteOrigin()}/${handle}?ref=qr`);
+  const palette = new URL(req.url).searchParams.get("palette") === "dark-green"
+    ? "dark-green"
+    : "light";
+  return brandedQr(`${siteOrigin()}/${handle}?ref=qr`, palette);
 }

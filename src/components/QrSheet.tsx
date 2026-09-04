@@ -38,7 +38,7 @@ export function QrSheet({
 
   if (!open) return null;
 
-  const qrImgUrl = `/api/qr/${handle}`;
+  const qrImgUrl = `/api/qr/${handle}?palette=dark-green`;
   const qrFileName = `fittlist-${handle}-qr.png`;
 
   const shareQr = async () => {
@@ -78,7 +78,7 @@ export function QrSheet({
 
   return (
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="sheet sheet-full">
+      <div className="sheet sheet-full profile-qr-sheet">
         <div className="adderhead">
           <h2>{ownerName ? `${ownerName.trim().split(/\s+/)[0]}'s QR code` : "Your QR code"}</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>

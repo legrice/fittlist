@@ -4523,6 +4523,43 @@ select.editinput.placekind-select {
 }
 .qrimg { display: block; width: 100%; height: 100%; aspect-ratio: 1; object-fit: contain; }
 .qrurl { text-align: center; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px; color: var(--si); word-break: break-all; margin-bottom: 4px; }
+.profile-qr-sheet,
+[data-mode="dark"] .profile-qr-sheet {
+  background:var(--color-shift);
+  color:var(--color-white);
+}
+.profile-qr-sheet .adderhead {
+  background:var(--color-shift);
+}
+.profile-qr-sheet .lead,
+.profile-qr-sheet .qrurl {
+  color:rgba(255,255,255,.78);
+}
+.profile-qr-sheet .qrframe {
+  width:min(72vw, 320px);
+  padding:0;
+  overflow:hidden;
+  border:0;
+  border-radius:22px;
+  background:var(--color-shift);
+}
+.profile-qr-sheet .sheetclose {
+  border-color:var(--glass-control-border);
+  background:var(--glass-control-bg);
+  color:var(--color-black);
+  box-shadow:var(--glass-control-shadow);
+  -webkit-backdrop-filter:blur(var(--glass-control-blur)) saturate(125%);
+  backdrop-filter:blur(var(--glass-control-blur)) saturate(125%);
+}
+.profile-qr-sheet .publishwrap > .btn:first-child {
+  background:var(--color-lime);
+  color:var(--color-black);
+}
+.profile-qr-sheet .publishwrap > .btn.ghost {
+  border-color:rgba(255,255,255,.42);
+  background:rgba(255,255,255,.12);
+  color:var(--color-white);
+}
 .acctwrap .rowcta { margin-top: 12px; }
 
 /* account: sign-in / security section */
