@@ -16,6 +16,7 @@ import {
 } from "@/components/CalendarBits";
 import type { PeekClass } from "@/components/ClassPeek";
 import { BodyPortal } from "@/components/BodyPortal";
+import { SettingsDetailSheet } from "@/components/SettingsDetailSheet";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
@@ -46,7 +47,6 @@ const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => mo
 const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
 const ShareTakeover = dynamic(() => import("@/components/ShareTakeover").then((module) => module.ShareTakeover));
 const CreateGroupSheet = dynamic(() => import("@/components/SavedScreen").then((module) => module.CreateGroupSheet));
-const SettingsDetailSheet = dynamic(() => import("@/components/SettingsDetailSheet").then((module) => module.SettingsDetailSheet));
 const GlobalAdd = dynamic(() => import("@/components/GlobalAdd").then((module) => module.GlobalAdd));
 
 /**

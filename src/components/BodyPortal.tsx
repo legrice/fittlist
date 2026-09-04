@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -15,7 +15,10 @@ import { createPortal } from "react-dom";
  */
 export function BodyPortal({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // Mount before the browser paints. Waiting for a passive effect leaves one
+  // visible frame where the page underneath has already reacted to the tap
+  // but the sheet and its scrim do not exist yet.
+  useLayoutEffect(() => setMounted(true), []);
   if (!mounted) return null;
   return createPortal(children, document.body);
 }

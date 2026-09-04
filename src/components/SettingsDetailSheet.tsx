@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { settingsSheetData, type SettingsSheetData } from "@/app/actions/settings";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
+import { MemberAccount } from "@/components/MemberAccount";
+import { ProfileSheet } from "@/components/ProfileSheet";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import type { ProfileSettingsView } from "@/components/YouDashboard";
 
 type DirectSettingsView = ProfileSettingsView | "away";
-
-const ProfileSheet = dynamic(() => import("@/components/ProfileSheet").then((module) => module.ProfileSheet));
-const MemberAccount = dynamic(() => import("@/components/MemberAccount").then((module) => module.MemberAccount));
 
 /** Opens one settings section over the surface that requested it. */
 export function SettingsDetailSheet({ view, onClose }: { view: DirectSettingsView | "home"; onClose: () => void }) {
@@ -37,8 +35,7 @@ export function SettingsDetailSheet({ view, onClose }: { view: DirectSettingsVie
   }, [onClose]);
 
   if (view !== "home") {
-    if (!data) return null;
-    return <BodyPortal>{data.kind === "coach" ? <ProfileSheet {...data.coach} anim="none" detailOnly initialView={view} onClose={onClose} /> : <MemberAccount {...data.fan} detailOnly initialView={memberView} onClose={onClose} />}</BodyPortal>;
+    return <BodyPortal>{data ? data.kind === "coach" ? <ProfileSheet {...data.coach} anim="none" detailOnly initialView={view} onClose={onClose} /> : <MemberAccount {...data.fan} detailOnly initialView={memberView} onClose={onClose} /> : <div className="header-account-overlay" onMouseDown={onClose}><section className="header-account-sheet header-profile-sheet" role="dialog" aria-modal="true" aria-label="Opening settings" onMouseDown={(event) => event.stopPropagation()}><button type="button" className="iconbtn header-profile-close" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button><div className="header-account-loading"><p>Opening settings&hellip;</p></div></section></div>}</BodyPortal>;
   }
 
   return <BodyPortal><div className="header-account-overlay" onMouseDown={onClose}>
