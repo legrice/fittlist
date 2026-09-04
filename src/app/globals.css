@@ -14053,12 +14053,19 @@ a.clspeek-by:active { opacity: .6; }
     width:calc(100% - 20px);
     margin:0 10px 10px;
     padding:14px 10px calc(14px + env(safe-area-inset-bottom));
+    overflow:hidden;
     border:1px solid color-mix(in srgb,var(--color-white) 70%,var(--color-border));
     border-radius:28px;
     background:color-mix(in srgb,var(--color-white) 94%,transparent);
     -webkit-backdrop-filter:blur(24px) saturate(150%);
     backdrop-filter:blur(24px) saturate(150%);
     box-shadow:0 -5px 28px rgba(2,13,8,.18),inset 0 1px 0 var(--color-white);
+  }
+  .calendar-share-sheet .shpage-embedded .sheditor-tools-all {
+    width:100%;
+    margin:0;
+    padding:0 0 12px;
+    scroll-padding-inline:0;
   }
   .calendar-share-sheet .shpage-embedded .sheditor-tool-icon {
     border-color:rgba(2,13,8,.08);
