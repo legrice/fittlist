@@ -606,10 +606,13 @@ export function CalendarScreen({
             <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share profile</button>}
           </div></section>
-          {studioRelationships.length > 0 && <section><h3>Your studios</h3><div className="calendar-action-list">
+          <section><h3>Profile</h3><div className="calendar-action-list">
+            <Link href={handle ? `/${handle}?edit=1` : "/settings?edit=1"}><span className="calendar-action-icon profile">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><strong>Edit profile</strong><small>Update your photo and profile details</small></span><Icon name="chevron_right" size={20} /></Link>
+          </div></section>
+          {studioRelationships.length > 0 && <section><h3>Studios</h3><div className="calendar-action-list">
             {studioRelationships.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{studio.name}</strong><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
           </div></section>}
-          <section><div className="calendar-action-section-head"><h3>Your groups</h3><button type="button" onClick={() => setCreateGroupOpen(true)}><Icon name="add" size={17} />New group</button></div><div className="calendar-action-list">
+          <section><div className="calendar-action-section-head"><h3>Groups</h3><button type="button" onClick={() => setCreateGroupOpen(true)}><Icon name="add" size={17} />New group</button></div><div className="calendar-action-list">
             {groupCalendars.map((group) => <Link key={group.id} href={`/g/${group.slug}`}><span className="calendar-action-icon group">{group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={23} />}</span><span><strong>{group.name}</strong><small className="calendar-relationship-role">{group.role === "owner" || group.role === "admin" ? "Manager" : "Member"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
             {groupCalendars.length === 0 && <Link href="/saved"><span className="calendar-action-icon group"><Icon name="groups" size={23} /></span><span><strong>Create or join a group</strong><small>Plan classes and events together</small></span><Icon name="chevron_right" size={20} /></Link>}
           </div></section>
