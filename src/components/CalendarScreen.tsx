@@ -598,7 +598,7 @@ export function CalendarScreen({
             <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share your week</button>
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share your profile</button>}
           </div></section>
-          {managedCalendars.some((calendar) => calendar.kind === "studio") && <section><h3>Studios you manage</h3><div className="calendar-action-list">
+          {managedCalendars.some((calendar) => calendar.kind === "studio") && <section><h3>Places you manage</h3><div className="calendar-action-list">
             {managedCalendars.filter((calendar) => calendar.kind === "studio").map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={`/s/${calendar.slug}/manage`}><span className="calendar-action-icon studio">{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{calendar.name}</strong><small>Manage calendar, coaches, and open shifts</small></span><Icon name="chevron_right" size={20} /></Link>)}
           </div></section>}
           <section><div className="calendar-action-section-head"><h3>Your groups</h3><Link href="/saved"><Icon name="add" size={17} />New group</Link></div><div className="calendar-action-list">
