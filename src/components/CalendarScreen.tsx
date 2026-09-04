@@ -46,6 +46,7 @@ const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => mo
 const ShareTakeover = dynamic(() => import("@/components/ShareTakeover").then((module) => module.ShareTakeover));
 const CreateGroupSheet = dynamic(() => import("@/components/SavedScreen").then((module) => module.CreateGroupSheet));
 const SettingsDetailSheet = dynamic(() => import("@/components/SettingsDetailSheet").then((module) => module.SettingsDetailSheet));
+const GlobalAdd = dynamic(() => import("@/components/GlobalAdd").then((module) => module.GlobalAdd));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -705,9 +706,9 @@ export function CalendarScreen({
           <section><h3>Profile</h3><div className="calendar-action-list">
             <button type="button" onClick={() => setProfileActionsOpen(true)}><span className="calendar-action-icon profile-avatar">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><small className="calendar-relationship-role">{handle ? `@${handle}` : "Personal profile"}</small><strong>{viewer.name}</strong></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
-          {studioRelationships.length > 0 && <section><h3>Studios</h3><div className="calendar-action-list">
+          <section><div className="calendar-action-section-head"><h3>Places</h3><GlobalAdd placeOnly triggerLabel="Add" triggerIconSize={17} /></div><div className="calendar-action-list">
             {studioRelationships.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small><strong>{studio.name}</strong></span><Icon name="chevron_right" size={20} /></Link>)}
-          </div></section>}
+          </div></section>
           <section><div className="calendar-action-section-head"><h3>Groups</h3><button type="button" onClick={() => setCreateGroupOpen(true)}><Icon name="add" size={17} />New group</button></div><div className="calendar-action-list">
             {groupCalendars.map((group) => <Link key={group.id} href={`/g/${group.slug}`}><span className="calendar-action-icon group">{group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={23} />}</span><span><small className="calendar-relationship-role">{group.role === "owner" || group.role === "admin" ? "Manager" : "Member"}</small><strong>{group.name}</strong></span><Icon name="chevron_right" size={20} /></Link>)}
             {groupCalendars.length === 0 && <Link href="/saved"><span className="calendar-action-icon group"><Icon name="groups" size={23} /></span><span><strong>Create or join a group</strong><small>Plan classes and events together</small></span><Icon name="chevron_right" size={20} /></Link>}

@@ -35,6 +35,7 @@ const placeKey = (value: string) =>
 export function GlobalAdd({
   floating = false,
   classOnly = false,
+  placeOnly = false,
   triggerClassName,
   triggerLabel,
   triggerIconSize,
@@ -42,6 +43,7 @@ export function GlobalAdd({
 }: {
   floating?: boolean;
   classOnly?: boolean;
+  placeOnly?: boolean;
   /** Desktop can give the same composer a full-width labelled trigger while
    * phone headers keep the compact plus button. */
   triggerClassName?: string;
@@ -129,6 +131,19 @@ export function GlobalAdd({
     setGroupOpen(true);
   };
   const openChooser = () => {
+    if (placeOnly) {
+      startTransition(async () => {
+        const loaded = data ?? (await globalComposerData());
+        if (!loaded) {
+          toast("Sign in to add to FittList");
+          return;
+        }
+        setData(loaded);
+        setMode("place");
+        setOpen(true);
+      });
+      return;
+    }
     if (classOnly) {
       startTransition(async () => {
         const loaded = data ?? (await globalComposerData());
@@ -522,7 +537,7 @@ export function GlobalAdd({
                   </button>
                   <button type="button" disabled={pending} onClick={() => choose("place")}>
                     <i><Icon name="storefront" size={23} /></i>
-                    <span>Add a studio</span>
+                    <span>Add a place</span>
                     <Icon name="chevron_right" size={20} />
                   </button>
                 </div>
@@ -537,7 +552,7 @@ export function GlobalAdd({
     <>
       <button
         className={triggerClassName ?? (floating ? "wkfab" : "iconbtn")}
-        aria-label={classOnly ? "Add a class" : "Add"}
+        aria-label={classOnly ? "Add a class" : placeOnly ? "Add a place" : "Add"}
         disabled={pending}
         onClick={openChooser}
       >
