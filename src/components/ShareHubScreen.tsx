@@ -388,7 +388,7 @@ export function ShareHubScreen({
   // See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>(startingDesign.decoId);
   const [pick, setPick] = useState<
-    null | "dates" | "classes" | "message" | "layout" | "color" | "photo" | "voice" | "perspective"
+    null | "dates" | "classes" | "message" | "font" | "layout" | "color" | "photo" | "voice" | "perspective"
   >(null);
   const [styleSection, setStyleSection] = useState<"presets" | "saved">("presets");
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -1384,6 +1384,7 @@ export function ShareHubScreen({
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
                 {styleId === "semantic" && <StudioTool icon="person" label="Perspective" detail={sharePerspective === "first" ? "Written as me" : `Written as ${name.trim().split(/\s+/)[0] || name}`} onClick={() => setPick("perspective")} />}
+                {styleId === "semantic" && <StudioTool icon="format_size" label="Font" detail={TYPEFACES.find((typeface) => typeface.id === typeId)?.label ?? "Font"} onClick={() => setPick("font")} />}
                 {styleId !== "semantic" && <StudioTool
                   icon="format_size"
                   label="Headline"
@@ -1932,6 +1933,18 @@ export function ShareHubScreen({
               <button className="btn si" onClick={() => { beginPreviewUpdate("headline"); pushUndo(); setHeadline(draftHeadline); setNoHead(draftNoHead); setTypeId(draftTypeId); setHsize(draftSlider); setPick(null); }}>
                 Done
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "font" && (
+        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
+          <div className="sheet shpick" role="dialog" aria-modal="true" aria-labelledby="share-font-title">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
+            <h2 id="share-font-title">Font</h2>
+            <div className="shfont-previews" role="radiogroup" aria-labelledby="share-font-title">
+              {TYPEFACES.map((typeface) => <button key={typeface.id} type="button" role="radio" aria-checked={typeId === typeface.id} className={`shfont-preview${typeId === typeface.id ? " on" : ""}`} style={{ fontFamily:`'${typeface.family}', sans-serif`, fontStyle:typeface.italic ? "italic" : "normal", letterSpacing:typeface.track == null ? undefined : `${typeface.track}em` }} onClick={() => { beginPreviewUpdate("headline"); pushUndo(); setTypeId(typeface.id); setPick(null); }}>{typeface.label}</button>)}
             </div>
           </div>
         </div>
