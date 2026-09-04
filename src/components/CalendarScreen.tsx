@@ -67,6 +67,16 @@ const SettingsDetailSheet = dynamic(() => import("@/components/SettingsDetailShe
 
 type View = "list" | "month";
 type CalendarFilter = "all" | "coaching" | "saved" | "personal";
+type SummaryVoice = "straightforward" | "friendly" | "sassy" | "unfiltered" | "shakespearean";
+
+const SUMMARY_VOICE_KEY = "fl-calendar-summary-voice";
+const SUMMARY_VOICES: { value:SummaryVoice; label:string; description:string }[] = [
+  { value:"straightforward", label:"Straightforward", description:"Clear, useful, and to the point." },
+  { value:"friendly", label:"Friendly", description:"Warm encouragement without laying it on thick." },
+  { value:"sassy", label:"Sassy", description:"A little attitude for your week." },
+  { value:"unfiltered", label:"Unfiltered", description:"A bit of swearing. You asked for it." },
+  { value:"shakespearean", label:"Shakespearean", description:"Forsooth, thy calendar awaits." },
+];
 
 const prefillFromTemplate = (template: TemplateDto): AdderPrefill => ({
   ...template,
@@ -150,6 +160,8 @@ export function CalendarScreen({
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const [calendarSyncOpen, setCalendarSyncOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [summaryVoiceOpen, setSummaryVoiceOpen] = useState(false);
+  const [summaryVoice, setSummaryVoice] = useState<SummaryVoice>("straightforward");
   const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
   const classSheetPullStart = useRef<number | null>(null);
   const [classSheetPullY, setClassSheetPullY] = useState(0);
@@ -215,6 +227,10 @@ export function CalendarScreen({
   useEffect(() => {
     router.prefetch("/calendar/following");
   },[router]);
+  useEffect(() => {
+    const stored=localStorage.getItem(SUMMARY_VOICE_KEY);
+    if (SUMMARY_VOICES.some((voice) => voice.value === stored)) setSummaryVoice(stored as SummaryVoice);
+  },[]);
   useEffect(() => {
     if (sessionStorage.getItem("fl-calendar-scope-enter") !== "you") return;
     sessionStorage.removeItem("fl-calendar-scope-enter");
@@ -369,22 +385,32 @@ export function CalendarScreen({
       });
     }
     const classWord=(count:number) => count === 1 ? "class" : "classes";
-    let title="Your week is open.";
-    if (coaching && attending)
-      title=`You’re coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`;
-    else if (coaching)
-      title=`You’re coaching ${coaching} ${classWord(coaching)}${studios.size ? ` at ${studios.size} ${studios.size === 1 ? "studio" : "studios"}` : ""} this week.`;
-    else if (attending)
-      title=`You’re attending ${attending} ${classWord(attending)} this week.`;
-    else if (personal)
-      title=`You have ${personal} personal ${classWord(personal)} this week.`;
+    const studioPhrase=studios.size ? ` at ${studios.size} ${studios.size === 1 ? "studio" : "studios"}` : "";
+    const plain=coaching && attending
+      ? `You’re coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
+      : coaching
+        ? `You’re coaching ${coaching} ${classWord(coaching)}${studioPhrase} this week.`
+        : attending
+          ? `You’re attending ${attending} ${classWord(attending)} this week.`
+          : personal
+            ? `You have ${personal} personal ${classWord(personal)} this week.`
+            : "Your week is open.";
+    let title=plain;
+    if (summaryVoice === "friendly")
+      title=coaching ? `Nice week ahead: ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attending ? `, plus ${attending} to attend` : ""}.` : attending ? `You’ve got ${attending} ${classWord(attending)} to look forward to this week.` : personal ? `You’ve made time for ${personal} personal ${classWord(personal)} this week.` : "A wide-open week. What sounds good?";
+    else if (summaryVoice === "sassy")
+      title=coaching ? `Look at you: coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attending ${attending}` : ""}. Casual.` : attending ? `${attending} ${classWord(attending)} on the books. Main character behavior.` : personal ? `${personal} personal ${classWord(personal)}. Very responsible of you.` : "Nothing booked. Mysterious. Powerful.";
+    else if (summaryVoice === "unfiltered")
+      title=coaching ? `Hell yes. You’re coaching ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attending ${attending}` : ""} this week.` : attending ? `You’re attending ${attending} damn good ${classWord(attending)} this week.` : personal ? `You handled your shit: ${personal} personal ${classWord(personal)} this week.` : "No plans. No bullshit. Your week is open.";
+    else if (summaryVoice === "shakespearean")
+      title=coaching ? `Dost thou coach ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attend ${attending}` : ""} this week? Verily.` : attending ? `Hark! ${attending} ${classWord(attending)} await thee this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thy week lies open before thee.";
     const details=[
       coaching ? `${coaching} coaching` : "",
       attending ? `${attending} attending` : "",
       personal ? `${personal} personal` : "",
     ].filter(Boolean).join(" · ");
     return { title, detail:details || "Nothing scheduled in the next 7 days." };
-  },[classes,savedByIso,studioById,todayIso]);
+  },[classes,savedByIso,studioById,todayIso,summaryVoice]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -622,6 +648,7 @@ export function CalendarScreen({
           </div></section>
           <section><h3>Tools</h3><div className="calendar-action-list">
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
+            <button type="button" onClick={() => setSummaryVoiceOpen(true)}><span className="calendar-action-icon"><Icon name="format_quote" size={23} /></span><span><strong>Calendar voice</strong><small>{SUMMARY_VOICES.find((voice) => voice.value === summaryVoice)?.label}</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSettingsOpen(true)}><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
         </div>
@@ -1029,6 +1056,7 @@ export function CalendarScreen({
       {!sheet && discoverOpen && <SiteSearchSheet todayIso={todayIso} userId={viewer.id} onClose={() => setDiscoverOpen(false)} />}
       {calendarSyncOpen && <SettingsDetailSheet view="calendar" onClose={closeCalendarSync} />}
       {settingsOpen && <SettingsDetailSheet view="home" onClose={() => setSettingsOpen(false)} />}
+      {summaryVoiceOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setSummaryVoiceOpen(false)}><section className="header-account-sheet calendar-voice-sheet" role="dialog" aria-modal="true" aria-label="Calendar voice" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Calendar voice</h1><p>Choose how your calendar talks to you.</p></div><button type="button" className="iconbtn acctclose" aria-label="Close" onClick={() => setSummaryVoiceOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-voice-options">{SUMMARY_VOICES.map((voice) => <button type="button" className={summaryVoice === voice.value ? "selected" : ""} aria-pressed={summaryVoice === voice.value} key={voice.value} onClick={() => { setSummaryVoice(voice.value); localStorage.setItem(SUMMARY_VOICE_KEY,voice.value); }}><span><strong>{voice.label}</strong><small>{voice.description}</small></span><Icon name={summaryVoice === voice.value ? "check_circle" : "radio_button_unchecked"} size={23} /></button>)}</div></section></div></BodyPortal>}
     </>
   );
 }
