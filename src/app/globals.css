@@ -11282,7 +11282,7 @@ html[data-mode="dark"],
 .calendar-quick-actions { margin-right:-16px; margin-left:-16px; overflow:hidden; }
 .calendar-quick-actions > div { padding:0 16px 3px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
 .calendar-quick-actions > div::-webkit-scrollbar { display:none; }
-.calendar-quick-actions :is(button,a) { min-height:44px; padding:0 16px; flex:0 0 auto; display:flex; align-items:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
+.calendar-quick-actions :is(button,a) { min-height:44px; padding:0 16px; flex:0 0 auto; display:flex; align-items:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-white); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
 .calendar-action-section-head { min-height:28px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .calendar-action-section-head h3 { margin:0; color:var(--color-text-secondary); font-size:13px; line-height:1.2; letter-spacing:.04em; text-transform:uppercase; }
 .calendar-action-section-head a { min-height:28px; padding:0 10px; display:flex; align-items:center; gap:3px; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary); font-size:13px; font-weight:700; text-decoration:none; }
