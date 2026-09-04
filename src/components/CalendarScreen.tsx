@@ -25,6 +25,7 @@ import { clockParts, dayBandLabel, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
+import { loadMonthlyCalendarInsights, type MonthlyCalendarInsights } from "@/app/actions/product-activity";
 import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
 import {
@@ -162,6 +163,9 @@ export function CalendarScreen({
   const [calendarSyncOpen, setCalendarSyncOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryVoiceOpen, setSummaryVoiceOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [monthlyInsights, setMonthlyInsights] = useState<MonthlyCalendarInsights | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
   const [summaryVoice, setSummaryVoice] = useState<SummaryVoice>("straightforward");
   const [summaryVariant, setSummaryVariant] = useState(0);
   const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
@@ -218,6 +222,34 @@ export function CalendarScreen({
     saved: filter === "all" || filter === "saved",
     personal: filter === "all" || filter === "personal",
   };
+
+  const localMonthlyInsights=useMemo(() => {
+    const studioById=new Map(studios.map((studio) => [studio.id,studio]));
+    const unique=uniqueCoachingOccurrences(classes,studioById);
+    const [year,month]=todayIso.split("-").map(Number);
+    const days=Number(todayIso.slice(8,10));
+    let coached=0;
+    const studioIds=new Set<string>();
+    for (let day=1;day<=days;day+=1) {
+      const iso=`${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      const date=new Date(`${iso}T00:00:00.000Z`);
+      const dow=(date.getUTCDay()+6)%7;
+      for (const cls of unique) {
+        if (!runsOn(cls,iso,dow)) continue;
+        coached+=1;
+        if (cls.studioId) studioIds.add(cls.studioId);
+      }
+    }
+    return { coached,studios:studioIds.size };
+  },[classes,studios,todayIso]);
+
+  const openInsights=useCallback(async () => {
+    setInsightsOpen(true);
+    if (monthlyInsights || insightsLoading) return;
+    setInsightsLoading(true);
+    try { setMonthlyInsights(await loadMonthlyCalendarInsights()); }
+    finally { setInsightsLoading(false); }
+  },[insightsLoading,monthlyInsights]);
 
   useEffect(() => {
     if (openAdder) {
@@ -667,6 +699,7 @@ export function CalendarScreen({
             <Link href="/notifications"><span className="calendar-action-icon"><Icon name="notifications" size={23} /></span><span><strong>Notifications</strong><small>Follows, saves, and account activity</small></span><Icon name="chevron_right" size={20} /></Link>
           </div></section>
           <section><h3>Tools</h3><div className="calendar-action-list">
+            <button type="button" onClick={openInsights}><span className="calendar-action-icon"><Icon name="activity" size={23} /></span><span><strong>Insights</strong><small>Your coaching, classes, and sharing</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSummaryVoiceOpen(true)}><span className="calendar-action-icon"><Icon name="campaign" size={23} /></span><span><strong>Calendar voice</strong><small>{SUMMARY_VOICES.find((voice) => voice.value === summaryVoice)?.label}</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSettingsOpen(true)}><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></button>
@@ -1076,6 +1109,7 @@ export function CalendarScreen({
       {!sheet && discoverOpen && <SiteSearchSheet todayIso={todayIso} userId={viewer.id} onClose={() => setDiscoverOpen(false)} />}
       {calendarSyncOpen && <SettingsDetailSheet view="calendar" onClose={closeCalendarSync} />}
       {settingsOpen && <SettingsDetailSheet view="home" onClose={() => setSettingsOpen(false)} />}
+      {insightsOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setInsightsOpen(false)}><section className="header-account-sheet calendar-insights-sheet" role="dialog" aria-modal="true" aria-label="Calendar insights" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Insights</h1><p>{monthlyInsights?.month ?? new Date(`${todayIso}T12:00:00.000Z`).toLocaleDateString("en-US",{ month:"long",year:"numeric",timeZone:"UTC" })}</p></div><button type="button" className="iconbtn acctclose" aria-label="Close insights" onClick={() => setInsightsOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-insights-grid"><article><strong>{localMonthlyInsights.coached}</strong><span>Classes coached</span></article><article><strong>{insightsLoading ? "–" : monthlyInsights?.attended ?? 0}</strong><span>Classes taken</span></article><article><strong>{insightsLoading ? "–" : monthlyInsights?.shareImages ?? 0}</strong><span>Images shared</span></article><article><strong>{localMonthlyInsights.studios}</strong><span>Studios coached at</span></article></div><div className="calendar-insights-note"><Icon name="activity" size={24} /><p>{localMonthlyInsights.coached > 0 ? `You’ve coached ${localMonthlyInsights.coached} ${localMonthlyInsights.coached === 1 ? "class" : "classes"} across ${localMonthlyInsights.studios || 1} ${localMonthlyInsights.studios === 1 ? "studio" : "studios"} this month.` : "Your monthly story will take shape as you add classes and share your week."}</p></div></section></div></BodyPortal>}
       {summaryVoiceOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setSummaryVoiceOpen(false)}><section className="header-account-sheet calendar-voice-sheet" role="dialog" aria-modal="true" aria-label="Calendar voice" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Calendar voice</h1><p>Choose how your calendar talks to you.</p></div><button type="button" className="iconbtn acctclose" aria-label="Close" onClick={() => setSummaryVoiceOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-voice-options">{SUMMARY_VOICES.map((voice) => <button type="button" className={summaryVoice === voice.value ? "selected" : ""} aria-pressed={summaryVoice === voice.value} key={voice.value} onClick={() => { setSummaryVoice(voice.value); localStorage.setItem(SUMMARY_VOICE_KEY,voice.value); }}><span><strong>{voice.label}</strong><small>{voice.description}</small></span><Icon name={summaryVoice === voice.value ? "check_circle" : "radio_button_unchecked"} size={23} /></button>)}</div></section></div></BodyPortal>}
     </>
   );
