@@ -14341,7 +14341,7 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-share-sheet .shpage-embedded .sheditor-tools-all {
     width:calc(100% + (2 * var(--page-gutter)));
     margin-inline:calc(-1 * var(--page-gutter));
-    padding:0 0 12px;
+    padding:0 12px 12px;
     scroll-padding-inline:12px;
   }
   .calendar-share-sheet .shpage-embedded .sheditor-tool-icon {

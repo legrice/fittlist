@@ -1456,6 +1456,20 @@ export function ShareHubScreen({
               </div>
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
+                <StudioTool
+                  icon="format_size"
+                  label="In words"
+                  detail={styleId === "semantic" ? "Week in words selected" : "Share your week in a sentence"}
+                  onClick={() => {
+                    if (styleId === "semantic") {
+                      setPick("voice");
+                      return;
+                    }
+                    beginPreviewUpdate("style");
+                    pushUndo();
+                    applyCompleteStyle("semantic");
+                  }}
+                />
                 {styleId === "semantic" ? <StudioTool icon="campaign" label="Voice" detail={SHARE_VOICES.find((voice) => voice.value === shareVoice)?.label ?? "Straightforward"} onClick={() => setPick("voice")} /> : <StudioTool
                   icon="format_size"
                   label="Headline"
