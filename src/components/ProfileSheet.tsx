@@ -709,7 +709,18 @@ export function ProfileSheet({
             </div>
           )}
           {view === "account" && (
-            <DeleteAccount isCoach />
+            <>
+              <form action={logout} className="settingslist" onSubmit={clearClientMemory}>
+                <button type="submit" className="setrow">
+                  <span className="setrow-ic"><Icon name="logout" size={24} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Log out</span>
+                    <span className="s">Sign out of this device</span>
+                  </span>
+                </button>
+              </form>
+              <DeleteAccount isCoach />
+            </>
           )}
 
           {view === "security" && (
