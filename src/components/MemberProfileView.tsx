@@ -251,7 +251,7 @@ export async function MemberProfileView({
         <section id="profile-schedule" className="profile-anchor-section">
         {week.length > 0 ? (
           <ClassOpener handle="">
-            <CalendarList days={memberCalendarDays(week, name)} className="profile-calendar-list" />
+            <CalendarList days={memberCalendarDays(week, name)} className="profile-calendar-list profile-person-calendar-list" />
           </ClassOpener>
         ) : (
           <div className="empty-block profile-empty-small"><h2>No upcoming schedule</h2><p>{isOwner ? "Add plans from Share when you have something coming up." : `${firstName} hasn’t shared upcoming plans.`}</p>{canMessage && user.handle && <ScheduleNudge handle={user.handle} name={name} signedIn={!!viewerId} />}</div>

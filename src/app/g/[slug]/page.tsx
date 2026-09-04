@@ -6,7 +6,7 @@ import { avatarColor } from "@/lib/avatar";
 import { clockParts, fmtDayHeaderRel, todayIso } from "@/lib/format";
 import { AppChrome } from "@/components/AppChrome";
 import { PublicTopBar } from "@/components/PublicTopBar";
-import { GroupActions, GroupShareButton } from "@/components/GroupActions";
+import { GroupActions } from "@/components/GroupActions";
 import { GroupAddClass, GroupMembers, GroupSettings } from "@/components/GroupSetup";
 import { Icon } from "@/components/Icon";
 import { ProfilePhotoZoom } from "@/components/ProfilePhotoZoom";
@@ -16,8 +16,8 @@ import { ClassOpener } from "@/components/ClassOpener";
 import { type GroupPurpose } from "@/app/actions/groups";
 import { groupInvitePeople } from "@/app/actions/you";
 import { GroupHub, type GroupUpdate } from "@/components/GroupUpdates";
+import { GroupOverflow } from "@/components/GroupOverflow";
 import { hiddenFrom } from "@/lib/blocks";
-import { ReportContentButton } from "@/components/ReportContentButton";
 import { viewerLook } from "@/lib/look";
 import { BackLink } from "@/components/BackLink";
 
@@ -120,5 +120,5 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const members = <GroupMembers slug={slug} inviteToken={manager?group.inviteToken:null} members={settingsMembers} people={invitePeople} canManage={manager} viewerId={viewerId} viewerRole={membership?.role ?? (group.ownerUserId===viewerId?"owner":null)}/>;
   const initialTab = tab === "updates" ? "updates" : tab === "members" ? "members" : "schedule";
   const backHref=from==="discover-groups"?"/discover?half=groups":"/feed";
-  return <div className="pub group-page hasnav" data-mode={await viewerLook()}><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} social /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><div className="group-seam-top"><BackLink className="group-header-control group-hero-back" href={backHref} anywhere label="Back"><Icon name="arrow_back" size={23}/></BackLink><h1 className="group-seam-name">{group.name}</h1></div><ProfilePhotoZoom photo={group.photo} name={group.name} color={avatarColor({id:group.id})} className="group-profile-photo"/><div className="group-hero-copy"><h1 className="group-copy-name">{group.name}</h1><GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} manager={manager} joined={!!membership||group.ownerUserId===viewerId} joinable={group.visibility!=="private"} invitationRole={invitation?.role}><ProfileInfoAction><p>{group.description||"No description has been added yet."}</p></ProfileInfoAction><GroupShareButton slug={slug} name={group.name} pill/>{manager&&<GroupSettings slug={slug} name={group.name} photo={group.photo} description={group.description??""} visibility={group.visibility as "public"|"unlisted"|"private"} people={invitePeople} pill/>}</GroupActions>{viewerId && viewerId !== group.ownerUserId && <ReportContentButton contentType="group" contentId={group.id} label="Report group" className="content-report-button group-report-button" />}</div></header><GroupHub slug={slug} canPost={!!membership||group.ownerUserId===viewerId} viewerId={viewerId} updates={updates} schedule={schedule} members={members} initialTab={initialTab}/></main></div></div>;
+  return <div className="pub group-page hasnav" data-mode={await viewerLook()}><div className="profwrap">{viewerId ? <AppChrome userId={viewerId} social /> : <PublicTopBar next={`/g/${slug}`} />}<main className="group-main"><header className="group-hero"><div className="group-seam-top"><BackLink className="group-header-control group-hero-back" href={backHref} anywhere label="Back"><Icon name="arrow_back" size={23}/></BackLink><h1 className="group-seam-name">{group.name}</h1>{viewerId&&<GroupOverflow id={group.id} slug={slug} name={group.name} canReport={viewerId!==group.ownerUserId}/>}</div><ProfilePhotoZoom photo={group.photo} name={group.name} color={avatarColor({id:group.id})} className="group-profile-photo"/><div className="group-hero-copy"><h1 className="group-copy-name">{group.name}</h1><GroupActions slug={slug} name={group.name} initialFavorite={!!favorite} manager={manager} joined={!!membership||group.ownerUserId===viewerId} joinable={group.visibility!=="private"} invitationRole={invitation?.role}><ProfileInfoAction><p>{group.description||"No description has been added yet."}</p></ProfileInfoAction>{manager&&<GroupSettings slug={slug} name={group.name} photo={group.photo} description={group.description??""} visibility={group.visibility as "public"|"unlisted"|"private"} people={invitePeople} pill/>}</GroupActions></div></header><GroupHub slug={slug} canPost={!!membership||group.ownerUserId===viewerId} viewerId={viewerId} updates={updates} schedule={schedule} members={members} initialTab={initialTab}/></main></div></div>;
 }

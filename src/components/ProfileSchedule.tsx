@@ -42,8 +42,8 @@ export function ProfileSchedule({ days }: { days: WeekDayRows[] }) {
           ))}
         </div>
       )}
-      <CalendarList days={preview} className="profile-calendar-list" />
-      {later.length > 0 && <ScheduleMore key={studioId ?? "all"} label="See more schedule" chunks={[<CalendarList key="more-schedule" days={later} className="profile-calendar-list" />]} />}
+      <CalendarList days={preview} className="profile-calendar-list profile-person-calendar-list" />
+      {later.length > 0 && <ScheduleMore key={studioId ?? "all"} label="See more schedule" chunks={[<CalendarList key="more-schedule" days={later} className="profile-calendar-list profile-person-calendar-list" />]} />}
     </>
   );
 }
