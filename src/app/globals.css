@@ -11321,7 +11321,7 @@ html[data-mode="dark"],
 .calendar-scope-hero .calendar-mode-tabs a { color:var(--color-text-secondary); }
 .calendar-scope-hero .calendar-mode-tabs a[aria-current="page"] { color:var(--color-text-primary); }
 .calendar-scope-hero .calendar-section-summary { margin-bottom:0; color:var(--color-white); }
-.calendar-scope-hero .calendar-section-summary > :is(a,button),
+.calendar-scope-hero .calendar-section-summary > :is(a,button):not(.calendar-summary-copy),
 .calendar-scope-hero .personal-summary-actions > :is(a,button) { background:var(--color-surface); color:var(--color-text-primary); }
 .calendar-scope-hero .personal-summary-actions > button:last-child { background:var(--color-lime); color:var(--color-black); }
 @media (max-width:939px) {
@@ -11350,7 +11350,7 @@ html[data-mode="dark"],
 .calendar-section-summary { margin:4px 0 20px; display:flex; align-items:center; justify-content:space-between; gap:18px; color:var(--color-text-primary); }
 .calendar-section-summary p { max-width:31ch; margin:0; font-size:24px; line-height:1.25; }
 .calendar-section-summary strong { font-weight:700; }
-.calendar-section-summary > :is(a,button) { min-height:40px; padding:0 16px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
+.calendar-section-summary > :is(a,button):not(.calendar-summary-copy) { min-height:40px; padding:0 16px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
 .calendar-following-head,
 .personal-upcoming-summary { align-items:center; flex-direction:column; text-align:center; }
 .calendar-scope-hero:not(:has(.calendar-reveal-panel)) .calendar-section-summary { min-height:0; justify-content:flex-start; gap:14px; }
