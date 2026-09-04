@@ -5479,6 +5479,9 @@ select.editinput.placekind-select {
   width:100%;
   min-width:0;
   max-width:100%;
+  -webkit-appearance:none;
+  appearance:none;
+  overflow:hidden;
 }
 @media (max-width:520px) {
   .away-date-fields { grid-template-columns:minmax(0,1fr); gap:0; }
