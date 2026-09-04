@@ -41,6 +41,7 @@ const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) =
 const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) => module.PlanSheet));
 const DiscoverSheet = dynamic(() => import("@/components/DiscoverSheet").then((module) => module.DiscoverSheet));
 const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => module.QrSheet));
+const ShareTakeover = dynamic(() => import("@/components/ShareTakeover").then((module) => module.ShareTakeover));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -138,6 +139,7 @@ export function CalendarScreen({
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [profileQrOpen, setProfileQrOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
@@ -244,11 +246,9 @@ export function CalendarScreen({
   useEffect(() => {
     if (addChoice) ensureComposer();
   }, [addChoice, ensureComposer]);
-  // Share belongs to the persistent app shell. Opening it there preserves
-  // this calendar's exact scroll, filter, view, and any sheets underneath.
-  const openShare = (event: ReactMouseEvent<HTMLButtonElement>) => window.dispatchEvent(new CustomEvent("fittlist:open-share", {
-    detail: { opener:event.currentTarget },
-  }));
+  // Calendar owns its share surface now that the global bottom dock is gone.
+  // Keeping it mounted here also preserves this page's exact scroll and view.
+  const openShare = (_event: ReactMouseEvent<HTMLButtonElement>) => setShareOpen(true);
   const switchScope = (event:ReactMouseEvent<HTMLAnchorElement>, target:"you"|"following") => {
     event.preventDefault();
     if (target === scopeTarget) return;
@@ -597,7 +597,6 @@ export function CalendarScreen({
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>
             <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share your week</button>
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share your profile</button>}
-            <Link href="/settings?section=calendar"><Icon name="event" size={20} />Sync calendar</Link>
           </div></section>
           {managedCalendars.some((calendar) => calendar.kind === "studio") && <section><h3>Studios you manage</h3><div className="calendar-action-list">
             {managedCalendars.filter((calendar) => calendar.kind === "studio").map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={`/s/${calendar.slug}/manage`}><span className="calendar-action-icon studio">{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{calendar.name}</strong><small>Manage calendar, coaches, and open shifts</small></span><Icon name="chevron_right" size={20} /></Link>)}
@@ -1013,6 +1012,7 @@ export function CalendarScreen({
       )}
       <Toast msg={toastMsg} on={toastOn} />
       {handle && <QrSheet handle={handle} open={profileQrOpen} onClose={() => setProfileQrOpen(false)} onToast={toast} />}
+      {shareOpen && <ShareTakeover onClosed={() => setShareOpen(false)} />}
       {!sheet && discoverOpen && <DiscoverSheet full onClose={() => setDiscoverOpen(false)} />}
     </>
   );
