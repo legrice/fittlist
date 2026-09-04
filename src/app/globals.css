@@ -14106,10 +14106,10 @@ a.clspeek-by:active { opacity: .6; }
     box-shadow:none;
   }
   .calendar-share-sheet .shpage-embedded .sheditor-tools-all {
-    width:100%;
-    margin:0;
+    width:calc(100% + (2 * var(--page-gutter)));
+    margin-inline:calc(-1 * var(--page-gutter));
     padding:0 0 12px;
-    scroll-padding-inline:0;
+    scroll-padding-inline:12px;
   }
   .calendar-share-sheet .shpage-embedded .sheditor-tool-icon {
     border-color:color-mix(in srgb,var(--color-white) 58%,transparent);
