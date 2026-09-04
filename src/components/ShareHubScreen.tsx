@@ -1415,6 +1415,7 @@ export function ShareHubScreen({
               <button type="button" aria-pressed={styleId !== "semantic"} onClick={() => { if (styleId === "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle(lastScheduleStyle.current); } }}>Schedule</button>
               <button type="button" aria-pressed={styleId === "semantic"} onClick={() => { if (styleId !== "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle("semantic"); } }}>In words</button>
             </div>
+            {styleId === "semantic" && <div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div>}
 
             {/* One preview is the center of the studio. The quiet stage gives
                 the artwork a canvas without making other formats compete. */}
@@ -1468,7 +1469,7 @@ export function ShareHubScreen({
               </div>
               <div className="sheditor-tools sheditor-tools-all" aria-label="Image editing tools">
                 <StudioTool icon="casino" label="Random" detail="New look" onClick={remix} />
-                {styleId === "semantic" ? <StudioTool icon="campaign" label="Voice" detail={SHARE_VOICES.find((voice) => voice.value === shareVoice)?.label ?? "Straightforward"} onClick={() => setPick("voice")} /> : <StudioTool
+                {styleId !== "semantic" && <StudioTool
                   icon="format_size"
                   label="Headline"
                   detail={noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
@@ -1555,16 +1556,6 @@ export function ShareHubScreen({
           )}
         </section>
       </div>
-
-      {pick === "voice" && (
-        <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
-          <div className="sheet shpick calendar-voice-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
-            <h2>Voice</h2>
-            <div className="calendar-voice-options">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); setPick(null); }}><span className="calendar-voice-option-main"><span className="calendar-voice-emoji" aria-hidden="true">{voice.emoji}</span><strong>{voice.label}</strong></span><Icon name={shareVoice === voice.value ? "check_circle" : "radio_button_unchecked"} size={23} /></button>)}</div>
-          </div>
-        </div>
-      )}
 
       {pick === "dates" && (
         <div
