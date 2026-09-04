@@ -11875,6 +11875,36 @@ a.clspeek-by:active { opacity: .6; }
 /* The headline's loudness slider: the platform's own control in the brand
    colour, full width under its label. */
 .shslider { width: 100%; margin: 8px 0 4px; accent-color: var(--si); }
+.shfont-previews {
+  display:flex;
+  gap:8px;
+  margin:0 -16px;
+  padding:1px 16px 8px;
+  overflow-x:auto;
+  scroll-padding-inline:16px;
+  scrollbar-width:none;
+  overscroll-behavior-inline:contain;
+}
+.shfont-previews::-webkit-scrollbar { display:none; }
+.shfont-preview {
+  flex:0 0 auto;
+  min-width:132px;
+  min-height:64px;
+  padding:10px 14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--card);
+  color:var(--ink);
+  font-size:20px;
+  line-height:1.1;
+  text-align:left;
+  cursor:pointer;
+}
+.shfont-preview.on {
+  border-color:var(--si);
+  box-shadow:inset 0 0 0 1px var(--si);
+  background:var(--si-tint);
+}
 /* The admin's hand-the-keys search: account rows under the box, each a
    tap. The email door survives underneath for whoever isn't here yet. */
 .adminfind { display: flex; flex-direction: column; gap: 6px; }

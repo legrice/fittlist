@@ -1927,23 +1927,32 @@ export function ShareHubScreen({
                   value={draftSlider}
                   onChange={(e) => setDraftSlider(Number(e.target.value))}
                 />
-                {/* The voice, as a plain dropdown, by Matt's call: the sheet
-                    of sample rows folded in here with the words it dresses. */}
-                <label className="flabel" htmlFor="shFont">
+                <div className="flabel" id="shFontLabel">
                   Font
-                </label>
-                <select
-                  id="shFont"
-                  className="typeselect"
-                  value={draftTypeId}
-                  onChange={(e) => setDraftTypeId(e.target.value as TypeFaceId)}
+                </div>
+                <div
+                  className="shfont-previews"
+                  role="radiogroup"
+                  aria-labelledby="shFontLabel"
                 >
                   {TYPEFACES.map((f) => (
-                    <option key={f.id} value={f.id}>
+                    <button
+                      key={f.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={draftTypeId === f.id}
+                      className={`shfont-preview${draftTypeId === f.id ? " on" : ""}`}
+                      style={{
+                        fontFamily: `'${f.family}', sans-serif`,
+                        fontStyle: f.italic ? "italic" : "normal",
+                        letterSpacing: f.track == null ? undefined : `${f.track}em`,
+                      }}
+                      onClick={() => setDraftTypeId(f.id)}
+                    >
                       {f.label}
-                    </option>
+                    </button>
                   ))}
-                </select>
+                </div>
               </>
             )}
             <div className="publishwrap nostick">
