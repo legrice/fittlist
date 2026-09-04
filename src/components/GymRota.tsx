@@ -651,35 +651,14 @@ export function GymRota({
   const openShiftCount = openShiftDays.reduce((count, day) => count + day.items.length, 0);
   const renderedWeekDays = shiftFilter === "open"
     ? openShiftDays
-    : desktop
-      ? filteredWeekDays
-      : [month?.days.find((day) => day.iso === selectedDayIso) ?? filteredWeekDays.find((day) => day.iso === selectedDayIso)]
-        .filter((day): day is GymDayDto => !!day)
-        .map((day) => ({ ...day, items: day.items.filter((item) => matchesShiftFilter(item, day.iso)) }));
-  const selectedDay = renderedWeekDays[0] ?? filteredWeekDays[0];
-  const canMoveToPreviousDay = Boolean(
-    week && selectedDayIso && (week.offset > 0 || selectedDayIso !== days[0]?.iso),
-  );
+    : filteredWeekDays;
+  const selectedDay = month?.days.find((day) => day.iso === selectedDayIso)
+    ?? filteredWeekDays.find((day) => day.iso === selectedDayIso)
+    ?? renderedWeekDays[0];
   const weekHref = (offset: number) => {
     const params = new URLSearchParams({ w: String(offset) });
     if (shiftFilter !== "all") params.set("show", shiftFilter);
     return `${manageBase}?${params.toString()}`;
-  };
-  const moveMobileDay = (delta: number) => {
-    if (!selectedDayIso || !week) return;
-    if (delta < 0 && !canMoveToPreviousDay) return;
-    const nextDate = new Date(`${selectedDayIso}T00:00:00Z`);
-    nextDate.setUTCDate(nextDate.getUTCDate() + delta);
-    const nextIso = nextDate.toISOString().slice(0, 10);
-    if (days.some((day) => day.iso === nextIso)) {
-      setSelectedDayIso(nextIso);
-      setDayMenu(null);
-      return;
-    }
-    const nextOffset = Math.max(0, week.offset + (delta > 0 ? 1 : -1));
-    const params = new URLSearchParams({ w: String(nextOffset), d: nextIso });
-    if (shiftFilter !== "all") params.set("show", shiftFilter);
-    router.push(`${manageBase}?${params.toString()}`);
   };
   const floatingAddDay = (() => {
     if (mobileView === "day" && selectedDay) return selectedDay;
@@ -908,48 +887,15 @@ export function GymRota({
                 </button>
               </div>
             </div>
-          ) : <div className={`rotaweek${desktop ? "" : " mobile-day-nav"}`}>
-            {desktop ? <Link className={`rotanav${week && week.offset > 0 ? "" : " off"}`} href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))} aria-disabled={!week || week.offset === 0}>
+          ) : desktop ? <div className="rotaweek">
+            <Link className={`rotanav${week && week.offset > 0 ? "" : " off"}`} href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))} aria-disabled={!week || week.offset === 0}>
               <Icon name="chevron_left" size={20} />
-            </Link> : <button className={`rotanav${canMoveToPreviousDay ? "" : " off"}`} aria-label="Previous day" disabled={!canMoveToPreviousDay} onClick={() => moveMobileDay(-1)}><Icon name="chevron_left" size={20} /></button>}
-            {desktop ? (
-              <span className="rotaweek-lbl">{week?.label ?? ""}</span>
-            ) : (
-              <span className="rotaweek-center">
-                <span className="rotaweek-lbl">{selectedDay ? fmtDay(selectedDay.iso) : "Calendar"}</span>
-                {selectedDay && (
-                  <span className="rota-day-menuwrap">
-                    <button
-                      className="rota-day-more"
-                      aria-label={`Actions for ${fmtDay(selectedDay.iso)}`}
-                      aria-expanded={dayMenu === selectedDay.iso}
-                      onClick={() => setDayMenu(dayMenu === selectedDay.iso ? null : selectedDay.iso)}
-                    >
-                      <Icon name="more_horiz" size={20} />
-                    </button>
-                    {dayMenu === selectedDay.iso && (
-                      <span className="rota-day-menu">
-                        <button onClick={() => void shareDay(selectedDay)}>Share day</button>
-                        <button
-                          disabled={pending}
-                          onClick={() => {
-                            setDayMenu(null);
-                            if (selectedDay.closed) openDay(selectedDay);
-                            else setClosingDay({ iso: selectedDay.iso, label: fmtDay(selectedDay.iso) });
-                          }}
-                        >
-                          {selectedDay.closed ? "Open day" : "Close day"}
-                        </button>
-                      </span>
-                    )}
-                  </span>
-                )}
-              </span>
-            )}
-            {desktop ? <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
+            </Link>
+            <span className="rotaweek-lbl">{week?.label ?? ""}</span>
+            <Link className="rotanav" href={weekHref((week?.offset ?? 0) + 1)}>
               <Icon name="chevron_right" size={20} />
-            </Link> : <button className="rotanav" aria-label="Next day" onClick={() => moveMobileDay(1)}><Icon name="chevron_right" size={20} /></button>}
-          </div>}
+            </Link>
+          </div> : null}
 
           <div className="calendar-cardlist rota-calendar">
             {shiftFilter === "open" && renderedWeekDays.length === 0 && (
@@ -962,7 +908,7 @@ export function GymRota({
               <section key={day.iso} className={`rotaday dayblock${day.closed ? " closed" : ""}`}>
                 <div className="rotaday-h dayband">
                   <span className="dayband-d">
-                    {desktop || shiftFilter === "open" ? fmtDay(day.iso) : ""}
+                    {fmtDay(day.iso)}
                     {day.closed && <b className="rota-day-closed-label">Closed</b>}
                   </span>
                   {desktop && <span className="rotaday-actions">

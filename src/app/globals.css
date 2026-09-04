@@ -13348,11 +13348,22 @@ a.clspeek-by:active { opacity: .6; }
 }
 
 @media (max-width: 1099px) {
-  .gym-manage-pad { min-height:100dvh; background:var(--color-background); }
+  body:has(.gym-manage-pad),
+  .screen:has(.gym-manage-pad),
+  .screen:has(.gym-manage-pad) > .pad {
+    background:var(--color-shift);
+  }
+  .gym-manage-pad {
+    min-height:100dvh;
+    background:var(--color-shift);
+    color:var(--color-white);
+  }
   .gym-manage-pad .studio-manage-top { margin-bottom:12px; }
-  .gym-manage-pad .rotaweek.mobile-day-nav,
   .gym-manage-pad .rota-month-nav { background:var(--color-surface); }
-  .gym-manage-pad .rota-calendar { margin-top:18px; }
+  .gym-manage-pad .studio-calendar-title,
+  .gym-manage-pad .rota-calendar .dayband-d,
+  .gym-manage-pad .rotaempty { color:var(--color-white); }
+  .gym-manage-pad .rota-calendar { margin-top:8px; }
   .gym-manage-pad .rota-calendar .dayrows { gap:16px; }
   .gym-manage-pad .rota-calendar .rota-inline-row {
     overflow:visible; border:0; border-radius:24px; background:var(--color-white);
