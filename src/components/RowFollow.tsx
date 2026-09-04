@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
+import { Toast, useToast } from "@/components/Toast";
+import { haptic } from "@/lib/haptics";
 
 // The directory row's Follow pill.
 //
@@ -29,6 +31,7 @@ export function RowFollow({
   const [following, setFollowing] = useState(initialFollowing);
   const [requested, setRequested] = useState(initialRequested);
   const [pending, start] = useTransition();
+  const [message, toastOn, toast] = useToast();
 
   const toggle = (e: React.MouseEvent) => {
     // The row underneath is a link to their page. Following is a thing you do
@@ -37,23 +40,27 @@ export function RowFollow({
     e.stopPropagation();
     if (pending) return;
     start(async () => {
+      try {
       if (following || requested) {
         const res = await unfollowTrainer(handle);
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(res.error ?? "Couldn’t unfollow. Try again.");
         setFollowing(false);
         setRequested(false);
         window.dispatchEvent(new Event("calendar-pins-changed"));
       } else {
         const res = await followTrainer(handle);
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(res.error ?? "Couldn’t follow. Try again.");
         if (res.requested) setRequested(true);
         else setFollowing(true);
       }
+      haptic("selection");
       router.refresh();
+      } catch (error) { toast(error instanceof Error ? error.message : "Check your connection and try again."); }
     });
   };
 
   return (
+    <>
       <button
         type="button"
         className={`disfollow${following || requested ? " on" : ""}`}
@@ -77,5 +84,7 @@ export function RowFollow({
           ? <Icon name={following ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={19} />
           : following ? "Following" : requested ? "Requested" : "Follow"}
       </button>
+      <Toast msg={message} on={toastOn} />
+    </>
   );
 }

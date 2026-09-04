@@ -1,4 +1,7 @@
 import { SignJWT } from "jose";
+import { randomBytes } from "node:crypto";
+import { NextResponse } from "next/server";
+import { GOOGLE_CALENDAR_STATE_COOKIE } from "@/lib/oauth-state";
 import { getSessionUserId } from "@/lib/session";
 import { authUrl, googleConfigured } from "@/lib/gcal";
 import { siteOrigin } from "@/lib/format";
@@ -16,10 +19,18 @@ export async function GET() {
   if (!googleConfigured()) {
     return Response.redirect(`${siteOrigin()}/app?gcal=unconfigured`, 302);
   }
-  // Signed, short-lived state carries the user id and doubles as CSRF proof.
+  // The signature protects identity; the browser cookie binds consent to the
+  // browser that started it. Signed state alone can be replayed in another tab.
   const state = await new SignJWT({ aud: "gcal", sub: userId })
     .setProtectedHeader({ alg: "HS256" })
+    .setJti(randomBytes(24).toString("base64url"))
     .setExpirationTime("10m")
     .sign(secret());
-  return Response.redirect(authUrl(state), 302);
+  const response = NextResponse.redirect(authUrl(state), 302);
+  response.cookies.set(GOOGLE_CALENDAR_STATE_COOKIE, state, {
+    httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax",
+    path: "/api/google/callback", maxAge: 10 * 60,
+  });
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }

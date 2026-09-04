@@ -5,7 +5,7 @@ import { getDb, schema } from "@/db";
 import { nextAvatarColor } from "@/lib/avatar-server";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeCode, emailFromIdToken, syncUserToGoogle, googleConfigured } from "@/lib/gcal";
-import { createSession } from "@/lib/session";
+import { createSession, getSessionUserId } from "@/lib/session";
 import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { pushSignupPing } from "@/lib/push";
 import { siteOrigin } from "@/lib/format";
@@ -13,7 +13,7 @@ import { fansEnabled, landingHref } from "@/lib/flags";
 import { sessionSecret } from "@/lib/secret";
 import { signupSource } from "@/lib/attribution";
 import { claimRosterPlaceholders } from "@/lib/roster";
-import { GOOGLE_LOGIN_STATE_COOKIE, oauthStateMatches } from "@/lib/oauth-state";
+import { GOOGLE_CALENDAR_STATE_COOKIE, GOOGLE_LOGIN_STATE_COOKIE, oauthStateMatches } from "@/lib/oauth-state";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +75,14 @@ export async function GET(req: Request) {
       maxAge: 0,
     });
     if (!oauthStateMatches(expectedState, state)) return toLogin("autherror=1");
+  } else {
+    const jar = await cookies();
+    const expectedState = jar.get(GOOGLE_CALENDAR_STATE_COOKIE)?.value;
+    jar.set(GOOGLE_CALENDAR_STATE_COOKIE, "", {
+      httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax",
+      path: "/api/google/callback", maxAge: 0,
+    });
+    if (aud !== "gcal" || typeof sub !== "string" || !oauthStateMatches(expectedState, state) || await getSessionUserId() !== sub) return back("error");
   }
   if (url.searchParams.get("error")) {
     return isLogin ? toLogin("autherror=1") : back("denied");
@@ -82,7 +90,9 @@ export async function GET(req: Request) {
   const code = url.searchParams.get("code");
   if (!code) return isLogin ? toLogin("autherror=1") : back("error");
 
-  const tokens = await exchangeCode(code);
+  let tokens;
+  try { tokens = await exchangeCode(code); }
+  catch { return isLogin ? toLogin("autherror=1") : back("error"); }
 
   // ---- "Continue with Google": identify the trainer, log them in, and wire up
   // calendar sync if they granted it in the same consent.

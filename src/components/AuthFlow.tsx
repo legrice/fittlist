@@ -360,12 +360,14 @@ export function AuthFlow({
   // account that never set a password (invited by email, signed up with Google)
   // it's the only way back in. Landing from the link offers to set one.
   const sendLink = (reset = false, signup = false) => {
+    if (pending) return;
     if (!email.trim()) {
       setError("Enter your email first.");
       return;
     }
     setError("");
     startTransition(async () => {
+      try {
       const res = await requestMagicLink(email, via, signup ? "signup" : reset ? "reset" : "login");
       if (res.ok) {
         setSheet(null);
@@ -373,10 +375,12 @@ export function AuthFlow({
         setSignupLink(signup);
         setStage("sent");
       } else setError(res.error ?? "Something went wrong.");
+      } catch { setError("We couldn’t send that link. Check your connection and try again."); }
     });
   };
 
   const submitAuth = () => {
+    if (pending) return;
     if (sheet === "signup") {
       sendLink(false, true);
       return;
@@ -384,6 +388,7 @@ export function AuthFlow({
     if (!email.trim() || !password) return;
     setError("");
     startTransition(async () => {
+      try {
       const res = await passwordAuth(email, password, false);
       if (!res.ok) {
         setError(res.error ?? "Something went wrong.");
@@ -394,6 +399,7 @@ export function AuthFlow({
       pendingFan.current = !!res.fan;
       if (passkeyable && !res.hasPasskey && (res.needsProfile || !res.fan)) setBio(true);
       else proceed(!!res.needsProfile, !!res.fan);
+      } catch { setError("We couldn’t sign you in. Check your connection and try again."); }
     });
   };
 

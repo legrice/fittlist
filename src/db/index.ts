@@ -70,8 +70,10 @@ async function init(): Promise<Db> {
   const { drizzle } = await import("drizzle-orm/pglite");
   const { migrate } = await import("drizzle-orm/pglite/migrator");
   const { mkdirSync } = await import("fs");
-  mkdirSync(".data/pglite", { recursive: true });
-  const client = new PGlite(".data/pglite");
+  // Isolated browser tests must never mutate the developer's saved data.
+  const dataDir = process.env.PGLITE_DATA_DIR || ".data/pglite";
+  mkdirSync(dataDir, { recursive: true });
+  const client = new PGlite(dataDir);
   const db = drizzle(client, { schema });
   await migrate(db, { migrationsFolder: "./drizzle" });
   return db;

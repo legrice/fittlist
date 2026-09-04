@@ -1,0 +1,364 @@
+{
+  "browsers": [
+    {
+      "name": "chromium",
+      "result": "passed",
+      "expectedOfflineNetworkErrors": 0,
+      "navigationDiagnostics": [],
+      "flows": "Mobile/desktop calendar, You/Following, back/forward, refresh, deep links, profile, studio, discovery, settings, adder, modal focus, offline/reconnect, password sign-in/sign-out"
+    },
+    {
+      "name": "webkit",
+      "result": "passed",
+      "expectedOfflineNetworkErrors": 0,
+      "navigationDiagnostics": [
+        "/localhost:3100/calendar/following due to access control checks."
+      ],
+      "flows": "Mobile/desktop calendar, You/Following, back/forward, refresh, deep links, profile, studio, discovery, settings, adder, modal focus, offline/reconnect, password sign-in/sign-out"
+    },
+    {
+      "name": "firefox",
+      "result": "passed",
+      "expectedOfflineNetworkErrors": 0,
+      "navigationDiagnostics": [],
+      "flows": "Mobile/desktop calendar, You/Following, back/forward, refresh, deep links, profile, studio, discovery, settings, adder, modal focus, offline/reconnect, password sign-in/sign-out"
+    }
+  ],
+  "security": [
+    "Signed-out personal data denied",
+    "Cross-account personal record and image IDOR denied; private class export denied",
+    "Social access, blocks and occurrence validation enforced through real server actions",
+    "Calendar add is idempotent; removal succeeds",
+    "Follow and unfollow round trip",
+    "Personal class creation and removal",
+    "Cross-origin mutation rejected by Next.js",
+    "Generic login errors and enforced password rate limit",
+    "Password change revokes the old session and renews the current one",
+    "Schedule image export succeeds; public profile excludes account email and private schedules",
+    "Validated image upload; private background cannot be cached or fetched signed out",
+    "Email-link confirmation, account creation, onboarding, profile edit"
+  ],
+  "performance": [
+    {
+      "browser": "chromium",
+      "lcp": 768,
+      "cls": 0.00823327971415391,
+      "longTasks": 0,
+      "ttfb": 410.69999999552965,
+      "domReady": 453.6000000014901
+    },
+    {
+      "browser": "chromium",
+      "scenario": "4x CPU, 150ms latency, 1.6Mbps",
+      "calendarReadyMs": 2341.966458000001
+    },
+    {
+      "browser": "webkit",
+      "lcp": 165,
+      "cls": null,
+      "longTasks": null,
+      "ttfb": 44,
+      "domReady": 97
+    },
+    {
+      "browser": "firefox",
+      "lcp": null,
+      "cls": null,
+      "longTasks": null,
+      "ttfb": 50,
+      "domReady": 124
+    }
+  ],
+  "accessibility": [
+    {
+      "browser": "chromium",
+      "violations": []
+    },
+    {
+      "browser": "webkit",
+      "violations": []
+    },
+    {
+      "browser": "firefox",
+      "violations": []
+    }
+  ],
+  "diagnostics": [
+    {
+      "browser": "chromium",
+      "errors": [],
+      "failedRequests": [
+        {
+          "url": "http://localhost:3100/saved?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/search?_rsc=n5CQezkYsuGo7zjY",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=g2cPfsFZ4pkOBMyc",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/search?_rsc=n5CQezkYsuGo7zjY",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/saved?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?_rsc=L33D6fn5ASQqXwrM",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio?from=search&_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/auditmember?from=search&_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/saved?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/discover",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/auditcoach?_rsc=_USO3KkWyIyAI2zx",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/schedule",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio?_rsc=mmi6CUtKJBBWmwRE",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/coaches?_rsc=mmi6CUtKJBBWmwRE",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/settings?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/following/people?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/following/studios?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/auditcoach?edit=1&_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/privacy?_rsc=kndVLRNFvDo9UKaV",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/saved?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?add=1",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=5TL2BZWGRrpfjbmX",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/notifications?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?add=1",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/coachshare?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/you?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/discover?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/feed?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/feed?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/you?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/notifications?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/coachshare?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/discover?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=5TL2BZWGRrpfjbmX",
+          "error": "net::ERR_INTERNET_DISCONNECTED"
+        },
+        {
+          "url": "http://localhost:3100/saved?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_INTERNET_DISCONNECTED"
+        }
+      ]
+    },
+    {
+      "browser": "webkit",
+      "errors": [
+        "/localhost:3100/calendar/following due to access control checks."
+      ],
+      "failedRequests": [
+        {
+          "url": "http://localhost:3100/search?_rsc=n5CQezkYsuGo7zjY",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=g2cPfsFZ4pkOBMyc",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/calendar?add=1",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/notifications?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/feed?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/you?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/coachshare?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/discover?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "cancelled"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=5TL2BZWGRrpfjbmX",
+          "error": "WebKit encountered an internal error"
+        },
+        {
+          "url": "http://localhost:3100/saved?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "WebKit encountered an internal error"
+        }
+      ]
+    },
+    {
+      "browser": "firefox",
+      "errors": [],
+      "failedRequests": [
+        {
+          "url": "http://localhost:3100/search?_rsc=n5CQezkYsuGo7zjY",
+          "error": "NS_BINDING_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?add=1",
+          "error": "NS_BINDING_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=5TL2BZWGRrpfjbmX",
+          "error": "NS_ERROR_OFFLINE"
+        },
+        {
+          "url": "http://localhost:3100/saved?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "NS_ERROR_OFFLINE"
+        }
+      ]
+    }
+  ]
+}

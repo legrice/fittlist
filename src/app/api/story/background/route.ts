@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * development data URL into the client payload. Blob URLs redirect directly;
  * local data URLs are decoded here.
  */
-export async function GET(request: Request) {
+export async function GET() {
   const userId = await getSessionUserId();
   if (!userId) return new Response("Not found", { status:404 });
 
@@ -21,9 +21,9 @@ export async function GET(request: Request) {
   const background = user?.storyPrefs?.background;
   if (!background) return new Response("Not found", { status:404 });
 
-  const cacheControl = new URL(request.url).searchParams.has("v")
-    ? "private, max-age=31536000, immutable"
-    : "no-store";
+  // This URL identifies the current session, not an immutable public image.
+  // Persisting it can show a previous account's background after sign-out.
+  const cacheControl = "private, no-store";
   if (/^https:\/\//i.test(background)) {
     return new Response(null, {
       status:302,
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const match = background.match(/^data:(image\/[a-z0-9+.-]+);base64,([a-z0-9+/=\s]+)$/i);
+  const match = background.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,([a-z0-9+/=\s]+)$/i);
   if (!match) return new Response("Not found", { status:404 });
   return new Response(Buffer.from(match[2], "base64"), {
     headers:{

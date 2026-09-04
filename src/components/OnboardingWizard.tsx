@@ -107,6 +107,7 @@ export function OnboardingWizard({
   const finish = () => {
     setError("");
     startTransition(async () => {
+      try {
       const disciplines = teach
         ? [...teachingTypes, ...(otherType.trim() ? [otherType.trim()] : [])]
         : [];
@@ -139,8 +140,9 @@ export function OnboardingWizard({
         setError(completed.error ?? "Couldn't finish setup. Try again.");
         return;
       }
-      router.push("/feed");
+      router.push("/calendar");
       router.refresh();
+      } catch { setError("We couldn’t finish setup. Check your connection and try again."); }
     });
   };
 

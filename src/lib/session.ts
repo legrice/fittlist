@@ -1,6 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { sessionSecret } from "@/lib/secret";
+import { cache } from "react";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "@/db";
 
 const COOKIE = "fl_session";
 const MAX_AGE = 60 * 60 * 24 * 90; // 90 days
@@ -32,7 +35,10 @@ function secret() {
 }
 
 export async function createSession(userId: string) {
-  const token = await new SignJWT({ uid: userId })
+  const db = await getDb();
+  const [user] = await db.select({ version: schema.users.sessionVersion }).from(schema.users).where(eq(schema.users.id, userId));
+  if (!user) throw new Error("Account no longer exists");
+  const token = await new SignJWT({ uid: userId, sv: user.version })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${MAX_AGE}s`)
@@ -48,17 +54,26 @@ export async function createSession(userId: string) {
   await stampLogin(userId);
 }
 
-export async function getSessionUserId(): Promise<string | null> {
+export const getSessionUserId = cache(async (): Promise<string | null> => {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
   if (!token) return null;
+  let uid: string;
+  let version: number;
   try {
-    const { payload } = await jwtVerify(token, secret());
-    return typeof payload.uid === "string" ? payload.uid : null;
+    const { payload } = await jwtVerify(token, secret(), { algorithms: ["HS256"] });
+    if (typeof payload.uid !== "string" || !/^[0-9a-f-]{36}$/i.test(payload.uid)) return null;
+    uid = payload.uid;
+    version = payload.sv === undefined ? 0 : Number(payload.sv);
   } catch {
     return null;
   }
-}
+  // Request-scoped only: revocations and deletions must apply to the next
+  // request on every instance. Database failures reach the recovery boundary.
+  const db = await getDb();
+  const [user] = await db.select({ version: schema.users.sessionVersion }).from(schema.users).where(eq(schema.users.id, uid));
+  return user && user.version === version ? uid : null;
+});
 
 export async function destroySession() {
   const jar = await cookies();

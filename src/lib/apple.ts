@@ -57,6 +57,7 @@ async function clientSecret(): Promise<string> {
 
 export async function appleExchange(code: string): Promise<{ id_token?: string; error?: string }> {
   const res = await fetch(TOKEN, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({

@@ -6,6 +6,7 @@ import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { announceSaved } from "@/components/SaveEducation";
+import { haptic } from "@/lib/haptics";
 
 // The corner of a class row on a profile: the Add ribbon, for a member
 // looking at somebody else's class. A sibling of the row, never a child,
@@ -30,10 +31,13 @@ export function ClassCardActions({
   const [justAdded, setJustAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
-  const [, start] = useTransition();
+  const [pending, start] = useTransition();
+  const submitting = useRef(false);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   const toggle = () => {
+    if (submitting.current) return;
+    submitting.current = true;
     const next = !on;
     setOn(next);
     if (next) {
@@ -44,12 +48,16 @@ export function ClassCardActions({
       setJustAdded(false);
     }
     start(async () => {
-      const res = await setGoing(classId, iso, next);
-      if (!res.ok) {
+      try {
+        const res = await setGoing(classId, iso, next);
+        if (!res.ok) throw new Error(res.error ?? "Couldn’t save that change. Try again.");
+        haptic(next ? "success" : "selection");
+        if (next) announceSaved(classId, iso);
+      } catch (error) {
         setOn(!next);
         setJustAdded(false);
-        toast(res.error ?? "Something went wrong");
-      } else if (next) announceSaved(classId, iso);
+        toast(error instanceof Error ? error.message : "Check your connection and try again.");
+      } finally { submitting.current = false; }
     });
   };
 
@@ -65,6 +73,8 @@ export function ClassCardActions({
           className={`calendar-save-action evcard-add${on ? " on" : ""}`}
           aria-label={on ? "Saved to your plans" : "Save to your plans"}
           aria-pressed={on}
+          aria-busy={pending}
+          disabled={pending}
           onClick={toggle}
         >
           <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />

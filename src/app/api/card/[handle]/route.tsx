@@ -1,3 +1,4 @@
+import { safeServerImage } from "@/lib/server-image";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { eq, sql } from "drizzle-orm";
@@ -62,7 +63,7 @@ export async function GET(
   const isCoach = user.kind !== "fan";
   const name = user.name.trim() || user.email.split("@")[0];
   const initial = (name.charAt(0) || "?").toUpperCase();
-  const profilePhoto = user.photo;
+  const profilePhoto = await safeServerImage(user.photo);
 
   // One quiet line of proof for coaches: how much is on this week. Counted,
   // never listed; the schedule has its own image.

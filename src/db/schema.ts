@@ -27,6 +27,7 @@ export const users = pgTable("users", {
   // scrypt password hash ("salt:hash"). Null for accounts that only ever used
   // a magic link or a passkey, which stay fully password-less.
   passwordHash: text("password_hash"),
+  sessionVersion: integer("session_version").notNull().default(0),
   name: text("name").notNull().default(""),
   handle: text("handle").unique(),
   // Public profile: a short bio and a photo (stored as a small data URL).

@@ -73,6 +73,7 @@ type TokenResponse = {
 
 export async function exchangeCode(code: string): Promise<TokenResponse> {
   const res = await fetch(TOKEN, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -88,6 +89,7 @@ export async function exchangeCode(code: string): Promise<TokenResponse> {
 
 async function accessTokenFrom(refreshToken: string): Promise<string | null> {
   const res = await fetch(TOKEN, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({

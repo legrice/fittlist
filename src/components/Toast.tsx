@@ -47,8 +47,9 @@ export function Toast({
       className={`toast${on ? " on" : ""}${action || dismiss ? " has-act" : ""}`}
       role="status"
       aria-live="polite"
+      inert={!on}
     >
-      <span className="toast-msg">{msg}</span>
+      <span className="toast-msg">{on ? msg : ""}</span>
       {action && (
         <a className="toast-act" href={action.href}>
           {action.label}

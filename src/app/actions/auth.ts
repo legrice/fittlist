@@ -3,7 +3,6 @@
 import { createHash, randomBytes } from "crypto";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   generateAuthenticationOptions,
@@ -32,7 +31,9 @@ import {
   passwordResetGrantId,
   pendingMagicToken,
 } from "@/lib/session";
-import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
+import { DUMMY_PASSWORD_HASH, MAX_PASSWORD_LENGTH, hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
+import { takeAnonymousActionRateLimit } from "@/lib/anonymous-rate-limit";
+import { requestIpAddress } from "@/lib/request-ip";
 import { pubKeyFromStore, pubKeyToStore, rpInfo, setChallenge, takeChallenge } from "@/lib/webauthn";
 import { acceptInvite, INVITE_MSG, signupAllowed } from "@/lib/invites";
 import { emailHtml } from "@/lib/email-html";
@@ -53,11 +54,6 @@ function sha256(s: string) {
   return createHash("sha256").update(s).digest("hex");
 }
 
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  return (h.get("x-forwarded-for") ?? "local").split(",")[0].trim();
-}
-
 // ---- password: one form that logs in an existing account or signs up a new one
 export async function passwordAuth(
   emailRaw: string,
@@ -72,34 +68,24 @@ export async function passwordAuth(
   needsInvite?: boolean;
   error?: string;
 }> {
+  if (typeof emailRaw !== "string" || emailRaw.length > 254 || typeof password !== "string" || password.length > MAX_PASSWORD_LENGTH) {
+    return { ok: false, error: "Wrong email or password. You can also sign in with an email link." };
+  }
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   if (!password) return { ok: false, error: "Enter your password." };
 
   const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
-
-  if (!user) {
-    // New accounts are created only after the owner opens an emailed,
-    // single-use link. A public server action must not let somebody claim an
-    // unregistered address (and any email-keyed guest history) with a password
-    // they chose themselves.
-    void asFan;
-    return {
-      ok: false,
-      error: "Create your account with the email sign-up link first.",
-    };
-  }
-  if (!user.passwordHash) {
-    return {
-      ok: false,
-      error:
-        "This account doesn't have a password yet. You signed in by email or with Google. " +
-        "Tap “Forgot your password?” and we'll email you a link to get in and set one.",
-    };
-  }
-  if (!(await verifyPassword(password, user.passwordHash))) {
-    return { ok: false, error: "Wrong email or password." };
+  void asFan;
+  const allowed = await takeAnonymousActionRateLimit(db, {
+    action: "password_login", target: { kind: "email", id: email }, ip: await requestIpAddress(),
+    limits: { ip: { max: 50, windowMs: MAGIC_TTL_MS }, ipTarget: { max: 10, windowMs: MAGIC_TTL_MS }, target: { max: 30, windowMs: MAGIC_TTL_MS } },
+  });
+  if (!allowed) return { ok: false, error: "Too many attempts. Try again in 15 minutes or use an email link." };
+  const [user] = await db.select({ id: schema.users.id, passwordHash: schema.users.passwordHash, handle: schema.users.handle, kind: schema.users.kind }).from(schema.users).where(eq(schema.users.email, email));
+  const matches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+  if (!user?.passwordHash || !matches) {
+    return { ok: false, error: "Wrong email or password. You can also sign in with an email link." };
   }
   await createSession(user.id);
   const passkeys = await db
@@ -155,7 +141,7 @@ export async function setPassword(
       if (!claimed.length) return false;
       await tx
         .update(schema.users)
-        .set({ passwordHash })
+        .set({ passwordHash, sessionVersion: sql`${schema.users.sessionVersion} + 1` })
         .where(eq(schema.users.id, userId));
       return true;
     });
@@ -167,7 +153,7 @@ export async function setPassword(
     await db.transaction(async (tx) => {
       await tx
         .update(schema.users)
-        .set({ passwordHash })
+        .set({ passwordHash, sessionVersion: sql`${schema.users.sessionVersion} + 1` })
         .where(eq(schema.users.id, userId));
       // A successful current-password change or first password setup makes any
       // pending reset for this browser unnecessary. Remove it rather than
@@ -186,6 +172,7 @@ export async function setPassword(
     });
   }
   await clearPasswordPrompt();
+  await createSession(userId);
   return { ok: true };
 }
 
@@ -239,6 +226,9 @@ export async function requestMagicLink(
   via: string | null = null,
   intent: "login" | "signup" | "reset" = "login",
 ): Promise<{ ok: boolean; error?: string }> {
+  if (typeof emailRaw !== "string" || emailRaw.length > 254 || (via !== null && typeof via !== "string")) {
+    return { ok: false, error: "That doesn't look like an email address." };
+  }
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   // Server actions are public endpoints; TypeScript does not validate a
@@ -246,6 +236,13 @@ export async function requestMagicLink(
   const requestedIntent = intent === "reset" || intent === "signup" ? intent : "login";
 
   const db = await getDb();
+
+  const ip = await requestIpAddress();
+  const allowed = await takeAnonymousActionRateLimit(db, {
+    action: "magic_link", target: { kind: "email", id: email }, ip,
+    limits: { ip: { max: MAX_LINKS_PER_IP, windowMs: MAGIC_TTL_MS }, target: { max: MAX_LINKS_PER_EMAIL, windowMs: MAGIC_TTL_MS } },
+  });
+  if (!allowed) return { ok: false, error: "Too many links requested. Try again in a few minutes." };
 
   // Invite gate: an email with no account yet must be invited to receive a link
   // (existing accounts can always request a login link).
@@ -263,24 +260,6 @@ export async function requestMagicLink(
   const purpose: "login" | "signup" | "reset" = existing
     ? requestedIntent === "reset" ? "reset" : "login"
     : "signup";
-
-  const since = new Date(Date.now() - MAGIC_TTL_MS);
-  const ip = await clientIp();
-
-  const [byEmail] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(schema.magicLinks)
-    .where(and(eq(schema.magicLinks.email, email), gt(schema.magicLinks.createdAt, since)));
-  if (byEmail.n >= MAX_LINKS_PER_EMAIL) {
-    return { ok: false, error: "Too many links requested. Try again in a few minutes." };
-  }
-  const [byIp] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(schema.magicLinks)
-    .where(and(eq(schema.magicLinks.ip, ip), gt(schema.magicLinks.createdAt, since)));
-  if (byIp.n >= MAX_LINKS_PER_IP) {
-    return { ok: false, error: "Too many links requested. Try again in a few minutes." };
-  }
 
   const token = randomBytes(32).toString("hex");
   const [createdLink] = await db.insert(schema.magicLinks).values({
@@ -738,6 +717,8 @@ export async function claimProfile(
 
 export async function logout() {
   await destroySession();
+  await clearPasswordPrompt();
+  await clearPendingMagicToken();
   redirect("/");
 }
 

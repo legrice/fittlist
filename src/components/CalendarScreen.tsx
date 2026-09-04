@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent as ReactTouchEvent } from "react";
+import { useFrontSheet } from "@/lib/use-front-sheet";
+import { haptic } from "@/lib/haptics";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { AdderPrefill } from "@/components/Adder";
@@ -176,8 +178,7 @@ export function CalendarScreen({
   const [summaryVariant, setSummaryVariant] = useState(0);
   const communityFooterRef = useRef<HTMLElement | null>(null);
   const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
-  const classSheetPullStart = useRef<number | null>(null);
-  const [classSheetPullY, setClassSheetPullY] = useState(0);
+  const { sheetRef: frontSheetRef, scopeRef: frontScopeRef } = useFrontSheet(!classSheetDismissed, () => setClassSheetDismissed(true));
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -283,10 +284,13 @@ export function CalendarScreen({
     setSummaryVariant(next);
   },[summaryVoice]);
   useEffect(() => {
-    if (sessionStorage.getItem("fl-calendar-scope-enter") !== "you") return;
-    sessionStorage.removeItem("fl-calendar-scope-enter");
+    try {
+      if (sessionStorage.getItem("fl-calendar-scope-enter") !== "you") return;
+      sessionStorage.removeItem("fl-calendar-scope-enter");
+    } catch { return; }
     setScopeSummaryEntering(true);
-    window.setTimeout(() => setScopeSummaryEntering(false),240);
+    const timer = window.setTimeout(() => setScopeSummaryEntering(false),240);
+    return () => window.clearTimeout(timer);
   },[]);
 
   useEffect(() => {
@@ -340,35 +344,23 @@ export function CalendarScreen({
   // Keeping it mounted here also preserves this page's exact scroll and view.
   const openShare = (_event: ReactMouseEvent<HTMLButtonElement>) => setShareOpen(true);
   const switchScope = (event:ReactMouseEvent<HTMLAnchorElement>, target:"you"|"following") => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     if (target === scopeTarget) return;
     setScopeTarget(target);
-    sessionStorage.setItem("fl-calendar-scope-enter",target);
+    try { sessionStorage.setItem("fl-calendar-scope-enter",target); } catch { /* Storage is optional. */ }
+    haptic();
     // Keep the outgoing surface present while the prefetched route swaps in.
     // A short cue is enough to communicate the change without exposing the
     // page background if navigation takes a beat on a slower connection.
-    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 60);
+    router.push(target === "you" ? "/calendar" : "/calendar/following");
   };
   const restoreActionSurface = () => {
     window.scrollTo({ top:0, behavior:"auto" });
     setClassSheetDismissed(false);
     requestAnimationFrame(() => window.scrollTo({ top:0, behavior:"auto" }));
   };
-  const startClassSheetPull = (event:ReactTouchEvent<HTMLDivElement>) => {
-    if (window.scrollY > 4) return;
-    classSheetPullStart.current=event.touches[0]?.clientY ?? null;
-  };
-  const moveClassSheetPull = (event:ReactTouchEvent<HTMLDivElement>) => {
-    if (classSheetPullStart.current === null) return;
-    const distance=Math.max(0,(event.touches[0]?.clientY ?? classSheetPullStart.current)-classSheetPullStart.current);
-    if (distance > 0) event.preventDefault();
-    setClassSheetPullY(distance);
-  };
-  const endClassSheetPull = () => {
-    if (classSheetPullY > 120) setClassSheetDismissed(true);
-    classSheetPullStart.current=null;
-    setClassSheetPullY(0);
-  };
+
   useEffect(() => {
     try {
       const stored: unknown = JSON.parse(localStorage.getItem(calendarStateKey) ?? "null");
@@ -716,13 +708,13 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} style={{ "--sheet-pull-progress": Math.min(classSheetPullY / 120, 1), "--sheet-search-scale": 1 - (.12 * Math.min(classSheetPullY / 120, 1)) } as React.CSSProperties}>
+      {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} ref={frontScopeRef}>
           <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /></button>
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
         <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>{classSheetDismissed && calendarWeekSummary.details.length > 0 && <div className="calendar-summary-details" aria-label="Weekly breakdown">{calendarWeekSummary.details.map((detail) => <span key={detail}>{detail}</span>)}</div>}<button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
-      {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Calendar actions">
+      {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
         <div className="calendar-action-hub">
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>
             <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>

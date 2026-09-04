@@ -1,3 +1,4 @@
+import { safeServerImage } from "@/lib/server-image";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { eq } from "drizzle-orm";
@@ -91,6 +92,7 @@ export async function GET(
   const initial = (coach.name.trim().charAt(0) || "?").toUpperCase();
   const nameSize = c.name.length <= 14 ? 88 : c.name.length <= 24 ? 70 : 54;
 
+  const safePhoto = await safeServerImage(coach.photo);
   return new ImageResponse(
     (
       <div
@@ -159,10 +161,10 @@ export async function GET(
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-            {coach.photo ? (
+            {safePhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={coach.photo}
+                src={safePhoto!}
                 alt=""
                 width={84}
                 height={84}

@@ -507,7 +507,7 @@ export function GymRota({
     if (!ok) toast("Couldn't share the open shifts");
   };
 
-  const useStandardDay = (day: GymDayDto) => {
+  const handleApplyStandardDay = (day: GymDayDto) => {
     if (pending) return;
     setMonthMenu(null);
     start(async () => {
@@ -785,7 +785,7 @@ export function GymRota({
                             {monthMenu === day.iso && (
                               <div className="rota-month-menu">
                                 {month.standardDays.includes(day.dayOfWeek) && !day.closed && (
-                                  <button onClick={() => useStandardDay(day)}>
+                                  <button onClick={() => handleApplyStandardDay(day)}>
                                     Use standard {WEEKDAYS[day.dayOfWeek]}
                                   </button>
                                 )}

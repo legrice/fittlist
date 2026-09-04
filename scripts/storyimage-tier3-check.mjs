@@ -42,7 +42,7 @@ const plan = storyPlan.planStory(days, budget, 764, { keepPlacesWithClasses: tru
 if (plan.tier !== 3) fail(`fixture should reach tier 3, got tier ${plan.tier}`);
 
 const started = performance.now();
-const response = renderStory({
+const response = await renderStory({
   theme: STORY_THEMES.paper,
   style: STORY_STYLES.plain,
   format: "story",
@@ -85,7 +85,7 @@ const elapsed = Math.round((performance.now() - started) * 10) / 10;
 const photoBackground = `data:image/svg+xml;base64,${Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920"><rect width="1080" height="1920" fill="#315f4d"/></svg>',
 ).toString("base64")}`;
-const photoResponse = renderStory({
+const photoResponse = await renderStory({
   theme: STORY_THEMES.paper,
   style: STORY_STYLES.plain,
   format: "story",

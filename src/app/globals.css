@@ -11477,7 +11477,7 @@ html[data-mode="dark"],
 .calendar-community-footer p { max-width:28ch; margin:0; color:color-mix(in srgb,var(--color-white) 82%,transparent); font-size:15px; line-height:1.35; }
 .calendar-community-footer nav { display:flex; align-items:center; justify-content:center; gap:18px; }
 .calendar-community-footer a { color:var(--color-white); font-size:14px; font-weight:700; text-decoration:none; }
-.calendar-community-footer small { color:color-mix(in srgb,var(--color-white) 58%,transparent); font-size:12px; }
+.calendar-community-footer small { color:color-mix(in srgb,var(--color-white) 85%,transparent); font-size:12px; }
 .profile-actions-sheet { background:var(--color-background); }
 .profile-actions-sheet > .calendar-action-list { margin-top:20px; }
 .calendar-following-actions .calendar-directory-list { overflow:visible; }
@@ -14750,4 +14750,27 @@ a.clspeek-by:active { opacity: .6; }
     backdrop-filter:var(--glass-control-filter);
     box-shadow:var(--glass-control-shadow);
   }
+}
+
+/* Shared response timings. Match src/lib/motion.ts for JS-owned lifecycles. */
+:root {
+  --motion-tap:80ms;
+  --motion-state:var(--motion-fast);
+  --motion-sheet:var(--motion-base);
+  --motion-settle:var(--motion-ease-out);
+}
+:where(button, a, [role="button"]) { touch-action:manipulation; }
+:where(button, [role="button"]):not(:disabled):active { opacity:.82; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline:2px solid var(--color-text-primary);
+  outline-offset:3px;
+}
+.calendar-pull-sheet { transition:transform var(--motion-sheet) var(--motion-settle); will-change:auto; }
+.calendar-pull-sheet.is-pulling { transition:none; will-change:transform; }
+@media (max-width:939px) {
+  .calendar-scope-top button, .calendar-mode-tabs a, .sheetclose { min-width:44px; min-height:44px; }
+  .sheet, .personal-calendar-sheet, .calendar-directory-sheet { overscroll-behavior:contain; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
 }

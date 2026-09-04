@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent } from "react";
 import Link from "next/link";
+import { useFrontSheet } from "@/lib/use-front-sheet";
+import { haptic } from "@/lib/haptics";
+import { withTimeout } from "@/lib/async";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -219,6 +222,8 @@ export function FollowingScreen({
   const [cats, setCats] = useState(initialCats);
   const [myRail, setMyRail] = useState(initialMyRail);
   const [calendarPending, setCalendarPending] = useState(mode === "home");
+  const [calendarError, setCalendarError] = useState(false);
+  const [calendarRetry, setCalendarRetry] = useState(0);
   const [calendarSwitcherOpen, setCalendarSwitcherOpen] = useState(false);
   const calendarSwitcherRef = useRef<HTMLElement>(null);
   const calendarSwitcherDragStartY = useRef<number | null>(null);
@@ -228,9 +233,8 @@ export function FollowingScreen({
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("following");
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
-  const classSheetPullStart = useRef<number | null>(null);
   const communityFooterRef = useRef<HTMLElement | null>(null);
-  const [classSheetPullY, setClassSheetPullY] = useState(0);
+  const { sheetRef: frontSheetRef, scopeRef: frontScopeRef } = useFrontSheet(!classSheetDismissed, () => setClassSheetDismissed(true));
   const [activityComments,setActivityComments]=useState<FeedItem|null>(null);
   const [activityComment,setActivityComment]=useState("");
   const [socialPending,startSocialTransition]=useTransition();
@@ -303,6 +307,7 @@ export function FollowingScreen({
   // already-interactive rows or resetting any filters/peek state.
   useEffect(() => {
     const generation = ++streamGeneration.current;
+    setCalendarError(false);
     // A server refresh can change the relationship graph without unmounting
     // this client component. Reset to that new first response, then stream a
     // matching remainder; otherwise an old month can survive an unfollow.
@@ -330,14 +335,13 @@ export function FollowingScreen({
     if (remembered) applyRemainder(remembered);
     setCalendarPending(!remembered);
     const frame = requestAnimationFrame(() => {
-      void loadClientMemory(memoryKey, loadCalendarRemainder)
+      void loadClientMemory(memoryKey, () => withTimeout(loadCalendarRemainder()))
         .then((remainder) => {
           if (!remainder || streamGeneration.current !== generation) return;
           applyRemainder(remainder);
         })
         .catch(() => {
-          // The first two days remain fully usable offline or on a failed
-          // continuation request; a later navigation naturally retries.
+          if (streamGeneration.current === generation) setCalendarError(true);
         })
         .finally(() => {
           if (streamGeneration.current === generation) setCalendarPending(false);
@@ -347,7 +351,7 @@ export function FollowingScreen({
       cancelAnimationFrame(frame);
       if (streamGeneration.current === generation) streamGeneration.current += 1;
     };
-  }, [initialCats, initialCoaches, initialItems, initialMyRail, isHome, todayIso]);
+  }, [initialCats, initialCoaches, initialItems, initialMyRail, isHome, todayIso, calendarRetry]);
 
   // The containerless list lands on today or the first day that holds
   // anything. Home keeps only the date rail and the selected day's results;
@@ -477,39 +481,29 @@ export function FollowingScreen({
   },[calendarFollowing,router]);
   useEffect(() => {
     if (!calendarFollowing) return;
-    if (sessionStorage.getItem("fl-calendar-scope-enter") !== "following") return;
-    sessionStorage.removeItem("fl-calendar-scope-enter");
+    try {
+      if (sessionStorage.getItem("fl-calendar-scope-enter") !== "following") return;
+      sessionStorage.removeItem("fl-calendar-scope-enter");
+    } catch { return; }
     setScopeSummaryEntering(true);
-    window.setTimeout(() => setScopeSummaryEntering(false),240);
+    const timer = window.setTimeout(() => setScopeSummaryEntering(false),240);
+    return () => window.clearTimeout(timer);
   },[calendarFollowing]);
   const switchScope = (event:ReactMouseEvent<HTMLAnchorElement>, target:"you"|"following") => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     if (target === scopeTarget) return;
     setScopeTarget(target);
-    sessionStorage.setItem("fl-calendar-scope-enter",target);
+    try { sessionStorage.setItem("fl-calendar-scope-enter",target); } catch { /* Storage is optional. */ }
+    haptic();
     // Preserve the current surface until the prefetched destination takes
     // over; this avoids a blank green frame between calendar scopes.
-    window.setTimeout(() => router.push(target === "you" ? "/calendar" : "/calendar/following"), 60);
+    router.push(target === "you" ? "/calendar" : "/calendar/following");
   };
   const restoreActionSurface = () => {
     window.scrollTo({ top:0, behavior:"auto" });
     setClassSheetDismissed(false);
     requestAnimationFrame(() => window.scrollTo({ top:0, behavior:"auto" }));
-  };
-  const startClassSheetPull = (event:TouchEvent<HTMLDivElement>) => {
-    if (window.scrollY > 4) return;
-    classSheetPullStart.current=event.touches[0]?.clientY ?? null;
-  };
-  const moveClassSheetPull = (event:TouchEvent<HTMLDivElement>) => {
-    if (classSheetPullStart.current === null) return;
-    const distance=Math.max(0,(event.touches[0]?.clientY ?? classSheetPullStart.current)-classSheetPullStart.current);
-    if (distance > 0) event.preventDefault();
-    setClassSheetPullY(distance);
-  };
-  const endClassSheetPull = () => {
-    if (classSheetPullY > 120) setClassSheetDismissed(true);
-    classSheetPullStart.current=null;
-    setClassSheetPullY(0);
   };
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
@@ -958,7 +952,8 @@ export function FollowingScreen({
   };
   return (
     <>
-      {calendarFollowing && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} style={{ "--sheet-pull-progress": Math.min(classSheetPullY / 120, 1), "--sheet-search-scale": 1 - (.12 * Math.min(classSheetPullY / 120, 1)) } as React.CSSProperties}>
+      {calendarError && <div className="pad" role="status"><p>The rest of your calendar couldn’t load. Your loaded classes are still available.</p><button type="button" className="ghost" onClick={() => setCalendarRetry((retry) => retry + 1)}>Try again</button></div>}
+      {calendarFollowing && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} ref={frontScopeRef}>
         <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /></button>
         <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
         <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setFind(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show following actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
@@ -967,7 +962,7 @@ export function FollowingScreen({
         <div><p>{followingSummaryText}</p></div>
         <button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show Discover" : "Show following calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>
       </header></section></>}
-      {calendarFollowing && !classSheetDismissed && <section className={`calendar-action-sheet calendar-following-actions calendar-following-discover calendar-pull-sheet calendar-transition-surface${scopeTarget !== "following" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Discover people, places, and groups"><div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack groupFrom="calendar-following" /></div><footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer></section>}
+      {calendarFollowing && !classSheetDismissed && <section className={`calendar-action-sheet calendar-following-actions calendar-following-discover calendar-pull-sheet calendar-transition-surface${scopeTarget !== "following" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Discover people, places, and groups"><div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack groupFrom="calendar-following" /></div><footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer></section>}
       {(!calendarFollowing || classSheetDismissed) && <div className={calendarFollowing ? "calendar-foreground-sheet calendar-surface-schedule" : undefined}>
       {!isHome && (
         <header className="upcoming-head">

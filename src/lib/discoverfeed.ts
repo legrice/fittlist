@@ -476,11 +476,27 @@ export async function buildDiscoverFeed(
         )),
     ]);
     const identity=(actorId:string,classId:string,iso:string,kind:string) => `${actorId}|${classId}|${iso}|${kind}`;
+    // Group once: a long calendar used to scan every social row for every
+    // occurrence. Blocks apply to commenters and likers as well as actors.
+    const likesByActivity = new Map<string, typeof likeRows>();
+    const commentsByActivity = new Map<string, typeof commentRows>();
+    for (const row of likeRows) {
+      if (hidden.has(row.userId)) continue;
+      const key = identity(row.actorUserId,row.classId,row.occurrenceDate,row.activityKind);
+      const group = likesByActivity.get(key) ?? [];
+      group.push(row); likesByActivity.set(key,group);
+    }
+    for (const row of commentRows) {
+      if (hidden.has(row.authorId)) continue;
+      const key = identity(row.actorUserId,row.classId,row.occurrenceDate,row.activityKind);
+      const group = commentsByActivity.get(key) ?? [];
+      group.push(row); commentsByActivity.set(key,group);
+    }
     for (const item of socialItems) {
       const id=identity(item.activityActor!.id,item.classId,item.iso,item.activityKind!);
-      const likes=likeRows.filter((row) => identity(row.actorUserId,row.classId,row.occurrenceDate,row.activityKind)===id);
+      const likes=likesByActivity.get(id) ?? [];
       item.likes={ count:likes.length,mine:likes.some((row) => row.userId===userId) };
-      item.comments=commentRows.filter((row) => identity(row.actorUserId,row.classId,row.occurrenceDate,row.activityKind)===id).map((row) => ({
+      item.comments=(commentsByActivity.get(id) ?? []).map((row) => ({
         id:row.id,body:row.body,createdAt:row.createdAt.toISOString(),
         author:{ id:row.authorId,name:row.authorName,photo:row.authorPhoto,color:row.authorColor ?? avatarColor({id:row.authorId}) },
       }));

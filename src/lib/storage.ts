@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { del, put } from "@vercel/blob";
+import sharp from "sharp";
 
 const DELETE_BATCH_SIZE = 100;
 const MANAGED_IMAGE_PREFIXES = ["u", "ut", "story-background", "group", "class", "studio"] as const;
@@ -73,13 +74,22 @@ export async function storeImage(
   if (!dataUrl) return dataUrl ?? null;
   // Already a URL (an unchanged photo round-tripping through an editor, or
   // a row saved before this existed): pass it through untouched.
-  if (!dataUrl.startsWith("data:image/")) return dataUrl;
+  if (typeof dataUrl !== "string") throw new Error("That image could not be read.");
+  if (!dataUrl.startsWith("data:")) {
+    const url = new URL(dataUrl);
+    if (url.protocol !== "https:" || url.username || url.password || dataUrl.length > 2048) throw new Error("Use an HTTPS image URL.");
+    return dataUrl;
+  }
+  const m = dataUrl.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-zA-Z0-9+/]+={0,2})$/);
+  if (!m || dataUrl.length > 2_500_000) throw new Error("Choose a JPEG, PNG, WebP or GIF image under 2MB.");
+  const buf = Buffer.from(m[2], "base64");
+  // MIME strings supplied by a browser are untrusted. Decode metadata with a
+  // pixel limit before publishing anything, including in embedded/local mode.
+  const metadata = await sharp(buf, { limitInputPixels: 40_000_000 }).metadata();
+  if (`image/${metadata.format}` !== m[1]) throw new Error("That image format could not be read.");
   if (!process.env.BLOB_READ_WRITE_TOKEN) return dataUrl;
-  const m = dataUrl.match(/^data:(image\/[a-z+.-]+);base64,(.+)$/s);
-  if (!m) return dataUrl;
   try {
-    const buf = Buffer.from(m[2], "base64");
-    const ext = m[1] === "image/png" ? "png" : m[1] === "image/webp" ? "webp" : "jpg";
+    const ext = m[1] === "image/png" ? "png" : m[1] === "image/webp" ? "webp" : m[1] === "image/gif" ? "gif" : "jpg";
     const hash = createHash("sha256").update(buf).digest("hex").slice(0, 20);
     const { url } = await put(`${prefix}/${hash}.${ext}`, buf, {
       access: "public",
@@ -87,6 +97,7 @@ export async function storeImage(
       addRandomSuffix: false,
       // The same picture re-saved is the same file: don't error on it.
       allowOverwrite: true,
+      abortSignal: AbortSignal.timeout(10_000),
     });
     return url;
   } catch {

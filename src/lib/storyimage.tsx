@@ -1,3 +1,4 @@
+import { safeServerImage } from "@/lib/server-image";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { ImageResponse } from "next/og";
@@ -206,7 +207,8 @@ function FeaturedClass({
   );
 }
 
-export function renderStory(model: StoryModel) {
+export async function renderStory(model: StoryModel) {
+  const [photo, backgroundPhoto] = await Promise.all([safeServerImage(model.photo), safeServerImage(model.backgroundPhoto)]);
   const {
     theme: t,
     style: y,
@@ -214,8 +216,6 @@ export function renderStory(model: StoryModel) {
     line1,
     line2,
     headlineSize: hSize,
-    photo,
-    backgroundPhoto,
     backgroundX,
     backgroundY,
     backgroundZoom,

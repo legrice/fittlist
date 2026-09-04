@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { SearchScreen } from "@/components/SearchScreen";
 
 export function SiteSearchSheet({ todayIso, userId, onClose }: { todayIso: string; userId: string; onClose: () => void }) {
   const [query, setQuery] = useState("");
+  const sheet = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented && sheet.current?.contains(document.activeElement)) {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, [onClose]);
 
   return <BodyPortal>
     <div className="site-search-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="site-search-sheet" role="dialog" aria-modal="true" aria-label="Search FittList" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={sheet} className="site-search-sheet" role="dialog" aria-modal="true" aria-label="Search FittList" onMouseDown={(event) => event.stopPropagation()}>
         <header>
           <label>
             <Icon name="search" size={21} />

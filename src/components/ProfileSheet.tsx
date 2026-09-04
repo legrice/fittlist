@@ -873,6 +873,8 @@ export function ProfileSheet({
                   </button>
                 </div>
               ) : (
+                // OAuth needs a document navigation, not a prefetched client route.
+                // eslint-disable-next-line @next/next/no-html-link-for-pages
                 <a className="btn si" href="/api/google/connect">
                   Connect Google Calendar
                 </a>

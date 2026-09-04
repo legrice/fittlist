@@ -1,7 +1,8 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mondayOfCurrentWeek } from "@/lib/format";
 import { verifyCalendarToken } from "@/lib/calfeed";
+import { hiddenFrom } from "@/lib/blocks";
 import { calendarTimeZoneLines, icsEsc as esc, icsFold as fold, recurrenceLines, zonedDateLine, zonedEndLine } from "@/lib/ics";
 
 // One member's whole week, across every coach they follow, as a calendar they
@@ -28,7 +29,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     .select({ trainerUserId: schema.subscribers.trainerUserId })
     .from(schema.subscribers)
     .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
-  const coachIds = [...new Set(follows.map((f) => f.trainerUserId))];
+  const hidden = await hiddenFrom(userId);
+  const coachIds = [...new Set(follows.map((f) => f.trainerUserId))].filter((id) => !hidden.has(id));
 
   const coaches = coachIds.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
@@ -41,7 +43,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
 
   const generatedAt = new Date();
   const followed = coachIds.length
-    ? await db.select().from(schema.classes).where(inArray(schema.classes.userId, coachIds))
+    ? await db.select().from(schema.classes).where(and(inArray(schema.classes.userId, coachIds), eq(schema.classes.isPublic, true)))
     : [];
   // The shifts they're on. A gym's class belongs to the gym, so it never turns
   // up in the followed set even for the person teaching it, and this feed is
@@ -57,7 +59,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   // Dates that are exceptions to the standing rota: somebody swapped, or a
   // slot was opened up. A cover moves one date from one calendar to another,
   // so it has to reach both of them or two people turn up, or nobody does.
-  const coverRows = await db.select().from(schema.shiftCovers);
+  const coverRows = await db.select().from(schema.shiftCovers).where(or(
+    eq(schema.shiftCovers.coachUserId, userId),
+    ...(shifts.length ? [inArray(schema.shiftCovers.classId, shifts.map((item) => item.id))] : []),
+  ));
   const takenFromMe = new Map<string, string[]>(); // class -> dates I'm no longer on
   const givenToMe: typeof coverRows = [];
   const shiftIds = new Set(shifts.map((c) => c.id));
@@ -87,7 +92,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     .filter((x) => !!x.cls && x.cls.isPublic && x.cover.occurrenceDate >= mondayOfCurrentWeek(generatedAt, x.cls.timeZone));
   // Public only. A coach's private client sessions are on their own schedule
   // and must not reach a follower's calendar.
-  const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= mondayOfCurrentWeek(generatedAt, c.timeZone)));
+  const rows = classRows.filter((c) => (c.isPublic || c.coachUserId === userId) && (!c.specificDate || c.specificDate >= mondayOfCurrentWeek(generatedAt, c.timeZone)));
 
   const studioIds = [
     ...new Set(
@@ -189,7 +194,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     headers: {
       "content-type": "text/calendar; charset=utf-8",
       "content-disposition": 'inline; filename="fittlist-my-week.ics"',
-      "cache-control": "private, max-age=900",
+      "cache-control": "private, no-store",
     },
   });
 }

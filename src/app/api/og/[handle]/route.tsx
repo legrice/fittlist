@@ -1,3 +1,4 @@
+import { safeServerImage } from "@/lib/server-image";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { eq } from "drizzle-orm";
@@ -55,6 +56,7 @@ export async function GET(
   // Long names would otherwise run under the photo.
   const nameSize = user.name.length <= 14 ? 92 : user.name.length <= 22 ? 74 : 58;
 
+  const safePhoto = await safeServerImage(user.photo);
   return new ImageResponse(
     (
       <div
@@ -71,10 +73,10 @@ export async function GET(
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 48 }}>
-          {user.photo ? (
+          {safePhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={user.photo}
+              src={safePhoto!}
               alt=""
               width={248}
               height={248}
