@@ -74,8 +74,9 @@ function writeRecent(userId: string, hit: RecentHit): RecentHit[] {
   return next;
 }
 
-export function SearchScreen({ todayIso, userId }: { todayIso: string; userId: string }) {
-  const [q, setQ] = useState("");
+export function SearchScreen({ todayIso, userId, query, showRecents = true }: { todayIso: string; userId: string; query?: string; showRecents?: boolean }) {
+  const [localQuery, setLocalQuery] = useState("");
+  const q = query ?? localQuery;
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
   const [classes, setClasses] = useState<DirClass[]>([]);
@@ -100,7 +101,7 @@ export function SearchScreen({ todayIso, userId }: { todayIso: string; userId: s
   }, [userId]);
 
   useEffect(() => {
-    const receive = (event: Event) => setQ((event as CustomEvent<string>).detail ?? "");
+    const receive = (event: Event) => setLocalQuery((event as CustomEvent<string>).detail ?? "");
     window.addEventListener("fittlist:search-query", receive);
     return () => window.removeEventListener("fittlist:search-query", receive);
   }, []);
@@ -197,7 +198,7 @@ export function SearchScreen({ todayIso, userId }: { todayIso: string; userId: s
     <>
       {short ? (
         <>
-          {recent.length > 0 && (
+          {showRecents && recent.length > 0 && (
             <div className="srchsec">
               <h2 className="srchhead">
                 Recent
