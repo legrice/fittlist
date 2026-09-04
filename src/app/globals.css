@@ -14000,6 +14000,28 @@ a.clspeek-by:active { opacity: .6; }
 .sheditor-share-action { margin-top:10px; }
 .sheditor-share-action .shheader-share { width:100%; }
 @media (max-width:939px) {
+  /* The mobile share studio is one immersive workspace. The green surround
+     separates the editable artwork from the white, floating control dock and
+     brings this older utility screen into the same visual system as Calendar. */
+  .calendar-share-sheet:has(.shpage-editor),
+  .calendar-share-sheet .shpage-embedded.shpage-editor,
+  .calendar-share-sheet:has(.shpage-editor) .share-takeover-head,
+  .calendar-share-sheet .shpage-embedded .sheditor-shell,
+  .calendar-share-sheet .shpage-embedded .sheditor-stage {
+    background:var(--color-shift);
+  }
+  .calendar-share-sheet:has(.shpage-editor) .share-takeover-head {
+    box-shadow:none;
+  }
+  .calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close,
+  .calendar-share-sheet:has(.shpage-editor) .shtop-help,
+  .calendar-share-sheet:has(.shpage-editor) .shdesign-actions {
+    border-color:color-mix(in srgb,var(--color-white) 58%,transparent);
+    background:color-mix(in srgb,var(--color-white) 66%,transparent);
+    -webkit-backdrop-filter:blur(22px) saturate(165%);
+    backdrop-filter:blur(22px) saturate(165%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.76),0 7px 20px rgba(2,13,8,.15);
+  }
   .cardwrap.shpage-tabbed.shpage-editor { padding-bottom:0; }
   .screen.hasnav:has(.shpage:not(.shpage-tabbed)) .cardwrap.shpage.shpage-editor,
   .calendar-share-sheet .shpage-embedded.shpage-editor { padding-bottom:0; }
@@ -14016,6 +14038,22 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-share-sheet .shpage-embedded .sheditor-stage {
     flex:1 1 auto;
     min-height:0;
+  }
+  .calendar-share-sheet .shpage-embedded .sheditor-dock {
+    width:calc(100% - 20px);
+    margin:0 10px 10px;
+    padding:14px 10px calc(14px + env(safe-area-inset-bottom));
+    border:1px solid color-mix(in srgb,var(--color-white) 70%,var(--color-border));
+    border-radius:28px;
+    background:color-mix(in srgb,var(--color-white) 94%,transparent);
+    -webkit-backdrop-filter:blur(24px) saturate(150%);
+    backdrop-filter:blur(24px) saturate(150%);
+    box-shadow:0 -5px 28px rgba(2,13,8,.18),inset 0 1px 0 var(--color-white);
+  }
+  .calendar-share-sheet .shpage-embedded .sheditor-tool-icon {
+    border-color:rgba(2,13,8,.08);
+    background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(226,232,227,.72));
+    box-shadow:inset 0 1px 0 var(--color-white),0 4px 12px rgba(2,13,8,.08);
   }
   .shpage-tabbed .sheditor-dock {
     padding-bottom:calc(98px + env(safe-area-inset-bottom));
