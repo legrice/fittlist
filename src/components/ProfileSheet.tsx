@@ -584,7 +584,7 @@ export function ProfileSheet({
             if (e.target === e.currentTarget) goBack();
           }}
         >
-          <div className="sheet">
+          <div className="sheet settings-detail-sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={goBack}>
               <Icon name="close" size={18} />
             </button>

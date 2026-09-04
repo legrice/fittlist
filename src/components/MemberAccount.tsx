@@ -220,7 +220,7 @@ export function MemberAccount({
             if (e.target === e.currentTarget) detailOnly ? onClose?.() : setView(null);
           }}
         >
-          <div className="sheet">
+          <div className="sheet settings-detail-sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => detailOnly ? onClose?.() : setView(null)}>
               <Icon name="close" size={18} />
             </button>
