@@ -14379,4 +14379,22 @@ a.clspeek-by:active { opacity: .6; }
     z-index:1;
   }
   .calendar-view-toggle button > .icon { width:24px; height:24px; }
+
+  /* The share studio uses the same restrained glass recipe as the main
+     You/Following switch. Keep shape and disabled state component-specific,
+     but do not let old editor borders make these controls look milkier. */
+  .shpage-editor .share-page-close,
+  .calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close,
+  .shpage-editor .shtop-help,
+  .shpage-editor .shdesign-actions,
+  .shpage-editor .sheditor-tool-icon {
+    border-color:var(--glass-control-highlight);
+    background:var(--glass-control-bg);
+    -webkit-backdrop-filter:var(--glass-control-filter);
+    backdrop-filter:var(--glass-control-filter);
+    box-shadow:var(--glass-control-shadow);
+  }
+  .shpage-editor .shdesign-actions button + button {
+    border-left-color:var(--glass-control-highlight);
+  }
 }
