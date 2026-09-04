@@ -122,8 +122,8 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --glass-control-shadow-raised: inset 0 1px 0 var(--glass-control-highlight), 0 5px 16px rgba(0,0,0,.09);
   --calendar-floating-control-size: 64px;
   --calendar-view-toggle-width: 136px;
-  --calendar-view-icon-size: 29px;
-  --calendar-add-icon-size: 34px;
+  --calendar-view-icon-size: 32px;
+  --calendar-add-icon-size: 38px;
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
   --headline-tracking: .012em;
