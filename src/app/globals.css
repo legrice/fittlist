@@ -114,6 +114,12 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-planner-amber: #D9B44A;
   --radius-card: 20px;
   --radius-pill: 999px;
+  /* Shared interactive glass, based on the You/Following control. */
+  --glass-control-bg: color-mix(in srgb, var(--color-surface) 62%, transparent);
+  --glass-control-filter: blur(24px) saturate(170%);
+  --glass-control-highlight: color-mix(in srgb, var(--color-white) 72%, transparent);
+  --glass-control-shadow: inset 0 1px 0 var(--glass-control-highlight);
+  --glass-control-shadow-raised: inset 0 1px 0 var(--glass-control-highlight), 0 6px 18px rgba(0,0,0,.12);
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
   --headline-tracking: .012em;
@@ -11184,7 +11190,7 @@ html[data-mode="dark"],
    an X.
    --------------------------------------------------------------------------- */
 .clsfull { position: relative; }
-.calendar-mode-tabs { position:relative; width:188px; padding:3px; display:grid; grid-template-columns:1fr 1fr; overflow:hidden; border-radius:var(--radius-pill); background:color-mix(in srgb,var(--color-surface) 62%,transparent); -webkit-backdrop-filter:blur(24px) saturate(170%); backdrop-filter:blur(24px) saturate(170%); box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-white) 72%,transparent); transition:width 420ms cubic-bezier(.2,1.35,.35,1),grid-template-columns 420ms cubic-bezier(.2,1.35,.35,1); }
+.calendar-mode-tabs { position:relative; width:188px; padding:3px; display:grid; grid-template-columns:1fr 1fr; overflow:hidden; border-radius:var(--radius-pill); background:var(--glass-control-bg); -webkit-backdrop-filter:var(--glass-control-filter); backdrop-filter:var(--glass-control-filter); box-shadow:var(--glass-control-shadow); transition:width 420ms cubic-bezier(.2,1.35,.35,1),grid-template-columns 420ms cubic-bezier(.2,1.35,.35,1); }
 .calendar-mode-tabs::after { content:""; position:absolute; inset:3px auto 3px 3px; width:calc(50% - 3px); border-radius:var(--radius-pill); background:var(--color-surface); transform:translateX(0); box-shadow:0 3px 12px rgba(0,0,0,.08); transition:transform 180ms cubic-bezier(.2,.8,.2,1),width 420ms cubic-bezier(.2,1.35,.35,1); }
 .calendar-mode-tabs[data-active="following"]::after { transform:translateX(100%); }
 .calendar-mode-tabs a { position:relative; z-index:1; min-width:0; min-height:38px; padding:0 8px; display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--color-text-secondary); font-size:15px; font-weight:700; text-decoration:none; transition:opacity 180ms ease,padding 420ms cubic-bezier(.2,1.35,.35,1); }
@@ -11197,8 +11203,7 @@ html[data-mode="dark"],
 .calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-shift); color:var(--color-white); touch-action:pan-y; }
 .calendar-scope-top { position:sticky; top:0; z-index:0; margin:0 0 18px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; background:var(--color-shift); }
 .calendar-scope-top .calendar-mode-tabs { margin:0; justify-self:center; }
-.calendar-scope-search { width:44px; height:44px; padding:0; display:grid; place-items:center; overflow:hidden; border:0; border-radius:50%; background:color-mix(in srgb,var(--color-surface) 62%,transparent); color:var(--color-text-primary); text-decoration:none; -webkit-backdrop-filter:blur(24px) saturate(170%); backdrop-filter:blur(24px) saturate(170%); box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-white) 72%,transparent); }
-.calendar-scope-search { box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-white) 72%,transparent),0 6px 18px rgba(0,0,0,.12); }
+.calendar-scope-search { width:44px; height:44px; padding:0; display:grid; place-items:center; overflow:hidden; border:0; border-radius:50%; background:var(--glass-control-bg); color:var(--color-text-primary); text-decoration:none; -webkit-backdrop-filter:var(--glass-control-filter); backdrop-filter:var(--glass-control-filter); box-shadow:var(--glass-control-shadow-raised); }
 .calendar-scope-actions { position:relative; width:44px; height:44px; display:block; }
 .calendar-scope-actions .calendar-scope-search { position:absolute; inset:0; transition:opacity 220ms ease,transform 360ms cubic-bezier(.2,1.35,.35,1); }
 .calendar-scope-search-open { opacity:calc(1 - var(--sheet-pull-progress, 0)); transform:scale(var(--sheet-search-scale, 1)); }
@@ -11206,7 +11211,7 @@ html[data-mode="dark"],
 .calendar-scope-top.is-expanded { --sheet-pull-progress:1 !important; }
 .calendar-scope-top.is-expanded .calendar-scope-search-open { pointer-events:none; }
 .calendar-scope-top.is-expanded .calendar-scope-close { opacity:1; transform:scale(1); pointer-events:auto; }
-.calendar-scope-top > .brandbar-avatar { width:44px; height:44px; margin:0; overflow:hidden; border:1px solid color-mix(in srgb,var(--color-white) 68%,transparent); border-radius:50%; background:color-mix(in srgb,var(--color-surface) 28%,transparent); -webkit-backdrop-filter:blur(24px) saturate(170%); backdrop-filter:blur(24px) saturate(170%); box-shadow:inset 0 1px 1px rgba(255,255,255,.72),inset 0 -1px 2px rgba(0,0,0,.12),0 7px 20px rgba(0,0,0,.16); }
+.calendar-scope-top > .brandbar-avatar { width:44px; height:44px; margin:0; overflow:hidden; border:1px solid color-mix(in srgb,var(--color-white) 68%,transparent); border-radius:50%; background:var(--glass-control-bg); -webkit-backdrop-filter:var(--glass-control-filter); backdrop-filter:var(--glass-control-filter); box-shadow:var(--glass-control-shadow-raised); }
 .calendar-scope-top > .brandbar-avatar :is(img,span) { width:100%; height:100%; filter:saturate(1.06) contrast(1.02); }
 .calendar-scope-top > .brandbar-avatar::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; pointer-events:none; background:linear-gradient(145deg,rgba(255,255,255,.38),rgba(255,255,255,.04) 42%,rgba(0,0,0,.08)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); }
 .calendar-scope-current { justify-self:center; font-size:17px; }
@@ -14291,5 +14296,40 @@ a.clspeek-by:active { opacity: .6; }
   }
   .shpage-editor:not(.shpage-embedded) .sheditor-share-action {
     margin-top:2px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Unified interactive glass
+
+   Every floating control uses the same material as the You/Following switch.
+   Component-specific shapes, action colors, and selected states stay intact.
+   -------------------------------------------------------------------------- */
+@media (max-width:939px) {
+  .calendar-view-toggle,
+  .profile-seam-top :is(.evback,.ownermore,.ownergear,.calendar-pin-button,.profile-overflow-trigger),
+  .group-hero-back,
+  .group-overflow-trigger,
+  .calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close,
+  .calendar-share-sheet:has(.shpage-editor) .shtop-help,
+  .calendar-share-sheet:has(.shpage-editor) .shdesign-actions,
+  .calendar-share-sheet .shpage-embedded .sheditor-tool-icon,
+  :is(.screen.hasnav, .screen.hasnav > .pad, .pub.hasnav .profwrap) > .navwrap > .navbar,
+  :is(.screen.hasnav, .screen.hasnav > .pad, .pub.hasnav .profwrap) > .navwrap > .navshare {
+    background:var(--glass-control-bg);
+    -webkit-backdrop-filter:var(--glass-control-filter);
+    backdrop-filter:var(--glass-control-filter);
+    box-shadow:var(--glass-control-shadow-raised);
+  }
+
+  .calendar-view-toggle {
+    background:var(--glass-control-bg);
+  }
+
+  .calendar-add-pill,
+  .personal-calendar-sheet .calendar-bottom-actions .calendar-bottom-add {
+    -webkit-backdrop-filter:var(--glass-control-filter);
+    backdrop-filter:var(--glass-control-filter);
+    box-shadow:var(--glass-control-shadow-raised);
   }
 }
