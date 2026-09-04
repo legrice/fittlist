@@ -142,6 +142,7 @@ export function CalendarScreen({
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [profileQrOpen, setProfileQrOpen] = useState(false);
+  const [profileActionsOpen, setProfileActionsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
@@ -606,8 +607,7 @@ export function CalendarScreen({
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share profile</button>}
           </div></section>
           <section><h3>Profile</h3><div className="calendar-action-list">
-            <Link href={handle ? `/${handle}?edit=1` : "/settings?edit=1"}><span className="calendar-action-icon profile">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><strong>Edit profile</strong><small>Update your photo and profile details</small></span><Icon name="chevron_right" size={20} /></Link>
-            {handle && <Link href={`/${handle}`}><span className="calendar-action-icon"><Icon name="person" size={23} /></span><span><strong>View public profile</strong><small>See what other people see</small></span><Icon name="chevron_right" size={20} /></Link>}
+            <button type="button" onClick={() => setProfileActionsOpen(true)}><span className="calendar-action-icon profile">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><strong>{viewer.name}</strong><small>{handle ? `@${handle}` : "Personal profile"}</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
           {studioRelationships.length > 0 && <section><h3>Studios</h3><div className="calendar-action-list">
             {studioRelationships.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{studio.name}</strong><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
@@ -1023,6 +1023,7 @@ export function CalendarScreen({
       )}
       <Toast msg={toastMsg} on={toastOn} />
       {handle && <QrSheet handle={handle} open={profileQrOpen} onClose={() => setProfileQrOpen(false)} onToast={toast} />}
+      {profileActionsOpen && <BodyPortal><div className="sheet-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setProfileActionsOpen(false); }}><section className="sheet profile-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="profile-actions-title" onMouseDown={(event) => event.stopPropagation()}><button type="button" className="iconbtn sheetclose" aria-label="Close profile options" onClick={() => setProfileActionsOpen(false)}><Icon name="close" size={18} /></button><h2 id="profile-actions-title">Profile</h2><div className="calendar-action-list"><Link href={handle ? `/${handle}?edit=1` : "/settings?edit=1"} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="edit" size={23} /></span><span><strong>Edit profile</strong><small>Update your photo and profile details</small></span><Icon name="chevron_right" size={20} /></Link>{handle && <Link href={`/${handle}`} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="person" size={23} /></span><span><strong>View public profile</strong><small>See what other people see</small></span><Icon name="chevron_right" size={20} /></Link>}</div></section></div></BodyPortal>}
       {shareOpen && <ShareTakeover onClosed={() => setShareOpen(false)} />}
       {createGroupOpen && <CreateGroupSheet onClose={() => setCreateGroupOpen(false)} />}
       {!sheet && discoverOpen && <SiteSearchSheet todayIso={todayIso} userId={viewer.id} onClose={() => setDiscoverOpen(false)} />}
