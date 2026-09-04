@@ -7105,7 +7105,11 @@ html[data-mode="dark"],
   .group-page,
   .group-page .profwrap,
   .group-page .group-main { background:var(--color-background); }
-  .group-page .group-main { margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); }
+  .group-page .group-main {
+    width:calc(100% + (2 * var(--page-gutter)));
+    margin-right:calc(-1 * var(--page-gutter));
+    margin-left:calc(-1 * var(--page-gutter));
+  }
   .group-hero {
     position:relative; isolation:isolate;
     padding:0 var(--page-gutter) 24px; border:0;
@@ -13365,6 +13369,9 @@ a.clspeek-by:active { opacity: .6; }
     margin-left:calc(-1 * var(--page-gutter));
     padding:24px var(--page-gutter) 32px;
     background:var(--color-background);
+  }
+  .group-main > .group-schedule-section {
+    margin-inline:0;
   }
   .profile-calendar-list .dayrows { gap:12px; }
   .profile-calendar-list .clline {
