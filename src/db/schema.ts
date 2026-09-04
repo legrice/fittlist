@@ -1020,6 +1020,41 @@ export const attendances = pgTable(
   ],
 );
 
+// Lightweight conversation around one person's public calendar activity. The
+// person, occurrence, and activity kind form the durable identity, so the
+// conversation disappears naturally when its class or account is removed.
+export const calendarActivityLikes = pgTable(
+  "calendar_activity_likes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorUserId: uuid("actor_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    classId: uuid("class_id").notNull().references(() => classes.id, { onDelete: "cascade" }),
+    occurrenceDate: date("occurrence_date", { mode: "string" }).notNull(),
+    activityKind: text("activity_kind").notNull(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("calendar_activity_likes_unique").on(t.actorUserId,t.classId,t.occurrenceDate,t.activityKind,t.userId),
+    index("calendar_activity_likes_activity").on(t.actorUserId,t.classId,t.occurrenceDate,t.activityKind),
+  ],
+);
+
+export const calendarActivityComments = pgTable(
+  "calendar_activity_comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorUserId: uuid("actor_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    classId: uuid("class_id").notNull().references(() => classes.id, { onDelete: "cascade" }),
+    occurrenceDate: date("occurrence_date", { mode: "string" }).notNull(),
+    activityKind: text("activity_kind").notNull(),
+    authorUserId: uuid("author_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("calendar_activity_comments_activity").on(t.actorUserId,t.classId,t.occurrenceDate,t.activityKind,t.createdAt)],
+);
+
 // A coach's activity feed. Today it's just "someone followed you"; the type +
 // jsonb data shape leaves room for more kinds later without new columns.
 export const notifications = pgTable(

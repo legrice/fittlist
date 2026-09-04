@@ -191,7 +191,7 @@ export async function buildDiscoverFeed(
     lat: schema.studios.lat,
     lng: schema.studios.lng,
   };
-  const [everyoneRows, followedUserRows, mineMarkRows, activityRows, studioDirectoryRows] = await Promise.all([
+  const [everyoneRows, followedUserRows, mineMarkRows, activityRows, studioDirectoryRows, followedAttendanceRows] = await Promise.all([
     db
       .select(userListColumns)
       .from(schema.users)
@@ -228,6 +228,40 @@ export async function buildDiscoverFeed(
     options.calendarOnly
       ? Promise.resolve([])
       : db.select(studioListColumns).from(schema.studios).orderBy(schema.studios.name),
+    followed.length
+      ? db.select({
+          actorId:schema.users.id,
+          actorName:schema.users.name,
+          actorPhoto:sql<string|null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+          actorColor:schema.users.avatarColor,
+          classId:schema.classes.id,
+          className:schema.classes.name,
+          occurrenceDate:schema.attendances.occurrenceDate,
+          startTime:schema.classes.startTime,
+          timeZone:schema.classes.timeZone,
+          durationMin:schema.classes.durationMin,
+          description:schema.classes.description,
+          classType:schema.classes.classType,
+          links:schema.classes.links,
+          location:schema.classes.location,
+          studioId:schema.studios.id,
+          studioSlug:schema.studios.slug,
+          studioName:schema.studios.name,
+          studioAddress:schema.studios.address,
+          lat:schema.studios.lat,
+          lng:schema.studios.lng,
+        }).from(schema.attendances)
+          .innerJoin(schema.users,eq(schema.users.id,schema.attendances.userId))
+          .innerJoin(schema.classes,eq(schema.classes.id,schema.attendances.classId))
+          .leftJoin(schema.studios,eq(schema.studios.id,schema.classes.studioId))
+          .where(and(
+            inArray(schema.attendances.userId,followed),
+            eq(schema.attendances.isPublic,true),
+            eq(schema.classes.isPublic,true),
+            gte(schema.attendances.occurrenceDate,from),
+            lte(schema.attendances.occurrenceDate,through),
+          ))
+      : Promise.resolve([]),
   ]);
   const followedUsers = options.calendarOnly
     ? everyoneRows.filter((user) => followedSet.has(user.id))
@@ -346,8 +380,43 @@ export async function buildDiscoverFeed(
         lng: st?.lng ?? null,
         saved: mineMarks.has(`${c.id}|${iso}`),
         shift: c.shift && c.ownerUserId === userId,
+        ...(options.calendarOnly && followedSet.has(coach.id) ? {
+          activityActor:{ id:coach.id,name:coach.name.trim() || coach.email.split("@")[0],photo:coach.photoThumb ?? coach.photo,color:avatarColor(coach) },
+          activityKind:"coaching" as const,
+        } : {}),
       });
     }
+  }
+  for (const attendance of followedAttendanceRows) {
+    if (occurrenceEnded(attendance.occurrenceDate,attendance.startTime,attendance.durationMin,attendance.timeZone)) continue;
+    const t=clockParts(attendance.startTime);
+    const offset=Math.floor((Date.parse(`${attendance.occurrenceDate}T00:00:00Z`)-Date.parse(`${today}T00:00:00Z`))/864e5);
+    items.push({
+      key:`going:${attendance.actorId}:${attendance.classId}|${attendance.occurrenceDate}`,
+      week:Math.floor(offset/7),
+      iso:attendance.occurrenceDate,
+      classId:attendance.classId,
+      base:attendance.studioSlug ? `s/${attendance.studioSlug}` : "calendar/following",
+      coachId:attendance.actorId,
+      assignedCoachName:null,
+      name:attendance.className,
+      where:attendance.studioName ?? attendance.location,
+      whereHref:attendance.studioSlug ? `/s/${attendance.studioSlug}` : null,
+      hm:t.hm,
+      ap:t.ap,
+      durationMin:attendance.durationMin,
+      mins:timeToMinutes(attendance.startTime),
+      about:attendance.description,
+      classType:attendance.classType,
+      links:attendance.links,
+      studioAddress:attendance.studioAddress,
+      lat:attendance.lat,
+      lng:attendance.lng,
+      saved:mineMarks.has(`${attendance.classId}|${attendance.occurrenceDate}`),
+      shift:false,
+      activityActor:{ id:attendance.actorId,name:attendance.actorName,photo:attendance.actorPhoto,color:attendance.actorColor ?? avatarColor({id:attendance.actorId}) },
+      activityKind:"going",
+    });
   }
   // One class, one row, however many accounts list it. A studio's listing
   // and the coach's own, or two coaches co-listing a slot, are the same
@@ -360,7 +429,7 @@ export async function buildDiscoverFeed(
     const seen = new Map<string, number>();
     let w = 0;
     for (const i of items) {
-      const key = `${i.iso}|${i.name.trim().toLowerCase()}|${i.mins}|${(i.where ?? "").toLowerCase()}`;
+      const key = `${i.activityKind ?? "class"}|${i.activityActor?.id ?? ""}|${i.iso}|${i.name.trim().toLowerCase()}|${i.mins}|${(i.where ?? "").toLowerCase()}`;
       const prior = seen.get(key);
       if (prior !== undefined) {
         // The studio and coach can both contribute the same occurrence. Keep
@@ -372,6 +441,50 @@ export async function buildDiscoverFeed(
       items[w++] = i;
     }
     items.length = w;
+  }
+
+  const socialItems=items.filter((item) => item.activityActor && item.activityKind);
+  if (socialItems.length) {
+    const actorIds=[...new Set(socialItems.map((item) => item.activityActor!.id))];
+    const classIds=[...new Set(socialItems.map((item) => item.classId))];
+    const [likeRows,commentRows]=await Promise.all([
+      db.select().from(schema.calendarActivityLikes).where(and(
+        inArray(schema.calendarActivityLikes.actorUserId,actorIds),
+        inArray(schema.calendarActivityLikes.classId,classIds),
+        gte(schema.calendarActivityLikes.occurrenceDate,from),
+        lte(schema.calendarActivityLikes.occurrenceDate,through),
+      )),
+      db.select({
+        id:schema.calendarActivityComments.id,
+        actorUserId:schema.calendarActivityComments.actorUserId,
+        classId:schema.calendarActivityComments.classId,
+        occurrenceDate:schema.calendarActivityComments.occurrenceDate,
+        activityKind:schema.calendarActivityComments.activityKind,
+        body:schema.calendarActivityComments.body,
+        createdAt:schema.calendarActivityComments.createdAt,
+        authorId:schema.users.id,
+        authorName:schema.users.name,
+        authorPhoto:sql<string|null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
+        authorColor:schema.users.avatarColor,
+      }).from(schema.calendarActivityComments)
+        .innerJoin(schema.users,eq(schema.users.id,schema.calendarActivityComments.authorUserId))
+        .where(and(
+          inArray(schema.calendarActivityComments.actorUserId,actorIds),
+          inArray(schema.calendarActivityComments.classId,classIds),
+          gte(schema.calendarActivityComments.occurrenceDate,from),
+          lte(schema.calendarActivityComments.occurrenceDate,through),
+        )),
+    ]);
+    const identity=(actorId:string,classId:string,iso:string,kind:string) => `${actorId}|${classId}|${iso}|${kind}`;
+    for (const item of socialItems) {
+      const id=identity(item.activityActor!.id,item.classId,item.iso,item.activityKind!);
+      const likes=likeRows.filter((row) => identity(row.actorUserId,row.classId,row.occurrenceDate,row.activityKind)===id);
+      item.likes={ count:likes.length,mine:likes.some((row) => row.userId===userId) };
+      item.comments=commentRows.filter((row) => identity(row.actorUserId,row.classId,row.occurrenceDate,row.activityKind)===id).map((row) => ({
+        id:row.id,body:row.body,createdAt:row.createdAt.toISOString(),
+        author:{ id:row.authorId,name:row.authorName,photo:row.authorPhoto,color:row.authorColor ?? avatarColor({id:row.authorId}) },
+      }));
+    }
   }
 
   // Soonest first. The rail was alphabetical, which is an order about the

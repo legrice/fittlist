@@ -65,7 +65,6 @@ export async function discoverPeople(distanceMiles?: number): Promise<DiscoverDa
       createdAt:schema.users.createdAt,
     }).from(schema.users).where(and(
       eq(schema.users.discoverable,true),
-      eq(schema.users.kind,"coach"),
       isNotNull(schema.users.handle),
       bounds ? and(
         gte(schema.users.locationLat,bounds.minLat),
