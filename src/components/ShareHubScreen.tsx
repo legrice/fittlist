@@ -51,9 +51,9 @@ const loadAdderModule = () => import("@/components/Adder");
 const Adder = dynamic(() => loadAdderModule().then((module) => module.Adder));
 type PersonalDetail = NonNullable<Awaited<ReturnType<typeof personalDetail>>>;
 
-// The Share tab is one focused image studio. The schedule poster is the thing
-// people actually send, so profile cards, QR codes and plain text no longer
-// compete with the editing workflow or render behind it.
+// The Share tab is one focused image studio. The poster remains the main
+// canvas, with a plain-text share beside export for places where an image is
+// less useful than a schedule somebody can read, copy, or search.
 type EditorSnapshot = {
   design: ShareDesign;
   headline: string;
@@ -1021,6 +1021,17 @@ export function ShareHubScreen({
       items:dayItems,
     }));
   }, [effHide, inRange]);
+  const semanticScheduleText = useMemo(() => {
+    const lines = [coach ? "My coaching schedule" : "My schedule", ""];
+    for (const day of previewDays) {
+      lines.push(day.day);
+      for (const item of day.items) {
+        lines.push(`  ${item.time}  ${item.name}${item.where ? ` · ${item.where}` : ""}`);
+      }
+      lines.push("");
+    }
+    return lines.join("\n").trimEnd();
+  }, [coach, previewDays]);
   const liveLayout = useMemo(
     () => buildShareStoryLayout({
       days:previewDays,
@@ -1257,11 +1268,29 @@ export function ShareHubScreen({
         disabled={sharing || backgroundBusy}
         onClick={() => void shareImage()}
       >
-        Share
+        Share image
       </button>
       <span className="sr-only" role="status" aria-live="polite">{shareStatus}</span>
     </>
   );
+
+  const shareText = async () => {
+    const text = `${semanticScheduleText}\n\n${window.location.origin}/${handle}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title:"My FittList schedule", text });
+        return;
+      } catch (error) {
+        if ((error as Error)?.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("Schedule copied, ready to paste");
+    } catch {
+      toast("Couldn't share the schedule as text");
+    }
+  };
 
   const saveNamedLook = async () => {
     if (designSaving || backgroundBusy || !lookName.trim()) return;
@@ -1498,7 +1527,7 @@ export function ShareHubScreen({
                 }}
               />
 
-              <div className="sheditor-share-action">{imageShareAction()}</div>
+              <div className="sheditor-share-action">{imageShareAction()}<button type="button" className="shheader-share sheditor-share-text" onClick={() => void shareText()}>Share as text</button></div>
             </div>
           </div>
           {building && (

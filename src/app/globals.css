@@ -14280,8 +14280,16 @@ a.clspeek-by:active { opacity: .6; }
   width:100%; min-height:44px; margin-top:20px; border-radius:var(--radius-pill);
   background:var(--si); color:var(--color-black); font:inherit; font-size:14px; font-weight:700;
 }
-.sheditor-share-action { margin-top:10px; }
+.sheditor-share-action { margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .sheditor-share-action .shheader-share { width:100%; }
+.sheditor-share-action .sheditor-share-text {
+  border:1px solid color-mix(in srgb,var(--color-white) 44%,transparent);
+  background:var(--glass-control-bg);
+  color:var(--color-black);
+  box-shadow:var(--glass-control-shadow);
+  -webkit-backdrop-filter:var(--glass-control-filter);
+  backdrop-filter:var(--glass-control-filter);
+}
 @media (max-width:939px) {
   /* The mobile share studio is one immersive workspace. The green surround
      separates the editable artwork from the white, floating control dock and
