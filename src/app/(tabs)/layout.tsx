@@ -21,10 +21,10 @@ import { managedCalendarsForUser } from "@/lib/managed-calendars";
 
 export const dynamic = "force-dynamic";
 
-// Safari tints its browser chrome from theme-color. The tabbed app ends in a
-// white navigation surface, so matching that color removes the beige seam
-// between the site bar and Safari's own bottom controls.
-export const viewport: Viewport = { themeColor: "#ffffff" };
+// Safari exposes one theme colour for its chrome rather than separate top and
+// bottom values. Use the app's green for the status area; the document root
+// remains light gray so the lower toolbar/overscroll can sample that surface.
+export const viewport: Viewport = { themeColor: "#1F5B3A" };
 
 type DeferredViewer = {
   id: string;

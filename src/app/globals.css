@@ -11182,10 +11182,13 @@ html[data-mode="dark"],
 .calendar-scope-hero .personal-summary-actions > :is(a,button) { background:var(--color-surface); color:var(--color-text-primary); }
 .calendar-scope-hero .personal-summary-actions > button:last-child { background:var(--color-lime); color:var(--color-black); }
 @media (max-width:939px) {
-  html:has(.calendar-scope-hero),
-  body:has(.calendar-scope-hero),
   .screen.hasnav:has(.calendar-scope-hero),
   .screen.hasnav:has(.calendar-scope-hero) > .pad { background:var(--color-shift); }
+  /* Keep the root canvas light even while Calendar itself is green. Safari
+     has only one theme-color, but this gives its translucent lower toolbar
+     and bottom overscroll a light-gray surface to sample. */
+  html:has(.calendar-scope-hero),
+  body:has(.calendar-scope-hero) { background:var(--color-background); }
   html:has(.calendar-scope-hero),
   body:has(.calendar-scope-hero) { overscroll-behavior-y:none; }
   .calendar-scope-top { margin:-8px calc(-1 * var(--page-gutter)) 0; padding:12px var(--page-gutter) 8px; }
