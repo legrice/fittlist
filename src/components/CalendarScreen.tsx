@@ -42,6 +42,7 @@ const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) =
 const DiscoverSheet = dynamic(() => import("@/components/DiscoverSheet").then((module) => module.DiscoverSheet));
 const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => module.QrSheet));
 const ShareTakeover = dynamic(() => import("@/components/ShareTakeover").then((module) => module.ShareTakeover));
+const CreateGroupSheet = dynamic(() => import("@/components/SavedScreen").then((module) => module.CreateGroupSheet));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -140,6 +141,7 @@ export function CalendarScreen({
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [profileQrOpen, setProfileQrOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
@@ -601,7 +603,7 @@ export function CalendarScreen({
           {managedCalendars.some((calendar) => calendar.kind === "studio") && <section><h3>Places you manage</h3><div className="calendar-action-list">
             {managedCalendars.filter((calendar) => calendar.kind === "studio").map((calendar) => <Link key={`${calendar.kind}:${calendar.id}`} href={`/s/${calendar.slug}/manage`}><span className="calendar-action-icon studio">{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><strong>{calendar.name}</strong><small>Manage calendar, coaches, and open shifts</small></span><Icon name="chevron_right" size={20} /></Link>)}
           </div></section>}
-          <section><div className="calendar-action-section-head"><h3>Your groups</h3><Link href="/saved"><Icon name="add" size={17} />New group</Link></div><div className="calendar-action-list">
+          <section><div className="calendar-action-section-head"><h3>Your groups</h3><button type="button" onClick={() => setCreateGroupOpen(true)}><Icon name="add" size={17} />New group</button></div><div className="calendar-action-list">
             {groupCalendars.map((group) => <Link key={group.id} href={`/g/${group.slug}`}><span className="calendar-action-icon group">{group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={23} />}</span><span><strong>{group.name}</strong><small>{group.role === "owner" || group.role === "admin" ? "You manage this group" : "Group member"}</small></span><Icon name="chevron_right" size={20} /></Link>)}
             {groupCalendars.length === 0 && <Link href="/saved"><span className="calendar-action-icon group"><Icon name="groups" size={23} /></span><span><strong>Create or join a group</strong><small>Plan classes and events together</small></span><Icon name="chevron_right" size={20} /></Link>}
           </div></section>
@@ -1013,6 +1015,7 @@ export function CalendarScreen({
       <Toast msg={toastMsg} on={toastOn} />
       {handle && <QrSheet handle={handle} open={profileQrOpen} onClose={() => setProfileQrOpen(false)} onToast={toast} />}
       {shareOpen && <ShareTakeover onClosed={() => setShareOpen(false)} />}
+      {createGroupOpen && <CreateGroupSheet onClose={() => setCreateGroupOpen(false)} />}
       {!sheet && discoverOpen && <DiscoverSheet full onClose={() => setDiscoverOpen(false)} />}
     </>
   );
