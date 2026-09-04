@@ -435,7 +435,8 @@ export function CalendarScreen({
     let coaching=0;
     let attending=0;
     let personal=0;
-    const studios=new Set<string>();
+    const coachingPlaces=new Set<string>();
+    const attendingPlaces=new Set<string>();
     for (let offset=0; offset<7; offset+=1) {
       const date=new Date(start+offset*864e5);
       const iso=date.toISOString().slice(0,10);
@@ -443,27 +444,30 @@ export function CalendarScreen({
       coaching+=rows.length;
       rows.forEach((item) => {
         const place=item.studioId ? studioById.get(item.studioId)?.name : item.location;
-        if (place) studios.add(place);
+        if (place) coachingPlaces.add(place);
       });
       (savedByIso.get(iso) ?? []).forEach((item) => {
         if (item.personal) personal+=1;
         else {
           attending+=1;
-          if (item.where) studios.add(item.where);
+          if (item.where) attendingPlaces.add(item.where);
         }
       });
     }
     const classWord=(count:number) => count === 1 ? "class" : "classes";
-    const studioPhrase=studios.size ? ` at ${studios.size} ${studios.size === 1 ? "studio" : "studios"}` : "";
-    const attendingPhrase=attending ? ` and attending ${attending} ${classWord(attending)}` : "";
+    const activitySummary=coaching && attending
+      ? `You are coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
+      : coaching
+        ? `You are coaching ${coaching} ${classWord(coaching)} this week.`
+        : attending
+          ? `You are attending ${attending} ${classWord(attending)} this week.`
+          : "You have nothing scheduled this week.";
     const totalScheduled=coaching+attending+personal;
-    const roastContext=totalScheduled
-      ? `You have ${totalScheduled} ${classWord(totalScheduled)} at ${studios.size} ${studios.size === 1 ? "studio" : "studios"} this week.`
-      : "You have 0 classes at 0 studios this week.";
+    const roastContext=activitySummary;
     const variant=(options:string[]) => options[summaryVariant%options.length];
-    let title=`You are coaching ${coaching} ${classWord(coaching)} at ${studios.size} ${studios.size === 1 ? "studio" : "studios"} this week.`;
+    let title=activitySummary;
     if (summaryVoice === "friendly")
-      title=coaching ? variant([`Nice week ahead: ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attending ? `, plus ${attending} to attend` : ""}.`,`You’ve got this. ${coaching} ${classWord(coaching)} to coach this week${studioPhrase}.`,`A good week is taking shape: ${coaching} coaching${attending ? ` and ${attending} attending` : ""}.`,`Your week looks strong: ${coaching} ${classWord(coaching)} to coach${studioPhrase}.`,`Ready when you are. ${coaching} ${classWord(coaching)} are waiting for you this week.`]) : attending ? `You’ve got ${attending} ${classWord(attending)} to look forward to this week.` : personal ? `You’ve made time for ${personal} personal ${classWord(personal)} this week.` : "A wide-open week. What sounds good?";
+      title=coaching && attending ? variant([`${activitySummary} Look at you doing both.`,`${activitySummary} A nicely balanced week.`,`${activitySummary} Your week is looking good.`]) : coaching ? variant([`${activitySummary} You’ve got this.`,`${activitySummary} Your week is looking good.`,`${activitySummary} Ready when you are.`]) : attending ? variant([`${activitySummary} Something to look forward to.`,`${activitySummary} A good week is taking shape.`]) : personal ? `You’ve made time for ${personal} personal ${classWord(personal)} this week.` : "You have nothing scheduled this week. A wide-open week. What sounds good?";
     else if (summaryVoice === "sassy") {
       if (totalScheduled === 0)
         title=variant([`${roastContext} What the fuck are you doing here? That is less a schedule and more a blank document with ambition.`,`${roastContext} Your calendar is so empty it has started echoing. Add a class before somebody mistakes this for a minimalist art project.`,`${roastContext} Not one class. Not one plan. Just you opening a fitness calendar to admire all the available whitespace.`,`${roastContext} The audacity of checking it anyway is honestly the most exercise happening here.`,`${roastContext} Your schedule has achieved perfect stillness, which would be impressive if this were a meditation app and not a place for actual classes.`]);
@@ -495,13 +499,13 @@ export function CalendarScreen({
         title=variant([`${roastContext} Holy fucking shit, the calendar has achieved sentience and immediately spent it all on decorative gravy.`,`${roastContext} Everything is absolutely batshit. A forklift-certified possum is running payroll from inside a watermelon.`,`${roastContext} Jesus tap-dancing Christ, Thursday has twelve elbows and keeps whispering about the forbidden coupon.`,`${roastContext} The week needs a fire marshal, a structural engineer, and somebody willing to explain taxes to a haunted pelican.`,`${roastContext} This schedule kicked down the door, ate a protein bar sideways, and challenged the concept of furniture to a duel.`]);
     }
     else if (summaryVoice === "shakespearean")
-      title=coaching ? variant([`Dost thou coach ${coaching} ${classWord(coaching)}${studioPhrase}${attending ? ` and attend ${attending}` : ""} this week? Verily.`,`Hark! ${coaching} ${classWord(coaching)} await thy noble instruction${studioPhrase}${attendingPhrase}.`,`Lo, thy week bears ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attendingPhrase}.`,`By my troth, ${coaching} ${classWord(coaching)} summon thee this week${studioPhrase}${attendingPhrase}.`,`Attend, good coach! ${coaching} ${classWord(coaching)} stand upon thy calendar${studioPhrase}${attendingPhrase}.`]) : attending ? `Hark! ${attending} ${classWord(attending)} await thee this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thy week lies open before thee.";
+      title=coaching && attending ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to coach and ${attending} to attend.`,`By my troth, thou coachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to coach.`,`By my troth, thou coachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thou hast nothing scheduled this week.";
     const details=[
-      coaching ? `${coaching} coaching` : "",
-      attending ? `${attending} attending` : "",
-      personal ? `${personal} personal` : "",
-    ].filter(Boolean).join(" · ");
-    return { title, detail:details || "Nothing scheduled in the next 7 days." };
+      coaching ? `Coaching: ${coaching} ${classWord(coaching)} at ${coachingPlaces.size} ${coachingPlaces.size === 1 ? "place" : "places"}` : "",
+      attending ? `Attending: ${attending} ${classWord(attending)} at ${attendingPlaces.size} ${attendingPlaces.size === 1 ? "place" : "places"}` : "",
+      personal ? `Personal: ${personal} ${classWord(personal)}` : "",
+    ].filter(Boolean);
+    return { title, details };
   },[classes,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
 
   /** Every date from today that holds something, with its rows in time order.
@@ -717,7 +721,7 @@ export function CalendarScreen({
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button><button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
+        <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>{classSheetDismissed && calendarWeekSummary.details.length > 0 && <div className="calendar-summary-details" aria-label="Weekly breakdown">{calendarWeekSummary.details.map((detail) => <span key={detail}>{detail}</span>)}</div>}<button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
       {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} style={{ transform:`translateY(${classSheetPullY}px)` }} onTouchStart={startClassSheetPull} onTouchMove={moveClassSheetPull} onTouchEnd={endClassSheetPull} onTouchCancel={endClassSheetPull} aria-label="Calendar actions">
         <div className="calendar-action-hub">
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>
