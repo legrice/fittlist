@@ -7072,6 +7072,7 @@ html[data-mode="dark"],
 .group-section > h2 { margin:0 0 16px; font-size:25px; }
 .group-section-head { margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .group-section-head h2 { margin:0; font-size:25px; }
+.group-section-actions { justify-content:flex-end; }
 .group-empty-add { min-width:108px; height:44px; padding:0 18px; display:inline-flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-lime); color:var(--color-black); font:inherit; font-size:15px; font-weight:700; box-shadow:none; white-space:nowrap; }
 .group-schedule-empty { padding:28px 20px; text-align:left; }
 .group-settings-sheet > h2 { margin:0 48px 7px 0; font-size:28px; }
@@ -13102,7 +13103,7 @@ a.clspeek-by:active { opacity: .6; }
 
 @media (max-width:939px) {
   .profile-anchor-section:has(.profile-calendar-list),
-  .group-schedule-section {
+  .group-main > .group-schedule-section {
     margin-right:calc(-1 * var(--page-gutter));
     margin-left:calc(-1 * var(--page-gutter));
     padding:24px var(--page-gutter) 32px;
