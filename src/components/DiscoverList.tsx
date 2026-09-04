@@ -107,7 +107,7 @@ function StudioGrid({studios}:{studios:DirStudio[]}){
   return <div className="discover-studio-grid">{studios.map((studio,index)=><div className="discover-studio-row" key={studio.id}>
     <Link className="discover-studio-main" href={`/s/${studio.slug}?from=discover-studios`}>
       <span className="discover-studio-media">{studio.photo?<img src={studio.photo} alt="" loading={index<4?"eager":"lazy"} decoding="async"/>:<span className="discover-studio-placeholder" style={{background:studio.color}}>{studio.name.trim().charAt(0).toUpperCase()}</span>}</span>
-      <span className="discover-studio-copy"><strong>{studio.name}</strong><small>{[studio.types.slice(0,2).join(" · ")||"Fitness space",studio.address].filter(Boolean).join(" · ")}</small></span>
+      <span className="discover-studio-copy"><strong>{studio.name}</strong><small>{studio.types.slice(0,2).join(" · ")||"Fitness space"}</small></span>
     </Link>
     <FavoritePlaceButton studio={studio}/>
   </div>)}</div>
