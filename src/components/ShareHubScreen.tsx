@@ -64,12 +64,13 @@ type EditorSnapshot = {
   featuredKey: string | null;
 };
 
-type ShareVoice = "straightforward" | "friendly" | "sassy" | "unfiltered" | "shakespearean";
+type ShareVoice = "straightforward" | "friendly" | "sassy" | "explicit" | "unfiltered" | "shakespearean";
 type SharePerspective = "first" | "third";
 const SHARE_VOICES: { value:ShareVoice; label:string; emoji:string }[] = [
   { value:"straightforward", label:"Straightforward", emoji:"😐" },
   { value:"friendly", label:"Friendly", emoji:"🙂" },
   { value:"sassy", label:"Roast me", emoji:"😏" },
+  { value:"explicit", label:"Explicit", emoji:"🤬" },
   { value:"unfiltered", label:"Unhinged", emoji:"🤫" },
   { value:"shakespearean", label:"Shakespearean", emoji:"🧐" },
 ];
@@ -1018,6 +1019,7 @@ export function ShareHubScreen({
     if (shareVoice === "sassy") return variant(thirdPerson
       ? [`${context} Wow, look at ${firstName} go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. ${firstName} really loves coaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally ${firstName} cast ${firstName} in every scene.`]
       : [`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I really love coaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
+    if (shareVoice === "explicit") return variant([`${context} Holy fucking shit, this schedule is stacked like a brick shithouse with a goddamn unlimited class pass.`,`${context} That is a fuckload of calendar for one person, and somehow every damn box is demanding a fresh pair of socks.`,`${context} Fuck me sideways, this week has more action than a group chat after somebody says “quick question.”`,`${context} This schedule is busy as fuck, loud as hell, and absolutely refusing to calm its shit down.`,`${context} Well, shit. The calendar is packed, the laundry is fucked, and apparently rest has left the goddamn building.`]);
     if (shareVoice === "unfiltered") return variant([`${context} Holy fucking shit, Wednesday just laid an egg and the egg is asking for your Wi-Fi password.`,`${context} The calendar is absolutely batshit and currently being audited by three lizards in a trench coat.`,`${context} Jesus tap-dancing Christ, the lasagna is screaming again and Thursday refuses to discuss it.`,`${context} A forklift-certified possum has seized control of the week and replaced every doorknob with soup.`,`${context} This schedule ate a protein bar sideways and challenged the concept of furniture to a duel.`]);
     if (shareVoice === "shakespearean") return variant(thirdPerson
       ? [`${context} Hark, ${firstName}'s noble week awaits.`,`${context} Doth ${firstName} e’er rest? Verily, the evidence says no.`,`${context} Lo, behold ${firstName}'s mighty calendar.`,`${context} By our troth, ${firstName}'s week is stacked.`,`${context} Attend, good friends, for ${firstName}'s schedule hath entered the chat.`]

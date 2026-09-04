@@ -72,7 +72,7 @@ const GlobalAdd = dynamic(() => import("@/components/GlobalAdd").then((module) =
 
 type View = "list" | "month";
 type CalendarFilter = "all" | "coaching" | "saved" | "personal";
-type SummaryVoice = "straightforward" | "friendly" | "sassy" | "unfiltered" | "shakespearean";
+type SummaryVoice = "straightforward" | "friendly" | "sassy" | "explicit" | "unfiltered" | "shakespearean";
 
 const SUMMARY_VOICE_KEY = "fl-calendar-summary-voice";
 const SUMMARY_VARIANT_KEY = "fl-calendar-summary-variant";
@@ -80,7 +80,8 @@ const SUMMARY_VOICES: { value:SummaryVoice; label:string; emoji:string }[] = [
   { value:"straightforward", label:"Straightforward", emoji:"😐" },
   { value:"friendly", label:"Friendly", emoji:"🙂" },
   { value:"sassy", label:"Roast me", emoji:"😏" },
-  { value:"unfiltered", label:"Unhinged", emoji:"🤪" },
+  { value:"explicit", label:"Explicit", emoji:"🤬" },
+  { value:"unfiltered", label:"Unhinged", emoji:"🤫" },
   { value:"shakespearean", label:"Shakespearean", emoji:"🧐" },
 ];
 
@@ -472,6 +473,16 @@ export function CalendarScreen({
         title=variant([`${roastContext} Wow, look at you go, fitness royalty. Bow down, everyone.`,`${roastContext} Slow down there, Rocky. Leave some classes for the rest of us.`,`${roastContext} Okay, we getttt it. You love coaching.`,`${roastContext} You know what they say: those who can’t do, teach, and apparently put the whole thing on their calendar.`,`${roastContext} As DJ Khaled said, another one?!`]);
       else
         title=variant([`${roastContext} Apparently you are the exhausted hero this city never asked for, personally holding the fitness industry together one aggressively scheduled class at a time.`,`${roastContext} Congratulations on becoming the main character, the supporting cast, and the overworked production assistant in the heroic saga of your own completely unhinged week.`,`${roastContext} Save some fitness for everyone else, legend. Your calendar looks like it was assembled by someone who believes rest days are malicious gossip.`,`${roastContext} This is not a schedule anymore; it is a public declaration that you intend to save the entire week through charisma, caffeine, and a deeply concerning refusal to sit down.`,`${roastContext} Behold the hero of the group chat, bravely taking on more classes than anyone requested and somehow preparing to mention every single one of them.`]);
+    }
+    else if (summaryVoice === "explicit") {
+      if (totalScheduled === 0)
+        title=variant([`${roastContext} There is fuck-all here. This calendar is empty as shit and somehow still wasting everybody’s goddamn time.`,`${roastContext} Not one fucking thing. You opened the calendar, stared into the void, and the void said “get your shit together.”`,`${roastContext} This blank-ass week has the audacity to call itself a schedule.`,`${roastContext} Absolutely nothing is happening. Even the goddamn tumbleweed called in bored.`,`${roastContext} The schedule is empty as hell. Add some shit or close the fucking tab.`]);
+      else if (totalScheduled < 3)
+        title=variant([`${roastContext} That’s the whole fucking schedule? One little commitment wearing a big-ass calendar like it pays rent.`,`${roastContext} A tiny-ass week, but sure, let’s give the damn thing its own dramatic reveal.`,`${roastContext} This is barely a fucking schedule. It is a suggestion with shoes on.`,`${roastContext} One or two things and already the calendar wants a goddamn press release.`,`${roastContext} Cute as shit. Blink once and the whole damn fitness era is over.`]);
+      else if (totalScheduled < 7)
+        title=variant([`${roastContext} Holy fucking shit, look at you stacking classes like the calendar owes you money.`,`${roastContext} Slow the fuck down, Rocky. Leave one goddamn class for everybody else.`,`${roastContext} Okay, we fucking get it. You love this shit.`,`${roastContext} This schedule is built like a damn brick shithouse and has the attitude to match.`,`${roastContext} Another fucking class? DJ Khaled would be exhausted by this shit.`]);
+      else
+        title=variant([`${roastContext} This calendar is busy as fuck, stacked to hell, and one class away from demanding its own goddamn assistant.`,`${roastContext} Holy fucking shit. Rest packed a bag, left the building, and blocked your number.`,`${roastContext} This is not a schedule. It is a full-blown fucking hostage situation with athletic shoes.`,`${roastContext} Every damn square is full. The calendar is screaming, the laundry is fucked, and somehow you added another class.`,`${roastContext} That is an absolutely obscene amount of shit to do in one fucking week.`]);
     }
     else if (summaryVoice === "unfiltered") {
       if (totalScheduled === 0)
