@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { BodyPortal } from "@/components/BodyPortal";
-import { FollowHint, followHintOff } from "@/components/FollowHint";
 import { useFollowSync } from "@/components/FollowSync";
 import { SignupPrompt } from "@/components/SignupPrompt";
 import { Toast, useToast } from "@/components/Toast";
@@ -34,7 +33,6 @@ export function NotifyCta({
   const setFollowing = (value: boolean) => sync ? sync[1]({ following: value }) : setLocalFollowing(value);
   const setRequested = (value: boolean) => sync ? sync[1]({ requested: value }) : setLocalRequested(value);
   const [signupOpen, setSignupOpen] = useState(false);
-  const [hint, setHint] = useState(false);
   const [pending, startTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const firstName = trainerName.trim().split(/\s+/)[0] || trainerName;
@@ -77,10 +75,7 @@ export function NotifyCta({
       if (result.requested) {
         setRequested(true);
         toast(`Follow request sent to ${firstName}`);
-      } else {
-        setFollowing(true);
-        if (!followHintOff()) setHint(true);
-      }
+      } else setFollowing(true);
       window.dispatchEvent(new Event("follows-changed"));
     });
   };
@@ -97,7 +92,6 @@ export function NotifyCta({
       </button>
 
       <BodyPortal>
-        <FollowHint name={firstName} handle={handle} on={hint} onClose={() => setHint(false)} />
         <Toast msg={toastMsg} on={toastOn} />
       </BodyPortal>
       <SignupPrompt

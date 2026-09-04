@@ -145,7 +145,6 @@ export function PersonRow({
         <RowFollow
           handle={c.handle}
           name={c.name}
-          isCoach={c.kind === "coach"}
           following={c.following}
           requested={c.requested}
           calendarLanguage={calendarLanguage}

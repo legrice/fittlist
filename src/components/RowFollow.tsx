@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
-import { FollowHint, followHintOff } from "@/components/FollowHint";
 import { Icon } from "@/components/Icon";
 
 // The directory row's Follow pill.
@@ -12,22 +11,15 @@ import { Icon } from "@/components/Icon";
 // and it is the same `.disfollow` the followers and blocked lists wear, so
 // there is one inline follow control rather than one per list.
 //
-// Following from a list is a real follow, so it does what the profile pill
-// does: a coach gets FollowHint, which is the only thing that says where
-// their classes just went. A member gets nothing, because the bar would be
-// promising a week they don't have.
 export function RowFollow({
   handle,
   name,
-  isCoach,
   following: initialFollowing,
   requested: initialRequested,
   calendarLanguage = false,
 }: {
   handle: string;
   name: string;
-  /** Following a member buys something quiet and mutual, so no hint. */
-  isCoach: boolean;
   following: boolean;
   requested: boolean;
   /** Use calendar-first language in discovery without changing relationship data. */
@@ -36,9 +28,7 @@ export function RowFollow({
   const router = useRouter();
   const [following, setFollowing] = useState(initialFollowing);
   const [requested, setRequested] = useState(initialRequested);
-  const [hint, setHint] = useState(false);
   const [pending, start] = useTransition();
-  const first = name.trim().split(/\s+/)[0] || name;
 
   const toggle = (e: React.MouseEvent) => {
     // The row underneath is a link to their page. Following is a thing you do
@@ -57,17 +47,13 @@ export function RowFollow({
         const res = await followTrainer(handle);
         if (!res.ok) return;
         if (res.requested) setRequested(true);
-        else {
-          setFollowing(true);
-          if (isCoach && !followHintOff()) setHint(true);
-        }
+        else setFollowing(true);
       }
       router.refresh();
     });
   };
 
   return (
-    <>
       <button
         type="button"
         className={`disfollow${following || requested ? " on" : ""}`}
@@ -91,7 +77,5 @@ export function RowFollow({
           ? <Icon name={following ? "bookmark_added" : requested ? "schedule" : "bookmark"} size={19} />
           : following ? "Following" : requested ? "Requested" : "Follow"}
       </button>
-      <FollowHint name={first} handle={handle} on={hint} onClose={() => setHint(false)} />
-    </>
   );
 }

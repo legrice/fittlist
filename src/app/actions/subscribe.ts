@@ -53,9 +53,8 @@ const EMAIL_FOLLOW_MAILBOX_LIMITS: AnonymousActionRateLimits = {
 
 // A follow changes what two screens hold, and neither of them is the one the
 // tap happened on. Without this the router serves the copy of Following it
-// already had, so the coach you just followed isn't on it: exactly the promise
-// FollowHint makes when it links you straight there. The pill's own state is
-// local, which is why the profile itself needs nothing.
+// already had, so the coach you just followed isn't on it. The pill's own
+// state is local, which is why the profile itself needs nothing.
 const followChanged = () => {
   revalidatePath("/feed");
   revalidatePath("/following");

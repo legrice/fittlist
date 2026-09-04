@@ -4232,37 +4232,6 @@ button.ps-card { cursor: pointer; }
   .followpill.pop { animation: none; }
 }
 
-/* What a follow actually did, said once. Above the tab bar, like a toast, but
-   it waits to be dismissed because it carries somewhere to go. */
-.folhint {
-  position: fixed; left: 50%; transform: translateX(-50%); z-index: 46;
-  bottom: calc(96px + env(safe-area-inset-bottom));
-  width: min(calc(100vw - 32px), 420px);
-  background: var(--ink); color: var(--paper);
-  border-radius: 18px; padding: 14px 16px;
-  box-shadow: none; border: 1px solid var(--line);
-  animation: folhintin .22s ease-out;
-}
-@keyframes folhintin { from { opacity: 0; transform: translate(-50%, 10px); } }
-/* Your plans already floats Share your plans above the tab bar, so the note
-   sits above that in turn. Two things in one spot means the top one wins and
-   the other is a shape behind it. */
-.folhint.weekadded { bottom: calc(152px + env(safe-area-inset-bottom)); }
-@media (min-width: 940px) {
-  .folhint.weekadded { bottom: calc(88px + env(safe-area-inset-bottom)); }
-}
-.folhint-t { margin: 0; font-size: 14.5px; line-height: 1.4; }
-.folhint-row { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
-.folhint-go {
-  border: none; background: none; cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 600; font-size: 14px; color: var(--paper); text-decoration: underline;
-  padding: 0;
-}
-.folhint-off {
-  margin-left: auto; border: none; background: none; cursor: pointer;
-  font-family: inherit; font-size: 13px; color: rgba(255, 255, 255, .62);
-}
 .followpill[disabled] { opacity: .55; pointer-events: none; }
 
 /* About / Contact / Schedule, as a scrolling rail of pills. Each one is a link
