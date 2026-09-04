@@ -14378,7 +14378,12 @@ a.clspeek-by:active { opacity: .6; }
     position:relative;
     z-index:1;
   }
-  .calendar-view-toggle button > .icon { width:24px; height:24px; }
+  .calendar-view-toggle button > .icon { width:29px; height:29px; }
+  .calendar-revealed-controls > .calendar-add-pill > .icon,
+  .calendar-bottom-actions > .calendar-bottom-add > .icon {
+    width:34px;
+    height:34px;
+  }
 
   /* The share studio uses the same restrained glass recipe as the main
      You/Following switch. Keep shape and disabled state component-specific,
