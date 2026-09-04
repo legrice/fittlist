@@ -11382,11 +11382,11 @@ html[data-mode="dark"],
 .calendar-following-head,
 .personal-upcoming-summary { align-items:center; flex-direction:column; text-align:center; }
 .calendar-scope-hero:not(:has(.calendar-reveal-panel)) .calendar-section-summary { min-height:0; justify-content:flex-start; gap:14px; }
-.calendar-summary-copy { max-width:100%; padding:0; display:grid; justify-items:center; gap:5px; border:0; background:transparent; color:inherit; font:inherit; text-align:center; cursor:pointer; }
+.calendar-summary-copy { width:100%; max-width:100%; padding:0; display:grid; justify-items:center; gap:5px; border:0; background:transparent; color:inherit; font:inherit; text-align:center; cursor:pointer; }
 .calendar-summary-copy:active { transform:scale(.985); }
 .calendar-summary-copy > span { color:var(--color-text-secondary); font-size:13px; line-height:1.2; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
 .calendar-summary-copy > strong { width:100%; max-width:none; color:var(--color-white); font-size:25px; line-height:1.08; font-weight:600; }
-.calendar-summary-copy.is-sassy > strong { font-style:italic; }
+.calendar-summary-copy > strong em { font-style:italic; }
 .calendar-summary-copy > small { max-width:34ch; color:color-mix(in srgb,var(--color-white) 76%,transparent); font-size:15px; line-height:1.35; }
 .calendar-following-head p { max-width:25ch; margin-inline:auto; font-size:25px; line-height:1.08; font-weight:600; }
 .calendar-transition-surface { transition:opacity 100ms ease,translate 100ms cubic-bezier(.4,0,1,1); }
