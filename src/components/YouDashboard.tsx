@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { updateProfilePhoto } from "@/app/actions/profile";
@@ -12,6 +13,8 @@ import { ClassOpener } from "@/components/ClassOpener";
 import { readPhotoPair } from "@/lib/photo";
 import { QrSheet } from "@/components/QrSheet";
 import { ProfileShare } from "@/components/ProfileShare";
+
+const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
 
 export type YouFavoritePerson = {
   id: string;
@@ -100,6 +103,7 @@ export function YouDashboard({
   const [photoPreview, setPhotoPreview] = useState(me.photo);
   const [photoPending, startPhoto] = useTransition();
   const [qrOpen, setQrOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
 
   const savePhoto = (file: File) => {
@@ -198,7 +202,7 @@ export function YouDashboard({
           icon="notifications"
           title="Notifications"
           detail={unread.notifications > 0 ? `${unread.notifications} unread` : "Follows, saves, and account activity"}
-          href="/notifications"
+          onClick={() => setNotificationsOpen(true)}
           count={unread.notifications}
         />
       </AccountGroup>
@@ -272,6 +276,7 @@ export function YouDashboard({
         </div>
       )}
       <Toast msg={toastMsg} on={toastOn} />
+      {notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
     </main>
   );
 }
@@ -294,7 +299,7 @@ function FollowingCountCircle({ href, count, singular, plural, photos, icon }: {
   </Link>;
 }
 
-function AccountRow({ icon, title, detail, href, count = 0, avatar, classTarget, calendarSheet = false }: { icon: string; title: string; detail?: string; href: string; count?: number; avatar?: { photo: string | null; name: string; color?: string }; classTarget?: { id: string; iso: string; base: string }; calendarSheet?:boolean }) {
+function AccountRow({ icon, title, detail, href, onClick, count = 0, avatar, classTarget, calendarSheet = false }: { icon: string; title: string; detail?: string; href?: string; onClick?: () => void; count?: number; avatar?: { photo: string | null; name: string; color?: string }; classTarget?: { id: string; iso: string; base: string }; calendarSheet?:boolean }) {
   const content = <>
       {avatar ? <span className="youaccount-icon youaccount-place-avatar" style={avatar.photo ? undefined : { background: avatar.color }}>{avatar.photo ? <img src={avatar.photo} alt="" /> : <span>{(avatar.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span> : <span className="youaccount-icon"><Icon name={icon} size={20} /></span>}
       <span className="youaccount-copy">
@@ -305,5 +310,6 @@ function AccountRow({ icon, title, detail, href, count = 0, avatar, classTarget,
       <Icon className="youaccount-chevron" name="chevron_right" size={19} />
     </>;
   if (calendarSheet) return <PersonalCalendarSheetTrigger className="youaccount-row" ariaLabel="Open personal calendar">{content}</PersonalCalendarSheetTrigger>;
-  return <Link className="youaccount-row" href={href} data-cid={classTarget?.id} data-d={classTarget?.iso} data-base={classTarget?.base}>{content}</Link>;
+  if (onClick) return <button type="button" className="youaccount-row" onClick={onClick}>{content}</button>;
+  return <Link className="youaccount-row" href={href ?? "/you"} data-cid={classTarget?.id} data-d={classTarget?.iso} data-base={classTarget?.base}>{content}</Link>;
 }

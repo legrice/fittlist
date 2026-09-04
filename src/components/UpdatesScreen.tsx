@@ -104,10 +104,11 @@ export function NotificationList({ notifications }: { notifications: Notif[] }) 
             )}
             <span className="notifrow-main">
               <span className="notifrow-top">
-                <span className="nm">{n.title}</span>
                 <span className="tm">{fmt(n.createdAt)}</span>
+                <span className="nm">{n.title}</span>
               </span>
               {n.body && <span className="notifrow-body">{n.body}</span>}
+              {n.type === "shift_request" && n.href && <span className="notifrow-action">Review request <Icon name="chevron_right" size={17} /></span>}
             </span>
             {!n.readAt && <span className="notifrow-dot" aria-hidden="true" />}
           </>

@@ -43,6 +43,7 @@ const ClassPeek = dynamic(() => import("@/components/ClassPeek").then((module) =
 const PlanSheet = dynamic(() => import("@/components/PlanSheet").then((module) => module.PlanSheet));
 const SiteSearchSheet = dynamic(() => import("@/components/SiteSearchSheet").then((module) => module.SiteSearchSheet));
 const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => module.QrSheet));
+const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
 const ShareTakeover = dynamic(() => import("@/components/ShareTakeover").then((module) => module.ShareTakeover));
 const CreateGroupSheet = dynamic(() => import("@/components/SavedScreen").then((module) => module.CreateGroupSheet));
 const SettingsDetailSheet = dynamic(() => import("@/components/SettingsDetailSheet").then((module) => module.SettingsDetailSheet));
@@ -158,6 +159,7 @@ export function CalendarScreen({
   const [discoverOpen, setDiscoverOpen] = useState(false);
   const [profileQrOpen, setProfileQrOpen] = useState(false);
   const [profileActionsOpen, setProfileActionsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
@@ -700,7 +702,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} style={{ "--sheet-pull-progress": Math.min(classSheetPullY / 120, 1), "--sheet-search-scale": 1 - (.12 * Math.min(classSheetPullY / 120, 1)) } as React.CSSProperties}>
-          <Link className="calendar-scope-search calendar-scope-notifications" href="/notifications" aria-label="Notifications"><Icon name="notifications" size={23} /></Link>
+          <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /></button>
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
@@ -723,7 +725,7 @@ export function CalendarScreen({
           </div></section>
           <section><h3>Updates</h3><div className="calendar-action-list">
             <Link href="/inbox"><span className="calendar-action-icon"><Icon name="chat_bubble" size={23} /></span><span><strong>Messages</strong><small>Conversations and class questions</small></span><Icon name="chevron_right" size={20} /></Link>
-            <Link href="/notifications"><span className="calendar-action-icon"><Icon name="notifications" size={23} /></span><span><strong>Notifications</strong><small>Follows, saves, and account activity</small></span><Icon name="chevron_right" size={20} /></Link>
+            <button type="button" onClick={() => setNotificationsOpen(true)}><span className="calendar-action-icon"><Icon name="notifications" size={23} /></span><span><strong>Notifications</strong><small>Follows, saves, and account activity</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
           <section><h3>Tools</h3><div className="calendar-action-list">
             <button type="button" onClick={openInsights}><span className="calendar-action-icon"><Icon name="activity" size={23} /></span><span><strong>Insights</strong><small>Your coaching, classes, and sharing</small></span><Icon name="chevron_right" size={20} /></button>
@@ -1136,6 +1138,7 @@ export function CalendarScreen({
       {handle && <QrSheet handle={handle} open={profileQrOpen} onClose={() => setProfileQrOpen(false)} onToast={toast} />}
       {profileActionsOpen && <BodyPortal><div className="sheet-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setProfileActionsOpen(false); }}><section className="sheet profile-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="profile-actions-title" onMouseDown={(event) => event.stopPropagation()}><button type="button" className="iconbtn sheetclose" aria-label="Close profile options" onClick={() => setProfileActionsOpen(false)}><Icon name="close" size={18} /></button><h2 id="profile-actions-title">Profile</h2><div className="calendar-action-list"><Link href={handle ? `/${handle}?edit=1` : "/settings?edit=1"} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="edit" size={23} /></span><span><strong>Edit profile</strong><small>Update your photo and profile details</small></span><Icon name="chevron_right" size={20} /></Link>{handle && <Link href={`/${handle}`} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="person" size={23} /></span><span><strong>View public profile</strong><small>See what other people see</small></span><Icon name="chevron_right" size={20} /></Link>}</div></section></div></BodyPortal>}
       {shareOpen && <ShareTakeover onClosed={() => setShareOpen(false)} />}
+      {notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       {createGroupOpen && <CreateGroupSheet onClose={() => setCreateGroupOpen(false)} />}
       {!sheet && discoverOpen && <SiteSearchSheet todayIso={todayIso} userId={viewer.id} onClose={() => setDiscoverOpen(false)} />}
       {calendarSyncOpen && <SettingsDetailSheet view="calendar" onClose={closeCalendarSync} />}

@@ -959,7 +959,7 @@ export function FollowingScreen({
   return (
     <>
       {calendarFollowing && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} style={{ "--sheet-pull-progress": Math.min(classSheetPullY / 120, 1), "--sheet-search-scale": 1 - (.12 * Math.min(classSheetPullY / 120, 1)) } as React.CSSProperties}>
-        <Link className="calendar-scope-search calendar-scope-notifications" href="/notifications" aria-label="Notifications"><Icon name="notifications" size={23} /></Link>
+        <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /></button>
         <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
         <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setFind(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show following actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
       </div>

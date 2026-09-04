@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { markUpdatesSeen } from "@/app/actions/notifications";
-import { AppChrome } from "@/components/AppChrome";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
@@ -42,7 +41,6 @@ export default async function NotificationsPage() {
         mode="notifications"
         notifications={notifications}
         markSeen={markUpdatesSeen}
-        header={<AppChrome userId={userId} bar />}
       />
     </section>
   );

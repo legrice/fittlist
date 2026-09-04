@@ -2383,8 +2383,8 @@ button.bl-band { cursor: pointer; }
 .social-notifications i { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-lime); border: 1px solid var(--shell); }
 .notifications-sheet-scrim { z-index: 90; align-items: flex-end; }
 .notifications-sheet {
-  width: 100%; height: min(82dvh, 760px); max-height: 82dvh; padding: 12px var(--page-gutter) calc(28px + env(safe-area-inset-bottom));
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; overflow-y: auto;
+  width: 100%; height: min(92dvh, 880px); max-height: 92dvh; padding: 12px var(--page-gutter) calc(28px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; overflow-y: auto; background:var(--color-background);
 }
 .notifications-sheet-grab {
   display: block; width: 42px; height: 5px; margin: 0 auto 12px;
@@ -6006,10 +6006,10 @@ select.editinput.placekind-select {
 /* ============================================================================
    Notifications feed (bell in the brandbar -> /notifications)
    ========================================================================== */
-.notiflist { display: flex; flex-direction: column; margin-top: 8px; }
+.notiflist { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
 .notifrow {
-  display: flex; align-items: center; gap: 12px; padding: 14px 2px; text-decoration: none;
-  color: var(--ink); border-bottom: 1px solid var(--line); -webkit-tap-highlight-color: transparent;
+  position:relative; display:flex; align-items:flex-start; gap:12px; padding:16px; text-decoration:none;
+  color:var(--ink); border:0; border-radius:var(--radius-card); background:var(--color-surface); -webkit-tap-highlight-color:transparent;
 }
 /* A face where we have one. Same size as the icon chip it replaces, so a feed
    with both in it still lines up. */
@@ -6025,13 +6025,14 @@ select.editinput.placekind-select {
   flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; background: var(--cl);
   border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--si);
 }
-.notifrow-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.notifrow-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.notifrow-top .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px; }
-.notifrow-top .tm { flex-shrink: 0; font-size: 12px; color: var(--ol); }
-.notifrow-body { font-size: 13px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notifrow-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.notifrow-top { display:flex; flex-direction:column; gap:3px; align-items:flex-start; }
+.notifrow-top .nm { font-family:'Delight','Helvetica Neue',Arial,sans-serif; font-weight:700; font-size:16px; line-height:1.22; }
+.notifrow-top .tm { order:-1; flex-shrink:0; font-size:12px; color:var(--ol); }
+.notifrow-body { font-size:14px; line-height:1.38; color:var(--ol); overflow:visible; white-space:normal; overflow-wrap:anywhere; }
 .notifrow.unread .notifrow-body { color: var(--ink); }
-.notifrow-dot { flex-shrink: 0; width: 9px; height: 9px; border-radius: 999px; background: var(--si); }
+.notifrow-action { width:max-content; margin-top:3px; padding:7px 10px; display:flex; align-items:center; gap:2px; border-radius:var(--radius-pill); background:var(--color-lime-soft); color:var(--color-olive); font-size:13px; font-weight:700; }
+.notifrow-dot { position:absolute; top:16px; right:16px; width:9px; height:9px; border-radius:999px; background:var(--si); }
 
 /* iOS-style switch (dark-mode row, and reusable) */
 .switch {
