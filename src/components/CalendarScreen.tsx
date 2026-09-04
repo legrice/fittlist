@@ -18,6 +18,7 @@ import type { PeekClass } from "@/components/ClassPeek";
 import { BodyPortal } from "@/components/BodyPortal";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
+import { Wordmark } from "@/components/Wordmark";
 import { AddWeekChoices } from "@/components/AddWeekChoices";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
@@ -34,6 +35,7 @@ import {
 } from "@/app/actions/calendar-data";
 import { invalidateClientMemory } from "@/lib/client-memory";
 import type { GroupCalendarDestination, ManagedCalendarDestination } from "@/lib/managed-calendars";
+import type { ProfileSettingsView } from "@/components/YouDashboard";
 
 const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
 const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
@@ -161,7 +163,7 @@ export function CalendarScreen({
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const [calendarSyncOpen, setCalendarSyncOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsView, setSettingsView] = useState<ProfileSettingsView | "away" | null>(null);
   const [summaryVoiceOpen, setSummaryVoiceOpen] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [monthlyInsights, setMonthlyInsights] = useState<MonthlyCalendarInsights | null>(null);
@@ -702,8 +704,13 @@ export function CalendarScreen({
             <button type="button" onClick={openInsights}><span className="calendar-action-icon"><Icon name="activity" size={23} /></span><span><strong>Insights</strong><small>Your coaching, classes, and sharing</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSummaryVoiceOpen(true)}><span className="calendar-action-icon"><Icon name="campaign" size={23} /></span><span><strong>Calendar voice</strong><small>{SUMMARY_VOICES.find((voice) => voice.value === summaryVoice)?.label}</small></span><Icon name="chevron_right" size={20} /></button>
-            <button type="button" onClick={() => setSettingsOpen(true)}><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
+          <section><h3>Settings</h3><div className="calendar-action-list">
+            {!member && <button type="button" onClick={() => setSettingsView("away")}><span className="calendar-action-icon"><Icon name="schedule" size={23} /></span><span><strong>Set yourself as away</strong><small>Add away dates, a profile note, and an automatic reply</small></span><Icon name="chevron_right" size={20} /></button>}
+            <button type="button" onClick={() => setSettingsView("reach")}><span className="calendar-action-icon"><Icon name="public_off" size={23} /></span><span><strong>Privacy &amp; communication</strong><small>Messages, visibility, and follower approvals</small></span><Icon name="chevron_right" size={20} /></button>
+            <button type="button" onClick={() => setSettingsView("account")}><span className="calendar-action-icon"><Icon name="lock" size={23} /></span><span><strong>Account &amp; preferences</strong><small>Login, notifications, and appearance</small></span><Icon name="chevron_right" size={20} /></button>
+          </div></section>
+          <footer className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the FittList community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer>
         </div>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
@@ -1108,7 +1115,7 @@ export function CalendarScreen({
       {createGroupOpen && <CreateGroupSheet onClose={() => setCreateGroupOpen(false)} />}
       {!sheet && discoverOpen && <SiteSearchSheet todayIso={todayIso} userId={viewer.id} onClose={() => setDiscoverOpen(false)} />}
       {calendarSyncOpen && <SettingsDetailSheet view="calendar" onClose={closeCalendarSync} />}
-      {settingsOpen && <SettingsDetailSheet view="home" onClose={() => setSettingsOpen(false)} />}
+      {settingsView && <SettingsDetailSheet view={settingsView} onClose={() => setSettingsView(null)} />}
       {insightsOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setInsightsOpen(false)}><section className="header-account-sheet calendar-insights-sheet" role="dialog" aria-modal="true" aria-label="Calendar insights" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Insights</h1><p>{monthlyInsights?.month ?? new Date(`${todayIso}T12:00:00.000Z`).toLocaleDateString("en-US",{ month:"long",year:"numeric",timeZone:"UTC" })}</p></div><button type="button" className="iconbtn acctclose" aria-label="Close insights" onClick={() => setInsightsOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-insights-grid"><article><strong>{localMonthlyInsights.coached}</strong><span>Classes coached</span></article><article><strong>{insightsLoading ? "–" : monthlyInsights?.attended ?? 0}</strong><span>Classes taken</span></article><article><strong>{insightsLoading ? "–" : monthlyInsights?.shareImages ?? 0}</strong><span>Images shared</span></article><article><strong>{localMonthlyInsights.studios}</strong><span>Studios coached at</span></article></div><div className="calendar-insights-note"><Icon name="activity" size={24} /><p>{localMonthlyInsights.coached > 0 ? `You’ve coached ${localMonthlyInsights.coached} ${localMonthlyInsights.coached === 1 ? "class" : "classes"} across ${localMonthlyInsights.studios || 1} ${localMonthlyInsights.studios === 1 ? "studio" : "studios"} this month.` : "Your monthly story will take shape as you add classes and share your week."}</p></div></section></div></BodyPortal>}
       {summaryVoiceOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setSummaryVoiceOpen(false)}><section className="header-account-sheet calendar-voice-sheet" role="dialog" aria-modal="true" aria-label="Calendar voice" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Calendar voice</h1><p>Choose how your calendar talks to you.</p></div><button type="button" className="iconbtn acctclose" aria-label="Close" onClick={() => setSummaryVoiceOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-voice-options">{SUMMARY_VOICES.map((voice) => <button type="button" className={summaryVoice === voice.value ? "selected" : ""} aria-pressed={summaryVoice === voice.value} key={voice.value} onClick={() => { setSummaryVoice(voice.value); localStorage.setItem(SUMMARY_VOICE_KEY,voice.value); }}><span><strong>{voice.label}</strong><small>{voice.description}</small></span><Icon name={summaryVoice === voice.value ? "check_circle" : "radio_button_unchecked"} size={23} /></button>)}</div></section></div></BodyPortal>}
     </>

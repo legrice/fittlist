@@ -11458,6 +11458,17 @@ html[data-mode="dark"],
 }
 .calendar-action-icon.profile-avatar > span { width:100%; height:100%; display:grid; place-items:center; color:var(--color-white); font-weight:700; }
 .calendar-action-icon img { width:100%; height:100%; object-fit:cover; }
+.calendar-community-footer {
+  margin:4px -24px -24px; padding:84px 24px calc(34px + env(safe-area-inset-bottom));
+  display:grid; justify-items:center; gap:14px; text-align:center;
+  background:linear-gradient(to bottom,transparent 0,var(--color-shift) 58px,var(--color-shift) 100%);
+  color:var(--color-white);
+}
+.calendar-community-footer .wordmark { margin-bottom:2px; font-size:27px; }
+.calendar-community-footer p { max-width:28ch; margin:0; color:color-mix(in srgb,var(--color-white) 82%,transparent); font-size:15px; line-height:1.35; }
+.calendar-community-footer nav { display:flex; align-items:center; justify-content:center; gap:18px; }
+.calendar-community-footer a { color:var(--color-white); font-size:14px; font-weight:700; text-decoration:none; }
+.calendar-community-footer small { color:color-mix(in srgb,var(--color-white) 58%,transparent); font-size:12px; }
 .profile-actions-sheet { background:var(--color-background); }
 .profile-actions-sheet > .calendar-action-list { margin-top:20px; }
 .calendar-following-actions .calendar-directory-list { overflow:visible; }
