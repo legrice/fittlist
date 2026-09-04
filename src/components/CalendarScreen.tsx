@@ -456,23 +456,8 @@ export function CalendarScreen({
     const roastContext=totalScheduled
       ? `You have ${totalScheduled} ${classWord(totalScheduled)} at ${studios.size} ${studios.size === 1 ? "studio" : "studios"} this week.`
       : "You have 0 classes at 0 studios this week.";
-    const plain=coaching && attending
-      ? `You’re coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
-      : coaching
-        ? `You’re coaching ${coaching} ${classWord(coaching)}${studioPhrase} this week.`
-        : attending
-          ? `You’re attending ${attending} ${classWord(attending)} this week.`
-          : personal
-            ? `You have ${personal} personal ${classWord(personal)} this week.`
-            : "Your week is open.";
     const variant=(options:string[]) => options[summaryVariant%options.length];
-    let title=variant([
-      plain,
-      coaching ? `${coaching} ${classWord(coaching)} to coach this week${studioPhrase}${attending ? `, with ${attending} more to attend` : ""}.` : plain,
-      coaching ? `This week: ${coaching} coaching${attending ? `, ${attending} attending` : ""}${studioPhrase}.` : plain,
-      coaching ? `You have ${coaching} ${classWord(coaching)} to coach this week${studioPhrase}.` : plain,
-      plain,
-    ]);
+    let title=`You are coaching ${coaching} ${classWord(coaching)} at ${studios.size} ${studios.size === 1 ? "studio" : "studios"} this week.`;
     if (summaryVoice === "friendly")
       title=coaching ? variant([`Nice week ahead: ${coaching} ${classWord(coaching)} to coach${studioPhrase}${attending ? `, plus ${attending} to attend` : ""}.`,`You’ve got this. ${coaching} ${classWord(coaching)} to coach this week${studioPhrase}.`,`A good week is taking shape: ${coaching} coaching${attending ? ` and ${attending} attending` : ""}.`,`Your week looks strong: ${coaching} ${classWord(coaching)} to coach${studioPhrase}.`,`Ready when you are. ${coaching} ${classWord(coaching)} are waiting for you this week.`]) : attending ? `You’ve got ${attending} ${classWord(attending)} to look forward to this week.` : personal ? `You’ve made time for ${personal} personal ${classWord(personal)} this week.` : "A wide-open week. What sounds good?";
     else if (summaryVoice === "sassy") {
