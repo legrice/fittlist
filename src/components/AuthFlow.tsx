@@ -221,7 +221,7 @@ export function AuthFlow({
   inviter = null,
   claimAs = "coach",
   fans = false,
-  landing = "/feed",
+  landing = "/calendar",
 }: {
   startStage: "email" | "claim";
   via?: string | null;

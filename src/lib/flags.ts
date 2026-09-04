@@ -30,8 +30,9 @@ export async function fansVisible(): Promise<boolean> {
   return !!(await currentAdmin());
 }
 
-// The canonical signed-in landing page. `/feed` is the Calendar tab; the
-// separate `/calendar` route is the viewer's calendar management page.
+// The canonical signed-in landing page. Calendar now opens on the unified
+// You/Following experience; `/feed` remains available as the legacy combined
+// calendar but is no longer where a completed sign-in should land.
 export async function landingHref(): Promise<string> {
-  return "/feed";
+  return "/calendar";
 }
