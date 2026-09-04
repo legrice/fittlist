@@ -1010,8 +1010,9 @@ export function ShareHubScreen({
     const activity=coach && (!twoHats || hat === "coaching") ? "coaching" : "going to";
     const firstName=name.trim().split(/\s+/)[0] || name;
     const thirdPerson=sharePerspective === "third";
-    const subject=thirdPerson ? firstName : "I";
-    const context=`${subject} ${thirdPerson ? "is" : "am"} ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
+    const context=thirdPerson
+      ? `${firstName} is ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`
+      : `I’m ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
     const variant=(lines:string[]) => lines[shareVoiceVariant%lines.length];
     if (shareVoice === "friendly") return `${context} Look at ${thirdPerson ? firstName : "me"} making the week count.`;
     if (shareVoice === "sassy") return variant(thirdPerson
@@ -1664,7 +1665,7 @@ export function ShareHubScreen({
             <h2 id="share-perspective-title">Perspective</h2>
             <p className="lead">Who should the sentence sound like it is about?</p>
             <div className="settingslist">
-              <button className="setrow" aria-pressed={sharePerspective === "first"} onClick={() => { setSharePerspective("first"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"first"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write as me</span><span className="s">“I am coaching...”</span></span>{sharePerspective === "first" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
+              <button className="setrow" aria-pressed={sharePerspective === "first"} onClick={() => { setSharePerspective("first"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"first"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write as me</span><span className="s">“I’m coaching...”</span></span>{sharePerspective === "first" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
               <button className="setrow" aria-pressed={sharePerspective === "third"} onClick={() => { setSharePerspective("third"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"third"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write about me</span><span className="s">“{name.trim().split(/\s+/)[0] || name} is coaching...”</span></span>{sharePerspective === "third" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
             </div>
           </div>
