@@ -648,7 +648,7 @@ export function CalendarScreen({
           </div></section>
           <section><h3>Tools</h3><div className="calendar-action-list">
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
-            <button type="button" onClick={() => setSummaryVoiceOpen(true)}><span className="calendar-action-icon"><Icon name="format_quote" size={23} /></span><span><strong>Calendar voice</strong><small>{SUMMARY_VOICES.find((voice) => voice.value === summaryVoice)?.label}</small></span><Icon name="chevron_right" size={20} /></button>
+            <button type="button" onClick={() => setSummaryVoiceOpen(true)}><span className="calendar-action-icon"><Icon name="campaign" size={23} /></span><span><strong>Calendar voice</strong><small>{SUMMARY_VOICES.find((voice) => voice.value === summaryVoice)?.label}</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSettingsOpen(true)}><span className="calendar-action-icon"><Icon name="settings" size={23} /></span><span><strong>Settings</strong><small>Your profile, availability, and preferences</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
         </div>
