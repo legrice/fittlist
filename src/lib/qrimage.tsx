@@ -21,10 +21,10 @@ const MARK_H = Math.round((MARK_W * 136) / 134);
 
 export async function brandedQr(
   target: string,
-  palette: "light" | "dark-green" = "light",
+  palette: "light" | "dark-green" | "slate" = "light",
 ): Promise<ImageResponse> {
-  const darkGreen = palette === "dark-green";
-  const background = darkGreen ? "#1F5B3A" : "#ffffff";
+  const darkGreen = palette !== "light";
+  const background = palette === "slate" ? "#111F24" : darkGreen ? "#1F5B3A" : "#ffffff";
   const foreground = darkGreen ? "#ffffff" : "#191502";
   const qrDataUrl = await QRCode.toDataURL(target, {
     type: "image/png",

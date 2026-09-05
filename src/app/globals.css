@@ -15057,3 +15057,27 @@ html:has(.calendar-scope-top) {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+.profile-qr-sheet.profile-qr-sheet,
+.profile-qr-sheet .adderhead,
+.profile-qr-sheet .qrframe,
+.profile-qr-sheet .publishwrap {
+  background: var(--kinetic-canvas-dark);
+  color: var(--kinetic-inverse);
+  box-shadow: none;
+  border: 0;
+}
+.profile-qr-sheet.profile-qr-sheet .lead,
+.profile-qr-sheet .qrurl { color: var(--kinetic-inverse); }
+.profile-qr-sheet .sheet-dismiss.sheetclose {
+  background: var(--kinetic-icon-surface);
+  color: var(--kinetic-inverse);
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.profile-qr-sheet .publishwrap > .btn:first-child {
+  background: var(--kinetic-accent);
+  color: var(--kinetic-text);
+}

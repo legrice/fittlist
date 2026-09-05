@@ -21,7 +21,8 @@ export async function GET(
     .where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  const palette = new URL(req.url).searchParams.get("palette") === "dark-green"
+  const requestedPalette = new URL(req.url).searchParams.get("palette");
+  const palette = requestedPalette === "slate" ? "slate" : requestedPalette === "dark-green"
     ? "dark-green"
     : "light";
   return brandedQr(`${siteOrigin()}/${handle}?ref=qr`, palette);

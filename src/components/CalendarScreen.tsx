@@ -543,7 +543,6 @@ export function CalendarScreen({
             ap: t.ap,
             dur: `${c.durationMin} min`,
             coach: null,
-            tag: c.shift ? "Shift" : "Coaching",
             tagTone: c.shift ? "shift" as const : "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
@@ -564,7 +563,6 @@ export function CalendarScreen({
           : i.coachName
             ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
             : null,
-        tag: i.personal ? "Personal" : "Saved",
         tagTone: i.personal ? "personal" as const : "attending" as const,
         onTap: i.personal
           ? () => setPlan(i.id)

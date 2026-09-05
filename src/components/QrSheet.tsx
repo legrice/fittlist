@@ -21,46 +21,28 @@ export function QrSheet({
    *  "Sara's QR code" on it instead of claiming it's yours. */
   ownerName?: string;
 }) {
-  const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageUrl, setPageUrl] = useState(`fittlist.co/${handle}`);
 
   useEffect(() => {
     setPageUrl(`${window.location.host}/${handle}`);
   }, [handle]);
-  useEffect(() => {
-    setCanShareFiles(
-      typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function",
-    );
-  }, []);
-
   if (!open) return null;
 
-  const qrImgUrl = `/api/qr/${handle}?palette=dark-green`;
-  const qrFileName = `fittlist-${handle}-qr.png`;
+  const qrImgUrl = `/api/qr/${handle}?palette=slate`;
 
-  const shareQr = async () => {
+  const shareProfile = async () => {
     if (sharing) return;
     setSharing(true);
     try {
-      if (canShareFiles) {
-        const res = await fetch(qrImgUrl);
-        if (res.ok) {
-          const file = new File([await res.blob()], qrFileName, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-            return;
-          }
-        }
+      const url = `${window.location.origin}/${handle}`;
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: ownerName ? `${ownerName} on FittList` : "My FittList profile", url });
+      } else {
+        await copyPageLink();
       }
-      const a = document.createElement("a");
-      a.href = qrImgUrl;
-      a.download = qrFileName;
-      a.click();
     } catch (err) {
-      if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the QR code");
+      if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the profile link");
     } finally {
       setSharing(false);
     }
@@ -96,19 +78,8 @@ export function QrSheet({
         </div>
         <div className="qrurl">{pageUrl}</div>
         <div className="publishwrap">
-          {/* The word has to match the act: this branch opens the share sheet,
-              so it says share. The other one is a real download and says save.
-              Naming both "Save" is what the four story sheets did until the
-              filled button was found to be opening the iOS share sheet. */}
-          {canShareFiles ? (
-            <button className="btn" disabled={sharing} onClick={shareQr}>
-              {sharing ? "Opening…" : "Share QR code"}
-            </button>
-          ) : (
-            <a className="btn" href={qrImgUrl} download={qrFileName}>Save QR code</a>
-          )}
-          <button className="btn ghost" style={{ marginTop: 8 }} onClick={copyPageLink}>
-            Copy link
+          <button className="btn" disabled={sharing} onClick={shareProfile}>
+            {sharing ? "Opening…" : "Share link to profile"}
           </button>
         </div>
       </div>
