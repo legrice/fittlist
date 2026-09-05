@@ -465,9 +465,9 @@ export function CalendarScreen({
     const classWord=(count:number) => count === 1 ? "class" : "classes";
     const studioSummary=coachingStudios.size ? ` at ${coachingStudios.size} ${coachingStudios.size === 1 ? "studio" : "studios"}` : "";
     const activitySummary=coaching && attending
-      ? `You’re coaching ${coaching} ${classWord(coaching)}${studioSummary} and attending ${attending} this week.`
+      ? `You’re teaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
       : coaching
-        ? `You’re coaching ${coaching} ${classWord(coaching)}${studioSummary} this week.`
+        ? `You’re teaching ${coaching} ${classWord(coaching)}${studioSummary} this week.`
         : attending
           ? `You’re attending ${attending} ${classWord(attending)} this week.`
           : "You have nothing scheduled this week.";
@@ -483,7 +483,7 @@ export function CalendarScreen({
       else if (totalScheduled < 3)
         title=variant([`${roastContext} That’s it? You opened a whole calendar for that like the rest of the week needed professional supervision.`,`${roastContext} An adorable little schedule. Tiny, manageable, and apparently still important enough to require its own app.`,`${roastContext} Pace yourself, hero. At this rate you may need almost one full hand to count everything you’re doing.`,`${roastContext} The calendar equivalent of dipping one toe in the pool and announcing that you swim now.`,`${roastContext} Blink carefully or your entire fitness era will be over before you notice it started.`]);
       else if (totalScheduled < 7)
-        title=variant([`${roastContext} Wow, look at you go, fitness royalty. Bow down, everyone.`,`${roastContext} Slow down there, Rocky. Leave some classes for the rest of us.`,`${roastContext} Okay, we getttt it. You love coaching.`,`${roastContext} You know what they say: those who can’t do, teach, and apparently put the whole thing on their calendar.`,`${roastContext} As DJ Khaled said, another one?!`]);
+        title=variant([`${roastContext} Wow, look at you go, fitness royalty. Bow down, everyone.`,`${roastContext} Slow down there, Rocky. Leave some classes for the rest of us.`,`${roastContext} Okay, we getttt it. You love teaching.`,`${roastContext} You know what they say: those who can’t do, teach, and apparently put the whole thing on their calendar.`,`${roastContext} As DJ Khaled said, another one?!`]);
       else
         title=variant([`${roastContext} Apparently you are the exhausted hero this city never asked for, personally holding the fitness industry together one aggressively scheduled class at a time.`,`${roastContext} Congratulations on becoming the main character, the supporting cast, and the overworked production assistant in the heroic saga of your own completely unhinged week.`,`${roastContext} Save some fitness for everyone else, legend. Your calendar looks like it was assembled by someone who believes rest days are malicious gossip.`,`${roastContext} This is not a schedule anymore; it is a public declaration that you intend to save the entire week through charisma, caffeine, and a deeply concerning refusal to sit down.`,`${roastContext} Behold the hero of the group chat, bravely taking on more classes than anyone requested and somehow preparing to mention every single one of them.`]);
     }
