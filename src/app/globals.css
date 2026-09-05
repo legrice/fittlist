@@ -14844,7 +14844,7 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-surface-schedule { animation:calendar-schedule-reveal 320ms var(--motion-ease-out) both; }
 @keyframes calendar-schedule-reveal {
   from { opacity:0; translate:0 24px; }
-  to { opacity:1; translate:0 0; }
+  to { opacity:1; translate:none; }
 }
 @media (prefers-reduced-motion:reduce) {
   .calendar-scope-hero.calendar-transition-surface { transition:none; }
@@ -14921,4 +14921,18 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-surface-schedule .calendar-person-chip { color: inherit; }
 .calendar-surface-schedule .calendar-person-chip.on .calendar-person-face {
   box-shadow: 0 0 0 2px var(--color-shift), 0 0 0 5px var(--color-lime);
+}
+
+/* The month strip belongs below the calendar toolbar, like the date bands. */
+.screen:has(.calendar-scope-top.is-expanded) .scrollhead {
+  top: 70px;
+  z-index: 29;
+  padding: 10px var(--page-gutter);
+  background: var(--color-shift);
+  border-bottom: 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.screen:has(.calendar-scope-top.is-expanded) .scrollhead :is(.scrollhead-d, .monthhead) {
+  color: var(--color-white);
 }
