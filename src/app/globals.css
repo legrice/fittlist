@@ -15260,3 +15260,5 @@ button.calendar-summary-reveal:focus-visible {
 @media (min-width: 940px) {
   .rota-open-summary { color: var(--color-text-primary); }
 }
+
+.discover-group-tile > a > span > img { width:100%; height:100%; object-fit:cover; border-radius:inherit; }

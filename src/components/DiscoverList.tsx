@@ -17,7 +17,7 @@ import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import { Toast, useToast } from "@/components/Toast";
 
 export type DiscoverHalf = "people" | "places" | "classes" | "groups";
-type Group = { id:string; name:string; slug:string; description:string|null; purpose:string; lat:number|null; lng:number|null; favorited:boolean };
+type Group = { photo?:string|null; id:string; name:string; slug:string; description:string|null; purpose:string; lat:number|null; lng:number|null; favorited:boolean };
 const distanceOptions = [["1","Within 1 mile"],["2","Within 2 miles"],["5","Within 5 miles"],["10","Within 10 miles"],["25","Within 25 miles"]] as const;
 
 export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,startHalf,upcoming=[],groups=[],backHref,hideBack=false,groupFrom="discover-groups" }: { people:DirPerson[];studios?:DirStudio[];cities:string[];myCity?:string|null;myLat?:number|null;myLng?:number|null;startHalf?:DiscoverHalf;upcoming?:BrowseDay[];groups?:Group[];backHref:string;hideBack?:boolean;groupFrom?:"discover-groups"|"calendar-following" }) {
@@ -139,4 +139,4 @@ function StudioGrid({studios}:{studios:DirStudio[]}){
     <FavoritePlaceButton studio={studio}/>
   </div>)}</div>
 }
-function GroupGrid({groups,from="discover-groups"}:{groups:Group[];from?:"discover-groups"|"calendar-following"}){return <div className="discover-group-grid">{groups.map((group)=><div className="discover-group-tile" key={group.id}><Link href={`/g/${group.slug}?from=${from}`}><span><Icon name="groups" size={28}/></span><strong>{group.name}</strong><small>{group.description||"Open group"}</small></Link><FavoriteGroupButton group={group}/></div>)}</div>}
+function GroupGrid({groups,from="discover-groups"}:{groups:Group[];from?:"discover-groups"|"calendar-following"}){return <div className="discover-group-grid">{groups.map((group)=><div className="discover-group-tile" key={group.id}><Link href={`/g/${group.slug}?from=${from}`}><span>{group.photo ? <img src={group.photo} alt="" loading="lazy" decoding="async" /> : <Icon name="groups" size={28}/>}</span><strong>{group.name}</strong><small>{group.description||"Open group"}</small></Link><FavoriteGroupButton group={group}/></div>)}</div>}
