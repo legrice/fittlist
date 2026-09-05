@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 // Safari exposes one theme colour for its chrome rather than separate top and
 // bottom values. Use the app's green for the status area; the document root
 // remains light gray so the lower toolbar/overscroll can sample that surface.
-export const viewport: Viewport = { themeColor: "#1F5B3A" };
+export const viewport: Viewport = { themeColor: "#192126" };
 
 type DeferredViewer = {
   id: string;

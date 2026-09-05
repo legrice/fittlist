@@ -75,31 +75,31 @@ html[data-native="ios"] .screen.hasnav > .pad {
 :root {
   /* FittList core palette. New UI should consume these semantic tokens;
      the legacy aliases below map to them while older surfaces migrate. */
-  --color-lime: #8CF25F;
-  --color-lime-pressed: #8BD85D;
-  --color-lime-soft: #DDF5CC;
+  --color-lime: #A1E510;
+  --color-lime-pressed: #BBF246;
+  --color-lime-soft: #EEFAD7;
   --color-action: var(--color-lime);
   --color-action-pressed: var(--color-lime-pressed);
   --color-action-soft: var(--color-lime-soft);
   --color-favorite: #D62F3A;
   --color-danger-soft: #FCE8E8;
   --color-danger-text: #B4232E;
-  --color-olive: #334A18;
-  --color-black: #020D08;
+  --color-olive: #384046;
+  --color-black: #192126;
   --color-white: #FFFFFF;
-  --color-background: #F5F6F5;
+  --color-background: #F3F4F6;
   --color-surface: #FFFFFF;
-  --color-surface-muted: #EEF0EE;
-  --color-surface-hover: #E4E7E4;
-  --color-border: #D3D7D3;
-  --color-border-strong: #B5BBB5;
-  --color-text-primary: #020D08;
-  --color-text-secondary: #5F645F;
-  --color-text-muted: #858B85;
+  --color-surface-muted: #E5E7EB;
+  --color-surface-hover: #D1D5DB;
+  --color-border: #D1D5DB;
+  --color-border-strong: #9CA3AF;
+  --color-text-primary: #192126;
+  --color-text-secondary: #384046;
+  --color-text-muted: #6B7280;
   --color-coaching: #AFCFEC;
   --color-coaching-soft: #E2EDF6;
   --color-coaching-text: #153A55;
-  --color-shift: #1F5B3A;
+  --color-shift: #192126;
   --color-shift-text: #FFFFFF;
   --color-attending: #C8C3DB;
   --color-attending-text: #211731;
@@ -127,15 +127,14 @@ html[data-native="ios"] .screen.hasnav > .pad {
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
   --headline-tracking: .012em;
-  /* Delight typeface. Black ink, cool neutral ground, and bright lime CTA.
+  /* Delight typeface. Charcoal ink, cool gray ground, and bright lime actions.
 
      Product typography stays at 400/500/600. The 700 face is available for
      short display headlines and primary actions, where confidence helps;
      dense schedules and supporting copy deliberately remain quieter.
 
-     The neutrals carry a slight graphite cast so white cards and black type
-     feel crisp rather than delicate. Role colors are muted steel, slate, and
-     sand; the unchanged lime remains the unmistakable action color. */
+     White cards and charcoal calendar backdrops carry the hierarchy.
+     The lighter lime marks pressed actions; role colors retain their meaning. */
   --cl: var(--color-surface-muted);
   --cl-d: var(--color-surface-hover);
   --paper: var(--color-surface);
@@ -221,7 +220,7 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --rel-added: #ACACAC;
   --go: #3d8b53;           /* "on" green for switches */
   --si-soft: var(--color-lime-soft);
-  --sa: #d6d1b3;
+  --sa: var(--color-surface-hover);
   --yellow: #f5f200;
   /* Shape system. These four values are the complete product vocabulary:
      small contained details, ordinary controls/surfaces, bottom sheets, and
@@ -2381,19 +2380,14 @@ button.bl-band { cursor: pointer; }
 }
 .social-notifications { position: relative; text-decoration: none; }
 .social-notifications i { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-lime); border: 1px solid var(--shell); }
-.notifications-sheet-scrim { z-index: 90; align-items: flex-end; }
-.notifications-sheet {
-  width: 100%; height: min(92dvh, 880px); max-height: 92dvh; padding: 12px var(--page-gutter) calc(28px + env(safe-area-inset-bottom));
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; overflow-y: auto; background:var(--color-background);
-}
-.notifications-sheet-grab {
-  display: block; width: 42px; height: 5px; margin: 0 auto 12px;
-  border-radius: var(--radius-pill); background: var(--color-border-strong);
-}
-.notifications-sheet-head { display: grid; grid-template-columns: 48px minmax(0,1fr); align-items: start; gap: 10px; margin-bottom: 18px; }
-.notifications-sheet-close { position: static; width: 44px; height: 44px; margin: 0; background: var(--color-surface-muted); }
-.notifications-sheet-head h2 { margin: 0; padding: 0; font-size: 28px; line-height: 1.08; }
-.notifications-sheet-head p { margin: 4px 0 0; color: var(--color-text-secondary); font-size: 14px; }
+/* Notifications and Search share the standard modal frame and stacking level.
+   Only the content scrolls, keeping dismissal at the usual top-right inset. */
+.sheet.utility-sheet { height:94dvh; padding:0; overflow:hidden; display:flex; flex-direction:column; background:var(--color-background); }
+.utility-sheet-head { position:relative; flex:0 0 auto; padding:16px var(--page-gutter) 18px; }
+.utility-sheet-grab { position:absolute; top:7px; left:50%; width:38px; height:5px; transform:translateX(-50%); border-radius:var(--radius-pill); background:var(--color-border-strong); }
+.utility-sheet-head h2 { min-height:44px; display:flex; align-items:center; margin:0; padding-right:64px; font-size:28px; line-height:1.1; }
+.utility-sheet-head p { margin:4px 0 0; color:var(--color-text-secondary); font-size:14px; }
+.utility-sheet-content { min-height:0; flex:1; overflow-y:auto; overscroll-behavior:contain; padding:0 var(--page-gutter) var(--pad-b); }
 .notifications-sheet-loading { min-height: 180px; display: grid; place-items: center; color: var(--color-text-secondary); }
 .youcalendar-card {
   min-height: 92px; margin: 20px 0 28px; padding: 16px 18px; display: grid;
@@ -6028,36 +6022,39 @@ html[data-mode="dark"],
 [data-mode="dark"] .chatscreen, .chatscreen[data-mode="dark"],
 [data-mode="dark"] .sheet,
 [data-mode="dark"] .pub, .pub[data-mode="dark"] {
-  --color-background: #17150f;
-  --color-surface: #211c13;
-  --color-surface-muted: #272115;
-  --color-surface-hover: #322b1b;
-  --color-border: #35301f;
-  --color-border-strong: #4a4330;
-  --color-text-primary: #f3efe3;
-  --color-text-secondary: #a89f8a;
-  --color-text-muted: #a89f8a;
-  --paper: #14120d;
-  --shell: #0c0b07;
+  --color-background: #192126;
+  --color-surface: #273137;
+  --color-surface-muted: #384046;
+  --color-surface-hover: #4B5563;
+  --color-border: #4B5563;
+  --color-border-strong: #6B7280;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #D1D5DB;
+  --color-text-muted: #D1D5DB;
+  --paper: var(--color-background);
+  --shell: var(--color-background);
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  --grad-top: #2a2014;
-  --grad-mid: #1c1913;
-  /* Warm like the light ground: the cool #16171a had the same clash with
-     the warm dark surfaces that the light side's cool gray had. */
-  --ground: #17150f;
-  --si-tint: #26351d;
-  --si-ink: #b9f590;
-  --card: #211c13;
-  --ink: #f3efe3;
-  --ol: #a89f8a;
-  --line: #35301f;
-  --div: #4a4330;
+  --grad-top: var(--color-background);
+  --grad-mid: var(--color-background);
+  --ground: var(--color-background);
+  --si-tint: #303D22;
+  --si-ink: #BBF246;
+  --card: var(--color-surface);
+  --ink: var(--color-text-primary);
+  --ol: var(--color-text-secondary);
+  --muted: var(--color-text-secondary);
+  --sub: var(--color-text-secondary);
+  --muted-surface: var(--color-surface-muted);
+  --soft: var(--color-surface-muted);
+  --wash: var(--color-surface-muted);
+  --line: var(--color-border);
+  --div: var(--color-border-strong);
   --band: var(--paper);
-  --cl: #272115;
-  --cl-d: #322b1b;
-  --sa: #3d3826;
-  --si-soft: #26351d;
-  --color-action-soft: #26351d;
+  --cl: var(--color-surface-muted);
+  --cl-d: var(--color-surface-hover);
+  --sa: var(--color-surface-hover);
+  --si-soft: var(--si-tint);
+  --color-action-soft: var(--si-tint);
   --color-danger-soft: #3A2023;
   --color-danger-text: #FF8F98;
   --soft-shadow: none;
@@ -9963,16 +9960,10 @@ html[data-mode="dark"],
 }
 .calendar-context-meta { color:var(--color-text-secondary); }
 .calendar-directory-scrim { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end; background:rgba(0,0,0,.34); }
-.site-search-scrim { position:fixed; inset:0; z-index:140; display:flex; align-items:flex-end; background:rgba(0,0,0,.34); }
-.site-search-sheet { width:100%; height:100dvh; max-height:100dvh; padding:calc(18px + env(safe-area-inset-top)) var(--page-gutter) calc(24px + env(safe-area-inset-bottom)); overflow:hidden; display:flex; flex-direction:column; border-radius:0; background:var(--color-background); color:var(--color-text-primary); box-shadow:0 -12px 40px rgba(0,0,0,.16); }
-.site-search-sheet > header { display:grid; grid-template-columns:minmax(0,1fr) 48px; align-items:center; gap:10px; }
-.site-search-sheet > header > label { min-width:0; min-height:48px; padding:0 14px; display:flex; align-items:center; gap:10px; border-radius:var(--radius-pill); background:var(--color-surface); }
+.site-search-sheet > header > label { min-width:0; min-height:48px; margin-top:16px; padding:0 14px; display:flex; align-items:center; gap:10px; border-radius:var(--radius-pill); background:var(--color-surface); }
 .site-search-sheet > header input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--color-text-primary); font:inherit; font-size:16px; }
-.site-search-sheet > header label button,
-.site-search-close { padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--color-text-primary); }
+.site-search-sheet > header label button { padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--color-text-primary); }
 .site-search-sheet > header label button { width:32px; height:32px; flex:0 0 auto; }
-.site-search-close { width:48px; height:48px; border-radius:50%; background:var(--color-surface); }
-.site-search-results { min-height:0; flex:1; overflow-y:auto; overscroll-behavior:contain; }
 .calendar-directory-sheet { width:100%; height:82dvh; max-height:82dvh; overflow:hidden; padding:22px var(--page-gutter) calc(20px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; border-radius:28px 28px 0 0; background:var(--ground); color:var(--ink); box-shadow:0 -12px 40px rgba(0,0,0,.16); transition:transform 220ms var(--motion-ease-out); will-change:transform; }
 .calendar-directory-sheet.is-pulling { transition:none; }
 .calendar-directory-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
@@ -11317,9 +11308,9 @@ html[data-mode="dark"],
 .calendar-scope-top > .brandbar-avatar :is(img,span) { width:100%; height:100%; filter:saturate(1.06) contrast(1.02); }
 .calendar-scope-top > .brandbar-avatar::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; pointer-events:none; background:linear-gradient(145deg,rgba(255,255,255,.38),rgba(255,255,255,.04) 42%,rgba(0,0,0,.08)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); }
 .calendar-scope-current { justify-self:center; font-size:17px; }
-.calendar-scope-top .calendar-mode-tabs a { color:color-mix(in srgb,var(--color-black) 58%,transparent); }
+.calendar-scope-top .calendar-mode-tabs a { color:var(--color-text-secondary); }
 .calendar-scope-top .calendar-mode-tabs[data-active="you"] a:first-child,
-.calendar-scope-top .calendar-mode-tabs[data-active="following"] a:nth-child(2) { color:var(--color-black); }
+.calendar-scope-top .calendar-mode-tabs[data-active="following"] a:nth-child(2) { color:var(--color-text-primary); }
 .calendar-scope-top .calendar-scope-current { color:var(--color-white); }
 .calendar-scope-search:active,
 .calendar-scope-top > .brandbar-avatar:active,
@@ -11334,7 +11325,7 @@ html[data-mode="dark"],
 @media (max-width:939px) {
   .screen.hasnav:has(.calendar-scope-hero),
   .screen.hasnav:has(.calendar-scope-hero) > .pad { background:var(--color-shift); }
-  /* Keep the root canvas light even while Calendar itself is green. Safari
+  /* Keep the root canvas light even while Calendar itself is charcoal. Safari
      has only one theme-color, but this gives its translucent lower toolbar
      and bottom overscroll a light-gray surface to sample. */
   html:has(.calendar-scope-hero),
@@ -11451,7 +11442,7 @@ button.calendar-summary-copy:active { transform:scale(.985); }
 .calendar-quick-actions { overflow:hidden; }
 .calendar-quick-actions > div { padding:0 0 3px; display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; scrollbar-width:none; }
 .calendar-quick-actions > div::-webkit-scrollbar { display:none; }
-.calendar-quick-actions :is(button,a) { width:100%; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-white); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
+.calendar-quick-actions :is(button,a) { width:100%; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
 .calendar-action-section-head { min-height:28px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .calendar-action-section-head h3 { margin:0; color:var(--color-text-secondary); font-size:13px; line-height:1.2; letter-spacing:.04em; text-transform:uppercase; }
 .calendar-action-section-head :is(a,button) { min-height:28px; padding:0 10px; display:flex; align-items:center; gap:3px; border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary); font:inherit; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; }
@@ -13228,12 +13219,12 @@ a.clspeek-by:active { opacity: .6; }
 .personal-calendar-list .clrow > :is(.clmore, .calendar-save-action, .calendar-attending-check, .following-add) { top:10px; right:8px; }
 
 /* Calendar has two deliberately separate surfaces on mobile: a light action
-   surface in front, and the green schedule surface it reveals. */
+   surface in front, and the charcoal schedule surface it reveals. */
 @media (max-width:939px) {
   .calendar-action-sheet {
     width:calc(100% + (2 * var(--page-gutter)));
     /* Continue beneath Safari's collapsing bottom chrome.  Sizing this to the
-       sheet's exact visual offset left a strip of the green rear surface
+       sheet's exact visual offset left a strip of the charcoal rear surface
        visible once the action layer reached the end of its content. */
     min-height:calc(100dvh - 126px);
     margin-right:calc(-1 * var(--page-gutter));

@@ -35,7 +35,8 @@ export function NativeAppBridge() {
         // Style.Dark is light glyphs for a dark background, and Style.Light
         // is dark glyphs for a light background.
         void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => {});
-        void StatusBar.setBackgroundColor({ color: dark ? "#17150f" : "#fdfcf7" }).catch(() => {});
+        const background = getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
+        void StatusBar.setBackgroundColor({ color: background || (dark ? "#192126" : "#F3F4F6") }).catch(() => {});
       };
       syncStatusBar();
       window.addEventListener("fittlist:themechange", syncStatusBar);

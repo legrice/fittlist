@@ -22,8 +22,8 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait",
     // Matches the header, so the status bar reads as part of the app rather
     // than a strip of something else above it.
-    background_color: "#8CF25F",
-    theme_color: "#8CF25F",
+    background_color: "#192126",
+    theme_color: "#192126",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },

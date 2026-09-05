@@ -272,12 +272,14 @@ export function FollowingScreen({
     const metas=[...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
     const original=metas.map((meta) => meta.content);
     const observer=new IntersectionObserver(([entry]) => {
-      metas.forEach((meta) => { meta.content=entry.isIntersecting ? "#F5F6F5" : "#1F5B3A"; });
+      const colors = getComputedStyle(document.documentElement);
+      const color = colors.getPropertyValue(entry.isIntersecting ? "--color-background" : "--color-shift").trim();
+      metas.forEach((meta) => { meta.content=color; });
     },{ threshold:.12 });
     observer.observe(footer);
     return () => {
       observer.disconnect();
-      metas.forEach((meta,index) => { meta.content=original[index] ?? "#1F5B3A"; });
+      metas.forEach((meta,index) => { meta.content=original[index] ?? "#192126"; });
     };
   },[calendarFollowing,classSheetDismissed]);
 

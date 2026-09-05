@@ -4,7 +4,7 @@ import { useLayoutEffect } from "react";
 
 const MODE_ROOT_SELECTOR = ".screen, .appshell, .chatscreen, .pub, [data-mode]";
 const DARK_ROOT_SELECTOR = "[data-mode='dark']";
-const DARK_THEME_COLOR = "#17150f";
+const DARK_THEME_COLOR = "#192126";
 const lightThemeColors = new WeakMap<HTMLMetaElement, string>();
 
 function syncDocumentChrome(dark: boolean) {

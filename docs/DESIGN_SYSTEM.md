@@ -9,7 +9,7 @@ not redefine these decisions.
 - Content sits on white or near-white surfaces.
 - Elevation comes from layering and dividers, never decorative shadows.
 - Lists are flat. Rows use inset dividers rather than individual cards.
-- Orange means the primary next action or the selected state.
+- Lime means the primary next action or the selected state.
 - Green means an item was successfully added. Red is destructive only.
 - Every interactive target is at least 44 by 44 pixels.
 
@@ -27,8 +27,8 @@ the element, reconsider whether the element needs a container.
 
 ## Actions
 
-- **Primary:** orange fill, white type.
-- **Secondary:** quiet gray fill, ink type.
+- **Primary:** lime (`#A1E510`) fill, charcoal (`#192126`) type; lighter lime (`#BBF246`) when pressed.
+- **Secondary:** cool gray fill, charcoal type. Secondary text uses `#384046` in light mode.
 - **Outline:** white fill with ink outline, used only when the boundary matters.
 - **Tertiary:** text only.
 - **Destructive:** red, always confirmed before irreversible work.
@@ -71,6 +71,11 @@ pressed/disabled behavior.
 - Calendar rows, date headers, and dividers use shared components everywhere.
 
 ## Surfaces
+
+The palette uses white (`#FFFFFF`) cards, cool gray (`#F3F4F6`) backgrounds,
+and charcoal (`#192126`) calendar backdrops. Dark mode uses the same charcoal
+ground with raised gray surfaces and white text. Semantic status and calendar
+role colors remain distinct from the primary action color.
 
 Containers are appropriate for fields, sheets, dialogs, empty states, media
 previews, and genuinely selectable options. Calendar entries, settings,

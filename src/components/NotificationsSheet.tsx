@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadNotificationSheet } from "@/app/actions/notifications";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
@@ -14,6 +14,18 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
     readClientMemory<Notif[]>(NOTIFICATIONS_MEMORY_KEY),
   );
   const [failed, setFailed] = useState(false);
+  const sheet = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented && sheet.current && document.activeElement?.closest('.sheet, [role="dialog"]') === sheet.current) {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, [onClose]);
 
   useEffect(() => {
     let live = true;
@@ -34,24 +46,24 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
   return (
     <BodyPortal>
       <div className="sheet-scrim notifications-sheet-scrim" onClick={(event) => event.target === event.currentTarget && onClose()}>
-        <section className="sheet notifications-sheet" role="dialog" aria-modal="true" aria-labelledby="notifications-sheet-title">
-          <span className="notifications-sheet-grab" aria-hidden="true" />
-          <div className="notifications-sheet-head">
-            <button type="button" className="iconbtn notifications-sheet-close sheet-dismiss" aria-label="Close notifications" onClick={onClose}>
+        <section ref={sheet} className="sheet utility-sheet notifications-sheet" role="dialog" aria-modal="true" aria-labelledby="notifications-sheet-title">
+          <header className="utility-sheet-head">
+            <span className="utility-sheet-grab" aria-hidden="true" />
+            <h2 id="notifications-sheet-title">Notifications</h2>
+            <p>Calendar, badge, and account activity</p>
+            <button type="button" className="sheetclose sheet-dismiss" aria-label="Close notifications" onClick={onClose}>
               <Icon name="close" size={20} />
             </button>
-            <div>
-              <h2 id="notifications-sheet-title">Notifications</h2>
-              <p>Calendar, badge, and account activity</p>
-            </div>
+          </header>
+          <div className="utility-sheet-content">
+            {notifications ? (
+              <NotificationList notifications={notifications} />
+            ) : failed ? (
+              <div className="notifications-sheet-loading" role="status">Couldn&rsquo;t load notifications</div>
+            ) : (
+              <div className="notifications-sheet-loading" role="status">Loading notifications</div>
+            )}
           </div>
-          {notifications ? (
-            <NotificationList notifications={notifications} />
-          ) : failed ? (
-            <div className="notifications-sheet-loading" role="status">Couldn&rsquo;t load notifications</div>
-          ) : (
-            <div className="notifications-sheet-loading" role="status">Loading notifications</div>
-          )}
         </section>
       </div>
     </BodyPortal>
