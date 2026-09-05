@@ -63,7 +63,11 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         tabBar.isHidden = true
 
         let topToHeader = bridge.view.topAnchor.constraint(equalTo: headerView.bottomAnchor)
-        let topToView = bridge.view.topAnchor.constraint(equalTo: view.topAnchor)
+        // CAPBridgeViewController's root view is the WKWebView itself. Pinning
+        // it to view.topAnchor overrides the StatusBar plugin's frame offset
+        // whenever Auto Layout runs, placing every page under the system bar.
+        // UIKit owns this inset for all routes, sheets, rotations and resumes.
+        let topToView = bridge.view.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
         bridgeTopToHeader = topToHeader
         bridgeTopToView = topToView
         NSLayoutConstraint.activate([
@@ -72,8 +76,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 62),
             topToView,
-            bridge.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bridge.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bridge.view.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            bridge.view.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             bridge.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),

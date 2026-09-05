@@ -73,3 +73,12 @@ cancellation, and revoked credentials on a physical device.
 The repository already provides a public privacy policy, immediate account
 deletion, blocking, reporting and moderation. Those should be exercised in the
 native regression suite rather than rebuilt separately.
+
+## Native viewport
+
+The shell pins the Capacitor bridge to UIKit’s top, leading, and trailing safe
+area edges. Its bottom extends to the window edge so the web UI can use the
+home-indicator inset. Capacitor’s bridge view is the web view itself: pinning
+it to the window’s top overrides the status-bar plugin’s frame adjustment and
+clips headers across all routes. Keep the safe-area constraint active when
+opening and closing takeovers.
