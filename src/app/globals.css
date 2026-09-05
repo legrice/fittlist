@@ -14998,3 +14998,14 @@ html:has(.calendar-scope-top) {
 .calendar-action-sheet .calendar-following-surface {
   background: var(--kinetic-canvas-light);
 }
+
+.calendar-summary-reveal,
+.calendar-scope-top .calendar-scope-close {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+.calendar-summary-reveal:focus-visible .icon,
+.calendar-scope-close:focus-visible .icon {
+  filter: drop-shadow(0 0 3px var(--kinetic-inverse));
+}
