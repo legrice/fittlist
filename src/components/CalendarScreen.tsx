@@ -356,10 +356,26 @@ export function CalendarScreen({
     // page background if navigation takes a beat on a slower connection.
     router.push(target === "you" ? "/calendar" : "/calendar/following");
   };
+  const revealWasOpen = useRef(false);
+  const revealButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const returning = revealWasOpen.current;
+    revealWasOpen.current = classSheetDismissed;
+    const target = classSheetDismissed
+      ? frontScopeRef.current?.querySelector<HTMLButtonElement>(".calendar-scope-close")
+      : returning ? revealButtonRef.current : null;
+    if (!target) return;
+    // The summary must finish expanding before its chevron can take focus.
+    const timer = window.setTimeout(() => target.focus({ preventScroll: true }), classSheetDismissed ? 0 : 300);
+    return () => window.clearTimeout(timer);
+  }, [classSheetDismissed, frontScopeRef]);
+
   const restoreActionSurface = () => {
     window.scrollTo({ top:0, behavior:"auto" });
     setClassSheetDismissed(false);
-    requestAnimationFrame(() => window.scrollTo({ top:0, behavior:"auto" }));
+    requestAnimationFrame(() => {
+      window.scrollTo({ top:0, behavior:"auto" });
+    });
   };
 
   useEffect(() => {
@@ -705,9 +721,9 @@ export function CalendarScreen({
       {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}`} ref={frontScopeRef}>
           <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /></button>
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
-          <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
+          <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" tabIndex={classSheetDismissed ? 0 : -1} aria-hidden={!classSheetDismissed} aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
+        <section inert={classSheetDismissed} aria-hidden={classSheetDismissed} className={`calendar-scope-hero calendar-transition-surface${classSheetDismissed ? " is-schedule" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" ref={revealButtonRef} className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
       {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
         <div className="calendar-action-hub">
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>

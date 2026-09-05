@@ -11296,7 +11296,7 @@ html[data-mode="dark"],
 .calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-shift); color:var(--color-white); touch-action:pan-y; }
 .calendar-scope-top { position:sticky; top:0; z-index:0; margin:0 0 18px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; background:var(--color-shift); }
 .calendar-scope-top .calendar-mode-tabs { margin:0; justify-self:center; }
-.calendar-scope-top .calendar-mode-tabs::after { background:var(--color-lime); }
+.calendar-scope-top .calendar-mode-tabs::after { background:var(--color-white); }
 .calendar-scope-search { width:44px; height:44px; padding:0; display:grid; place-items:center; overflow:hidden; border:0; border-radius:50%; background:var(--glass-control-bg); color:var(--color-text-primary); text-decoration:none; -webkit-backdrop-filter:var(--glass-control-filter); backdrop-filter:var(--glass-control-filter); box-shadow:var(--glass-control-shadow-raised); }
 .calendar-scope-actions { position:relative; width:44px; height:44px; display:block; }
 .calendar-scope-actions .calendar-scope-search { position:absolute; inset:0; transition:opacity 220ms ease,transform 360ms cubic-bezier(.2,1.35,.35,1); }
@@ -14821,3 +14821,35 @@ a.clspeek-by:active { opacity: .6; }
 .suggested-follow-grid strong { font-size:16px; }
 .suggested-follow-grid small { font-size:13px; color:var(--muted); }
 .suggested-follow-grid button { margin-top:12px; }
+
+/* Focus the revealed calendar: collapse the summary while the schedule rises
+   into its space. Keep the close control available above the scrolling days. */
+.calendar-scope-hero.calendar-transition-surface {
+  display:grid;
+  grid-template-rows:1fr;
+  transition:grid-template-rows 280ms var(--motion-ease-out), padding 280ms var(--motion-ease-out), margin 280ms var(--motion-ease-out), opacity 140ms ease, visibility 0s;
+}
+.calendar-scope-hero > .calendar-section-summary { min-height:0; overflow:hidden; margin:0; }
+.calendar-scope-hero.is-schedule {
+  grid-template-rows:0fr;
+  padding-block:0;
+  margin-block:0;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition-delay:0s,0s,0s,0s,280ms;
+}
+.calendar-scope-top > :not(.calendar-scope-actions) { transition:opacity 140ms ease, visibility 0s; }
+@media (min-width:940px) { .calendar-scope-top.is-expanded { z-index:3; } }
+.calendar-scope-top.is-expanded > :not(.calendar-scope-actions),
+.calendar-scope-top.is-expanded .calendar-scope-search-open { opacity:0; visibility:hidden; pointer-events:none; transition-delay:0s,140ms; }
+.calendar-surface-schedule { animation:calendar-schedule-reveal 320ms var(--motion-ease-out) both; }
+@keyframes calendar-schedule-reveal {
+  from { opacity:0; translate:0 24px; }
+  to { opacity:1; translate:0 0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .calendar-scope-hero.calendar-transition-surface,
+  .calendar-scope-top > :not(.calendar-scope-actions) { transition:none; }
+  .calendar-surface-schedule { animation:none; }
+}
