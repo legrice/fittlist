@@ -11439,13 +11439,13 @@ button.calendar-summary-copy:active { transform:scale(.985); }
 }
 .calendar-action-sheet > h2 { margin:0 0 18px; font-size:28px; line-height:1.1; }
 .calendar-action-hub { display:grid; gap:28px; }
-.calendar-action-hub > section > h3 { margin:0 0 10px; color:var(--color-text-secondary); font-size:13px; line-height:1.2; letter-spacing:normal; text-transform:none; }
+.calendar-action-hub > section > h3 { margin:0 0 10px; color:var(--color-text-secondary); font-size:15px; line-height:1.2; letter-spacing:normal; text-transform:none; }
 .calendar-quick-actions { overflow:hidden; }
 .calendar-quick-actions > div { padding:0 0 3px; display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; scrollbar-width:none; }
 .calendar-quick-actions > div::-webkit-scrollbar { display:none; }
 .calendar-quick-actions :is(button,a) { width:100%; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:var(--radius-pill); background:var(--color-surface); color:var(--color-text-primary); font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; }
 .calendar-action-section-head { min-height:28px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.calendar-action-section-head h3 { margin:0; color:var(--color-text-secondary); font-size:13px; line-height:1.2; letter-spacing:normal; text-transform:none; }
+.calendar-action-section-head h3 { margin:0; color:var(--color-text-secondary); font-size:15px; line-height:1.2; letter-spacing:normal; text-transform:none; }
 .calendar-action-section-head :is(a,button) { min-height:28px; padding:0 10px; display:flex; align-items:center; gap:3px; border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary); font:inherit; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; }
 .calendar-action-list { display:grid; gap:12px; }
 .calendar-action-list > :is(button,a) {
