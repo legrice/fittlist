@@ -14940,3 +14940,61 @@ a.clspeek-by:active { opacity: .6; }
   width: 36px;
   height: 36px;
 }
+
+/* Kinetic Minimal: calendar canvases and their foreground roles. */
+:root {
+  --kinetic-canvas-dark: #141414;
+  --kinetic-canvas-light: #F6F6F4;
+  --kinetic-surface: #FFFFFF;
+  --kinetic-accent: #E8FD52;
+  --kinetic-text: #000000;
+  --kinetic-inverse: #FFFFFF;
+  --kinetic-badge: rgba(20, 20, 20, 0.06);
+  --kinetic-header-control: rgba(255, 255, 255, 0.12);
+}
+html:has(.calendar-scope-top) {
+  --color-shift: var(--kinetic-canvas-dark);
+}
+.calendar-scope-top,
+.calendar-scope-hero {
+  background: var(--kinetic-canvas-dark);
+  color: var(--kinetic-inverse);
+}
+.calendar-scope-top .calendar-scope-search,
+.calendar-scope-top .calendar-mode-tabs {
+  background: var(--kinetic-header-control);
+  color: var(--kinetic-inverse);
+  box-shadow: none;
+  border: 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.calendar-scope-top .calendar-mode-tabs::after { background: var(--kinetic-accent); box-shadow:none; }
+.calendar-scope-top .calendar-mode-tabs a { color: var(--kinetic-inverse); }
+.calendar-scope-top .calendar-mode-tabs a[aria-current="page"] { color: var(--kinetic-text); }
+.calendar-action-sheet {
+  --color-surface: var(--kinetic-surface);
+  --color-surface-muted: var(--kinetic-badge);
+  --color-text-primary: var(--kinetic-text);
+  background: var(--kinetic-canvas-light);
+  color: var(--kinetic-text);
+}
+.calendar-action-hub > section > h3,
+.calendar-action-hub .calendar-action-section-head h3,
+.calendar-action-list .calendar-relationship-role { color: var(--kinetic-text); }
+.calendar-action-hub .calendar-action-section-head :is(a,button) {
+  background: var(--kinetic-accent);
+  color: var(--kinetic-text);
+}
+.calendar-revealed-controls > .calendar-add-pill {
+  background: var(--kinetic-accent);
+  color: var(--kinetic-text) !important;
+}
+.calendar-scope-top .calendar-mode-tabs[data-active="you"] a:first-child,
+.calendar-scope-top .calendar-mode-tabs[data-active="following"] a:nth-child(2) {
+  color: var(--kinetic-text);
+}
+.calendar-action-sheet .calendar-action-hub,
+.calendar-action-sheet .calendar-following-surface {
+  background: var(--kinetic-canvas-light);
+}

@@ -274,7 +274,7 @@ export function FollowingScreen({
     const original=metas.map((meta) => meta.content);
     const observer=new IntersectionObserver(([entry]) => {
       const colors = getComputedStyle(document.documentElement);
-      const color = colors.getPropertyValue(entry.isIntersecting ? "--color-background" : "--color-shift").trim();
+      const color = colors.getPropertyValue(entry.isIntersecting ? "--kinetic-canvas-light" : "--kinetic-canvas-dark").trim();
       metas.forEach((meta) => { meta.content=color; });
     },{ threshold:.12 });
     observer.observe(footer);
