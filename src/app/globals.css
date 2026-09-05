@@ -11375,7 +11375,7 @@ button.calendar-summary-copy:active { transform:scale(.985); }
 }
 .calendar-summary-share { min-width:104px; min-height:58px; padding:0 28px; border:0; border-radius:var(--radius-pill); background:var(--color-lime) !important; color:var(--color-black) !important; font:inherit; font-size:18px; font-weight:700; cursor:pointer; transition:transform var(--motion-fast) var(--motion-ease-out),background-color var(--motion-fast) var(--motion-ease-standard); }
 .calendar-summary-share:active { transform:scale(.985); background:var(--color-lime-pressed) !important; }
-.calendar-summary-reveal { width:44px; min-width:44px !important; height:36px; min-height:36px !important; padding:0 !important; border-radius:var(--radius-pill); background:color-mix(in srgb,var(--color-white) 14%,transparent) !important; color:var(--color-white) !important; perspective:120px; }
+.calendar-summary-reveal { width:44px; min-width:44px !important; height:44px; min-height:44px !important; padding:0 !important; border-radius:50%; background:color-mix(in srgb,var(--color-white) 14%,transparent) !important; color:var(--color-white) !important; perspective:120px; }
 .calendar-summary-reveal .icon { transform:rotateX(0deg); transform-origin:50% 50%; transition:transform 300ms cubic-bezier(.2,1.2,.35,1); will-change:transform; }
 .calendar-summary-reveal.is-open .icon { transform:rotateX(180deg); }
 .calendar-summary-reveal:active { transform:translateY(2px); }
