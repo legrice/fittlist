@@ -11548,6 +11548,7 @@ html[data-mode="dark"],
 .calendar-social-actions button.liked { background:var(--color-lime-soft); color:var(--color-olive); }
 .calendar-activity-scrim { position:fixed; inset:0; z-index:150; display:flex; align-items:flex-end; background:rgba(0,0,0,.38); }
 .calendar-activity-sheet { position:relative; z-index:1; display:flex; flex-direction:column; width:100%; max-height:88dvh; overflow:hidden; padding:22px var(--page-gutter) calc(24px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); color:var(--color-text-primary); box-shadow:0 -12px 42px rgba(0,0,0,.18); }
+.calendar-activity-sheet::before { content:""; flex:0 0 4px; width:36px; margin:-10px auto 18px; border-radius:var(--radius-pill); background:var(--color-border); }
 .calendar-activity-sheet > :not(.calendar-activity-comments) { flex-shrink:0; }
 .calendar-activity-scrim.is-composing .calendar-activity-sheet { position:absolute; top:calc(var(--comment-viewport-top, 0px) + 12px); height:calc(var(--comment-viewport-height, 100dvh) - 12px); max-height:calc(var(--comment-viewport-height, 100dvh) - 12px); padding-bottom:12px; }
 /* Keep Safari’s translucent keyboard/browser chrome backed by the sheet. */

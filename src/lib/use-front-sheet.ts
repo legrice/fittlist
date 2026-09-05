@@ -7,7 +7,7 @@ import { resistedSheetDistance, sheetShouldDismiss } from "@/lib/motion";
 /** Both front sheets share the same two resting states. Movement touches only
  * compositor styles, not React's calendar tree. Native non-passive listeners
  * claim downward pulls only at the top; upward/horizontal scrolling stays native. */
-export function useFrontSheet(enabled: boolean, onDismiss: () => void) {
+export function useFrontSheet(enabled: boolean, onDismiss: () => void, requirePageTop = true) {
   const sheetRef = useRef<HTMLElement>(null);
   const scopeRef = useRef<HTMLDivElement>(null);
   const dismissRef = useRef(onDismiss);
@@ -34,7 +34,7 @@ export function useFrontSheet(enabled: boolean, onDismiss: () => void) {
     const start = (event: TouchEvent) => {
       reset();
       suppressClick = false;
-      if (event.touches.length !== 1 || window.scrollY > 4) return;
+      if (event.touches.length !== 1 || (requirePageTop && window.scrollY > 4)) return;
       const target = event.target instanceof Element ? event.target : null;
       if (target?.closest("input, textarea, select, [contenteditable=true], [role=slider]")) return;
       for (let node = target; node && node !== sheet; node = node.parentElement) {
@@ -92,6 +92,6 @@ export function useFrontSheet(enabled: boolean, onDismiss: () => void) {
       sheet.removeEventListener("touchcancel", end);
       sheet.removeEventListener("click", click, true);
     };
-  }, [enabled]);
+  }, [enabled, requirePageTop]);
   return { sheetRef, scopeRef };
 }
