@@ -10,7 +10,7 @@ const f = JSON.parse(fs.readFileSync(fixturePath,"utf8"));
 const base = "http://localhost:3100";
 const log = fs.openSync(`${f.directory}/server.log`,"w");
 const server = spawn(process.execPath,["node_modules/next/dist/bin/next","start","-p","3100"],{
-  env:{...process.env,DATABASE_URL:"",BLOB_READ_WRITE_TOKEN:"",RESEND_API_KEY:"",SESSION_SECRET:f.secret,PGLITE_DATA_DIR:f.dataDir,ALLOW_EMBEDDED_DB_IN_PRODUCTION:"true",INVITE_ONLY:"false",FANS_ENABLED:"true",NEXT_PUBLIC_ORIGIN:base},stdio:["ignore",log,log],
+  env:{...process.env,DATABASE_URL:"",BLOB_READ_WRITE_TOKEN:"",RESEND_API_KEY:"",SESSION_SECRET:f.secret,ADMIN_EMAILS:f.owner.email,PGLITE_DATA_DIR:f.dataDir,ALLOW_EMBEDDED_DB_IN_PRODUCTION:"true",INVITE_ONLY:"false",FANS_ENABLED:"true",NEXT_PUBLIC_ORIGIN:base},stdio:["ignore",log,log],
 });
 const report = { browsers:[], security:[], performance:[], accessibility:[] };
 const manifest = JSON.parse(fs.readFileSync(".next/server/server-reference-manifest.json","utf8"));
@@ -105,8 +105,19 @@ async function signupFlow(browser) {
   await page.getByRole("button",{name:"Finish setup",exact:true}).click();
   await page.waitForURL("**/calendar");
   await page.getByRole("button",{name:"Not now",exact:true}).first().click();
-  await page.getByText("Your week starts with one class.",{exact:true}).waitFor();
+  await page.getByText("You have nothing on your calendar yet.",{exact:true}).waitFor();
   assert.equal(await page.getByRole("heading",{name:"Studios",exact:true}).count(),0);
+  assert.equal(await page.locator(".calendar-onboarding-actions").count(),0);
+  await page.getByRole("button",{name:"Share week",exact:true}).click();
+  await page.getByRole("heading",{name:"Add a class before sharing your week",exact:true}).waitFor();
+  await page.locator(".shstart").getByRole("button",{name:"Add a class",exact:true}).click();
+  await page.locator(".sheet.adder").waitFor();
+  await page.goto(`${base}/calendar`);
+  await page.getByRole("button",{name:"Show your calendar",exact:true}).click();
+  await page.getByText("Add any classes you’re teaching or attending to start.",{exact:true}).waitFor();
+  assert.equal(await page.locator(".calendar-first-class button").count(),1);
+  await page.screenshot({path:`${f.directory}/new-account-expanded.png`,animations:"disabled"});
+  await page.getByRole("button",{name:"Show calendar actions",exact:true}).last().click();
   await page.screenshot({path:`${f.directory}/new-account-calendar.png`,animations:"disabled",fullPage:true});
   await page.getByRole("button",{name:"Create a group",exact:false}).click();
   await page.locator(".create-group-sheet").waitFor();
@@ -134,6 +145,20 @@ async function browserFlows(name,type) {
     const context=await signedContext(browser,"owner");
     const page=await context.newPage();
     page.setDefaultTimeout(15_000);
+    await page.goto(`${base}/admin/marketing`);
+    const demo = page.locator("figure[data-running]");
+    await demo.scrollIntoViewIfNeeded();
+    await page.getByRole("button",{name:"Pause app preview",exact:true}).click();
+    assert.equal(await demo.getAttribute("data-running"),"false");
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
+    await demo.screenshot({path:`${f.directory}/${name}-marketing-you.png`});
+    // Sample the animation timeline deterministically, without waiting through a loop.
+    await demo.evaluate(el=>el.getAnimations({subtree:true}).forEach(animation=>{animation.currentTime=18500;}));
+    await demo.screenshot({path:`${f.directory}/${name}-marketing-following.png`});
+    await page.emulateMedia({reducedMotion:"reduce"});
+    await page.getByRole("button",{name:"Reduced-motion preview",exact:true}).waitFor();
+    assert.equal(await demo.evaluate(el=>el.getAnimations({subtree:true}).length),0);
+    await page.emulateMedia({reducedMotion:"no-preference"});
     const errors=[];
     const failedRequests=[];
     page.on("requestfailed",request=>failedRequests.push({url:request.url(),error:request.failure()?.errorText}));

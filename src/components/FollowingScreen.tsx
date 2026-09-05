@@ -18,6 +18,7 @@ import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/Cale
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
+import { SuggestedFollows } from "@/components/SuggestedFollows";
 import { Wordmark } from "@/components/Wordmark";
 import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
@@ -1058,7 +1059,7 @@ export function FollowingScreen({
       ) : isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
-        calendarFollowing ? <section className="calendar-first-class"><h2>{followingSummary.length === 0 ? "Find your people" : "No upcoming activity yet"}</h2><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p><button className="btn" type="button" onClick={restoreActionSurface}>Explore calendars</button></section> : firstRun ? (
+        calendarFollowing ? <section className="calendar-first-class"><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={restoreActionSurface}>Explore calendars</button></section> : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="calendar-member-empty-figure" src="/illustrations/following-empty.png" alt="" width={356} height={600} />

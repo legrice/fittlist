@@ -487,7 +487,7 @@ export function CalendarScreen({
     }
     else if (summaryVoice === "shakespearean")
       title=coaching && attending ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to coach and ${attending} to attend.`,`By my troth, thou coachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to coach.`,`By my troth, thou coachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thou hast nothing scheduled this week.";
-    if (classes.length === 0 && savedDays.every((day) => day.items.length === 0)) title="Your week starts with one class.";
+    if (classes.length === 0 && savedDays.every((day) => day.items.length === 0)) title="You have nothing on your calendar yet.";
     return { title };
   },[classes,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
 
@@ -705,11 +705,11 @@ export function CalendarScreen({
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div><div className="calendar-onboarding-actions"><button type="button" onClick={openAdd}>Add a class</button><Link href="/calendar/following">Find people to follow</Link></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
+        <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
       {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
         <div className="calendar-action-hub">
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>
-            {!bare && <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>}
+            <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share profile</button>}
           </div></section>
           <section><h3>Profile</h3><div className="calendar-action-list">
@@ -774,7 +774,7 @@ export function CalendarScreen({
       </CalSticky>
 
       {bare ? (
-        <section className="calendar-first-class"><p>Add a class you’re taking or teaching to start your calendar.</p><div className="calendar-empty-actions"><button className="btn si" type="button" onClick={openAdd}>Add a class</button><Link className="btn ghost" href="/calendar/following">Find people to follow</Link></div></section>
+        <section className="calendar-first-class"><p>Add any classes you’re teaching or attending to start.</p><div className="calendar-empty-actions"><button className="btn si" type="button" onClick={openAdd}>Add a class</button></div></section>
       ) : view === "month" ? (
         <MonthScroll
           todayIso={todayIso}

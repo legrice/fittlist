@@ -1,3 +1,4 @@
+import { MarketingPhoneDemo } from "@/components/MarketingPhoneDemo";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
@@ -103,38 +104,7 @@ export function MarketingLanding({
       <section className={styles.hero}>
         <h1>Fit all of your fitness<br />into one calendar.</h1>
         <Link href="/?join=signup" className={styles.primary}>Get started</Link>
-        <div className={styles.heroArt} aria-label="FittList calendar on a phone">
-          <div className={styles.heroPhone} aria-hidden="true">
-            <div className={styles.phoneStatus}><span>9:41</span><span>● ● ●</span></div>
-            <div className={styles.phoneBrand}>
-              <span className={styles.phoneBrandName}><span className={styles.phoneMark} /><strong>FittList</strong></span>
-              <span className={styles.phoneTools}>
-                <i><Icon name="search" size={16} /></i>
-                <i><Icon name="add" size={16} /></i>
-                <i><Icon name="notifications" size={16} /></i>
-              </span>
-            </div>
-            <div className={styles.phoneIdentity}>
-              <b>MC</b>
-              <span><strong>Maya Cole</strong><small>Coach · 4 studios</small></span>
-            </div>
-            <div className={styles.phoneFilters}>
-              <span data-selected="true">All Studios</span>
-              <span>Northline Yoga</span>
-              <span>Harbor Athletic Club</span>
-              <span>Common Ground Studio</span>
-              <span>Motive House</span>
-            </div>
-            <div className={styles.phoneSchedule}>
-              <h3>Today</h3>
-              <div><i data-tone="mint">N</i><span><strong>Evening Flow</strong><small>Northline Yoga</small></span><time>6:00pm</time></div>
-              <div><i data-tone="blue">H</i><span><strong>Strength Circuit</strong><small>Harbor Athletic Club</small></span><time>7:00pm</time></div>
-              <h3>Tomorrow</h3>
-              <div><i data-tone="amber">C</i><span><strong>Mobility Lab</strong><small>Common Ground Studio</small></span><time>8:00am</time></div>
-              <div><i data-tone="plum">M</i><span><strong>Power Hour</strong><small>Motive House</small></span><time>5:30pm</time></div>
-            </div>
-          </div>
-        </div>
+        <MarketingPhoneDemo />
       </section>
 
       <section className={styles.proof}>

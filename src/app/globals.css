@@ -14802,8 +14802,17 @@ a.clspeek-by:active { opacity: .6; }
 .sheet-dismiss.sheetclose { left:auto; right:var(--page-gutter); }
 .sheet-dismiss.header-profile-close { top:16px; }
 
-.calendar-onboarding-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:18px; }
-.calendar-onboarding-actions :is(a,button) { min-height:44px; padding:10px 16px; border:0; border-radius:var(--radius-pill); background:var(--color-white); color:var(--color-black); font:inherit; font-size:14px; font-weight:700; text-decoration:none; }
 .calendar-first-class { padding:24px 0; text-align:center; }
 .calendar-first-class h2 { margin:0 0 10px; }
-.calendar-first-class p { margin:0 0 20px; }
+.calendar-first-class > p { margin:0 auto 24px; max-width:440px; font-size:20px; line-height:1.4; }
+.calendar-first-class .calendar-empty-actions .btn { width:100%; min-height:54px; font-size:18px; }
+.suggested-follows { margin:24px 0; text-align:left; }
+.suggested-follows h3 { font-size:16px; margin:0 0 12px; }
+.suggested-follow-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.suggested-follow-grid article { background:var(--card); color:var(--ink); padding:18px 12px; border-radius:22px; text-align:center; min-width:0; }
+.suggested-follow-grid a { display:flex; flex-direction:column; align-items:center; gap:8px; color:inherit; text-decoration:none; }
+.suggested-follow-grid .suggested-face { display:grid; place-items:center; width:48px; height:48px; overflow:hidden; border-radius:50%; background:var(--cl); }
+.suggested-face img { width:100%; height:100%; object-fit:cover; }
+.suggested-follow-grid strong { font-size:16px; }
+.suggested-follow-grid small { font-size:13px; color:var(--muted); }
+.suggested-follow-grid button { margin-top:12px; }
