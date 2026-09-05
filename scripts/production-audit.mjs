@@ -167,6 +167,7 @@ async function browserFlows(name,type) {
       await page.getByRole("button",{name:"Group settings",exact:true}).click();
       const settings=page.locator(".group-settings-sheet");
       await settings.getByRole("heading",{name:"Group settings",exact:true}).waitFor();
+      await settings.evaluate(async el=>Promise.all([...el.getAnimations(),...el.parentElement.getAnimations()].map(animation=>animation.finished.catch(()=>{}))));
       for(const target of [settings.locator("h2"),settings.getByRole("button",{name:"Close",exact:true})]) {
         assert(await target.evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),"Group sheet must be above calendar cards");
       }
