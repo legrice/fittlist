@@ -11293,7 +11293,7 @@ html[data-mode="dark"],
 .calendar-mode-tabs.is-collapsed[data-active="following"] { grid-template-columns:0fr 1fr; }
 .calendar-mode-tabs.is-collapsed::after { width:calc(100% - 6px); transform:translateX(0); }
 .calendar-mode-tabs.is-collapsed a:not([aria-current="page"]) { min-width:0; padding:0; opacity:0; pointer-events:none; }
-.calendar-scope-hero { margin:0 0 24px; padding:20px; border-radius:28px; background:var(--color-shift); color:var(--color-white); touch-action:pan-y; }
+.calendar-scope-hero { margin:0 0 24px; padding:28px 20px; border-radius:28px; background:var(--color-shift); color:var(--color-white); touch-action:pan-y; }
 .calendar-scope-top { position:sticky; top:0; z-index:0; margin:0 0 18px; padding:8px 0; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; background:var(--color-shift); }
 .calendar-scope-top .calendar-mode-tabs { margin:0; justify-self:center; }
 .calendar-scope-top .calendar-mode-tabs::after { background:var(--color-white); }
@@ -11334,7 +11334,7 @@ html[data-mode="dark"],
   html:has(.calendar-scope-hero),
   body:has(.calendar-scope-hero) { overscroll-behavior-y:none; }
   .calendar-scope-top { margin:-8px calc(-1 * var(--page-gutter)) 0; padding:12px var(--page-gutter) 8px; }
-  .calendar-scope-hero { position:sticky; top:64px; z-index:0; margin:0 calc(-1 * var(--page-gutter)); padding:16px var(--page-gutter) 28px; border-radius:0; }
+  .calendar-scope-hero { position:sticky; top:64px; z-index:0; margin:0 calc(-1 * var(--page-gutter)); padding:24px var(--page-gutter) 36px; border-radius:0; }
   .screen.hasnav .calendar-cardwrap,
   .calendar-foreground-sheet { position:relative; z-index:1; margin-top:-12px; margin-right:calc(-1 * var(--page-gutter)); margin-left:calc(-1 * var(--page-gutter)); padding:22px var(--page-gutter) calc(92px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); box-shadow:0 -8px 24px rgba(0,0,0,.07); }
   .screen.hasnav .calendar-cardwrap { width:calc(100% + (2 * var(--page-gutter))); }
@@ -14878,4 +14878,10 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-revealed-controls.is-returning,
   .calendar-action-sheet.calendar-front-restoring:not(.calendar-surface-leaving) { animation: none; }
   .calendar-scope-top.is-returning .calendar-scope-close { transition: none; }
+}
+
+/* Keep Following's directory controls clean against the front sheet. */
+.calendar-following-surface .discover-class-filters select,
+.calendar-following-surface .discover-searchrow .dissearch {
+  border: 0;
 }
