@@ -11547,7 +11547,11 @@ html[data-mode="dark"],
 .calendar-social-actions button { min-width:42px; height:36px; padding:0 11px; display:flex; align-items:center; justify-content:center; gap:5px; border:0; border-radius:var(--radius-pill); background:var(--color-surface-muted); color:var(--color-text-primary); font:inherit; font-size:13px; font-weight:700; }
 .calendar-social-actions button.liked { background:var(--color-lime-soft); color:var(--color-olive); }
 .calendar-activity-scrim { position:fixed; inset:0; z-index:150; display:flex; align-items:flex-end; background:rgba(0,0,0,.38); }
-.calendar-activity-sheet { width:100%; max-height:88dvh; overflow-y:auto; padding:22px var(--page-gutter) calc(24px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); color:var(--color-text-primary); box-shadow:0 -12px 42px rgba(0,0,0,.18); }
+.calendar-activity-sheet { position:relative; z-index:1; display:flex; flex-direction:column; width:100%; max-height:88dvh; overflow:hidden; padding:22px var(--page-gutter) calc(24px + env(safe-area-inset-bottom)); border-radius:32px 32px 0 0; background:var(--color-background); color:var(--color-text-primary); box-shadow:0 -12px 42px rgba(0,0,0,.18); }
+.calendar-activity-sheet > :not(.calendar-activity-comments) { flex-shrink:0; }
+.calendar-activity-scrim.is-composing .calendar-activity-sheet { position:absolute; top:calc(var(--comment-viewport-top, 0px) + 12px); height:calc(var(--comment-viewport-height, 100dvh) - 12px); max-height:calc(var(--comment-viewport-height, 100dvh) - 12px); padding-bottom:12px; }
+/* Keep Safari’s translucent keyboard/browser chrome backed by the sheet. */
+.calendar-activity-scrim.is-composing::after { content:""; position:absolute; top:calc(var(--comment-viewport-top, 0px) + var(--comment-viewport-height, 100dvh) - 2px); bottom:0; left:0; right:0; background:var(--color-background); pointer-events:none; }
 .calendar-activity-sheet > header { display:flex; align-items:flex-start; justify-content:space-between; }
 .calendar-activity-sheet > header > button { width:44px; height:44px; padding:0; display:grid; place-items:center; border:0; border-radius:50%; background:var(--color-surface-muted); color:inherit; }
 .calendar-activity-faces > span,
@@ -11557,7 +11561,7 @@ html[data-mode="dark"],
 .calendar-activity-sheet > h2 { margin:22px 0 4px; font-size:21px; line-height:1.3; font-weight:400; }
 .calendar-activity-sheet > h2 :is(strong,b) { font-weight:700; }
 .calendar-activity-detail { margin:0; color:var(--color-text-secondary); font-size:14px; }
-.calendar-activity-comments { margin-top:24px; padding-top:18px; display:grid; gap:18px; border-top:1px solid var(--color-border); }
+.calendar-activity-comments { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; align-content:start; margin-top:24px; padding-top:18px; display:grid; gap:18px; border-top:1px solid var(--color-border); }
 .calendar-activity-comments > div { display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:start; gap:11px; }
 .calendar-activity-comments > div > span { width:44px; height:44px; }
 .calendar-activity-comments p { margin:0; font-size:15px; line-height:1.4; }
