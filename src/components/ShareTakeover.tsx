@@ -150,27 +150,6 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
   useEffect(() => {
     mountedRef.current = true;
     originScroll.current = window.scrollY;
-    const backgroundState: Array<{
-      element: HTMLElement;
-      inert: boolean;
-      ariaHidden: string | null;
-    }> = [];
-    let backgroundBlocked = false;
-    const blockBackground = (dialog: HTMLElement) => {
-      if (backgroundBlocked) return;
-      backgroundBlocked = true;
-      for (const element of [...document.body.children]) {
-        if (!(element instanceof HTMLElement) || element.contains(dialog)) continue;
-        if (["SCRIPT", "STYLE", "LINK"].includes(element.tagName)) continue;
-        backgroundState.push({
-          element,
-          inert:element.hasAttribute("inert"),
-          ariaHidden:element.getAttribute("aria-hidden"),
-        });
-        element.setAttribute("inert", "");
-        element.setAttribute("aria-hidden", "true");
-      }
-    };
     window.dispatchEvent(new CustomEvent("fittlist:takeover", { detail: true }));
     window.history.pushState(
       { ...(window.history.state ?? {}), shareTakeover:historyMarker.current },
@@ -184,10 +163,9 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
         // exists, rather than when BodyPortal still renders null.
         sharePerformance.shellRendered();
         dialogRef.current.focus({ preventScroll:true });
-        // The origin can itself be a portaled calendar takeover. Block every
-        // body sibling, not just the route shell, so screen readers and
-        // keyboard users encounter only Share until it closes.
-        blockBackground(dialogRef.current);
+        // ScrollLock owns background isolation and restores it on close.
+        // A second inert snapshot here can preserve ScrollLock's temporary
+        // state and leave the underlying screen disabled after dismissal.
       }
       else focusFrame = requestAnimationFrame(focusWhenReady);
     };
@@ -259,11 +237,6 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
       if (closeTimer.current) clearTimeout(closeTimer.current);
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("popstate", onPopState);
-      for (const state of backgroundState) {
-        if (!state.inert) state.element.removeAttribute("inert");
-        if (state.ariaHidden === null) state.element.removeAttribute("aria-hidden");
-        else state.element.setAttribute("aria-hidden", state.ariaHidden);
-      }
       if (window.history.state?.shareTakeover === historyMarker.current) {
         const nextState = { ...(window.history.state ?? {}) };
         delete nextState.shareTakeover;
