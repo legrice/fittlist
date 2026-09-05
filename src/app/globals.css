@@ -15220,3 +15220,13 @@ button.calendar-summary-reveal:focus-visible {
   display:grid; place-items:center; color:var(--color-white); font-size:13px; font-weight:700;
 }
 .clline-coach-face img { width:100%; height:100%; object-fit:cover; }
+
+/* Hidden occurrence controls must not reserve title space on personal cards. */
+.personal-calendar-list.calendar-cardlist .clrow .clline-title-row .clline-nm {
+  padding-right: 0;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: unset;
+}
