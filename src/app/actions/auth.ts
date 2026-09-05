@@ -38,7 +38,8 @@ import { pubKeyFromStore, pubKeyToStore, rpInfo, setChallenge, takeChallenge } f
 import { acceptInvite, INVITE_MSG, signupAllowed } from "@/lib/invites";
 import { emailHtml } from "@/lib/email-html";
 import { fansEnabled, landingHref } from "@/lib/flags";
-import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
+import { RESERVED_HANDLES, slug } from "@/lib/format";
+import { authOrigin } from "@/lib/auth-origin";
 import { signupSource } from "@/lib/attribution";
 import { pushSignupPing } from "@/lib/push";
 import { claimRosterPlaceholders } from "@/lib/roster";
@@ -270,7 +271,7 @@ export async function requestMagicLink(
     purpose,
     expiresAt: new Date(Date.now() + MAGIC_TTL_MS),
   }).returning({ id: schema.magicLinks.id });
-  const url = `${siteOrigin()}/auth/magic?token=${token}`;
+  const url = `${authOrigin()}/auth/magic?token=${token}`;
   const firstTime = !existing;
   const resetting = purpose === "reset";
   const lines = firstTime

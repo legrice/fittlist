@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { siteOrigin } from "@/lib/format";
+import { authOrigin } from "@/lib/auth-origin";
 import { MAGIC_PENDING_COOKIE, MAGIC_PENDING_MAX_AGE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   const q = new URL(req.url).searchParams;
   const token = q.get("token") ?? "";
   const invited = q.get("invited") === "1";
-  const origin = siteOrigin();
+  const origin = authOrigin();
   if (!/^[a-f0-9]{64}$/.test(token)) {
     const expired = NextResponse.redirect(`${origin}/?expired=1${invited ? "&invited=1" : ""}`, 303);
     expired.cookies.set(MAGIC_PENDING_COOKIE, "", {

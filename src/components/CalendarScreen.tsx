@@ -49,7 +49,6 @@ const QrSheet = dynamic(() => import("@/components/QrSheet").then((module) => mo
 const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
 const ShareTakeover = dynamic(() => import("@/components/ShareTakeover").then((module) => module.ShareTakeover));
 const CreateGroupSheet = dynamic(() => import("@/components/SavedScreen").then((module) => module.CreateGroupSheet));
-const GlobalAdd = dynamic(() => import("@/components/GlobalAdd").then((module) => module.GlobalAdd));
 
 /**
  * A coach's own calendar: the classes they teach, and nothing else.
@@ -488,6 +487,7 @@ export function CalendarScreen({
     }
     else if (summaryVoice === "shakespearean")
       title=coaching && attending ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to coach and ${attending} to attend.`,`By my troth, thou coachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to coach.`,`By my troth, thou coachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thou hast nothing scheduled this week.";
+    if (classes.length === 0 && savedDays.every((day) => day.items.length === 0)) title="Your week starts with one class.";
     return { title };
   },[classes,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
 
@@ -652,6 +652,7 @@ export function CalendarScreen({
   // eight weeks do: the empty state offers the thing to do only when there is
   // nothing on their coaching calendar.
   const bare = classes.length === 0 && savedDays.every((day) => day.items.length === 0);
+  const managedStudios = studioRelationships.filter((studio) => studio.admin);
   const openAdd = () => {
     ensureComposer();
     setQuickPrefill(null);
@@ -704,22 +705,22 @@ export function CalendarScreen({
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Following</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
-        <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary"><button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button><button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
+        <section className={`calendar-scope-hero calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div><div className="calendar-onboarding-actions"><button type="button" onClick={openAdd}>Add a class</button><Link href="/calendar/following">Find people to follow</Link></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
       {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
         <div className="calendar-action-hub">
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>
-            <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>
+            {!bare && <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>}
             {handle && <button type="button" onClick={() => setProfileQrOpen(true)}><Icon name="qr_code_2" size={20} />Share profile</button>}
           </div></section>
           <section><h3>Profile</h3><div className="calendar-action-list">
             <button type="button" onClick={() => setProfileActionsOpen(true)}><span className="calendar-action-icon profile-avatar">{viewer.photo ? <img src={viewer.photo} alt="" /> : <span style={{ background:viewer.color }}>{viewer.name.charAt(0)}</span>}</span><span><small className="calendar-relationship-role">{handle ? `@${handle}` : "Personal profile"}</small><strong>{viewer.name}</strong></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
-          <section><div className="calendar-action-section-head"><h3>Places</h3><GlobalAdd placeOnly triggerClassName="calendar-section-add" triggerLabel="Add" triggerIconSize={17} /></div><div className="calendar-action-list">
-            {studioRelationships.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small><strong>{studio.name}</strong></span><Icon name="chevron_right" size={20} /></Link>)}
-          </div></section>
-          <section><div className="calendar-action-section-head"><h3>Groups</h3><button type="button" onClick={() => setCreateGroupOpen(true)}><Icon name="add" size={17} />New group</button></div><div className="calendar-action-list">
+          {managedStudios.length > 0 && <section><div className="calendar-action-section-head"><h3>Studios</h3></div><div className="calendar-action-list">
+            {managedStudios.map((studio) => <Link key={studio.id} href={studio.admin ? `/s/${studio.slug}/manage` : `/s/${studio.slug}`}><span className="calendar-action-icon studio">{studio.photo ? <img src={studio.photo} alt="" /> : <Icon name="storefront" size={23} />}</span><span><small className="calendar-relationship-role">{studio.admin ? "Manager" : "Coach"}</small><strong>{studio.name}</strong></span><Icon name="chevron_right" size={20} /></Link>)}
+          </div></section>}
+          <section><div className="calendar-action-section-head"><h3>Groups</h3>{groupCalendars.length > 0 && <button type="button" onClick={() => setCreateGroupOpen(true)}><Icon name="add" size={17} />New group</button>}</div><div className="calendar-action-list">
             {groupCalendars.map((group) => <Link key={group.id} href={`/g/${group.slug}`}><span className="calendar-action-icon group">{group.photo ? <img src={group.photo} alt="" /> : <Icon name="groups" size={23} />}</span><span><small className="calendar-relationship-role">{group.role === "owner" || group.role === "admin" ? "Manager" : "Member"}</small><strong>{group.name}</strong></span><Icon name="chevron_right" size={20} /></Link>)}
-            {groupCalendars.length === 0 && <Link href="/saved"><span className="calendar-action-icon group"><Icon name="groups" size={23} /></span><span><strong>Create or join a group</strong><small>Plan classes and events together</small></span><Icon name="chevron_right" size={20} /></Link>}
+            {groupCalendars.length === 0 && <><Link href="/discover?half=groups"><span className="calendar-action-icon group"><Icon name="search" size={23} /></span><span><strong>Find a group</strong><small>Meet people to train with</small></span><Icon name="chevron_right" size={20} /></Link><button type="button" onClick={() => setCreateGroupOpen(true)}><span className="calendar-action-icon group"><Icon name="add" size={23} /></span><span><strong>Create a group</strong><small>Make plans with your people</small></span><Icon name="chevron_right" size={20} /></button></>}
           </div></section>
           <section><h3>Updates</h3><div className="calendar-action-list">
             <Link href="/inbox"><span className="calendar-action-icon"><Icon name="chat_bubble" size={23} /></span><span><strong>Messages</strong><small>Conversations and class questions</small></span><Icon name="chevron_right" size={20} /></Link>
@@ -773,16 +774,7 @@ export function CalendarScreen({
       </CalSticky>
 
       {bare ? (
-        <WeekEmpty
-          first
-          title="Your calendar is empty"
-          body="Add a class you&rsquo;re taking or teaching."
-          actions={(
-            <div className="calendar-empty-actions">
-              <button className="btn si" type="button" onClick={openAdd}>Add a class</button>
-            </div>
-          )}
-        />
+        <section className="calendar-first-class"><p>Add a class you’re taking or teaching to start your calendar.</p><div className="calendar-empty-actions"><button className="btn si" type="button" onClick={openAdd}>Add a class</button><Link className="btn ghost" href="/calendar/following">Find people to follow</Link></div></section>
       ) : view === "month" ? (
         <MonthScroll
           todayIso={todayIso}

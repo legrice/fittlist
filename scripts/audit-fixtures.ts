@@ -22,6 +22,7 @@ const [owner, member, outsider] = await db.insert(schema.users).values([
   { email:"audit-outsider@example.test", name:"Audit Outsider", handle:"auditoutsider", kind:"fan", passwordHash, onboardedAt:new Date() },
 ]).returning();
 const [studio] = await db.insert(schema.studios).values({ name:"Audit Studio", slug:"audit-studio", address:"100 Test Street, New York", lat:40.71, lng:-74.0 }).returning();
+await db.insert(schema.studioManagers).values({studioId:studio.id,userId:owner.id});
 const iso = todayIso();
 const dow = (new Date(`${iso}T12:00:00Z`).getUTCDay()+6)%7;
 const [publicClass, privateClass] = await db.insert(schema.classes).values([

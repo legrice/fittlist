@@ -645,7 +645,7 @@ export function FollowingScreen({
     groupOptions.length ? `${groupOptions.length}\u00a0${groupOptions.length === 1 ? "group" : "groups"}` : null,
   ].filter((value): value is string => !!value);
   const followingSummaryText = followingSummary.length === 0
-    ? "You aren’t following any calendars yet."
+    ? "Find your people. See what’s on their calendars."
     : `You’re following ${followingSummary.length === 1 ? followingSummary[0] : `${followingSummary.slice(0,-1).join(", ")}${followingSummary.length > 2 ? "," : ""} and ${followingSummary.at(-1)}`}.`;
 
   const selectedCalendar = useMemo(() => {
@@ -1058,7 +1058,7 @@ export function FollowingScreen({
       ) : isHome && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status">Loading your schedule</div>
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
-        firstRun ? (
+        calendarFollowing ? <section className="calendar-first-class"><h2>{followingSummary.length === 0 ? "Find your people" : "No upcoming activity yet"}</h2><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p><button className="btn" type="button" onClick={restoreActionSurface}>Explore calendars</button></section> : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="calendar-member-empty-figure" src="/illustrations/following-empty.png" alt="" width={356} height={600} />
