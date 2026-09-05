@@ -15210,3 +15210,13 @@ button.calendar-summary-reveal:focus-visible {
   outline: none;
   box-shadow: none;
 }
+
+.personal-calendar-list .clline:has(.clline-by) { grid-template-rows:auto auto auto; }
+.personal-calendar-list .clline > .clline-by { grid-row:1; margin-bottom:6px; }
+.personal-calendar-list .clline:has(.clline-by) .clline-title-row :is(.clline-t,.clline-nm) { grid-row:2; }
+.personal-calendar-list .clline:has(.clline-by) .clline-studio-row :is(.clline-dur,.clline-w) { grid-row:3; }
+.clline-coach-face {
+  width:28px; height:28px; flex:0 0 28px; border-radius:50%; overflow:hidden;
+  display:grid; place-items:center; color:var(--color-white); font-size:13px; font-weight:700;
+}
+.clline-coach-face img { width:100%; height:100%; object-fit:cover; }
