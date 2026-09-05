@@ -15081,3 +15081,18 @@ html:has(.calendar-scope-top) {
   background: var(--kinetic-accent);
   color: var(--kinetic-text);
 }
+
+.calendar-profile-tile {
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--kinetic-surface);
+}
+.calendar-profile-tile .calendar-quick-actions {
+  padding: 0 16px 16px;
+}
+.calendar-profile-tile .calendar-quick-actions > div {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+.calendar-profile-tile .calendar-quick-actions :is(button,a) {
+  padding-inline: 10px;
+}
