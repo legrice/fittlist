@@ -18,6 +18,7 @@ export function ClassCardActions({
   name,
   canAdd,
   initialOn,
+  variant = "icon",
 }: {
   classId: string;
   iso: string;
@@ -26,6 +27,7 @@ export function ClassCardActions({
    *  the coach on the slot. The server still has the final say. */
   canAdd: boolean;
   initialOn: boolean;
+  variant?: "icon" | "label";
 }) {
   const [on, setOn] = useState(initialOn);
   const [justAdded, setJustAdded] = useState(false);
@@ -70,14 +72,14 @@ export function ClassCardActions({
           reaches nothing. */}
       {canAdd && (
         <button
-          className={`calendar-save-action evcard-add${on ? " on" : ""}`}
+          className={variant === "label" ? `explore-save-button${on ? " on" : ""}` : `calendar-save-action evcard-add${on ? " on" : ""}`}
           aria-label={on ? "Saved to your plans" : "Save to your plans"}
           aria-pressed={on}
           aria-busy={pending}
           disabled={pending}
           onClick={toggle}
         >
-          <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
+          {variant === "label" ? (on ? "Saved" : "Save") : <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />}
         </button>
       )}
       {/* The same note every other Add answers with, naming the list it

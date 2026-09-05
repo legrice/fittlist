@@ -15179,3 +15179,12 @@ html:has(.calendar-scope-top) {
   background: color-mix(in srgb, var(--kinetic-accent) 24%, var(--kinetic-surface));
   color: var(--kinetic-text);
 }
+
+.explore-save-row { display:flex; justify-content:flex-end; padding:0 16px 16px; }
+.explore-save-row:empty { display:none; }
+.explore-save-button {
+  min-height:36px; padding:0 18px; border:0; border-radius:var(--radius-pill);
+  background:#E5E7EB; color:var(--kinetic-text); font:inherit; font-size:14px; font-weight:700;
+}
+.explore-save-button.on { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
+.explore-save-button:disabled { opacity:.6; }
