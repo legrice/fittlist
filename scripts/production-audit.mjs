@@ -159,6 +159,26 @@ async function browserFlows(name,type) {
     await page.getByRole("button",{name:"Reduced-motion preview",exact:true}).waitFor();
     assert.equal(await demo.evaluate(el=>el.getAnimations({subtree:true}).length),0);
     await page.emulateMedia({reducedMotion:"no-preference"});
+    // The settings header and close button must win hit-testing over class cards.
+    for (const width of [390,1280]) {
+      await page.setViewportSize({width,height:844});
+      await page.goto(`${base}/g/audit-group`);
+      await page.getByText("Audit Strength",{exact:true}).first().waitFor();
+      await page.getByRole("button",{name:"Group settings",exact:true}).click();
+      const settings=page.locator(".group-settings-sheet");
+      await settings.getByRole("heading",{name:"Group settings",exact:true}).waitFor();
+      for(const target of [settings.locator("h2"),settings.getByRole("button",{name:"Close",exact:true})]) {
+        assert(await target.evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),"Group sheet must be above calendar cards");
+      }
+      await page.screenshot({path:`${f.directory}/${name}-group-settings-${width}.png`});
+      await settings.getByRole("button",{name:/Details Edit/}).click();
+      await settings.getByRole("heading",{name:"Details",exact:true}).waitFor();
+      await settings.getByRole("button",{name:"Close",exact:true}).click();
+      await page.getByRole("button",{name:"Add a class",exact:true}).first().click();
+      await page.locator(".group-class-catalog-sheet").getByRole("heading",{name:"Add a class",exact:true}).waitFor();
+      await page.locator(".group-class-catalog-sheet").getByRole("button",{name:"Close",exact:true}).click();
+    }
+    await page.setViewportSize({width:390,height:844});
     const errors=[];
     const failedRequests=[];
     page.on("requestfailed",request=>failedRequests.push({url:request.url(),error:request.failure()?.errorText}));

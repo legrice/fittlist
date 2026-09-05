@@ -29,6 +29,9 @@ const [publicClass, privateClass] = await db.insert(schema.classes).values([
   { userId:owner.id, name:"Audit Strength", dayOfWeek:dow, startTime:"23:00", durationMin:45, studioId:studio.id, isPublic:true },
   { userId:owner.id, name:"CONFIDENTIAL COACH CLASS", dayOfWeek:dow, startTime:"23:00", durationMin:30, isPublic:false },
 ]).returning();
+const [group] = await db.insert(schema.groups).values({name:"Audit Group",slug:"audit-group",ownerUserId:owner.id,inviteToken:randomBytes(24).toString("hex"),visibility:"public"}).returning();
+await db.insert(schema.groupMembers).values([{groupId:group.id,userId:owner.id,role:"owner"},{groupId:group.id,userId:member.id,role:"member"}]);
+await db.insert(schema.groupClasses).values({groupId:group.id,classId:publicClass.id,occurrenceDate:iso});
 const [personal] = await db.insert(schema.personalClasses).values({ userId:owner.id, name:"CONFIDENTIAL PERSONAL PLAN", dayOfWeek:dow, startTime:"23:30" }).returning();
 await db.insert(schema.subscribers).values({ trainerUserId:owner.id, userId:member.id, email:member.email });
 const magic = randomBytes(32).toString("hex");
