@@ -14943,7 +14943,7 @@ a.clspeek-by:active { opacity: .6; }
 
 /* Kinetic Minimal: calendar canvases and their foreground roles. */
 :root {
-  --kinetic-canvas-dark: #141414;
+  --kinetic-canvas-dark: #192126;
   --kinetic-canvas-light: #F6F6F4;
   --kinetic-surface: #FFFFFF;
   --kinetic-accent: #E8FD52;
