@@ -441,11 +441,11 @@ export function CalendarScreen({
     }
     const classWord=(count:number) => count === 1 ? "class" : "classes";
     const activitySummary=coaching && attending
-      ? `You are coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
+      ? `You’re coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
       : coaching
-        ? `You are coaching ${coaching} ${classWord(coaching)} this week.`
+        ? `You’re coaching ${coaching} ${classWord(coaching)} this week.`
         : attending
-          ? `You are attending ${attending} ${classWord(attending)} this week.`
+          ? `You’re attending ${attending} ${classWord(attending)} this week.`
           : "You have nothing scheduled this week.";
     const totalScheduled=coaching+attending+personal;
     const roastContext=activitySummary;
