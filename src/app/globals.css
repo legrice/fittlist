@@ -15034,3 +15034,26 @@ html:has(.calendar-scope-top) {
   background: transparent;
   border-bottom: 0;
 }
+
+/* Shared floating icon treatment for calendar, share, and entity headers. */
+:root {
+  --kinetic-icon-surface: color-mix(in srgb, var(--kinetic-canvas-dark) 88%, var(--kinetic-inverse));
+}
+.calendar-scope-top .calendar-scope-search,
+.shpage-editor .share-page-close,
+.shpage-editor .shtop-undo,
+.shpage-editor .sheditor-tool-icon,
+.calendar-share-sheet:has(.shpage-editor) > .calendar-share-close,
+.calendar-share-sheet:has(.shpage-editor) .share-takeover-head .calendar-share-close,
+.calendar-share-sheet:has(.shpage-editor) .shtop-undo,
+.calendar-share-sheet .shpage-embedded .sheditor-tool-icon,
+.profile-seam-top :is(.evback,.ownermore,.ownergear,.calendar-pin-button,.profile-overflow-trigger),
+.group-hero-back,
+.group-overflow-trigger {
+  background: var(--kinetic-icon-surface);
+  color: var(--kinetic-inverse);
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
