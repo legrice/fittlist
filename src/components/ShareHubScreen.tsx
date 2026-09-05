@@ -341,8 +341,7 @@ export function ShareHubScreen({
     ),
   ).current;
   const [themeId, setThemeId] = useState<StoryThemeId>(startingDesign.themeId);
-  const [styleId, setStyleId] = useState<StoryStyleId>(startingDesign.styleId);
-  const lastScheduleStyle = useRef<StoryStyleId>(startingDesign.styleId === "semantic" ? "plain" : startingDesign.styleId);
+  const [styleId, setStyleId] = useState<StoryStyleId>(startingDesign.styleId === "semantic" ? "plain" : startingDesign.styleId);
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
   const [hide, setHide] = useState<Set<string>>(new Set());
@@ -929,7 +928,8 @@ export function ShareHubScreen({
 
   const applyDesign = (design: ShareDesign) => {
     const safe = sanitizeShareDesign(design);
-    setStyleId(safe.styleId);
+    // Words is paused; older saved looks still open as an editable image.
+    setStyleId(safe.styleId === "semantic" ? "plain" : safe.styleId);
     setThemeId(safe.themeId);
     setTypeId(safe.typeId);
     setDecoId(safe.decoId);
@@ -964,8 +964,8 @@ export function ShareHubScreen({
   };
 
   const applyCompleteStyle = (id: StoryStyleId) => {
+    if (id === "semantic") id="plain";
     const style = STORY_STYLES[id];
-    if (id !== "semantic") lastScheduleStyle.current=id;
     setStyleId(id);
     setThemeId(style.theme);
     setTypeId(style.typeface);
@@ -981,7 +981,6 @@ export function ShareHubScreen({
     if (styleId === "semantic") setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5);
     else {
       const nextStyle=randomOther((Object.keys(STORY_STYLES) as StoryStyleId[]).filter((id) => id !== "semantic"), styleId);
-      lastScheduleStyle.current=nextStyle;
       setStyleId(nextStyle);
     }
     setThemeId(randomOther(Object.keys(STORY_THEMES) as StoryThemeId[], themeId));
@@ -1325,10 +1324,6 @@ export function ShareHubScreen({
         <section className={`sheditor-shell sheditor-week${building ? " is-building" : ""}`} aria-label="Share image editor">
           <div className="sheditor-disabled-layer" inert={building ? true : undefined} aria-hidden={building || undefined}>
             <div className="shtop-controls">
-              <div className="calendar-mode-tabs sheditor-format-tabs" data-active={styleId === "semantic" ? "words" : "image"} role="group" aria-label="Share format">
-                <button type="button" aria-pressed={styleId !== "semantic"} onClick={() => { if (styleId === "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle(lastScheduleStyle.current); } }}>Image</button>
-                <button type="button" aria-pressed={styleId === "semantic"} onClick={() => { if (styleId !== "semantic") { beginPreviewUpdate("style"); pushUndo(); applyCompleteStyle("semantic"); } }}>Words</button>
-              </div>
               <button type="button" className="shtop-undo" disabled={undoStack.length === 0} onClick={undoLast} aria-label="Undo last change"><Icon name="reply" size={24}/></button>
             </div>
             {styleId === "semantic" && <div className="sheditor-words-controls"><div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div></div>}
