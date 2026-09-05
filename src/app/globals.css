@@ -15102,6 +15102,7 @@ html:has(.calendar-scope-top) {
   min-height: 0;
   display: grid;
   grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-rows: auto auto;
   align-content: center;
   align-items: start;
   gap: 5px 8px;
@@ -15113,13 +15114,13 @@ html:has(.calendar-scope-top) {
   grid-column: 1;
   grid-row: 1;
   align-self: start;
-  text-align: center;
+  text-align: left;
 }
 .personal-calendar-list .clline-title-row .clline-nm { grid-column: 2; grid-row: 1; }
 .personal-calendar-list .clline-studio-row .clline-dur {
   grid-column: 1;
   grid-row: 2;
-  text-align: center;
+  text-align: left;
 }
 .personal-calendar-list .clline-studio-row .clline-w { grid-column: 2; grid-row: 2; }
 .personal-calendar-list .clline-by,
