@@ -15305,3 +15305,9 @@ body:has(.studio-dashboard:not(.studio-dashboard-embedded), .studio-shifts-view)
   background:transparent; color:var(--color-text-primary);
 }
 .studio-dashboard.studio-dashboard-embedded .studio-dashboard-settings > h2 { color:var(--color-text-primary); }
+
+.studio-profile-admin-badge {
+  display:inline-flex; align-items:center; padding:4px 12px; border-radius:var(--radius-pill);
+  background:color-mix(in srgb, var(--kinetic-accent) 24%, var(--kinetic-surface));
+  color:var(--kinetic-text); font-size:13px; font-weight:700; line-height:1.3;
+}

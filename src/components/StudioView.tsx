@@ -403,7 +403,7 @@ export async function StudioView({
           // room.
           avatar={<ProfilePhotoZoom photo={s.photo} name={s.name} color={avatarColor({id:s.id})} className="profav"/>}
           backTo={backTo}
-          badges={null}
+          badges={access.isManager ? <span className="studio-profile-admin-badge">Admin</span> : null}
           ownerTop={viewerId ? <CalendarPinButton entityType="studio" entityId={s.id} /> : null}
           actions={
             /* Nothing to offer, no row: an empty pills row still spends its
