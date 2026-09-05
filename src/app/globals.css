@@ -14070,6 +14070,8 @@ a.clspeek-by:active { opacity: .6; }
   background:var(--color-background);
 }
 
+.share-editor-root { width:100%; min-width:0; }
+.calendar-share-sheet > .share-editor-root { flex:1 1 0%; }
 .sheditor-shell {
   min-width:0;
   margin:10px calc(-1 * var(--page-gutter)) 0;
@@ -14272,6 +14274,10 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-share-sheet .shtop-controls > * { pointer-events:auto; }
 .shtop-undo { position:absolute; right:var(--page-gutter); width:var(--tap-size); height:var(--tap-size); padding:0; display:grid; place-items:center; border:1px solid var(--sheditor-border); border-radius:50%; background:var(--sheditor-soft); color:var(--sheditor-text); }
 .shtop-undo:disabled { opacity:.42; }
+.calendar-share-sheet .shtop-undo { left:var(--page-gutter); right:auto; }
+@media (max-width:939px) {
+  .calendar-share-sheet .sheditor-format-tabs { max-width:calc(100% - 144px); }
+}
 .calendar-share-sheet .shdesign-actions button {
   min-height:38px;
   padding:0 10px;
