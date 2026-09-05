@@ -14936,3 +14936,15 @@ a.clspeek-by:active { opacity: .6; }
 .screen:has(.calendar-scope-top.is-expanded) .scrollhead :is(.scrollhead-d, .monthhead) {
   color: var(--color-white);
 }
+
+.calendar-revealed-controls > .calendar-add-pill {
+  --calendar-floating-control-size: 72px;
+  --calendar-add-icon-size: 36px;
+  width: 72px;
+  height: 72px;
+  min-height: 72px;
+}
+.calendar-revealed-controls > .calendar-add-pill > .icon {
+  width: 36px;
+  height: 36px;
+}
