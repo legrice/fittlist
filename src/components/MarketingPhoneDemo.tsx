@@ -28,7 +28,7 @@ export function MarketingPhoneDemo() {
     <div className={styles.phone} aria-hidden="true">
       <div className={styles.status}><strong>9:41</strong><span className={styles.island} /><span>••• ▰</span></div>
       {[false, true].map(following => <div key={String(following)} className={`${styles.scene} ${following ? styles.following : styles.you}`}>
-        <div className={styles.top}><span className={styles.circle}><Icon name="notifications" size={19} /></span><div className={styles.tabs}><span data-active={!following}>You</span><span data-active={following}>Following</span></div><span className={styles.circle}><Icon name="search" size={19} /></span></div>
+        <div className={styles.top}><span className={styles.circle}><Icon name="notifications" size={19} /></span><div className={styles.tabs}><span data-active={!following}>You</span><span data-active={following}>Explore</span></div><span className={styles.circle}><Icon name="search" size={19} /></span></div>
         <h3 className={styles.summary}>{following ? "You’re following 8 people, 2 studios, and 3 groups." : "You’re teaching 14 classes across 3 studios this week."}</h3>
         <div className={styles.chevron}><Icon name="expand_more" size={22} /></div>
         <div className={styles.schedule}><div className={styles.scroll}>
