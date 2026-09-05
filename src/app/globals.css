@@ -14885,3 +14885,30 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-following-surface .discover-searchrow .dissearch {
   border: 0;
 }
+
+/* One pinned calendar toolbar, with the date bands directly beneath it. */
+.calendar-scope-top.is-expanded {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 70px;
+  min-height: 70px;
+  box-sizing: border-box;
+  margin-bottom: 0;
+}
+.calendar-scope-top.is-expanded .calendar-scope-actions {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+.calendar-scope-top.is-expanded ~ .calendar-surface-schedule .dayband,
+.calendar-scope-top.is-expanded ~ .calendar-surface-schedule .cash-day > h2 {
+  top: 70px;
+}
+.calendar-revealed-controls { justify-content: flex-end; }
+.calendar-revealed-controls > .calendar-add-pill {
+  background: var(--color-lime);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.calendar-revealed-controls > .calendar-add-pill::after { background: none; }
