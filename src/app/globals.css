@@ -75,9 +75,13 @@ html[data-native="ios"] .screen.hasnav > .pad {
 :root {
   /* FittList core palette. New UI should consume these semantic tokens;
      the legacy aliases below map to them while older surfaces migrate. */
-  --color-lime: #8CF25F;
-  --color-lime-pressed: #8BD85D;
-  --color-lime-soft: #DDF5CC;
+  --color-apricot: #F3AD8E;
+  --color-apricot-pressed: #E59978;
+  --color-apricot-soft: #FBE2D5;
+  /* Compatibility aliases for existing primary actions. */
+  --color-lime: var(--color-apricot);
+  --color-lime-pressed: var(--color-apricot-pressed);
+  --color-lime-soft: var(--color-apricot-soft);
   --color-action: var(--color-lime);
   --color-action-pressed: var(--color-lime-pressed);
   --color-action-soft: var(--color-lime-soft);
@@ -85,15 +89,15 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-danger-soft: #FCE8E8;
   --color-danger-text: #B4232E;
   --color-olive: #334A18;
-  --color-black: #020D08;
+  --color-black: #10291D;
   --color-white: #FFFFFF;
-  --color-background: #F5F6F5;
-  --color-surface: #FFFFFF;
-  --color-surface-muted: #EEF0EE;
-  --color-surface-hover: #E4E7E4;
+  --color-background: #F6F3EC;
+  --color-surface: #FFFEFA;
+  --color-surface-muted: #DFE8DE;
+  --color-surface-hover: #D3DFD2;
   --color-border: #D3D7D3;
   --color-border-strong: #B5BBB5;
-  --color-text-primary: #020D08;
+  --color-text-primary: #10291D;
   --color-text-secondary: #5F645F;
   --color-text-muted: #858B85;
   --color-coaching: #AFCFEC;
@@ -127,15 +131,14 @@ html[data-native="ios"] .screen.hasnav > .pad {
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
   --headline-tracking: .012em;
-  /* Delight typeface. Black ink, cool neutral ground, and bright lime CTA.
+  /* Delight typeface. Deep green ink, warm cream ground, and apricot actions.
 
      Product typography stays at 400/500/600. The 700 face is available for
      short display headlines and primary actions, where confidence helps;
      dense schedules and supporting copy deliberately remain quieter.
 
-     The neutrals carry a slight graphite cast so white cards and black type
-     feel crisp rather than delicate. Role colors are muted steel, slate, and
-     sand; the unchanged lime remains the unmistakable action color. */
+     Soft white cards sit on cream, with sage secondary controls.
+     Role colors retain their meaning; apricot identifies primary actions. */
   --cl: var(--color-surface-muted);
   --cl-d: var(--color-surface-hover);
   --paper: var(--color-surface);
@@ -11365,10 +11368,10 @@ html[data-mode="dark"],
 .calendar-summary-copy:not(button) { cursor:default; }
 button.calendar-summary-copy:active { transform:scale(.985); }
 .calendar-summary-copy > span { color:var(--color-text-secondary); font-size:13px; line-height:1.2; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
-.calendar-summary-copy > strong { width:100%; max-width:none; color:var(--color-white); font-size:25px; line-height:1.08; font-weight:600; }
+.calendar-summary-copy > strong { width:100%; max-width:none; color:var(--color-white); font-size:25px; line-height:1.08; font-weight:700; }
 .calendar-summary-copy > strong em { font-style:italic; }
 .calendar-summary-copy > small { max-width:34ch; color:color-mix(in srgb,var(--color-white) 76%,transparent); font-size:15px; line-height:1.35; }
-.calendar-following-head p { max-width:25ch; margin-inline:auto; font-size:25px; line-height:1.08; font-weight:600; }
+.calendar-following-head p { max-width:25ch; margin-inline:auto; font-size:25px; line-height:1.08; font-weight:700; }
 .calendar-transition-surface { transition:opacity 100ms ease,translate 100ms cubic-bezier(.4,0,1,1); }
 .calendar-transition-surface.calendar-surface-leaving { opacity:.82; translate:0 4px; }
 .calendar-transition-surface.calendar-surface-entering { animation:calendar-surface-enter 160ms cubic-bezier(.16,1,.3,1) both; }
@@ -11431,6 +11434,19 @@ button.calendar-summary-copy:active { transform:scale(.985); }
   background:var(--color-background);
   box-shadow:0 -10px 30px rgba(0,0,0,.12);
   color:var(--color-text-primary);
+}
+.calendar-action-sheet::before {
+  content:"";
+  position:absolute;
+  z-index:3;
+  top:10px;
+  left:50%;
+  width:38px;
+  height:5px;
+  border-radius:var(--radius-pill);
+  background:var(--color-border-strong);
+  transform:translateX(-50%);
+  pointer-events:none;
 }
 .calendar-action-sheet > h2 { margin:0 0 18px; font-size:28px; line-height:1.1; }
 .calendar-action-hub { display:grid; gap:28px; }
