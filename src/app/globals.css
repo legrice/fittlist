@@ -15124,3 +15124,40 @@ html:has(.calendar-scope-top) {
 .personal-calendar-list .clline-studio-row .clline-w { grid-column: 2; grid-row: 2; }
 .personal-calendar-list .clline-by,
 .personal-calendar-list .clline-extra { grid-column: 1 / -1; }
+
+/* A clear pending state while the next calendar tab is loading. */
+.calendar-scope-top .calendar-mode-tabs.is-loading a {
+  color: var(--kinetic-inverse) !important;
+}
+.calendar-scope-top .calendar-mode-tabs.is-loading::after {
+  background: var(--kinetic-header-control);
+}
+.calendar-scope-hero.calendar-surface-leaving { position: relative; }
+.calendar-scope-hero.calendar-surface-leaving > .calendar-section-summary {
+  visibility: hidden;
+}
+.calendar-scope-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: var(--kinetic-inverse);
+}
+.calendar-scope-loading span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: calendar-loading-dance 900ms ease-in-out infinite;
+}
+.calendar-scope-loading span:nth-child(2) { animation-delay: 120ms; }
+.calendar-scope-loading span:nth-child(3) { animation-delay: 240ms; }
+@keyframes calendar-loading-dance {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-scope-loading span { animation: none; }
+}
