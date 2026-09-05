@@ -15174,3 +15174,8 @@ html:has(.calendar-scope-top) {
 @media (prefers-reduced-motion: reduce) {
   .calendar-action-sheet.calendar-surface-leaving { translate: none; transition: none; }
 }
+
+.calendar-action-hub .calendar-relationship-role {
+  background: color-mix(in srgb, var(--kinetic-accent) 24%, var(--kinetic-surface));
+  color: var(--kinetic-text);
+}
