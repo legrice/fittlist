@@ -521,7 +521,10 @@ export function FollowingScreen({
   const switchScope = (event:ReactMouseEvent<HTMLAnchorElement>, target:"you"|"following") => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    if (target === scopeTarget) return;
+    if (target === scopeTarget) {
+      if (target === "following" && classSheetDismissed) restoreActionSurface();
+      return;
+    }
     setScopeTarget(target);
     try { sessionStorage.setItem("fl-calendar-scope-enter",target); } catch { /* Storage is optional. */ }
     haptic();
