@@ -11365,8 +11365,6 @@ html[data-mode="dark"],
 .calendar-summary-copy > span { color:var(--color-text-secondary); font-size:13px; line-height:1.2; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
 .calendar-summary-copy > strong { width:100%; max-width:none; color:var(--color-white); font-size:25px; line-height:1.08; font-weight:600; }
 .calendar-summary-copy > strong em { font-style:italic; }
-.calendar-summary-details { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 14px; color:color-mix(in srgb,var(--color-white) 78%,transparent); font-size:14px; line-height:1.25; font-weight:600; }
-.calendar-summary-details span { white-space:nowrap; }
 .calendar-summary-copy > small { max-width:34ch; color:color-mix(in srgb,var(--color-white) 76%,transparent); font-size:15px; line-height:1.35; }
 .calendar-following-head p { max-width:25ch; margin-inline:auto; font-size:25px; line-height:1.08; font-weight:600; }
 .calendar-transition-surface { transition:opacity 100ms ease,translate 100ms cubic-bezier(.4,0,1,1); }
