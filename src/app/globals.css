@@ -14839,9 +14839,7 @@ a.clspeek-by:active { opacity: .6; }
   pointer-events:none;
   transition-delay:0s,0s,0s,0s,280ms;
 }
-.calendar-scope-top > :not(.calendar-scope-actions) { transition:opacity 140ms ease, visibility 0s; }
 @media (min-width:940px) { .calendar-scope-top.is-expanded { z-index:3; } }
-.calendar-scope-top.is-expanded > :not(.calendar-scope-actions),
 .calendar-scope-top.is-expanded .calendar-scope-search-open { opacity:0; visibility:hidden; pointer-events:none; transition-delay:0s,140ms; }
 .calendar-surface-schedule { animation:calendar-schedule-reveal 320ms var(--motion-ease-out) both; }
 @keyframes calendar-schedule-reveal {
@@ -14849,8 +14847,7 @@ a.clspeek-by:active { opacity: .6; }
   to { opacity:1; translate:0 0; }
 }
 @media (prefers-reduced-motion:reduce) {
-  .calendar-scope-hero.calendar-transition-surface,
-  .calendar-scope-top > :not(.calendar-scope-actions) { transition:none; }
+  .calendar-scope-hero.calendar-transition-surface { transition:none; }
   .calendar-surface-schedule { animation:none; }
 }
 
