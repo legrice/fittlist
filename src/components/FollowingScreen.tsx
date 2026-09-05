@@ -644,11 +644,18 @@ export function FollowingScreen({
     setCalendarDirectoryBusy(null);
   };
   const sortedCoachOptions = useMemo(() => [...coachOptions].sort((a, b) => Number(pins.has(`person:${b.id}`)) - Number(pins.has(`person:${a.id}`))), [coachOptions, pins]);
+  // Only offer people whose visible schedule has something to select. Use the
+  // activity owner for attendance, which can differ from the class's coach.
+  const followingCalendarPeople = sortedCoachOptions.filter((person) =>
+    favoriteIds.has(person.id) && items.some((item) =>
+      (item.activityActor?.id ?? item.coachId) === person.id && passes(item),
+    ),
+  );
   const togglePerson = (id: string) => {
     if (selectedPeople.has(id)) {
       setIncludeYou(true);
       setSelectedPeople(new Set());
-      setCalendarFilter("all");
+      setCalendarFilter(calendarFollowing ? "following" : "all");
       return;
     }
     setIncludeYou(false);
@@ -712,9 +719,9 @@ export function FollowingScreen({
       if (!passes(item)) return false;
       if (!isHome) return true;
       if (calendarFilter === "you") return item.saved || item.shift || (!!meId && item.coachId === meId);
-      if (calendarFilter === "people") return (includeYou && (item.saved || item.shift || (!!meId && item.coachId === meId))) || selectedPeople.has(item.coachId);
+      if (calendarFilter === "people") return (includeYou && (item.saved || item.shift || (!!meId && item.coachId === meId))) || selectedPeople.has(calendarFollowing ? item.activityActor?.id ?? item.coachId : item.coachId);
       if (calendarFilter === "following") {
-        const fromPeople = favoriteIds.has(item.coachId);
+        const fromPeople = favoriteIds.has(calendarFollowing ? item.activityActor?.id ?? item.coachId : item.coachId);
         const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
         const fromGroups = groupKeys.has(item.key);
         return fromPeople || fromStudios || fromGroups;
@@ -1043,13 +1050,13 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && !calendarFollowing && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
-      {isHome && !calendarFollowing && !firstRun && (
+      {isHome && (calendarFollowing || !firstRun) && (
         <header className="following-head">
           <div className="calendar-scope-row" aria-label="Calendar scope">
-            <button type="button" className={`calendar-person-chip${calendarFilter === "all" ? " on" : ""}`} aria-pressed={calendarFilter === "all"} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter("all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
-            <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>
-            {sortedCoachOptions.map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={26} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
-            <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>
+            <button type="button" className={`calendar-person-chip${calendarFilter === (calendarFollowing ? "following" : "all") ? " on" : ""}`} aria-pressed={calendarFilter === (calendarFollowing ? "following" : "all")} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter(calendarFollowing ? "following" : "all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
+            {!calendarFollowing && <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>}
+            {(calendarFollowing ? followingCalendarPeople : sortedCoachOptions).map((coach) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-label={`Show ${coach.name}’s calendar`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading="lazy" decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={26} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
+            {!calendarFollowing && <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>}
           </div>
         </header>
       )}

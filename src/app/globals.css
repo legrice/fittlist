@@ -14912,3 +14912,13 @@ a.clspeek-by:active { opacity: .6; }
   backdrop-filter: none;
 }
 .calendar-revealed-controls > .calendar-add-pill::after { background: none; }
+
+.calendar-surface-schedule .calendar-scope-row {
+  margin-inline: calc(-1 * var(--page-gutter));
+  padding-inline: var(--page-gutter);
+  margin-bottom: 18px;
+}
+.calendar-surface-schedule .calendar-person-chip { color: inherit; }
+.calendar-surface-schedule .calendar-person-chip.on .calendar-person-face {
+  box-shadow: 0 0 0 2px var(--color-shift), 0 0 0 5px var(--color-lime);
+}
