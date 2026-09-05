@@ -427,11 +427,13 @@ export function CalendarScreen({
     let coaching=0;
     let attending=0;
     let personal=0;
+    const coachingStudios=new Set<string>();
     for (let offset=0; offset<7; offset+=1) {
       const date=new Date(start+offset*864e5);
       const iso=date.toISOString().slice(0,10);
       const rows=uniqueCoachingOccurrences(classes.filter((item) => runsOn(item,iso,(date.getUTCDay()+6)%7)),studioById);
       coaching+=rows.length;
+      rows.forEach((item) => { if (item.studioId) coachingStudios.add(item.studioId); });
       (savedByIso.get(iso) ?? []).forEach((item) => {
         if (item.personal) personal+=1;
         else {
@@ -440,10 +442,11 @@ export function CalendarScreen({
       });
     }
     const classWord=(count:number) => count === 1 ? "class" : "classes";
+    const studioSummary=coachingStudios.size ? ` at ${coachingStudios.size} ${coachingStudios.size === 1 ? "studio" : "studios"}` : "";
     const activitySummary=coaching && attending
-      ? `You’re coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
+      ? `You’re coaching ${coaching} ${classWord(coaching)}${studioSummary} and attending ${attending} this week.`
       : coaching
-        ? `You’re coaching ${coaching} ${classWord(coaching)} this week.`
+        ? `You’re coaching ${coaching} ${classWord(coaching)}${studioSummary} this week.`
         : attending
           ? `You’re attending ${attending} ${classWord(attending)} this week.`
           : "You have nothing scheduled this week.";
