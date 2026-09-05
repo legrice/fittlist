@@ -14269,6 +14269,7 @@ a.clspeek-by:active { opacity: .6; }
 .shdesign-actions button { min-height:38px; padding:0 12px; }
 .shdesign-actions button + button { border-left:1px solid var(--sheditor-border); }
 .calendar-share-sheet .shtop-controls {
+  min-height:var(--tap-size);
   position:fixed;
   top:max(16px, env(safe-area-inset-top));
   right:0;
