@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
-import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
@@ -30,6 +29,8 @@ import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { StudioBeenHere } from "@/components/StudioBeenHere";
 import { CalendarPinButton } from "@/components/CalendarPinButton";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
+import { StudioManageDashboard } from "@/components/StudioManageDashboard";
+import { gymSchedule, gymCoaches, shiftRequests } from "@/app/actions/gym";
 import { hiddenFrom } from "@/lib/blocks";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -81,7 +82,8 @@ export async function StudioView({
   let viewerKind: string | null = null;
   let viewerId: string | null = null;
   let signedIn = false;
-  if (await fansVisible()) {
+  {
+    // Studio permissions must not depend on the public fan-feature flag.
     viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db
@@ -351,6 +353,11 @@ export async function StudioView({
     admin: access.isAdmin,
   };
 
+  const adminData = access.isManager ? await Promise.all([
+    gymSchedule(s.id, 0), gymCoaches(s.id), shiftRequests(s.id),
+  ]) : null;
+  const adminItems = adminData?.[0]?.days.flatMap((day) => day.items) ?? [];
+
   return (
     <div
       // pub-hero whether or not there is a photo, by Matt's call: a
@@ -449,6 +456,12 @@ export async function StudioView({
         >
 
         <section id="profile-schedule" className="profile-anchor-section">
+          {adminData && <StudioManageDashboard embedded studioName={s.name} studioSlug={s.slug ?? s.id}
+            hasAccount={!!s.accountUserId} classCount={adminItems.length}
+            openShiftCount={adminItems.filter((item) => !item.onUserId).length}
+            staffCount={adminData[1].length} requests={adminData[2]}
+            admin={{studio:editProps, showCoaches:s.showCoaches, approvalOn:s.approveShiftChanges}} />}
+
           {community && !access.claimed && (
             <CommunityNote
               studioId={s.id}
