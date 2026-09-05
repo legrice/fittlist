@@ -14853,3 +14853,32 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-scope-top > :not(.calendar-scope-actions) { transition:none; }
   .calendar-surface-schedule { animation:none; }
 }
+
+/* Let the calendar finish leaving before its front sheet returns. */
+.calendar-surface-schedule.is-returning,
+.calendar-revealed-controls.is-returning {
+  animation: calendar-schedule-return 140ms ease-in both;
+  pointer-events: none;
+}
+.calendar-scope-top.is-returning .calendar-scope-close {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease-in;
+}
+.calendar-action-sheet.calendar-front-restoring:not(.calendar-surface-leaving) {
+  animation: calendar-front-restore 320ms var(--motion-ease-out) both;
+}
+@keyframes calendar-schedule-return {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes calendar-front-restore {
+  from { opacity: 0; translate: 0 32px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-surface-schedule.is-returning,
+  .calendar-revealed-controls.is-returning,
+  .calendar-action-sheet.calendar-front-restoring:not(.calendar-surface-leaving) { animation: none; }
+  .calendar-scope-top.is-returning .calendar-scope-close { transition: none; }
+}
