@@ -75,13 +75,9 @@ html[data-native="ios"] .screen.hasnav > .pad {
 :root {
   /* FittList core palette. New UI should consume these semantic tokens;
      the legacy aliases below map to them while older surfaces migrate. */
-  --color-apricot: #F3AD8E;
-  --color-apricot-pressed: #E59978;
-  --color-apricot-soft: #FBE2D5;
-  /* Compatibility aliases for existing primary actions. */
-  --color-lime: var(--color-apricot);
-  --color-lime-pressed: var(--color-apricot-pressed);
-  --color-lime-soft: var(--color-apricot-soft);
+  --color-lime: #8CF25F;
+  --color-lime-pressed: #8BD85D;
+  --color-lime-soft: #DDF5CC;
   --color-action: var(--color-lime);
   --color-action-pressed: var(--color-lime-pressed);
   --color-action-soft: var(--color-lime-soft);
@@ -89,15 +85,15 @@ html[data-native="ios"] .screen.hasnav > .pad {
   --color-danger-soft: #FCE8E8;
   --color-danger-text: #B4232E;
   --color-olive: #334A18;
-  --color-black: #10291D;
+  --color-black: #020D08;
   --color-white: #FFFFFF;
-  --color-background: #F6F3EC;
-  --color-surface: #FFFEFA;
-  --color-surface-muted: #DFE8DE;
-  --color-surface-hover: #D3DFD2;
+  --color-background: #F5F6F5;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #EEF0EE;
+  --color-surface-hover: #E4E7E4;
   --color-border: #D3D7D3;
   --color-border-strong: #B5BBB5;
-  --color-text-primary: #10291D;
+  --color-text-primary: #020D08;
   --color-text-secondary: #5F645F;
   --color-text-muted: #858B85;
   --color-coaching: #AFCFEC;
@@ -131,14 +127,15 @@ html[data-native="ios"] .screen.hasnav > .pad {
   /* Display type should feel confident without squeezing the letters together.
      Keep body and utility copy untouched; headline surfaces opt into this. */
   --headline-tracking: .012em;
-  /* Delight typeface. Deep green ink, warm cream ground, and apricot actions.
+  /* Delight typeface. Black ink, cool neutral ground, and bright lime CTA.
 
      Product typography stays at 400/500/600. The 700 face is available for
      short display headlines and primary actions, where confidence helps;
      dense schedules and supporting copy deliberately remain quieter.
 
-     Soft white cards sit on cream, with sage secondary controls.
-     Role colors retain their meaning; apricot identifies primary actions. */
+     The neutrals carry a slight graphite cast so white cards and black type
+     feel crisp rather than delicate. Role colors are muted steel, slate, and
+     sand; the unchanged lime remains the unmistakable action color. */
   --cl: var(--color-surface-muted);
   --cl-d: var(--color-surface-hover);
   --paper: var(--color-surface);
