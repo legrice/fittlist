@@ -1007,7 +1007,7 @@ export function ShareHubScreen({
     const places=new Set(previewDays.flatMap((day) => day.items.map((item) => item.where).filter(Boolean)));
     const classWord=count === 1 ? "class" : "classes";
     const placeWord=places.size === 1 ? "place" : "places";
-    const activity=coach && (!twoHats || hat === "coaching") ? "coaching" : "going to";
+    const activity=coach && (!twoHats || hat === "coaching") ? "teaching" : "going to";
     const firstName=name.trim().split(/\s+/)[0] || name;
     const thirdPerson=sharePerspective === "third";
     const context=thirdPerson
@@ -1016,8 +1016,8 @@ export function ShareHubScreen({
     const variant=(lines:string[]) => lines[shareVoiceVariant%lines.length];
     if (shareVoice === "friendly") return `${context} Look at ${thirdPerson ? firstName : "me"} making the week count.`;
     if (shareVoice === "sassy") return variant(thirdPerson
-      ? [`${context} Wow, look at ${firstName} go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. ${firstName} really loves coaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally ${firstName} cast ${firstName} in every scene.`]
-      : [`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I really love coaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
+      ? [`${context} Wow, look at ${firstName} go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. ${firstName} really loves teaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally ${firstName} cast ${firstName} in every scene.`]
+      : [`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I really love teaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);
     if (shareVoice === "explicit") return variant([`${context} Holy fucking shit, this schedule is stacked like a brick shithouse with a goddamn unlimited class pass.`,`${context} That is a fuckload of calendar for one person, and somehow every damn box is demanding a fresh pair of socks.`,`${context} Fuck me sideways, this week has more action than a group chat after somebody says “quick question.”`,`${context} This schedule is busy as fuck, loud as hell, and absolutely refusing to calm its shit down.`,`${context} Well, shit. The calendar is packed, the laundry is fucked, and apparently rest has left the goddamn building.`]);
     if (shareVoice === "unfiltered") return variant([`${context} Holy fucking shit, Wednesday just laid an egg and the egg is asking for your Wi-Fi password.`,`${context} The calendar is absolutely batshit and currently being audited by three lizards in a trench coat.`,`${context} Jesus tap-dancing Christ, the lasagna is screaming again and Thursday refuses to discuss it.`,`${context} A forklift-certified possum has seized control of the week and replaced every doorknob with soup.`,`${context} This schedule ate a protein bar sideways and challenged the concept of furniture to a duel.`]);
     if (shareVoice === "shakespearean") return variant(thirdPerson
@@ -1663,8 +1663,8 @@ export function ShareHubScreen({
             <h2 id="share-perspective-title">Perspective</h2>
             <p className="lead">Who should the sentence sound like it is about?</p>
             <div className="settingslist">
-              <button className="setrow" aria-pressed={sharePerspective === "first"} onClick={() => { setSharePerspective("first"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"first"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write as me</span><span className="s">“I’m coaching...”</span></span>{sharePerspective === "first" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
-              <button className="setrow" aria-pressed={sharePerspective === "third"} onClick={() => { setSharePerspective("third"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"third"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write about me</span><span className="s">“{name.trim().split(/\s+/)[0] || name} is coaching...”</span></span>{sharePerspective === "third" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
+              <button className="setrow" aria-pressed={sharePerspective === "first"} onClick={() => { setSharePerspective("first"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"first"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write as me</span><span className="s">“I’m teaching...”</span></span>{sharePerspective === "first" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
+              <button className="setrow" aria-pressed={sharePerspective === "third"} onClick={() => { setSharePerspective("third"); localStorage.setItem(SHARE_PERSPECTIVE_KEY,"third"); setPick(null); }}><span className="setrow-ic"><Icon name="person" size={22} /></span><span className="setrow-txt"><span className="t">Write about me</span><span className="s">“{name.trim().split(/\s+/)[0] || name} is teaching...”</span></span>{sharePerspective === "third" && <span className="setrow-ic"><Icon name="check" size={18} /></span>}</button>
             </div>
           </div>
         </div>
@@ -1972,7 +1972,7 @@ export function ShareHubScreen({
               <div className="shdays shcuts" role="group" aria-label="Which classes">
                 {(
                   [
-                    ["coaching", "Coaching"],
+                    ["coaching", "Teaching"],
                     ["saved", "Saved"],
                   ] as const
                 ).map(([id, label]) => (
@@ -2019,7 +2019,7 @@ export function ShareHubScreen({
                         <span className="shpick-titleline">
                           <span className="t">{it.name}</span>
                           <span className={`shclass-tag ${it.coaching ? "coaching" : "saved"}`}>
-                            {it.coaching ? "Coaching" : "Saved"}
+                            {it.coaching ? "Teaching" : "Saved"}
                           </span>
                         </span>
                         <span className="s">

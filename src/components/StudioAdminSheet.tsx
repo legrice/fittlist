@@ -471,7 +471,7 @@ export function StudioAdminSheet({
                 <button className="setrow" onClick={toggleNames} aria-pressed={names}>
                   <span className="setrow-ic"><Icon name="groups" size={24} /></span>
                   <span className="setrow-txt">
-                    <span className="t">Show who&rsquo;s coaching</span>
+                    <span className="t">Show who&rsquo;s teaching</span>
                     <span className="s">
                       {names
                         ? "Coach names appear on the public schedule"

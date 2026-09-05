@@ -504,9 +504,9 @@ export function GlobalAdd({
                 {mode === "class" && data?.canCoach && !classRole && (
                   <div className="globaladd-role">
                     <h2 id="globaladd-title">Add a class</h2>
-                    <p>Are you coaching or attending?</p>
+                    <p>Are you teaching or attending?</p>
                     <div className="globaladd-role-options">
-                      <button type="button" onClick={() => setClassRole("coaching")}>I&rsquo;m coaching</button>
+                      <button type="button" onClick={() => setClassRole("coaching")}>I&rsquo;m teaching</button>
                       <button type="button" onClick={() => setMode("browse")}>I&rsquo;m attending</button>
                     </div>
                   </div>

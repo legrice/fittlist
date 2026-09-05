@@ -132,7 +132,7 @@ export function OnboardingWizard({
       }
       const teaching = await setTeaching(teach);
       if (!teaching.ok) {
-        setError(teaching.error ?? "Couldn't save your coaching choice. Try again.");
+        setError(teaching.error ?? "Couldn't save your teaching choice. Try again.");
         return;
       }
       const completed = await completeOnboarding();

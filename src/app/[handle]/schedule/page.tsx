@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const user = await profileUser(handle);
   if (!user) return { title: "fittlist" };
   const title = `${user.name}'s schedule · fittlist`;
-  const description = `${user.name}'s coaching schedule, every studio in one link.`;
+  const description = `${user.name}'s teaching schedule, every studio in one link.`;
   // The schedule is the bare handle now. This URL still resolves, because
   // people have already sent it, and points search engines at the canonical one.
   const url = `${siteOrigin()}/${handle}`;

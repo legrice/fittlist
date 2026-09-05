@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     user.about?.trim() ||
     (user.kind === "fan"
       ? `${user.name} on fittlist.`
-      : `${user.name}'s coaching schedule, every studio in one link.`);
+      : `${user.name}'s teaching schedule, every studio in one link.`);
   const url = `${siteOrigin()}/${handle}`;
   // The card is a real URL that composes the photo in. users.photo is a data
   // URL, and an unfurler fetches og:image over HTTP rather than decoding it, so

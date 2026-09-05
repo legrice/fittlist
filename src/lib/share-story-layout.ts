@@ -111,7 +111,7 @@ export function buildShareStoryLayout({
         time: featured.item.time,
         name: featured.item.name,
         sub: [
-          mixed && featured.item.coaching ? "Coaching" : featured.item.who,
+          mixed && featured.item.coaching ? "Teaching" : featured.item.who,
           showStudio ? featured.item.where : "",
         ]
           .filter(Boolean)
@@ -136,7 +136,7 @@ export function buildShareStoryLayout({
         time: item.time,
         name: item.name,
         where: showStudio ? item.where : "",
-        who: mixed && item.coaching ? "Coaching" : item.who,
+        who: mixed && item.coaching ? "Teaching" : item.who,
       })),
     })),
     scheduleBudget / style.rowScale,

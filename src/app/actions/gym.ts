@@ -249,7 +249,7 @@ async function coachConflictError(
     if (wantedStart < rowEnd && rowStart < wantedEnd) {
       const where = row.studioId ? studioName.get(row.studioId) : null;
       const endTime = `${String(Math.floor(rowEnd / 60) % 24).padStart(2, "0")}:${String(rowEnd % 60).padStart(2, "0")}`;
-      return `Schedule conflict: already coaching ${row.name}${where ? ` at ${where}` : ""}, ${fmtTime(row.startTime)}–${fmtTime(endTime)}.`;
+      return `Schedule conflict: already teaching ${row.name}${where ? ` at ${where}` : ""}, ${fmtTime(row.startTime)}–${fmtTime(endTime)}.`;
     }
   }
   return null;
@@ -913,7 +913,7 @@ async function tellCoach(
 ) {
   await addNotification(coachUserId, {
     type: on ? "shift_assigned" : "shift_dropped",
-    title: on ? `You're coaching ${className}` : `You're off ${className}`,
+    title: on ? `You're teaching ${className}` : `You're off ${className}`,
     body: `${when} at ${studioName}.`,
     href: "/calendar",
   });
@@ -2528,7 +2528,7 @@ export async function inviteStudioCoach(
     });
     void pushToUser(existing.id, {
       title: `${studio.name} invited you`,
-      body: role === "coach" ? "Accept your coaching invite on FittList." : "Accept your team invite on FittList.",
+      body: role === "coach" ? "Accept your teaching invite on FittList." : "Accept your team invite on FittList.",
       url: `/s/${studio.slug ?? studio.id}`,
     });
   }

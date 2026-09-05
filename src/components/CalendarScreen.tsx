@@ -508,7 +508,7 @@ export function CalendarScreen({
         title=variant([`${roastContext} Holy fucking shit, the calendar has achieved sentience and immediately spent it all on decorative gravy.`,`${roastContext} Everything is absolutely batshit. A forklift-certified possum is running payroll from inside a watermelon.`,`${roastContext} Jesus tap-dancing Christ, Thursday has twelve elbows and keeps whispering about the forbidden coupon.`,`${roastContext} The week needs a fire marshal, a structural engineer, and somebody willing to explain taxes to a haunted pelican.`,`${roastContext} This schedule kicked down the door, ate a protein bar sideways, and challenged the concept of furniture to a duel.`]);
     }
     else if (summaryVoice === "shakespearean")
-      title=coaching && attending ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to coach and ${attending} to attend.`,`By my troth, thou coachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art coaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to coach.`,`By my troth, thou coachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thou hast nothing scheduled this week.";
+      title=coaching && attending ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to teach and ${attending} to attend.`,`By my troth, thou teachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to teach.`,`By my troth, thou teachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thou hast nothing scheduled this week.";
     if (classes.length === 0 && savedDays.every((day) => day.items.length === 0)) title="You have nothing on your calendar yet.";
     return { title };
   },[classes,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
@@ -693,7 +693,7 @@ export function CalendarScreen({
       startEnablingCoach(async () => {
         const result = await setTeaching(true);
         if (!result.ok) {
-          toast(result.error ?? "Couldn’t turn on coaching");
+          toast(result.error ?? "Couldn’t turn on teaching");
           return;
         }
         if (composerData?.templates.some((template) => template.isPublic))
@@ -750,7 +750,7 @@ export function CalendarScreen({
             <button type="button" onClick={() => setNotificationsOpen(true)}><span className="calendar-action-icon"><Icon name="notifications" size={23} /></span><span><strong>Notifications</strong><small>Follows, saves, and account activity</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
           <section><h3>Tools</h3><div className="calendar-action-list">
-            <button type="button" onClick={openInsights}><span className="calendar-action-icon"><Icon name="activity" size={23} /></span><span><strong>Insights</strong><small>Your coaching, classes, and sharing</small></span><Icon name="chevron_right" size={20} /></button>
+            <button type="button" onClick={openInsights}><span className="calendar-action-icon"><Icon name="activity" size={23} /></span><span><strong>Insights</strong><small>Your teaching, classes, and sharing</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
           <section><h3>Settings</h3><div className="calendar-action-list">
@@ -774,7 +774,7 @@ export function CalendarScreen({
             <span className="sr-only">View calendar</span>
             <select value={filter} onChange={(event) => setFilter(event.target.value as CalendarFilter)}>
               <option value="all">View: All</option>
-              {!member && <option value="coaching">View: Coaching</option>}
+              {!member && <option value="coaching">View: Teaching</option>}
               <option value="saved">View: Saved</option>
               <option value="personal">View: Personal</option>
             </select>
@@ -856,7 +856,7 @@ export function CalendarScreen({
                   selected={addChoiceKind}
                   onSelect={setAddChoiceKind}
                 />
-                <button type="button" className="addrole-continue" disabled={!addChoiceKind || enablingCoach || (addChoiceKind === "coaching" && loadingTools)} onClick={continueAdd}>{enablingCoach ? "Turning on coaching…" : addChoiceKind === "coaching" && loadingTools ? "Finding your classes…" : "Continue"}</button>
+                <button type="button" className="addrole-continue" disabled={!addChoiceKind || enablingCoach || (addChoiceKind === "coaching" && loadingTools)} onClick={continueAdd}>{enablingCoach ? "Turning on teaching…" : addChoiceKind === "coaching" && loadingTools ? "Finding your classes…" : "Continue"}</button>
               </>
             ) : (
               <>

@@ -440,7 +440,7 @@ export function ProfileOwnerBar({
             </label>
             <ChipsField value={pCerts} onChange={setPCerts} placeholder="e.g. NASM CPT" maxLen={40} max={12} />
             <label className="flabel">
-              Coaching focus <span>· a few short descriptors</span>
+              Teaching focus <span>· a few short descriptors</span>
             </label>
             <ChipsField value={pHighlights} onChange={setPHighlights} placeholder="e.g. Beginner friendly" maxLen={60} max={6} />
             <label className="flabel" htmlFor="pInstagram">

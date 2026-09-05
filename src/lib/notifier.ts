@@ -85,7 +85,7 @@ export async function sendWelcome(trainer: Trainer, subscriber: { id: string; em
     kind: "welcome",
     subject: `You're on ${trainer.name}'s list`,
     text:
-      `You're subscribed to ${trainer.name}'s coaching schedule.\n\n` +
+      `You're subscribed to ${trainer.name}'s teaching schedule.\n\n` +
       `Once a week you'll get their upcoming classes in one email. Nothing else, ever.\n\n` +
       `The current week is always at ${url}.` +
       unsub.text,

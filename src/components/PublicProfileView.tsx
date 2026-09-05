@@ -250,7 +250,7 @@ export async function PublicProfileView({
       )}
       {user.highlights.length > 0 && (
         <div className="profsec focussec">
-          <h2 className="prof-sec-h">Coaching focus</h2>
+          <h2 className="prof-sec-h">Teaching focus</h2>
           <ul className="expectlist">
             {user.highlights.map((h, i) => (
               <li key={i}>{h}</li>

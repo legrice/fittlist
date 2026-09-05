@@ -966,7 +966,7 @@ export function Adder({
                     className={role === "coaching" ? "sel" : ""}
                     onClick={() => setRole("coaching")}
                   >
-                    I&rsquo;m coaching it
+                    I&rsquo;m teaching it
                   </button>
                 </div>
                 <p className="durnote" style={{ marginTop: 8 }}>
