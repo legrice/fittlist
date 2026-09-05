@@ -15021,3 +15021,16 @@ html:has(.calendar-scope-top) {
 .calendar-following-surface .discover-class-filters select {
   border: 1px solid var(--kinetic-control-border);
 }
+
+/* Weekday initials sit directly on the calendar canvas. */
+.calendar-surface-schedule .calsticky:not(:empty) {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+.calendar-surface-schedule .monthhead,
+.calendar-surface-schedule .calsticky .monthhead {
+  color: var(--kinetic-inverse);
+  background: transparent;
+  border-bottom: 0;
+}
