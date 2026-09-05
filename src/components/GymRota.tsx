@@ -25,7 +25,6 @@ import { BackLink } from "@/components/BackLink";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine } from "@/components/WeekView";
 import { studioPlannerColorLabel } from "@/lib/studio-planner";
-import { putImage } from "@/lib/shareimage";
 
 /** "Thu, Aug 6" — the date a swap is about, said the way a person would. */
 const fmtDay = (iso: string) =>
@@ -181,7 +180,6 @@ export function GymRota({
   const [coachPick, setCoachPick] = useState<CoachPick | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [dayMenu, setDayMenu] = useState<string | null>(null);
-  const [sharingOpenShifts, setSharingOpenShifts] = useState(false);
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [desktop, setDesktop] = useState(false);
@@ -472,39 +470,6 @@ export function GymRota({
       if (error instanceof DOMException && error.name === "AbortError") return;
       toast("Couldn't share that day");
     }
-  };
-
-  const openShiftText = (openDays: GymDayDto[]) => {
-    const lines = openDays.flatMap((day) => [
-      fmtDay(day.iso),
-      ...day.items.map((item) => {
-        const clock = clockParts(item.startTime);
-        return `${clock.hm} ${clock.ap.toUpperCase()} · ${item.name} · ${item.durationMin} min`;
-      }),
-      "",
-    ]);
-    return [studioName, "Open shifts", "", ...lines].join("\n").trim();
-  };
-
-  const copyOpenShifts = async (openDays: GymDayDto[]) => {
-    try {
-      await navigator.clipboard.writeText(openShiftText(openDays));
-      toast("Open shifts copied");
-    } catch {
-      toast("Couldn't copy the open shifts");
-    }
-  };
-
-  const shareOpenShiftImage = async () => {
-    if (sharingOpenShifts) return;
-    setSharingOpenShifts(true);
-    const offset = week?.offset ?? 0;
-    const ok = await putImage(
-      `/api/story/open-shifts/${encodeURIComponent(studioId)}?w=${offset}&name=${encodeURIComponent(studioName)}&v=${Date.now()}`,
-      `${studioSlug || "studio"}-open-shifts.png`,
-    );
-    setSharingOpenShifts(false);
-    if (!ok) toast("Couldn't share the open shifts");
   };
 
   const handleApplyStandardDay = (day: GymDayDto) => {
@@ -871,22 +836,7 @@ export function GymRota({
           {/* A real week, dates and all, because that's what the spreadsheet is
               and what a swap is about. */}
           {shiftFilter === "open" ? (
-            <div className="rota-open-manager-head">
-              <div>
-                <strong>{openShiftCount} open {openShiftCount === 1 ? "shift" : "shifts"}</strong>
-                <span>{week?.label ?? "This week"}</span>
-              </div>
-              <div className="rota-open-actions">
-                <button type="button" onClick={() => void copyOpenShifts(openShiftDays)} disabled={!openShiftCount}>
-                  <Icon name="content_copy" size={19} />
-                  Copy text
-                </button>
-                <button className="primary" type="button" onClick={() => void shareOpenShiftImage()} disabled={!openShiftCount || sharingOpenShifts}>
-                  <Icon name="ios_share" size={20} />
-                  {sharingOpenShifts ? "Preparing…" : "Share image"}
-                </button>
-              </div>
-            </div>
+            <p className="rota-open-summary">There {openShiftCount === 1 ? "is" : "are"} {openShiftCount} open {openShiftCount === 1 ? "shift" : "shifts"} this week.</p>
           ) : desktop ? <div className="rotaweek">
             <Link className={`rotanav${week && week.offset > 0 ? "" : " off"}`} href={weekHref(Math.max(0, (week?.offset ?? 0) - 1))} aria-disabled={!week || week.offset === 0}>
               <Icon name="chevron_left" size={20} />

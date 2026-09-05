@@ -15230,3 +15230,33 @@ button.calendar-summary-reveal:focus-visible {
   text-overflow: ellipsis;
   -webkit-line-clamp: unset;
 }
+
+.rota-open-summary {
+  margin: 20px 0 28px;
+  text-align: center;
+  color: var(--kinetic-inverse);
+  font-size: 25px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+.rota-calendar .rota-inline-row .clline {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
+  align-items: start;
+  gap: 5px 8px;
+}
+.rota-calendar .clline-title-row,
+.rota-calendar .clline-studio-row { display: contents; }
+.rota-calendar .clline-title-row .clline-t { grid-column:1; grid-row:1; align-self:start; text-align:left; }
+.rota-calendar .rota-inline-row .clline-title-row .clline-nm {
+  grid-column:2; grid-row:1; padding-right:0; display:block;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.rota-calendar .clline-studio-row .clline-dur { grid-column:1; grid-row:2; text-align:left; }
+.rota-calendar .clline-studio-row .clline-w { grid-column:2; grid-row:2; }
+.rota-calendar .clline-by, .rota-calendar .clline-extra { grid-column:1 / -1; }
+@media (min-width: 940px) {
+  .rota-open-summary { color: var(--color-text-primary); }
+}
