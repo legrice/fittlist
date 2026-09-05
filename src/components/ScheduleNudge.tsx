@@ -20,7 +20,7 @@ export function ScheduleNudge({ handle, name, signedIn }: { handle: string; name
       {open && mounted && createPortal(
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}><Icon name="close" size={18} /></button>
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setOpen(false)}><Icon name="close" size={20} /></button>
             <h2 style={{ marginTop: 10 }}>Ask {first}</h2>
             <MessageComposer
               handle={handle}

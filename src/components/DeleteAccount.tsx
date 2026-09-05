@@ -78,11 +78,11 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
         >
           <div className="sheet confirmsheet">
             <button
-              className="iconbtn sheetclose"
+              className="iconbtn sheetclose sheet-dismiss"
               aria-label="Close"
               onClick={closeConfirmation}
             >
-              <Icon name="close" size={18} />
+              <Icon name="close" size={20} />
             </button>
             <h2>Are you sure you want to delete your account?</h2>
             <p className="lead">

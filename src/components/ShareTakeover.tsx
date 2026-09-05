@@ -297,11 +297,11 @@ export function ShareTakeover({ onClosed }: { onClosed: () => void }) {
           <header className="share-takeover-head">
             <button
               type="button"
-              className="sheetclose calendar-share-close"
+              className="sheetclose calendar-share-close sheet-dismiss"
               aria-label="Close share editor"
               onClick={close}
             >
-              <Icon name="close" size={24} />
+              <Icon name="close" size={20} />
             </button>
           </header>
 

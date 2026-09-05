@@ -144,7 +144,7 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
       <section className="sheet sheet-full dissheet discover-full-sheet" role="dialog" aria-modal="true" aria-labelledby="discover-sheet-title">
         <div className="adderhead">
           <h2 id="discover-sheet-title">Discover</h2>
-          <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}><Icon name="close" size={18} /></button>
+          <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
         </div>
         {data ? <DiscoverList people={data.people} studios={[]} cities={data.cities} myCity={data.myCity} myLat={data.myLat} myLng={data.myLng} groups={[]} upcoming={[]} backHref="/calendar" hideBack /> : <p className="dissheet-wait">Loading Discover…</p>}
       </section>
@@ -162,8 +162,8 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
       <div className="sheet sheet-full dissheet">
         <div className="adderhead">
           <h2>Find profiles</h2>
-          <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
+          <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={20} />
           </button>
         </div>
         <div className="dissearchrow">

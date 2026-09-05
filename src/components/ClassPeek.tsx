@@ -533,11 +533,7 @@ export function ClassPeek({
       }}
     >
       <div className="sheet clspeek clsfull" ref={sheetRef}>
-        {/* Close stays on the left; secondary tools stay on the right. Both
-            remain visible while a long class scrolls. */}
-        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={20} />
-        </button>
+        {/* Secondary tools stay left; close stays right while the sheet scrolls. */}
         <button
           className="clspeek-x clsfull-more"
           aria-label="More class actions"
@@ -545,6 +541,9 @@ export function ClassPeek({
           onClick={() => setMoreOpen((open) => !open)}
         >
           <Icon name="more_horiz" size={20} />
+        </button>
+        <button className="clspeek-x clsfull-x sheet-dismiss" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={20} />
         </button>
         {moreOpen && full && (
           <div className="clsfull-menu" role="menu">
@@ -802,7 +801,7 @@ export function ClassPeek({
               <div className="clspeek-titles">
                 <h2 className="clspeek-nm">Manage shift</h2>
               </div>
-              <button className="clspeek-x" aria-label="Close" onClick={closeManage}>
+              <button className="clspeek-x sheet-dismiss" aria-label="Close" onClick={closeManage}>
                 <Icon name="close" size={20} />
               </button>
             </div>
@@ -848,7 +847,7 @@ export function ClassPeek({
             <span className="clspeek-grab" aria-hidden="true" />
             <div className="clspeek-head">
               <div className="clspeek-titles"><h2 className="clspeek-nm">Request an edit</h2></div>
-              <button className="clspeek-x" aria-label="Close" onClick={() => { setRequestingEdit(false); setShiftErr(""); }}><Icon name="close" size={20} /></button>
+              <button className="clspeek-x sheet-dismiss" aria-label="Close" onClick={() => { setRequestingEdit(false); setShiftErr(""); }}><Icon name="close" size={20} /></button>
             </div>
             <p className="lead">Tell management what needs to change for {cls.name} on {cls.when}.</p>
             <label className="field"><span>Requested change</span><textarea value={editRequest} maxLength={500} rows={5} placeholder="For example, the start time should be 6:30pm." onChange={(event) => setEditRequest(event.target.value)} autoFocus /></label>
@@ -866,7 +865,7 @@ export function ClassPeek({
               <div className="clspeek-titles">
                 <h2 className="clspeek-nm">Hand it to</h2>
               </div>
-              <button className="clspeek-x" aria-label="Close" onClick={() => setSending(false)}>
+              <button className="clspeek-x sheet-dismiss" aria-label="Close" onClick={() => setSending(false)}>
                 <Icon name="close" size={20} />
               </button>
             </div>

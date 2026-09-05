@@ -11579,19 +11579,19 @@ html[data-mode="dark"],
    floats over whatever scrolls beneath it. */
 .clspeek-x.clsfull-x {
   position: sticky; top: 2px; z-index: 6;
-  display: flex; margin-bottom: calc(-1 * var(--tap-size));
+  display: flex; margin-left:auto; margin-bottom: calc(-1 * var(--tap-size));
   width: var(--tap-size); height: var(--tap-size); background: var(--cl);
   box-shadow: none; border: 0;
 }
 .clspeek-x.clsfull-more {
   position: sticky; top: 2px; z-index: 7;
-  display: flex; margin-left: auto; margin-bottom: calc(-1 * var(--tap-size));
+  display: flex; margin-left:0; margin-right:auto; margin-bottom: calc(-1 * var(--tap-size));
   width: var(--tap-size); height: var(--tap-size); background: var(--cl);
   box-shadow: none; border: 0;
 }
 .clsfull-menu {
   position: sticky; top: 50px; z-index: 8;
-  width: min(280px, calc(100% - 44px)); margin: 0 0 -1px auto;
+  width: min(280px, calc(100% - 44px)); margin: 0 auto -1px 0;
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   box-shadow: var(--soft-shadow); overflow: hidden;
   animation: fadeIn .12s ease;
@@ -14777,3 +14777,19 @@ a.clspeek-by:active { opacity: .6; }
 @media (prefers-reduced-motion:reduce) {
   *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
 }
+
+/* One close-control treatment for bottom sheets. Layout remains owned by
+   each header so back buttons stay left and close stays last on the right. */
+.sheet-dismiss.sheet-dismiss {
+  width:44px; min-width:44px; max-width:44px;
+  height:44px; min-height:44px; max-height:44px;
+  flex-shrink:0; padding:0; margin-left:auto;
+  display:flex; align-items:center; justify-content:center;
+  border:0; border-radius:50%;
+  background:var(--color-surface-muted); color:var(--color-text-primary);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  cursor:pointer; touch-action:manipulation;
+}
+.sheet-dismiss.sheet-dismiss:active { background:var(--color-surface-hover); }
+.sheet-dismiss.sheetclose { left:auto; right:var(--page-gutter); }
+.sheet-dismiss.header-profile-close { top:16px; }

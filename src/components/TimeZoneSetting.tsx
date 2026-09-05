@@ -46,8 +46,8 @@ export function TimeZoneSetting({ initialTimeZone }: { initialTimeZone: string }
       {open && <BodyPortal>
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
           <section className="sheet timezone-sheet" role="dialog" aria-modal="true" aria-labelledby="timezone-setting-title">
-            <button className="iconbtn sheetclose" type="button" aria-label="Close time zone settings" onClick={close}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" type="button" aria-label="Close time zone settings" onClick={close}>
+              <Icon name="close" size={20} />
             </button>
             <h2 id="timezone-setting-title">Time zone</h2>
             <p className="lead">Used for classes and personal entries you add yourself. Studio classes use the studio&rsquo;s local time.</p>

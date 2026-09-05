@@ -60,8 +60,8 @@ export function InviteCoach({ studioName }: { studioName: string }) {
           }}
         >
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setOpen(false)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Invite a coach</h2>
             <p className="lead">

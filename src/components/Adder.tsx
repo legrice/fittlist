@@ -918,8 +918,8 @@ export function Adder({
           heavier decision than it is. */}
       <div className={`sheet adder${stage !== "form" ? " adder-step" : ""}`}>
         {stage !== "form" && (
-          <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
+          <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={20} />
           </button>
         )}
 
@@ -940,8 +940,8 @@ export function Adder({
                 </button>
               )}
               <h2>{stepped ? "Add a class" : heading.title}</h2>
-              <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-                <Icon name="close" size={18} />
+              <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+                <Icon name="close" size={20} />
               </button>
             </div>
             {stepped && <p className="stepline">Step 3 of 3 &middot; The details</p>}

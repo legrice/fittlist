@@ -134,7 +134,7 @@ export function HeaderAccountButton({
                 if ((event.target as HTMLElement).closest("a")) close();
               }}
             >
-              <button type="button" className="iconbtn header-profile-close" aria-label="Close" onClick={close}>
+              <button type="button" className="iconbtn header-profile-close sheet-dismiss" aria-label="Close" onClick={close}>
                 <Icon name="close" size={20} />
               </button>
               {settingsView ? (

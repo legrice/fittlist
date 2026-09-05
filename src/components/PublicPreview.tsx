@@ -90,7 +90,7 @@ export function PublicPreview({ data }: { data: PublicPreviewData }) {
       {intent && (
         <div className={styles.scrim} role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIntent(null)}>
           <section className={styles.prompt} role="dialog" aria-modal="true" aria-labelledby="public-intent-title">
-            <button className={styles.close} type="button" aria-label="Close" onClick={() => setIntent(null)}><Icon name="close" /></button>
+            <button className={`sheet-dismiss ${styles.close}`} type="button" aria-label="Close" onClick={() => setIntent(null)}><Icon size={20} name="close" /></button>
             <span className={styles.promptMark}><Wordmark /></span>
             <h2 id="public-intent-title">{intent.title}</h2>
             <p>{intent.body}</p>

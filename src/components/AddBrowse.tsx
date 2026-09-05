@@ -159,8 +159,8 @@ export function AddBrowse({
             <h2 className="peekhead-nm" id="addbrowse-title">Add a class</h2>
             <p className="addbrowse-intro">Discover classes from coaches near you.</p>
           </div>
-          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
+          <button className="iconbtn sheetclose peekclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={20} />
           </button>
         </div>
 

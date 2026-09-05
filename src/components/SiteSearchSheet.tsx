@@ -28,7 +28,7 @@ export function SiteSearchSheet({ todayIso, userId, onClose }: { todayIso: strin
             <input autoFocus type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search FittList" aria-label="Search FittList" />
             {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}><Icon name="close" size={18} /></button>}
           </label>
-          <button type="button" className="site-search-close" aria-label="Close search" onClick={onClose}><Icon name="close" size={21} /></button>
+          <button type="button" className="site-search-close sheet-dismiss" aria-label="Close search" onClick={onClose}><Icon name="close" size={20} /></button>
         </header>
         <div className="site-search-results"><SearchScreen todayIso={todayIso} userId={userId} query={query} showRecents={false} /></div>
       </section>

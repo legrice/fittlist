@@ -48,8 +48,8 @@ export function NewMessage({ people, empty = false }: { people: MessagePerson[];
       {open && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
           <div className="sheet newmessage-sheet" role="dialog" aria-modal="true" aria-labelledby="newmessage-title">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={close}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={close}>
+              <Icon name="close" size={20} />
             </button>
             <h2 id="newmessage-title">{person ? `Message ${person.name.split(/\s+/)[0]}` : "New message"}</h2>
             {person ? (

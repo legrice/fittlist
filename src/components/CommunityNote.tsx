@@ -39,11 +39,11 @@ export function CommunityNote({ studioId, name, claimable = true }: { studioId: 
           >
             <div className="sheet infosheet">
               <button
-                className="iconbtn sheetclose"
+                className="iconbtn sheetclose sheet-dismiss"
                 aria-label="Close"
                 onClick={() => setOpen(false)}
               >
-                <Icon name="close" size={18} />
+                <Icon name="close" size={20} />
               </button>
               <h2 style={{ marginTop: 10 }}>This schedule</h2>
               <p className="lead">

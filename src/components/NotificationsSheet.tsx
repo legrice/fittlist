@@ -37,7 +37,7 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
         <section className="sheet notifications-sheet" role="dialog" aria-modal="true" aria-labelledby="notifications-sheet-title">
           <span className="notifications-sheet-grab" aria-hidden="true" />
           <div className="notifications-sheet-head">
-            <button type="button" className="iconbtn notifications-sheet-close" aria-label="Close notifications" onClick={onClose}>
+            <button type="button" className="iconbtn notifications-sheet-close sheet-dismiss" aria-label="Close notifications" onClick={onClose}>
               <Icon name="close" size={20} />
             </button>
             <div>

@@ -261,12 +261,12 @@ export function SavedClassShareSheet({
       >
         <button
           ref={closeRef}
-          className="iconbtn sheetclose"
+          className="iconbtn sheetclose sheet-dismiss"
           type="button"
           aria-label="Close"
           onClick={dismiss}
         >
-          <Icon name="close" size={18} />
+          <Icon name="close" size={20} />
         </button>
 
         <div className="postsave-head">

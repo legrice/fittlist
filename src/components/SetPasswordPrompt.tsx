@@ -83,8 +83,8 @@ export function SetPasswordPrompt({ mode }: { mode: PasswordPromptMode }) {
     <BodyPortal>
       <div className="sheet-scrim setpw-scrim">
         <div ref={dialogRef} className="sheet confirmsheet setpw-sheet" role="dialog" aria-modal="true" aria-labelledby="setpw-title" aria-describedby="setpw-description">
-          <button className="iconbtn sheetclose" type="button" aria-label={resetting ? "Cancel password reset" : "Not now"} onClick={dismiss} disabled={pending}>
-            <Icon name="close" size={18} />
+          <button className="iconbtn sheetclose sheet-dismiss" type="button" aria-label={resetting ? "Cancel password reset" : "Not now"} onClick={dismiss} disabled={pending}>
+            <Icon name="close" size={20} />
           </button>
           <h2 id="setpw-title">{resetting ? "Reset your password" : "Set a password"}</h2>
           <p className="lead" id="setpw-description">

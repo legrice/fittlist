@@ -221,8 +221,8 @@ export function MemberAccount({
           }}
         >
           <div className="sheet settings-detail-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => detailOnly ? onClose?.() : setView(null)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => detailOnly ? onClose?.() : setView(null)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>{VIEW_TITLE[view]}</h2>
 
@@ -308,11 +308,11 @@ export function MemberAccount({
         >
           <div className="sheet">
             <button
-              className="iconbtn sheetclose"
+              className="iconbtn sheetclose sheet-dismiss"
               aria-label="Close"
               onClick={() => setShareMenu(false)}
             >
-              <Icon name="close" size={18} />
+              <Icon name="close" size={20} />
             </button>
             <h2>Share</h2>
             <p className="lead">fittlist.co/{handle}</p>

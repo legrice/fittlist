@@ -135,11 +135,11 @@ export function StudioOwnerBar({
             <div className="adderhead">
               <h2>Edit place</h2>
               <button
-                className="iconbtn sheetclose adderclose"
+                className="iconbtn sheetclose adderclose sheet-dismiss"
                 aria-label="Close"
                 onClick={onClose}
               >
-                <Icon name="close" size={18} />
+                <Icon name="close" size={20} />
               </button>
             </div>
 
@@ -304,8 +304,8 @@ export function StudioOwnerBar({
       {confirmingDelete && (
         <div className="sheet-scrim studio-delete-confirm" onClick={(event) => { if (event.target === event.currentTarget) setConfirmingDelete(false); }}>
           <div className="sheet confirmsheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setConfirmingDelete(false)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setConfirmingDelete(false)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Delete {props.name}?</h2>
             <p className="lead">This permanently removes the place from fittlist. It can only be deleted when no classes or coaches still depend on it.</p>

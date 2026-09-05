@@ -35,12 +35,12 @@ export function SettingsDetailSheet({ view, onClose }: { view: DirectSettingsVie
   }, [onClose]);
 
   if (view !== "home") {
-    return <BodyPortal>{data ? data.kind === "coach" ? <ProfileSheet {...data.coach} anim="none" detailOnly initialView={view} onClose={onClose} /> : <MemberAccount {...data.fan} detailOnly initialView={memberView} onClose={onClose} /> : <div className="header-account-overlay" onMouseDown={onClose}><section className="header-account-sheet header-profile-sheet" role="dialog" aria-modal="true" aria-label="Opening settings" onMouseDown={(event) => event.stopPropagation()}><button type="button" className="iconbtn header-profile-close" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button><div className="header-account-loading"><p>Opening settings&hellip;</p></div></section></div>}</BodyPortal>;
+    return <BodyPortal>{data ? data.kind === "coach" ? <ProfileSheet {...data.coach} anim="none" detailOnly initialView={view} onClose={onClose} /> : <MemberAccount {...data.fan} detailOnly initialView={memberView} onClose={onClose} /> : <div className="header-account-overlay" onMouseDown={onClose}><section className="header-account-sheet header-profile-sheet" role="dialog" aria-modal="true" aria-label="Opening settings" onMouseDown={(event) => event.stopPropagation()}><button type="button" className="iconbtn header-profile-close sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button><div className="header-account-loading"><p>Opening settings&hellip;</p></div></section></div>}</BodyPortal>;
   }
 
   return <BodyPortal><div className="header-account-overlay" onMouseDown={onClose}>
     <section className={`header-account-sheet header-profile-sheet${view === "home" ? " settings-index-sheet" : ""}`} role="dialog" aria-modal="true" aria-label={view === "home" ? "Settings" : "Calendar and sync"} onMouseDown={(event) => event.stopPropagation()}>
-      {data ? data.kind === "coach" ? <ProfileSheet {...data.coach} anim="none" detailOnly={view !== "home"} initialView={view} onClose={onClose} /> : <MemberAccount {...data.fan} detailOnly={view !== "home"} initialView={memberView} onClose={onClose} /> : <><button type="button" className="iconbtn header-profile-close" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button><div className="header-account-loading"><p>Opening settings&hellip;</p></div></>}
+      {data ? data.kind === "coach" ? <ProfileSheet {...data.coach} anim="none" detailOnly={view !== "home"} initialView={view} onClose={onClose} /> : <MemberAccount {...data.fan} detailOnly={view !== "home"} initialView={memberView} onClose={onClose} /> : <><button type="button" className="iconbtn header-profile-close sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button><div className="header-account-loading"><p>Opening settings&hellip;</p></div></>}
     </section>
   </div></BodyPortal>;
 }

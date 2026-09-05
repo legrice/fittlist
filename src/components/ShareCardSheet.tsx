@@ -106,8 +106,8 @@ export function ShareCardSheet({
       <div className="sheet sheet-full">
         <div className="adderhead">
           <h2>{title}</h2>
-          <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
+          <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={20} />
           </button>
         </div>
         <p className="lead" style={{ marginTop: 0 }}>

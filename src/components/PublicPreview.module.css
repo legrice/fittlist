@@ -35,7 +35,7 @@
 .prompt>.primary{width:100%;min-height:50px}
 .loginLink{display:block;color:var(--ink);font-size:14px;font-weight:700;margin-top:16px}
 .loginLink span{color:var(--muted);font-weight:500}
-.close{position:absolute;top:18px;right:18px}
+.close{position:absolute;top:16px;right:var(--page-gutter)}
 
 @media(max-width:760px){
   .page{padding-bottom:36px}

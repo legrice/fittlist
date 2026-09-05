@@ -696,7 +696,7 @@ export function GymRota({
       {filterOpen && (
         <div className="calendar-drawer-scrim" onClick={(event) => event.target === event.currentTarget && setFilterOpen(false)}>
           <aside className="calendar-drawer" role="dialog" aria-modal="true" aria-labelledby="rota-filter-title">
-            <div className="calendar-drawer-head"><h2 id="rota-filter-title">Calendar filters</h2><button className="iconbtn" aria-label="Close" onClick={() => setFilterOpen(false)}><Icon name="close" size={18} /></button></div>
+            <div className="calendar-drawer-head"><h2 id="rota-filter-title">Calendar filters</h2><button className="iconbtn sheet-dismiss" aria-label="Close" onClick={() => setFilterOpen(false)}><Icon name="close" size={20} /></button></div>
             <section className="calendar-drawer-section"><h3>View</h3>
             <div>
               {([desktop ? "week" : "day", "month"] as const).map((view) => {
@@ -1029,8 +1029,8 @@ export function GymRota({
                 <h2 id="rota-coach-title">Choose a coach</h2>
                 <p>{coachPick.cls.name} · {coachPick.label}</p>
               </div>
-              <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setCoachPick(null)}>
-                <Icon name="close" size={18} />
+              <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setCoachPick(null)}>
+                <Icon name="close" size={20} />
               </button>
             </div>
             <div className="rota-coach-options" role="radiogroup" aria-label="Coach">

@@ -787,8 +787,8 @@ export function AdminPanel({
           <div className="sheet sheet-full actsheet">
             <div className="adderhead">
               <h2>Activity</h2>
-              <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={() => setActOpen(false)}>
-                <Icon name="close" size={18} />
+              <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={() => setActOpen(false)}>
+                <Icon name="close" size={20} />
               </button>
             </div>
             <p className="lead">

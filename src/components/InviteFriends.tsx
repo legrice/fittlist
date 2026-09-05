@@ -57,8 +57,8 @@ export function InviteSheet({
       }}
     >
       <div className="sheet">
-        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={18} />
+        <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={20} />
         </button>
         <h2>Share FittList</h2>
         <p className="lead">

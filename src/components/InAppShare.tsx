@@ -125,8 +125,8 @@ export function FittlistShareSheet({
   return (
     <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="sheet inappshare-sheet" role="dialog" aria-modal="true" aria-labelledby="inappshare-title">
-        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={18} />
+        <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={20} />
         </button>
         <h2 id="inappshare-title">Share</h2>
         <InAppShare title={title} url={url} onToast={onToast} />

@@ -29,8 +29,8 @@ export function SignupPrompt({
     <BodyPortal>
       <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
         <div className="sheet signup-prompt" role="dialog" aria-modal="true" aria-labelledby="signup-prompt-title">
-          <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
+          <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={20} />
           </button>
           <h2 id="signup-prompt-title">{title}</h2>
           <p className="lead">{body}</p>

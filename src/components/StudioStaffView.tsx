@@ -171,8 +171,8 @@ export function StudioStaffView({
           if (event.target === event.currentTarget) setCoachSheetOpen(false);
         }}>
           <div className="sheet staff-coach-add-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setCoachSheetOpen(false)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setCoachSheetOpen(false)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Add staff</h2>
             <div className="staff-role-picker" role="radiogroup" aria-label="Staff role">

@@ -151,7 +151,7 @@ export function FollowingDirectory({ data, mode }: { data: FollowingDirectoryDat
         {filtersOpen && (
           <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}>
             <div className="sheet discover-filters-sheet">
-              <button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={() => setFiltersOpen(false)}><Icon name="close" size={18} /></button>
+              <button type="button" className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setFiltersOpen(false)}><Icon name="close" size={20} /></button>
               <div className="discover-filters-sheet-head"><h2>Filters</h2><button type="button" disabled={!activeFilters} onClick={clearFilters}>Clear all</button></div>
               <div className="discover-filters-sheet-fields">
                 <DirectoryFilter label="Distance" value={distance} onChange={setDistance} all="Any distance" options={distanceOptions} disabled={data.viewerLat == null || data.viewerLng == null} />

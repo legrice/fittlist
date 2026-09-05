@@ -63,7 +63,7 @@ export function EmbedScheduleButton({ handle, inline = false }: { handle: string
       {open && (
         <div className="sheet-scrim" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
           <section className="sheet embed-sheet" role="dialog" aria-modal="true" aria-label="Embed your schedule">
-            <button className="sheetclose" type="button" aria-label="Close" onClick={() => setOpen(false)}><Icon name="close" size={22} /></button>
+            <button className="sheetclose sheet-dismiss" type="button" aria-label="Close" onClick={() => setOpen(false)}><Icon name="close" size={20} /></button>
             <h2>Embed your schedule</h2>
             {setup}
           </section>

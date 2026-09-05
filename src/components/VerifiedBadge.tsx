@@ -57,11 +57,11 @@ export function VerifiedBadge({
           >
             <div className="sheet infosheet">
               <button
-                className="iconbtn sheetclose"
+                className="iconbtn sheetclose sheet-dismiss"
                 aria-label="Close"
                 onClick={() => setOpen(false)}
               >
-                <Icon name="close" size={18} />
+                <Icon name="close" size={20} />
               </button>
               {verified ? (
                 <>

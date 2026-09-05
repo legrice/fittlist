@@ -268,7 +268,7 @@ export function YouDashboard({
       {photoMenu && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPhotoMenu(false); }}>
           <section className="sheet youphoto-sheet" role="dialog" aria-modal="true" aria-labelledby="youphoto-title">
-            <button type="button" className="iconbtn sheetclose" aria-label="Close" onClick={() => setPhotoMenu(false)}><Icon name="close" size={18} /></button>
+            <button type="button" className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPhotoMenu(false)}><Icon name="close" size={20} /></button>
             <h2 id="youphoto-title">Profile photo</h2>
             <button type="button" onClick={() => choosePhoto("library")}><Icon name="image" size={21} /><span><strong>Choose a photo</strong><small>Crop it before it saves</small></span></button>
             <button type="button" onClick={() => choosePhoto("camera")}><Icon name="image" size={21} /><span><strong>Take a photo</strong><small>Use your camera</small></span></button>

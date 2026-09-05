@@ -297,8 +297,8 @@ export function GlobalAdd({
           <Icon name="arrow_back" size={20} />
         </button>
         <h2 id="globaladd-title">Tell us about {placeName}</h2>
-        <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={close}>
-          <Icon name="close" size={18} />
+        <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={close}>
+          <Icon name="close" size={20} />
         </button>
       </div>
       <p className="lead">A few details make the page useful from day one.</p>
@@ -496,8 +496,8 @@ export function GlobalAdd({
                 aria-labelledby="globaladd-title"
               >
                 {placeStep !== "details" && (
-                  <button className="iconbtn sheetclose" aria-label="Close" onClick={close}>
-                    <Icon name="close" size={18} />
+                  <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={close}>
+                    <Icon name="close" size={20} />
                   </button>
                 )}
                 {mode === "place" && (placeStep === "identity" ? placeIdentity : placeDetails)}
@@ -519,8 +519,8 @@ export function GlobalAdd({
                 aria-modal="true"
                 aria-labelledby="globaladd-chooser-title"
               >
-                <button className="iconbtn sheetclose" aria-label="Close add menu" onClick={close}>
-                  <Icon name="close" size={18} />
+                <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close add menu" onClick={close}>
+                  <Icon name="close" size={20} />
                 </button>
                 <h2 id="globaladd-chooser-title">Create</h2>
                 <p className="lead">What would you like to add?</p>

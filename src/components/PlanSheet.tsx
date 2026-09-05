@@ -109,7 +109,7 @@ export function PlanSheet({
   return (
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget && !pending) onClose(); }}>
       <div className="sheet clspeek clsfull">
-        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
+        <button className="clspeek-x clsfull-x sheet-dismiss" aria-label="Close" onClick={onClose}>
           <Icon name="close" size={20} />
         </button>
         <span className="clspeek-grab" aria-hidden="true" />

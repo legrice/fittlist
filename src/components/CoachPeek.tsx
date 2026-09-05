@@ -298,7 +298,7 @@ export function CoachPeek({
       {messageOpen && peek?.handle && (
         <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setMessageOpen(false); }}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label={`Message ${name}`}>
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMessageOpen(false)}><Icon name="close" size={18} /></button>
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setMessageOpen(false)}><Icon name="close" size={20} /></button>
             <h2>Message {name.split(/\s+/)[0]}</h2>
             <MessageComposer handle={peek.handle} coachName={name} signedIn />
           </div>

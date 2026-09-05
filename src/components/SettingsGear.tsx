@@ -113,7 +113,7 @@ export function SettingsGear({ header = false, pill = false }: {
                 <div className="acctwrap" role="dialog" aria-label="Your account">
                   <div className="accttop">
                     <h1 className="acct-h">Settings</h1>
-                    <button className="iconbtn acctclose" aria-label="Close" onClick={close}>
+                    <button className="iconbtn acctclose sheet-dismiss" aria-label="Close" onClick={close}>
                       <Icon name="close" size={20} />
                     </button>
                   </div>
@@ -121,7 +121,7 @@ export function SettingsGear({ header = false, pill = false }: {
                 </div>
               ) : (
                 <div className="header-account-loading">
-                  <button className="iconbtn acctclose" aria-label="Close" onClick={close}>
+                  <button className="iconbtn acctclose sheet-dismiss" aria-label="Close" onClick={close}>
                     <Icon name="close" size={20} />
                   </button>
                   <p>Opening settings&hellip;</p>

@@ -116,8 +116,8 @@ export function StudioFeedback({
           }}
         >
           <div className="sheet confirmsheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Report this studio</h2>
             <p className="lead">
@@ -163,8 +163,8 @@ export function StudioFeedback({
           }}
         >
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Suggest an edit</h2>
             <p className="lead">
@@ -235,8 +235,8 @@ export function StudioFeedback({
           }}
         >
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Claim this place</h2>
             <p className="lead">
@@ -309,8 +309,8 @@ export function StudioFeedback({
           }}
         >
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Take this page down</h2>
             <p className="lead">

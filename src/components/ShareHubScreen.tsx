@@ -1483,8 +1483,8 @@ export function ShareHubScreen({
           }}
         >
           <div className="sheet shpick">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Dates</h2>
             {/* The one preset worth a chip: "I'm at this tonight" is a real
@@ -1545,8 +1545,8 @@ export function ShareHubScreen({
           }}
         >
           <div className="sheet shpick shphoto-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Photo</h2>
             <div className="shbackground-choices">
@@ -1664,7 +1664,7 @@ export function ShareHubScreen({
       {pick === "perspective" && (
         <div className="sheet-scrim share-inspector-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
           <div className="sheet shpick" role="dialog" aria-modal="true" aria-labelledby="share-perspective-title">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={20} /></button>
             <h2 id="share-perspective-title">Perspective</h2>
             <p className="lead">Who should the sentence sound like it is about?</p>
             <div className="settingslist">
@@ -1686,8 +1686,8 @@ export function ShareHubScreen({
           }}
         >
           <div className="sheet shcolor-sheet" role="dialog" aria-modal="true" aria-labelledby="shcolor-title">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => { setColorMenuOpen(false); setPick(null); }}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => { setColorMenuOpen(false); setPick(null); }}>
+              <Icon name="close" size={20} />
             </button>
             <h2 id="shcolor-title">Choose a color</h2>
             <div className="shcolor-sheet-list" role="listbox" aria-label="Background color">
@@ -1720,8 +1720,8 @@ export function ShareHubScreen({
           }}
         >
           <div className="sheet shpick shstyle-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Style</h2>
             <div className="shstyle-tabs" role="tablist" aria-label="Style choices">
@@ -1856,8 +1856,8 @@ export function ShareHubScreen({
           }}
         >
           <div className="sheet shpick">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Headline</h2>
             <p className="lead">The words at the top of the picture, how loud, and their voice.</p>
@@ -1943,7 +1943,7 @@ export function ShareHubScreen({
       {pick === "font" && (
         <div className="sheet-scrim share-inspector-scrim" onClick={(event) => { if (event.target === event.currentTarget) setPick(null); }}>
           <div className="sheet shpick" role="dialog" aria-modal="true" aria-labelledby="share-font-title">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={18} /></button>
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPick(null)}><Icon name="close" size={20} /></button>
             <h2 id="share-font-title">Font</h2>
             <div className="shfont-previews" role="radiogroup" aria-labelledby="share-font-title">
               {TYPEFACES.map((typeface) => <button key={typeface.id} type="button" role="radio" aria-checked={typeId === typeface.id} className={`shfont-preview${typeId === typeface.id ? " on" : ""}`} style={{ fontFamily:`'${typeface.family}', sans-serif`, fontStyle:typeface.italic ? "italic" : "normal", letterSpacing:typeface.track == null ? undefined : `${typeface.track}em` }} onClick={() => { beginPreviewUpdate("headline"); pushUndo(); setTypeId(typeface.id); setPick(null); }}>{typeface.label}</button>)}
@@ -1960,8 +1960,8 @@ export function ShareHubScreen({
           }}
         >
           <div className="sheet shpick">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Classes</h2>
             {/* Without this line people read a checkbox as a delete and stop

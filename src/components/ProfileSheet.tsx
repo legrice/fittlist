@@ -436,7 +436,7 @@ export function ProfileSheet({
         {!page && (
           <div className="accttop">
             <h1 className="acct-h">Settings</h1>
-            <button className="iconbtn acctclose" aria-label="Close" onClick={onClose}>
+            <button className="iconbtn acctclose sheet-dismiss" aria-label="Close" onClick={onClose}>
               <Icon name="close" size={20} />
             </button>
           </div>
@@ -585,8 +585,8 @@ export function ProfileSheet({
           }}
         >
           <div className="sheet settings-detail-sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={goBack}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={goBack}>
+              <Icon name="close" size={20} />
             </button>
             <h2>{viewTitle}</h2>
 
@@ -891,8 +891,8 @@ export function ProfileSheet({
       {pwSheet && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setPwSheet(false); }}>
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPwSheet(false)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setPwSheet(false)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>{pwSet ? "Change password" : "Set a password"}</h2>
             <p className="lead">At least 8 characters. You can still use a magic link or passkey.</p>
@@ -920,11 +920,11 @@ export function ProfileSheet({
         >
           <div className="sheet">
             <button
-              className="iconbtn sheetclose"
+              className="iconbtn sheetclose sheet-dismiss"
               aria-label="Close"
               onClick={() => setShareMenu(false)}
             >
-              <Icon name="close" size={18} />
+              <Icon name="close" size={20} />
             </button>
             <h2>Share</h2>
             <p className="lead">fittlist.co/{handle}</p>

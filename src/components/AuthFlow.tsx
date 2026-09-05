@@ -648,8 +648,8 @@ export function AuthFlow({
       {sheet && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setSheet(null)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setSheet(null)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>
               {sheet === "signup"
@@ -794,8 +794,8 @@ export function AuthFlow({
       {requestOpen && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setRequestOpen(false); }}>
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setRequestOpen(false)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setRequestOpen(false)}>
+              <Icon name="close" size={20} />
             </button>
             {reqSent ? (
               <>

@@ -283,11 +283,11 @@ export function StudioShiftsView({
         >
           <div className="sheet">
             <button
-              className="iconbtn sheetclose"
+              className="iconbtn sheetclose sheet-dismiss"
               aria-label="Close"
               onClick={() => setManage(null)}
             >
-              <Icon name="close" size={18} />
+              <Icon name="close" size={20} />
             </button>
             <h2>{manage.name}</h2>
             <div className="settingslist ownermenu">
@@ -337,11 +337,11 @@ export function StudioShiftsView({
         >
           <div className="sheet">
             <button
-              className="iconbtn sheetclose"
+              className="iconbtn sheetclose sheet-dismiss"
               aria-label="Close"
               onClick={() => setTransfer(null)}
             >
-              <Icon name="close" size={18} />
+              <Icon name="close" size={20} />
             </button>
             <h2>Transfer shift</h2>
             <p className="lead">

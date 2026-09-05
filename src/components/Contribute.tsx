@@ -49,8 +49,8 @@ export function Contribute({ addHref }: { addHref: string }) {
           }}
         >
           <div className="sheet contribsheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={18} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setOpen(false)}>
+              <Icon name="close" size={20} />
             </button>
             <h2>Contribute</h2>
             <p className="lead">The record is built by the people in it.</p>

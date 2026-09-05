@@ -74,7 +74,7 @@ export function ReportContentButton({
         {open && (
           <div className="sheet-scrim" onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
             <div className="sheet content-report-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-              <button type="button" className="iconbtn sheetclose" aria-label="Close report" onClick={() => setOpen(false)}><Icon name="close" size={18} /></button>
+              <button type="button" className="iconbtn sheetclose sheet-dismiss" aria-label="Close report" onClick={() => setOpen(false)}><Icon name="close" size={20} /></button>
               <h2 id={titleId}>Report this content</h2>
               <p className="lead">Tell us what’s wrong. The person who posted it won’t see who reported it.</p>
               <fieldset className="content-report-reasons">

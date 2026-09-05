@@ -117,7 +117,7 @@ export function ProfileEndorsements({ handle, studioSlug, firstName, initial, mi
             <div className="sheet stamp-picker">
               <div className="adderhead">
                 <div><h2>Pick a badge</h2><p>What makes {firstName} great?</p></div>
-                <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={() => setPicker(false)}><Icon name="close" size={18} /></button>
+                <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={() => setPicker(false)}><Icon name="close" size={20} /></button>
               </div>
               <div className="stamp-picker-grid">
                 {traits.map((trait, index) => stamp(trait, index, true))}
