@@ -15188,3 +15188,19 @@ html:has(.calendar-scope-top) {
 }
 .explore-save-button.on { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
 .explore-save-button:disabled { opacity:.6; }
+
+.calendar-following-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.calendar-following-card .activity-card-main { grid-column: 1 / -1; }
+.calendar-following-card .calendar-social-actions {
+  grid-column: 1;
+  grid-row: 2;
+  padding-bottom: 16px;
+}
+.calendar-following-card .explore-save-row {
+  grid-column: 2;
+  grid-row: 2;
+  align-items: center;
+}
