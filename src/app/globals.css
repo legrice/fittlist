@@ -15204,3 +15204,9 @@ html:has(.calendar-scope-top) {
   grid-row: 2;
   align-items: center;
 }
+
+/* Override the global button focus ring; the chevron glyph signals focus. */
+button.calendar-summary-reveal:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
