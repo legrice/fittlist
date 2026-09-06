@@ -15360,3 +15360,10 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .following-coach-context.explore-coach-context { background:transparent; border:0; border-radius:0; padding:0; min-height:36px; margin:14px 0 24px; color:var(--kinetic-inverse); }
 .explore-coach-context .feedfilter-txt { color:var(--kinetic-inverse); }
 .explore-coach-context .feedfilter-link { display:inline-flex; align-items:center; gap:3px; flex-shrink:0; min-height:30px; padding:6px 12px; border:0; border-radius:var(--radius-pill); background:var(--kinetic-accent); color:var(--kinetic-text); font-size:12px; font-weight:700; text-decoration:none; }
+
+.class-actions-scrim { z-index:160; }
+.sheet.class-actions-sheet { padding:0 0 calc(16px + env(safe-area-inset-bottom)); background:var(--kinetic-canvas-light); }
+.class-actions-sheet .utility-sheet-head { padding-bottom:12px; }
+.class-actions-sheet .utility-sheet-head .sheet-dismiss { position:absolute; top:16px; right:var(--page-gutter); }
+.class-actions-list { margin:0 var(--page-gutter); overflow:hidden; border-radius:20px; background:var(--kinetic-surface); }
+.class-actions-list .ovmenu-item { width:100%; min-height:52px; padding:14px 16px; }

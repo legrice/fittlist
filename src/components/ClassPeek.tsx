@@ -10,6 +10,7 @@ import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
 import { giveUpShift, requestShiftEdit, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { SavedClassShareSheet } from "@/components/SavedClassShareSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
@@ -546,10 +547,12 @@ export function ClassPeek({
           <Icon name="close" size={20} />
         </button>
         {moreOpen && full && (
-          <div className="clsfull-menu" role="menu">
+          <BodyPortal><div className="sheet-scrim class-actions-scrim" onClick={(event) => { event.stopPropagation(); if (event.target === event.currentTarget) setMoreOpen(false); }}>
+          <section className="sheet class-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="class-actions-title" onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); setMoreOpen(false); } }}>
+            <header className="utility-sheet-head"><span className="utility-sheet-grab" aria-hidden="true" /><h2 id="class-actions-title">Class actions</h2><button type="button" className="sheet-dismiss" aria-label="Close class actions" autoFocus onClick={() => setMoreOpen(false)}><Icon name="close" size={20} /></button></header>
+            <div className="class-actions-list">
             <a
               className="ovmenu-item"
-              role="menuitem"
               href={full.googleUrl}
               target="_blank"
               rel="noopener nofollow"
@@ -559,7 +562,6 @@ export function ClassPeek({
             </a>
             <a
               className="ovmenu-item"
-              role="menuitem"
               href={full.icsHref}
               onClick={() => setMoreOpen(false)}
             >
@@ -567,7 +569,6 @@ export function ClassPeek({
             </a>
             <button
               className="ovmenu-item"
-              role="menuitem"
               onClick={() => {
                 setMoreOpen(false);
                 void share();
@@ -576,15 +577,14 @@ export function ClassPeek({
               <Icon name="reply" className="share-arrow-forward" size={19} /> Share class
             </button>
             {((cls.mine && !cls.shift && onEdit) || full.adminEdit) && (
-              <button className="ovmenu-item" role="menuitem" onClick={editClass}>
+              <button className="ovmenu-item" onClick={editClass}>
                 <Icon name="edit" size={19} /> Edit class
               </button>
             )}
             {!cls.mine && !reported && (
               <button
                 className="ovmenu-item ovmenu-quiet"
-                role="menuitem"
-                onClick={() => {
+                  onClick={() => {
                   setMoreOpen(false);
                   setReportOpen(true);
                 }}
@@ -592,7 +592,8 @@ export function ClassPeek({
                 <Icon name="flag" size={19} /> Report this class
               </button>
             )}
-          </div>
+            </div>
+          </section></div></BodyPortal>
         )}
         <span className="clspeek-grab" aria-hidden="true" />
 
