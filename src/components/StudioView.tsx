@@ -387,7 +387,7 @@ export async function StudioView({
           // room.
           avatar={<ProfilePhotoZoom photo={s.photo} name={s.name} color={avatarColor({id:s.id})} className="profav"/>}
           backTo={backTo}
-          badges={access.isManager ? <span className="studio-profile-admin-badge">Admin</span> : null}
+          badges={null}
           ownerTop={<ProfileOverflow profileId={s.id} path={base} name={s.name} canReport={false}>
             {hasContact && <ContactSheet coachName={s.name} signedIn={signedIn} canMessage={false} ways={{email:s.contactEmail ?? "",phone:s.phone ?? "",whatsapp:"",instagram:s.instagram ?? "",website:s.website ?? "",links:[]}}/>}
             {access.isManager && <Link className="actpill" href={`${base}/manage`}>Admin dashboard</Link>}
