@@ -1,4 +1,5 @@
 "use client";
+import { NotificationDot } from "@/components/NotificationDot";
 
 import { LoadingDots } from "@/components/LoadingDots";
 
@@ -724,7 +725,7 @@ export function CalendarScreen({
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
       {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
-          {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={view === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => setView(view === "month" ? "list" : "month")}><Icon name={view === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /></button>}
+          {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={view === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => setView(view === "month" ? "list" : "month")}><Icon name={view === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /><NotificationDot /></button>}
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}${scopeTarget !== "you" ? " is-loading" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Explore</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" tabIndex={classSheetDismissed ? 0 : -1} aria-hidden={!classSheetDismissed} aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>

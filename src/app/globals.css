@@ -15519,3 +15519,5 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 .discover-group-copy small { color:var(--color-text-secondary); font-size:14px; line-height:1.35; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
 .discover-group-row .discover-follow-group { width:auto; margin:0; flex:0 0 auto; }
 .directory-loading { display:flex; justify-content:center; align-items:center; min-height:120px; background:transparent; border:0; box-shadow:none; }
+.calendar-scope-notifications { position:relative; }
+.notification-unread-dot { position:absolute; top:7px; right:7px; width:9px; height:9px; border-radius:50%; background:#F06464; box-shadow:0 0 0 2px var(--kinetic-icon-surface); pointer-events:none; }

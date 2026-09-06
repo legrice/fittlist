@@ -38,3 +38,13 @@ export async function markUpdatesSeen(): Promise<void> {
   // The badge is in every header, so everything cached goes.
   revalidatePath("/", "layout");
 }
+
+export async function hasNewNotifications(): Promise<boolean> {
+  const userId = await getSessionUserId();
+  if (!userId) return false;
+  const { getDb, schema } = await import("@/db");
+  const { and, eq, isNull, notInArray } = await import("drizzle-orm");
+  const db = await getDb();
+  const rows = await db.select({id:schema.notifications.id}).from(schema.notifications).where(and(eq(schema.notifications.userId,userId),isNull(schema.notifications.readAt),notInArray(schema.notifications.type,["message","feedback"]))).limit(1);
+  return rows.length > 0;
+}

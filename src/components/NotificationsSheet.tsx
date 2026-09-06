@@ -4,7 +4,7 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 
 import { useEffect, useRef, useState } from "react";
-import { loadNotificationSheet } from "@/app/actions/notifications";
+import { loadNotificationSheet, markUpdatesSeen } from "@/app/actions/notifications";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { NotificationList, type Notif } from "@/components/UpdatesScreen";
@@ -18,6 +18,10 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
   );
   const [failed, setFailed] = useState(false);
   const sheet = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    void markUpdatesSeen().then(()=>window.dispatchEvent(new Event("fl-notifications-seen"))).catch(()=>{});
+  }, []);
 
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
