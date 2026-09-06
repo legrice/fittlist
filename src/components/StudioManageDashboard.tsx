@@ -56,6 +56,7 @@ export function StudioManageDashboard({
             {admin.studio.photo ? <img src={admin.studio.photo} alt="" /> : <Icon name="storefront" size={42} />}
           </span>
           <h1>{studioName}</h1>
+          <span className="studio-dashboard-admin-badge">Studio admin</span>
         </div>
       </div>
 

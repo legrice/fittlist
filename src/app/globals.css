@@ -15489,3 +15489,4 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
     height:auto; max-height:52px; overflow:hidden; text-overflow:ellipsis;
   }
 }
+.studio-dashboard-admin-badge { display:inline-flex; align-self:center; padding:5px 12px; border-radius:var(--radius-pill); background:var(--kinetic-accent); color:var(--kinetic-text); font-size:13px; font-weight:700; line-height:1.2; }
