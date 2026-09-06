@@ -15353,5 +15353,5 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .explore-class-duration { grid-column:1; }
 .explore-class-studio { grid-column:2; min-width:0; }
 .explore-class-duration, .explore-class-studio { font-size:15px; line-height:1.3; color:var(--color-text-secondary); }
-.calendar-following-card .explore-save-row { position:absolute; top:16px; right:16px; padding:0; }
+.calendar-following-card .explore-save-row { position:absolute; grid-area:auto; top:16px; right:16px; bottom:auto; padding:0; }
 .calendar-following-card .explore-save-button { min-height:28px; height:28px; padding:0 10px; font-size:11px; }
