@@ -15521,3 +15521,12 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 .directory-loading { display:flex; justify-content:center; align-items:center; min-height:120px; background:transparent; border:0; box-shadow:none; }
 .calendar-scope-notifications { position:relative; }
 .notification-unread-dot { position:absolute; top:7px; right:7px; width:9px; height:9px; border-radius:50%; background:#F06464; box-shadow:0 0 0 2px var(--kinetic-icon-surface); pointer-events:none; }
+html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-welcome), .screen.ob:has(.simple-welcome) > .pad { background:var(--kinetic-canvas-dark); }
+.screen.ob:has(.simple-welcome) > .pad > .mark { display:none; }
+.simple-welcome { min-height:100dvh; max-width:620px; margin:auto; padding:80px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:var(--kinetic-inverse); box-sizing:border-box; }
+.simple-welcome-logo { width:144px; height:auto; margin-bottom:36px; }
+.simple-welcome h1 { margin:0; font-size:clamp(36px,6vw,56px); line-height:1.06; font-weight:700; letter-spacing:-.035em; color:var(--kinetic-inverse); }
+.simple-welcome > p { margin:24px 0 32px; max-width:440px; font-size:18px; line-height:1.5; color:var(--kinetic-inverse); }
+.simple-welcome-actions { display:flex; gap:12px; width:100%; max-width:380px; }
+.simple-welcome-actions button { flex:1; min-height:48px; padding:12px 20px; border:1px solid var(--kinetic-control-border); border-radius:var(--radius-pill); background:var(--kinetic-surface); color:var(--kinetic-text); font:inherit; font-weight:700; }
+.simple-welcome-actions .simple-welcome-signup { background:var(--kinetic-accent); }

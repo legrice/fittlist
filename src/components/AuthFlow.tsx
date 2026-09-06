@@ -488,87 +488,15 @@ export function AuthFlow({
         <Wordmark variant="ink" className="mark" />
 
         {stage === "landing" && (
-          <div className="obwelcome">
-            <header className="obwelcome-head">
-              <Wordmark variant="ink" className="obwelcome-logo" />
-              <nav aria-label="Account">
-                <button type="button" className="obwelcome-signup-button" onClick={() => { setError(""); setSheet("signup"); }}>
-                  Sign up
-                </button>
-                <button type="button" className="obwelcome-login-button" onClick={() => { setError(""); setSheet("login"); }}>
-                  Log in
-                </button>
-              </nav>
-            </header>
-            <div className="obwelcome-stories" data-story="calendar" ref={landingStoriesRef}>
-              <div className="obwelcome-story-stage">
-                <div className="obwelcome-grid obwelcome-calendar-grid">
-                <div className="obwelcome-title">
-                  <h1>Fit all your fitness into one calendar.</h1>
-                </div>
-                <div className="obwelcome-device"><LandingCalendarMockup /></div>
-                <div className="obwelcome-copy">
-                  <p>Manage your schedule across multiple studios and see what your friends and favorite coaches are up to.</p>
-                  <form className="obwelcome-email" onSubmit={(event) => { event.preventDefault(); sendLink(false, true); }}>
-                    <span><Icon name="mail" size={18} /></span>
-                    <input
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      aria-label="Email address"
-                      placeholder="Email address"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                    />
-                    <button type="submit" disabled={pending}>
-                      {pending ? "Sending…" : "Get started"} <Icon name="arrow_forward" size={18} />
-                    </button>
-                  </form>
-                  {error && <div className="errorcopy">{error}</div>}
-                </div>
-                </div>
-                <div className="obwelcome-grid obwelcome-share-grid">
-                  <div className="obwelcome-title">
-                    <h1>Share your week your way.</h1>
-                  </div>
-                  <div className="obwelcome-device"><LandingShareMockup /></div>
-                  <div className="obwelcome-copy">
-                    <p>Send your classes as an image, share a link, or post them anywhere you&rsquo;d like.</p>
-                  </div>
-                </div>
-                <div className="obwelcome-grid obwelcome-groups-grid">
-                  <div className="obwelcome-title">
-                    <h1>Organize group calendars.</h1>
-                  </div>
-                  <div className="obwelcome-device"><LandingGroupMockup /></div>
-                  <div className="obwelcome-copy">
-                    <p>Bring the schedule, updates, and everyone who&rsquo;s joining together in one shared calendar.</p>
-                  </div>
-                </div>
-                <div className="obwelcome-grid obwelcome-studio-grid">
-                  <div className="obwelcome-title">
-                    <h1>Manage your studio&rsquo;s schedule.</h1>
-                  </div>
-                  <div className="obwelcome-device"><LandingStudioMockup /></div>
-                  <div className="obwelcome-copy">
-                    <p>Assign coaches, fill open shifts, and keep every class covered.</p>
-                  </div>
-                </div>
-                <section className="obwelcome-final-cta" aria-labelledby="obwelcome-final-title">
-                  <h2 id="obwelcome-final-title">Ready to build your week?</h2>
-                  <button type="button" onClick={() => { setError(""); setSheet("signup"); }}>Get started</button>
-                </section>
-              </div>
+          <main className="simple-welcome">
+            <Wordmark variant="cloud" className="simple-welcome-logo" />
+            <h1>Fit all your fitness into one calendar.</h1>
+            <p>Manage your schedule across multiple studios and see what your friends and favorite coaches are up to.</p>
+            <div className="simple-welcome-actions">
+              <button type="button" onClick={() => { setError(""); setSheet("login"); }}>Log in</button>
+              <button type="button" className="simple-welcome-signup" onClick={() => { setError(""); setSheet("signup"); }}>Sign up</button>
             </div>
-            <footer className="obwelcome-footer">
-              <Wordmark variant="ink" className="obwelcome-footer-mark" />
-              <span>&copy; {new Date().getFullYear()} FittList</span>
-              <a href="mailto:hello@fittlist.co">Contact</a>
-              <button type="button" onClick={() => { setError(""); setSheet("signup"); }}>
-                Sign up
-              </button>
-            </footer>
-          </div>
+          </main>
         )}
 
         {stage === "sent" && (
