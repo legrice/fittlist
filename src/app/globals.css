@@ -15490,3 +15490,12 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
   }
 }
 .studio-dashboard-admin-badge { display:inline-flex; align-self:center; padding:5px 12px; border-radius:var(--radius-pill); background:var(--kinetic-accent); color:var(--kinetic-text); font-size:13px; font-weight:700; line-height:1.2; }
+.calendar-following-discover .discover-directory-tabs {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px;
+  padding:4px; border:0; border-radius:var(--radius-pill); background:var(--kinetic-badge);
+}
+.calendar-following-discover .discover-directory-tabs button {
+  min-width:0; min-height:40px; padding:8px 10px; border:0; border-radius:var(--radius-pill);
+  color:var(--kinetic-text); font-size:15px; background:transparent;
+}
+.calendar-following-discover .discover-directory-tabs button.on { background:var(--kinetic-surface); border:0; }
