@@ -1,3 +1,4 @@
+import { FavoritePlaceButton } from "@/components/FavoritePlaceButton";
 import { StudioProfileHub } from "@/components/StudioProfileHub";
 import { and, eq, gte, inArray, lte, or } from "drizzle-orm";
 import { cache } from "react";
@@ -15,19 +16,16 @@ import { backToFor } from "@/lib/nav";
 import { ContactSheet } from "@/components/ContactSheet";
 import { Icon } from "@/components/Icon";
 import { InviteCoach } from "@/components/InviteCoach";
-import { CommunityNote } from "@/components/CommunityNote";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { ProfileActionGate } from "@/components/ProfileActionGate";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioMenu } from "@/components/StudioMenu";
-import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
-import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfilePhotoZoom } from "@/components/ProfilePhotoZoom";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
-import { CalendarPinButton } from "@/components/CalendarPinButton";
+import { ProfileOverflow } from "@/components/ProfileOverflow";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { hiddenFrom } from "@/lib/blocks";
 
@@ -390,12 +388,17 @@ export async function StudioView({
           avatar={<ProfilePhotoZoom photo={s.photo} name={s.name} color={avatarColor({id:s.id})} className="profav"/>}
           backTo={backTo}
           badges={access.isManager ? <span className="studio-profile-admin-badge">Admin</span> : null}
-          ownerTop={viewerId ? <CalendarPinButton entityType="studio" entityId={s.id} /> : null}
+          ownerTop={<ProfileOverflow profileId={s.id} path={base} name={s.name} canReport={false}>
+            {hasContact && <ContactSheet coachName={s.name} signedIn={signedIn} canMessage={false} ways={{email:s.contactEmail ?? "",phone:s.phone ?? "",whatsapp:"",instagram:s.instagram ?? "",website:s.website ?? "",links:[]}}/>}
+            {access.isManager && <Link className="actpill" href={`${base}/manage`}>Admin dashboard</Link>}
+            <StudioMenu slug={s.slug ?? ""} canEdit={canEdit} claimed={access.claimed} claimable={s.placeKind !== "outdoor"} signedIn={signedIn} studio={editProps}/>
+          </ProfileOverflow>}
           actions={
             /* Nothing to offer, no row: an empty pills row still spends its
                margin, which read as stray space between the address and the
                tabs on a studio with no contact ways. */
             <div className="profacts">
+              <FavoritePlaceButton studio={{slug:s.slug ?? s.id,name:s.name,favorited:!!viewerId && studioVisitRows.some(row=>row.endorserUserId===viewerId)}}/>
               {/* The same pill a person's page carries, opening the same
                   sheet. Nobody is messaged on fittlist here: a studio has no
                   account to write to, so the sheet is the ways in and no more. */}
@@ -414,22 +417,6 @@ export async function StudioView({
                   }}
                 />
               )}
-              <ProfileShare path={base} name={s.name} pill />
-              {access.isManager && <Link className="actpill" href={`${base}/manage`}>Admin dashboard</Link>}
-              <StudioMenu
-                slug={s.slug ?? ""}
-                canEdit={canEdit}
-                claimed={access.claimed}
-                claimable={s.placeKind !== "outdoor"}
-                signedIn={signedIn}
-                studio={editProps}
-              />
-              <VerifiedBadge
-                studioId={s.id}
-                name={s.name}
-                verified={access.claimed}
-                claimable={s.placeKind !== "outdoor"}
-              />
             </div>
           }
           endorsement={null}
@@ -480,13 +467,6 @@ export async function StudioView({
           </div>
           )}
         </section>} schedule={        <section id="profile-schedule" className="profile-anchor-section">
-          {community && !access.claimed && (
-            <CommunityNote
-              studioId={s.id}
-              name={s.name}
-              claimable={s.placeKind !== "outdoor"}
-            />
-          )}
           {hasSchedule ? (
             <StudioSchedule
               slug={s.slug ?? s.id}

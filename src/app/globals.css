@@ -15467,3 +15467,14 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 .photo-viewer-actions > :is(button,a) { display:flex; flex-direction:column; align-items:center; gap:8px; border:0; background:none; color:var(--kinetic-inverse); font:inherit; font-size:13px; text-decoration:none; }
 .photo-viewer-actions .icon { box-sizing:content-box; padding:14px; border-radius:50%; background:var(--kinetic-icon-surface); }
 .photo-viewer-content > p { min-height:20px; font-size:13px; }
+/* Shared profile proportions and settings-style overflow rows. */
+.pub :is(.profav,.group-profile-photo) { width:140px; height:140px; min-width:140px; aspect-ratio:1; flex-basis:140px; }
+.profile-seam-top .profile-top-name { left:88px; right:88px; }
+@media(max-width:939px) { .group-seam-top .group-seam-name { left:88px; right:88px; } }
+.sheet.profile-overflow-sheet { max-height:85dvh; background:var(--kinetic-canvas-light); padding-top:28px; }
+.profile-overflow-sheet > h2 { text-align:left; padding-right:56px; }
+.profile-overflow-sheet .profile-overflow-items { display:flex; flex-direction:column; gap:8px; margin-top:24px; }
+.profile-overflow-sheet .profile-overflow-items :is(.actpill,.profile-share-pill,.profile-overflow-item) { display:flex; align-items:center; justify-content:flex-start; width:100%; min-height:52px; height:auto; margin:0; padding:14px 16px; gap:12px; border:1px solid var(--kinetic-control-border); border-radius:16px; background:var(--kinetic-surface); color:var(--kinetic-text); text-align:left; text-decoration:none; }
+.pub:is(.profile,.memberpub) .profile-action-cluster :is(.followpill.on,.discover-follow-button.on) { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); border-color:var(--kinetic-canvas-dark); }
+.studio-profile .profile-action-cluster { overflow:visible; }
+.studio-profile .profile-action-cluster :is(.discover-follow-button,.actpill,.profile-about-trigger) { flex:1 1 0; width:0; min-height:40px; padding:8px; justify-content:center; border:1px solid var(--kinetic-control-border); border-radius:var(--radius-pill); background:var(--kinetic-surface); color:var(--kinetic-text); font-size:14px; }

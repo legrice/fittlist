@@ -219,7 +219,7 @@ export async function MemberProfileView({
           badges={null}
           // Settings lives in the shared app header; floating it here as well
           // made the owner's page carry two doors to the same place.
-          ownerTop={!isOwner&&viewerId?<ProfileOverflow profileId={user.id} path={`/${user.handle!}`} name={name}/>:null}
+          ownerTop={<ProfileOverflow profileId={user.id} path={`/${user.handle!}`} name={name} canReport={!isOwner && !!viewerId}><ContactSheet handle={user.handle!} coachName={name} signedIn={!!viewerId} canMessage={canMessage} ways={ways}/></ProfileOverflow>}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />

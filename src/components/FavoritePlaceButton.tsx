@@ -6,7 +6,7 @@ import { toggleStudioVisit } from "@/app/actions/endorsements";
 import { Toast, useToast } from "@/components/Toast";
 import type { DirStudio } from "@/components/DirectoryRows";
 
-export function FavoritePlaceButton({ studio }: { studio: DirStudio }) {
+export function FavoritePlaceButton({ studio }: { studio: Pick<DirStudio, "slug" | "name" | "favorited"> }) {
   const router = useRouter();
   const [favorited, setFavorited] = useState(!!studio.favorited);
   const [pending, start] = useTransition();
