@@ -15441,3 +15441,20 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 .group-members-sheet { padding-top:60px; }
 .studio-profile-hub > .group-tabs.group-segmented-tabs { display:flex; gap:4px; padding:4px; margin:0 0 24px; border:0; border-radius:var(--radius-pill); background:var(--kinetic-badge); }
 .profile-update-count { display:inline-grid; place-items:center; min-width:20px; height:20px; margin-left:6px; padding:0 5px; border-radius:var(--radius-pill); background:var(--kinetic-accent); color:var(--kinetic-text); font-size:12px; }
+/* Names wrap inside a fixed title slot; the portrait and content never move. */
+.profile-top-name {
+  white-space:normal; overflow-wrap:anywhere; line-height:1.15;
+  text-align:center; text-overflow:clip;
+}
+.profile-seam-top .profile-top-name {
+  top:14px; left:76px; right:76px; height:52px; margin:0;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+@media (max-width:939px) {
+  .group-seam-top .group-seam-name {
+    position:absolute; top:14px; left:76px; right:76px; height:52px; margin:0;
+    display:flex; align-items:center; justify-content:center;
+    white-space:normal; overflow-wrap:anywhere; overflow:hidden;
+    line-height:1.15; text-align:center;
+  }
+}
