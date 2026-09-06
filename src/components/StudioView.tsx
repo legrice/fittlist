@@ -26,7 +26,6 @@ import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileAbout } from "@/components/ProfileAbout";
 import { ProfilePhotoZoom } from "@/components/ProfilePhotoZoom";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
-import { StudioBeenHere } from "@/components/StudioBeenHere";
 import { CalendarPinButton } from "@/components/CalendarPinButton";
 import { ProfileShoutouts } from "@/components/ProfileShoutouts";
 import { hiddenFrom } from "@/lib/blocks";
@@ -356,7 +355,7 @@ export async function StudioView({
       // pub-hero whether or not there is a photo, by Matt's call: a
       // no-photo studio wears its colour as the same full-bleed hero, so
       // the two pages are one page.
-      className={`pub profile${signedIn ? " hasnav" : ""} pub-hero`}
+      className={`pub profile studio-profile${signedIn ? " hasnav" : ""} pub-hero`}
       data-mode={await viewerLook()}
     >
       <div className="profwrap">
@@ -403,13 +402,6 @@ export async function StudioView({
                margin, which read as stray space between the address and the
                tabs on a studio with no contact ways. */
             <div className="profacts">
-              {(s.placeKind === "studio" || s.placeKind === "wellness") && (
-                <StudioBeenHere
-                  slug={s.slug ?? s.id}
-                  initial={!!viewerId && studioVisitRows.some((row) => row.endorserUserId === viewerId)}
-                  initialCount={studioVisitRows.length}
-                />
-              )}
               {/* The same pill a person's page carries, opening the same
                   sheet. Nobody is messaged on fittlist here: a studio has no
                   account to write to, so the sheet is the ways in and no more. */}

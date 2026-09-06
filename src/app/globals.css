@@ -15393,3 +15393,27 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .person-profile-light .profile-person-calendar-list .clline-by { display:none; }
 html:has(.person-profile-light), body:has(.person-profile-light) { background:var(--kinetic-canvas-light); }
 .personal-calendar-list :is(.clline-t, .clline-ap) { font-weight:700; }
+
+/* One profile palette for people, studios, and groups. */
+.pub:is(.profile,.memberpub,.group-page),
+.pub:is(.profile,.memberpub,.group-page) :is(.profwrap,.pubcard,.pubpanel,.pubstick,.group-main) {
+  background:var(--kinetic-canvas-light); color:var(--kinetic-text);
+}
+.pub:is(.profile,.memberpub) .pubhead:not(.pubhead-hero),
+.pub:is(.profile,.memberpub) .profile-seam-top,
+.pub.group-page :is(.group-hero,.group-seam-top) { background:var(--kinetic-canvas-dark); }
+.pub:is(.profile,.memberpub) .profile-top-name,
+.pub.group-page .group-seam-name { color:var(--kinetic-inverse); }
+.pub:is(.profile,.memberpub) .pubhead .pubidentity-paper,
+.pub:is(.profile,.memberpub) .pubhead .pubbelow,
+.pub.group-page .group-hero::before { background:var(--kinetic-canvas-light); color:var(--kinetic-text); }
+.pub:is(.profile,.memberpub) .profile-seam-top :is(.evback,.ownermore,.profile-overflow-trigger,.calendar-pin-button) {
+  background:var(--kinetic-icon-surface); color:var(--kinetic-inverse); border:0; box-shadow:none;
+}
+.pub:is(.profile,.memberpub) .profile-action-cluster :is(.actpill,.followpill,.profile-about-trigger,.profile-owner-primary),
+.pub.group-page .group-hero-copy .actpill {
+  background:var(--kinetic-surface); color:var(--kinetic-text); border:1px solid var(--kinetic-control-border); border-radius:var(--radius-pill);
+}
+.studio-profile .profile-action-cluster { flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto; gap:8px; padding-bottom:4px; }
+.studio-profile .profile-action-cluster > .profacts { display:contents; }
+.studio-profile .profile-action-cluster :is(.actpill,.profile-about-trigger) { flex:0 0 auto; white-space:nowrap; }
