@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { addGroupComment, addGroupPost, toggleGroupReaction } from "@/app/actions/groups";
 import { setGoing } from "@/app/actions/going";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ReportContentButton } from "@/components/ReportContentButton";
@@ -16,9 +17,21 @@ export type GroupUpdate = {
   reactions:{ reaction:string; count:number; mine:boolean }[];
 };
 
-export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, initialTab="schedule" }: { slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[]; schedule:ReactNode; members:ReactNode; initialTab?:"schedule"|"updates"|"members" }) {
-  const [tab,setTab]=useState(initialTab);
-  return <><div className="group-tabs" role="tablist"><button className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Upcoming</button><button className={tab==="updates"?"on":""} onClick={()=>setTab("updates")}>Updates{updates.length > 0 && <span>{updates.length}</span>}</button><button className={tab==="members"?"on":""} onClick={()=>setTab("members")}>Members</button></div>{tab==="schedule" ? schedule : tab==="updates" ? <GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates} /> : members}</>;
+export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, memberPreview, initialTab="updates" }: { slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[]; schedule:ReactNode; members:ReactNode; memberPreview:{id:string; name:string; photo:string|null; color:string}[]; initialTab?:"schedule"|"updates"|"members" }) {
+  const [tab,setTab]=useState(initialTab === "schedule" ? "schedule" : "updates");
+  const [membersOpen,setMembersOpen]=useState(initialTab === "members");
+  return <>
+    <button type="button" className="group-member-preview" onClick={()=>setMembersOpen(true)} aria-label={`View ${memberPreview.length} members`}>
+      <span className="group-member-faces">{memberPreview.slice(0,5).map(member=><span key={member.id} style={{background:member.color}}>{member.photo ? <img src={member.photo} alt=""/> : member.name.charAt(0)}</span>)}</span>
+      <span>{memberPreview.length} {memberPreview.length === 1 ? "member" : "members"}</span><Icon name="chevron_right" size={17}/>
+    </button>
+    <div className="group-tabs group-segmented-tabs" role="tablist" aria-label="Group content">
+      <button role="tab" aria-selected={tab==="updates"} className={tab==="updates"?"on":""} onClick={()=>setTab("updates")}>Updates</button>
+      <button role="tab" aria-selected={tab==="schedule"} className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button>
+    </div>
+    {tab==="schedule" ? schedule : <GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates} />}
+    {membersOpen && <BodyPortal><div className="sheet-scrim" onClick={event=>{if(event.target===event.currentTarget)setMembersOpen(false);}}><section className="sheet group-members-sheet" role="dialog" aria-modal="true" aria-label="Group members" onKeyDown={event=>{if(event.key==="Escape"){event.stopPropagation();setMembersOpen(false);}}}><button autoFocus type="button" className="sheetclose sheet-dismiss" aria-label="Close members" onClick={()=>setMembersOpen(false)}><Icon name="close" size={20}/></button>{members}</section></div></BodyPortal>}
+  </>;
 }
 
 function GroupUpdates({ slug, canPost, viewerId, updates }: { slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[] }) {
