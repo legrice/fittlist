@@ -15518,3 +15518,4 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 .discover-group-copy strong { font-size:17px; line-height:1.2; overflow-wrap:anywhere; }
 .discover-group-copy small { color:var(--color-text-secondary); font-size:14px; line-height:1.35; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
 .discover-group-row .discover-follow-group { width:auto; margin:0; flex:0 0 auto; }
+.directory-loading { display:flex; justify-content:center; align-items:center; min-height:120px; background:transparent; border:0; box-shadow:none; }
