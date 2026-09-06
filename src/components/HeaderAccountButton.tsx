@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -153,11 +156,11 @@ export function HeaderAccountButton({
                       initialView={settingsView === "page" ? "profile" : settingsView}
                       onClose={() => setSettingsView(null)}
                     />
-                  ) : <div className="header-account-loading"><p>Opening settings&hellip;</p></div>
+                  ) : <div className="header-account-loading"><p><LoadingDots label="Opening settings…"/></p></div>
                 ) : data ? (
                   <YouDashboard {...data} onOpenSettings={openSettings} />
               ) : (
-                <div className="header-account-loading"><p>Opening your profile&hellip;</p></div>
+                <div className="header-account-loading"><p><LoadingDots label="Opening your profile…"/></p></div>
               )}
             </section>
           </div>

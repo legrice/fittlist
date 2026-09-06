@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -124,7 +127,7 @@ export function SettingsGear({ header = false, pill = false }: {
                   <button className="iconbtn acctclose sheet-dismiss" aria-label="Close" onClick={close}>
                     <Icon name="close" size={20} />
                   </button>
-                  <p>Opening settings&hellip;</p>
+                  <p><LoadingDots label="Opening settings…"/></p>
                 </div>
               )}
             </section>

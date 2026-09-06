@@ -1,4 +1,5 @@
 "use client";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
@@ -1453,7 +1454,7 @@ export function Adder({
                 : "Nothing listed at this place yet. Your class will be the first."}
             </p>
             {catLoading ? (
-              <p className="empty">Looking at this place&rsquo;s list…</p>
+              <p className="empty"><LoadingDots label="Loading classes"/></p>
             ) : (
               <div className="studio-list">
                 {catalog.map((c) => (

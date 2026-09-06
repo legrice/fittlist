@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { searchDirectory, type SearchGroup } from "@/app/actions/search";
@@ -238,7 +241,7 @@ export function SearchScreen({ todayIso, userId, query, showRecents = true }: { 
         </>
       ) : busy ? (
         <div className="empty-block" role="status" aria-live="polite">
-          <p>Searching&hellip;</p>
+          <p><LoadingDots label="Searching…"/></p>
         </div>
       ) : failed ? (
         <div className="empty-block" role="status" aria-live="polite">

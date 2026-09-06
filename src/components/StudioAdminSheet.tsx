@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -318,7 +321,7 @@ export function StudioAdminSheet({
                   One owner holds the master role. Managers can run the studio without changing ownership.
                 </p>
                 {admins === null ? (
-                  <p className="adminempty">Loading admins…</p>
+                  <p className="adminempty"><LoadingDots label="Loading admins…"/></p>
                 ) : (
                   <div className="settingslist studio-admin-list">
                     {admins.map((admin) => (
@@ -357,7 +360,7 @@ export function StudioAdminSheet({
                   </label>
                   {managerSearch.trim().length >= 2 && (
                     <div className="studio-manager-results" aria-live="polite">
-                      {managerSearchPending ? <p>Searching…</p> : managerCandidates.length ? managerCandidates.map((person) => (
+                      {managerSearchPending ? <p><LoadingDots label="Searching…"/></p> : managerCandidates.length ? managerCandidates.map((person) => (
                         <button key={person.id} disabled={addingAdmin} onClick={() => void addExistingAdmin(person)}>
                           {person.photo ? <img src={person.photo} alt="" loading="lazy" decoding="async" /> : <span style={{ background: person.color }}>{person.name.charAt(0).toUpperCase()}</span>}
                           <span><strong>{person.name}</strong><small>{person.handle ? `@${person.handle}` : person.email}</small></span>

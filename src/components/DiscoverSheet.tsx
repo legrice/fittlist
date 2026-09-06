@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -146,7 +149,7 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
           <h2 id="discover-sheet-title">Discover</h2>
           <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
         </div>
-        {data ? <DiscoverList people={data.people} studios={[]} cities={data.cities} myCity={data.myCity} myLat={data.myLat} myLng={data.myLng} groups={[]} upcoming={[]} backHref="/calendar" hideBack /> : <p className="dissheet-wait">Loading Discover…</p>}
+        {data ? <DiscoverList people={data.people} studios={[]} cities={data.cities} myCity={data.myCity} myLat={data.myLat} myLng={data.myLng} groups={[]} upcoming={[]} backHref="/calendar" hideBack /> : <p className="dissheet-wait"><LoadingDots label="Loading Discover…"/></p>}
       </section>
     </div>,
     document.body,
@@ -276,7 +279,7 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
           // Nothing dramatic while it loads: the sheet is already up and the
           // list is the only thing in it, so a spinner would be a second
           // thing on a screen with one.
-          <p className="dissheet-wait">Loading coaches…</p>
+          <p className="dissheet-wait"><LoadingDots label="Loading coaches…"/></p>
         )}
       </div>
     </div>,

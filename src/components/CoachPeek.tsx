@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { personPeek, type Peek } from "@/app/actions/peek";
@@ -225,7 +228,7 @@ export function CoachPeek({
         {!peek && !missing && (
           <div className="peekloading" role="status" aria-live="polite" aria-busy="true">
             <span aria-hidden="true" />
-            <p>Loading schedule</p>
+            <p><LoadingDots label="Loading schedule"/></p>
           </div>
         )}
         {missing && <p className="peekempty">That schedule isn&rsquo;t available.</p>}

@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { addBrowse, type AddBrowseData } from "@/app/actions/discover";
@@ -197,7 +200,7 @@ export function AddBrowse({
 
         <div className="addbrowse-results">
           {!days && loadFailed && <p className="peekempty">Couldn&rsquo;t load classes. Try again in a moment.</p>}
-          {!days && !loadFailed && <p className="peekempty">Looking at the week&hellip;</p>}
+          {!days && !loadFailed && <p className="peekempty"><LoadingDots label="Looking at the week…"/></p>}
           {days && days.length === 0 && (
             <p className="peekempty">Nothing listed near you this week yet.</p>
           )}

@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { peopleForSharing, type SharePerson } from "@/app/actions/share";
 import { sendInquiry } from "@/app/actions/inquiries";
@@ -90,7 +93,7 @@ export function InAppShare({
         ))}
         {!loading && failed && <p>Couldn&rsquo;t load people right now.</p>}
         {!loading && !failed && shown.length === 0 && <p>No people match that.</p>}
-        {loading && <p>Finding people…</p>}
+        {loading && <p><LoadingDots label="Finding people…"/></p>}
       </div>
     </section>
   );

@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { loadFollowingDirectory } from "@/app/actions/following-directory";
@@ -166,7 +169,7 @@ export function FollowingDirectory({ data, mode }: { data: FollowingDirectoryDat
 
         {loading && !loaded[tab] ? (
           <div className="follow-directory-empty" aria-live="polite">
-            <p>Loading {data.title.toLowerCase()}…</p>
+            <p><LoadingDots label={`Loading ${data.title.toLowerCase()}`} /></p>
           </div>
         ) : visible.length ? (
           <div className="follow-directory-list">
@@ -186,7 +189,7 @@ export function FollowingDirectory({ data, mode }: { data: FollowingDirectoryDat
                 disabled={loading}
                 onClick={() => loadTab(tab, limits[tab] + data.pageSize)}
               >
-                {loading ? "Loading…" : "Load more"}
+                {loading ? <LoadingDots label="Loading…"/> : "Load more"}
               </button>
             )}
           </div>

@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import { BodyPortal } from "@/components/BodyPortal";
@@ -92,7 +95,7 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
     <button ref={buttonRef} type="button" className={className} aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} onClick={show}>{children}</button>
     {open && <BodyPortal><div className="personal-calendar-scrim"><section className={`personal-calendar-sheet${visible ? " is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Your calendar">
       {error && <div className="pad" role="status"><p>{error}</p><button className="btn" onClick={() => void refreshCalendar()} disabled={pending}>Try again</button> <Link href="/">Sign in</Link></div>}
-      {data ? <CalendarScreen {...data} sheet openAdder={openAdder} onClose={goBack} /> : <div className="pad"><button type="button" className="ghost" onClick={goBack}>Close calendar</button><h2>Your calendar</h2>{pending && <p role="status">Loading your calendar…</p>}</div>}
+      {data ? <CalendarScreen {...data} sheet openAdder={openAdder} onClose={goBack} /> : <div className="pad"><button type="button" className="ghost" onClick={goBack}>Close calendar</button><h2>Your calendar</h2>{pending && <p role="status"><LoadingDots label="Loading your calendar…"/></p>}</div>}
     </section></div></BodyPortal>}
   </>;
 }

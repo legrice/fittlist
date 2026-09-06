@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
@@ -230,7 +233,7 @@ export function StudioStaffView({
                 </label>
                 <div className="staff-coach-results">
                   {coachSearching ? (
-                    <p>Searching…</p>
+                    <p><LoadingDots label="Searching…"/></p>
                   ) : coachSearch.trim().length < 2 ? (
                     <p>Search by name or username.</p>
                   ) : coachResults.length ? (

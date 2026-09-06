@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -1463,7 +1466,7 @@ export function ShareHubScreen({
               <h2 id="share-empty-title">Add a class before sharing your week</h2>
               <p>Once it&rsquo;s on your calendar, we&rsquo;ll turn your week into a shareable schedule.</p>
               <button className="btn si" disabled={adderBusy} onClick={() => void openAdder()}>
-                {adderBusy ? "Loading class tools..." : "Add a class"}
+                {adderBusy ? <LoadingDots label="Loading class tools..."/> : "Add a class"}
               </button>
             </div>
           )}
@@ -2062,7 +2065,7 @@ export function ShareHubScreen({
                   void openAdder();
                 }}
               >
-                {adderBusy ? "Loading class tools..." : "+ Add a class"}
+                {adderBusy ? <LoadingDots label="Loading class tools..."/> : "+ Add a class"}
               </button>
             )}
             <div className="publishwrap nostick">

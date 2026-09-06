@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useRef, useState } from "react";
 import { loadNotificationSheet } from "@/app/actions/notifications";
 import { BodyPortal } from "@/components/BodyPortal";
@@ -60,7 +63,7 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
             ) : failed ? (
               <div className="notifications-sheet-loading" role="status">Couldn&rsquo;t load notifications</div>
             ) : (
-              <div className="notifications-sheet-loading" role="status">Loading notifications</div>
+              <div className="notifications-sheet-loading" role="status"><LoadingDots label="Loading notifications"/></div>
             )}
           </div>
         </section>

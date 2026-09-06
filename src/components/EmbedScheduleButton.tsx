@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useMemo, useState } from "react";
 import { embedStudioOptions } from "@/app/actions/embed";
 import { Icon } from "@/components/Icon";
@@ -38,7 +41,7 @@ export function EmbedScheduleButton({ handle, inline = false }: { handle: string
           <Icon name={selected.length === 0 ? "check_circle" : "circle"} size={21} />
           <span><strong>All studios</strong><small>Every public class you teach</small></span>
         </button>
-        {loading && <p>Loading your studios…</p>}
+        {loading && <p><LoadingDots label="Loading your studios…"/></p>}
         {studios.map((studio) => {
           const on = selected.includes(studio.id);
           return <button type="button" className={on ? "on" : ""} onClick={() => setSelected((current) => on ? current.filter((id) => id !== studio.id) : [...current, studio.id])} key={studio.id}>

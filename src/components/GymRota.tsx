@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -701,7 +704,7 @@ export function GymRota({
           </div>
 
           {monthLoading && !month ? (
-            <div className="rota-month-loading">Loading the month…</div>
+            <div className="rota-month-loading"><LoadingDots label="Loading the month…"/></div>
           ) : month ? (
             <div className={`rota-month-board${monthLoading ? " loading" : ""}`}>
               <div className="rota-month-weekdays" aria-hidden="true">

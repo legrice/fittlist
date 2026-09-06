@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import { useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent } from "react";
 import Link from "next/link";
 import { useFrontSheet } from "@/lib/use-front-sheet";
@@ -1081,7 +1084,7 @@ export function FollowingScreen({
       {isHome && calendarFilter === "people" && !includeYou && selectedPeople.size === 0 ? (
         <div className="calendar-selection-empty"><h2>No calendars selected</h2><p>Tap a person above to see what’s on their calendar.</p></div>
       ) : isHome && shown.length === 0 && calendarPending ? (
-        <div className="calendar-stream-loading" role="status">Loading your schedule</div>
+        <div className="calendar-stream-loading" role="status"><LoadingDots label="Loading your schedule"/></div>
       ) : (isHome ? shown.length === 0 : items.length === 0) ? (
         calendarFollowing ? <section className="calendar-first-class"><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={restoreActionSurface}>Explore calendars</button></section> : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">

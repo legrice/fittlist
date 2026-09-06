@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
+
 import Link from "next/link";
 import { useFrontSheet } from "@/lib/use-front-sheet";
 import { useCalendarReturn } from "@/lib/use-calendar-return";
@@ -993,7 +996,7 @@ export function CalendarScreen({
                 <button className="btn si" type="button" onClick={ensureComposer}>Try again</button>
                 <button className="btn ghost" type="button" style={{ marginTop: 8 }} onClick={() => { setAddOpen(false); setEdit(null); setPlanEdit(null); }}>Close</button>
               </>
-            ) : "Loading your class tools…"}
+            ) : <LoadingDots label="Loading your class tools…"/>}
           </div>
         </div>
       )}
