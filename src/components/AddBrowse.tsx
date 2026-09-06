@@ -148,7 +148,7 @@ export function AddBrowse({
 
   return (
     <div
-      className="sheet-scrim"
+      className="sheet-scrim addbrowse-scrim"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -213,27 +213,27 @@ export function AddBrowse({
                 const key = `${it.classId}|${it.iso}`;
                 const on = marks[key] ?? it.saved;
                 return (
-                  <div key={key} className="peekrow">
-                    <Link className="peekrow-go" href={`/${it.base}/${it.classId}?d=${it.iso}`}>
-                      <span className="peekrow-nm">{it.name}</span>
-                      <span className="peekrow-sub">
-                        {it.hm}
-                        <span className="peekrow-ap">{it.ap.toLowerCase()}</span>
-                        {it.where ? ` · ${it.where}` : ""}
-                      </span>
-                      {it.attributionName && (
-                        <span className="peekrow-by">
-                          {it.attribution === "added" ? "Added by" : "Coached by"} {it.attributionName}
+                  <div key={key} className="addbrowse-card">
+                    <Link className="addbrowse-card-link" href={`/${it.base}/${it.classId}?d=${it.iso}`}>
+                      <span className="addbrowse-coach">
+                        <span className="clline-coach-face" style={{ background: it.coachColor }}>
+                          {it.coachPhoto ? <img src={it.coachPhoto} alt="" /> : (it.coachName || it.attributionName || "?").charAt(0)}
                         </span>
-                      )}
+                        <span>{it.coachName || it.attributionName}</span>
+                      </span>
+                      <span className="addbrowse-time">{it.hm}<small>{it.ap.toUpperCase()}</small></span>
+                      <strong className="addbrowse-class-name">{it.name}</strong>
+                      <span className="addbrowse-duration">{it.durationMin} min</span>
+                      <span className="addbrowse-studio">{it.where}</span>
                     </Link>
                     {!it.own && (
                       <button
-                        className={`peekadd${on ? " on" : ""}`}
+                        className={`addbrowse-save${on ? " on" : ""}`}
                         onClick={() => on ? setRemoveConfirm({ classId: it.classId, iso: it.iso, name: it.name }) : save(it.classId, it.iso, it.name, true)}
                         aria-label={on ? `Saved to your week: ${it.name}` : `Save ${it.name} to your week`}
+                        aria-pressed={on}
                       >
-                        <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
+                        {on ? "Saved" : "Save"}
                       </button>
                     )}
                   </div>
