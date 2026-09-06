@@ -15505,3 +15505,7 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 .loading-dots > span:nth-child(3) { animation-delay:240ms; }
 @media(prefers-reduced-motion:reduce) { .loading-dots > span { animation:none; } }
 .route-loading-dots { min-height:60dvh; display:grid; place-items:center; }
+.calendar-following-discover .discover-follow-button { min-height:34px; padding:7px 11px; font-size:11px; }
+.calendar-following-discover :is(.discover-person-tile,.discover-studio-row) { padding-top:16px; padding-bottom:16px; }
+.calendar-following-discover .discover-group-grid { row-gap:16px; }
+.calendar-following-discover .discover-group-tile { padding-top:20px; padding-bottom:20px; }
