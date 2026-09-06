@@ -1049,7 +1049,7 @@ export function FollowingScreen({
       )}
       {isHome && !calendarFollowing && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
       {isHome && (!calendarFollowing || classSheetDismissed) && !firstRun && (
-        <header className="following-head explore-calendar-rail">
+        <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
           <div className="calendar-scope-row" aria-label="Calendar scope">
             <button type="button" className={`calendar-person-chip${calendarFilter === (calendarFollowing ? "following" : "all") ? " on" : ""}`} aria-pressed={calendarFilter === (calendarFollowing ? "following" : "all")} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter(calendarFollowing ? "following" : "all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
             {!calendarFollowing && <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>}
@@ -1071,7 +1071,7 @@ export function FollowingScreen({
         </div>
       )}
       {isHome && calendarFilter === "people" && selectedPeople.size > 0 && (
-        <div className="feedfilterbar following-coach-context">
+        <div className={`feedfilterbar following-coach-context${calendarFollowing ? " explore-coach-context" : ""}`}>
           <span className="feedfilter-txt">{soleSelectedCoach ? `${soleSelectedCoach.name.split(/\s+/)[0]}’s calendar` : `${selectedPeople.size + Number(includeYou)} calendars selected`}</span>
           {soleSelectedCoach?.handle
             ? <Link className="feedfilter-link" href={`/${soleSelectedCoach.handle}?from=feed`}>See profile <Icon name="chevron_right" size={17} /></Link>

@@ -15355,3 +15355,8 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .explore-class-duration, .explore-class-studio { font-size:15px; line-height:1.3; color:var(--color-text-secondary); }
 .calendar-following-card .explore-save-row { position:absolute; grid-area:auto; top:16px; right:16px; bottom:auto; padding:0; }
 .calendar-following-card .explore-save-button { min-height:28px; height:28px; padding:0 10px; font-size:11px; }
+
+.explore-calendar-rail-all { margin-bottom:24px; }
+.following-coach-context.explore-coach-context { background:transparent; border:0; border-radius:0; padding:0; min-height:36px; margin:14px 0 24px; color:var(--kinetic-inverse); }
+.explore-coach-context .feedfilter-txt { color:var(--kinetic-inverse); }
+.explore-coach-context .feedfilter-link { display:inline-flex; align-items:center; gap:3px; flex-shrink:0; min-height:30px; padding:6px 12px; border:0; border-radius:var(--radius-pill); background:var(--kinetic-accent); color:var(--kinetic-text); font-size:12px; font-weight:700; text-decoration:none; }
