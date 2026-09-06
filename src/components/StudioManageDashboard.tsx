@@ -10,9 +10,8 @@ import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 
 export function StudioManageDashboard({
-  studioName, studioSlug, hasAccount, classCount, openShiftCount, staffCount, requests, admin, embedded = false,
+  studioName, studioSlug, hasAccount, classCount, openShiftCount, staffCount, requests, admin,
 }: {
-  embedded?: boolean;
   studioName: string;
   studioSlug: string;
   hasAccount: boolean;
@@ -47,8 +46,8 @@ export function StudioManageDashboard({
   };
 
   return (
-    <div className={`studio-dashboard${embedded ? " studio-dashboard-embedded" : ""}`}>
-      {!embedded && <div className="studio-manage-top pagetop">
+    <main className="studio-dashboard">
+      <div className="studio-manage-top pagetop">
         <div className="studio-dashboard-hero">
           <BackLink className="evback studio-manage-back" href="/you" anywhere notUnder={`/s/${studioSlug}`} label="Back to your profile">
             <Icon name="arrow_back" size={23} />
@@ -58,7 +57,7 @@ export function StudioManageDashboard({
           </span>
           <h1>{studioName}</h1>
         </div>
-      </div>}
+      </div>
 
       <div className="studio-dashboard-grid">
         <Link className="studio-dashboard-card" href={`${base}/calendar?show=all`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="calendar_month" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Calendar</strong><small>{classSummary}</small></span><Icon name="arrow_forward" size={22} /></Link>
@@ -104,11 +103,11 @@ export function StudioManageDashboard({
       <section className="studio-dashboard-settings">
         <h2>Settings</h2>
         <div className="settingslist">
-          {!embedded && <Link className="setrow" href={`/s/${studioSlug}`}><span className="setrow-ic"><Icon name="storefront" size={24} /></span><span className="setrow-txt"><span className="t">View studio profile</span><span className="s">See the public page</span></span><span className="setrow-chev"><Icon name="chevron_right" size={22} /></span></Link>}
+          <Link className="setrow" href={`/s/${studioSlug}`}><span className="setrow-ic"><Icon name="storefront" size={24} /></span><span className="setrow-txt"><span className="t">View studio profile</span><span className="s">See the public page</span></span><span className="setrow-chev"><Icon name="chevron_right" size={22} /></span></Link>
           <StudioAdminSheet slug={studioSlug} canSchedule={hasAccount} studio={admin.studio} showCoaches={admin.showCoaches} approvalOn={admin.approvalOn} dashboardTrigger />
         </div>
       </section>
       <Toast msg={toastMsg} on={toastOn} />
-    </div>
+    </main>
   );
 }
