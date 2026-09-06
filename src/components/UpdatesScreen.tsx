@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { MarkSeen } from "@/components/MarkSeen";
@@ -80,9 +81,18 @@ export function NotificationList({ notifications }: { notifications: Notif[] }) 
       </p>
     );
   }
+  const sorted = [...notifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
   return (
     <div className="notiflist">
-      {notifications.map((n) => {
+      {sorted.map((n, index) => {
+        const date = new Date(n.createdAt);
+        const startsDay = index === 0 || date.toDateString() !== new Date(sorted[index - 1].createdAt).toDateString();
+        const dayLabel = date.toDateString() === today.toDateString() ? "Today"
+          : date.toDateString() === yesterday.toDateString() ? "Yesterday"
+          : date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", ...(date.getFullYear() !== today.getFullYear() ? { year: "numeric" as const } : {}) });
         const inner = (
           <>
             {n.actor ? (
@@ -115,7 +125,9 @@ export function NotificationList({ notifications }: { notifications: Notif[] }) 
           </>
         );
         const cls = `notifrow${n.readAt ? "" : " unread"}`;
-        return n.href ? (
+        return <Fragment key={n.id}>
+          {startsDay && <h3 className="notification-date-heading">{dayLabel}</h3>}
+          {n.href ? (
           <Link key={n.id} href={n.href} className={cls}>
             {inner}
           </Link>
@@ -123,7 +135,7 @@ export function NotificationList({ notifications }: { notifications: Notif[] }) 
           <div key={n.id} className={cls}>
             {inner}
           </div>
-        );
+        )}</Fragment>;
       })}
     </div>
   );

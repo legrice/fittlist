@@ -15321,3 +15321,6 @@ body:has(.studio-dashboard:not(.studio-dashboard-embedded), .studio-shifts-view)
   background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse);
   font-size:11px; font-weight:700; line-height:1;
 }
+
+.notification-date-heading { margin:22px 0 4px; font-size:22px; line-height:1.2; font-weight:700; color:var(--kinetic-text); }
+.notification-date-heading:first-child { margin-top:4px; }
