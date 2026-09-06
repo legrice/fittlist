@@ -572,9 +572,9 @@ export function CalendarScreen({
           : () => setPeek(peekOfAdded(i)),
         corner: (
           <button
-            className="following-add on calendar-attending-check"
+            className={`following-add on calendar-attending-check${!i.personal && i.coachName ? " personal-saved-button" : ""}`}
             type="button"
-            aria-label={`Remove ${i.name} from your schedule`}
+            aria-label={`Saved: remove ${i.name} from your schedule`}
             onClick={() =>
               setRemoveConfirm({
                 key,
@@ -585,7 +585,7 @@ export function CalendarScreen({
               })
             }
           >
-            <Icon name="check" size={24} />
+            {!i.personal && i.coachName ? "Saved" : <Icon name="check" size={24} />}
           </button>
         ),
       };
