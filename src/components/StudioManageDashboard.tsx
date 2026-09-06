@@ -49,7 +49,7 @@ export function StudioManageDashboard({
     <main className="studio-dashboard">
       <div className="studio-manage-top pagetop">
         <div className="studio-dashboard-hero">
-          <BackLink className="evback studio-manage-back" href="/you" anywhere notUnder={`/s/${studioSlug}`} label="Back to your profile">
+          <BackLink className="evback studio-manage-back" href="/calendar" anywhere label="Back">
             <Icon name="arrow_back" size={23} />
           </BackLink>
           <span className="studio-dashboard-photo">
