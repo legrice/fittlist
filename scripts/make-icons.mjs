@@ -7,12 +7,12 @@
 //   npx tsx scripts/make-icons.mjs
 //
 // The output is committed. Run it again only when the mark itself changes.
-import { chromium } from "playwright";
+import sharp from "sharp";
 import fs from "node:fs";
 import { brandIcon } from "../src/lib/brand.ts";
 
 const LIME = "#8CF25F";
-const INK_COLOR = "#020D08";
+const INK_COLOR = "#111F24";
 
 // brandIcon's ink fills its 108x103 viewBox exactly, so the centre is the box
 // centre. Scale by the larger side, so the mark fits its share of the square in
@@ -42,25 +42,20 @@ const ICONS = [
   { file: "apple-touch-icon.png", size: 180, radius: 0, fill: 79.2 },
 ];
 
-const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 for (const { file, size, radius, fill } of ICONS) {
-  const page = await browser.newPage({
-    viewport: { width: size, height: size },
-    deviceScaleFactor: 1,
-  });
-  await page.setContent(
-    `<body style="margin:0;background:transparent">${square(size, radius, fill)}</body>`,
-    { waitUntil: "load" },
-  );
-  await page.screenshot({ path: `public/${file}`, omitBackground: radius > 0 });
-  await page.close();
+  await sharp(Buffer.from(square(size, radius, fill)))
+    .removeAlpha().png().toFile(`public/${file}`);
   console.log(`public/${file}  ${size}x${size}`);
 }
+
+// iOS applies its own corner mask; supply an opaque full-size square.
+await sharp(Buffer.from(square(1024, 0, 79.2)))
+  .removeAlpha().png()
+  .toFile("ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png");
 
 // The browser favicon: same mark, same source, so the tab matches the app.
 fs.writeFileSync("src/app/icon.svg", `${square(120, 0, 79.2).replace(/\n\s+/g, "")}\n`);
 console.log("src/app/icon.svg");
 
-await browser.close();
 if (!fs.existsSync("public/icon-512.png")) throw new Error("icons missing");
-console.log(`\n${ICONS.length + 1} written`);
+console.log(`\n${ICONS.length + 2} written`);
