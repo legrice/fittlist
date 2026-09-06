@@ -50,7 +50,6 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
           <header className="utility-sheet-head">
             <span className="utility-sheet-grab" aria-hidden="true" />
             <h2 id="notifications-sheet-title">Notifications</h2>
-            <p>Calendar, badge, and account activity</p>
             <button type="button" className="sheetclose sheet-dismiss" aria-label="Close notifications" onClick={onClose}>
               <Icon name="close" size={20} />
             </button>

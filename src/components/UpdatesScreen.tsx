@@ -198,9 +198,7 @@ export function UpdatesScreen({
       <div className="admintop pagetop">
         <div>
           <h1>{mode === "notifications" ? "Notifications" : "Messages"}</h1>
-          <p className="adminsub">
-            {mode === "notifications" ? "Calendar, badge, and account activity" : "Your conversations"}
-          </p>
+          {mode === "messages" && <p className="adminsub">Your conversations</p>}
         </div>
         <div className="updates-actions">
           {mode === "messages" && <NewMessage people={messagePeople} />}
