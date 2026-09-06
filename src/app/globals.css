@@ -15340,8 +15340,21 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .addbrowse-save.on { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
 .addbrowse-foot { background:var(--kinetic-canvas-light); }
 
-.explore-calendar-rail .calendar-person-face { outline:3px solid var(--kinetic-icon-surface); outline-offset:0; }
-.explore-calendar-rail .calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 6px var(--kinetic-accent); }
+/* The border sits within the avatar, so there is no detached ring or clipping. */
+.explore-calendar-rail .calendar-person-face,
+.explore-calendar-rail .calendar-person-chip.on .calendar-person-face { outline:0; box-shadow:none; }
+.explore-calendar-rail .calendar-person-face::after {
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:3px;
+  background:var(--kinetic-icon-surface); pointer-events:none;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+}
+.explore-calendar-rail .calendar-person-chip.on .calendar-person-face::after {
+  background:linear-gradient(135deg, var(--kinetic-accent) 0%, var(--kinetic-accent) 65%, #82CBE8 100%);
+}
+.explore-calendar-rail .calendar-person-star { z-index:1; }
 .calendar-surface-schedule .explore-calendar-rail .calendar-person-chip { color:var(--kinetic-inverse); }
 .calendar-following-card { position:relative; }
 .calendar-following-card .activity-card-main { display:grid; grid-template-columns:78px minmax(0,1fr); gap:4px 8px; padding:16px; text-align:left; }
