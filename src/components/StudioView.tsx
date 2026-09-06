@@ -1,3 +1,4 @@
+import { StudioProfileHub } from "@/components/StudioProfileHub";
 import { and, eq, gte, inArray, lte, or } from "drizzle-orm";
 import { cache } from "react";
 import Link from "next/link";
@@ -370,14 +371,7 @@ export async function StudioView({
         <ProfileTabs
           base={base}
           tab={tab}
-          tabs={[
-            {
-              key: "schedule",
-              label: "Schedule",
-            },
-            { key: "coaches", label: "Coaches" },
-          ]}
-          sectionToggle
+          tabs={[]}
           infoSheet
           name={s.name}
           summary={null}
@@ -441,7 +435,51 @@ export async function StudioView({
           endorsement={null}
         >
 
-        <section id="profile-schedule" className="profile-anchor-section">
+        <StudioProfileHub coaches={coaches} coachList={        <section id="profile-coaches" className="profile-anchor-section">
+        <h2 className="profile-section-title">Coaches</h2>
+          {coaches.length === 0 ? (
+            <>
+              <div className="empty-block">
+                <h2>Nobody listed yet</h2>
+                <p>
+                  Coaches appear here when they add {s.name} as a place they teach, or put a
+                  class on at it.
+                </p>
+              </div>
+              {signedIn && <InviteCoach studioName={s.name} />}
+            </>
+          ) : (
+          <div className="profstudios coachlist">
+            {coaches.map((c) => (
+              <Link key={c.id} className="coachstudio" href={`/${c.handle}`}>
+                {c.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="coachstudio-av" src={c.photo} alt="" />
+                ) : (
+                  <span
+                    className="coachstudio-av coachstudio-av-empty"
+                    style={{ background: c.color }}
+                    aria-hidden="true"
+                  >
+                    {(c.name.trim().charAt(0) || "?").toUpperCase()}
+                  </span>
+                )}
+                <span className="coachstudio-txt">
+                  <span className="nm">{c.name}</span>
+                  {c.title && <span className="ad">{c.title}</span>}
+                </span>
+                <span className="coachstudio-chev">
+                  <Icon name="chevron_right" size={20} />
+                </span>
+              </Link>
+            ))}
+            {/* The list fills in by word of mouth, and the person most
+                likely to bring a coach in is somebody standing in their
+                class. */}
+            {signedIn && <InviteCoach studioName={s.name} />}
+          </div>
+          )}
+        </section>} schedule={        <section id="profile-schedule" className="profile-anchor-section">
           {community && !access.claimed && (
             <CommunityNote
               studioId={s.id}
@@ -464,7 +502,7 @@ export async function StudioView({
               </p>
             </div>
           )}
-        </section>
+        </section>} />
 
         <section id="profile-about" className="profile-anchor-section">
         <h2 className="profile-section-title">Info</h2>
@@ -523,51 +561,7 @@ export async function StudioView({
         />
         </section>
 
-        <section id="profile-coaches" className="profile-anchor-section">
-        <h2 className="profile-section-title">Coaches</h2>
-          {coaches.length === 0 ? (
-            <>
-              <div className="empty-block">
-                <h2>Nobody listed yet</h2>
-                <p>
-                  Coaches appear here when they add {s.name} as a place they teach, or put a
-                  class on at it.
-                </p>
-              </div>
-              {signedIn && <InviteCoach studioName={s.name} />}
-            </>
-          ) : (
-          <div className="profstudios coachlist">
-            {coaches.map((c) => (
-              <Link key={c.id} className="coachstudio" href={`/${c.handle}`}>
-                {c.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="coachstudio-av" src={c.photo} alt="" />
-                ) : (
-                  <span
-                    className="coachstudio-av coachstudio-av-empty"
-                    style={{ background: c.color }}
-                    aria-hidden="true"
-                  >
-                    {(c.name.trim().charAt(0) || "?").toUpperCase()}
-                  </span>
-                )}
-                <span className="coachstudio-txt">
-                  <span className="nm">{c.name}</span>
-                  {c.title && <span className="ad">{c.title}</span>}
-                </span>
-                <span className="coachstudio-chev">
-                  <Icon name="chevron_right" size={20} />
-                </span>
-              </Link>
-            ))}
-            {/* The list fills in by word of mouth, and the person most
-                likely to bring a coach in is somebody standing in their
-                class. */}
-            {signedIn && <InviteCoach studioName={s.name} />}
-          </div>
-          )}
-        </section>
+
 
         </ProfileTabs>
         </ProfileActionGate>

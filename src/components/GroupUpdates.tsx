@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { addGroupComment, addGroupPost, toggleGroupReaction } from "@/app/actions/groups";
 import { setGoing } from "@/app/actions/going";
@@ -17,8 +17,11 @@ export type GroupUpdate = {
   reactions:{ reaction:string; count:number; mine:boolean }[];
 };
 
-export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, memberPreview, initialTab="updates" }: { slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[]; schedule:ReactNode; members:ReactNode; memberPreview:{id:string; name:string; photo:string|null; color:string}[]; initialTab?:"schedule"|"updates"|"members" }) {
+export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, memberPreview, initialTab="schedule" }: { slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[]; schedule:ReactNode; members:ReactNode; memberPreview:{id:string; name:string; photo:string|null; color:string}[]; initialTab?:"schedule"|"updates"|"members" }) {
   const [tab,setTab]=useState(initialTab === "schedule" ? "schedule" : "updates");
+  const [seen,setSeen]=useState<number | null>(null);
+  useEffect(()=>{const key=`group-updates-seen:${slug}:${viewerId}`;const previous=Number(localStorage.getItem(key)||0);if(initialTab==="updates"){const now=Date.now();localStorage.setItem(key,String(now));setSeen(now);}else setSeen(previous);},[slug,viewerId,initialTab]);
+  const unread=seen===null?0:updates.filter(update=>new Date(update.createdAt).getTime()>seen && update.author.id!==viewerId).length;
   const [membersOpen,setMembersOpen]=useState(initialTab === "members");
   return <>
     <button type="button" className="group-member-preview" onClick={()=>setMembersOpen(true)} aria-label={`View ${memberPreview.length} members`}>
@@ -26,8 +29,8 @@ export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, 
       <span>{memberPreview.length} {memberPreview.length === 1 ? "member" : "members"}</span><Icon name="chevron_right" size={17}/>
     </button>
     <div className="group-tabs group-segmented-tabs" role="tablist" aria-label="Group content">
-      <button role="tab" aria-selected={tab==="updates"} className={tab==="updates"?"on":""} onClick={()=>setTab("updates")}>Updates</button>
       <button role="tab" aria-selected={tab==="schedule"} className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button>
+      <button role="tab" aria-selected={tab==="updates"} className={tab==="updates"?"on":""} onClick={()=>{setTab("updates");setSeen(Date.now());localStorage.setItem(`group-updates-seen:${slug}:${viewerId}`,String(Date.now()));}}>Updates{unread > 0 && <span className="profile-update-count">{unread}</span>}</button>
     </div>
     {tab==="schedule" ? schedule : <GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates} />}
     {membersOpen && <BodyPortal><div className="sheet-scrim" onClick={event=>{if(event.target===event.currentTarget)setMembersOpen(false);}}><section className="sheet group-members-sheet" role="dialog" aria-modal="true" aria-label="Group members" onKeyDown={event=>{if(event.key==="Escape"){event.stopPropagation();setMembersOpen(false);}}}><button autoFocus type="button" className="sheetclose sheet-dismiss" aria-label="Close members" onClick={()=>setMembersOpen(false)}><Icon name="close" size={20}/></button>{members}</section></div></BodyPortal>}
