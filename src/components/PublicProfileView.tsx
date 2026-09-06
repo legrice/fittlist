@@ -397,7 +397,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className={`pub profile${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
+      className={`pub profile person-profile-light${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >

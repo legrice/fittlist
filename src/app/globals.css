@@ -15367,3 +15367,28 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .class-actions-sheet .utility-sheet-head .sheet-dismiss { position:absolute; top:16px; right:var(--page-gutter); }
 .class-actions-list { margin:0 var(--page-gutter); overflow:hidden; border-radius:20px; background:var(--kinetic-surface); }
 .class-actions-list .ovmenu-item { width:100%; min-height:52px; padding:14px 16px; }
+
+/* Coach profiles use one quiet canvas, with white actions and schedule cards. */
+.person-profile-light,
+.person-profile-light :is(.profwrap,.pubhead,.profile-seam-top,.pubidentity,.pubbelow,.pubcard,.pubpanel,.pubstick) {
+  background:var(--kinetic-canvas-light); color:var(--kinetic-text);
+}
+.person-profile-light .profile-top-name { color:var(--kinetic-text); }
+.person-profile-light .profile-seam-top :is(.evback,.ownermore,.profile-overflow-trigger,.calendar-pin-button),
+.person-profile-light .profile-action-cluster :is(.followpill,.followpill.on,.actpill,.profile-about-trigger,.profile-owner-primary) {
+  background:var(--kinetic-surface); color:var(--kinetic-text);
+  border:1px solid var(--kinetic-control-border); border-radius:var(--radius-pill);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+.person-profile-light .profile-person-calendar-list .clline {
+  min-height:0; display:grid; grid-template-columns:78px minmax(0,1fr); grid-template-rows:auto auto;
+  align-content:center; align-items:start; gap:5px 8px; padding:16px 18px;
+  background:var(--kinetic-surface);
+}
+.person-profile-light .profile-person-calendar-list :is(.clline-title-row,.clline-studio-row) { display:contents; }
+.person-profile-light .profile-person-calendar-list .clline-t { grid-column:1; grid-row:1; text-align:left; }
+.person-profile-light .profile-person-calendar-list .clline-nm { grid-column:2; grid-row:1; padding-right:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.person-profile-light .profile-person-calendar-list .clline-dur { grid-column:1; grid-row:2; text-align:left; }
+.person-profile-light .profile-person-calendar-list .clline-w { grid-column:2; grid-row:2; }
+.person-profile-light .profile-person-calendar-list .clline-by { display:none; }
+html:has(.person-profile-light), body:has(.person-profile-light) { background:var(--kinetic-canvas-light); }
