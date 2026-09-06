@@ -6895,7 +6895,7 @@ html[data-mode="dark"],
 }
 .discover-group-tile { min-height:180px; padding:16px; display:flex; flex-direction:column; align-items:flex-start; border:1px solid var(--color-border); border-radius:var(--radius-card); background:var(--card); color:var(--ink); }
 .discover-group-tile > a { width:100%; min-width:0; flex:1; display:flex; flex-direction:column; align-items:flex-start; color:inherit; text-decoration:none; }
-.discover-group-tile > a > span { width:48px; height:48px; display:grid; place-items:center; border-radius:50%; background:var(--color-lime-soft); color:var(--color-olive); }
+.discover-group-tile > a > span { position:relative; width:48px; height:48px; min-width:48px; min-height:48px; flex:0 0 48px; overflow:hidden; display:grid; place-items:center; border-radius:50%; background:var(--color-lime-soft); color:var(--color-olive); }
 .discover-group-tile strong { margin-top:auto; font-size:17px; line-height:1.15; }
 .discover-group-tile small { margin-top:5px; color:var(--muted); font-size:13px; line-height:1.3; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
 .discover-follow-group { width:100%; margin-top:12px; }
@@ -15261,7 +15261,7 @@ button.calendar-summary-reveal:focus-visible {
   .rota-open-summary { color: var(--color-text-primary); }
 }
 
-.discover-group-tile > a > span > img { width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+.discover-group-tile > a > span > img { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; object-position:center; border-radius:inherit; }
 
 /* Studio admin and coach workspaces share the dark profile canvas. */
 html:has(.studio-dashboard, .studio-shifts-view),
