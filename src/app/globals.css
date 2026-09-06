@@ -15340,8 +15340,8 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .addbrowse-save.on { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
 .addbrowse-foot { background:var(--kinetic-canvas-light); }
 
-.explore-calendar-rail .calendar-person-face { outline:2px solid var(--kinetic-inverse); outline-offset:0; }
-.explore-calendar-rail .calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 5px var(--kinetic-accent); }
+.explore-calendar-rail .calendar-person-face { outline:4px solid var(--kinetic-inverse); outline-offset:0; }
+.explore-calendar-rail .calendar-person-chip.on .calendar-person-face { box-shadow:0 0 0 7px var(--kinetic-accent); }
 .calendar-surface-schedule .explore-calendar-rail .calendar-person-chip { color:var(--kinetic-inverse); }
 .calendar-following-card { position:relative; }
 .calendar-following-card .activity-card-main { display:grid; grid-template-columns:78px minmax(0,1fr); gap:4px 8px; padding:16px; text-align:left; }
