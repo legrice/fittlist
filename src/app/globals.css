@@ -15392,3 +15392,4 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .person-profile-light .profile-person-calendar-list .clline-w { grid-column:2; grid-row:2; }
 .person-profile-light .profile-person-calendar-list .clline-by { display:none; }
 html:has(.person-profile-light), body:has(.person-profile-light) { background:var(--kinetic-canvas-light); }
+.personal-calendar-list :is(.clline-t, .clline-ap) { font-weight:700; }
