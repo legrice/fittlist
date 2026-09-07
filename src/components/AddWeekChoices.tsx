@@ -5,7 +5,7 @@ import { Icon } from "@/components/Icon";
 export function AddWeekChoices({
   canCoach,
   disabled = false,
-  coachDetail = "I’m the coach",
+  coachDetail = "I’m teaching",
   onCoach,
   onAttend,
   onPersonal,

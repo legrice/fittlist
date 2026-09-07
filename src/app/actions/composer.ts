@@ -28,6 +28,6 @@ export async function globalComposerData(): Promise<{
     templates,
     customTypes: custom.map((r) => r.name),
     lastUsed: templates.length ? { startTime: templates[0].startTime, durationMin: templates[0].durationMin, studioId: templates[0].studioId } : { startTime: "06:00", durationMin: 50, studioId: studioDtos[0]?.id ?? null },
-    canCoach: !!me && me.kind !== "fan" && !!me.handle,
+    canCoach: !!me?.handle,
   };
 }

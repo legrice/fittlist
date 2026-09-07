@@ -196,20 +196,14 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const db = await getDb();
 
   const committed = await scheduleTransaction(db, async (tx) => {
-    // Public inventory is coach-only. Every class also resolves its wall-clock
+    // Every class resolves its wall-clock
     // zone from the selected studio, or from its owner when no studio applies.
     const [owner] = await tx
-      .select({ kind: schema.users.kind, timeZone: schema.users.timeZone })
+      .select({ kind: schema.users.kind, handle: schema.users.handle, timeZone: schema.users.timeZone })
       .from(schema.users)
       .where(eq(schema.users.id, userId));
     if (!owner) return { ok: false as const, error: "Session expired." };
-    if (isPublic && owner.kind === "fan") {
-      return {
-        ok: false as const,
-        error:
-          "Publishing classes is for coaches. Add classes you attend to Your week, or ask to become one in settings.",
-      };
-    }
+    if (isPublic && !owner.handle) return { ok: false as const, error: "Finish setting up your profile before publishing a class." };
     let studio: typeof schema.studios.$inferSelect | undefined;
     if (input.studioId) {
       [studio] = await tx.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));
@@ -397,6 +391,12 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   }
 
   const first = inserted[0] ?? existingSeriesRows.find((row) => days.includes(row.dayOfWeek));
+  // Keep the legacy discovery discriminator in sync with actual teaching.
+  // No account switch is needed; failed saves roll this back with the class.
+  if (isPublic && owner.kind === "fan") {
+    await tx.update(schema.users).set({ kind: "coach" })
+      .where(and(eq(schema.users.id, userId), eq(schema.users.kind, "fan")));
+  }
   return { ok: true as const, studio, inserted, first, timeZone };
   }).catch((error) => {
     if (error instanceof ScheduleConflictError)

@@ -601,7 +601,7 @@ export function AuthFlow({
                     : "Use the email your invite was sent to. We'll send a secure link to verify it."
                   : [
                       fans
-                        ? "One account, whether you coach or you're here to train."
+                        ? "One account for classes you teach and attend."
                         : null,
                       inviteOnly && !inviter
                         ? "Invite-only beta: use your invited email."

@@ -36,7 +36,6 @@ import type { ClassDto, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay as WeekDayData, WeekItem } from "@/lib/week";
 import { setGoing } from "@/app/actions/going";
 import { loadMonthlyCalendarInsights, type MonthlyCalendarInsights } from "@/app/actions/product-activity";
-import { setTeaching } from "@/app/actions/auth";
 import { removePersonalClass, type PersonalDetail, type PersonalMatch } from "@/app/actions/personal";
 import {
   loadCalendarComposerData,
@@ -203,7 +202,6 @@ export function CalendarScreen({
     personalId?: string;
   } | null>(null);
   const [, startRemove] = useTransition();
-  const [enablingCoach, startEnablingCoach] = useTransition();
   // The month grid uses a fixed weekday rail once the page has scrolled.
   // Day view relies on its actual date bands as sticky headers instead of
   // rendering a second, competing overlay.
@@ -694,19 +692,6 @@ export function CalendarScreen({
   };
   const continueAdd = () => {
     if (!addChoiceKind) return;
-    if (addChoiceKind === "coaching" && member && bare) {
-      startEnablingCoach(async () => {
-        const result = await setTeaching(true);
-        if (!result.ok) {
-          toast(result.error ?? "Couldn’t turn on teaching");
-          return;
-        }
-        if (composerData?.templates.some((template) => template.isPublic))
-          setAddChoiceStep("regular");
-        else openNewCoachingClass();
-      });
-      return;
-    }
     if (addChoiceKind === "coaching") {
       if (composerData?.templates.some((template) => template.isPublic))
         setAddChoiceStep("regular");
@@ -855,13 +840,11 @@ export function CalendarScreen({
                 <h2 id="addrole-title">Add to your week</h2>
                 <p className="lead">What are you doing?</p>
                 <AddWeekChoices
-                  canCoach={!member || bare}
-                  coachDetail={member && bare ? "I also coach" : undefined}
-                  disabled={enablingCoach}
+                  canCoach
                   selected={addChoiceKind}
                   onSelect={setAddChoiceKind}
                 />
-                <button type="button" className="addrole-continue" disabled={!addChoiceKind || enablingCoach || (addChoiceKind === "coaching" && loadingTools)} onClick={continueAdd}>{enablingCoach ? "Turning on teaching…" : addChoiceKind === "coaching" && loadingTools ? "Finding your classes…" : "Continue"}</button>
+                <button type="button" className="addrole-continue" disabled={!addChoiceKind || (addChoiceKind === "coaching" && loadingTools)} onClick={continueAdd}>{addChoiceKind === "coaching" && loadingTools ? "Finding your classes…" : "Continue"}</button>
               </>
             ) : (
               <>

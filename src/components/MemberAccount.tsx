@@ -18,7 +18,6 @@ import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { TimeZoneSetting } from "@/components/TimeZoneSetting";
-import { TeachingToggle } from "@/components/TeachingToggle";
 import { clearClientMemory } from "@/lib/client-memory";
 
 type MView = "profile" | "calendar" | "reach" | "account";
@@ -144,20 +143,11 @@ export function MemberAccount({
           <span className="setrow-ic"><Icon name="lock" size={24} /></span>
           <span className="setrow-txt">
             <span className="t">Account &amp; preferences</span>
-            <span className="s">Not a coach · notifications, appearance</span>
+            <span className="s">Notifications and appearance</span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </button>
       </div>
-
-      {/* "Start coaching" used to sit here: an ask, filed for an admin to
-          answer, because a self-served switch was how ghost inventory got
-          into the directory. It is the toggle in the group above now. The
-          gate that ask existed to hold is still there, one step later: a
-          class is only public once a handle exists and the account says it
-          teaches, and turning the switch off takes the listing away again
-          without touching a week. Two doors onto one idea is one too many,
-          and the one behind an approval queue was the slower one. */}
 
       <h3 className="setgroup-h">FittList</h3>
       <div className="settingslist">
@@ -278,7 +268,6 @@ export function MemberAccount({
             {view === "account" && (
               <>
                 <div className="settingslist">
-                  <TeachingToggle initialOn={false} />
                   <NotificationPrefs />
                 </div>
                 <form action={logout} className="settingslist" onSubmit={clearClientMemory}>

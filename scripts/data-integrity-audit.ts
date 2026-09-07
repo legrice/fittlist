@@ -83,6 +83,28 @@ async function main() {
     assert.equal(runsOn(c, "2096-04-23", 0), false);
     assert.equal(runsOn(c, "2096-04-10", 1), false);
   });
+  await check(2, "teaching needs no account switch and failed saves keep existing identity", async () => {
+    const [person] = await db.insert(schema.users).values({
+      email: "new-teacher@example.test", name: "New teacher", handle: "newteacher",
+      kind: "fan", onboardedAt: new Date(), discoverable: false,
+    }).returning();
+    tokens.set(person.id, await new SignJWT({ uid: person.id, sv: 0 })
+      .setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("1h")
+      .sign(new TextEncoder().encode(process.env.SESSION_SECRET)));
+    const { globalComposerData } = await import("../src/app/actions/composer");
+    assert.equal((await as(person.id, globalComposerData))?.canCoach, true);
+    const failed = await as(person.id, () => publishClasses(input("Invalid teaching", { studioId: null })));
+    assert.equal(failed.ok, false);
+    assert.equal((await db.select().from(schema.users).where(eq(schema.users.id, person.id)))[0].kind, "fan");
+    const saved = await as(person.id, () => publishClasses(input("First teaching class")));
+    assert(saved.ok && saved.id);
+    const [after] = await db.select().from(schema.users).where(eq(schema.users.id, person.id));
+    assert.equal(after.kind, "coach");
+    assert.equal(after.discoverable, false, "publishing preserves the profile visibility preference");
+    assert.equal(after.handle, person.handle);
+    assert.equal((await db.select().from(schema.classes).where(eq(schema.classes.id, saved.id)))[0].userId, person.id);
+    await as(person.id, () => deleteClass(saved.id!, "all"));
+  });
   await check(2, "editing preserves cancellation and saved attendance", async () => {
     const saved = await as(coach.id, () => publishClasses(input("Preserve saved")));
     assert(saved.ok && saved.id);
@@ -287,9 +309,8 @@ async function main() {
     memory.setClientMemoryScope(null);
     Reflect.deleteProperty(globalThis, "window");
   });
-  await check(5, "signed-out/member/outsider cannot publish or edit another coach", async () => {
+  await check(5, "signed-out users cannot publish and outsiders cannot edit another person", async () => {
     assert.equal((await as(null, () => publishClasses(input("No session")))).ok, false);
-    assert.equal((await as(member.id, () => publishClasses(input("Member public")))).ok, false);
     const saved = await as(coach.id, () => publishClasses(input("Protected")));
     assert(saved.ok && saved.id);
     assert.equal((await as(outsider.id, () => updateClass(saved.id!, input("Overwritten")))).ok, false);

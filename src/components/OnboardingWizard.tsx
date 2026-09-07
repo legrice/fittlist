@@ -7,21 +7,8 @@ import { LocationPicker } from "@/components/LocationPicker";
 import { Wordmark } from "@/components/Wordmark";
 import { updateProfile } from "@/app/actions/profile";
 import { cityFromCoordinates, completeOnboarding } from "@/app/actions/onboarding";
-import { setTeaching } from "@/app/actions/auth";
 import { readPhotoPair } from "@/lib/photo";
 import type { GeoPlace } from "@/lib/geocode";
-
-const TEACHING_TYPES = [
-  "Strength",
-  "Yoga",
-  "Pilates",
-  "Cycling",
-  "Running",
-  "Dance",
-  "Boxing",
-  "HIIT",
-  "Mobility",
-] as const;
 
 /**
  * Post-signup setup is intentionally the same for everybody. Name and handle
@@ -45,15 +32,12 @@ export function OnboardingWizard({
 }) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
-  const [teach, setTeach] = useState(false);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [pThumb, setPThumb] = useState<string | null>(null);
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
   const [pLocation, setPLocation] = useState(location);
   const [pPlace, setPPlace] = useState<GeoPlace | null>(null);
-  const [teachingTypes, setTeachingTypes] = useState<string[]>([]);
-  const [otherType, setOtherType] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [locating, setLocating] = useState(false);
@@ -108,9 +92,6 @@ export function OnboardingWizard({
     setError("");
     startTransition(async () => {
       try {
-      const disciplines = teach
-        ? [...teachingTypes, ...(otherType.trim() ? [otherType.trim()] : [])]
-        : [];
       const res = await updateProfile({
         name,
         title: pTitle,
@@ -124,15 +105,9 @@ export function OnboardingWizard({
         website: "",
         photo: pPhoto,
         photoThumb: pThumb,
-        disciplines,
       });
       if (!res.ok) {
         setError(res.error ?? "Couldn't save. Try again.");
-        return;
-      }
-      const teaching = await setTeaching(teach);
-      if (!teaching.ok) {
-        setError(teaching.error ?? "Couldn't save your teaching choice. Try again.");
         return;
       }
       const completed = await completeOnboarding();
@@ -240,47 +215,6 @@ export function OnboardingWizard({
               placeholder="A line or two about you"
               onChange={(e) => setPAbout(e.target.value)}
             />
-
-            <section className="wizteach">
-              <h2>Do you teach fitness?</h2>
-              <label className="switchrow">
-                <span>
-                  <strong>I teach fitness</strong>
-                  <small>Turn this on to add what you teach to your profile.</small>
-                </span>
-                <input type="checkbox" checked={teach} onChange={(e) => setTeach(e.target.checked)} />
-              </label>
-              {teach && (
-                <div className="wizcategories">
-                  <span className="flabel">What do you teach? <span>Choose all that apply.</span></span>
-                  <div className="wizcategory-grid">
-                    {TEACHING_TYPES.map((type) => {
-                      const on = teachingTypes.includes(type);
-                      return (
-                        <button
-                          key={type}
-                          type="button"
-                          className={`wizcategory${on ? " on" : ""}`}
-                          aria-pressed={on}
-                          onClick={() => setTeachingTypes((current) => on ? current.filter((item) => item !== type) : [...current, type])}
-                        >
-                          {type}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <label className="flabel" htmlFor="wOtherType">Other <span>· optional</span></label>
-                  <input
-                    id="wOtherType"
-                    className="editinput"
-                    value={otherType}
-                    maxLength={40}
-                    placeholder="What else do you teach?"
-                    onChange={(e) => setOtherType(e.target.value)}
-                  />
-                </div>
-              )}
-            </section>
 
             <div className="wizfoot">
               <button className="btn si" onClick={finish} disabled={pending}>
