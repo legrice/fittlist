@@ -13,12 +13,17 @@ export function GET() {
   }
   return NextResponse.json(
     {
+      webcredentials: { apps: [`${teamId}.co.fittlist.app`] },
       applinks: {
         apps: [],
         details: [
           {
             appID: `${teamId}.co.fittlist.app`,
-            components: [{ "/": "/*", comment: "Open all FittList links in the app" }],
+            components: [
+              { "/": "/api/google/*", exclude: true, comment: "Keep OAuth cookies in the initiating browser" },
+              { "/": "/connect/google", exclude: true, comment: "Browser-based Google Calendar setup" },
+              { "/": "/*", comment: "Open FittList links in the app" },
+            ],
           },
         ],
       },

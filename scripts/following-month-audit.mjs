@@ -32,7 +32,10 @@ async function checked(name, fn) {
   fs.writeFileSync(output, JSON.stringify(report, null, 2));
 }
 async function context() {
-  const context = await browser.newContext({ viewport: desktop ? { width: 1440, height: 900 } : { width: 390, height: 844 }, reducedMotion: "reduce" });
+  // Service-worker-controlled requests bypass Playwright page interception.
+  // Disable it only in this transport-fault harness; the production audit
+  // retains the real worker and checks ordinary offline behavior.
+  const context = await browser.newContext({ serviceWorkers: "block", viewport: desktop ? { width: 1440, height: 900 } : { width: 390, height: 844 }, reducedMotion: "reduce" });
   await context.addCookies([{ name: "fl_session", value: f.viewer.token, url: base, httpOnly: true, sameSite: "Lax" }]);
   await context.route("**/*", route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
   const page = await context.newPage(); page.setDefaultTimeout(20000);
@@ -160,6 +163,11 @@ try {
   await checked("Loaded distant data survives background remainder completion", async () => {
     const { context: c, page } = await context();
     let release, held = false, farRequested = false;
+    const requestedActions = [];
+    page.on("request", request => {
+      const id = request.headers()["next-action"];
+      if (id) requestedActions.push({ name: actionManifest.node[id]?.exportedName ?? "unknown", path: new URL(request.url()).pathname, sameOrigin: new URL(request.url()).origin === base, matchesRemainder: id === remainderActionId, method: request.method() });
+    });
     const gate = new Promise(resolve => { release = resolve; });
     await page.route(url => url.origin === base && url.pathname.replace(/\/$/, "") === "/calendar/following", async route => {
       const request = route.request();
@@ -172,8 +180,9 @@ try {
       await openFollowing(page); await showMonth(page, monthOf(f.dates.far), false);
       // Bound the delay: server-action queues can serialize the background
       // request and the month request, making inverted completion impossible.
-      await pause(1200);
-      assert(held, "Captured the initial background remainder response");
+      const deadline=Date.now()+10000;
+      while(!held && Date.now()<deadline)await pause(100);
+      assert(held, `Captured the initial background remainder response; actions: ${JSON.stringify(requestedActions)}`);
       const beforeRelease = await page.locator(`#month-${monthOf(f.dates.far)}`).getAttribute("data-load-state");
       const requestedBeforeRelease = farRequested;
       release();

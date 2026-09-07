@@ -2,11 +2,22 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { loadCalendarShareData, type CalendarShareData } from "@/app/actions/calendar-data";
+import type { CalendarShareData } from "@/app/actions/calendar-data";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { invalidateClientMemory, loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import { sharePerformance } from "@/lib/share-performance";
+
+async function loadCalendarShareData(): Promise<CalendarShareData | null> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch("/api/calendar/share-data", { cache: "no-store", signal: controller.signal });
+    if (response.status === 401) return null;
+    if (!response.ok) throw new Error("Share data unavailable");
+    return await response.json() as CalendarShareData;
+  } finally { window.clearTimeout(timeout); }
+}
 
 const SHARE_CACHE_KEY = "share-takeover";
 type ShareHubModule = typeof import("@/components/ShareHubScreen");

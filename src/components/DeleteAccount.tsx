@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMyAccount } from "@/app/actions/auth";
 import { Icon } from "@/components/Icon";
@@ -22,6 +22,7 @@ import { clearClientMemory } from "@/lib/client-memory";
 // It says what leaves before it asks, because a list of consequences after
 // the fact is a list nobody read.
 export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
+  const busy = useRef(false);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [word, setWord] = useState("");
@@ -42,18 +43,23 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
   };
 
   const go = () => {
-    if (word.trim().toLowerCase() !== "delete") return;
+    if (busy.current || pending || word.trim().toLowerCase() !== "delete") return;
+    busy.current = true;
+    setErr("");
     start(async () => {
-      const res = await deleteMyAccount();
-      if (!res.ok) {
-        setErr(res.error ?? "Couldn't delete that account.");
-        return;
-      }
-      clearClientMemory();
-      // The session is already gone server-side; this is just the way out of
-      // a screen that no longer has anything behind it.
-      router.replace("/");
-      router.refresh();
+      try {
+        const res = await deleteMyAccount();
+        if (!res.ok) {
+          setErr(res.error ?? "Couldn't delete that account.");
+          return;
+        }
+        clearClientMemory();
+        // The session is already gone server-side; this is just the way out of
+        // a screen that no longer has anything behind it.
+        router.replace("/");
+        router.refresh();
+      } catch { setErr("Couldn’t confirm deletion. Check your connection and try again."); }
+      finally { busy.current = false; }
     });
   };
 
@@ -76,7 +82,7 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
             if (e.target === e.currentTarget) closeConfirmation();
           }}
         >
-          <div className="sheet confirmsheet">
+          <div className="sheet confirmsheet" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
             <button
               className="iconbtn sheetclose sheet-dismiss"
               aria-label="Close"
@@ -84,7 +90,7 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
             >
               <Icon name="close" size={20} />
             </button>
-            <h2>Are you sure you want to delete your account?</h2>
+            <h2 id="delete-account-title">Are you sure you want to delete your account?</h2>
             <p className="lead">
               This is permanent and cannot be undone. Everything below goes at once, and nothing
               about it can be brought back.
@@ -115,7 +121,7 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
               }}
               aria-label="Type delete to confirm"
             />
-            {err && <p className="errorcopy">{err}</p>}
+            {err && <p className="errorcopy" role="alert">{err}</p>}
             <div className="publishwrap">
               <button
                 className="btn si"

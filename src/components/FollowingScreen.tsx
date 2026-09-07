@@ -1,4 +1,6 @@
 "use client";
+
+import { useCalendarScopeRecovery } from "@/lib/calendar-scope-recovery";
 import { useSearchHistory } from "@/lib/use-search-history";
 import { NotificationDot } from "@/components/NotificationDot";
 
@@ -237,6 +239,8 @@ export function FollowingScreen({
   const [calendarSwitcherDragY, setCalendarSwitcherDragY] = useState(0);
   const [calendarSwitcherDragging, setCalendarSwitcherDragging] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("following");
+  const resetScopeNavigation = useCallback(() => setScopeTarget("following"), []);
+  useCalendarScopeRecovery(scopeTarget, "following", resetScopeNavigation);
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const communityFooterRef = useRef<HTMLElement | null>(null);

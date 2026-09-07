@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import { haptic } from "@/lib/haptics";
 import { Toast, useToast } from "@/components/Toast";
 
 // Following a member. Same verb and same table as following a coach; what it
@@ -27,6 +28,7 @@ export function FollowMemberButton({
   initialRequested?: boolean;
   followsYou?: boolean;
 }) {
+  const busy = useRef(false);
   const [state, setState] = useState<FollowState>(
     initialFollowing ? "following" : initialRequested ? "requested" : "off",
   );
@@ -35,33 +37,39 @@ export function FollowMemberButton({
   const first = name.trim().split(/\s+/)[0] || name;
 
   const toggle = () => {
-    if (pending) return;
+    if (busy.current || pending) return;
+    busy.current = true;
     start(async () => {
-      if (state === "off") {
-        const res = await followTrainer(handle);
-        if (!res.ok) {
-          toast(res.error ?? "Something went wrong.");
-          return;
-        }
-        if (res.requested) {
-          setState("requested");
-          toast(`Follow request sent to ${first}`);
+      try {
+        if (state === "off") {
+          const res = await followTrainer(handle);
+          if (!res.ok) {
+            toast(res.error ?? "Something went wrong.");
+            return;
+          }
+          if (res.requested) {
+            setState("requested");
+            toast(`Follow request sent to ${first}`);
+          } else {
+            setState("following");
+            toast(`Following ${first}`);
+          }
+          haptic("success");
+          window.dispatchEvent(new Event("follows-changed"));
         } else {
-          setState("following");
-          toast(`Following ${first}`);
+          const res = await unfollowTrainer(handle);
+          if (!res.ok) {
+            toast(res.error ?? "Something went wrong.");
+            return;
+          }
+          const wasRequest = state === "requested";
+          setState("off");
+          haptic("selection");
+          window.dispatchEvent(new Event("calendar-pins-changed"));
+          toast(wasRequest ? "Follow request withdrawn" : `Unfollowed ${first}`);
         }
-        window.dispatchEvent(new Event("follows-changed"));
-      } else {
-        const res = await unfollowTrainer(handle);
-        if (!res.ok) {
-          toast(res.error ?? "Something went wrong.");
-          return;
-        }
-        const wasRequest = state === "requested";
-        setState("off");
-        window.dispatchEvent(new Event("calendar-pins-changed"));
-        toast(wasRequest ? "Follow request withdrawn" : `Unfollowed ${first}`);
-      }
+      } catch { toast("Couldn’t update following. Check your connection and try again."); }
+      finally { busy.current = false; }
     });
   };
 

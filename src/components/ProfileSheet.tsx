@@ -14,6 +14,7 @@ import {
 import { updateAwayStatus, updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
+import { GoogleCalendarConnect } from "@/components/GoogleCalendarConnect";
 import { DeleteAccount } from "@/components/DeleteAccount";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ShiftsPublicToggle } from "@/components/ShiftsPublicToggle";
@@ -169,6 +170,7 @@ export function ProfileSheet({
   const [inviteOpen, setInviteOpen] = useState(false);
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
+  useEffect(() => setConnected(googleConnected), [googleConnected]);
   const [disconnecting, startDisconnect] = useTransition();
 
   const [pkCount, setPkCount] = useState(passkeyCount);
@@ -237,13 +239,15 @@ export function ProfileSheet({
 
   const disconnectGcal = () =>
     startDisconnect(async () => {
-      const result = await disconnectGoogleAction();
-      if (!result.ok) {
-        toast("Couldn't disconnect Google Calendar. Try again");
-        return;
-      }
-      setConnected(false);
-      toast("Google Calendar disconnected");
+      try {
+        const result = await disconnectGoogleAction();
+        if (!result.ok) {
+          toast("Couldn't disconnect Google Calendar. Try again");
+          return;
+        }
+        setConnected(false);
+        toast("Google Calendar disconnected");
+      } catch { toast("Couldn’t disconnect Google Calendar. Check your connection and try again."); }
     });
 
   const addPasskey = async () => {
@@ -871,11 +875,7 @@ export function ProfileSheet({
                   </button>
                 </div>
               ) : (
-                // OAuth needs a document navigation, not a prefetched client route.
-                // eslint-disable-next-line @next/next/no-html-link-for-pages
-                <a className="btn si" href="/api/google/connect">
-                  Connect Google Calendar
-                </a>
+                <GoogleCalendarConnect />
               )}
               <button className="calcopy" onClick={copyCal} style={{ marginTop: 18 }}>
                 Apple or Outlook? Copy your calendar feed link

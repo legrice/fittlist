@@ -115,3 +115,11 @@ count their presence as tested coverage. Port a missing scenario into the
 maintained fixture-based runner before using it to approve a release. CI uploads
 only the allowlisted JSON audit results, excluding fixture tokens, raw request
 diagnostics, screenshots, and server logs.
+
+## iPhone release readiness (2026-09-07)
+
+See [the release audit](IPHONE_TESTFLIGHT_AUDIT_2026-09-07.md) and [iOS setup](ios-app.md). `npm run check:iphone-browser` exercises small/standard/large phone viewports, native header visibility, malformed sessions, private share reads, stalled route recovery, repeated Back taps and failed settings reads. It creates disposable fixtures and never targets production.
+
+`npm run check:ios-release` checks the generated native production configuration and rejects unsafe variants. Run `npm run ios:sync` first. Xcode runs the same release gate automatically. `npm run check:production-environment` verifies that production rejects the development secret and a hosted embedded database despite development overrides.
+
+The following-month transport fault harness disables service workers because worker-controlled WebKit requests bypass page interception. The ordinary production audit retains the worker and checks real offline/reconnect behavior.

@@ -2,8 +2,7 @@
 // personal calendar token, and both OAuth flows all sign with SESSION_SECRET,
 // so a deployment that boots without it would sign every one of those with a
 // string that sits in this repo, and anyone could mint a session for any
-// account. Refuse to run rather than run open. A local `next start` test may
-// opt in explicitly; hosting-provider detection is not a security boundary.
+// account. Refuse to run rather than run open. Production tests must also provide a random secret.
 export function sessionSecretRaw(): string {
   const raw = process.env.SESSION_SECRET;
   if (raw) {
@@ -20,7 +19,7 @@ export function sessionSecretRaw(): string {
     }
     return raw;
   }
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_INSECURE_DEV_SECRET !== "true") {
+  if (process.env.NODE_ENV === "production") {
     throw new Error("SESSION_SECRET is not set; refusing to sign with the dev fallback");
   }
   return "dev-secret-change-me";

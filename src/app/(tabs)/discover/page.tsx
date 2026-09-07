@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { fansVisible } from "@/lib/flags";
 import { DiscoverList, type DiscoverHalf } from "@/components/DiscoverList";
+import { BackLink } from "@/components/BackLink";
+import { Icon } from "@/components/Icon";
 import { currentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +33,11 @@ export default async function DiscoverPage({
   const me = await currentUser();
   if (!me) redirect("/");
   return (
+    <>
+    <header className="settings-route-head iphone-route-head">
+      <BackLink href="/calendar" anywhere className="iconbtn" label="Back to calendar"><Icon name="arrow_back" size={23} /></BackLink>
+      <h1>Explore</h1>
+    </header>
     <DiscoverList
       people={[]}
       studios={[]}
@@ -44,5 +51,6 @@ export default async function DiscoverPage({
       backHref="/feed"
       hideBack
     />
+    </>
   );
 }

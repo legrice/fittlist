@@ -50,7 +50,7 @@ self.addEventListener("fetch", (event) => {
         fetch(request).then((res) => {
           if (res.ok) {
             const copy = res.clone();
-            caches.open(VERSION).then((c) => c.put(request, copy));
+            event.waitUntil(caches.open(VERSION).then((c) => c.put(request, copy)).catch(() => {}));
           }
           return res;
         }),

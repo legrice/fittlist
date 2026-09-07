@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { pageBeneath, samePage } from "@/components/NavTrack";
 
 // A "back" navigation: slide the current page out to the right, uncovering
@@ -8,6 +9,13 @@ import { pageBeneath, samePage } from "@/components/NavTrack";
 // mirror of the forward (slide-in-from-right) push.
 export function useSlideBack() {
   const router = useRouter();
+  const pathname = usePathname();
+  const busy = useRef(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    busy.current = false;
+    return () => { if (resetTimer.current) clearTimeout(resetTimer.current); };
+  }, [pathname]);
   // No href means we don't know the destination by name — walk the history
   // instead, which is literally "where you tapped this from".
   //
@@ -30,6 +38,9 @@ export function useSlideBack() {
   // inside this one is not somewhere you came from, it is somewhere you went,
   // so the arrow steps over it to the named destination instead.
   return (href?: string, anywhere = false, notUnder?: string) => {
+    if (busy.current) return;
+    busy.current = true;
+    resetTimer.current = setTimeout(() => { busy.current = false; }, 2000);
     const go = () => {
       if (!href) return router.back();
       const beneath = pageBeneath();
@@ -45,14 +56,9 @@ export function useSlideBack() {
       router.push(href);
     };
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("fl-nav", "back");
-      const el = document.querySelector(".page-slide");
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (el && !reduce) {
-        el.classList.add("exit-right");
-        window.setTimeout(go, 210);
-        return;
-      }
+      try { sessionStorage.setItem("fl-nav", "back"); } catch { /* Navigation does not require storage. */ }
+      // Begin history navigation on touch. A delayed timer could fire after
+      // another route opened, and repeated taps could pop several screens.
     }
     go();
   };

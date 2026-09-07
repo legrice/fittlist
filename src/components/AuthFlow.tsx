@@ -524,7 +524,7 @@ export function AuthFlow({
             <button className="btn ghost" onClick={() => setStage("landing")}>
               Back
             </button>
-            {error && <div className="errorcopy">{error}</div>}
+            {error && <div role="alert" className="errorcopy">{error}</div>}
             <div className="microcopy">The link works once. Request a new one any time.</div>
           </>
         )}
@@ -541,6 +541,7 @@ export function AuthFlow({
             <input
               ref={nameRef}
               placeholder="Your name"
+              aria-label="Your name"
               autoComplete="name"
               maxLength={40}
               value={name}
@@ -550,6 +551,8 @@ export function AuthFlow({
               <span className="urlfield-pre">fittlist.co/</span>
               <input
                 className="urlfield-in"
+                aria-label="Profile handle"
+                enterKeyHint="go"
                 placeholder={slug(name) || "yourname"}
                 autoComplete="off"
                 autoCapitalize="none"
@@ -567,7 +570,7 @@ export function AuthFlow({
             <button className="btn" onClick={claim} disabled={pending}>
               {pending ? "Claiming…" : "Claim it"}
             </button>
-            {error && <div className="errorcopy">{error}</div>}
+            {error && <div role="alert" className="errorcopy">{error}</div>}
           </>
         )}
       </div>
@@ -615,6 +618,15 @@ export function AuthFlow({
               type="email"
               className="editinput"
               placeholder="you@example.com"
+              aria-label="Email address"
+              inputMode="email"
+              enterKeyHint={sheet === "login" ? "next" : "send"}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                if (sheet === "login") document.getElementById("auth-password")?.focus();
+                else submitAuth();
+              }}
               autoComplete="email"
               autoCapitalize="none"
               value={email}
@@ -626,6 +638,9 @@ export function AuthFlow({
                 className="editinput"
                 style={{ marginTop: 10 }}
                 placeholder="Password"
+                id="auth-password"
+                aria-label="Password"
+                enterKeyHint="go"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -651,7 +666,7 @@ export function AuthFlow({
                 </button>
               )}
             </div>}
-            {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
+            {error && <div role="alert" className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
             {inviteOnly && !invited && !inviter && sheet === "signup" && (
               <button className="authmagic" onClick={openRequest}>
                 Not invited yet? Request an invite
@@ -746,6 +761,7 @@ export function AuthFlow({
                 <input
                   className="editinput"
                   placeholder="Your name"
+                  aria-label="Your name"
                   autoComplete="name"
                   maxLength={80}
                   value={reqName}
@@ -756,13 +772,16 @@ export function AuthFlow({
                   className="editinput"
                   style={{ marginTop: 10 }}
                   placeholder="you@example.com"
+                  aria-label="Email address"
+                  inputMode="email"
+                  enterKeyHint="send"
                   autoComplete="email"
                   autoCapitalize="none"
                   value={reqEmail}
                   onChange={(e) => setReqEmail(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitRequest()}
                 />
-                {reqErr && <div className="errorcopy" style={{ textAlign: "left" }}>{reqErr}</div>}
+                {reqErr && <div role="alert" className="errorcopy" style={{ textAlign: "left" }}>{reqErr}</div>}
                 <div className="publishwrap nostick">
                   <button className="btn si" onClick={submitRequest} disabled={pending}>
                     {pending ? "Sending…" : "Request an invite"}

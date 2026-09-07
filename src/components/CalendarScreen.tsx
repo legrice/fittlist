@@ -1,4 +1,6 @@
 "use client";
+
+import { useCalendarScopeRecovery } from "@/lib/calendar-scope-recovery";
 import { useSearchHistory } from "@/lib/use-search-history";
 import { NotificationDot } from "@/components/NotificationDot";
 
@@ -172,6 +174,8 @@ export function CalendarScreen({
   const [shareOpen, setShareOpen] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [scopeTarget, setScopeTarget] = useState<"you" | "following">("you");
+  const resetScopeNavigation = useCallback(() => setScopeTarget("you"), []);
+  useCalendarScopeRecovery(scopeTarget, "you", resetScopeNavigation);
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const [calendarSyncOpen, setCalendarSyncOpen] = useState(false);
@@ -261,8 +265,9 @@ export function CalendarScreen({
     if (monthlyInsights || insightsLoading) return;
     setInsightsLoading(true);
     try { setMonthlyInsights(await loadMonthlyCalendarInsights()); }
+    catch { toast("Couldn’t load your insights. Check your connection and try again."); }
     finally { setInsightsLoading(false); }
-  },[insightsLoading,monthlyInsights]);
+  },[insightsLoading,monthlyInsights,toast]);
 
   useEffect(() => {
     if (openAdder) {
@@ -275,17 +280,20 @@ export function CalendarScreen({
     router.prefetch("/calendar/following");
   },[router]);
   useEffect(() => {
-    const stored=localStorage.getItem(SUMMARY_VOICE_KEY);
-    if (SUMMARY_VOICES.some((voice) => voice.value === stored)) setSummaryVoice(stored as SummaryVoice);
+    try {
+      const stored=localStorage.getItem(SUMMARY_VOICE_KEY);
+      if (SUMMARY_VOICES.some((voice) => voice.value === stored)) setSummaryVoice(stored as SummaryVoice);
+    } catch { /* Preferences are optional when storage is unavailable. */ }
   },[]);
   useEffect(() => {
     const key=`${SUMMARY_VARIANT_KEY}:${summaryVoice}`;
-    const stored=localStorage.getItem(key);
+    let stored: string | null = null;
+    try { stored=localStorage.getItem(key); } catch { /* Optional preference. */ }
     const previous=stored === null ? -1 : Number.parseInt(stored,10);
     const next=Number.isFinite(previous) && previous >= 0
       ? (previous+1+Math.floor(Math.random()*4))%5
       : Math.floor(Math.random()*5);
-    localStorage.setItem(key,String(next));
+    try { localStorage.setItem(key,String(next)); } catch { /* Optional preference. */ }
     setSummaryVariant(next);
   },[summaryVoice]);
   useEffect(() => {
@@ -519,7 +527,7 @@ export function CalendarScreen({
       title=coaching && attending ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to teach and ${attending} to attend.`,`By my troth, thou teachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to teach.`,`By my troth, thou teachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thou hast nothing scheduled this week.";
     if (classes.length === 0 && savedDays.every((day) => day.items.length === 0)) title="You have nothing on your calendar yet.";
     return { title };
-  },[classes,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
+  },[classes,savedDays,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -1151,7 +1159,7 @@ export function CalendarScreen({
       {calendarSyncOpen && <SettingsDetailSheet view="calendar" onClose={closeCalendarSync} />}
       {settingsView && <SettingsDetailSheet view={settingsView} onClose={() => setSettingsView(null)} />}
       {insightsOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setInsightsOpen(false)}><section className="header-account-sheet calendar-insights-sheet" role="dialog" aria-modal="true" aria-label="Calendar insights" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Insights</h1><p>{monthlyInsights?.month ?? new Date(`${todayIso}T12:00:00.000Z`).toLocaleDateString("en-US",{ month:"long",year:"numeric",timeZone:"UTC" })}</p></div><button type="button" className="iconbtn acctclose sheet-dismiss" aria-label="Close insights" onClick={() => setInsightsOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-insights-grid"><article><strong>{localMonthlyInsights.coached}</strong><span>Classes coached</span></article><article><strong>{insightsLoading ? "–" : monthlyInsights?.attended ?? 0}</strong><span>Classes taken</span></article><article><strong>{insightsLoading ? "–" : monthlyInsights?.shareImages ?? 0}</strong><span>Images shared</span></article><article><strong>{localMonthlyInsights.studios}</strong><span>Studios coached at</span></article></div><div className="calendar-insights-note"><Icon name="activity" size={24} /><p>{localMonthlyInsights.coached > 0 ? `You’ve coached ${localMonthlyInsights.coached} ${localMonthlyInsights.coached === 1 ? "class" : "classes"} across ${localMonthlyInsights.studios || 1} ${localMonthlyInsights.studios === 1 ? "studio" : "studios"} this month.` : "Your monthly story will take shape as you add classes and share your week."}</p></div></section></div></BodyPortal>}
-      {summaryVoiceOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setSummaryVoiceOpen(false)}><section className="header-account-sheet calendar-voice-sheet" role="dialog" aria-modal="true" aria-label="Calendar voice" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Calendar voice</h1><p>Choose how your calendar talks to you.</p></div><button type="button" className="iconbtn acctclose sheet-dismiss" aria-label="Close" onClick={() => setSummaryVoiceOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-voice-options">{SUMMARY_VOICES.map((voice) => <button type="button" className={summaryVoice === voice.value ? "selected" : ""} aria-pressed={summaryVoice === voice.value} key={voice.value} onClick={() => { setSummaryVoice(voice.value); localStorage.setItem(SUMMARY_VOICE_KEY,voice.value); setSummaryVoiceOpen(false); }}><span className="calendar-voice-option-main"><span className="calendar-voice-emoji" aria-hidden="true">{voice.emoji}</span><strong>{voice.label}</strong></span><Icon name={summaryVoice === voice.value ? "check_circle" : "radio_button_unchecked"} size={23} /></button>)}</div></section></div></BodyPortal>}
+      {summaryVoiceOpen && <BodyPortal><div className="header-account-overlay" onMouseDown={() => setSummaryVoiceOpen(false)}><section className="header-account-sheet calendar-voice-sheet" role="dialog" aria-modal="true" aria-label="Calendar voice" onMouseDown={(event) => event.stopPropagation()}><div className="accttop"><div><h1 className="acct-h">Calendar voice</h1><p>Choose how your calendar talks to you.</p></div><button type="button" className="iconbtn acctclose sheet-dismiss" aria-label="Close" onClick={() => setSummaryVoiceOpen(false)}><Icon name="close" size={20} /></button></div><div className="calendar-voice-options">{SUMMARY_VOICES.map((voice) => <button type="button" className={summaryVoice === voice.value ? "selected" : ""} aria-pressed={summaryVoice === voice.value} key={voice.value} onClick={() => { setSummaryVoice(voice.value); try { localStorage.setItem(SUMMARY_VOICE_KEY,voice.value); } catch { /* Optional preference. */ } setSummaryVoiceOpen(false); }}><span className="calendar-voice-option-main"><span className="calendar-voice-emoji" aria-hidden="true">{voice.emoji}</span><strong>{voice.label}</strong></span><Icon name={summaryVoice === voice.value ? "check_circle" : "radio_button_unchecked"} size={23} /></button>)}</div></section></div></BodyPortal>}
     </>
   );
 }

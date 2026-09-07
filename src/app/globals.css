@@ -19,20 +19,8 @@ html[data-native="ios"] body { padding-top: env(safe-area-inset-top); }
   box-shadow: none;
 }
 
-/* UIKit owns navigation in the iOS shell. The website keeps the HTML bar. */
-html[data-native="ios"] .navwrap { display: flex; }
-html[data-native="ios"] .brandbar { display: none; }
-/* UIKit's material bar overlays the web view, just like the website's fixed
-   bar. Keep the last content and floating action reachable above it. */
-html[data-native="ios"] .cardwrap { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
-html[data-native="ios"] .hasnav .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
-/* The website lets its brand row sit behind the page as content scrolls. That
-   stacking model can still paint over a sticky child inside WKWebView, so the
-   native shell gives the row one unambiguous viewport position: directly below
-   the Dynamic Island, above every page. The column reserves the same height. */
-html[data-native="ios"] .screen.hasnav > .pad {
-  padding-top: 14px;
-}
+/* The web dock and headers remain visible in the native shell. UIKit reserves
+   the status area; CSS handles the home indicator just as it does in Safari. */
 
 /* Delight, the brand typeface, self-hosted as woff2.
    Four faces: 700 is reserved for display headlines and decisive actions;
@@ -15753,3 +15741,5 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 @media (min-width:940px) {
   .route-loading-calendar { background:var(--kinetic-canvas-light); color:var(--kinetic-text); }
 }
+
+@media (min-width: 940px) { .iphone-route-head { display: none; } }

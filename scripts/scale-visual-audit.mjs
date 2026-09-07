@@ -66,6 +66,7 @@ try {
       for(let i=0;i<12;i++){await page.keyboard.press("Tab");assert(await dialog.evaluate(el=>el.contains(document.activeElement)),"Focus remains within dialog");}
       const animations=await dialog.evaluate(el=>el.getAnimations({subtree:true}).filter(a=>a.effect?.getComputedTiming().iterations===Infinity).length);
       await page.keyboard.press("Escape");await dialog.waitFor({state:"hidden"});
+      await page.waitForFunction(()=>document.activeElement?.getAttribute("aria-label")==="More profile actions");
       const restored=await page.getByRole("button",{name:"More profile actions",exact:true}).evaluate(el=>el===document.activeElement);
       assert(restored,"Focus restored to trigger");return {infiniteAnimationsWithReducedMotion:animations};
     });

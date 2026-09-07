@@ -68,7 +68,10 @@ async function init(): Promise<Db> {
       throw error;
     }
   }
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_EMBEDDED_DB_IN_PRODUCTION !== "true") {
+  if (process.env.NODE_ENV === "production" && (
+    process.env.ALLOW_EMBEDDED_DB_IN_PRODUCTION !== "true" ||
+    !process.env.PGLITE_DATA_DIR || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+  )) {
     throw new Error(
       "DATABASE_URL is not set; refusing to use the embedded development database in production",
     );

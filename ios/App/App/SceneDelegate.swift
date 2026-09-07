@@ -3,13 +3,34 @@ import Capacitor
 import WebKit
 import MessageUI
 import Photos
-import AuthenticationServices
 import CryptoKit
+
+/// Never forward a signed-in image request to a different origin on redirect.
+private final class ShareRedirectPolicy: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession, task: URLSessionTask,
+                    willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest,
+                    completionHandler: @escaping (URLRequest?) -> Void) {
+        guard let original = task.originalRequest?.url, let next = request.url,
+              original.scheme == next.scheme, original.host == next.host,
+              original.port == next.port, next.user == nil, next.password == nil else {
+            completionHandler(nil)
+            return
+        }
+        completionHandler(request)
+    }
+}
 
 /// UIKit asks the outer shell which status-bar style to use, while Capacitor's
 /// plugin updates its bridge controller. Forward that update through the
 /// container so a web appearance change reaches the actual system chrome.
 final class FittListBridgeViewController: CAPBridgeViewController {
+    var shellStatusBarStyle: UIStatusBarStyle?
+
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        shellStatusBarStyle ?? super.preferredStatusBarStyle
+    }
+
     override func setStatusBarStyle(_ statusBarStyle: UIStatusBarStyle) {
         super.setStatusBarStyle(statusBarStyle)
         parent?.setNeedsStatusBarAppearanceUpdate()
@@ -18,16 +39,16 @@ final class FittListBridgeViewController: CAPBridgeViewController {
 
 /// One native navigation shell around the existing Capacitor bridge. FittList
 /// keeps one web product while the highest-value app surfaces become native.
-final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler, MFMessageComposeViewControllerDelegate, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler, MFMessageComposeViewControllerDelegate {
     private let bridge = FittListBridgeViewController()
     private let headerView = UIView()
+    private let statusBarSurface = UIView()
     private let tabBar = UITabBar()
     private var settingsButton: UIButton?
     private var bridgeTopToHeader: NSLayoutConstraint?
     private var bridgeTopToView: NSLayoutConstraint?
-    // These IDs deliberately match src/lib/nav.ts. The web navigation is
-    // hidden in the native shell, so a mismatch here removes the only working
-    // route to a primary destination.
+    // Retained native fallback IDs match src/lib/nav.ts. Visible navigation
+    // belongs to the web app, including its account and calendar controls.
     private let tabIDs = ["following", "discover", "calendar", "share"]
     private let fallbackRoutes = ["/feed", "/discover", "/you", "/membershare"]
     private let trustedWebHosts: Set<String> = ["fittlist.co", "www.fittlist.co"]
@@ -36,6 +57,14 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private let shareFileSizeLimit = 12 * 1024 * 1024
     private let shareFileCacheSizeLimit = 36 * 1024 * 1024
     private let pngSignature: [UInt8] = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+    private lazy var shareSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.httpShouldSetCookies = false
+        configuration.urlCredentialStorage = nil
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 45
+        return URLSession(configuration: configuration, delegate: ShareRedirectPolicy(), delegateQueue: nil)
+    }()
     private var shareDownloadTask: URLSessionTask?
     private var shareDownloadToken: UUID?
     private var shareDownloadKey: String?
@@ -84,6 +113,18 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             tabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
+        // This surface paints only the system safe area, never over web content.
+        statusBarSurface.translatesAutoresizingMaskIntoConstraints = false
+        statusBarSurface.isUserInteractionEnabled = false
+        statusBarSurface.backgroundColor = view.backgroundColor
+        view.addSubview(statusBarSurface)
+        NSLayoutConstraint.activate([
+            statusBarSurface.topAnchor.constraint(equalTo: view.topAnchor),
+            statusBarSurface.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            statusBarSurface.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            statusBarSurface.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+        ])
+
         installWebHooks()
         shareFileQueue.async { [weak self] in
             self?.pruneShareFileCache(keeping: nil)
@@ -91,8 +132,29 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         }
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // The status-bar plugin may add its own background after appearance.
+        view.bringSubviewToFront(statusBarSurface)
+    }
+
+    private func updateStatusBarSurface(_ channels: [Double]) {
+        guard channels.count == 3, channels.allSatisfy({ $0.isFinite && (0...255).contains($0) }) else { return }
+        let rgb = channels.map { $0 / 255 }
+        let color = UIColor(red: rgb[0], green: rgb[1], blue: rgb[2], alpha: 1)
+        statusBarSurface.backgroundColor = color
+        view.backgroundColor = color
+        let linear = rgb.map { $0 <= 0.04045 ? $0 / 12.92 : pow(($0 + 0.055) / 1.055, 2.4) }
+        let luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+        bridge.shellStatusBarStyle = luminance < 0.179 ? .lightContent : .darkContent
+        bridge.setNeedsStatusBarAppearanceUpdate()
+        setNeedsStatusBarAppearanceUpdate()
+        view.bringSubviewToFront(statusBarSurface)
+    }
+
     deinit {
         shareDownloadTask?.cancel()
+        shareSession.invalidateAndCancel()
     }
 
     private func configureTabBar() {
@@ -215,19 +277,14 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         controller.add(self, name: "fittlistExternal")
         controller.add(self, name: "fittlistTakeover")
         controller.add(self, name: "fittlistShareTarget")
-        controller.add(self, name: "fittlistApple")
         bridge.webView?.allowsBackForwardNavigationGestures = true
 
-        // Mark the document before it paints so the web header does not flash
-        // underneath the native header.
+        // The web app owns visible navigation; UIKit owns system safe areas.
+        // Mark native capabilities before the first paint.
         controller.addUserScript(WKUserScript(
             source: """
             document.documentElement.dataset.native = 'ios';
             document.documentElement.dataset.nativeShareProtocol = '2';
-            const nativeStyle = document.createElement('style');
-            nativeStyle.id = 'fittlist-native-shell-style';
-            nativeStyle.textContent = '.brandbar,.navwrap{display:none!important}';
-            (document.head || document.documentElement).appendChild(nativeStyle);
             """,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
@@ -235,12 +292,30 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         controller.addUserScript(WKUserScript(
             source: """
             (() => {
-              const send = () => window.webkit.messageHandlers.fittlistRoute.postMessage({
-                path: location.pathname,
-                settings: !!document.querySelector('.brandbar [aria-label="Settings"]'),
-                active: document.querySelector('.navwrap a[aria-current="page"]')?.dataset.tab || null
-              });
-              const sendAfterRender = () => setTimeout(send, 80);
+              let lastRoute = '';
+              const send = () => {
+                const header = document.querySelector('.calendar-scope-top, .group-seam-top');
+                const background = getComputedStyle(header || document.body).backgroundColor;
+                const channels = background.match(/[0-9.]+/g)?.map(Number) || [];
+                const chrome = channels.length >= 3 && (channels.length < 4 || channels[3] > 0)
+                  ? channels.slice(0, 3)
+                  : document.documentElement.dataset.mode === 'dark' ? [23, 21, 15] : [253, 252, 247];
+                const route = {
+                  path: location.pathname,
+                  settings: !!document.querySelector('.brandbar [aria-label="Settings"]'),
+                  active: document.querySelector('.navwrap a[aria-current="page"]')?.dataset.tab || null,
+                  chrome
+                };
+                const next = JSON.stringify(route);
+                if (next === lastRoute) return;
+                lastRoute = next;
+                window.webkit.messageHandlers.fittlistRoute.postMessage(route);
+              };
+              let renderTimer;
+              const sendAfterRender = () => { clearTimeout(renderTimer); renderTimer = setTimeout(send, 80); };
+              // React can finish the next route after pushState fires.
+              new MutationObserver(sendAfterRender).observe(document.body, { childList: true, subtree: true });
+              addEventListener('fittlist:themechange', sendAfterRender);
               const push = history.pushState.bind(history);
               const replace = history.replaceState.bind(history);
               history.pushState = (...args) => { push(...args); sendAfterRender(); };
@@ -289,22 +364,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        if message.name == "fittlistApple", let payload = message.body as? [String: Any] {
-            guard isTrustedWebMessage(message),
-                  let nonce = payload["nonce"] as? String,
-                  nonce.count >= 32,
-                  nonce.count <= 128 else {
-                appleResult(["error": "unavailable"])
-                return
-            }
-            startAppleSignIn(nonce: nonce)
-            return
-        }
+        // Every privileged handler has the same main-frame/origin boundary,
+        // including external links and appearance messages.
+        guard isTrustedWebMessage(message) else { return }
         if message.name == "fittlistShareTarget", let payload = message.body as? [String: Any] {
-            guard isTrustedWebMessage(message) else {
-                shareResult(status: "failed", message: "Couldn't prepare that image")
-                return
-            }
             shareImage(payload)
             return
         }
@@ -322,6 +385,9 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         guard message.name == "fittlistRoute",
               let route = message.body as? [String: Any],
               let path = route["path"] as? String else { return }
+        if message.frameInfo.isMainFrame, let channels = route["chrome"] as? [Double] {
+            updateStatusBarSurface(channels)
+        }
         setTakeover(false)
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
         let active = route["active"] as? String
@@ -350,61 +416,28 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         guard message.frameInfo.isMainFrame else { return false }
         let origin = message.frameInfo.securityOrigin
         let host = origin.host.lowercased()
-        if origin.protocol == "https" && trustedWebHosts.contains(host) { return true }
-        // A preview build opts into one exact CAPACITOR_SERVER_URL host. The
-        // Capacitor navigation allow-list controls which host can occupy the
-        // main web view; matching that live main-frame URL lets the same build
-        // exercise Apple/share bridges without trusting wildcard previews.
-        if origin.protocol == "https",
-           let currentHost = bridge.webView?.url?.host?.lowercased(),
-           host == currentHost { return true }
+        if origin.protocol == "https" && trustedWebHosts.contains(host) && (origin.port == 0 || origin.port == 443) { return true }
         #if DEBUG
-        return origin.protocol == "http" && (host == "localhost" || host == "127.0.0.1")
+        // Development trusts the configured origin, never whichever website
+        // happens to be occupying the web view after a redirect.
+        guard let configured = bridge.bridge?.config.serverURL else { return false }
+        return origin.protocol == configured.scheme && host == configured.host?.lowercased()
+            && (origin.port == (configured.port ?? (configured.scheme == "https" ? 443 : 80)) || origin.port == 0)
         #else
         return false
         #endif
     }
 
-    private func startAppleSignIn(nonce: String) {
-        let request = ASAuthorizationAppleIDProvider().createRequest()
-        request.requestedScopes = [.fullName, .email]
-        request.nonce = SHA256.hash(data: Data(nonce.utf8)).map { String(format: "%02x", $0) }.joined()
-        let controller = ASAuthorizationController(authorizationRequests: [request])
-        controller.delegate = self
-        controller.presentationContextProvider = self
-        controller.performRequests()
-    }
-
-    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-              let tokenData = credential.identityToken,
-              let identityToken = String(data: tokenData, encoding: .utf8) else {
-            appleResult(["error": "invalid_credential"])
-            return
-        }
-        var payload: [String: String] = ["identityToken": identityToken]
-        if let givenName = credential.fullName?.givenName, !givenName.isEmpty { payload["givenName"] = givenName }
-        if let familyName = credential.fullName?.familyName, !familyName.isEmpty { payload["familyName"] = familyName }
-        appleResult(payload)
-    }
-
-    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        let code = (error as? ASAuthorizationError)?.code
-        appleResult(["error": code == .canceled ? "cancelled" : "authorization_failed"])
-    }
-
-    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        view.window ?? ASPresentationAnchor()
-    }
-
-    private func appleResult(_ payload: [String: String]) {
-        guard let data = try? JSONSerialization.data(withJSONObject: payload),
-              let json = String(data: data, encoding: .utf8) else { return }
-        DispatchQueue.main.async {
-            self.bridge.webView?.evaluateJavaScript(
-                "window.dispatchEvent(new CustomEvent('fittlist:native-apple-result',{detail:\(json)}))"
-            )
-        }
+    private func isTrustedServerURL(_ url: URL) -> Bool {
+        guard url.user == nil, url.password == nil else { return false }
+        if url.scheme == "https", let host = url.host?.lowercased(), trustedWebHosts.contains(host),
+           url.port == nil || url.port == 443 { return true }
+        #if DEBUG
+        guard let configured = bridge.bridge?.config.serverURL else { return false }
+        return url.scheme == configured.scheme && url.host == configured.host && url.port == configured.port
+        #else
+        return false
+        #endif
     }
 
     private func cookies(for url: URL, from allCookies: [HTTPCookie]) -> [HTTPCookie] {
@@ -445,15 +478,17 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         return activeURL
     }
 
-    private func shareFileURL(for sourceURL: URL) -> URL {
-        let digest = SHA256.hash(data: Data(sourceURL.absoluteString.utf8))
+    private func shareFileURL(for sourceURL: URL, accountScope: String) -> URL {
+        // HTTP-only session identity scopes the cache. Two accounts can request
+        // the same URL without ever reusing each other's private schedule image.
+        let digest = SHA256.hash(data: Data("\(accountScope)|\(sourceURL.absoluteString)".utf8))
             .map { String(format: "%02x", $0) }
             .joined()
         return shareFileCacheDirectory.appendingPathComponent("\(digest).png", isDirectory: false)
     }
 
-    private func cachedShareFile(for sourceURL: URL) -> URL? {
-        let fileURL = shareFileURL(for: sourceURL)
+    private func cachedShareFile(for sourceURL: URL, accountScope: String) -> URL? {
+        let fileURL = shareFileURL(for: sourceURL, accountScope: accountScope)
         let manager = FileManager.default
         guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
               values.isRegularFile == true,
@@ -472,13 +507,13 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         }
         shareFileQueue.async { [weak self] in
             guard let self else { return }
-            try? manager.setAttributes([.modificationDate: Date()], ofItemAtPath: fileURL.path)
+            try? manager.setAttributes([.modificationDate: Date(), .protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: fileURL.path)
             self.pruneShareFileCache(keeping: fileURL)
         }
         return fileURL
     }
 
-    private func storeDownloadedShareFile(_ downloadedURL: URL, for sourceURL: URL) throws -> URL {
+    private func storeDownloadedShareFile(_ downloadedURL: URL, for sourceURL: URL, accountScope: String) throws -> URL {
         let manager = FileManager.default
         let values = try downloadedURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
         guard values.isRegularFile == true,
@@ -495,10 +530,10 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         }
 
         try manager.createDirectory(at: shareFileCacheDirectory, withIntermediateDirectories: true)
-        let fileURL = shareFileURL(for: sourceURL)
+        let fileURL = shareFileURL(for: sourceURL, accountScope: accountScope)
         try? manager.removeItem(at: fileURL)
         try manager.moveItem(at: downloadedURL, to: fileURL)
-        try? manager.setAttributes([.modificationDate: Date()], ofItemAtPath: fileURL.path)
+        try? manager.setAttributes([.modificationDate: Date(), .protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: fileURL.path)
         pruneShareFileCache(keeping: fileURL)
         return fileURL
     }
@@ -588,9 +623,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         guard
               let rawURL = payload["url"] as? String,
               let url = URL(string: rawURL),
-              url.scheme?.lowercased() == "https",
-              let host = url.host?.lowercased(),
-              trustedWebHosts.contains(host),
+              isTrustedServerURL(url),
               url.path.hasPrefix("/api/story/") || url.path.hasPrefix("/api/card/") || url.path.hasPrefix("/api/qr/") else {
             shareResult(status: "failed", message: "Couldn't prepare that image", requestId: requestId)
             return
@@ -600,15 +633,6 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
         guard !shareSheetPresented else {
             shareResult(status: "failed", message: "Share is already open", requestId: requestId)
-            return
-        }
-
-        if target == "more", let cachedURL = cachedShareFile(for: url) {
-            cancelShareDownload()
-            let token = UUID()
-            shareDownloadToken = token
-            shareDownloadKey = requestKey
-            presentCachedShareFile(cachedURL, requestId: requestId, token: token)
             return
         }
 
@@ -630,26 +654,33 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
                 var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
                 request.setValue("image/png", forHTTPHeaderField: "Accept")
                 let matchingCookies = self.cookies(for: url, from: cookies)
+                let accountScope = matchingCookies.first(where: { $0.name == "fl_session" })?.value ?? "anonymous"
                 HTTPCookie.requestHeaderFields(with: matchingCookies).forEach {
                     request.setValue($0.value, forHTTPHeaderField: $0.key)
                 }
                 if target == "more" {
-                    let task = URLSession.shared.downloadTask(with: request) { [weak self] location, response, error in
+                    if let cachedURL = self.cachedShareFile(for: url, accountScope: accountScope) {
+                        self.presentCachedShareFile(cachedURL, requestId: requestId, token: token)
+                        return
+                    }
+                    let task = self.shareSession.downloadTask(with: request) { [weak self] location, response, error in
                         guard let self else { return }
                         let http = response as? HTTPURLResponse
                         var cachedURL: URL?
                         if error == nil,
                            let location,
                            let http,
-                           (200..<300).contains(http.statusCode),
+                           http.url?.host == url.host, http.url?.scheme == url.scheme, http.url?.port == url.port,
+                          (200..<300).contains(http.statusCode),
                            http.expectedContentLength <= 0 || http.expectedContentLength <= Int64(self.shareFileSizeLimit) {
                             self.shareFileQueue.sync {
-                                cachedURL = try? self.storeDownloadedShareFile(location, for: url)
+                                cachedURL = try? self.storeDownloadedShareFile(location, for: url, accountScope: accountScope)
                             }
                         }
                         DispatchQueue.main.async {
                             guard self.shareDownloadToken == token else { return }
                             guard let cachedURL else {
+                                _ = self.finishShareDownload(token: token)
                                 self.shareResult(
                                     status: "failed",
                                     message: "Couldn't prepare that image",
@@ -664,11 +695,12 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
                     task.resume()
                     return
                 }
-                let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                let task = self.shareSession.dataTask(with: request) { [weak self] data, response, error in
                     guard let self else { return }
                     guard error == nil,
                           let data,
                           let http = response as? HTTPURLResponse,
+                          http.url?.host == url.host, http.url?.scheme == url.scheme, http.url?.port == url.port,
                           (200..<300).contains(http.statusCode),
                           data.count >= self.pngSignature.count,
                           data.count <= self.shareFileSizeLimit,

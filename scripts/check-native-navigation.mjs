@@ -33,7 +33,7 @@ const requiredSwiftFragments = [
   'tabBar.isHidden = true',
   "document.documentElement.dataset.nativeShareProtocol = '2';",
   'if target == "cancel"',
-  'URLSession.shared.downloadTask(with: request)',
+  'self.shareSession.downloadTask(with: request)',
   'requestId: requestId',
   'status: "share-ready"',
   'status: "complete"',
@@ -70,4 +70,5 @@ for (const fragment of requiredMobileDockFragments) {
     fail(`mobile dock shell coverage is missing ${fragment}`);
 }
 
+if (swift.includes(".brandbar,.navwrap{display:none!important}")) fail("native shell hides the only visible navigation");
 console.log("Native navigation/share contract: web dock aligned and export lifecycle guarded");

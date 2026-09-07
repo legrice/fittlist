@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/check-copy.mjs && node scripts/check-weights.mjs && node scripts/check-colors.mjs && node scripts/icon-check.mjs && node scripts/check-native-navigation.mjs && npm run check:share-performance && node --import tsx scripts/storyplan-check.mjs && node --import tsx scripts/content-safety-check.mjs && node --import tsx scripts/timezone-calendar-check.mjs && node --import tsx scripts/calendar-atomicity-check.ts && node --import tsx scripts/purge-check.ts && node --import tsx scripts/anonymous-rate-limit-check.ts && node scripts/email-follow-confirmation-check.mjs && next build",
+    "build": "node scripts/check-copy.mjs && node scripts/check-weights.mjs && node scripts/check-colors.mjs && node scripts/icon-check.mjs && node scripts/check-native-navigation.mjs && npm run check:production-environment && npm run check:share-performance && node --import tsx scripts/storyplan-check.mjs && node --import tsx scripts/content-safety-check.mjs && node --import tsx scripts/timezone-calendar-check.mjs && node --import tsx scripts/calendar-atomicity-check.ts && node --import tsx scripts/purge-check.ts && node --import tsx scripts/anonymous-rate-limit-check.ts && node scripts/email-follow-confirmation-check.mjs && next build",
     "start": "next start",
     "lint": "eslint src scripts --quiet",
     "db:generate": "drizzle-kit generate",
@@ -34,7 +34,10 @@
     "check:operations": "node --import tsx scripts/operations-audit-check.ts notifications && node --import tsx scripts/operations-audit-check.ts security && node --import tsx scripts/operations-audit-check.ts recovery",
     "check:calendar-window": "node --import tsx scripts/following-calendar-window-check.ts",
     "check:following-month-browser": "node scripts/following-month-audit.mjs",
-    "check:desktop-browser": "node scripts/desktop-browser-audit.mjs"
+    "check:desktop-browser": "node scripts/desktop-browser-audit.mjs",
+    "check:ios-release": "python3 scripts/check-ios-release.py && python3 scripts/ios-release-check.py && node --import tsx scripts/native-link-check.ts",
+    "check:iphone-browser": "node scripts/iphone-browser-audit.mjs",
+    "check:production-environment": "node --import tsx scripts/production-environment-check.ts"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

@@ -84,6 +84,7 @@ export async function exchangeCode(code: string): Promise<TokenResponse> {
       grant_type: "authorization_code",
     }),
   });
+  if (!res.ok) throw new Error("Google authorization failed");
   return res.json();
 }
 
@@ -172,6 +173,7 @@ async function upsertGoogleEvent(
   const url = `${CAL}/events/${encodeURIComponent(id)}`;
   const write = (method: "PUT" | "POST", body: Record<string, unknown>, target = url) =>
     fetch(target, {
+      signal: AbortSignal.timeout(10_000),
       method,
       headers: { ...headers, "content-type": "application/json" },
       body: JSON.stringify(body),
@@ -191,6 +193,7 @@ async function upsertGoogleEvent(
 async function deleteGoogleEvent(id: string, headers: Record<string, string>): Promise<boolean> {
   try {
     const response = await fetch(`${CAL}/events/${encodeURIComponent(id)}`, {
+      signal: AbortSignal.timeout(10_000),
       method: "DELETE",
       headers,
     });

@@ -12,6 +12,12 @@ export function ScrollLock() {
   useEffect(() => {
     let frame = 0;
     let activeDialog: HTMLElement | null = null;
+    let lastTrigger: HTMLElement | null = null;
+    const rememberTrigger = (event: PointerEvent) => {
+      const target = event.target instanceof Element ? event.target.closest<HTMLElement>('button, a[href], [role="button"]') : null;
+      if (target) lastTrigger = target;
+    };
+    document.addEventListener("pointerdown", rememberTrigger, true);
     const returnFocus = new Map<HTMLElement, HTMLElement | null>();
     const inerted = new Map<HTMLElement, boolean>();
     const focusable = (dialog: HTMLElement) => [...dialog.querySelectorAll<HTMLElement>(
@@ -37,7 +43,12 @@ export function ScrollLock() {
         returnFocus.delete(previous);
       }
       if (!dialog) return;
-      if (!returnFocus.has(dialog)) returnFocus.set(dialog, document.activeElement instanceof HTMLElement ? document.activeElement : null);
+      if (!returnFocus.has(dialog)) {
+        const focused = document.activeElement;
+        // A touch in Safari does not necessarily focus its button.
+        returnFocus.set(dialog, focused instanceof HTMLElement && focused !== document.body
+          ? focused : lastTrigger?.isConnected ? lastTrigger : null);
+      }
       // Isolate siblings at every level, including nested sheets rendered in
       // the same portal. Remember pre-existing inert state when restoring.
       for (let branch: HTMLElement = dialog; branch.parentElement; branch = branch.parentElement) {
@@ -94,6 +105,7 @@ export function ScrollLock() {
     return () => {
       observer.disconnect();
       document.removeEventListener("keydown", trapFocus, true);
+      document.removeEventListener("pointerdown", rememberTrigger, true);
       restoreInert();
       if (frame) cancelAnimationFrame(frame);
       document.body.classList.remove("sheet-open");

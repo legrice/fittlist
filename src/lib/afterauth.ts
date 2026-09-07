@@ -16,7 +16,7 @@ const KEY = "fl-after-auth";
 /** Only ever our own pages: a destination read from a URL is somebody else's
  *  input, and "//evil.example" is a same-looking path that isn't one. */
 function safe(path: string | null | undefined): string | null {
-  if (!path) return null;
+  if (!path || path.includes("\\")) return null;
   return /^\/(?!\/)[^\s]*$/.test(path) ? path : null;
 }
 
