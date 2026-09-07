@@ -42,7 +42,7 @@ export type WeekRow = {
   ap: string;
   /** "45 min", gray under the time. Absent on rows that don't know it. */
   dur?: string;
-  /** Following only: whose class this is. */
+  /** Whose class this is, when attribution is needed in the schedule. */
   coach?: { id: string; name: string; color: string; photo: string | null } | null;
   /** A profile peek already establishes whose schedule this is in its
    *  header, so its rows keep the coach name but do not repeat the face. */
@@ -161,7 +161,7 @@ export function ClassLine({ row }: { row: WeekRow }) {
     <>
       {(row.coach || row.tag) && (
         <span className="clline-by">
-          {row.coach && row.tagTone === "attending" && !row.hideCoachAvatar && <span className="clline-coach-face" style={{ background: row.coach.color }}>
+          {row.coach && !row.hideCoachAvatar && <span className="clline-coach-face" style={{ background: row.coach.color }}>
             {row.coach.photo ? <img src={row.coach.photo} alt="" /> : row.coach.name.trim().charAt(0)}
           </span>}
           {row.coach && <span className="clline-by-name">{row.coach.name}</span>}

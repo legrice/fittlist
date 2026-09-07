@@ -13309,45 +13309,58 @@ a.clspeek-by:active { opacity: .6; }
   .calendar-surface-schedule .wkempty-b { color:color-mix(in srgb,var(--color-white) 72%,transparent); }
   .calendar-surface-schedule .wkempty-actions .ghost { background:var(--color-surface); color:var(--color-text-primary); }
 }
-/* Profiles used the occurrence grid before CalendarList became text-led.
-   Keep their hierarchy explicit so older grid coordinates cannot indent the
-   class or studio away from the coach byline: attribution, class, place. */
+/* Every profile schedule uses the same time gutter and single-line title.
+   Attribution spans both columns above the class details when supplied. */
 .profile-calendar-list .clline {
   --row-rail-bottom:24px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(78px, max-content) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: start;
+  gap: 5px 8px;
   /* The calendar tab leaves a full spacing step between the final caption
      and its divider. Profiles used the compact row padding, which made the
      rule look attached to the studio line above it. */
   padding-bottom: 24px;
 }
-.profile-calendar-list .clline-by,
-.profile-calendar-list .clline-title-row,
-.profile-calendar-list .clline-studio-row {
+.profile-calendar-list .clline-by {
   width: 100%;
   min-width: 0;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin-bottom: 6px;
 }
 .profile-calendar-list .clline-title-row,
 .profile-calendar-list .clline-studio-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 14px;
+  display: contents;
 }
 .profile-calendar-list .clline :is(.clline-by-name, .clline-nm, .clline-t, .clline-w, .clline-dur) {
-  grid-row: auto;
   justify-self: auto;
   margin-left: 0;
 }
 .profile-calendar-list .clline-title-row .clline-nm,
 .profile-calendar-list .clline-studio-row .clline-w {
-  grid-column: 1;
+  grid-column: 2;
 }
 .profile-calendar-list .clline-title-row .clline-t,
 .profile-calendar-list .clline-studio-row .clline-dur {
-  grid-column: 2;
+  grid-column: 1;
+  text-align: left;
 }
+.profile-calendar-list .clline-studio-row.no-location .clline-dur { grid-column: 1; }
+.profile-calendar-list .clline-title-row :is(.clline-t, .clline-nm) { grid-row: 1; }
+.profile-calendar-list .clline-studio-row :is(.clline-dur, .clline-w) { grid-row: 2; }
+.profile-calendar-list .clline:has(> .clline-by) .clline-title-row :is(.clline-t, .clline-nm) { grid-row: 2; }
+.profile-calendar-list .clline:has(> .clline-by) .clline-studio-row :is(.clline-dur, .clline-w) { grid-row: 3; }
+.profile-calendar-list .clline-title-row .clline-nm {
+  display: block; padding-right: 0; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; -webkit-line-clamp: unset;
+}
+.profile-calendar-list .clline :is(.clline-t, .clline-ap) { font-weight: 700; }
+.profile-calendar-list .clline-extra { grid-column: 1 / -1; grid-row: auto; }
+.profile-calendar-list .clrow:has(> .clmore) .clline-by { padding-right: 30px; }
+.profile-calendar-list .clrow:has(> .clmore) .clline:not(:has(> .clline-by)) .clline-nm { padding-right: 30px; }
 
 @media (max-width:939px) {
   .profile-anchor-section:has(.profile-calendar-list),
@@ -13369,8 +13382,7 @@ a.clspeek-by:active { opacity: .6; }
   }
   .profile-calendar-list .clline::before { display:none; }
   .profile-calendar-list .dayblock + .dayblock { margin-top:26px; }
-  .profile-person-calendar-list .clline-by-name { display:none; }
-  .profile-person-calendar-list .clline-by:not(:has(.clline-tag)) { display:none; }
+  .profile-calendar-list .clrow > .clmore { top:12px; right:12px; }
 }
 
 .wkfab {
@@ -15402,16 +15414,9 @@ body:has(.studio-dashboard, .studio-shifts-view),
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 .person-profile-light .profile-person-calendar-list .clline {
-  min-height:0; display:grid; grid-template-columns:minmax(78px,max-content) minmax(0,1fr); grid-template-rows:auto auto;
-  align-content:center; align-items:start; gap:5px 8px; padding:16px 18px;
+  min-height:0; padding:16px 18px;
   background:var(--kinetic-surface);
 }
-.person-profile-light .profile-person-calendar-list :is(.clline-title-row,.clline-studio-row) { display:contents; }
-.person-profile-light .profile-person-calendar-list .clline-t { grid-column:1; grid-row:1; text-align:left; }
-.person-profile-light .profile-person-calendar-list .clline-nm { grid-column:2; grid-row:1; padding-right:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.person-profile-light .profile-person-calendar-list .clline-dur { grid-column:1; grid-row:2; text-align:left; }
-.person-profile-light .profile-person-calendar-list .clline-w { grid-column:2; grid-row:2; }
-.person-profile-light .profile-person-calendar-list .clline-by { display:none; }
 html:has(.person-profile-light), body:has(.person-profile-light) { background:var(--kinetic-canvas-light); }
 .personal-calendar-list :is(.clline-t, .clline-ap) { font-weight:700; }
 
