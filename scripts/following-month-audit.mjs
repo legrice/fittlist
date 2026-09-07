@@ -30,8 +30,14 @@ async function context() {
   await context.addCookies([{ name: "fl_session", value: f.viewer.token, url: base, httpOnly: true, sameSite: "Lax" }]);
   await context.route("**/*", route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
   const page = await context.newPage(); page.setDefaultTimeout(20000);
+  await page.bringToFront();
+  page.auditNetwork = [];
+  page.on("response", response => { const request = response.request(); if (request.headers()["next-action"]) page.auditNetwork.push({ action: actionMonth(request) || "background", status: response.status() }); });
+  page.on("requestfailed", request => { if (request.headers()["next-action"]) page.auditNetwork.push({ action: actionMonth(request) || "background", failure: request.failure()?.errorText }); });
   return { context, page };
 }
+const waitDom = (page, predicate, arg) => page.waitForFunction(predicate, arg, { polling: 100 });
+const visibility = page => page.evaluate(() => ({ visibility: document.visibilityState, focused: document.hasFocus() }));
 async function openFollowing(page) {
   await page.goto(`${base}/calendar/following`);
   await page.getByRole("navigation", { name: "Calendar view", exact: true }).waitFor();
@@ -44,7 +50,7 @@ async function showMonth(page, ym, loaded = true) {
   const block = page.locator(`#month-${ym}`);
   await block.waitFor();
   await block.evaluate(el => el.scrollIntoView({ block: "center", behavior: "instant" }));
-  if (loaded) await page.waitForFunction(id => document.getElementById(id)?.dataset.loadState === "loaded", `month-${ym}`);
+  if (loaded) await waitDom(page, id => document.getElementById(id)?.dataset.loadState === "loaded", `month-${ym}`);
   if (loaded && ym === monthOf(f.dates.far)) await page.screenshot({ path: `${f.directory}/${browserName}-future-month.png`, animations: "disabled" });
   return block;
 }
@@ -53,7 +59,7 @@ async function openDate(page, iso, classId, checkCardLayout = true) {
   await page.getByRole("button", { name: `Open ${iso}`, exact: true }).click();
   const day = page.locator(`#feed-day-${iso}`);
   await day.waitFor();
-  await page.waitForFunction(id => { const r = document.getElementById(id)?.getBoundingClientRect(); return !!r && r.top < innerHeight && r.bottom > 0; }, `feed-day-${iso}`);
+  await waitDom(page, id => { const r = document.getElementById(id)?.getBoundingClientRect(); return !!r && r.top < innerHeight && r.bottom > 0; }, `feed-day-${iso}`);
   await page.waitForTimeout(300);
   if (iso === f.dates.far) await page.screenshot({ path: `${f.directory}/${browserName}-future-date.png`, animations: "disabled" });
   const heading = await day.locator("h2").boundingBox();
@@ -98,26 +104,26 @@ try {
 
   await checked("Failed distant month stays explicit and retries successfully", async () => {
     const { context: c, page } = await context();
-    const ym = monthOf(f.dates.far); let failures = 0;
-    let releaseFailure;
-    const failureGate = new Promise(resolve => { releaseFailure = resolve; });
-    await page.route("**/calendar/following", async route => {
-      if (actionMonth(route.request()) === ym && failures === 0) { failures++; await failureGate; await route.abort("failed"); } else await route.continue();
-    });
+    const ym = monthOf(f.dates.far);
     try {
       await openFollowing(page);
+      await showMonth(page, monthOf(f.iso));
+      await c.setOffline(true);
       const block = await showMonth(page, ym, false);
       await block.getByRole("button", { name: `Open ${f.dates.far}`, exact: true }).click();
-      releaseFailure();
-      await page.waitForFunction(id => document.getElementById(id)?.dataset.loadState === "error", `month-${ym}`);
+      await waitDom(page, id => document.getElementById(id)?.dataset.loadState === "error", `month-${ym}`);
       assert(await block.isVisible(), "An unloaded date stays in month view when its request fails");
       assert.equal(await page.getByText("No classes on this day.", { exact: true }).count(), 0, "Failure is not rendered as an empty day");
+      await c.setOffline(false);
       await block.getByRole("button", { name: /^Retry / }).click();
       const selected = page.locator(`#feed-day-${f.dates.far}`);
       await selected.waitFor();
       assert.equal(await selected.locator(`[data-cid="${f.classes["Month Recurring A"]}"]`).count(), 1, "Retry opens the date originally selected");
-      return { simulatedFailures: failures, retryLoaded: true };
-    } finally { releaseFailure(); await c.close(); }
+      return { offlineFailureShown: true, retryLoaded: true };
+    } catch (error) {
+      await page.screenshot({ path: `${f.directory}/${browserName}-failed-month.png`, animations: "disabled" });
+      throw new Error(`${error.message}; page: ${JSON.stringify(await visibility(page))}; month state: ${await page.evaluate(id => document.getElementById(id)?.dataset.loadState ?? "absent", `month-${ym}`)}; requests: ${JSON.stringify(page.auditNetwork)}; UI: ${(await page.locator("body").innerText()).slice(0, 1600)}`);
+    } finally { await c.setOffline(false); await c.close(); }
   });
 
   await checked("Day list continues past the initially loaded window", async () => {
@@ -125,20 +131,23 @@ try {
     try {
       await openFollowing(page);
       const initialMonth = monthOf(f.iso);
-      await page.waitForFunction(() => document.querySelector(".cash-days-more") || [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Show more dates"));
+      await waitDom(page, () => document.querySelector(".cash-days-more") || [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Show more dates"));
       for (let i = 0; i < 12; i++) {
         const sentinel = page.locator(".cash-days-more");
-        if (await sentinel.count()) { const before = await page.locator(".cash-day").count(); await sentinel.scrollIntoViewIfNeeded(); await page.waitForFunction(n => document.querySelectorAll(".cash-day").length > n || !document.querySelector(".cash-days-more"), before); }
+        if (await sentinel.count()) { const before = await page.locator(".cash-day").count(); await page.evaluate(() => document.querySelector(".cash-days-more")?.scrollIntoView({ block: "center", behavior: "instant" })); await waitDom(page, n => document.querySelectorAll(".cash-day").length > n || !document.querySelector(".cash-days-more"), before); }
         else break;
       }
       const more = page.getByRole("button", { name: "Show more dates", exact: true });
       await more.waitFor();
       const before = await page.locator(".cash-day").last().getAttribute("id");
       await more.click();
-      await page.waitForFunction(previous => [...document.querySelectorAll(".cash-day")].at(-1)?.id > previous, before);
+      await waitDom(page, previous => [...document.querySelectorAll(".cash-day")].at(-1)?.id > previous, before);
       const after = await page.locator(".cash-day").last().getAttribute("id");
       const rows = await noDuplicates(page);
       return { initialMonth, previousLastDate: before, continuedLastDate: after, renderedRows: rows };
+    } catch (error) {
+      await page.screenshot({ path: `${f.directory}/${browserName}-day-continuation-failure.png`, animations: "disabled" });
+      throw new Error(`${error.message}; page: ${JSON.stringify(await visibility(page))}; requests: ${JSON.stringify(page.auditNetwork)}; UI: ${(await page.locator("body").innerText()).slice(0, 1600)}`);
     } finally { await c.close(); }
   });
 
@@ -146,7 +155,7 @@ try {
     const { context: c, page } = await context();
     let release, held = false, farRequested = false;
     const gate = new Promise(resolve => { release = resolve; });
-    await page.route("**/calendar/following", async route => {
+    await page.route(url => url.origin === base && url.pathname.replace(/\/$/, "") === "/calendar/following", async route => {
       const request = route.request();
       if (actionMonth(request) === monthOf(f.dates.far)) farRequested = true;
       if (!held && request.method() === "POST" && request.headers()["next-action"] && request.postData()?.trim() === "[]") {
@@ -174,10 +183,11 @@ try {
     let monthRequests = 0;
     const pendingActions = new Map();
     const responses = [], errors = [];
+    const responseReads = [];
     const pendingHttp = new Map();
     const actionLabel = request => actionMonth(request) || (request.postData()?.includes(f.dates.far) ? "save occurrence" : "background action");
     page.on("request", request => { pendingHttp.set(request, { method: request.method(), path: new URL(request.url()).pathname, rsc: !!request.headers().rsc }); if (actionMonth(request) === monthOf(f.dates.far)) monthRequests++; if (request.headers()["next-action"]) pendingActions.set(request, actionLabel(request)); });
-    page.on("response", async response => { if (response.request().headers()["next-action"]) { const result = { action: actionLabel(response.request()), status: response.status() }; responses.push(result); if (result.action === "save occurrence") result.ok = /"ok"\s*:\s*true/.test(await response.text()); } });
+    page.on("response", response => { if (response.request().headers()["next-action"]) { const result = { action: actionLabel(response.request()), status: response.status() }; responses.push(result); if (result.action === "save occurrence") responseReads.push(response.text().then(body => { result.ok = /"ok"\s*:\s*true/.test(body); }).catch(() => { result.bodyAvailable = false; })); } });
     page.on("pageerror", error => errors.push(error.message.slice(0, 200)));
     page.on("requestfinished", request => { pendingActions.delete(request); pendingHttp.delete(request); });
     page.on("requestfailed", request => { pendingActions.delete(request); pendingHttp.delete(request); });
@@ -194,7 +204,7 @@ try {
       } catch (error) {
         await page.screenshot({ path: `${f.directory}/${browserName}-save-failure.png`, animations: "disabled" });
         const buttons = await day.locator(".explore-save-button").evaluateAll(elements => elements.map(el => ({ busy: el.getAttribute("aria-busy"), pressed: el.getAttribute("aria-pressed"), disabled: el.disabled, text: el.textContent })));
-        throw new Error(`${error.message}; buttons: ${JSON.stringify(buttons)}; pending actions: ${JSON.stringify([...pendingActions.values()])}; pending HTTP: ${JSON.stringify([...pendingHttp.values()])}; responses: ${JSON.stringify(responses)}; page errors: ${JSON.stringify(errors)}; far-month requests: ${monthRequests}`);
+        throw new Error(`${error.message}; page: ${JSON.stringify(await visibility(page))}; buttons: ${JSON.stringify(buttons)}; pending actions: ${JSON.stringify([...pendingActions.values()])}; pending HTTP: ${JSON.stringify([...pendingHttp.values()])}; responses: ${JSON.stringify(responses)}; page errors: ${JSON.stringify(errors)}; far-month requests: ${monthRequests}`);
       }
       console.log("Save settled", JSON.stringify({ elapsedMs: Math.round(performance.now() - saveStart), responses: responses.filter(response => response.action === "save occurrence") }));
       const closeSave = page.locator('.saveeducation .confirm-keep, [aria-labelledby="postsave-title"] .sheet-dismiss');
@@ -204,13 +214,15 @@ try {
       const heading = await day.locator("h2").boundingBox();
       assert(heading && heading.y >= -1 && heading.y < 800, "Selected date remains visible after saving");
       return { saved: true, farMonthRefetchedAfterSave: monthRequests > before, monthRequests, renderedRows: await noDuplicates(page) };
-    } finally { await c.close(); }
+    } finally { await Promise.race([Promise.allSettled(responseReads), pause(1000)]); await c.close(); }
   });
 
-  await checked("Search close refresh refetches the selected future month", async () => {
+  await checked("Search close preserves the selected future date through refresh", async () => {
     const { context: c, page } = await context();
     let monthRequests = 0;
+    const refreshes = [];
     page.on("request", request => { if (actionMonth(request) === monthOf(f.dates.far)) monthRequests++; });
+    page.on("response", response => { const request = response.request(); if (request.method() === "GET" && request.headers().rsc) refreshes.push({ path: new URL(request.url()).pathname, status: response.status() }); });
     try {
       await openFollowing(page);
       await openDate(page, f.dates.far, f.classes["Month Recurring A"]);
@@ -218,20 +230,24 @@ try {
       await page.getByRole("button", { name: "Show Explore", exact: true }).click();
       await page.getByRole("button", { name: "Search FittList", exact: true }).click();
       await page.getByRole("dialog", { name: "Search", exact: true }).waitFor();
-      const refreshedMonth = page.waitForResponse(response => actionMonth(response.request()) === monthOf(f.dates.far));
-      await page.getByRole("button", { name: "Close search", exact: true }).click();
+      await Promise.all([
+        page.waitForResponse(response => { const request = response.request(); return request.method() === "GET" && request.headers().rsc && new URL(request.url()).pathname === "/calendar/following"; }),
+        page.getByRole("button", { name: "Close search", exact: true }).click(),
+      ]);
       await page.getByRole("dialog", { name: "Search", exact: true }).waitFor({ state: "hidden" });
       await page.getByRole("button", { name: "Show Explore calendar", exact: true }).click();
       const day = page.locator(`#feed-day-${f.dates.far}`);
-      await refreshedMonth;
       await day.locator(`[data-cid="${f.classes["Month Recurring A"]}"]`).waitFor();
-      for (let i = 0; i < 50 && monthRequests <= before; i++) await pause(100);
-      assert(monthRequests > before, "A new server seed triggers a fresh month request");
       await page.waitForTimeout(300);
       const heading = await day.locator("h2").boundingBox();
       await page.screenshot({ path: `${f.directory}/${browserName}-after-search-refresh.png`, animations: "disabled" });
       assert(heading && heading.y >= -1 && heading.y < 800, `Selected date is restored after the refreshed calendar opens; heading at ${heading?.y}`);
-      return { farMonthRefetched: true, previousMonthRequests: before, currentMonthRequests: monthRequests, renderedRows: await noDuplicates(page) };
+      const coach = await day.locator(".explore-class-coach").first().boundingBox();
+      assert(coach && coach.y >= heading.y + heading.height - 1, "First class coach row remains below the selected date heading");
+      return { selectedDatePreserved: true, farMonthRefetched: monthRequests > before, previousMonthRequests: before, currentMonthRequests: monthRequests, renderedRows: await noDuplicates(page) };
+    } catch (error) {
+      await page.screenshot({ path: `${f.directory}/${browserName}-search-refresh-failure.png`, animations: "disabled" });
+      throw new Error(`${error.message}; page: ${JSON.stringify(await visibility(page))}; month requests: ${monthRequests}; refreshes: ${JSON.stringify(refreshes)}; requests: ${JSON.stringify(page.auditNetwork)}; UI: ${(await page.locator("body").innerText()).slice(0, 1600)}`);
     } finally { await c.close(); }
   });
 } finally {

@@ -28,9 +28,16 @@ in-flight remainder requests are invalidated when the server seed changes.
 - The data-integrity suite includes actual month actions: month boundaries, leap
   years, bounded ranges, invalid inputs, first/last/recurring occurrences, group
   membership, blocked/private/canceled/ended exclusion, and account isolation.
-- Dedicated browser checks exercise dates two and eight months ahead, dated and
-  recurring classes, group-only classes, genuinely empty dates, deduplication,
-  failed load/retry preserving the selected date, and day-list continuation.
+- Six dedicated browser scenarios pass in Chromium (installed Chrome), WebKit,
+  and Firefox. They exercise dates two and eight months ahead, dated and recurring
+  classes, group-only classes, genuinely empty dates, deduplication, offline
+  failure/retry preserving the selected date, day-list continuation, retained
+  loaded data, saving a future class, and search-close refresh preserving its
+  selected date and class. Future-month and selected-day screenshots were also
+  inspected; the date heading and first coach row remain clear of the toolbar.
+- An unchanged search-close refresh can retain identical server props and does
+  not necessarily issue another month request. The browser check requires the
+  selected date and class to remain visible; it records any refetch as observed.
 - The delayed-remainder browser scenario verifies retained data after completion.
   Next queues server actions serially in this setup, so that scenario does not
   exercise reversed network completion order. The window merge and generation
