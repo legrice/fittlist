@@ -4,6 +4,7 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { useMemo, useState, useTransition } from "react";
 import { loadFollowingDirectory } from "@/app/actions/following-directory";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
@@ -105,9 +106,9 @@ export function FollowingDirectory({ data, mode }: { data: FollowingDirectoryDat
     <section className="screen follow-directory-screen" data-mode={mode}>
       <main className="follow-directory">
         <header className="follow-directory-head">
-          <Link className="follow-directory-back" href="/you" aria-label="Back to profile">
+          <BackLink className="follow-directory-back" href="/calendar" anywhere label="Back">
             <Icon name="arrow_back" size={23} />
-          </Link>
+          </BackLink>
           <h1>{data.title}</h1>
           <span aria-hidden="true" />
         </header>

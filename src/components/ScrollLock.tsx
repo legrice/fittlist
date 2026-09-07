@@ -54,7 +54,20 @@ export function ScrollLock() {
       }
     };
     const trapFocus = (event: KeyboardEvent) => {
-      if (event.key !== "Tab" || !activeDialog) return;
+      if (event.key !== "Tab" && event.key !== "Escape") return;
+      // A key can arrive before the observer’s next animation frame.
+      update();
+      if (!activeDialog) return;
+      if (event.key === "Escape") {
+        const close = activeDialog.querySelector<HTMLButtonElement>("button.sheet-dismiss:not(:disabled)");
+        if (close && close.getClientRects().length && close.getAttribute("aria-disabled") !== "true") {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          close.click();
+        }
+        return;
+      }
+      if (event.key !== "Tab") return;
       const elements = focusable(activeDialog);
       // Safari's default Tab preference skips buttons and can send focus to
       // browser chrome before reaching our last control. Traverse the dialog's

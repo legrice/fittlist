@@ -28,7 +28,7 @@ export default async function BlockedPage() {
       <div className="pad">
         <AppChrome userId={userId} bar />
         <div className="folback">
-          <BackLink className="evback" href="/settings" label="Back to settings">
+          <BackLink className="evback" href="/calendar" anywhere label="Back">
             <Icon name="arrow_back" size={23} />
           </BackLink>
         </div>

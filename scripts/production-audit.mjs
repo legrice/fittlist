@@ -127,8 +127,6 @@ async function signupFlow(browser) {
   assert.equal(await page.getByRole("tab",{name:"Groups",exact:true}).getAttribute("aria-selected"),"true");
   await page.goto(`${base}/calendar/following`);
   await page.getByText("Find your people. See what’s on their calendars.",{exact:true}).waitFor();
-  await page.getByRole("button",{name:"Show following calendar",exact:true}).click();
-  await page.getByRole("button",{name:"Explore calendars",exact:true}).click();
   await page.getByRole("tab",{name:"People",exact:true}).waitFor();
   report.security.push("New-account You/Following empty states, no Studios section, group discovery and creation entry");
   const result=await action(context,"profile","updateProfile",[{name:"Audit Updated User",title:"Runner",about:"Updated through the real profile action",instagram:"",website:"",location:"New York, NY",locationLat:40.71,locationLng:-74.0}]);
@@ -139,9 +137,60 @@ async function signupFlow(browser) {
   report.security.push("Email-link confirmation, account creation, onboarding, profile edit");
   await context.close();
 }
-async function browserFlows(name,type) {
-  const browser=await type.launch();
+async function navigationAudit(browser) {
+  const context = await signedContext(browser, "owner");
+  const page = await context.newPage();
+  const links = new Set();
+  report.navigation = {routes: [], links: [], sheets: []};
   try {
+    for (const route of ["/calendar", "/calendar/following", "/support", "/privacy", "/terms", "/settings", "/followers", "/requests", "/blocked", "/ethos", "/brand", "/auditcoach", "/s/audit-studio", "/s/audit-studio/manage", "/g/audit-group"]) {
+      const response = await page.goto(base + route);
+      assert(response.status() < 400, route);
+      report.navigation.routes.push({route, status: response.status()});
+      for (const href of await page.locator('a[href^="/"]').evaluateAll(nodes => nodes.map(node => node.getAttribute("href")))) {
+        if (!href.startsWith("/api/") && !href.startsWith("/auth/") && !href.startsWith("//")) links.add(href);
+      }
+    }
+    for (const href of links) {
+      const response = await context.request.get(base + href);
+      report.navigation.links.push({href, status: response.status()});
+      assert(response.status() < 400, `Broken link: ${href} (${response.status()})`);
+    }
+    for (const origin of ["/calendar", "/calendar/following", "/support"]) {
+      for (const target of ["/privacy", "/terms", ...(origin === "/support" ? [] : ["/support"])]) {
+        await page.goto(base + origin);
+        await page.locator(`a[href="${target}"]`).first().click();
+        await page.waitForURL(base + target);
+        await page.getByRole("button", {name:"Back",exact:true}).first().click();
+        await page.waitForURL(base + origin);
+      }
+    }
+    for (const [route, trigger, dialogName] of [["/auditcoach", "More profile actions", "Profile actions"], ["/g/audit-group", "More group actions", "Group actions"]]) {
+      await page.goto(base + route);
+      const depth = await page.evaluate(() => history.length);
+      for (let i=0;i<3;i++) {
+        await page.getByRole("button", {name:trigger,exact:true}).click();
+        const dialog=page.getByRole("dialog",{name:dialogName,exact:true});
+        await dialog.waitFor();
+        if (i === 0) await dialog.screenshot({path:`${f.directory}/${dialogName.replaceAll(" ","-")}.png`,animations:"disabled"});
+        const close = dialog.locator(".sheet-dismiss");
+        const box = await close.boundingBox();
+        assert(box.width >= 44 && box.height >= 44, "Close target too small");
+        await page.keyboard.press("Tab");
+        assert(await dialog.evaluate(el=>el.contains(document.activeElement)), "Focus escaped sheet: " + await page.evaluate(()=>document.activeElement?.outerHTML?.slice(0,400)));
+        await page.keyboard.press("Escape");
+        await dialog.waitFor({state:"hidden"});
+        assert.equal(await page.evaluate(() => history.length), depth, "Sheet grew navigation history");
+      }
+      report.navigation.sheets.push(dialogName);
+    }
+    console.log(`Navigation: ${report.navigation.routes.length} routes, ${links.size} links, origin-aware back and repeated sheet dismissals passed`);
+  } finally { await context.close(); }
+}
+async function browserFlows(name,type) {
+  const browser=await type.launch(name === "chromium" && process.env.AUDIT_CHROME_CHANNEL ? {channel:process.env.AUDIT_CHROME_CHANNEL} : {});
+  try {
+    await navigationAudit(browser);
     const context=await signedContext(browser,"owner");
     const page=await context.newPage();
     page.setDefaultTimeout(15_000);
@@ -164,6 +213,7 @@ async function browserFlows(name,type) {
       await page.setViewportSize({width,height:844});
       await page.goto(`${base}/g/audit-group`);
       await page.getByText("Audit Strength",{exact:true}).first().waitFor();
+      await page.getByRole("button",{name:"More group actions",exact:true}).click();
       await page.getByRole("button",{name:"Group settings",exact:true}).click();
       const settings=page.locator(".group-settings-sheet");
       await settings.getByRole("heading",{name:"Group settings",exact:true}).waitFor();
@@ -175,6 +225,7 @@ async function browserFlows(name,type) {
       await settings.getByRole("button",{name:/Details Edit/}).click();
       await settings.getByRole("heading",{name:"Details",exact:true}).waitFor();
       await settings.getByRole("button",{name:"Close",exact:true}).click();
+      await page.getByRole("button",{name:"Close group actions",exact:true}).click();
       await page.getByRole("button",{name:"Add a class",exact:true}).first().click();
       await page.locator(".group-class-catalog-sheet").getByRole("heading",{name:"Add a class",exact:true}).waitFor();
       await page.locator(".group-class-catalog-sheet").getByRole("button",{name:"Close",exact:true}).click();
@@ -211,14 +262,13 @@ async function browserFlows(name,type) {
     await page.screenshot({path:`${f.directory}/${name}-mobile-calendar.png`,fullPage:false,animations:"disabled"});
     const metrics=await page.evaluate(()=>({ ...window.__auditMetrics,lcp:window.__auditMetrics.lcp || null,ttfb:performance.getEntriesByType("navigation")[0].responseStart,domReady:performance.getEntriesByType("navigation")[0].domContentLoadedEventEnd }));
     report.performance.push({browser:name,...metrics});
-    await page.getByRole("link",{name:"Following",exact:true}).first().click();
+    await page.getByRole("link",{name:"Explore",exact:true}).first().click();
     await page.waitForURL("**/calendar/following");
     await page.goBack();await page.waitForURL("**/calendar");
     await page.goForward();await page.waitForURL("**/calendar/following");
     await page.reload();
     await page.getByRole("link",{name:"You",exact:true}).first().click();await page.waitForURL("**/calendar");
-    const reveal=page.getByRole("button",{name:"Show your calendar",exact:true});
-    await reveal.click();await page.getByRole("button",{name:"Show calendar actions",exact:true}).first().click();
+    await page.locator(".calendar-pull-sheet").waitFor();
     // Exercise the shared native event path, including interruption. This
     // checks gesture logic; physical iPhone feel still needs a device pass.
     await page.evaluate(async()=>{
@@ -246,12 +296,12 @@ async function browserFlows(name,type) {
     await page.goto(`${base}/calendar`);
     // Contrast measurements taken halfway through the page's opacity fade
     // vary by engine speed. Audit the resting UI after finite motion settles.
-    await page.evaluate(()=>Promise.all(document.getAnimations()
-      .filter(animation=>Number.isFinite(animation.effect?.getComputedTiming().endTime))
-      .map(animation=>animation.finished.catch(()=>{}))));
+    await page.emulateMedia({reducedMotion:"reduce"});
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     const axe=await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21aa"]).analyze();
     report.accessibility.push({browser:name,violations:axe.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))});
     assert.deepEqual(axe.violations.map(v=>v.id),[],`${name}: Calendar accessibility violations`);
+    await page.emulateMedia({reducedMotion:"no-preference"});
     for(const route of ["/discover","/search?q=Audit","/auditcoach","/auditcoach/schedule",`/auditcoach/${f.classId}`,"/s/audit-studio","/s/audit-studio/schedule","/you","/settings","/calendar?add=1"]) {
       const response=await page.goto(base+route);assert(response.status()<400,`${name}: ${route}`);
       await page.waitForTimeout(120);
@@ -298,7 +348,7 @@ async function browserFlows(name,type) {
       await slowPage.goto(`${base}/calendar`);
       await slowPage.getByRole("navigation",{name:"Calendar view",exact:true}).waitFor();
       report.performance.push({browser:"chromium",scenario:"4x CPU, 150ms latency, 1.6Mbps",calendarReadyMs:performance.now()-started});
-      await slowPage.getByRole("link",{name:"Following",exact:true}).first().click();
+      await slowPage.getByRole("link",{name:"Explore",exact:true}).first().click();
       await slowPage.waitForURL("**/calendar/following");
       await slow.close();
       await checkSecurity(browser); await signupFlow(browser);

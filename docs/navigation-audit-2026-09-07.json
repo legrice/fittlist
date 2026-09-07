@@ -1,0 +1,541 @@
+{
+  "browsers": [
+    {
+      "name": "chromium",
+      "result": "passed",
+      "expectedOfflineNetworkErrors": 0,
+      "navigationDiagnostics": [],
+      "flows": "Mobile/desktop calendar, You/Following, back/forward, refresh, deep links, profile, studio, discovery, settings, adder, modal focus, offline/reconnect, password sign-in/sign-out"
+    }
+  ],
+  "security": [
+    "Signed-out personal data denied",
+    "Cross-account personal record and image IDOR denied; private class export denied",
+    "Social access, blocks and occurrence validation enforced through real server actions",
+    "Calendar add is idempotent; removal succeeds",
+    "Follow and unfollow round trip",
+    "Personal class creation and removal",
+    "Cross-origin mutation rejected by Next.js",
+    "Generic login errors and enforced password rate limit",
+    "Password change revokes the old session and renews the current one",
+    "Schedule image export succeeds; public profile excludes account email and private schedules",
+    "Validated image upload; private background cannot be cached or fetched signed out",
+    "New-account You/Following empty states, no Studios section, group discovery and creation entry",
+    "Email-link confirmation, account creation, onboarding, profile edit"
+  ],
+  "performance": [
+    {
+      "browser": "chromium",
+      "lcp": null,
+      "cls": 0,
+      "longTasks": 0,
+      "ttfb": 50,
+      "domReady": 57.69999998807907
+    },
+    {
+      "browser": "chromium",
+      "scenario": "4x CPU, 150ms latency, 1.6Mbps",
+      "calendarReadyMs": 2842.912124999999
+    }
+  ],
+  "accessibility": [
+    {
+      "browser": "chromium",
+      "violations": []
+    }
+  ],
+  "navigation": {
+    "routes": [
+      {
+        "route": "/calendar",
+        "status": 200
+      },
+      {
+        "route": "/calendar/following",
+        "status": 200
+      },
+      {
+        "route": "/support",
+        "status": 200
+      },
+      {
+        "route": "/privacy",
+        "status": 200
+      },
+      {
+        "route": "/terms",
+        "status": 200
+      },
+      {
+        "route": "/settings",
+        "status": 200
+      },
+      {
+        "route": "/followers",
+        "status": 200
+      },
+      {
+        "route": "/requests",
+        "status": 200
+      },
+      {
+        "route": "/blocked",
+        "status": 200
+      },
+      {
+        "route": "/ethos",
+        "status": 200
+      },
+      {
+        "route": "/brand",
+        "status": 200
+      },
+      {
+        "route": "/auditcoach",
+        "status": 200
+      },
+      {
+        "route": "/s/audit-studio",
+        "status": 200
+      },
+      {
+        "route": "/s/audit-studio/manage",
+        "status": 200
+      },
+      {
+        "route": "/g/audit-group",
+        "status": 200
+      }
+    ],
+    "links": [
+      {
+        "href": "/feed",
+        "status": 200
+      },
+      {
+        "href": "/you",
+        "status": 200
+      },
+      {
+        "href": "/admin?activity=1",
+        "status": 200
+      },
+      {
+        "href": "/discover",
+        "status": 200
+      },
+      {
+        "href": "/coachshare",
+        "status": 200
+      },
+      {
+        "href": "/inbox",
+        "status": 200
+      },
+      {
+        "href": "/notifications",
+        "status": 200
+      },
+      {
+        "href": "/admin",
+        "status": 200
+      },
+      {
+        "href": "/search",
+        "status": 200
+      },
+      {
+        "href": "/following/people",
+        "status": 200
+      },
+      {
+        "href": "/following/studios",
+        "status": 200
+      },
+      {
+        "href": "/following/groups",
+        "status": 200
+      },
+      {
+        "href": "/saved",
+        "status": 200
+      },
+      {
+        "href": "/calendar",
+        "status": 200
+      },
+      {
+        "href": "/calendar/following",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage",
+        "status": 200
+      },
+      {
+        "href": "/g/audit-group",
+        "status": 200
+      },
+      {
+        "href": "/support",
+        "status": 200
+      },
+      {
+        "href": "/privacy",
+        "status": 200
+      },
+      {
+        "href": "/terms",
+        "status": 200
+      },
+      {
+        "href": "/",
+        "status": 200
+      },
+      {
+        "href": "/feedback",
+        "status": 200
+      },
+      {
+        "href": "/community-standards",
+        "status": 200
+      },
+      {
+        "href": "/admin/marketing",
+        "status": 200
+      },
+      {
+        "href": "/brand",
+        "status": 200
+      },
+      {
+        "href": "/ethos",
+        "status": 200
+      },
+      {
+        "href": "/auditmember?from=followers",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-09-07",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-09-14",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-09-21",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-09-28",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-10-05",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-10-12",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-10-19",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/17a71f27-fcf3-49c0-bcf5-add13a2ae0a7?d=2026-10-26",
+        "status": 200
+      },
+      {
+        "href": "/settings?edit=1",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/calendar?show=all",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/calendar?show=open&view=week",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/shifts?preview=coach",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/staff",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/counts",
+        "status": 200
+      }
+    ],
+    "sheets": [
+      "Profile actions",
+      "Group actions"
+    ]
+  },
+  "diagnostics": [
+    {
+      "browser": "chromium",
+      "errors": [],
+      "failedRequests": [
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=5TL2BZWGRrpfjbmX",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=g2cPfsFZ4pkOBMyc",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?_rsc=pB7BWxb0RTXiou0l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=g2cPfsFZ4pkOBMyc",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?_rsc=HZj2m5QLsaBdfsm5",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/g/audit-group?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/manage?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?_rsc=L33D6fn5ASQqXwrM",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/g/audit-group?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/manage?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio?from=search&_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/auditmember?from=search&_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=5TL2BZWGRrpfjbmX",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/manage?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/g/audit-group?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/search?_rsc=QUj8_WYEG7GsL1qL",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/discover",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/auditcoach?_rsc=TRPBNOK6ubTJO4at",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio?_rsc=TRPBNOK6ubTJO4at",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/following/people?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/settings?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/auditcoach?edit=1&_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/manage/calendar?_rsc=89uMQoln2sm0oocF",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/privacy?_rsc=kndVLRNFvDo9UKaV",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/brand?_rsc=kndVLRNFvDo9UKaV",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/ethos?_rsc=kndVLRNFvDo9UKaV",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/g/audit-group?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?add=1",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/manage?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar/following?_rsc=5TL2BZWGRrpfjbmX",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?add=1",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar?add=1",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/feed?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/you?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/admin?activity=1&_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/discover?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/notifications?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/coachshare?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/feed?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/you?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/admin?activity=1&_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/discover?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/inbox?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/notifications?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/calendar",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://localhost:3100/s/audit-studio/manage?_rsc=4ZlPRNCVLqaFldMt",
+          "error": "net::ERR_ABORTED"
+        }
+      ]
+    }
+  ]
+}

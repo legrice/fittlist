@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { redirect } from "next/navigation";
 import { myFeedback } from "@/app/actions/feedback";
 import { getDb, schema } from "@/db";
@@ -31,14 +31,13 @@ export default async function FeedbackPage() {
   if (!host || host.email.toLowerCase() === me.email.toLowerCase()) redirect("/inbox");
 
   const thread = await myFeedback();
-  const back = "/settings";
 
   return (
     <section className="screen chatscreen" data-mode={lookMode(me.look)}>
       <div className="chattop">
-        <Link className="iconbtn chatback" aria-label="Back" href={back}>
+        <BackLink className="iconbtn chatback" label="Back" href="/calendar" anywhere>
           <Icon name="arrow_back" size={20} />
-        </Link>
+        </BackLink>
         <div className="chattop-txt">
           <span className="chattop-nm">Send feedback</span>
         </div>
