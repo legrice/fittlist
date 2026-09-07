@@ -286,7 +286,19 @@ async function browserFlows(name,type) {
     const metrics=await page.evaluate(()=>({ ...window.__auditMetrics,lcp:window.__auditMetrics.lcp || null,ttfb:performance.getEntriesByType("navigation")[0].responseStart,domReady:performance.getEntriesByType("navigation")[0].domContentLoadedEventEnd }));
     report.performance.push({browser:name,...metrics});
     await page.getByRole("link",{name:"Explore",exact:true}).first().click();
-    await page.waitForURL("**/calendar/following");
+    try {
+      await page.waitForURL("**/calendar/following");
+    } catch (error) {
+      // Keep CI navigation failures diagnosable without publishing sessions,
+      // query strings, request bodies, or fixture credentials.
+      console.log("Explore navigation failure", await page.evaluate(() => ({
+        path: location.pathname,
+        ready: document.readyState,
+        activeScope: document.querySelector(".calendar-mode-tabs")?.getAttribute("data-active"),
+        loading: !!document.querySelector(".calendar-scope-loading"),
+      })));
+      throw error;
+    }
     await page.goBack();await page.waitForURL("**/calendar");
     await page.goForward();await page.waitForURL("**/calendar/following");
     await page.reload();

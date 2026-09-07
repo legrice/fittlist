@@ -34,18 +34,26 @@ try {
   page = await context.newPage();
   page.setDefaultTimeout(15000);
   const errors = [];
-  const cancelledRequests = [];
   page.on("pageerror", error => errors.push(error.message));
-  page.on("requestfailed", request => {
-    if (request.failure()?.errorText === "cancelled") cancelledRequests.push(new URL(request.url()));
-  });
   const rail = page.getByRole("complementary", { name: "Desktop navigation" });
   async function visit(path) {
+    // WebKit prepares the downloadable image for native sharing. Complete and
+    // verify it before the route crawl unloads the document; otherwise WebKit
+    // can report an access-control diagnostic for a request interrupted by goto.
+    const shareExport = browserName === "webkit" && path === "/coachshare"
+      ? page.waitForResponse(response => new URL(response.url()).pathname === "/api/story/compose")
+      : null;
     const response = await page.goto(base + path);
     assert(response.status() < 400, `${path} loads`);
     await rail.waitFor();
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(150);
+    if (shareExport) {
+      const exported = await shareExport;
+      assert.equal(exported.status(), 200, "Share image generates successfully");
+      assert.match(exported.headers()["content-type"], /^image\/png/, "Share produces a PNG");
+      assert.equal(await exported.finished(), null, "Share image finishes before the route crawl continues");
+    }
   }
   async function frame() {
     await rail.waitFor();
@@ -163,15 +171,7 @@ try {
   await page.setViewportSize({ width: 940, height: 900 });
   await page.getByRole("button", { name: "Month view", exact: true }).waitFor(); await frame();
   report.checks.push("Resizing across 939/940px preserves the mobile reveal and desktop page controls");
-  // WebKit reports an access-control diagnostic when navigation cancels an
-  // in-flight image export. Require the matching cancelled request, as in
-  // production-audit, rather than ignoring arbitrary fetch or CORS failures.
-  const navigationDiagnostics = browserName === "webkit" ? errors.filter(message =>
-    message.startsWith("/localhost:3192/api/story/compose?") && message.endsWith(" due to access control checks.") &&
-    cancelledRequests.some(url => url.origin === base && message.includes(url.pathname + url.search)),
-  ) : [];
-  report.navigationCancellations = navigationDiagnostics.length;
-  assert.deepEqual(errors.filter(message => !navigationDiagnostics.includes(message)), [], "No unexplained browser runtime errors");
+  assert.deepEqual(errors, [], "No browser runtime errors");
   console.log(`PASS desktop workflows in ${browserName}`);
 } catch (error) {
   if (page && !page.isClosed()) {

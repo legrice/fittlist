@@ -168,12 +168,12 @@ transaction behavior, future-month loading, visibility checks, and navigation/
 focus fixes. Presentation can be restored selectively without reverting those
 changes or touching native configuration.
 
-## Review status
+## Original audit status
 
-Audit and visual comparisons are ready for review. No application styling,
-routes, shared logic, database schema, native files, main branch, or TestFlight
-release was changed. Screenshots contain synthetic fixture data only; fixture
-credentials and server logs are excluded from the report.
+The original audit and visual comparisons preceded the implementation below.
+That audit alone changed no application code. Screenshots contain synthetic
+fixture data only; fixture credentials and server logs are excluded from the
+report.
 
 
 ## Desktop restoration
@@ -220,6 +220,9 @@ checks with `npm run check:desktop-browser` and
 - Desktop browser regression passed in Chrome at 940, 1024, 1440 and 1920px,
   including route entry, calendar views, profile actions, keyboard dismissal,
   the scrolled month toolbar, managed-calendar navigation, and page/Back flows.
+- The same desktop matrix and workflows passed in WebKit with no runtime errors.
+  Its route crawl verifies the Share PNG finishes before unloading the page;
+  app-driven Share/Back navigation is exercised separately.
 - All six mobile Following month scenarios and all five desktop calendar-data
   scenarios passed in Chrome. The delayed-response test identifies the actual
   calendar remainder action, rather than another background request.
