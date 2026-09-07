@@ -71,33 +71,41 @@ try {
     const result=await context.request.get(base+'/api/calendar/share-data');assert.equal(result.status(),200);assert.match(result.headers()['cache-control'],/private, no-store/);
   });
   await check('Stalled calendar client navigation recovers without duplicate history',async()=>{
-    await context.addCookies([{name:'fl_session',value:f.owner.token,url:base,httpOnly:true}]);
-    const held=[];
-    const documents=[];
-    let commits=0;
+    const isolated=await browser.newContext({viewport:{width:375,height:667},isMobile:true,serviceWorkers:'block'});
+    await isolated.addCookies([{name:'fl_session',value:f.owner.token,url:base,httpOnly:true}]);
+    const page=await isolated.newPage(),held=[],documents=[];
+    let commits=0,release;
+    const gate=new Promise(resolve=>{release=resolve;});
     const recordCommit=frame=>{if(frame===page.mainFrame() && new URL(frame.url()).pathname==='/calendar/following')commits++;};
     page.on('framenavigated',recordCommit);
     const started=Date.now();
     await page.route('**/calendar/following**',route=>{
-      if(route.request().method()==='GET' && route.request().headers().rsc==='1') { held.push(route); return new Promise(()=>{}); }
+      if(route.request().method()==='GET' && route.request().headers().rsc==='1') {
+        const pending=gate.then(()=>route.abort().catch(()=>{}));held.push(pending);return pending;
+      }
       if(route.request().isNavigationRequest())documents.push({path:new URL(route.request().url()).pathname,type:route.request().resourceType(),elapsed:Date.now()-started});
       return route.continue();
     });
-    await page.goto(base+'/calendar');
-    await page.getByRole('link',{name:'Explore',exact:true}).first().click();
-    await page.waitForURL('**/calendar/following',{timeout:14000,waitUntil:'domcontentloaded'});
-    assert(held.length>0,'A real client calendar request was held');
-    // Aborting the held RSC fetch can cause Next to attempt its own MPA
-    // fallback as WebKit replaces the outgoing document. Count committed
-    // destinations/history, not the cancelled network attempt.
-    assert(documents.length>=1 && documents.length<=2,`Bounded document recovery: ${JSON.stringify(documents)}`);
-    assert.equal(commits,1,'Recovery commits exactly one destination');
-    page.off('framenavigated',recordCommit);
-    for(const route of held)await route.abort().catch(()=>{});
-    await page.unroute('**/calendar/following**');
-    await page.goBack();await page.getByRole('navigation',{name:'Calendar view',exact:true}).waitFor();assert.equal(new URL(page.url()).pathname,'/calendar');
+    try {
+      await page.goto(base+'/calendar');
+      await page.getByRole('link',{name:'Explore',exact:true}).first().click();
+      await page.waitForURL('**/calendar/following',{timeout:14000,waitUntil:'domcontentloaded'});
+      assert(held.length>0,'A real client calendar request was held');
+      // Next may retry the cancelled document request as WebKit replaces it.
+      // Verify one committed screen and one history entry, with bounded reads.
+      assert(documents.length>=1 && documents.length<=2,`Bounded document recovery: ${JSON.stringify(documents)}`);
+      assert.equal(commits,1,'Recovery commits exactly one destination');
+      release();await Promise.all(held);
+      await page.unroute('**/calendar/following**');
+      await page.goBack();await page.getByRole('navigation',{name:'Calendar view',exact:true}).waitFor();
+      assert.equal(new URL(page.url()).pathname,'/calendar');
+    } finally {release();await Promise.all(held);await isolated.close();}
   });
   await check('Failed settings read is retryable and remains dismissible',async()=>{
+    const isolated=await browser.newContext({viewport:{width:375,height:667},isMobile:true,serviceWorkers:'block'});
+    await isolated.addCookies([{name:'fl_session',value:f.owner.token,url:base,httpOnly:true}]);
+    const page=await isolated.newPage();
+    try {
     const manifest=JSON.parse(fs.readFileSync('.next/server/server-reference-manifest.json','utf8'));
     const settingsId=Object.entries(manifest.node).find(([,action])=>action.exportedName==='settingsSheetData')?.[0];
     assert(settingsId);
@@ -116,6 +124,7 @@ try {
     await page.keyboard.press('Escape');
     await page.getByRole('heading',{name:'Calendar & sync',exact:true}).waitFor({state:'hidden'});
     await page.unroute('**/calendar');
+    } finally {await isolated.close();}
   });
   await check('Rapid Back taps return once and do not queue a second pop',async()=>{
     await page.goto(base+'/calendar');
@@ -131,7 +140,13 @@ try {
   await page.goto('about:blank');
   await context.clearCookies();
   await check('Browser calendar setup preserves login destination',async()=>{
-    await page.goto(base+'/connect/google');assert(new URL(page.url()).searchParams.get('next')==='/connect/google');
+    const anonymous=await browser.newContext({viewport:{width:375,height:667},isMobile:true,serviceWorkers:'block'});
+    const login=await anonymous.newPage();
+    try {
+      await login.goto(base+'/connect/google',{waitUntil:'domcontentloaded'});
+      await login.getByRole('textbox',{name:'Email address',exact:true}).waitFor();
+      assert(new URL(login.url()).searchParams.get('next')==='/connect/google');
+    } finally {await anonymous.close();}
   });
   await context.close();
 } finally {

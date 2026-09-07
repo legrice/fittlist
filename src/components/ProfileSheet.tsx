@@ -752,7 +752,7 @@ export function ProfileSheet({
                 <div className="secrow">
                   <span className="secrow-ic"><Icon name="fingerprint" size={24} /></span>
                   <span className="secrow-txt">
-                    <span className="t">Face ID / passkey</span>
+                    <span className="t">Passkeys</span>
                     <span className="s">
                       {pkCount > 0 ? "A passkey is set" : "Sign in with your face or fingerprint"}
                     </span>

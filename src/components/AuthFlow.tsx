@@ -271,7 +271,7 @@ export function AuthFlow({
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
   const [knownPasskey, setKnownPasskey] = useState(false);
-  const [passkeyLabel, setPasskeyLabel] = useState("Log in with a passkey");
+  const passkeyLabel = "Log in with a passkey";
   // "Request an invite" modal (invite-only beta).
   const [requestOpen, setRequestOpen] = useState(false);
   const [reqName, setReqName] = useState("");
@@ -285,9 +285,7 @@ export function AuthFlow({
   useEffect(() => {
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
     setKnownPasskey(hasLocalPasskeyHistory());
-    const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
-      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (appleMobile) setPasskeyLabel("Log in with Face ID");
+
   }, []);
   // Arriving from a coach's page with a door already chosen: "?join=login"
   // opens the sign-in sheet, "?join=signup" the sign-up one. Tapping Sign in on
