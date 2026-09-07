@@ -30,8 +30,10 @@
     "test": "node --import tsx scripts/production-regressions.ts",
     "test:browser": "node scripts/production-audit.mjs",
     "check:notifications-browser": "node scripts/notification-browser-audit.mjs",
-    "check:data-integrity": "node --import tsx scripts/data-integrity-audit.ts && node --import tsx scripts/saved-visibility-check.ts",
-    "check:operations": "node --import tsx scripts/operations-audit-check.ts notifications && node --import tsx scripts/operations-audit-check.ts security && node --import tsx scripts/operations-audit-check.ts recovery"
+    "check:data-integrity": "node --import tsx scripts/data-integrity-audit.ts && node --import tsx scripts/saved-visibility-check.ts && npm run check:calendar-window",
+    "check:operations": "node --import tsx scripts/operations-audit-check.ts notifications && node --import tsx scripts/operations-audit-check.ts security && node --import tsx scripts/operations-audit-check.ts recovery",
+    "check:calendar-window": "node --import tsx scripts/following-calendar-window-check.ts",
+    "check:following-month-browser": "node scripts/following-month-audit.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

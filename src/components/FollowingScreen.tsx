@@ -5,12 +5,11 @@ import { NotificationDot } from "@/components/NotificationDot";
 import { LoadingDots } from "@/components/LoadingDots";
 
 
-import { useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent } from "react";
 import Link from "next/link";
 import { useFrontSheet } from "@/lib/use-front-sheet";
 import { useCalendarReturn } from "@/lib/use-calendar-return";
 import { haptic } from "@/lib/haptics";
-import { withTimeout } from "@/lib/async";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -20,14 +19,14 @@ import { ClassCardActions } from "@/components/ClassCardActions";
 import { Toast, useToast } from "@/components/Toast";
 import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
-import { loadCalendarRemainder } from "@/app/actions/calendar-stream";
+import { useFollowingCalendar } from "@/lib/use-following-calendar";
+import { FOLLOWING_MAX_MONTHS_AHEAD } from "@/lib/calendar-window";
 import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
 import { SuggestedFollows } from "@/components/SuggestedFollows";
 import { Wordmark } from "@/components/Wordmark";
-import { loadClientMemory, readClientMemory } from "@/lib/client-memory";
 import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 import { addCalendarActivityComment } from "@/app/actions/calendar-social";
 
@@ -97,14 +96,14 @@ export type SocialGroup = {
   classKeys: string[];
 };
 
-type CalendarRemainder = NonNullable<Awaited<ReturnType<typeof loadCalendarRemainder>>>;
-
 /** A circle on the Coaches near you rail, the viewer's own follow state
  *  riding along so the pill under the face starts right. */
 export type FeedItem = {
   key: string;
   /** Which seven-day chunk of the rolling month it falls in. */
   week: number;
+  /** Visible group calendars containing this occurrence in its fetched window. */
+  groupIds?: string[];
   iso: string;
   classId: string;
   /** The base its class page lives under: a handle, or `s/{slug}` for a gym. */
@@ -225,13 +224,10 @@ export function FollowingScreen({
   const router = useRouter();
   const isHome = mode === "home";
   const calendarFollowing = usePathname().startsWith("/calendar/following");
-  const [items, setItems] = useState(initialItems);
-  const [coaches, setCoaches] = useState(initialCoaches);
-  const [cats, setCats] = useState(initialCats);
-  const [myRail, setMyRail] = useState(initialMyRail);
-  const [calendarPending, setCalendarPending] = useState(mode === "home");
-  const [calendarError, setCalendarError] = useState(false);
-  const [calendarRetry, setCalendarRetry] = useState(0);
+  const {
+    items, coaches, cats, myRail, pending: calendarPending, error: calendarError,
+    months: calendarMonths, loadedThrough, ensureMonth, retry: retryCalendar,
+  } = useFollowingCalendar({ items: initialItems, coaches: initialCoaches, cats: initialCats, myRail: initialMyRail }, todayIso, isHome);
   const [calendarSwitcherOpen, setCalendarSwitcherOpen] = useState(false);
   const calendarSwitcherRef = useRef<HTMLElement>(null);
   const calendarSwitcherDragStartY = useRef<number | null>(null);
@@ -271,7 +267,6 @@ export function FollowingScreen({
   },[activityComments]);
   const [socialPending,startSocialTransition]=useTransition();
   const personalCalendarTriggerRef = useRef<HTMLButtonElement>(null);
-  const streamGeneration = useRef(0);
 
   useEffect(() => {
     const footer=communityFooterRef.current;
@@ -335,57 +330,6 @@ export function FollowingScreen({
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [calendarSwitcherOpen]);
-
-  // Give the browser the useful screen first. The longer schedule begins
-  // loading after hydration, then merges without replacing today's
-  // already-interactive rows or resetting any filters/peek state.
-  useEffect(() => {
-    const generation = ++streamGeneration.current;
-    setCalendarError(false);
-    // A server refresh can change the relationship graph without unmounting
-    // this client component. Reset to that new first response, then stream a
-    // matching remainder; otherwise an old month can survive an unfollow.
-    setItems(initialItems);
-    setCoaches(initialCoaches);
-    setCats(initialCats);
-    setMyRail(initialMyRail);
-    if (!isHome) return undefined;
-    const memoryKey = `calendar-remainder:${todayIso}`;
-    const applyRemainder = (remainder: CalendarRemainder) => {
-      if (streamGeneration.current !== generation) return;
-      // Rebuild from the current server seed each time. That lets remembered
-      // data paint instantly, while a quiet fresh answer can still remove a
-      // class that disappeared since the last visit.
-      const mergedItems = new Map(initialItems.map((item) => [item.key, item]));
-      for (const item of remainder.items) mergedItems.set(item.key, item);
-      setItems([...mergedItems.values()]);
-      const mergedCoaches = new Map(initialCoaches.map((coach) => [coach.id, coach]));
-      for (const coach of remainder.coaches) mergedCoaches.set(coach.id, coach);
-      setCoaches([...mergedCoaches.values()]);
-      setCats([...new Set([...initialCats, ...remainder.cats])]);
-      setMyRail(remainder.myRail);
-    };
-    const remembered = readClientMemory<CalendarRemainder>(memoryKey);
-    if (remembered) applyRemainder(remembered);
-    setCalendarPending(!remembered);
-    const frame = requestAnimationFrame(() => {
-      void loadClientMemory(memoryKey, () => withTimeout(loadCalendarRemainder()))
-        .then((remainder) => {
-          if (!remainder || streamGeneration.current !== generation) return;
-          applyRemainder(remainder);
-        })
-        .catch(() => {
-          if (streamGeneration.current === generation) setCalendarError(true);
-        })
-        .finally(() => {
-          if (streamGeneration.current === generation) setCalendarPending(false);
-        });
-    });
-    return () => {
-      cancelAnimationFrame(frame);
-      if (streamGeneration.current === generation) streamGeneration.current += 1;
-    };
-  }, [initialCats, initialCoaches, initialItems, initialMyRail, isHome, todayIso, calendarRetry]);
 
   // The containerless list lands on today or the first day that holds
   // anything. Home keeps only the date rail and the selected day's results;
@@ -465,6 +409,21 @@ export function FollowingScreen({
   }, [calendarDirectoryOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
   const [followingMonthHorizon, setFollowingMonthHorizon] = useState(12);
+  const [selectedMonthDay, setSelectedMonthDay] = useState<string | null>(null);
+  const [pendingMonthDay, setPendingMonthDay] = useState<string | null>(null);
+  const monthDayRequest = useRef(0);
+  const alignedMonthDay = useRef<string | null>(null);
+  useEffect(() => {
+    alignedMonthDay.current = null;
+  }, [initialItems, initialCoaches, initialCats, initialMyRail]);
+  const requestVisibleMonth = useCallback((month: string) => {
+    if (!calendarMonths[month]) void ensureMonth(month);
+  }, [calendarMonths, ensureMonth]);
+  useEffect(() => {
+    // Saving or editing a class refreshes the server seed without leaving the
+    // selected day. Recheck that month's data before showing an empty state.
+    if (selectedMonthDay) requestVisibleMonth(selectedMonthDay.slice(0, 7));
+  }, [selectedMonthDay, requestVisibleMonth]);
   const [personPeekOpen, setPersonPeekOpen] = useState<null | { id: string; name: string; photo: string | null; color: string; self: boolean }>(null);
   const [entityPeekOpen, setEntityPeekOpen] = useState<null | { type:"studio"|"group"; id:string; name:string; photo:string|null; color:string; href:string; items:FeedItem[] }>(null);
   const [pins, setPins] = useState(() => new Set(initialPins));
@@ -556,6 +515,9 @@ export function FollowingScreen({
   }, [classSheetDismissed, frontScopeRef]);
 
   const { returning, restoring, restore: restoreActionSurface } = useCalendarReturn(classSheetDismissed, () => {
+    monthDayRequest.current += 1;
+    setPendingMonthDay(null);
+    alignedMonthDay.current = null;
     window.scrollTo({ top:0, behavior:"auto" });
     setClassSheetDismissed(false);
     requestAnimationFrame(() => {
@@ -720,6 +682,7 @@ export function FollowingScreen({
 
   const shown = useMemo(() => {
     const studioHrefs = new Set(studioOptions.map((studio) => `/s/${studio.slug}`));
+    const visibleGroupIds = new Set(groupOptions.map((group) => group.id));
     const groupKeys = new Set(groupOptions.flatMap((group) => group.classKeys));
     return items.filter((item) => {
       if (!passes(item)) return false;
@@ -729,7 +692,7 @@ export function FollowingScreen({
       if (calendarFilter === "following") {
         const fromPeople = favoriteIds.has(calendarFollowing ? item.activityActor?.id ?? item.coachId : item.coachId);
         const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
-        const fromGroups = groupKeys.has(item.key);
+        const fromGroups = item.groupIds ? item.groupIds.some((id) => visibleGroupIds.has(id)) : groupKeys.has(item.key);
         return fromPeople || fromStudios || fromGroups;
       }
       if (calendarFilter.startsWith("coach:")) return item.coachId === calendarFilter.slice(6);
@@ -739,14 +702,14 @@ export function FollowingScreen({
       }
       if (calendarFilter.startsWith("group:")) {
         const group = groupOptions.find((option) => option.id === calendarFilter.slice(6));
-        return Boolean(group?.classKeys.includes(item.key));
+        return Boolean(group && (item.groupIds ? item.groupIds.includes(group.id) : group.classKeys.includes(item.key)));
       }
       // The rail is presentation and may be progressively truncated. The
       // relationship itself is the source of truth for the combined view,
       // otherwise a class from followed person 17 can vanish on first paint.
       const fromPeople = item.saved || (!!meId && item.coachId === meId) || favoriteIds.has(item.coachId);
       const fromStudios = Boolean(item.whereHref && studioHrefs.has(item.whereHref));
-      const fromGroups = groupKeys.has(item.key);
+      const fromGroups = item.groupIds ? item.groupIds.some((id) => visibleGroupIds.has(id)) : groupKeys.has(item.key);
       return fromPeople || fromStudios || fromGroups;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -804,13 +767,12 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Keep a generous rolling horizon so the semantic schedule feels continuous
-  // rather than stopping at an arbitrary month boundary.
+  // Each fetched window is bounded. Keep its dates available, including a
+  // month reached beyond the initial rolling window.
   const homeRows: FeedItem[] = useMemo(
     () => {
-      const monthEnd = plusDays(todayIso, 180);
       return [...shown]
-        .filter((item) => item.iso >= todayIso && item.iso <= monthEnd)
+        .filter((item) => item.iso >= todayIso)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -823,13 +785,22 @@ export function FollowingScreen({
       if (rows) rows.push(item);
       else days.set(item.iso, [item]);
     }
-    return [...days.entries()].map(([iso, rows]) => ({
-      iso,
-      label: daySectionLabel(iso, todayIso),
-      today: iso === todayIso,
-      rows,
-    }));
-  }, [homeRows, todayIso]);
+    if (selectedMonthDay && !days.has(selectedMonthDay)) days.set(selectedMonthDay, []);
+    const ordered = [...days.entries()].sort(([a], [b]) => a.localeCompare(b));
+    return ordered.map(([iso, rows], index) => {
+      const afterPrevious = index ? plusDays(ordered[index - 1][0], 1) : todayIso;
+      let cursor = afterPrevious > loadedThrough ? afterPrevious : plusDays(loadedThrough, 1);
+      let missingMonth: string | null = null;
+      while (cursor < iso) {
+        const ym = cursor.slice(0, 7);
+        if (calendarMonths[ym] !== "loaded") { missingMonth = ym; break; }
+        const next = new Date(`${ym}-01T00:00:00Z`);
+        next.setUTCMonth(next.getUTCMonth() + 1);
+        cursor = next.toISOString().slice(0, 10);
+      }
+      return { iso, label: daySectionLabel(iso, todayIso), today: iso === todayIso, rows, missingMonth };
+    });
+  }, [homeRows, todayIso, selectedMonthDay, loadedThrough, calendarMonths]);
   // Keep the full calendar in memory, but mount only the nearby date groups.
   // A broad following graph can contain thousands of cards in a month.
   // Scrolling reveals later days; picking a month date explicitly reveals it.
@@ -856,21 +827,40 @@ export function FollowingScreen({
     return mapped;
   }, [homeRows, meId]);
 
-  const openMonthDay = (iso: string) => {
-    const index = homeDays.findIndex((section) => section.iso === iso);
-    if (index >= 0) setVisibleHomeDayCount((count) => Math.max(count, index + 1));
+  const openMonthDay = async (iso: string) => {
+    const request = ++monthDayRequest.current;
+    setPendingMonthDay(iso);
+    if (!await ensureMonth(iso.slice(0, 7)) || request !== monthDayRequest.current) return;
+    setPendingMonthDay(null);
+    alignedMonthDay.current = null;
+    setSelectedMonthDay(iso);
     setCalendarView("day");
-    if (monthScrollFrame.current !== null) cancelAnimationFrame(monthScrollFrame.current);
-    // Skipped day bodies initially use their intrinsic-size estimate. Their
-    // measured heights can shift the target after the first scroll, so align
-    // across a few frames while the newly revealed date groups settle.
+  };
+  useEffect(() => {
+    if (!selectedMonthDay || calendarView !== "day" || alignedMonthDay.current === selectedMonthDay) return;
+    if (calendarFollowing && !classSheetDismissed) return;
+    if (selectedMonthDay > loadedThrough && calendarMonths[selectedMonthDay.slice(0, 7)] !== "loaded") return;
+    const index = homeDays.findIndex((section) => section.iso === selectedMonthDay);
+    if (index < 0) return;
+    setVisibleHomeDayCount((count) => Math.max(count, index + 1));
+    // Let content-visibility's estimated heights settle before finishing the
+    // jump. Aligning once can leave a distant day thousands of pixels away.
     let frames = 0;
     const align = () => {
-      document.getElementById(`feed-day-${iso}`)?.scrollIntoView({ block: "start", behavior: "instant" });
+      document.getElementById(`feed-day-${selectedMonthDay}`)?.scrollIntoView({ block: "start", behavior: "instant" });
       monthScrollFrame.current = ++frames < 6 ? requestAnimationFrame(align) : null;
+      if (frames === 6) alignedMonthDay.current = selectedMonthDay;
     };
     monthScrollFrame.current = requestAnimationFrame(align);
-  };
+    return () => {
+      if (monthScrollFrame.current !== null) cancelAnimationFrame(monthScrollFrame.current);
+    };
+  }, [calendarView, selectedMonthDay, homeDays, calendarFollowing, classSheetDismissed, loadedThrough, calendarMonths]);
+  const nextMonth = plusDays(loadedThrough, 1).slice(0, 7);
+  const [year, month] = todayIso.slice(0, 7).split("-").map(Number);
+  const lastMonth = new Date(Date.UTC(year, month - 1 + FOLLOWING_MAX_MONTHS_AHEAD, 1)).toISOString().slice(0, 7);
+  const canLoadMoreDates = nextMonth <= lastMonth;
+  const loadMoreDates = () => void ensureMonth(nextMonth);
   useEffect(() => {
     if (!isHome || calendarView !== "day" || (calendarFollowing && !classSheetDismissed) || visibleHomeCount >= homeDays.length) return undefined;
     const target = homeMoreRef.current;
@@ -1020,9 +1010,9 @@ export function FollowingScreen({
   };
   return (
     <>
-      {calendarError && <div className="pad" role="status"><p>The rest of your calendar couldn’t load. Your loaded classes are still available.</p><button type="button" className="ghost" onClick={() => setCalendarRetry((retry) => retry + 1)}>Try again</button></div>}
+      {calendarError && <div className="pad" role="status"><p>The rest of your calendar couldn’t load. Your loaded classes are still available.</p><button type="button" className="ghost" onClick={() => void retryCalendar()}>Try again</button></div>}
       {calendarFollowing && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
-        {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={calendarView === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => setCalendarView(calendarView === "month" ? "day" : "month")}><Icon name={calendarView === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /><NotificationDot /></button>}
+        {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={calendarView === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => { monthDayRequest.current += 1; setPendingMonthDay(null); setSelectedMonthDay(null); setCalendarView(calendarView === "month" ? "day" : "month"); }}><Icon name={calendarView === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /><NotificationDot /></button>}
         <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}${scopeTarget !== "following" ? " is-loading" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Explore</Link></nav>
         <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setFind(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" tabIndex={classSheetDismissed ? 0 : -1} aria-hidden={!classSheetDismissed} aria-label="Show Explore" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
       </div>
@@ -1099,9 +1089,9 @@ export function FollowingScreen({
       )}
       {isHome && calendarFilter === "people" && !includeYou && selectedPeople.size === 0 ? (
         <div className="calendar-selection-empty"><h2>No calendars selected</h2><p>Tap a person above to see what’s on their calendar.</p></div>
-      ) : isHome && shown.length === 0 && calendarPending ? (
+      ) : isHome && calendarView === "day" && !selectedMonthDay && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status"><LoadingDots label="Loading your schedule"/></div>
-      ) : (isHome ? shown.length === 0 : items.length === 0) ? (
+      ) : (isHome ? calendarView === "day" && !selectedMonthDay && !followingSummary.length && shown.length === 0 : items.length === 0) ? (
         calendarFollowing ? <section className="calendar-first-class"><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={restoreActionSurface}>Explore calendars</button></section> : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1212,14 +1202,22 @@ export function FollowingScreen({
             {isHome && calendarView === "month" ? (
               <>
                 <MonthHeadRow />
-                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={() => {}} monthsAhead={followingMonthHorizon} onNeedMore={() => setFollowingMonthHorizon((value) => value + 12)} />
+                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={requestVisibleMonth} onMonthVisible={requestVisibleMonth} monthStates={calendarMonths} onRetryMonth={(month) => pendingMonthDay?.startsWith(month) ? void openMonthDay(pendingMonthDay) : void ensureMonth(month)} emptyDayAction="open" monthsAhead={followingMonthHorizon} onNeedMore={followingMonthHorizon < FOLLOWING_MAX_MONTHS_AHEAD ? () => setFollowingMonthHorizon((value) => Math.min(FOLLOWING_MAX_MONTHS_AHEAD, value + 12)) : undefined} />
               </>
             ) : isHome ? (
                 <div className="cash-activity-list">
                   {visibleHomeDays.map((section) => (
                     <section className="cash-day" id={`feed-day-${section.iso}`} key={section.iso}>
+                      {section.missingMonth && <div className="following-date-gap">
+                        {calendarMonths[section.missingMonth] === "loading" ? <LoadingDots label="Loading earlier dates" /> : <button type="button" className="calendar-load-more" onClick={() => void ensureMonth(section.missingMonth!)}>{calendarMonths[section.missingMonth] === "error" ? "Retry loading earlier dates" : "Load earlier dates"}</button>}
+                      </div>}
                       <h2>{section.label}</h2>
                       <div>
+                        {section.rows.length === 0 && (section.iso <= loadedThrough || calendarMonths[section.iso.slice(0, 7)] === "loaded"
+                          ? <p className="dayempty">No classes on this day.</p>
+                          : calendarMonths[section.iso.slice(0, 7)] === "error"
+                            ? <div role="status"><p>This day couldn’t load.</p><button type="button" className="ghost" onClick={() => void ensureMonth(section.iso.slice(0, 7))}>Try again</button></div>
+                            : <LoadingDots label="Loading this day" />)}
                         {section.rows.map((item) => {
                           const coach = coachById.get(item.coachId);
                           const studio = item.whereHref ? studioOptions.find((option) => `/s/${option.slug}` === item.whereHref) : null;
@@ -1254,6 +1252,14 @@ export function FollowingScreen({
                     </section>
                   ))}
                   {visibleHomeCount < homeDays.length && <div className="cash-days-more" ref={homeMoreRef} aria-hidden="true" />}
+                  {visibleHomeCount >= homeDays.length && canLoadMoreDates && !calendarPending && !calendarError && (
+                    <div className="following-more-dates">
+                      {calendarMonths[nextMonth] === "loading" ? <LoadingDots label="Loading more dates" /> : <>
+                        {calendarMonths[nextMonth] === "error" && <p role="status">These dates couldn’t load.</p>}
+                        <button type="button" className="calendar-load-more" onClick={loadMoreDates}>{calendarMonths[nextMonth] === "error" ? "Retry loading dates" : "Show more dates"}</button>
+                      </>}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>

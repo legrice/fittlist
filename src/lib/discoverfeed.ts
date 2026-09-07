@@ -5,6 +5,7 @@ import { hiddenFrom } from "@/lib/blocks";
 import { publicClassOccurrenceFilter, publicGroupOccurrenceFilter, visibleGroupFilter } from "@/lib/group-schedule";
 import { classAddress, publicFeedSchedules, shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import { boundedCalendarWindow, rollingCalendarWindow, type CalendarDateWindow } from "@/lib/calendar-window";
 import type {
   FeedCoach,
   FeedItem,
@@ -40,6 +41,9 @@ export type DiscoverFeedOptions = {
    * for 2–30 after hydration; discovery keeps the complete rolling month. */
   startDay?: number;
   endDay?: number;
+  /** Explicit month boundaries for on-demand calendar requests. Like offset
+   * windows, these may expand at most 31 days of occurrences. */
+  dateWindow?: CalendarDateWindow;
   /** Home is a calendar of relationships the viewer chose. It must not pay
    * to load every discoverable coach merely to discard most of them later. */
   calendarOnly?: boolean;
@@ -74,14 +78,12 @@ export async function buildDiscoverFeed(
     .filter((id) => id !== userId && !hidden.has(id));
   const followedSet = new Set(followed);
   const today = todayIso();
-  const startDay = Math.max(0, options.startDay ?? 0);
-  const endDay = Math.max(startDay, Math.min(30, options.endDay ?? 30));
-  const startDate = new Date(`${today}T00:00:00Z`);
-  startDate.setUTCDate(startDate.getUTCDate() + startDay);
-  const from = startDate.toISOString().slice(0, 10);
-  const throughDate = new Date(`${today}T00:00:00Z`);
-  throughDate.setUTCDate(throughDate.getUTCDate() + endDay);
-  const through = throughDate.toISOString().slice(0, 10);
+  const { from, through } = options.dateWindow
+    ? boundedCalendarWindow(options.dateWindow)
+    : rollingCalendarWindow(today, options.startDay, options.endDay);
+  const todayValue = Date.parse(`${today}T00:00:00Z`);
+  const startDay = Math.round((Date.parse(`${from}T00:00:00Z`) - todayValue) / 86_400_000);
+  const endDay = Math.round((Date.parse(`${through}T00:00:00Z`) - todayValue) / 86_400_000);
 
   // Home is not the directory. Resolve the small graph that can contribute
   // to the viewer's calendar before selecting users or schedules: their own
@@ -90,6 +92,7 @@ export async function buildDiscoverFeed(
   // prevents one calendar visit from loading every public coach in FittList.
   const calendarOwnerIds = new Set<string>([userId, ...followed]);
   const followedStudioIds = new Set<string>();
+  const groupIdsByOccurrence = new Map<string, Set<string>>();
   if (options.calendarOnly) {
     const [savedStudioOwners, groupRows, savedClassOwners] = await Promise.all([
       db
@@ -129,7 +132,8 @@ export async function buildDiscoverFeed(
     const [groupClassOwners, studioClassPeople] = await Promise.all([
       visibleGroupRows.length
         ? db
-        .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
+        .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId,
+          groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate })
         .from(schema.groupClasses)
         .innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId))
         .where(and(
@@ -149,6 +153,12 @@ export async function buildDiscoverFeed(
     for (const row of [...groupClassOwners, ...studioClassPeople]) {
       calendarOwnerIds.add(row.ownerId);
       if (row.coachId) calendarOwnerIds.add(row.coachId);
+    }
+    for (const row of groupClassOwners) {
+      const key = `${row.classId}|${row.iso}`;
+      const ids = groupIdsByOccurrence.get(key) ?? new Set<string>();
+      ids.add(row.groupId);
+      groupIdsByOccurrence.set(key, ids);
     }
   }
   // Discover, per the brief: the list is classes near you, from every
@@ -423,6 +433,12 @@ export async function buildDiscoverFeed(
       activityKind:"going",
     });
   }
+  // Membership belongs to the requested occurrence window, not a fixed
+  // first-page list. An explicit empty list is authoritative after a group
+  // member leaves or a class is removed; old client metadata must not win.
+  if (options.calendarOnly) {
+    for (const item of items) item.groupIds = [...(groupIdsByOccurrence.get(`${item.classId}|${item.iso}`) ?? [])];
+  }
   // One class, one row, however many accounts list it. A studio's listing
   // and the coach's own, or two coaches co-listing a slot, are the same
   // class in the reader's terms: same name, same start, same place, same
@@ -440,6 +456,7 @@ export async function buildDiscoverFeed(
         // The studio and coach can both contribute the same occurrence. Keep
         // one row, but never lose that it is the viewer's assigned shift.
         if (i.shift) items[prior].shift = true;
+        if (options.calendarOnly) items[prior].groupIds = [...new Set([...(items[prior].groupIds ?? []), ...(i.groupIds ?? [])])];
         continue;
       }
       seen.set(key, w);

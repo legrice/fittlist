@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
+import { LoadingDots } from "@/components/LoadingDots";
+import type { CalendarMonthState } from "@/lib/use-following-calendar";
 
 // The calendar's chrome, shared by both calendars (a coach's /app, a member's
 // /week) so the two stay one thing: the month as the title with the view menu
@@ -856,12 +858,18 @@ function MonthBlock({
   todayIso,
   items,
   onDay,
+  loadState,
+  onRetry,
+  emptyDayAction = "add",
 }: {
   ym: string;
   todayIso: string;
   /** iso -> that day's rows. May span every month; only this one is read. */
   items: Map<string, MonthCellItem[]>;
   onDay: (iso: string) => void;
+  loadState?: CalendarMonthState;
+  onRetry?: () => void;
+  emptyDayAction?: "add" | "open";
 }) {
   const [y, m] = ym.split("-").map(Number);
   const first = new Date(Date.UTC(y, m - 1, 1));
@@ -881,9 +889,14 @@ function MonthBlock({
     cells.push({ iso, day: d.getUTCDate(), inMonth: d.getUTCMonth() === m - 1 });
   }
   const MAX = 3;
+  const fullMonth = first.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
   return (
-    <div id={`month-${ym}`} data-ym={ym} className="monthblock">
+    <div id={`month-${ym}`} data-ym={ym} data-load-state={loadState} className="monthblock" aria-busy={loadState === "loading" || undefined}>
       <h3 className="monthblock-h">{monthLabel(ym, todayIso)}</h3>
+      {loadState && <div className="monthblock-status">
+        {loadState === "loading" && <LoadingDots label={`Loading ${fullMonth}`} />}
+        {loadState === "error" && <><span role="status">This month couldn’t load.</span><button type="button" className="ghost" aria-label={`Retry ${fullMonth}`} onClick={onRetry}>Try again</button></>}
+      </div>}
       <div className="monthgrid">
         {cells.map((c) => {
           const rows = c.inMonth ? (items.get(c.iso) ?? []) : [];
@@ -900,7 +913,7 @@ function MonthBlock({
               disabled={!tappable}
               aria-label={
                 tappable
-                  ? rows.length
+                  ? rows.length || emptyDayAction === "open"
                     ? `Open ${c.iso}`
                     : `Add to ${c.iso}`
                   : undefined
@@ -933,6 +946,10 @@ export function MonthScroll({
   onMonthInView,
   monthsAhead = MONTHS_AHEAD,
   onNeedMore,
+  onMonthVisible,
+  monthStates,
+  onRetryMonth,
+  emptyDayAction,
 }: {
   todayIso: string;
   /** iso -> that day's rows, spanning the whole range, filtered and sorted. */
@@ -941,6 +958,11 @@ export function MonthScroll({
   onMonthInView: (ym: string) => void;
   monthsAhead?: number;
   onNeedMore?: () => void;
+  /** Load nearby months separately from the sticky title's observation band. */
+  onMonthVisible?: (ym: string) => void;
+  monthStates?: Record<string, CalendarMonthState>;
+  onRetryMonth?: (ym: string) => void;
+  emptyDayAction?: "add" | "open";
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLButtonElement>(null);
@@ -971,7 +993,23 @@ export function MonthScroll({
     );
     blocks.forEach((b) => io.observe(b));
     return () => io.disconnect();
-  }, [onMonthInView]);
+  }, [onMonthInView, monthsAhead]);
+  useEffect(() => {
+    if (!onMonthVisible) return;
+    const blocks = wrapRef.current?.querySelectorAll<HTMLElement>("[data-ym]");
+    if (!blocks?.length) return;
+    if (typeof IntersectionObserver === "undefined") {
+      onMonthVisible(thisYm);
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && entry.target instanceof HTMLElement && entry.target.dataset.ym) onMonthVisible(entry.target.dataset.ym);
+      }
+    }, { rootMargin: "400px 0px" });
+    blocks.forEach((block) => observer.observe(block));
+    return () => observer.disconnect();
+  }, [onMonthVisible, monthsAhead, thisYm]);
   useEffect(() => {
     const target = moreRef.current;
     if (!target || !onNeedMore || typeof IntersectionObserver === "undefined") return;
@@ -984,7 +1022,7 @@ export function MonthScroll({
   return (
     <div ref={wrapRef} className="monthscroll">
       {yms.map((ym) => (
-        <MonthBlock key={ym} ym={ym} todayIso={todayIso} items={items} onDay={onDay} />
+        <MonthBlock key={ym} ym={ym} todayIso={todayIso} items={items} onDay={onDay} loadState={monthStates ? monthStates[ym] ?? "loading" : undefined} onRetry={() => onRetryMonth?.(ym)} emptyDayAction={emptyDayAction} />
       ))}
       {onNeedMore && (
         <button ref={moreRef} className="calendar-load-more" type="button" onClick={onNeedMore}>

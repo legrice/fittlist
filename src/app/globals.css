@@ -14907,6 +14907,13 @@ a.clspeek-by:active { opacity: .6; }
 .calendar-scope-top.is-expanded ~ .calendar-surface-schedule .cash-day > h2 {
   top: 70px;
 }
+.calendar-scope-top.is-expanded ~ .calendar-surface-schedule .cash-day {
+  scroll-margin-top: 78px;
+}
+.cash-day > .following-date-gap {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
 .calendar-revealed-controls { justify-content: flex-end; }
 .calendar-revealed-controls > .calendar-add-pill {
   background: var(--color-lime);
@@ -15538,3 +15545,16 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .simple-welcome-actions { display:flex; flex-direction:column; gap:12px; width:100%; max-width:380px; }
 .simple-welcome-actions button { flex:1; min-height:48px; padding:12px 20px; border:1px solid var(--kinetic-control-border); border-radius:var(--radius-pill); background:var(--kinetic-surface); color:var(--kinetic-text); font:inherit; font-weight:700; }
 .simple-welcome-actions .simple-welcome-signup { background:var(--kinetic-accent); }
+
+/* Reserve loading feedback space so month grids do not jump when data arrives. */
+.monthblock-status {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.following-more-dates {
+  padding: 24px 0;
+  text-align: center;
+}

@@ -14,6 +14,8 @@ database. No live database or service credentials are used.
 | `npm run lint` | ESLint errors in application and scripts |
 | `npm test` | Password limits, image validation, sheet gesture thresholds, cache isolation, timeouts, and retry behavior |
 | `npm run check:data-integrity` | Real isolated scheduling actions, rollback/retry behavior, permissions, group visibility, recurrence, and saved-calendar loaders |
+| `npm run check:calendar-window` | Bounded monthly loads, leap years and range validation, future recurring/dated/group classes, canceled/private/blocked exclusion and viewer isolation; also included in data integrity |
+| `npm run check:following-month-browser` | Month navigation beyond 30 and 180 days, group-only classes, real empty days, retrying a failed month, day-list continuation and retained loaded data |
 | `npm run check:operations` | Notification pagination and acknowledgement, delivery error accounting, signed unsubscribe links, production configuration guards, migration replay, snapshot restore, and connection cleanup |
 | `scripts/production-audit.mjs` | Production browser navigation, accessibility, onboarding, authentication, social permissions, offline recovery, and response timing |
 | `npm run check:notifications-browser` | Legacy page and sheet pagination beyond 50 notifications, failed initial/older-page/cached refresh recovery, unread state, and viewer isolation |
@@ -46,6 +48,13 @@ The notification browser check seeds its own disposable fixture and uses port
 3188. Run `npm run check:notifications-browser` after the build. It defaults to
 bundled Chromium and also accepts `AUDIT_CHROME_CHANNEL=chrome` locally. It
 blocks external browser requests and never contacts email or push providers.
+
+The Following month browser check seeds its own disposable fixture and owns port
+3191. Run `npm run check:following-month-browser` after the build; use
+`AUDIT_CHROME_CHANNEL=chrome` for installed Chrome locally. It defaults to bundled
+Chromium in CI. `FOLLOWING_MONTH_FIXTURES` can reuse this check's own fixture; it
+intentionally ignores the production suite's `AUDIT_FIXTURES`. No live services
+or accounts are used.
 
 ## Scale, accessibility, and visual audit
 
