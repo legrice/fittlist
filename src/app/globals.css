@@ -15568,8 +15568,10 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 
   /* These are navigation surfaces on phones, not desktop page content.
      CSS also hides them during the server-rendered hydration frame. */
-  .calendar-scope-top, .calendar-scope-hero, .calendar-action-sheet,
-  .calendar-revealed-controls, .calendar-bottom-actions { display:none; }
+  .screen.hasnav :is(.calendar-scope-top, .calendar-scope-hero, .calendar-action-sheet, .calendar-bottom-actions),
+  .calendar-revealed-controls, .calendar-scope-loading { display:none; }
+  .screen.hasnav:has(.calendar-scope-hero),
+  .screen.hasnav:has(.calendar-scope-hero) > .pad { background:var(--kinetic-canvas-light); }
   .screen.hasnav .calendar-page-header.calendar-page-actions {
     display:flex; margin:0 0 24px; padding:28px 0 0; gap:20px;
   }

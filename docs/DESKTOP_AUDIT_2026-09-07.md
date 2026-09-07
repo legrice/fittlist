@@ -223,6 +223,10 @@ checks with `npm run check:desktop-browser` and
 - The same desktop matrix and workflows passed in WebKit with no runtime errors.
   Its route crawl verifies the Share PNG finishes before unloading the page;
   app-driven Share/Back navigation is exercised separately.
+- A server-rendered frame check with external app scripts withheld verifies
+  that desktop calendars, navigation and view controls appear immediately.
+  Desktop visibility rules override the older mobile transition selectors,
+  including before client initialization removes the mobile markup.
 - All six mobile Following month scenarios and all five desktop calendar-data
   scenarios passed in Chrome. The delayed-response test identifies the actual
   calendar remainder action, rather than another background request.

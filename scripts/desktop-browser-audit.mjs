@@ -111,6 +111,23 @@ try {
     report.checks.push(`Direct calendars, profile actions, headers and rail at ${width}px`);
     console.log(`PASS desktop frame and profile actions at ${width}px`);
   }
+  // Keep inline streaming scripts enabled while withholding external app
+  // bundles. This checks the real server-rendered frame before hydration can
+  // remove mobile surfaces and conceal a desktop CSS specificity regression.
+  const initial = await browser.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" });
+  await initial.addCookies([{ name: "fl_session", value: f.owner.token, url: base, httpOnly: true, sameSite: "Lax" }]);
+  await initial.route("**/*", route => route.request().resourceType() === "script" || new URL(route.request().url()).origin !== base ? route.abort() : route.continue());
+  const firstPaint = await initial.newPage();
+  for (const path of ["/calendar", "/calendar/following"]) {
+    await firstPaint.goto(base + path);
+    await firstPaint.getByRole("heading", { name: path === "/calendar" ? "Your calendar" : "Following", exact: true }).waitFor();
+    await firstPaint.getByRole("complementary", { name: "Desktop navigation" }).waitFor();
+    assert.equal(await firstPaint.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Server-rendered desktop hides mobile navigation surfaces");
+    assert(await firstPaint.getByRole("button", { name: "Month view", exact: true }).isVisible(), "Desktop view controls appear before hydration");
+    assert(await firstPaint.locator(".calendar-direct-schedule,.desktop-calendar-content").isVisible(), "Desktop schedule appears before hydration");
+  }
+  await initial.close();
+  report.checks.push("Server-rendered desktop calendars and controls are visible with mobile surfaces hidden before hydration");
   await page.setViewportSize({ width: 1440, height: 900 });
   for (const route of ["/discover", "/discover?half=studios", "/discover?half=groups", "/search", "/you", "/inbox", "/notifications", "/settings", "/coachshare", "/s/audit-studio/manage/calendar"]) {
     await visit(route); await frame();
