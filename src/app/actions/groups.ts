@@ -219,7 +219,7 @@ async function groupManager(slug: string) {
   const userId = await getSessionUserId();
   if (!userId) return null;
   const db = await getDb();
-  const [row] = await db.select({ groupId: schema.groups.id, ownerUserId: schema.groups.ownerUserId, role: schema.groupMembers.role }).from(schema.groups).innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
+  const [row] = await db.select({ groupId: schema.groups.id, ownerUserId: schema.groups.ownerUserId, visibility: schema.groups.visibility, role: schema.groupMembers.role }).from(schema.groups).innerJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
   if (row && row.ownerUserId !== userId && (await hiddenFrom(userId)).has(row.ownerUserId)) return null;
   return row && (row.role === "owner" || row.role === "admin") ? { db, userId, ...row } : null;
 }
@@ -447,10 +447,15 @@ export async function leaveGroup(slug: string) {
   const userId = await getSessionUserId();
   if (!userId) return { ok:false, error:"Sign in to leave this group." } as const;
   const db = await getDb();
-  const [membership] = await db.select({ id:schema.groupMembers.id, role:schema.groupMembers.role }).from(schema.groupMembers).innerJoin(schema.groups, eq(schema.groups.id, schema.groupMembers.groupId)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
+  const [membership] = await db.select({ id:schema.groupMembers.id, groupId:schema.groups.id, visibility:schema.groups.visibility, role:schema.groupMembers.role }).from(schema.groupMembers).innerJoin(schema.groups, eq(schema.groups.id, schema.groupMembers.groupId)).where(and(eq(schema.groups.slug, slug), eq(schema.groupMembers.userId, userId)));
   if (!membership) return { ok:false, error:"You’re not a member of this group." } as const;
   if (membership.role === "owner") return { ok:false, error:"The owner can’t leave the group." } as const;
-  await db.delete(schema.groupMembers).where(eq(schema.groupMembers.id, membership.id));
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.groupMembers).where(eq(schema.groupMembers.id, membership.id));
+    if (membership.visibility === "private") await tx.delete(schema.groupFavorites).where(and(
+      eq(schema.groupFavorites.groupId, membership.groupId), eq(schema.groupFavorites.userId, userId),
+    ));
+  });
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
   return { ok:true } as const;
@@ -463,7 +468,12 @@ export async function removeGroupMember(slug: string, memberUserId: string) {
   const [membership] = await manager.db.select({ id:schema.groupMembers.id, role:schema.groupMembers.role }).from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, manager.groupId), eq(schema.groupMembers.userId, memberUserId)));
   if (!membership) return { ok:false, error:"That person is no longer in the group." } as const;
   if (membership.role === "owner") return { ok:false, error:"The group owner can’t be removed." } as const;
-  await manager.db.delete(schema.groupMembers).where(eq(schema.groupMembers.id, membership.id));
+  await manager.db.transaction(async (tx) => {
+    await tx.delete(schema.groupMembers).where(eq(schema.groupMembers.id, membership.id));
+    if (manager.visibility === "private") await tx.delete(schema.groupFavorites).where(and(
+      eq(schema.groupFavorites.groupId, manager.groupId), eq(schema.groupFavorites.userId, memberUserId),
+    ));
+  });
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
   return { ok:true } as const;
@@ -473,12 +483,20 @@ export async function toggleGroupFavorite(slug: string) {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, signedOut: true } as const;
   const db = await getDb();
-  const [group] = await db.select({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId }).from(schema.groups).where(eq(schema.groups.slug, slug));
+  const [group] = await db.select({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId, visibility: schema.groups.visibility }).from(schema.groups).where(eq(schema.groups.slug, slug));
   if (!group) return { ok: false } as const;
   if (group.ownerUserId !== userId && (await hiddenFrom(userId)).has(group.ownerUserId)) return { ok: false } as const;
   const [existing] = await db.select({ id: schema.groupFavorites.id }).from(schema.groupFavorites).where(and(eq(schema.groupFavorites.groupId, group.id), eq(schema.groupFavorites.userId, userId)));
+  // Removing an old favorite stays allowed after access is revoked. Adding
+  // one requires real membership, not just knowledge of a private URL.
+  if (!existing && group.visibility === "private" && group.ownerUserId !== userId) {
+    const [membership] = await db.select({ id: schema.groupMembers.id }).from(schema.groupMembers).where(and(
+      eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, userId),
+    ));
+    if (!membership) return { ok: false, error: "That group is no longer available." } as const;
+  }
   if (existing) await db.delete(schema.groupFavorites).where(eq(schema.groupFavorites.id, existing.id));
-  else await db.insert(schema.groupFavorites).values({ groupId: group.id, userId });
+  else await db.insert(schema.groupFavorites).values({ groupId: group.id, userId }).onConflictDoNothing();
   revalidatePath(`/g/${slug}`);
   revalidatePath("/saved");
   const { recordProductActivity } = await import("@/lib/product-activity");

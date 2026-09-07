@@ -154,9 +154,10 @@ export async function sendWeeklyDigestForTrainer(
   const joinNudge = fansEnabled()
     ? `\n\nFollowing more than one coach? An account puts them all in one week: ${siteOrigin()}/`
     : "";
+  let sent = 0;
   for (const sub of subs) {
     const unsub = await unsubFooter(sub.id);
-    await sendMessage({
+    const result = await sendMessage({
       to: sub.email,
       kind: "weekly_schedule",
       subject: `${trainer.name}'s classes this week`,
@@ -166,8 +167,9 @@ export async function sendWeeklyDigestForTrainer(
         unsub.text,
       headers: unsub.headers,
     });
+    if (result.ok) sent++;
   }
-  return subs.length;
+  return sent;
 }
 
 // ---- merged digest (account follows)
@@ -234,7 +236,7 @@ export async function sendMergedDigestForFan(
         ? `${names[0]} and ${names[1]}`
         : `${names[0]}, ${names[1]} and ${names.length - 2} more`;
 
-  await sendMessage({
+  const result = await sendMessage({
     to: fan.email,
     kind: "weekly_schedule",
     subject: "Your week",
@@ -247,7 +249,7 @@ export async function sendMergedDigestForFan(
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     },
   });
-  return 1;
+  return result.ok ? 1 : 0;
 }
 
 /** Like weekDigestText, but across coaches — each line carries whose class it is. */

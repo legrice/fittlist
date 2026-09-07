@@ -1,4 +1,5 @@
 "use client";
+import { useSearchHistory } from "@/lib/use-search-history";
 import { NotificationDot } from "@/components/NotificationDot";
 
 import { LoadingDots } from "@/components/LoadingDots";
@@ -401,7 +402,7 @@ export function FollowingScreen({
   // Today isn't selected; it only ever names this one day.
   const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
-  const [find, setFind] = useState(false);
+  const [find, setFind] = useSearchHistory(meId ?? "");
   const [calendarFilter, setCalendarFilter] = useState<"all" | "you" | "following" | "people" | `coach:${string}` | `studio:${string}` | `group:${string}`>(calendarFollowing ? "following" : "all");
   const [includeYou, setIncludeYou] = useState(true);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(() => new Set());
@@ -469,6 +470,10 @@ export function FollowingScreen({
   const [pins, setPins] = useState(() => new Set(initialPins));
   const [visibleHomeDayCount, setVisibleHomeDayCount] = useState(2);
   const homeMoreRef = useRef<HTMLDivElement>(null);
+  const monthScrollFrame = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (monthScrollFrame.current !== null) cancelAnimationFrame(monthScrollFrame.current);
+  }, []);
   const [addedFocus, setAddedFocus] = useState<{ id: string; iso: string } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const [toastAction, setToastAction] = useState<{ label: string; href: string } | null>(null);
@@ -825,16 +830,16 @@ export function FollowingScreen({
       rows,
     }));
   }, [homeRows, todayIso]);
-  // Following should feel like a calendar, not a two-day feed. Its first
-  // reveal includes every populated date in the coming month; the sentinel
-  // then continues adding days beyond that range as the viewer scrolls.
-  const followingMonthDayCount = useMemo(() => {
-    if (!calendarFollowing) return 0;
-    const monthEnd = plusDays(todayIso, 31);
-    return homeDays.filter((section) => section.iso <= monthEnd).length;
-  }, [calendarFollowing, homeDays, todayIso]);
-  const visibleHomeCount = Math.max(visibleHomeDayCount, followingMonthDayCount);
+  // Keep the full calendar in memory, but mount only the nearby date groups.
+  // A broad following graph can contain thousands of cards in a month.
+  // Scrolling reveals later days; picking a month date explicitly reveals it.
+  const visibleHomeCount = visibleHomeDayCount;
   const visibleHomeDays = homeDays.slice(0, visibleHomeCount);
+  useEffect(() => {
+    if (!addedFocus) return;
+    const index = homeDays.findIndex((section) => section.iso === addedFocus.iso);
+    if (index >= 0) setVisibleHomeDayCount((count) => Math.max(count, index + 1));
+  }, [addedFocus, homeDays]);
   const monthItems = useMemo(() => {
     const mapped = new Map<string, MonthCellItem[]>();
     for (const item of homeRows) {
@@ -852,11 +857,22 @@ export function FollowingScreen({
   }, [homeRows, meId]);
 
   const openMonthDay = (iso: string) => {
+    const index = homeDays.findIndex((section) => section.iso === iso);
+    if (index >= 0) setVisibleHomeDayCount((count) => Math.max(count, index + 1));
     setCalendarView("day");
-    window.setTimeout(() => document.getElementById(`feed-day-${iso}`)?.scrollIntoView({ block: "start" }), 0);
+    if (monthScrollFrame.current !== null) cancelAnimationFrame(monthScrollFrame.current);
+    // Skipped day bodies initially use their intrinsic-size estimate. Their
+    // measured heights can shift the target after the first scroll, so align
+    // across a few frames while the newly revealed date groups settle.
+    let frames = 0;
+    const align = () => {
+      document.getElementById(`feed-day-${iso}`)?.scrollIntoView({ block: "start", behavior: "instant" });
+      monthScrollFrame.current = ++frames < 6 ? requestAnimationFrame(align) : null;
+    };
+    monthScrollFrame.current = requestAnimationFrame(align);
   };
   useEffect(() => {
-    if (!isHome || visibleHomeCount >= homeDays.length) return undefined;
+    if (!isHome || calendarView !== "day" || (calendarFollowing && !classSheetDismissed) || visibleHomeCount >= homeDays.length) return undefined;
     const target = homeMoreRef.current;
     if (!target) return undefined;
     if (typeof IntersectionObserver === "undefined") {
@@ -865,11 +881,11 @@ export function FollowingScreen({
     }
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
-      setVisibleHomeDayCount((count) => Math.min(homeDays.length, Math.max(count, followingMonthDayCount) + 4));
+      setVisibleHomeDayCount((count) => Math.min(homeDays.length, count + 4));
     }, { rootMargin: "800px 0px" });
     observer.observe(target);
     return () => observer.disconnect();
-  }, [followingMonthDayCount, homeDays.length, isHome, visibleHomeCount]);
+  }, [calendarFollowing, calendarView, classSheetDismissed, homeDays.length, isHome, visibleHomeCount]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -1044,7 +1060,6 @@ export function FollowingScreen({
                 setSelectedPeople(new Set());
                 setCalendarFilter("you");
                 setCalendarView("day");
-                setVisibleHomeDayCount(Number.MAX_SAFE_INTEGER);
                 setAddedFocus(focus);
               }}
             />

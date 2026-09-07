@@ -93,8 +93,8 @@ export async function sendShiftReminders(now = new Date()): Promise<{ sent: numb
             footer: "This reminder was sent because the studio assigned this shift to you on FittList.",
           }),
         });
-      } catch (error) {
-        console.error("shift reminder email failed", person.email, error);
+      } catch {
+        console.error("shift reminder email failed");
       }
       void pushToUser(coachUserId, { title: `${row.name} in 12 hours`, body, url });
     }

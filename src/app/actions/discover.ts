@@ -4,7 +4,7 @@ import { and, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
-import { publicSchedules } from "@/lib/coachweek";
+import { publicFeedSchedules } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import { currentUser } from "@/lib/current-user";
@@ -87,13 +87,18 @@ export async function discoverPeople(distanceMiles?: number, center?: { lat:numb
   ]);
   const rows = everyone.filter((r) => !hidden.has(r.id));
 
-  // Their own classes plus the shifts each has chosen to show, so the count
-  // matches what opening their page actually shows.
-  const classRows = (await publicSchedules(rows)).filter((c) => c.isPublic);
+  // This directory only needs counts and the next class within a fortnight.
+  // Keep artwork and definitions outside that window out of the list query.
+  const start = new Date(`${todayIso()}T00:00:00Z`);
+  const through = new Date(start);
+  through.setUTCDate(through.getUTCDate() + 13);
+  const classRows = (await publicFeedSchedules(rows, {
+    start: start.toISOString().slice(0, 10),
+    end: through.toISOString().slice(0, 10),
+  })).filter((c) => c.isPublic);
 
   // "Classes this week": the signal that a page is actually live, and the
   // thing somebody is deciding on.
-  const start = new Date(`${todayIso()}T00:00:00Z`);
   const weekCount = new Map<string, number>();
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);

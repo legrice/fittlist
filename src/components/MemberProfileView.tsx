@@ -128,7 +128,7 @@ export async function MemberProfileView({
   // public, and each falls off once it has run. Gated the way every week
   // is: open unless they turned approve-first on.
   const week =
-    user.handle && (await canSeeWeek(viewerId, user)) ? await memberWeek(user.id) : [];
+    user.handle && (await canSeeWeek(viewerId, user)) ? await memberWeek(user.id, { includePrivateSaved: viewerId === user.id }) : [];
 
   const backTo = isOwner
     ? from === "profile" ? { href: "/you", label: "Back to your profile" } : undefined

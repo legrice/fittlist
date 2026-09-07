@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { avatarColor } from "@/lib/avatar";
-import { clockParts, fmtDayHeaderRel, todayIso } from "@/lib/format";
+import { clockParts, dowOfDate, fmtDayHeaderRel, runsOn, todayIso } from "@/lib/format";
 import { AppChrome } from "@/components/AppChrome";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { GroupActions } from "@/components/GroupActions";
@@ -56,7 +56,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const [favorite] = favoriteRows;
   const visiblePostRows = postRows.filter((post) => !hiddenAuthors.has(post.authorUserId));
   const { image: _classImage, ...classColumns } = getTableColumns(schema.classes);
-  const selectedClassRows = selections.length ? await db.select(classColumns).from(schema.classes).where(inArray(schema.classes.id, selections.map((item) => item.classId))) : [];
+  const selectedClassRows = selections.length ? await db.select(classColumns).from(schema.classes).where(and(eq(schema.classes.isPublic, true), inArray(schema.classes.id, selections.map((item) => item.classId)))) : [];
   const classRows = selectedClassRows.filter((item) =>
     !hiddenAuthors.has(item.userId) && (!item.coachUserId || !hiddenAuthors.has(item.coachUserId))
   );
@@ -78,7 +78,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const byDay = new Map<string, WeekDayRows["rows"]>();
   for (const selection of selections) {
     const item = classById.get(selection.classId);
-    if (!item || selection.occurrenceDate < today) continue;
+    if (!item || selection.occurrenceDate < today || !runsOn(item, selection.occurrenceDate, dowOfDate(selection.occurrenceDate))) continue;
     const coach = coachById.get(item.userId);
     const studio = item.studioId ? studioById.get(item.studioId) : null;
     const base = coach?.handle ?? (studio?.slug ? `s/${studio.slug}` : null);
@@ -110,7 +110,9 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const savedSet=new Set(savedRows.map((row)=>`${row.classId}|${row.iso}`));
   const updates:GroupUpdate[]=visiblePostRows.flatMap((post)=>{
     const author=updateAuthorById.get(post.authorUserId); if(!author) return [];
-    const cls=post.classId ? classById.get(post.classId) : null; const studio=cls?.studioId ? studioById.get(cls.studioId) : null;
+    const linkedClass=post.classId ? classById.get(post.classId) : null;
+    const cls=linkedClass && post.occurrenceDate && runsOn(linkedClass, post.occurrenceDate, dowOfDate(post.occurrenceDate)) ? linkedClass : null;
+    const studio=cls?.studioId ? studioById.get(cls.studioId) : null;
     const time=cls ? clockParts(cls.startTime) : null;
     const reactionKinds=["heart","strong","in"].map((reaction)=>({reaction,count:reactionRows.filter((row)=>row.postId===post.id&&row.reaction===reaction).length,mine:reactionRows.some((row)=>row.postId===post.id&&row.reaction===reaction&&row.userId===viewerId)}));
     return [{ id:post.id,kind:post.kind,body:post.body,createdAt:post.createdAt.toISOString(),author:{id:author.id,name:author.name,photo:author.photo,color:avatarColor(author)},cls:cls&&post.occurrenceDate&&time?{id:cls.id,iso:post.occurrenceDate,name:cls.name,detail:`${new Date(`${post.occurrenceDate}T00:00:00Z`).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"})} · ${time.hm} ${time.ap}`,where:studio?.name??cls.location??"Location to come",saved:savedSet.has(`${cls.id}|${post.occurrenceDate}`)}:null,comments:commentRows.filter((row)=>row.postId===post.id).flatMap((row)=>{const person=updateAuthorById.get(row.authorUserId);return person?[{id:row.id,body:row.body,author:{id:person.id,name:person.name,photo:person.photo,color:avatarColor(person)}}]:[]}),reactions:reactionKinds }];

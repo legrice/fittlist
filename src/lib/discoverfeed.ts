@@ -1,7 +1,8 @@
-import { and, eq, gte, inArray, isNotNull, isNull, lte, max, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, lte, max, notInArray, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
+import { publicClassOccurrenceFilter, publicGroupOccurrenceFilter, visibleGroupFilter } from "@/lib/group-schedule";
 import { classAddress, publicFeedSchedules, shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import type {
@@ -104,7 +105,7 @@ export async function buildDiscoverFeed(
         .from(schema.groups)
         .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
         .leftJoin(schema.groupFavorites, eq(schema.groupFavorites.groupId, schema.groups.id))
-        .where(sql`${schema.groups.ownerUserId} = ${userId} OR ${schema.groupMembers.userId} = ${userId} OR ${schema.groupFavorites.userId} = ${userId}`),
+        .where(and(sql`${schema.groups.ownerUserId} = ${userId} OR ${schema.groupMembers.userId} = ${userId} OR ${schema.groupFavorites.userId} = ${userId}`, visibleGroupFilter(userId))),
       db
         .selectDistinct({ ownerId: schema.classes.userId, coachId: schema.classes.coachUserId })
         .from(schema.attendances)
@@ -113,6 +114,7 @@ export async function buildDiscoverFeed(
           eq(schema.attendances.userId, userId),
           gte(schema.attendances.occurrenceDate, from),
           lte(schema.attendances.occurrenceDate, through),
+          publicClassOccurrenceFilter(schema.attendances.occurrenceDate),
         )),
     ]);
     for (const row of savedStudioOwners) {
@@ -134,6 +136,7 @@ export async function buildDiscoverFeed(
           inArray(schema.groupClasses.groupId, visibleGroupRows.map((row) => row.id)),
           gte(schema.groupClasses.occurrenceDate, from),
           lte(schema.groupClasses.occurrenceDate, through),
+          publicGroupOccurrenceFilter(),
         ))
         : Promise.resolve([]),
       savedStudioOwners.length
@@ -257,7 +260,9 @@ export async function buildDiscoverFeed(
           .where(and(
             inArray(schema.attendances.userId,followed),
             eq(schema.attendances.isPublic,true),
-            eq(schema.classes.isPublic,true),
+            publicClassOccurrenceFilter(schema.attendances.occurrenceDate),
+            hidden.size ? notInArray(schema.classes.userId, [...hidden]) : undefined,
+            hidden.size ? or(isNull(schema.classes.coachUserId), notInArray(schema.classes.coachUserId, [...hidden])) : undefined,
             gte(schema.attendances.occurrenceDate,from),
             lte(schema.attendances.occurrenceDate,through),
           ))

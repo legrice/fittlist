@@ -27,6 +27,7 @@ import { setGoing } from "@/app/actions/going";
 import type { AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { tabListKeyDown } from "@/lib/tab-list-keyboard";
 import { Toast, useToast } from "@/components/Toast";
 import { InstagramTagPrompt } from "@/components/InstagramTagPrompt";
 import { ShareLivePreview } from "@/components/ShareLivePreview";
@@ -1722,11 +1723,12 @@ export function ShareHubScreen({
               <Icon name="close" size={20} />
             </button>
             <h2>Style</h2>
-            <div className="shstyle-tabs" role="tablist" aria-label="Style choices">
+            <div className="shstyle-tabs" role="tablist" aria-label="Style choices" onKeyDown={tabListKeyDown}>
               <button
                 type="button"
                 role="tab"
                 aria-selected={styleSection === "presets"}
+                tabIndex={styleSection === "presets" ? 0 : -1}
                 className={styleSection === "presets" ? "on" : ""}
                 onClick={() => setStyleSection("presets")}
               >
@@ -1736,6 +1738,7 @@ export function ShareHubScreen({
                 type="button"
                 role="tab"
                 aria-selected={styleSection === "saved"}
+                tabIndex={styleSection === "saved" ? 0 : -1}
                 className={styleSection === "saved" ? "on" : ""}
                 onClick={() => setStyleSection("saved")}
               >

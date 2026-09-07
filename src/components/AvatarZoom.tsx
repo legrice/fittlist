@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/components/Icon";
 import { MessageComposer } from "@/components/MessageComposer";
@@ -41,6 +41,8 @@ export function AvatarZoom({
   signedIn?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
+  const photoRef = useRef<HTMLImageElement>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [availOpen, setAvailOpen] = useState(false);
@@ -49,6 +51,10 @@ export function AvatarZoom({
   const [mounted, setMounted] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    // A cached failure can finish before hydration attaches onError.
+    if (photoRef.current?.complete && !photoRef.current.naturalWidth) setFailedPhoto(photo);
+  }, [photo]);
 
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
   const first = name.trim().split(/\s+/)[0] || name;
@@ -77,9 +83,10 @@ export function AvatarZoom({
     }
   };
 
-  const face = photo ? (
+  const visiblePhoto = photo && photo !== failedPhoto ? photo : null;
+  const face = visiblePhoto ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img className={className} src={photo} alt={name} />
+    <img ref={photoRef} className={className} src={visiblePhoto} alt={name} onError={() => setFailedPhoto(visiblePhoto)} />
   ) : (
     <span className={`${className} ${className}-empty`} style={{ background: color }} aria-hidden="true">
       {initial}
@@ -123,9 +130,9 @@ export function AvatarZoom({
               <Icon name="close" size={20} />
             </button>
             <div className="avoverlay-top">
-              {photo ? (
+              {visiblePhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img className="avoverlay-photo" src={photo} alt={name} />
+                <img className="avoverlay-photo" src={visiblePhoto} alt={name} onError={() => setFailedPhoto(visiblePhoto)} />
               ) : (
                 <span className="avoverlay-photo avoverlay-photo-empty" style={{ background: color }}>
                   {initial}

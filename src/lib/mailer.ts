@@ -77,10 +77,10 @@ export async function sendMessage({
       console.log(`[mail:${kind}] to=${to} subject="${subject}"\n${text}`);
       status = "logged";
     }
-  } catch (err) {
+  } catch {
     ok = false;
     status = "error";
-    console.error("sendMessage failed", err);
+    console.error("sendMessage failed");
   }
   try {
     const db = await getDb();

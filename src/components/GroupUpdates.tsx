@@ -8,6 +8,7 @@ import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ReportContentButton } from "@/components/ReportContentButton";
+import { tabListKeyDown } from "@/lib/tab-list-keyboard";
 
 export type GroupUpdate = {
   id:string; kind:string; body:string | null; createdAt:string;
@@ -28,9 +29,9 @@ export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, 
       <span className="group-member-faces">{memberPreview.slice(0,5).map(member=><span key={member.id} style={{background:member.color}}>{member.photo ? <img src={member.photo} alt=""/> : member.name.charAt(0)}</span>)}</span>
       <span>{memberPreview.length} {memberPreview.length === 1 ? "member" : "members"}</span><Icon name="chevron_right" size={17}/>
     </button>
-    <div className="group-tabs group-segmented-tabs" role="tablist" aria-label="Group content">
-      <button role="tab" aria-selected={tab==="schedule"} className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button>
-      <button role="tab" aria-selected={tab==="updates"} className={tab==="updates"?"on":""} onClick={()=>{setTab("updates");setSeen(Date.now());localStorage.setItem(`group-updates-seen:${slug}:${viewerId}`,String(Date.now()));}}>Updates{unread > 0 && <span className="profile-update-count">{unread}</span>}</button>
+    <div className="group-tabs group-segmented-tabs" role="tablist" aria-label="Group content" onKeyDown={tabListKeyDown}>
+      <button type="button" role="tab" tabIndex={tab==="schedule"?0:-1} aria-selected={tab==="schedule"} className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button>
+      <button type="button" role="tab" tabIndex={tab==="updates"?0:-1} aria-selected={tab==="updates"} className={tab==="updates"?"on":""} onClick={()=>{setTab("updates");setSeen(Date.now());localStorage.setItem(`group-updates-seen:${slug}:${viewerId}`,String(Date.now()));}}>Updates{unread > 0 && <span className="profile-update-count">{unread}</span>}</button>
     </div>
     {tab==="schedule" ? schedule : <GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates} />}
     {membersOpen && <BodyPortal><div className="sheet-scrim" onClick={event=>{if(event.target===event.currentTarget)setMembersOpen(false);}}><section className="sheet group-members-sheet" role="dialog" aria-modal="true" aria-label="Group members" onKeyDown={event=>{if(event.key==="Escape"){event.stopPropagation();setMembersOpen(false);}}}><button autoFocus type="button" className="sheetclose sheet-dismiss" aria-label="Close members" onClick={()=>setMembersOpen(false)}><Icon name="close" size={20}/></button>{members}</section></div></BodyPortal>}

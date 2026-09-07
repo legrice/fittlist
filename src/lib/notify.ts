@@ -1,4 +1,4 @@
-import { and, count, desc, eq, isNull, notInArray, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, lt, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb, schema } from "@/db";
 
@@ -87,7 +87,9 @@ export async function unreadUpdateCount(userId: string, email: string): Promise<
   return counts.notifications + counts.messages;
 }
 
-export async function listNotifications(userId: string, limit = 50, excludeTypes: string[] = []) {
+export type NotificationCursor = { createdAt: string; id: string };
+
+export async function listNotifications(userId: string, limit = 50, excludeTypes: string[] = [], cursor?: NotificationCursor) {
   const db = await getDb();
   // Left join: an email subscriber has no account, and the row still shows.
   const actor = alias(schema.users, "actor");
@@ -100,6 +102,9 @@ export async function listNotifications(userId: string, limit = 50, excludeTypes
       href: schema.notifications.href,
       readAt: schema.notifications.readAt,
       createdAt: schema.notifications.createdAt,
+      // Preserve PostgreSQL's microseconds for paging; JS Date rounds these
+      // away and can otherwise skip notifications created in the same ms.
+      createdAtCursor: sql<string>`${schema.notifications.createdAt}::text`,
       actorId: actor.id,
       actorName: actor.name,
       actorPhoto: actor.photo,
@@ -109,19 +114,26 @@ export async function listNotifications(userId: string, limit = 50, excludeTypes
     .from(schema.notifications)
     .leftJoin(actor, eq(actor.id, schema.notifications.actorUserId))
     .where(
-      excludeTypes.length
-        ? and(
-            eq(schema.notifications.userId, userId),
-            notInArray(schema.notifications.type, excludeTypes),
-          )
-        : eq(schema.notifications.userId, userId),
+      and(
+        eq(schema.notifications.userId, userId),
+        excludeTypes.length ? notInArray(schema.notifications.type, excludeTypes) : undefined,
+        cursor ? or(
+          lt(schema.notifications.createdAt, sql`${cursor.createdAt}::timestamptz`),
+          and(eq(schema.notifications.createdAt, sql`${cursor.createdAt}::timestamptz`), lt(schema.notifications.id, cursor.id)),
+        ) : undefined,
+      ),
     )
-    .orderBy(desc(schema.notifications.createdAt))
+    .orderBy(desc(schema.notifications.createdAt), desc(schema.notifications.id))
     .limit(limit);
 }
 
-// Opening the notifications screen clears the unread badge.
-export async function markNotificationsRead(userId: string): Promise<void> {
+// Only acknowledge rows actually displayed. A failed load, a 50-row limit,
+// or a notification arriving during the request must not clear unseen updates.
+export async function markNotificationsRead(userId: string, notificationIds: string[]): Promise<void> {
+  const ids = [...new Set(notificationIds)].filter((id) =>
+    typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
+  ).slice(0, 50);
+  if (!ids.length) return;
   const db = await getDb();
   await db
     .update(schema.notifications)
@@ -129,6 +141,7 @@ export async function markNotificationsRead(userId: string): Promise<void> {
     .where(
       and(
         eq(schema.notifications.userId, userId),
+        inArray(schema.notifications.id, ids),
         isNull(schema.notifications.readAt),
         notInArray(schema.notifications.type, ["message", "feedback"]),
       ),

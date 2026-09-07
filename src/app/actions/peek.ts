@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
@@ -8,6 +8,7 @@ import { publicSchedules, shiftNaming } from "@/lib/coachweek";
 import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { canSeeWeek } from "@/lib/week";
+import { publicClassOccurrenceFilter } from "@/lib/group-schedule";
 
 /** A class in a person's peek: theirs to lead, or one they saved, and
  *  whether it is already on your own week. */
@@ -134,12 +135,14 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
   const theirMarks = canSee
     ? (
         await db
-          .select()
+          .select(getTableColumns(schema.attendances))
           .from(schema.attendances)
+          .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
           .where(
             and(
               eq(schema.attendances.userId, personUserId),
-              eq(schema.attendances.isPublic, true),
+              viewerId === personUserId ? undefined : eq(schema.attendances.isPublic, true),
+              publicClassOccurrenceFilter(schema.attendances.occurrenceDate),
             ),
           )
       ).filter((m) => m.occurrenceDate >= today && m.occurrenceDate <= last)
@@ -224,7 +227,7 @@ export async function personPeek(personUserId: string): Promise<Peek | null> {
     for (const m of theirMarks) {
       if (m.occurrenceDate !== iso) continue;
       const c = markedById.get(m.classId);
-      if (!c) continue;
+      if (!c || !runsOn(c, iso, dow)) continue;
       if (occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
       const st = c.studioId ? studioById.get(c.studioId) : null;
       // A gym's class lives under the studio, because its account has no

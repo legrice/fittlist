@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
-import { MarkSeen } from "@/components/MarkSeen";
+import { NotificationFeed, type NotificationPage } from "@/components/NotificationFeed";
 import { NewMessage, type MessagePerson } from "@/components/NewMessage";
 
 // Notifications and Messages share the same quiet list grammar, but each owns
@@ -175,17 +175,15 @@ function ThreadList({ threads, people }: { threads: Thread[]; people: MessagePer
 }
 
 export function UpdatesScreen({
-  notifications,
+  notificationPage,
   threads,
   mode,
-  markSeen,
   header,
   messagePeople = [],
 }: {
-  notifications?: Notif[];
+  notificationPage?: NotificationPage;
   threads?: Thread[];
   mode: "notifications" | "messages";
-  markSeen?: () => Promise<void>;
   /** The app header, built on the server and handed down. */
   header?: React.ReactNode;
   messagePeople?: MessagePerson[];
@@ -194,7 +192,6 @@ export function UpdatesScreen({
   return (
     <div className="pad">
       {header}
-      {mode === "notifications" && markSeen && <MarkSeen action={markSeen} />}
       <div className="admintop pagetop">
         <div>
           <h1>{mode === "notifications" ? "Notifications" : "Messages"}</h1>
@@ -209,7 +206,7 @@ export function UpdatesScreen({
       </div>
 
       {mode === "notifications" ? (
-        <NotificationList notifications={notifications ?? []} />
+        <NotificationFeed initialPage={notificationPage} renderList={(notifications) => <NotificationList notifications={notifications} />} />
       ) : (
         <ThreadList threads={threads ?? []} people={messagePeople} />
       )}

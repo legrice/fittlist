@@ -28,7 +28,10 @@
     "ios:run": "cap run ios",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx scripts/production-regressions.ts",
-    "test:browser": "node scripts/production-audit.mjs"
+    "test:browser": "node scripts/production-audit.mjs",
+    "check:notifications-browser": "node scripts/notification-browser-audit.mjs",
+    "check:data-integrity": "node --import tsx scripts/data-integrity-audit.ts && node --import tsx scripts/saved-visibility-check.ts",
+    "check:operations": "node --import tsx scripts/operations-audit-check.ts notifications && node --import tsx scripts/operations-audit-check.ts security && node --import tsx scripts/operations-audit-check.ts recovery"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

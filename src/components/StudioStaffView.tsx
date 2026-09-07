@@ -16,6 +16,7 @@ import { AgendaAvatar } from "@/components/Agenda";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { tabListKeyDown } from "@/lib/tab-list-keyboard";
 
 // The studio's invited people. Scheduling access is part of each coach rather
 // than a second copy of the same roster; tapping a person opens their settings.
@@ -198,11 +199,12 @@ export function StudioStaffView({
                 Front desk
               </button>
             </div>
-            <div className="staff-add-modes" role="tablist" aria-label="How to add staff">
+            <div className="staff-add-modes" role="tablist" aria-label="How to add staff" onKeyDown={tabListKeyDown}>
               <button
                 type="button"
                 role="tab"
                 aria-selected={coachAddMode === "search"}
+                tabIndex={coachAddMode === "search" ? 0 : -1}
                 className={coachAddMode === "search" ? "on" : ""}
                 onClick={() => setCoachAddMode("search")}
               >
@@ -212,6 +214,7 @@ export function StudioStaffView({
                 type="button"
                 role="tab"
                 aria-selected={coachAddMode === "email"}
+                tabIndex={coachAddMode === "email" ? 0 : -1}
                 className={coachAddMode === "email" ? "on" : ""}
                 onClick={() => setCoachAddMode("email")}
               >

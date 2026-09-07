@@ -119,8 +119,21 @@ type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 class ScheduleConflictError extends Error {}
 
 function postgresErrorCode(error: unknown): string | null {
-  if (!error || typeof error !== "object" || !("code" in error)) return null;
-  return typeof error.code === "string" ? error.code : null;
+  // Drizzle wraps driver errors; inspecting only the outer error silently
+  // disabled serializable/deadlock retries in production.
+  const seen = new Set<unknown>();
+  while (error && typeof error === "object" && !seen.has(error)) {
+    seen.add(error);
+    if ("code" in error && typeof error.code === "string") return error.code;
+    error = "cause" in error ? error.cause : null;
+  }
+  return null;
+}
+
+function validIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
 }
 
 /**
@@ -147,17 +160,16 @@ async function scheduleTransaction<T>(db: Db, work: (tx: Transaction) => Promise
   }
 }
 
-// Shared by publish (new rows) and edit (replaceClassId set: the original
-// row is swapped for rows on the selected days).
+// Shared by publishing new slots and updating the selected recurring set.
 async function save(userId: string, input: PublishInput, replaceClassId?: string): Promise<SaveResult> {
   const name = input.name.trim() || "New class";
   // A one-off is authoritative on its date: the weekday comes from the date,
   // not the day pills. Weekly classes fan out across the selected days.
   const oneOff = input.specificDate?.trim() || null;
-  if (oneOff && !/^\d{4}-\d{2}-\d{2}$/.test(oneOff)) return { ok: false, error: "Invalid date." };
+  if (oneOff && !validIsoDate(oneOff)) return { ok: false, error: "Invalid date." };
   // A one-off is its own date, so an end date only means something weekly.
   const endsOn = oneOff ? null : input.endsOn?.trim() || null;
-  if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn))
+  if (endsOn && !validIsoDate(endsOn))
     return { ok: false, error: "Invalid end date." };
   if (endsOn && endsOn < todayIso())
     return { ok: false, error: "That end date has already passed." };
@@ -165,7 +177,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     ? [dowOfDate(oneOff)]
     : [...new Set(input.days)].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
   if (!days.length) return { ok: false, error: oneOff ? "Pick a date." : "Pick at least one day." };
-  if (!/^\d{2}:\d{2}$/.test(input.startTime)) return { ok: false, error: "Invalid start time." };
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input.startTime)) return { ok: false, error: "Invalid start time." };
   const durationMin = Math.round(input.durationMin);
   if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
 
@@ -210,21 +222,10 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     const location = studioId ? null : input.location?.trim().slice(0, 120) || null;
     const timeZone = studio?.timeZone ?? owner.timeZone;
 
-  // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
-  // quietly put you back on the Friday you already said you were off.
-  const keptSkips = new Map<number, string[]>();
-  // Who was coming, by weekday, so the rewrite below can put them back. -1 is
-  // the one-off / single-day case, which has no weekday to key on.
-  const keptGoing = new Map<
-    number,
-    {
-      userId: string;
-      occurrenceDate: string;
-      companions: string[];
-      isPublic: boolean;
-      createdAt: Date;
-    }[]
-  >();
+  // Keep durable row identities whenever the same weekday (or one-off)
+  // survives. Saves, group plans, discussions and shared links all refer to
+  // the class id; deleting and reinserting the row discarded those relations.
+  const retainedByDay = new Map<number, typeof schema.classes.$inferSelect>();
   // The set this save belongs to.
   //
   // A new weekly class joins an existing one when it is the same class in the
@@ -299,13 +300,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     }
   }
   if (replaceClassId) {
-    const [existing] = await tx
-      .select({
-        id: schema.classes.id,
-        seriesId: schema.classes.seriesId,
-        specificDate: schema.classes.specificDate,
-      })
-      .from(schema.classes)
+    const [existing] = await tx.select().from(schema.classes)
       .where(and(eq(schema.classes.id, replaceClassId), eq(schema.classes.userId, userId)));
     if (!existing)
       return {
@@ -313,80 +308,21 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
         error: "This class changed or was deleted. Close it and reopen the latest schedule before saving.",
       };
     seriesId = existing.seriesId;
-    if (!existing.specificDate) {
-      // Editing a weekly class replaces its whole recurring set (all its
-      // weekly rows), so the selected days become the new set - one-off dated
-      // instances of the same class are left untouched.
-      //
-      // Scoped to the series, not the template: the template is keyed on the
-      // class NAME, so a coach teaching the same class at two studios shares
-      // one template across both. Deleting by template took the other studio's
-      // class with it and rewrote it as this one.
-      // Editing replaces the rows, so anything pointing at them has to be
-      // carried over first. Going marks are the reason: they reference the row
-      // by id, so the delete below would fail on the foreign key, and a coach
-      // changing a description could not save at all once anyone was coming.
-      const old = await tx
-        .select({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek })
-        .from(schema.classes)
-        .where(
-          and(
-            eq(schema.classes.userId, userId),
-            eq(schema.classes.seriesId, existing.seriesId),
-            isNull(schema.classes.specificDate),
-          ),
-        );
-      const oldIds = old.map((o) => o.id);
-      const dayOfOldId = new Map(old.map((o) => [o.id, o.dayOfWeek]));
-      if (oldIds.length) {
-        const marks = await tx
-          .select()
-          .from(schema.attendances)
-          .where(inArray(schema.attendances.classId, oldIds));
-        for (const m of marks) {
-          const dow = dayOfOldId.get(m.classId);
-          if (dow === undefined) continue;
-          const list = keptGoing.get(dow) ?? [];
-          list.push({
-            userId: m.userId,
-            occurrenceDate: m.occurrenceDate,
-            companions: m.companions,
-            isPublic: m.isPublic,
-            createdAt: m.createdAt,
-          });
-          keptGoing.set(dow, list);
-        }
-        await tx.delete(schema.attendances).where(inArray(schema.attendances.classId, oldIds));
-      }
-      const gone = await tx
-        .delete(schema.classes)
-        .where(
-          and(
-            eq(schema.classes.userId, userId),
-            eq(schema.classes.seriesId, existing.seriesId),
-            isNull(schema.classes.specificDate),
-          ),
-        )
-        .returning({ dayOfWeek: schema.classes.dayOfWeek, skipDates: schema.classes.skipDates });
-      for (const g of gone) if (g.skipDates.length) keptSkips.set(g.dayOfWeek, g.skipDates);
+    const oldRows = existing.specificDate ? [existing] : await tx.select().from(schema.classes).where(and(
+      eq(schema.classes.userId, userId),
+      eq(schema.classes.seriesId, existing.seriesId),
+      isNull(schema.classes.specificDate),
+    ));
+    if (oneOff) {
+      retainedByDay.set(days[0], existing);
     } else {
-      const marks = await tx
-        .select()
-        .from(schema.attendances)
-        .where(eq(schema.attendances.classId, existing.id));
-      for (const m of marks) {
-        const list = keptGoing.get(-1) ?? [];
-        list.push({
-          userId: m.userId,
-          occurrenceDate: m.occurrenceDate,
-          companions: m.companions,
-          isPublic: m.isPublic,
-          createdAt: m.createdAt,
-        });
-        keptGoing.set(-1, list);
-      }
-      await tx.delete(schema.attendances).where(eq(schema.attendances.classId, existing.id));
-      await tx.delete(schema.classes).where(eq(schema.classes.id, existing.id));
+      for (const row of oldRows) if (days.includes(row.dayOfWeek)) retainedByDay.set(row.dayOfWeek, row);
+    }
+    const retainedIds = new Set([...retainedByDay.values()].map(row => row.id));
+    const removedIds = oldRows.filter(row => !retainedIds.has(row.id)).map(row => row.id);
+    if (removedIds.length) {
+      await tx.delete(schema.attendances).where(inArray(schema.attendances.classId, removedIds));
+      await tx.delete(schema.classes).where(inArray(schema.classes.id, removedIds));
     }
   }
 
@@ -405,62 +341,33 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // naturally idempotent. The signature above selects the existing series;
   // only occurrences that are not already part of it are inserted.
   const existingDays = new Set(existingSeriesRows.map((row) => row.dayOfWeek));
-  const daysToInsert = replaceClassId ? days : days.filter((day) => !existingDays.has(day));
-  const inserted = daysToInsert.length
-    ? await tx.insert(schema.classes).values(
-      daysToInsert.map((dayOfWeek) => ({
-      userId,
-      templateId: template.id,
-      seriesId,
-      dayOfWeek,
-      specificDate: oneOff,
-      endsOn,
-      skipDates: oneOff ? [] : (keptSkips.get(dayOfWeek) ?? []),
-      startTime: input.startTime,
-      timeZone,
-      durationMin,
-      name,
-      classType,
-      description,
-      image,
-      studioId,
-      location,
-      isPublic,
-      rsvp,
-      links,
-      })),
-    ).returning({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek })
-    : [];
-
-  // Put the Going marks back on the rows that replaced the ones they were on.
-  // A day that no longer runs has nowhere to put them, and those people are
-  // told about it by the caller.
-  if (keptGoing.size) {
-    const idForDay = new Map(inserted.map((r) => [r.dayOfWeek, r.id]));
-    const rows: {
-      userId: string;
-      classId: string;
-      occurrenceDate: string;
-      companions: string[];
-      isPublic: boolean;
-      createdAt: Date;
-    }[] = [];
-    for (const [dow, marks] of keptGoing) {
-      const classId = dow === -1 ? inserted[0]?.id : idForDay.get(dow);
-      if (!classId) continue;
-      for (const m of marks) {
-        rows.push({
-          userId: m.userId,
-          classId,
-          occurrenceDate: m.occurrenceDate,
-          companions: m.companions,
-          isPublic: m.isPublic,
-          createdAt: m.createdAt,
-        });
+  const valuesForDay = (dayOfWeek: number) => ({
+    userId, templateId: template.id, seriesId, dayOfWeek, specificDate: oneOff,
+    endsOn, skipDates: oneOff ? [] : (retainedByDay.get(dayOfWeek)?.skipDates ?? []),
+    startTime: input.startTime, timeZone, durationMin, name, classType,
+    description, image, studioId, location, isPublic, rsvp, links,
+  });
+  const inserted: { id: string; dayOfWeek: number }[] = [];
+  for (const [dayOfWeek, row] of retainedByDay) {
+    await tx.update(schema.classes).set(valuesForDay(dayOfWeek)).where(eq(schema.classes.id, row.id));
+    // A one-off moved to another date remains the same class people saved.
+    // Move its dated associations together, including the existing group post
+    // so comments/reactions keep their identity as well.
+    if (row.specificDate && oneOff && row.specificDate !== oneOff) {
+      for (const table of [schema.attendances, schema.groupClasses, schema.groupPosts,
+        schema.calendarActivityLikes, schema.calendarActivityComments] as const) {
+        await tx.update(table).set({ occurrenceDate: oneOff }).where(and(
+          eq(table.classId, row.id), eq(table.occurrenceDate, row.specificDate),
+        ));
       }
     }
-    if (rows.length) await tx.insert(schema.attendances).values(rows).onConflictDoNothing();
+    inserted.push({ id: row.id, dayOfWeek });
   }
+  const daysToInsert = days.filter(day => !retainedByDay.has(day) && (replaceClassId || !existingDays.has(day)));
+  if (daysToInsert.length) inserted.push(...await tx.insert(schema.classes)
+    .values(daysToInsert.map(valuesForDay))
+    .returning({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek }));
+  inserted.sort((a, b) => days.indexOf(a.dayOfWeek) - days.indexOf(b.dayOfWeek));
 
   // Log this class into the shared per-studio catalog (deduped by studio +
   // normalized name). Public + studio only: private sessions must never leak
@@ -667,8 +574,8 @@ export async function deleteClass(
 
   const outcome = await scheduleTransaction(db, async (tx) => {
     const [row] = await tx.select().from(schema.classes).where(eq(schema.classes.id, classId));
-    // The class id is the delete precondition. A concurrent edit replaces it;
-    // a concurrent delete removes it. Either way, retrying becomes a no-op.
+    // Re-read after any serialization retry. A concurrently removed weekday
+    // no longer exists, so repeating the deletion becomes a no-op.
     if (!row || row.userId !== candidate.userId) {
       return { ok: true as const, count: 0, changed: false as const, ownerId: candidate.userId, told: [] };
     }
@@ -714,7 +621,7 @@ export async function deleteClass(
     // falls through to the ordinary row deletion below.
     if (scope === "occurrence" && !row.specificDate) {
       const iso = occurrenceDate?.trim() ?? "";
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(iso))
+      if (!validIsoDate(iso))
         return { ok: false as const, error: "Which date?" };
       if (row.skipDates.includes(iso)) {
         return { ok: true as const, count: 1, changed: false as const, ownerId, told: [], about };

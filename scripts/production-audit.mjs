@@ -158,12 +158,35 @@ async function navigationAudit(browser) {
     }
     for (const origin of ["/calendar", "/calendar/following", "/support"]) {
       for (const target of ["/privacy", "/terms", ...(origin === "/support" ? [] : ["/support"])]) {
-        await page.goto(base + origin);
+        if (page.url() !== base + origin) await page.goto(base + origin);
+        const originReady = origin === "/support"
+          ? page.getByRole("heading", {name:"How can we help?",exact:true})
+          : page.getByRole("navigation", {name:"Calendar view",exact:true});
+        await originReady.waitFor();
         await page.locator(`a[href="${target}"]`).first().click();
         await page.waitForURL(base + target);
         await page.getByRole("button", {name:"Back",exact:true}).first().click();
         await page.waitForURL(base + origin);
+        // History updates its URL before WebKit finishes restoring the page.
+        // Wait for the actual destination instead of interrupting that restore.
+        await originReady.waitFor();
       }
+    }
+    for (const origin of ["/calendar", "/calendar/following"]) {
+      await page.goto(base + origin);
+      await page.getByRole("button", {name:"Search FittList",exact:true}).click();
+      const search=page.locator('.site-search-sheet input[type="search"]');
+      await search.fill("Audit");
+      await page.locator('.site-search-results a[href="/s/audit-studio?from=search"]').first().click();
+      await page.waitForURL(base + "/s/audit-studio?from=search");
+      await page.getByRole("button",{name:"Back to search",exact:true}).click();
+      await page.waitForURL(base + origin);
+      await search.waitFor();
+      assert.equal(await search.inputValue(), "Audit", "Back must restore the search query");
+      await page.getByRole("button",{name:"Close search",exact:true}).click();
+      await page.reload();
+      assert.equal(await page.locator(".site-search-sheet").count(),0,"Dismissed search must stay closed");
+      console.log(`Search Back restoration verified: ${origin}`);
     }
     for (const [route, trigger, dialogName] of [["/auditcoach", "More profile actions", "Profile actions"], ["/g/audit-group", "More group actions", "Group actions"]]) {
       await page.goto(base + route);

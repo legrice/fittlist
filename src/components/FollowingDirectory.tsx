@@ -11,6 +11,7 @@ import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { toggleStudioVisit } from "@/app/actions/endorsements";
 import { toggleGroupFavorite } from "@/app/actions/groups";
 import { Icon } from "@/components/Icon";
+import { tabListKeyDown } from "@/lib/tab-list-keyboard";
 import { PLACE_KIND_LABELS } from "@/lib/studio";
 import type {
   FollowingDirectoryData,
@@ -113,11 +114,12 @@ export function FollowingDirectory({ data, mode }: { data: FollowingDirectoryDat
           <span aria-hidden="true" />
         </header>
 
-        <div className="follow-directory-tabs" role="tablist" aria-label={`${data.title} lists`}>
+        <div className="follow-directory-tabs" role="tablist" aria-label={`${data.title} lists`} onKeyDown={tabListKeyDown}>
           <button
             type="button"
             role="tab"
             aria-selected={tab === "following"}
+            tabIndex={tab === "following" ? 0 : -1}
             className={tab === "following" ? "on" : ""}
             onClick={() => selectTab("following")}
           >
@@ -127,6 +129,7 @@ export function FollowingDirectory({ data, mode }: { data: FollowingDirectoryDat
             type="button"
             role="tab"
             aria-selected={tab === "discover"}
+            tabIndex={tab === "discover" ? 0 : -1}
             className={tab === "discover" ? "on" : ""}
             onClick={() => selectTab("discover")}
           >

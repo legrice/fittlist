@@ -12,6 +12,7 @@ import { publicSchedules } from "@/lib/coachweek";
 import { occurrenceEnded, runsOn } from "@/lib/format";
 import { staffStudiosForUser } from "@/lib/staff-studios";
 import { hiddenFrom } from "@/lib/blocks";
+import { publicClassOccurrenceFilter, publicGroupOccurrenceFilter, visibleGroupFilter } from "@/lib/group-schedule";
 
 /** The private profile/account surface intentionally has its own small query.
  * Favorites and group calendars belong to /saved; loading all of them before
@@ -164,7 +165,7 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
       .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
       .innerJoin(schema.users, eq(schema.users.id, schema.classes.userId))
       .leftJoin(schema.studios, eq(schema.studios.id, schema.classes.studioId))
-      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso())))
+      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()), publicClassOccurrenceFilter(schema.attendances.occurrenceDate)))
       .orderBy(asc(schema.attendances.occurrenceDate), asc(schema.classes.startTime))
       .limit(12),
     staffStudiosForUser(userId),
@@ -231,13 +232,14 @@ export async function youDashboardData(): Promise<YouDashboardData | null> {
         .select({ id: schema.groups.id, ownerUserId: schema.groups.ownerUserId, name: schema.groups.name, slug: schema.groups.slug, photo: schema.groups.photo, memberCount: count(schema.groupMembers.id) })
         .from(schema.groups)
         .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
-        .where(inArray(schema.groups.id, groupIds))
+        .where(and(inArray(schema.groups.id, groupIds), visibleGroupFilter(userId)))
         .groupBy(schema.groups.id, schema.groups.ownerUserId, schema.groups.name, schema.groups.slug, schema.groups.photo, schema.groups.createdAt)
         .orderBy(desc(schema.groups.createdAt))
     : [];
-  const [groupMemberRows, groupClassRows] = groupIds.length ? await Promise.all([
-    db.select({ groupId: schema.groupMembers.groupId, id: schema.users.id, name: schema.users.name, photo: schema.users.photoThumb, avatarColor: schema.users.avatarColor }).from(schema.groupMembers).innerJoin(schema.users, eq(schema.users.id, schema.groupMembers.userId)).where(inArray(schema.groupMembers.groupId, groupIds)),
-    db.select({ groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate, ownerUserId: schema.classes.userId, coachUserId: schema.classes.coachUserId }).from(schema.groupClasses).innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId)).where(and(inArray(schema.groupClasses.groupId, groupIds), gte(schema.groupClasses.occurrenceDate, todayIso()))),
+  const visibleGroupIds = groupBaseRows.map(group => group.id);
+  const [groupMemberRows, groupClassRows] = visibleGroupIds.length ? await Promise.all([
+    db.select({ groupId: schema.groupMembers.groupId, id: schema.users.id, name: schema.users.name, photo: schema.users.photoThumb, avatarColor: schema.users.avatarColor }).from(schema.groupMembers).innerJoin(schema.users, eq(schema.users.id, schema.groupMembers.userId)).where(inArray(schema.groupMembers.groupId, visibleGroupIds)),
+    db.select({ groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate, ownerUserId: schema.classes.userId, coachUserId: schema.classes.coachUserId }).from(schema.groupClasses).innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId)).where(and(inArray(schema.groupClasses.groupId, visibleGroupIds), gte(schema.groupClasses.occurrenceDate, todayIso()), publicGroupOccurrenceFilter())),
   ]) : [[], []];
   const visibleGroupClassRows = groupClassRows.filter((row) =>
     !hidden.has(row.ownerUserId) && (!row.coachUserId || !hidden.has(row.coachUserId))

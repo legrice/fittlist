@@ -16,7 +16,7 @@ async function main() {
     ["class delete", /tx\s*\.delete\(schema\.classes\)/],
     ["template upsert", /tx\s*\.insert\(schema\.classTemplates\)/],
     ["class insert", /tx\s*\.insert\(schema\.classes\)/],
-    ["attendance restore", /tx\s*\.insert\(schema\.attendances\)/],
+    ["class update preserving references", /tx\s*\.update\(schema\.classes\)/],
     ["studio catalog upsert", /tx\s*\.insert\(schema\.studioClasses\)/],
   ] as const) {
     assert(operation.test(saveTransaction), `class save transaction is missing ${label}`);

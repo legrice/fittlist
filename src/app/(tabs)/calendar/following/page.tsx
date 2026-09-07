@@ -7,6 +7,7 @@ import { avatarColor } from "@/lib/avatar";
 import { FollowingScreen } from "@/components/FollowingScreen";
 import { todayIso } from "@/lib/format";
 import { managedCalendarsForUser } from "@/lib/managed-calendars";
+import { publicGroupOccurrenceFilter, visibleGroupFilter } from "@/lib/group-schedule";
 
 export const dynamic = "force-dynamic";
 
@@ -63,19 +64,21 @@ export default async function DiscoverPage() {
         .from(schema.groups)
         .leftJoin(schema.groupMembers, eq(schema.groupMembers.groupId, schema.groups.id))
         .leftJoin(schema.groupFavorites, eq(schema.groupFavorites.groupId, schema.groups.id))
-        .where(or(
+        .where(and(or(
           eq(schema.groups.ownerUserId, userId),
           eq(schema.groupMembers.userId, userId),
           eq(schema.groupFavorites.userId, userId),
-        ));
+        ), visibleGroupFilter(userId)));
       const ids = rows.map((row) => row.id);
       const classRows = ids.length
         ? await db.select({ groupId: schema.groupClasses.groupId, classId: schema.groupClasses.classId, iso: schema.groupClasses.occurrenceDate })
           .from(schema.groupClasses)
+          .innerJoin(schema.classes, eq(schema.classes.id, schema.groupClasses.classId))
           .where(and(
             inArray(schema.groupClasses.groupId, ids),
             gte(schema.groupClasses.occurrenceDate, today),
             lte(schema.groupClasses.occurrenceDate, through),
+            publicGroupOccurrenceFilter(),
           ))
         : [];
       return { rows, classRows };

@@ -3,12 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { avatarColor } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
-import { listNotifications, markNotificationsRead } from "@/lib/notify";
+import { listNotifications, markNotificationsRead, type NotificationCursor } from "@/lib/notify";
 
-export async function loadNotificationSheet() {
+export async function loadNotificationSheet(cursor?: NotificationCursor) {
   const userId = await getSessionUserId();
-  if (!userId) return [];
-  const notifications = (await listNotifications(userId, 50, ["message", "feedback"])).map(
+  if (!userId) return { notifications: [], nextCursor: null };
+  if (cursor && (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cursor.id) ||
+    typeof cursor.createdAt !== "string" || !Number.isFinite(Date.parse(cursor.createdAt))
+  )) throw new Error("Invalid notification page.");
+  const rows = await listNotifications(userId, 51, ["message", "feedback"], cursor);
+  const notifications = rows.slice(0, 50).map(
     (notification) => ({
       ...notification,
       actor: notification.actorId
@@ -24,17 +29,20 @@ export async function loadNotificationSheet() {
         : null,
     }),
   );
-  await markNotificationsRead(userId);
-  revalidatePath("/", "layout");
-  return notifications;
+  const last = notifications.at(-1);
+  return {
+    notifications,
+    nextCursor: rows.length > 50 && last ? { createdAt: last.createdAtCursor, id: last.id } : null,
+  };
 }
 
-// Viewing Notifications is the "I've seen these" signal. Message threads keep
-// their independent unread counts until the conversation itself opens.
-export async function markUpdatesSeen(): Promise<void> {
+// Acknowledge the displayed rows after render. Message threads keep their
+// independent unread counts until the conversation itself opens.
+export async function markUpdatesSeen(notificationIds: string[]): Promise<void> {
   const userId = await getSessionUserId();
   if (!userId) return;
-  await markNotificationsRead(userId);
+  if (!Array.isArray(notificationIds)) return;
+  await markNotificationsRead(userId, notificationIds);
   // The badge is in every header, so everything cached goes.
   revalidatePath("/", "layout");
 }

@@ -1,4 +1,5 @@
 "use client";
+import { useSearchHistory } from "@/lib/use-search-history";
 import { NotificationDot } from "@/components/NotificationDot";
 
 import { LoadingDots } from "@/components/LoadingDots";
@@ -163,7 +164,7 @@ export function CalendarScreen({
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
-  const [discoverOpen, setDiscoverOpen] = useState(false);
+  const [discoverOpen, setDiscoverOpen] = useSearchHistory(viewer.id);
   const [profileQrOpen, setProfileQrOpen] = useState(false);
   const [profileActionsOpen, setProfileActionsOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);

@@ -125,10 +125,10 @@ export async function sendDailyAdminStats(): Promise<{ sent: number }> {
   let sent = 0;
   for (const to of admins) {
     try {
-      await sendMessage({ to, kind: "adminstats", subject, text });
-      sent++;
-    } catch (err) {
-      console.error("daily stats email failed", to, err);
+      const result = await sendMessage({ to, kind: "adminstats", subject, text });
+      if (result.ok) sent++;
+    } catch {
+      console.error("daily stats email failed");
     }
   }
   return { sent };

@@ -2,7 +2,8 @@ import { and, asc, eq, getTableColumns, gte, inArray, isNull, sql } from "drizzl
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { shiftCoach, shiftNaming } from "@/lib/coachweek";
-import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
+import { clockParts, dowOfDate, fmtDayHeader, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
+import { publicClassOccurrenceFilter } from "@/lib/group-schedule";
 
 const displayedTimeMinutes = ({ hm, ap }: { hm: string; ap: string }): number => {
   const [hourRaw, minuteRaw] = hm.split(":").map(Number);
@@ -167,16 +168,20 @@ export type SharedWeekItem = {
  */
 export async function sharedWeek(
   userId: string,
+  opts: { includePrivateSaved?: boolean } = {},
 ): Promise<{ iso: string; label: string; items: SharedWeekItem[] }[]> {
   const db = await getDb();
   const [marks, own] = await Promise.all([
     db
-      .select()
+      .select(getTableColumns(schema.attendances))
       .from(schema.attendances)
+      .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
       .where(
         and(
           eq(schema.attendances.userId, userId),
+          opts.includePrivateSaved ? undefined : eq(schema.attendances.isPublic, true),
           gte(schema.attendances.occurrenceDate, todayIso()),
+          publicClassOccurrenceFilter(schema.attendances.occurrenceDate),
         ),
       )
       .orderBy(asc(schema.attendances.occurrenceDate)),
@@ -208,7 +213,7 @@ export async function sharedWeek(
   const byDay = new Map<string, SharedWeekItem[]>();
   for (const m of marks) {
     const c = classById.get(m.classId);
-    if (!c) continue;
+    if (!c || !c.isPublic || !runsOn(c, m.occurrenceDate, dowOfDate(m.occurrenceDate))) continue;
     const coach = coachById.get(c.userId);
     // The base its class page lives under. A coach's is their handle; a gym's
     // account has none by design, so its classes are addressed under the
@@ -302,13 +307,14 @@ export async function sharedWeek(
  */
 export async function memberWeek(
   userId: string,
+  opts: { includePrivateSaved?: boolean } = {},
 ): Promise<{ iso: string; label: string; items: SharedWeekItem[] }[]> {
   const last = (() => {
     const d = new Date(`${todayIso()}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + 6);
     return d.toISOString().slice(0, 10);
   })();
-  return (await sharedWeek(userId))
+  return (await sharedWeek(userId, opts))
     .filter((day) => day.iso <= last)
     .map((day) => ({
       ...day,
@@ -338,12 +344,14 @@ export async function myWeek(
   })();
   const [marks, own] = await Promise.all([
     db
-      .select()
+      .select(getTableColumns(schema.attendances))
       .from(schema.attendances)
+      .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
       .where(
         and(
           eq(schema.attendances.userId, userId),
           gte(schema.attendances.occurrenceDate, sinceIso),
+          publicClassOccurrenceFilter(schema.attendances.occurrenceDate),
         ),
       )
       .orderBy(asc(schema.attendances.occurrenceDate)),
@@ -453,6 +461,7 @@ export async function myWeek(
           .where(
             and(
               inArray(schema.attendances.userId, mutuals),
+              eq(schema.attendances.isPublic, true),
               gte(schema.attendances.occurrenceDate, todayIso()),
             ),
           );
@@ -497,7 +506,7 @@ export async function myWeek(
     const c = classById.get(m.classId);
     // A class deleted out from under a mark leaves the mark behind for a
     // moment. Skip it rather than rendering a row with nothing in it.
-    if (!c) continue;
+    if (!c || !c.isPublic || !runsOn(c, m.occurrenceDate, dowOfDate(m.occurrenceDate))) continue;
     const coach = coachById.get(c.userId);
     // The base its class page lives under. A coach's is their handle; a gym's
     // account has none by design, so its classes are addressed under the

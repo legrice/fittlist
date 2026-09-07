@@ -1,4 +1,5 @@
 "use client";
+import { readSearchHistory, writeSearchQuery } from "@/lib/use-search-history";
 
 import { useEffect, useRef, useState } from "react";
 import { BodyPortal } from "@/components/BodyPortal";
@@ -6,7 +7,8 @@ import { Icon } from "@/components/Icon";
 import { SearchScreen } from "@/components/SearchScreen";
 
 export function SiteSearchSheet({ todayIso, userId, onClose }: { todayIso: string; userId: string; onClose: () => void }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => readSearchHistory(userId)?.query ?? "");
+  const changeQuery = (value: string) => { setQuery(value); writeSearchQuery(userId, value); };
   const sheet = useRef<HTMLElement>(null);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
@@ -28,8 +30,8 @@ export function SiteSearchSheet({ todayIso, userId, onClose }: { todayIso: strin
           <button type="button" className="sheetclose sheet-dismiss" aria-label="Close search" onClick={onClose}><Icon name="close" size={20} /></button>
           <label>
             <Icon name="search" size={21} />
-            <input autoFocus type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search FittList" aria-label="Search FittList" />
-            {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}><Icon name="close" size={18} /></button>}
+            <input autoFocus type="search" value={query} onChange={(event) => changeQuery(event.target.value)} placeholder="Search FittList" aria-label="Search FittList" />
+            {query && <button type="button" aria-label="Clear search" onClick={() => changeQuery("")}><Icon name="close" size={18} /></button>}
           </label>
         </header>
         <div className="utility-sheet-content site-search-results"><SearchScreen todayIso={todayIso} userId={userId} query={query} showRecents={false} /></div>

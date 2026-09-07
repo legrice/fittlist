@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
+import { visibleGroupFilter } from "@/lib/group-schedule";
 
 export type FollowingDirectoryKind = "people" | "studios" | "groups";
 export type FollowingDirectoryTab = "following" | "discover";
@@ -351,6 +352,7 @@ export async function followingDirectoryBatch(
   const conditions = tab === "following"
     ? following.size ? and(
         inArray(schema.groups.id, [...following]),
+        visibleGroupFilter(userId),
         hidden.size ? notInArray(schema.groups.ownerUserId, [...hidden]) : undefined,
       ) : null
     : and(

@@ -1,0 +1,89 @@
+name: Quality checks
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: ""
+      RESEND_API_KEY: ""
+      BLOB_READ_WRITE_TOKEN: ""
+      ALLOW_EMBEDDED_DB_IN_PRODUCTION: "true"
+      INVITE_ONLY: "false"
+      FANS_ENABLED: "true"
+      NEXT_PUBLIC_ORIGIN: http://localhost:3100
+      AUDIT_BROWSERS: chromium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Prepare isolated build environment
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from "node:fs";
+          import { randomBytes } from "node:crypto";
+          appendFileSync(process.env.GITHUB_ENV, `SESSION_SECRET=${randomBytes(32).toString("hex")}\nPGLITE_DATA_DIR=${process.env.RUNNER_TEMP}/fittlist-build-db\n`);
+          NODE
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run check:data-integrity
+      - run: npm run check:operations
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Seed disposable browser fixtures
+        run: |
+          task_fixture_path=$(node --import tsx scripts/audit-fixtures.ts | tail -n 1)
+          test -f "$task_fixture_path"
+          echo "AUDIT_FIXTURES=$task_fixture_path" >> "$GITHUB_ENV"
+      - name: Production browser audit
+        run: npm run test:browser
+      - name: Notification pagination and failure recovery
+        run: npm run check:notifications-browser
+      - name: Collect sanitized report
+        if: always()
+        run: |
+          node --input-type=module <<'NODE'
+          import { existsSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
+          if (!process.env.AUDIT_FIXTURES || !existsSync(process.env.AUDIT_FIXTURES)) process.exit(0);
+          const fixture = JSON.parse(readFileSync(process.env.AUDIT_FIXTURES, "utf8"));
+          const source = `${fixture.directory}/report.json`;
+          if (!existsSync(source)) process.exit(0);
+          const report = JSON.parse(readFileSync(source, "utf8"));
+          // Never publish fixtures, sessions, server logs, screenshots, raw
+          // request diagnostics, or exception bodies as CI artifacts.
+          const sanitized = {
+            browsers: report.browsers?.map(({name,result,flows}) => ({name,result,flows})),
+            security: report.security,
+            performance: report.performance,
+            accessibility: report.accessibility,
+            navigation: report.navigation,
+          };
+          mkdirSync("audit-artifacts", {recursive:true});
+          writeFileSync("audit-artifacts/report.json", JSON.stringify(sanitized, null, 2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-report
+          path: audit-artifacts/report.json
+          if-no-files-found: ignore
+          retention-days: 14

@@ -26,40 +26,47 @@ async function init(): Promise<Db> {
       // clears the getDb memo, so the next request simply tries again.
       connectionTimeoutMillis: 10_000,
     });
-    const db = drizzle(pool, { schema });
-    // The migrator stays off the hot path. Almost every cold start finds the
-    // database already at the newest migration, and for those one cheap
-    // SELECT is the whole ceremony: no advisory lock to contend on, nothing
-    // that can wedge the site. Only a database that is actually behind takes
-    // the lock, and even then every wait is bounded, because a frozen
-    // serverless instance holding an unbounded lock took the site down once.
-    const latest = journal.entries[journal.entries.length - 1].when;
-    let behind = true;
     try {
-      const r = await pool.query(
-        'select created_at from "drizzle"."__drizzle_migrations" order by created_at desc limit 1',
-      );
-      behind = r.rows.length === 0 || Number(r.rows[0].created_at) < latest;
-    } catch {
-      // No migrations table yet: a fresh database, which is as behind as it gets.
-    }
-    if (behind) {
-      const lock = await pool.connect();
+      const db = drizzle(pool, { schema });
+      // The migrator stays off the hot path. Almost every cold start finds the
+      // database already at the newest migration, and for those one cheap
+      // SELECT is the whole ceremony: no advisory lock to contend on, nothing
+      // that can wedge the site. Only a database that is actually behind takes
+      // the lock, and even then every wait is bounded, because a frozen
+      // serverless instance holding an unbounded lock took the site down once.
+      const latest = journal.entries[journal.entries.length - 1].when;
+      let behind = true;
       try {
-        await lock.query("set lock_timeout = '15s'");
-        await lock.query("select pg_advisory_lock(872619)");
-        await migrate(db, { migrationsFolder: "./drizzle" });
-      } finally {
+        const r = await pool.query(
+          'select created_at from "drizzle"."__drizzle_migrations" order by created_at desc limit 1',
+        );
+        behind = r.rows.length === 0 || Number(r.rows[0].created_at) < latest;
+      } catch {
+        // No migrations table yet: a fresh database, which is as behind as it gets.
+      }
+      if (behind) {
+        const lock = await pool.connect();
         try {
-          await lock.query("select pg_advisory_unlock(872619)");
-        } catch {
-          // The session dying releases the lock anyway.
+          await lock.query("set lock_timeout = '15s'");
+          await lock.query("select pg_advisory_lock(872619)");
+          await migrate(db, { migrationsFolder: "./drizzle" });
         } finally {
-          lock.release();
+          try {
+            await lock.query("select pg_advisory_unlock(872619)");
+          } catch {
+            // The session dying releases the lock anyway.
+          } finally {
+            lock.release();
+          }
         }
       }
+      return db as unknown as Db;
+    } catch (error) {
+      // getDb retries a failed initialization. Close this unsuccessful pool
+      // first so outages cannot leave a new set of connections on every retry.
+      await pool.end().catch(() => undefined);
+      throw error;
     }
-    return db as unknown as Db;
   }
   if (process.env.NODE_ENV === "production" && process.env.ALLOW_EMBEDDED_DB_IN_PRODUCTION !== "true") {
     throw new Error(

@@ -1,0 +1,655 @@
+{
+  "date": "2026-09-07",
+  "outcome": "completed_with_remaining_findings",
+  "environment": "Disposable synthetic databases, local production builds, desktop browsers and iOS simulator; no production data or external deliveries changed",
+  "dataIntegrity": {
+    "casesPassed": 28,
+    "savedLoaderGroupsPassed": 5
+  },
+  "operations": {
+    "notificationGroupsPassed": 8,
+    "notificationBrowser": [
+      "Legacy page displays exactly 50 then 57 rows in order, without duplicates; unread remains until older rows display",
+      "Sheet failed load-more preserves first page and cursor; retry appends exactly seven remaining rows",
+      "Cached reopen preserves visible first page on refresh failure; retry refreshes first page rather than skipping ahead",
+      "Failed initial load preserves unread state; retry displays only the authenticated viewer's notifications"
+    ],
+    "security": [
+      "Production refuses missing/weak signing secrets; OAuth state rejects missing or mismatched values",
+      "Every scheduled endpoint rejects absent configuration and unauthorized GET/POST without executing jobs",
+      "Push and mail failure logs omit recipients, bearer endpoints, headers, bodies, and raw errors; dead push endpoints are still pruned"
+    ],
+    "recovery": [
+      "All 118 migrations apply to a clean database; rerunning is idempotent",
+      "Isolated PGlite snapshot restores accounts, class relations, saves, and migration history",
+      "Failed isolated transaction rolls back without partial account changes",
+      "Repeated PostgreSQL initialization failures close each Pool and permit retry (transport mocked)"
+    ]
+  },
+  "dependencies": {
+    "production": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "all": {
+      "info": 0,
+      "low": 0,
+      "moderate": 7,
+      "high": 0,
+      "critical": 0,
+      "total": 7
+    }
+  },
+  "accessibility": [
+    {
+      "name": "Accessibility /scalecoach0",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /scalecoach1",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /scalecoach2",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /s/scale-studio-0",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /g/scale-group-0",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /g/scale-group-1",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /discover",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /support",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /privacy",
+      "status": "passed"
+    },
+    {
+      "name": "Accessibility /terms",
+      "status": "passed"
+    },
+    {
+      "name": "Segmented keyboard navigation /discover",
+      "status": "passed"
+    },
+    {
+      "name": "Segmented keyboard navigation /g/scale-group-0",
+      "status": "passed"
+    },
+    {
+      "name": "Segmented keyboard navigation /s/scale-studio-0",
+      "status": "passed"
+    },
+    {
+      "name": "Profile overflow keyboard and reduced motion",
+      "status": "passed"
+    },
+    {
+      "name": "Signed-out welcome accessibility",
+      "status": "passed"
+    }
+  ],
+  "visual": [
+    {
+      "name": "Route loading foreground and background pairings",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 320px /scalecoach0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 320px /scalecoach1",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 320px /scalecoach2",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 320px /s/scale-studio-0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 320px /g/scale-group-0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 320px /g/scale-group-1",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 390px /scalecoach0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 390px /scalecoach1",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 390px /scalecoach2",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 390px /s/scale-studio-0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 390px /g/scale-group-0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 390px /g/scale-group-1",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 1440px /scalecoach0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 1440px /scalecoach1",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 1440px /scalecoach2",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 1440px /s/scale-studio-0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 1440px /g/scale-group-0",
+      "status": "passed"
+    },
+    {
+      "name": "Visual 1440px /g/scale-group-1",
+      "status": "passed"
+    },
+    {
+      "name": "Failed group photo uses the same initial in its overlay",
+      "status": "passed"
+    },
+    {
+      "name": "200% text reflow /scalecoach0",
+      "status": "passed"
+    },
+    {
+      "name": "200% text reflow /s/scale-studio-0",
+      "status": "passed"
+    },
+    {
+      "name": "200% text reflow /g/scale-group-0",
+      "status": "passed"
+    },
+    {
+      "name": "200% text reflow /support",
+      "status": "passed"
+    }
+  ],
+  "scale": {
+    "fixture": {
+      "follows": 400,
+      "classes": 4000,
+      "studios": 20,
+      "groups": 20,
+      "memberships": 1020
+    },
+    "measurements": [
+      {
+        "name": "Scale /calendar/following",
+        "status": "passed",
+        "elapsedMs": 957,
+        "readyMs": 694,
+        "readyNavigation": [
+          {
+            "ttfbMs": 590,
+            "domReadyMs": 621,
+            "transferBytes": 92873,
+            "decodedBytes": 807404
+          }
+        ],
+        "lcp": 652,
+        "cls": 0.00847314261701047,
+        "longTasks": [],
+        "domNodes": 263,
+        "heapBytes": 10069018
+      },
+      {
+        "name": "Scale /discover",
+        "status": "passed",
+        "elapsedMs": 798,
+        "readyMs": 540,
+        "readyNavigation": [
+          {
+            "ttfbMs": 299,
+            "domReadyMs": 346,
+            "transferBytes": 10475,
+            "decodedBytes": 32682
+          }
+        ],
+        "lcp": 476,
+        "cls": 0.003225357782757662,
+        "longTasks": [],
+        "domNodes": 3832,
+        "heapBytes": 11439050
+      },
+      {
+        "name": "Scale /s/scale-studio-0",
+        "status": "passed",
+        "elapsedMs": 433,
+        "readyMs": 167,
+        "readyNavigation": [
+          {
+            "ttfbMs": 126,
+            "domReadyMs": 165,
+            "transferBytes": 137365,
+            "decodedBytes": 616041
+          }
+        ],
+        "lcp": 160,
+        "cls": 0,
+        "longTasks": [],
+        "domNodes": 2933,
+        "heapBytes": 18127928
+      },
+      {
+        "name": "Scale /g/scale-group-0",
+        "status": "passed",
+        "elapsedMs": 351,
+        "readyMs": 77,
+        "readyNavigation": [
+          {
+            "ttfbMs": 55,
+            "domReadyMs": 72,
+            "transferBytes": 18265,
+            "decodedBytes": 54920
+          }
+        ],
+        "lcp": 76,
+        "cls": 0,
+        "longTasks": [],
+        "domNodes": 272,
+        "heapBytes": 24156419
+      },
+      {
+        "name": "Expanded following calendar: long scrolling session",
+        "status": "passed",
+        "elapsedMs": 2034,
+        "before": {
+          "heap": 15189414,
+          "nodes": 14046,
+          "renderedDays": 2
+        },
+        "after": {
+          "heap": 79218425,
+          "nodes": 15583,
+          "renderedDays": 2,
+          "scrollY": 19200,
+          "documentHeight": 108410
+        }
+      }
+    ],
+    "dateReachability": [
+      {
+        "name": "Following incremental dates and month-date reachability",
+        "status": "passed"
+      }
+    ],
+    "directory": [
+      {
+        "name": "full-image-loader-batched",
+        "rows": 4000,
+        "durationMs": 155,
+        "serializedBytes": 66650948,
+        "classImages": 4000,
+        "coachCount": 400
+      },
+      {
+        "name": "list-loader",
+        "rows": 4000,
+        "durationMs": 53,
+        "serializedBytes": 2570948,
+        "classImages": 0,
+        "coachCount": 400
+      }
+    ]
+  },
+  "browsers": [
+    {
+      "name": "chromium",
+      "result": "passed",
+      "flows": "Mobile/desktop calendar, You/Following, back/forward, refresh, deep links, profile, studio, discovery, settings, adder, modal focus, offline/reconnect, password sign-in/sign-out"
+    },
+    {
+      "name": "webkit",
+      "result": "passed",
+      "flows": "Mobile/desktop calendar, You/Following, back/forward, refresh, deep links, profile, studio, discovery, settings, adder, modal focus, offline/reconnect, password sign-in/sign-out"
+    },
+    {
+      "name": "firefox",
+      "result": "passed",
+      "flows": "Mobile/desktop calendar, You/Following, back/forward, refresh, deep links, profile, studio, discovery, settings, adder, modal focus, offline/reconnect, password sign-in/sign-out"
+    }
+  ],
+  "navigation": {
+    "routes": [
+      {
+        "route": "/calendar",
+        "status": 200
+      },
+      {
+        "route": "/calendar/following",
+        "status": 200
+      },
+      {
+        "route": "/support",
+        "status": 200
+      },
+      {
+        "route": "/privacy",
+        "status": 200
+      },
+      {
+        "route": "/terms",
+        "status": 200
+      },
+      {
+        "route": "/settings",
+        "status": 200
+      },
+      {
+        "route": "/followers",
+        "status": 200
+      },
+      {
+        "route": "/requests",
+        "status": 200
+      },
+      {
+        "route": "/blocked",
+        "status": 200
+      },
+      {
+        "route": "/ethos",
+        "status": 200
+      },
+      {
+        "route": "/brand",
+        "status": 200
+      },
+      {
+        "route": "/auditcoach",
+        "status": 200
+      },
+      {
+        "route": "/s/audit-studio",
+        "status": 200
+      },
+      {
+        "route": "/s/audit-studio/manage",
+        "status": 200
+      },
+      {
+        "route": "/g/audit-group",
+        "status": 200
+      }
+    ],
+    "links": [
+      {
+        "href": "/feed",
+        "status": 200
+      },
+      {
+        "href": "/you",
+        "status": 200
+      },
+      {
+        "href": "/admin?activity=1",
+        "status": 200
+      },
+      {
+        "href": "/discover",
+        "status": 200
+      },
+      {
+        "href": "/coachshare",
+        "status": 200
+      },
+      {
+        "href": "/inbox",
+        "status": 200
+      },
+      {
+        "href": "/notifications",
+        "status": 200
+      },
+      {
+        "href": "/admin",
+        "status": 200
+      },
+      {
+        "href": "/search",
+        "status": 200
+      },
+      {
+        "href": "/following/people",
+        "status": 200
+      },
+      {
+        "href": "/following/studios",
+        "status": 200
+      },
+      {
+        "href": "/following/groups",
+        "status": 200
+      },
+      {
+        "href": "/saved",
+        "status": 200
+      },
+      {
+        "href": "/calendar",
+        "status": 200
+      },
+      {
+        "href": "/calendar/following",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage",
+        "status": 200
+      },
+      {
+        "href": "/g/audit-group",
+        "status": 200
+      },
+      {
+        "href": "/support",
+        "status": 200
+      },
+      {
+        "href": "/privacy",
+        "status": 200
+      },
+      {
+        "href": "/terms",
+        "status": 200
+      },
+      {
+        "href": "/",
+        "status": 200
+      },
+      {
+        "href": "/feedback",
+        "status": 200
+      },
+      {
+        "href": "/community-standards",
+        "status": 200
+      },
+      {
+        "href": "/admin/marketing",
+        "status": 200
+      },
+      {
+        "href": "/brand",
+        "status": 200
+      },
+      {
+        "href": "/ethos",
+        "status": 200
+      },
+      {
+        "href": "/auditmember?from=followers",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-09-07",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-09-14",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-09-21",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-09-28",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-10-05",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-10-12",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-10-19",
+        "status": 200
+      },
+      {
+        "href": "/auditcoach/ead1921f-b904-4493-ab8d-9daf78563f07?d=2026-10-26",
+        "status": 200
+      },
+      {
+        "href": "/settings?edit=1",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/calendar?show=all",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/calendar?show=open&view=week",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/shifts?preview=coach",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/staff",
+        "status": 200
+      },
+      {
+        "href": "/s/audit-studio/manage/counts",
+        "status": 200
+      }
+    ],
+    "sheets": [
+      "Profile actions",
+      "Group actions"
+    ]
+  },
+  "browserSecurity": [
+    "Signed-out personal data denied",
+    "Cross-account personal record and image IDOR denied; private class export denied",
+    "Social access, blocks and occurrence validation enforced through real server actions",
+    "Calendar add is idempotent; removal succeeds",
+    "Follow and unfollow round trip",
+    "Personal class creation and removal",
+    "Cross-origin mutation rejected by Next.js",
+    "Generic login errors and enforced password rate limit",
+    "Password change revokes the old session and renews the current one",
+    "Schedule image export succeeds; public profile excludes account email and private schedules",
+    "Validated image upload; private background cannot be cached or fetched signed out",
+    "New-account You/Following empty states, no Studios section, group discovery and creation entry",
+    "Email-link confirmation, account creation, onboarding, profile edit"
+  ],
+  "browserAccessibility": [
+    {
+      "browser": "chromium",
+      "violations": []
+    },
+    {
+      "browser": "webkit",
+      "violations": []
+    },
+    {
+      "browser": "firefox",
+      "violations": []
+    }
+  ],
+  "browserPerformance": [
+    {
+      "browser": "chromium",
+      "lcp": null,
+      "cls": 0,
+      "longTasks": 0,
+      "ttfb": 70.40000000596046,
+      "domReady": 79.09999999403954
+    },
+    {
+      "browser": "chromium",
+      "scenario": "4x CPU, 150ms latency, 1.6Mbps",
+      "calendarReadyMs": 2892.8587909999987
+    },
+    {
+      "browser": "webkit",
+      "lcp": 111,
+      "cls": null,
+      "longTasks": null,
+      "ttfb": 67,
+      "domReady": 91
+    },
+    {
+      "browser": "firefox",
+      "lcp": 101,
+      "cls": null,
+      "longTasks": null,
+      "ttfb": 70,
+      "domReady": 81
+    }
+  ],
+  "verificationNotes": [
+    "One combined final run hit a WebKit navigation timeout; isolated final-build WebKit and Firefox rerun passed. Chrome passed on the final build.",
+    "Build, typecheck, ESLint error check and maintained regressions passed; pre-existing non-blocking lint warnings remain.",
+    "Detailed unresolved findings and external verification limits are in COMPREHENSIVE_AUDIT_2026-09-07.md."
+  ]
+}

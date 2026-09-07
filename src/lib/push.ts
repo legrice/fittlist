@@ -14,6 +14,14 @@ function configured(): boolean {
   return !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 }
 
+// Provider errors can contain bearer endpoints, headers, and payload contents.
+// Keep only a bounded HTTP status in operational logs.
+function failureStatus(error: unknown): number | null {
+  if (!error || typeof error !== "object" || !("statusCode" in error)) return null;
+  const status = error.statusCode;
+  return typeof status === "number" && Number.isInteger(status) && status >= 100 && status <= 599 ? status : null;
+}
+
 /** Send a push to one account on every device it has registered. */
 export async function pushToUser(userId: string, payload: {
   title: string;
@@ -39,10 +47,10 @@ export async function pushToUser(userId: string, payload: {
         { TTL: 60 * 60 * 24 },
       );
     } catch (err: unknown) {
-      const code = (err as { statusCode?: number }).statusCode;
+      const code = failureStatus(err);
       if (code === 404 || code === 410)
         await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, s.endpoint));
-      else console.error("push failed", s.endpoint.slice(0, 48), err);
+      else console.error("push failed", { statusCode: code });
     }
   }));
 }
@@ -81,13 +89,13 @@ export async function pushToAdmins(payload: {
           { TTL: 60 * 60 * 24 },
         );
       } catch (err: unknown) {
-        const code = (err as { statusCode?: number }).statusCode;
+        const code = failureStatus(err);
         if (code === 404 || code === 410) {
           await db
             .delete(schema.pushSubscriptions)
             .where(eq(schema.pushSubscriptions.endpoint, s.endpoint));
         } else {
-          console.error("push failed", s.endpoint.slice(0, 48), err);
+          console.error("push failed", { statusCode: code });
         }
       }
     }),
@@ -105,6 +113,6 @@ export async function pushSignupPing(email: string): Promise<void> {
       url: "/admin",
     });
   } catch (err) {
-    console.error("signup ping failed", err);
+    console.error("signup ping failed", { statusCode: failureStatus(err) });
   }
 }

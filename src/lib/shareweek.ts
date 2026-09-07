@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { publicFeedSchedules } from "@/lib/coachweek";
+import { publicClassOccurrenceFilter } from "@/lib/group-schedule";
 import { DAYS, fmtTime, runsOn, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 
 // What goes on a share image, for a range and one of the two hats.
@@ -72,6 +73,10 @@ const shareClassColumns = {
   name: schema.classes.name,
   studioId: schema.classes.studioId,
   location: schema.classes.location,
+  dayOfWeek: schema.classes.dayOfWeek,
+  specificDate: schema.classes.specificDate,
+  endsOn: schema.classes.endsOn,
+  skipDates: schema.classes.skipDates,
 };
 
 const sharePersonalColumns = {
@@ -138,10 +143,12 @@ export async function shareWeek(
       db
         .select({ classId:schema.attendances.classId, occurrenceDate:schema.attendances.occurrenceDate })
         .from(schema.attendances)
+        .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
         .where(and(
           eq(schema.attendances.userId, userId),
           gte(schema.attendances.occurrenceDate, window.start),
           lte(schema.attendances.occurrenceDate, window.end),
+          publicClassOccurrenceFilter(schema.attendances.occurrenceDate),
         )),
       db.select(sharePersonalColumns).from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
     ]);
@@ -168,7 +175,7 @@ export async function shareWeek(
     ]);
     for (const m of marked) {
       const c = classById.get(m.classId);
-      if (!c) continue;
+      if (!c || !runsOn(c, m.occurrenceDate, dowOf(m.occurrenceDate))) continue;
       put(
         m.occurrenceDate,
         {
@@ -210,10 +217,12 @@ export async function shareWeek(
       db
         .select({ classId:schema.attendances.classId, occurrenceDate:schema.attendances.occurrenceDate })
         .from(schema.attendances)
+        .innerJoin(schema.classes, eq(schema.classes.id, schema.attendances.classId))
         .where(and(
           eq(schema.attendances.userId, userId),
           gte(schema.attendances.occurrenceDate, window.start),
           lte(schema.attendances.occurrenceDate, window.end),
+          publicClassOccurrenceFilter(schema.attendances.occurrenceDate),
         )),
       db.select(sharePersonalColumns).from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
       db
@@ -313,7 +322,7 @@ export async function shareWeek(
     }
     for (const m of marked) {
       const c = markedById.get(m.classId);
-      if (!c) continue;
+      if (!c || !runsOn(c, m.occurrenceDate, dowOf(m.occurrenceDate))) continue;
       put(
         m.occurrenceDate,
         {
