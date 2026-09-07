@@ -12809,7 +12809,7 @@ a.clspeek-by:active { opacity: .6; }
 .info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }
 .info-page-note a { color: inherit; font-weight: 600; }
 .public-info-shell { min-height:100dvh; max-width:720px; margin:0 auto; padding:24px var(--page-gutter) 36px; }
-.public-info-head { min-height:44px; display:flex; align-items:center; }
+.public-info-head { min-height:44px; display:flex; align-items:center; gap:16px; }
 .public-info-head a { color:var(--ink); text-decoration:none; }
 .public-info-shell .aboutpage { margin:18px auto 0; }
 .public-info-shell .aboutpage a:not(.btn) { color:inherit; font-weight:600; }

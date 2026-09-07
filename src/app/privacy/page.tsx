@@ -123,13 +123,11 @@ export default async function PrivacyPage() {
     <section className={`screen admin${userId ? " hasnav" : ""}`} data-mode={lookMode(look)}>
       <div className="pad">
         {userId && <AppChrome userId={userId} bar />}
-        {userId && (
-          <div className="folback">
-            <BackLink className="evback" href="/settings" label="Back to settings">
-              <Icon name="arrow_back" size={23} />
-            </BackLink>
-          </div>
-        )}
+        <div className="folback">
+          <BackLink className="evback" href="/" anywhere label="Back">
+            <Icon name="arrow_back" size={23} />
+          </BackLink>
+        </div>
         <div className="admintop">
           <div>
             <h1>Privacy</h1>
