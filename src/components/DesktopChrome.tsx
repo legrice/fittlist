@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
-import { DesktopFavorites } from "@/components/DesktopFavorites";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { LinkPending } from "@/components/LinkPending";
 import { Wordmark } from "@/components/Wordmark";
@@ -73,7 +72,9 @@ export function DesktopChrome({
   const managedHref = (calendar: ManagedCalendarDestination) =>
     calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`;
   const managedActive = managedCalendars.some((calendar) => pathname.startsWith(managedHref(calendar)));
-  const calendarOn = here === "following" || pathname.startsWith("/calendar") || managedActive;
+  const personalOn = pathname === "/calendar";
+  const followingOn = pathname === "/feed" || pathname.startsWith("/calendar/following");
+  const calendarOn = personalOn || managedActive;
   const profileOn = pathname.startsWith(profileHref) || pathname.startsWith("/settings") ||
     (active === "calendar" && !pathname.startsWith("/calendar"));
   // Profile is anchored to the bottom of the desktop rail. Every other
@@ -84,7 +85,7 @@ export function DesktopChrome({
   return (
     <>
       <aside className="desktop-left" aria-label="Desktop navigation">
-        <Link className="desktop-logo" href="/feed" aria-label="FittList calendar">
+        <Link className="desktop-logo" href="/calendar" aria-label="FittList calendar">
           <Wordmark variant="ink" />
         </Link>
         <div className="desktop-profile-row">
@@ -110,7 +111,7 @@ export function DesktopChrome({
         </div>
         <nav className="desktop-nav" aria-label="Main">
           <div className={`desktop-calendar-switcher${calendarOn ? " on" : ""}${calendarOpen ? " open" : ""}`} ref={calendarRef}>
-            <Link className="desktop-calendar-main" href="/feed" aria-current={here === "following" ? "page" : undefined} onClick={() => setCalendarOpen(false)}>
+            <Link className="desktop-calendar-main" href="/calendar" aria-current={personalOn ? "page" : undefined} onClick={() => setCalendarOpen(false)}>
               <Icon name="calendar_month" size={22} />
               <span>Calendar</span>
               <LinkPending className="desktop-nav-spin" />
@@ -127,15 +128,10 @@ export function DesktopChrome({
             </button>
             {calendarOpen && (
               <div className="desktop-calendar-menu" id="desktop-calendar-menu" role="menu">
-                <Link href="/feed" role="menuitem" className={here === "following" ? "selected" : ""} onClick={() => setCalendarOpen(false)}>
-                  <span className="desktop-calendar-menu-icon"><Icon name="calendar_view_day" size={19} /></span>
-                  <span><strong>My week</strong><small>You and calendars you follow</small></span>
-                  {here === "following" && <Icon name="check" size={18} />}
-                </Link>
-                <Link href={scheduleHref} role="menuitem" className={pathname.startsWith("/calendar") ? "selected" : ""} onClick={() => setCalendarOpen(false)}>
+                <Link href={scheduleHref} role="menuitem" className={personalOn ? "selected" : ""} onClick={() => setCalendarOpen(false)}>
                   <span className="desktop-calendar-menu-icon"><Icon name="person" size={19} /></span>
-                  <span><strong>Personal calendar</strong><small>Your classes and shifts</small></span>
-                  {pathname.startsWith("/calendar") && <Icon name="check" size={18} />}
+                  <span><strong>Your calendar</strong><small>Your classes and shifts</small></span>
+                  {personalOn && <Icon name="check" size={18} />}
                 </Link>
                 {managedCalendars.length > 0 && <p role="presentation">Managed calendars</p>}
                 {managedCalendars.map((calendar) => {
@@ -155,6 +151,12 @@ export function DesktopChrome({
               </div>
             )}
           </div>
+          <Link className={`desktop-nav-link${followingOn ? " on" : ""}`} href="/calendar/following" aria-current={followingOn ? "page" : undefined}>
+            <Icon name="calendar_view_day" size={22} /><span>Following</span><LinkPending className="desktop-nav-spin" />
+          </Link>
+          <Link className={`desktop-nav-link${pathname === "/search" ? " on" : ""}`} href="/search" aria-current={pathname === "/search" ? "page" : undefined}>
+            <Icon name="search" size={22} /><span>Search</span><LinkPending className="desktop-nav-spin" />
+          </Link>
           {links.map((item) => {
             const on = here === item.id;
             return (
@@ -170,12 +172,12 @@ export function DesktopChrome({
               </Link>
             );
           })}
-          <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox">
+          <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox" aria-current={pathname.startsWith("/inbox") ? "page" : undefined}>
             <Icon name="chat_bubble" size={22} />
             <span>Messages</span>
             {messageUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${messageUnread} unread messages`}>{messageUnread > 99 ? "99+" : messageUnread}</b>}
           </Link>
-          <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications">
+          <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications" aria-current={pathname.startsWith("/notifications") ? "page" : undefined}>
             <Icon name="notifications" size={22} />
             <span>Notifications</span>
             {notificationUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread} unread notifications`}>{notificationUnread > 99 ? "99+" : notificationUnread}</b>}
@@ -191,48 +193,6 @@ export function DesktopChrome({
         <GlobalAdd triggerClassName="desktop-create" triggerLabel="Add" />
       </aside>
 
-      <aside className="desktop-right" aria-label="Explore FittList">
-        <Link className="desktop-side-search" href="/search">
-          <Icon name="search" size={20} />
-          <span>Search FittList</span>
-        </Link>
-
-        <DesktopFavorites />
-
-        <section className="desktop-side-card desktop-explore-card">
-          <header className="desktop-side-head">
-            <h2>Explore</h2>
-            <Link href="/discover">See all</Link>
-          </header>
-          <div className="desktop-explore-list">
-            <Link href="/following/people">
-              <i><Icon name="account_circle" size={20} /></i>
-              <span><strong>People</strong><small>Following and discover</small></span>
-              <Icon name="chevron_right" size={18} />
-            </Link>
-            <Link href="/following/studios">
-              <i><Icon name="storefront" size={20} /></i>
-              <span><strong>Studios</strong><small>Schedules and places</small></span>
-              <Icon name="chevron_right" size={18} />
-            </Link>
-            <Link href="/following/groups">
-              <i><Icon name="groups" size={20} /></i>
-              <span><strong>Groups</strong><small>Your communities</small></span>
-              <Icon name="chevron_right" size={18} />
-            </Link>
-            <Link href="/saved">
-              <i><Icon name="bookmark" size={20} /></i>
-              <span><strong>Saved</strong><small>Your saved classes</small></span>
-              <Icon name="chevron_right" size={18} />
-            </Link>
-          </div>
-        </section>
-
-        <Link className="desktop-share-card" href={coach ? "/coachshare" : "/membershare"}>
-          <span><strong>Share your week</strong><small>Send your live FittList calendar.</small></span>
-          <Icon name="arrow_forward" size={19} />
-        </Link>
-      </aside>
     </>
   );
 }

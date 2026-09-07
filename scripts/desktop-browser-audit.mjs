@@ -1,0 +1,187 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import { spawn, execFileSync } from "node:child_process";
+import { chromium, firefox, webkit } from "playwright";
+
+// Use disposable data and a production build, as the mobile audit does.
+const fixturePath = process.env.DESKTOP_FIXTURES || execFileSync(process.execPath, ["--import", "tsx", "scripts/audit-fixtures.ts"], { env: { ...process.env, DATABASE_URL: "" }, encoding: "utf8" }).trim().split("\n").at(-1);
+const f = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
+const browserName = process.env.AUDIT_BROWSER || "chromium";
+assert(["chromium", "webkit", "firefox"].includes(browserName), "Supported desktop browser");
+const base = "http://localhost:3192";
+const output = `${f.directory}/desktop-${browserName}`;
+fs.mkdirSync(output, { recursive: true });
+const log = fs.openSync(`${output}/server.log`, "w");
+const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", "3192"], {
+  env: { ...process.env, DATABASE_URL: "", PGLITE_DATA_DIR: f.dataDir, SESSION_SECRET: f.secret, ALLOW_EMBEDDED_DB_IN_PRODUCTION: "true", RESEND_API_KEY: "", BLOB_READ_WRITE_TOKEN: "", ADMIN_EMAILS: "", INVITE_ONLY: "false", FANS_ENABLED: "true", NEXT_PUBLIC_ORIGIN: base }, stdio: ["ignore", log, log],
+});
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const report = { browser: browserName, checks: [] };
+let browser;
+let page;
+try {
+  let ready = false;
+  for (let i = 0; i < 90; i++) {
+    assert.equal(server.exitCode, null, "Desktop audit server is running");
+    try { if ((await fetch(base)).ok) { ready = true; break; } } catch {}
+    await pause(500);
+  }
+  assert(ready, "Desktop audit server ready");
+  browser = await ({ chromium, firefox, webkit }[browserName]).launch(browserName === "chromium" && process.env.AUDIT_CHROME_CHANNEL ? { channel: process.env.AUDIT_CHROME_CHANNEL } : {});
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  await context.addCookies([{ name: "fl_session", value: f.owner.token, url: base, httpOnly: true, sameSite: "Lax" }]);
+  await context.route("**/*", route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
+  page = await context.newPage();
+  page.setDefaultTimeout(15000);
+  const errors = [];
+  const cancelledRequests = [];
+  page.on("pageerror", error => errors.push(error.message));
+  page.on("requestfailed", request => {
+    if (request.failure()?.errorText === "cancelled") cancelledRequests.push(new URL(request.url()));
+  });
+  const rail = page.getByRole("complementary", { name: "Desktop navigation" });
+  async function visit(path) {
+    const response = await page.goto(base + path);
+    assert(response.status() < 400, `${path} loads`);
+    await rail.waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(150);
+  }
+  async function frame() {
+    await rail.waitFor();
+    assert(await rail.isVisible(), "Desktop rail is visible");
+    assert(await rail.evaluate(el => !el.closest("[inert]")), "Desktop rail is usable");
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "No horizontal page overflow");
+    const bounds = await rail.boundingBox();
+    const content = await page.locator(".screen.hasnav > .pad,.pub.hasnav .profwrap").first().boundingBox();
+    assert(content && content.x >= bounds.x + bounds.width - 1, "Page content clears the rail");
+  }
+  async function centeredDialog(name) {
+    const dialog = page.getByRole("dialog", { name, exact: true });
+    await dialog.waitFor();
+    const rect = await dialog.boundingBox(), viewport = page.viewportSize();
+    assert(rect.y >= 24 && rect.y + rect.height <= viewport.height - 24, `${name} fits vertically`);
+    assert(Math.abs(rect.x + rect.width / 2 - viewport.width / 2) < 2, `${name} is horizontally centered`);
+    assert(Math.abs(rect.y + rect.height / 2 - viewport.height / 2) < 2, `${name} is vertically centered`);
+    await page.waitForFunction(() => document.activeElement?.closest('[role="dialog"]'));
+    await page.keyboard.press("Escape");
+    await dialog.waitFor({ state: "hidden" });
+  }
+  for (const width of [940, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: width < 1100 ? 768 : 900 });
+    for (const route of ["/calendar", "/calendar/following", "/auditcoach", "/s/audit-studio", "/g/audit-group", "/s/audit-studio/manage"]) {
+      await visit(route); await frame();
+      if (route === "/calendar" || route === "/calendar/following") {
+        await page.getByRole("heading", { name: route === "/calendar" ? "Your calendar" : "Following", exact: true }).waitFor();
+        assert.equal(await page.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Calendar opens directly without a reveal surface");
+        assert.equal(await rail.locator('[aria-current="page"]').count(), 1, "One primary rail destination is selected");
+        await page.getByRole("button", { name: "Month view", exact: true }).click();
+        await page.locator(".monthblock").first().waitFor();
+        if (route === "/calendar") {
+          await page.locator(".monthblock").nth(3).scrollIntoViewIfNeeded();
+          const strip = page.locator(".scrollhead.on");
+          await strip.waitFor();
+          assert((await strip.boundingBox()).x >= (await rail.boundingBox()).width, "Scrolled month toolbar leaves navigation accessible");
+        }
+        await page.getByRole("button", { name: "Day view", exact: true }).click();
+      }
+      if (["/auditcoach", "/s/audit-studio", "/g/audit-group"].includes(route)) {
+        const header = page.locator(".profile-seam-top,.group-seam-top");
+        const title = header.locator("h1");
+        const box = await header.boundingBox(), text = await title.boundingBox();
+        assert(box.height > 80 && text.y >= box.y && text.y + text.height <= box.y + box.height, "Profile name has a real header box");
+        assert(await title.evaluate(el => getComputedStyle(el).color !== getComputedStyle(el.parentElement).backgroundColor), "Profile name contrasts with its header");
+        const more = page.getByRole("button", { name: route.startsWith("/g/") ? "More group actions" : "More profile actions", exact: true });
+        assert(await more.evaluate(el => { const r = el.getBoundingClientRect(); return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)); }), "Profile action is not covered by the identity panel");
+        await more.focus();
+        await more.press("Enter");
+        await centeredDialog(route.startsWith("/g/") ? "Group actions" : "Profile actions");
+        await page.waitForFunction(el => el === document.activeElement, await more.elementHandle());
+      }
+      if (width === 1440) await page.screenshot({ path: `${output}/${route.replaceAll("/", "-").slice(1)}.png`, animations: "disabled" });
+    }
+    report.checks.push(`Direct calendars, profile actions, headers and rail at ${width}px`);
+    console.log(`PASS desktop frame and profile actions at ${width}px`);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const route of ["/discover", "/discover?half=studios", "/discover?half=groups", "/search", "/you", "/inbox", "/notifications", "/settings", "/coachshare", "/s/audit-studio/manage/calendar"]) {
+    await visit(route); await frame();
+  }
+  report.checks.push("Discovery, search, profile, messages, notifications, settings, share and studio calendar retain the rail");
+  await visit("/calendar");
+  await page.getByRole("button", { name: "Share your week", exact: true }).click();
+  await page.waitForURL("**/coachshare"); await page.locator(".shpage").waitFor(); await frame();
+  assert.equal(await page.locator(".share-takeover-scrim").count(), 0, "Share uses its desktop page");
+  await page.goBack(); await page.waitForURL("**/calendar"); await page.getByRole("heading", { name: "Your calendar", exact: true }).waitFor();
+  await visit("/you");
+  await page.getByRole("link", { name: "Open personal calendar", exact: true }).click();
+  await page.waitForURL("**/calendar"); await page.getByRole("heading", { name: "Your calendar", exact: true }).waitFor(); await frame();
+  assert.equal(await page.locator(".personal-calendar-scrim").count(), 0, "Personal calendar uses its desktop page");
+  await page.goBack(); await page.waitForURL("**/you"); await page.locator(".youpage").waitFor();
+  await page.locator(".youaccount-row").filter({ hasText: "Notifications" }).click();
+  await page.waitForURL("**/notifications"); await page.getByRole("heading", { name: "Notifications", exact: true }).waitFor(); await frame();
+  await page.goBack(); await page.waitForURL("**/you"); await page.locator(".youpage").waitFor();
+  await rail.getByRole("link", { name: "Search", exact: true }).click();
+  await page.waitForURL("**/search"); await frame();
+  report.checks.push("Share, personal calendar, Notifications and Search navigate as pages; Back returns to their origins");
+
+  await visit("/calendar");
+  const chooser = rail.getByRole("button", { name: "Choose a calendar", exact: true });
+  await chooser.click();
+  const destinations = rail.getByRole("menuitem");
+  assert.equal(await rail.locator('.desktop-calendar-menu > .selected').count(), 1, "Only your current calendar is selected");
+  for (const destination of await destinations.all()) {
+    assert(await destination.evaluate(el => { const r = el.getBoundingClientRect(), rail = el.closest(".desktop-left").getBoundingClientRect(); return r.x >= rail.x && r.right <= rail.right; }), "Calendar destination fits within the rail");
+  }
+  await destinations.filter({ hasText: "Studio calendar" }).click();
+  await page.waitForURL("**/s/audit-studio/manage/calendar"); await page.getByRole("heading", { name: "Calendar", exact: true }).waitFor(); await frame();
+  await visit("/calendar");
+  const add = rail.getByRole("button", { name: "Add", exact: true });
+  await add.focus();
+  await add.press("Enter"); await centeredDialog("Create");
+  await page.waitForFunction(el => el === document.activeElement, await add.elementHandle());
+  await visit("/s/audit-studio");
+  await page.getByRole("button", { name: "About", exact: true }).click();
+  await page.locator("#profile-about").waitFor(); await frame();
+  assert.equal(await page.locator(".profile-info-scrim:visible").count(), 0, "Desktop About expands in the profile page");
+  await page.getByRole("button", { name: "About", exact: true }).click();
+  const cls = page.locator(".profile-calendar-list .clline[data-cid]").first();
+  await cls.click();
+  const detail = page.locator(".sheet.clsfull");
+  await detail.waitFor();
+  const classBounds = await detail.boundingBox();
+  assert(classBounds.y >= 24 && classBounds.y + classBounds.height <= 876, "Class dialog fits desktop");
+  await page.keyboard.press("Escape"); await detail.waitFor({ state: "hidden" });
+  report.checks.push("Managed calendars fit the rail; Add, profile actions and class details dismiss with focus; About stays inline");
+
+  await visit("/calendar");
+  await page.setViewportSize({ width: 939, height: 900 });
+  await page.getByRole("button", { name: "Show your calendar", exact: true }).waitFor();
+  assert(!(await rail.isVisible()), "Desktop rail gives way to mobile navigation at 939px");
+  await page.getByRole("button", { name: "Show your calendar", exact: true }).click();
+  await page.locator(".personal-calendar-list").waitFor();
+  await page.setViewportSize({ width: 940, height: 900 });
+  await page.getByRole("button", { name: "Month view", exact: true }).waitFor(); await frame();
+  report.checks.push("Resizing across 939/940px preserves the mobile reveal and desktop page controls");
+  // WebKit reports an access-control diagnostic when navigation cancels an
+  // in-flight image export. Require the matching cancelled request, as in
+  // production-audit, rather than ignoring arbitrary fetch or CORS failures.
+  const navigationDiagnostics = browserName === "webkit" ? errors.filter(message =>
+    message.startsWith("/localhost:3192/api/story/compose?") && message.endsWith(" due to access control checks.") &&
+    cancelledRequests.some(url => url.origin === base && message.includes(url.pathname + url.search)),
+  ) : [];
+  report.navigationCancellations = navigationDiagnostics.length;
+  assert.deepEqual(errors.filter(message => !navigationDiagnostics.includes(message)), [], "No unexplained browser runtime errors");
+  console.log(`PASS desktop workflows in ${browserName}`);
+} catch (error) {
+  if (page && !page.isClosed()) {
+    await page.screenshot({ path: `${output}/failure.png`, animations: "disabled" });
+    console.log("Desktop failure state", await page.evaluate(() => ({ path: location.pathname, headings: [...document.querySelectorAll("h1")].map(el => el.textContent), inert: [...document.querySelectorAll("[inert]")].map(el => el.className), dialogs: [...document.querySelectorAll('[role="dialog"]')].map(el => el.getAttribute("aria-label")), focused: document.activeElement?.className })));
+  }
+  throw error;
+} finally {
+  if (browser) await Promise.race([browser.close(), pause(3000)]);
+  server.kill("SIGTERM");
+  fs.closeSync(log);
+  fs.writeFileSync(`${output}/report.json`, JSON.stringify(report, null, 2));
+}

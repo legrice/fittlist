@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
+import { AppChrome } from "@/components/AppChrome";
 import { getDb, schema } from "@/db";
 import { loadNotificationSheet } from "@/app/actions/notifications";
 import { lookMode } from "@/lib/darkmode";
@@ -20,6 +21,7 @@ export default async function NotificationsPage() {
 
   return (
     <section className="screen admin hasnav" data-mode={lookMode(me?.look)}>
+      <AppChrome userId={userId} mobileHeader={false} />
       <UpdatesScreen
         mode="notifications"
         notificationPage={notificationPage}

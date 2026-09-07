@@ -6,6 +6,7 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 
 import Link from "next/link";
+import { isDesktopViewport, useDesktopLayout } from "@/lib/use-desktop-layout";
 import { useFrontSheet } from "@/lib/use-front-sheet";
 import { useCalendarReturn } from "@/lib/use-calendar-return";
 import { haptic } from "@/lib/haptics";
@@ -160,6 +161,7 @@ export function CalendarScreen({
   studioRelationships?: { id:string; name:string; slug:string; admin:boolean; photo:string|null }[];
 }) {
   const router = useRouter();
+  const desktop = useDesktopLayout();
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<CalendarFilter>("all");
   const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
@@ -182,7 +184,7 @@ export function CalendarScreen({
   const [summaryVariant, setSummaryVariant] = useState(0);
   const communityFooterRef = useRef<HTMLElement | null>(null);
   const closeCalendarSync = useCallback(() => setCalendarSyncOpen(false), []);
-  const { sheetRef: frontSheetRef, scopeRef: frontScopeRef } = useFrontSheet(!classSheetDismissed, () => setClassSheetDismissed(true));
+  const { sheetRef: frontSheetRef, scopeRef: frontScopeRef } = useFrontSheet(!desktop && !classSheetDismissed, () => setClassSheetDismissed(true));
   const [addChoice, setAddChoice] = useState(openAdder);
   const [addChoiceKind, setAddChoiceKind] = useState<"coaching" | "saved" | "personal" | null>(null);
   const [addChoiceStep, setAddChoiceStep] = useState<"role" | "regular">("role");
@@ -347,7 +349,10 @@ export function CalendarScreen({
   }, [addChoice, ensureComposer]);
   // Calendar owns its share surface now that the global bottom dock is gone.
   // Keeping it mounted here also preserves this page's exact scroll and view.
-  const openShare = (_event: ReactMouseEvent<HTMLButtonElement>) => setShareOpen(true);
+  const openShare = (_event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (isDesktopViewport()) router.push(member ? "/membershare" : "/coachshare");
+    else setShareOpen(true);
+  };
   const switchScope = (event:ReactMouseEvent<HTMLAnchorElement>, target:"you"|"following") => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
@@ -548,7 +553,7 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             dur: `${c.durationMin} min`,
-            coach: null,
+            coach: desktop ? viewer : null,
             tagTone: c.shift ? "shift" as const : "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
@@ -600,7 +605,7 @@ export function CalendarScreen({
       if (rows.length) out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
     }
     return out;
-  }, [classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer, dayHorizon]);
+  }, [desktop, classes, todayIso, studioById, handle, visible.coaching, visible.personal, visible.saved, savedByIso, viewer, dayHorizon]);
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
   const monthItems = useMemo(() => {
@@ -639,16 +644,17 @@ export function CalendarScreen({
 
   useEffect(() => {
     if (view !== "list") return;
-    if (days.length <= lastAutoDayCount.current) return;
-    lastAutoDayCount.current = days.length;
     const target = dayMoreRef.current;
     if (!target || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) setDayHorizon((value) => value + 84);
+      if (entries.some((entry) => entry.isIntersecting) && days.length > lastAutoDayCount.current) {
+        lastAutoDayCount.current = days.length;
+        setDayHorizon((value) => value + 84);
+      }
     }, { rootMargin: "600px 0px" });
     observer.observe(target);
     return () => observer.disconnect();
-  }, [view, dayHorizon, days.length]);
+  }, [desktop, classSheetDismissed, sheet, view, dayHorizon, days.length]);
 
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
@@ -710,14 +716,14 @@ export function CalendarScreen({
     <>
       {/* "See it" from a save toast lands here with ?hl: light the row. */}
       <HighlightOnLand />
-      {!sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
+      {!desktop && !sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
           {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={view === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => setView(view === "month" ? "list" : "month")}><Icon name={view === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /><NotificationDot /></button>}
           <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}${scopeTarget !== "you" ? " is-loading" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Explore</Link></nav>
           <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" tabIndex={classSheetDismissed ? 0 : -1} aria-hidden={!classSheetDismissed} aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
         </div>
         {scopeTarget !== "you" && <BodyPortal><div className="calendar-scope-loading" role="status" aria-label="Loading calendar"><span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" /></div></BodyPortal>}
         <section inert={classSheetDismissed} aria-hidden={classSheetDismissed} className={`calendar-scope-hero calendar-transition-surface${classSheetDismissed ? " is-schedule" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" ref={revealButtonRef} className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
-      {!sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${restoring ? " calendar-front-restoring" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
+      {!desktop && !sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${restoring ? " calendar-front-restoring" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
         <div className="calendar-action-hub">
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>
             <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>
@@ -776,7 +782,7 @@ export function CalendarScreen({
         </div>
       </header>
 
-      {(sheet || classSheetDismissed) && <div className={`cardwrap calendar-cardwrap${!sheet ? ` calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
+      <div className={`cardwrap calendar-cardwrap calendar-direct-schedule${!sheet && !classSheetDismissed ? " is-mobile-hidden" : ""}${!desktop && !sheet && classSheetDismissed ? ` calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
           where every day band underneath pins: one writer for that number,
@@ -809,12 +815,12 @@ export function CalendarScreen({
           </button>
         </>
       )}
-      </div>}
+      </div>
 
       {/* Month view needs its weekday rail fixed above the grid. Day view
           uses the real date bands as sticky headers so there is only one
           date label competing for the top edge while scrolling. */}
-      {(sheet || classSheetDismissed) && !bare && days.length > 0 && view === "month" && (
+      {(desktop || sheet || classSheetDismissed) && !bare && days.length > 0 && view === "month" && (
         <ScrollHead
           on={scrolled}
           label={ymInView ? monthLabel(ymInView, todayIso) : ""}
@@ -822,7 +828,7 @@ export function CalendarScreen({
         />
       )}
 
-      {sheet ? <div className="calendar-bottom-actions" aria-label="Schedule actions"><button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button></div> : classSheetDismissed && <BodyPortal><div className={`calendar-revealed-controls${returning ? " is-returning" : ""}`} aria-label="Calendar controls"><button className="calendar-add-pill" type="button" aria-label="Add to your calendar" onClick={openAdd}><Icon name="add" size={36} /></button></div></BodyPortal>}
+      {sheet ? <div className="calendar-bottom-actions" aria-label="Schedule actions"><button className="calendar-bottom-add" aria-label="Add to your schedule" onClick={openAdd}><Icon name="add" size={30} /></button></div> : !desktop && classSheetDismissed && <BodyPortal><div className={`calendar-revealed-controls${returning ? " is-returning" : ""}`} aria-label="Calendar controls"><button className="calendar-add-pill" type="button" aria-label="Add to your calendar" onClick={openAdd}><Icon name="add" size={36} /></button></div></BodyPortal>}
       {!sheet && calendarChooserOpen && <BodyPortal><div className="mobile-calendar-switcher-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setCalendarChooserOpen(false); }}><section className="mobile-calendar-switcher" role="dialog" aria-modal="true" aria-labelledby="owned-calendar-title" onMouseDown={(event) => event.stopPropagation()}><div className="mobile-calendar-switcher-handle" aria-hidden="true" /><header><h2 id="owned-calendar-title">Your calendars</h2><button className="sheet-dismiss" type="button" aria-label="Close calendar chooser" onClick={() => setCalendarChooserOpen(false)}><Icon name="close" size={20} /></button></header><div className="mobile-calendar-switcher-list"><button type="button" className="selected" aria-current="page" onClick={() => setCalendarChooserOpen(false)}><span className="mobile-calendar-switcher-icon"><Icon name="person" size={21} /></span><span><strong>Personal calendar</strong><small>Your classes, shifts, and saved classes</small></span><Icon name="check" size={19} /></button>{managedCalendars.length > 0 && <p>Calendars you manage</p>}{managedCalendars.map((calendar) => { const href=calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar?show=all` : `/g/${calendar.slug}`; return <Link href={href} key={`${calendar.kind}:${calendar.id}`}><span className={`mobile-calendar-switcher-icon ${calendar.kind}`}>{calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={21} />}</span><span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span><Icon name="chevron_right" size={19} /></Link>; })}</div></section></div></BodyPortal>}
       {addChoice && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setAddChoice(false); }}>

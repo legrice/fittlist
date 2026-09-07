@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { isDesktopViewport } from "@/lib/use-desktop-layout";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
@@ -35,6 +36,7 @@ export function NavBar({
   profileFace?: { photo: string | null; color: string; initial: string };
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const calendarSurface = pathname.startsWith("/calendar");
   const here = activeTab(pathname, active);
   const tabs = useMemo(() => navTabs(coach, scheduleHref, profileHref), [coach, scheduleHref, profileHref]);
@@ -46,6 +48,7 @@ export function NavBar({
   const shareOpenRef = useRef(false);
 
   const openShare = useCallback((opener?: HTMLElement | null) => {
+    if (isDesktopViewport()) { router.push(coach ? "/coachshare" : "/membershare"); return; }
     if (shareOpenRef.current) return;
     // Start the clock in the input handler, before React schedules the
     // takeover. Preloading here also covers programmatic open events that had
@@ -57,7 +60,7 @@ export function NavBar({
     shareOpener.current = opener
       ?? (activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : null);
     setShareOpen(true);
-  }, []);
+  }, [coach, router]);
   const openShareEvent = useCallback((event: Event) => {
     const detail = (event as CustomEvent<{ opener?: HTMLElement }>).detail;
     openShare(detail?.opener);
@@ -87,6 +90,7 @@ export function NavBar({
   }, [openShareEvent]);
 
   useEffect(() => {
+    if (isDesktopViewport()) return;
     // Share is a primary workflow. Warm its code and minimum calendar payload
     // after the current screen has painted, never on the navigation's critical
     // path. Safari does not expose requestIdleCallback, so give it a quiet

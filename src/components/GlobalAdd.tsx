@@ -553,8 +553,10 @@ export function GlobalAdd({
       <button
         className={triggerClassName ?? (floating ? "wkfab" : "iconbtn")}
         aria-label={classOnly ? "Add a class" : placeOnly ? "Add a place" : "Add"}
-        disabled={pending}
-        onClick={openChooser}
+        // Keep the opener focused while its data loads so dialog dismissal
+        // can return to it. A native disabled button loses that focus.
+        aria-disabled={pending}
+        onClick={() => { if (!pending) openChooser(); }}
       >
         <Icon name="add" size={triggerIconSize ?? (classOnly ? 30 : 24)} />
         {triggerLabel && <span>{triggerLabel}</span>}

@@ -33,7 +33,8 @@
     "check:data-integrity": "node --import tsx scripts/data-integrity-audit.ts && node --import tsx scripts/saved-visibility-check.ts && npm run check:calendar-window",
     "check:operations": "node --import tsx scripts/operations-audit-check.ts notifications && node --import tsx scripts/operations-audit-check.ts security && node --import tsx scripts/operations-audit-check.ts recovery",
     "check:calendar-window": "node --import tsx scripts/following-calendar-window-check.ts",
-    "check:following-month-browser": "node scripts/following-month-audit.mjs"
+    "check:following-month-browser": "node scripts/following-month-audit.mjs",
+    "check:desktop-browser": "node scripts/desktop-browser-audit.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

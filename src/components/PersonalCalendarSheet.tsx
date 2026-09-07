@@ -4,6 +4,7 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 
 import Link from "next/link";
+import { useDesktopLayout } from "@/lib/use-desktop-layout";
 import { useCallback, useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import { BodyPortal } from "@/components/BodyPortal";
 import { CalendarScreen } from "@/components/CalendarScreen";
@@ -15,6 +16,7 @@ import { withTimeout } from "@/lib/async";
 const PERSONAL_CALENDAR_KEY = "personal-calendar";
 
 export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, openAdder = false, buttonRef }: { children:ReactNode; className?:string; ariaLabel?:string; openAdder?:boolean; buttonRef?:Ref<HTMLButtonElement> }) {
+  const desktop = useDesktopLayout();
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
   const [data, setData] = useState<PersonalCalendarData | null>(() => readClientMemory(PERSONAL_CALENDAR_KEY));
@@ -91,6 +93,7 @@ export function PersonalCalendarSheetTrigger({ children, className, ariaLabel, o
     setOpen(true);
     void refreshCalendar();
   };
+  if (desktop) return <Link className={className} aria-label={ariaLabel} href={openAdder ? "/calendar?add=1" : "/calendar"}>{children}</Link>;
   return <>
     <button ref={buttonRef} type="button" className={className} aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} onClick={show}>{children}</button>
     {open && <BodyPortal><div className="personal-calendar-scrim"><section className={`personal-calendar-sheet${visible ? " is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Your calendar">

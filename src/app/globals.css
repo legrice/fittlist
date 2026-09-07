@@ -10014,14 +10014,14 @@ html[data-mode="dark"],
 /* --------------------------------------------------------------------------
    Desktop application frame
 
-   A wide screen is not a large phone. At 1100px the mobile chrome gives way
-   to three stable zones: navigation, the current page, and personal context.
+   A wide screen is not a large phone. At 940px the mobile chrome gives way
+   to the left navigation and the current page.
    Everything below this breakpoint remains the phone/iOS product unchanged.
    -------------------------------------------------------------------------- */
 .desktop-left,
 .desktop-right { display: none; }
 
-@media (min-width: 1100px) {
+@media (min-width: 940px) {
   body:has(.desktop-left) { background: var(--ground); }
 
   .desktop-left {
@@ -10188,8 +10188,6 @@ html[data-mode="dark"],
   }
   .pub .pubhero-media .ownertop { top: 16px; right: 16px; }
 
-  /* The old desktop header links are kept for the 940–1099px bridge where
-     the bottom bar has already left but the full desktop frame has not begun. */
 }
 
 @media (min-width: 1320px) {
@@ -15518,6 +15516,192 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
   color:var(--kinetic-text); font-size:15px; background:transparent;
 }
 .calendar-following-discover .discover-directory-tabs button.on { background:var(--kinetic-surface); border:0; }
+
+/* Desktop keeps the page-and-rail structure. Mobile scope/reveal surfaces
+   stay below 940px; desktop shares their palette and class-card typography. */
+.desktop-following-header { display:none; }
+@media (max-width:939px) {
+  .calendar-direct-schedule.is-mobile-hidden, .desktop-calendar-content.is-mobile-hidden { display:none; }
+}
+@media (min-width:940px) {
+  body:has(.desktop-left) {
+    --desktop-rail-width:240px;
+    --color-lime:var(--kinetic-accent);
+    --si:var(--kinetic-accent);
+    --ground:var(--kinetic-canvas-light);
+    --shell:var(--kinetic-canvas-light);
+    --paper:var(--kinetic-surface);
+    --card:var(--kinetic-surface);
+    background:var(--kinetic-canvas-light);
+  }
+  .desktop-left {
+    width:var(--desktop-rail-width); padding:28px 20px 20px;
+    overflow-y:auto; overscroll-behavior:contain;
+    background:var(--kinetic-surface); border-color:var(--kinetic-control-border);
+  }
+  .desktop-logo { margin:0 12px 32px; }
+  .desktop-nav { gap:4px; }
+  .desktop-nav-link, .desktop-calendar-main { min-height:46px; font-size:15px; }
+  .desktop-calendar-switcher, .desktop-calendar-toggle { min-height:46px; }
+  .desktop-nav-link.on, .desktop-calendar-switcher.on, .desktop-profile-link.on {
+    background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse);
+  }
+  .desktop-nav-link.on .icon, .desktop-calendar-switcher.on :is(.icon,.desktop-calendar-toggle) { color:inherit; }
+  .desktop-calendar-menu {
+    position:static; grid-column:1 / -1; width:100%; max-height:none;
+    padding:4px; border:0; border-radius:0 0 10px 10px;
+    background:var(--kinetic-surface); box-shadow:none;
+  }
+  .desktop-calendar-menu > a { grid-template-columns:32px minmax(0,1fr) 16px; gap:8px; padding:8px 4px; }
+  .desktop-calendar-menu-icon { width:32px; height:32px; }
+  .desktop-calendar-menu strong { white-space:normal; font-size:13px; }
+  .desktop-calendar-menu small { font-size:11px; }
+  .desktop-calendar-menu > a.selected { background:var(--kinetic-canvas-light); }
+  .desktop-create { flex-shrink:0; border-radius:var(--radius-pill); background:var(--kinetic-accent); }
+  .desktop-profile-row { flex-shrink:0; padding-top:20px; }
+  .desktop-profile-link.on .desktop-profile-avatar-empty { color:var(--kinetic-inverse); }
+  .screen.hasnav, .pub.hasnav { padding-left:var(--desktop-rail-width); padding-right:0; }
+  .screen.hasnav > .pad, .pub.hasnav .profwrap {
+    width:100%; max-width:1088px; padding-inline:36px; margin-inline:auto;
+  }
+  .screen.hasnav > .pad > .brandbar, .pub.hasnav .profwrap > .brandbar { display:none; }
+
+  /* These are navigation surfaces on phones, not desktop page content.
+     CSS also hides them during the server-rendered hydration frame. */
+  .calendar-scope-top, .calendar-scope-hero, .calendar-action-sheet,
+  .calendar-revealed-controls, .calendar-bottom-actions { display:none; }
+  .screen.hasnav .calendar-page-header.calendar-page-actions {
+    display:flex; margin:0 0 24px; padding:28px 0 0; gap:20px;
+  }
+  .calendar-page-title-row { width:100%; }
+  .calendar-page-title .calendar-page-back { display:none; }
+  .calendar-page-header h1 { font-size:32px; }
+  .calendar-header-share { text-decoration:none; background:var(--kinetic-surface); }
+  .calendar-desktop-controls { margin-top:0; justify-content:space-between; }
+  .calendar-desktop-filter { min-width:200px; flex:0 1 240px; }
+  .desktop-calendar-description { color:var(--color-text-secondary); font-size:14px; }
+  .calendar-cardwrap { padding-top:0; }
+  .screen.hasnav .scrollhead {
+    left:var(--desktop-rail-width); z-index:29;
+    padding-inline:max(36px, calc((100vw - var(--desktop-rail-width) - 1016px) / 2));
+    background:var(--kinetic-canvas-light);
+  }
+  .calendar-foreground-sheet, .calendar-surface-schedule {
+    position:relative; inset:auto; margin:0; padding:0; border:0; border-radius:0;
+    background:transparent; box-shadow:none; animation:none; transform:none;
+  }
+  .following-head.explore-calendar-rail { margin:0 0 20px; padding:0; }
+  .following-head .calendar-person-face { width:52px; height:52px; }
+  .calendar-person-chip { min-width:64px; }
+  .home-listregion .home-schedule { max-width:none; width:100%; margin:0; padding-inline:0; }
+  .cash-day > h2 { font-size:22px; }
+
+  /* A real header box keeps the name and corner actions above the identity. */
+  .pub:is(.profile,.memberpub) .pubhead:not(.pubhead-hero) {
+    position:relative; top:auto; padding:0; overflow:visible; border-radius:24px 24px 0 0;
+  }
+  .profile-seam-top {
+    position:relative; align-self:stretch; flex-shrink:0;
+    width:100%; height:132px; border-radius:24px 24px 0 0;
+  }
+  .profile-seam-top .profile-top-name {
+    top:22px; left:88px; right:88px; max-height:56px; line-height:1.2;
+    font-size:24px; white-space:normal; overflow-wrap:anywhere;
+  }
+  .profile-seam-top :is(.profback,.ownertop) { top:20px; z-index:2; }
+  .profile-seam-top .profback { left:20px; }
+  .profile-seam-top .ownertop { right:20px; }
+  .profile-seam-top :is(.evback,.ownermore,.ownergear,.calendar-pin-button,.profile-overflow-trigger) {
+    width:42px; height:42px; display:grid; place-items:center; border-radius:50%;
+  }
+  .pub:is(.profile,.memberpub) .pubhead:not(.pubhead-hero) .pubidentity-paper {
+    width:100%; padding:0 24px 0;
+  }
+  .pubhead:not(.pubhead-hero) .profile-identity-lead { transform:translateY(-42px); margin-bottom:-30px; }
+  .pub :is(.profav,.group-profile-photo) { width:112px; height:112px; min-width:112px; flex-basis:112px; }
+  .profile-avatar-favorite { width:112px; }
+  .pub:is(.profile,.memberpub) .pubhead .pubbelow { padding:14px 24px 20px; }
+  .pub:is(.profile,.memberpub) .profile-action-cluster { justify-content:center; gap:8px; }
+  .pub:is(.profile,.memberpub) .profile-action-cluster :is(.followpill,.discover-follow-button,.actpill,.profile-about-trigger,.profile-owner-primary) {
+    flex:0 0 auto; width:auto; min-height:38px; padding:8px 18px; font-size:14px;
+  }
+  .group-member-preview { margin-bottom:14px; }
+  .studio-profile-hub { padding-top:0; }
+  .studio-profile-hub > .group-tabs.group-segmented-tabs,
+  .group-main > .group-tabs.group-segmented-tabs {
+    gap:28px; margin:0 0 16px; padding:0; border-bottom:1px solid var(--kinetic-control-border);
+    border-radius:0; background:transparent;
+  }
+  .group-tabs.group-segmented-tabs button {
+    flex:0 0 auto; min-height:44px; padding:8px 2px;
+    border:0; border-bottom:3px solid transparent; border-radius:0;
+    background:transparent; color:var(--color-text-secondary);
+  }
+  .group-tabs.group-segmented-tabs button.on { border-bottom:3px solid var(--kinetic-canvas-dark); background:transparent; color:var(--kinetic-text); }
+  .group-page .group-main { max-width:none; margin:0; padding-top:0; }
+  .pub.group-page .group-hero { display:flex; flex-direction:column; align-items:center; gap:0; padding:0 0 20px; border:0; background:var(--kinetic-canvas-light); }
+  .group-seam-top { display:block; position:relative; width:100%; height:132px; border-radius:24px 24px 0 0; }
+  .group-hero .group-seam-name {
+    position:absolute; top:22px; left:88px; right:88px; max-height:58px; margin:0;
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+    overflow:hidden; overflow-wrap:anywhere; text-align:center; font-size:24px; line-height:1.2;
+  }
+  .group-hero .group-copy-name { display:none; }
+  .group-seam-top .group-hero-back { top:20px; left:20px; z-index:2; }
+  .group-seam-top .group-overflow-trigger { top:20px; right:20px; z-index:2; }
+  .group-hero .group-profile-photo { margin:-42px 0 12px; }
+  .group-profile-photo > span { display:grid; place-items:center; }
+  .group-hero-copy { max-width:100%; text-align:center; }
+  .group-hero-copy .profacts { justify-content:center; }
+  .pubpanel.desktop-profile-info { display:flex; flex-direction:column; }
+  .pubpanel.desktop-profile-info.info-open > #profile-about {
+    position:static; order:-1; width:100%; height:auto; max-height:none;
+    margin:0 0 24px; padding:24px; border-radius:20px; overflow:visible;
+    background:var(--kinetic-surface);
+  }
+
+  /* All schedule cards use the shared time gutter and plain white surface. */
+  .calendar-cardlist .dayrows { gap:10px; }
+  .calendar-cardlist .clline {
+    padding:16px 18px; border:0; border-radius:20px;
+    background:var(--kinetic-surface); box-shadow:none;
+  }
+  .calendar-cardlist .clline::before { display:none; }
+  .calendar-cardlist .clrow { border:0; }
+  .calendar-cardlist .clrow > .clmore { top:12px; right:12px; }
+  .calendar-following-card { border:0; border-radius:20px; background:var(--kinetic-surface); }
+  .personal-calendar-list .clline-title-row .clline-nm { padding-right:30px; }
+  .personal-calendar-list .clline-studio-row.no-location .clline-dur { grid-column:1; }
+
+  html:has(.studio-dashboard,.studio-shifts-view),
+  .screen:has(.studio-dashboard,.studio-shifts-view),
+  .screen:has(.studio-dashboard,.studio-shifts-view) > .pad,
+  .studio-dashboard, .studio-shifts-view {
+    background:var(--kinetic-canvas-light); color:var(--kinetic-text);
+  }
+  .studio-dashboard .studio-dashboard-hero { padding:24px; border-radius:24px; background:var(--kinetic-canvas-dark); }
+  .studio-dashboard .studio-dashboard-hero > .studio-manage-back { top:20px; left:20px; }
+  .studio-dashboard .studio-dashboard-settings > h2,
+  .studio-shifts-view :is(.studio-manage-top,.studio-manage-top h1,.adminsub,.adminempty,.pubtab,.pubtab.sel) { color:var(--kinetic-text); }
+  .studio-shifts-view .studio-manage-back { background:var(--kinetic-surface); color:var(--kinetic-text); }
+
+  /* Short tasks keep modal focus/Escape handling in a centered dialog. */
+  .sheet-scrim, .calendar-activity-scrim { align-items:center; justify-content:center; padding:32px; }
+  .sheet, .sheet.sheet-full, .sheet.adder, .calendar-activity-sheet {
+    max-height:calc(100dvh - 64px); border-radius:24px;
+    animation:none;
+  }
+  .sheet.utility-sheet { height:auto; max-height:calc(100dvh - 64px); }
+  .utility-sheet-content { flex:0 1 auto; }
+  .utility-sheet-grab, .calendar-activity-sheet::before { display:none; }
+  .calendar-activity-sheet { max-width:560px; }
+}
+@media (min-width:1100px) {
+  body:has(.desktop-left) { --desktop-rail-width:280px; }
+  .desktop-left { padding-inline:28px; }
+  .screen.hasnav > .pad, .pub.hasnav .profwrap { padding-inline:52px; }
+  .screen.hasnav .scrollhead { padding-inline:max(52px, calc((100vw - var(--desktop-rail-width) - 984px) / 2)); }
+}
 .loading-dots { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-width:40px; min-height:24px; vertical-align:middle; color:inherit; }
 .loading-dots > span { width:7px; height:7px; border-radius:50%; background:currentColor; animation:calendar-loading-dance 900ms ease-in-out infinite; }
 .loading-dots > span:nth-child(2) { animation-delay:120ms; }
@@ -15562,4 +15746,8 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .following-more-dates {
   padding: 24px 0;
   text-align: center;
+}
+
+@media (min-width:940px) {
+  .route-loading-calendar { background:var(--kinetic-canvas-light); color:var(--kinetic-text); }
 }

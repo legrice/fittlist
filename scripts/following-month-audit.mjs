@@ -8,10 +8,14 @@ const f = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
 assert(f.directory.includes("fittlist-month-audit-") && f.dataDir === `${f.directory}/db`, "Disposable month fixture required");
 const port = Number(process.env.AUDIT_PORT || 3191), base = `http://localhost:${port}`;
 const browserName = process.env.AUDIT_BROWSER || "chromium";
+const desktop = process.env.AUDIT_DESKTOP === "1";
 assert(["chromium", "webkit", "firefox"].includes(browserName), "Supported audit browser");
-const report = { browser: browserName, checks: [], limits: ["Synthetic isolated PGlite data; no production accounts or service messages.", "Reads the existing production build; does not build, deploy, or publish."] };
+const actionManifest = JSON.parse(fs.readFileSync(".next/server/server-reference-manifest.json", "utf8"));
+const remainderActionId = Object.entries(actionManifest.node).find(([, action]) => action.exportedName === "loadCalendarRemainder" && action.filename === "app/actions/calendar-stream.ts")?.[0];
+assert(remainderActionId, "Background calendar action exists in this build");
+const report = { browser: browserName, layout: desktop ? "desktop" : "mobile", checks: [], limits: ["Synthetic isolated PGlite data; no production accounts or service messages.", "Reads the existing production build; does not build, deploy, or publish."] };
 const checkFilter = process.env.FOLLOWING_MONTH_CHECK_FILTER;
-const output = `${f.directory}/following-month-${browserName}${checkFilter ? `-${checkFilter.toLowerCase().replace(/[^a-z0-9]+/g, "-")}` : ""}-report.json`;
+const output = `${f.directory}/following-month-${browserName}${desktop ? "-desktop" : ""}${checkFilter ? `-${checkFilter.toLowerCase().replace(/[^a-z0-9]+/g, "-")}` : ""}-report.json`;
 const log = fs.openSync(`${f.directory}/server.log`, "w");
 const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", String(port)], { env: { ...process.env, DATABASE_URL: "", PGLITE_DATA_DIR: f.dataDir, ALLOW_EMBEDDED_DB_IN_PRODUCTION: "true", SESSION_SECRET: f.secret, ADMIN_EMAILS: "", RESEND_API_KEY: "", BLOB_READ_WRITE_TOKEN: "", INVITE_ONLY: "false", FANS_ENABLED: "true", NEXT_PUBLIC_ORIGIN: base }, stdio: ["ignore", log, log] });
 let browser;
@@ -20,13 +24,15 @@ const monthOf = iso => iso.slice(0, 7);
 const actionMonth = request => request.method() === "POST" && request.headers()["next-action"] ? request.postData()?.match(/"(\d{4}-\d{2})"/)?.[1] : null;
 async function checked(name, fn) {
   if (checkFilter && !name.includes(checkFilter)) return;
+  // Search uses a page on desktop; its navigation/Back coverage lives in desktop-browser-audit.
+  if (desktop && name.startsWith("Search close")) return;
   const start = performance.now();
   try { const detail = await fn(); report.checks.push({ name, status: "passed", elapsedMs: Math.round(performance.now() - start), ...detail }); console.log(`PASS ${name}`); }
   catch (error) { report.checks.push({ name, status: "failed", elapsedMs: Math.round(performance.now() - start), message: String(error) }); console.log(`FAIL ${name}: ${error.message}`); }
   fs.writeFileSync(output, JSON.stringify(report, null, 2));
 }
 async function context() {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  const context = await browser.newContext({ viewport: desktop ? { width: 1440, height: 900 } : { width: 390, height: 844 }, reducedMotion: "reduce" });
   await context.addCookies([{ name: "fl_session", value: f.viewer.token, url: base, httpOnly: true, sameSite: "Lax" }]);
   await context.route("**/*", route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
   const page = await context.newPage(); page.setDefaultTimeout(20000);
@@ -40,12 +46,12 @@ const waitDom = (page, predicate, arg) => page.waitForFunction(predicate, arg, {
 const visibility = page => page.evaluate(() => ({ visibility: document.visibilityState, focused: document.hasFocus() }));
 async function openFollowing(page) {
   await page.goto(`${base}/calendar/following`);
-  await page.getByRole("navigation", { name: "Calendar view", exact: true }).waitFor();
+  await page.getByRole(desktop ? "group" : "navigation", { name: "Calendar view", exact: true }).waitFor();
   const reveal = page.getByRole("button", { name: "Show Explore calendar", exact: true });
-  if (await reveal.isVisible()) await reveal.click();
+  if (!desktop && await reveal.isVisible()) await reveal.click();
 }
 async function showMonth(page, ym, loaded = true) {
-  const switcher = page.getByRole("button", { name: "Switch to month view", exact: true });
+  const switcher = page.getByRole("button", { name: desktop ? "Month view" : "Switch to month view", exact: true });
   if (await switcher.isVisible()) await switcher.click();
   const block = page.locator(`#month-${ym}`);
   await block.waitFor();
@@ -158,7 +164,7 @@ try {
     await page.route(url => url.origin === base && url.pathname.replace(/\/$/, "") === "/calendar/following", async route => {
       const request = route.request();
       if (actionMonth(request) === monthOf(f.dates.far)) farRequested = true;
-      if (!held && request.method() === "POST" && request.headers()["next-action"] && request.postData()?.trim() === "[]") {
+      if (!held && request.method() === "POST" && request.headers()["next-action"] === remainderActionId) {
         held = true; const response = await route.fetch(); await gate; await route.fulfill({ response });
       } else await route.continue();
     });
@@ -175,6 +181,10 @@ try {
       await openDate(page, f.dates.near, f.classes["Month Recurring A"]);
       await openDate(page, f.dates.far, f.classes["Month Recurring A"]);
       return { heldBackgroundResponse: held, farRequestedWhileHeld: requestedBeforeRelease, distantLoadedBeforeRelease: beforeRelease === "loaded", backgroundOrder: beforeRelease === "loaded" ? "distant month completed first" : "server actions serialized; retention checked after completion", renderedRows: await noDuplicates(page) };
+    } catch (error) {
+      await page.screenshot({ path: `${f.directory}/${browserName}-background-remainder-failure.png`, animations: "disabled" });
+      const state = await page.evaluate(() => ({ path: location.pathname, desktop: matchMedia("(min-width: 940px)").matches, headings: [...document.querySelectorAll("h1")].map(el => ({ text: el.textContent, visible: !!el.getClientRects().length })), loading: document.querySelector(".route-loading-dots")?.getAttribute("aria-label"), scope: !!document.querySelector(".calendar-scope-top"), controls: !!document.querySelector(".calendar-desktop-controls") }));
+      throw new Error(`${error.message}; delayed background state: ${JSON.stringify(state)}`);
     } finally { release(); await c.close(); }
   });
 

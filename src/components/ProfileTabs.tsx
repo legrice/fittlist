@@ -1,5 +1,6 @@
 "use client";
 
+import { useDesktopLayout } from "@/lib/use-desktop-layout";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
@@ -126,6 +127,7 @@ export function ProfileTabs({
   infoSheet?: boolean;
   children: ReactNode;
 }) {
+  const desktop = useDesktopLayout();
   const [activeSection, setActiveSection] = useState(tab);
   const [infoOpen,setInfoOpen]=useState(false);
   const tracked = useRef(false);
@@ -307,7 +309,7 @@ export function ProfileTabs({
             {badges && <div className="profbadges-top">{badges}</div>}
         </div>
         <div className="pubbelow">
-        <div className="profile-action-cluster">{actions}{infoSheet&&<button type="button" className="actpill profile-about-trigger" onClick={()=>setInfoOpen(true)}><Icon name="info" size={19}/>About</button>}</div>
+        <div className="profile-action-cluster">{actions}{infoSheet&&<button type="button" className="actpill profile-about-trigger" aria-expanded={infoOpen} onClick={()=>setInfoOpen(desktop ? !infoOpen : true)}><Icon name="info" size={19}/>About</button>}</div>
         {summary?.trim() ? <ProfileAbout text={summary.trim()} className="profile-summary" /> : null}
         {endorsement}
         </div>
@@ -330,8 +332,8 @@ export function ProfileTabs({
           </div>
         )}
       </div>
-      <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}${infoSheet?" has-info-sheet":""}${infoOpen?" info-open":""}`} data-active={sectionToggle ? activeSection : undefined}>{children}</div>
-      {infoOpen&&<><div className="profile-info-scrim" onClick={()=>setInfoOpen(false)}/><button type="button" className="profile-info-close" aria-label="Close About" onClick={()=>setInfoOpen(false)}><Icon name="close" size={20}/></button></>}
+      <div className={`pubpanel${sectionToggle ? " pubpanel-toggle" : ""}${infoSheet ? ` has-info-sheet${desktop ? " desktop-profile-info" : ""}` : ""}${infoOpen?" info-open":""}`} data-active={sectionToggle ? activeSection : undefined}>{children}</div>
+      {!desktop && infoOpen&&<><div className="profile-info-scrim" onClick={()=>setInfoOpen(false)}/><button type="button" className="profile-info-close" aria-label="Close About" onClick={()=>setInfoOpen(false)}><Icon name="close" size={20}/></button></>}
       {sharePrompt && (
         <section className="profile-share-cta">
           <h2>{sharePrompt}</h2>

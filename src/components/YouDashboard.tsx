@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { updateProfilePhoto } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
+import { useDesktopLayout } from "@/lib/use-desktop-layout";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassOpener } from "@/components/ClassOpener";
@@ -95,6 +96,7 @@ export function YouDashboard({
   onOpenSettings,
 }: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups" | "savedItems">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const router = useRouter();
+  const desktop = useDesktopLayout();
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
   const profileGroups = [...yourGroups, ...favoriteGroups.filter((group) => !yourGroups.some((mine) => mine.id === group.id))];
@@ -202,7 +204,8 @@ export function YouDashboard({
           icon="notifications"
           title="Notifications"
           detail={unread.notifications > 0 ? `${unread.notifications} unread` : "Follows, saves, and account activity"}
-          onClick={() => setNotificationsOpen(true)}
+          href={desktop ? "/notifications" : undefined}
+          onClick={desktop ? undefined : () => setNotificationsOpen(true)}
           count={unread.notifications}
         />
       </AccountGroup>

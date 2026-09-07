@@ -16,6 +16,7 @@ database. No live database or service credentials are used.
 | `npm run check:data-integrity` | Real isolated scheduling actions, rollback/retry behavior, permissions, group visibility, recurrence, and saved-calendar loaders |
 | `npm run check:calendar-window` | Bounded monthly loads, leap years and range validation, future recurring/dated/group classes, canceled/private/blocked exclusion and viewer isolation; also included in data integrity |
 | `npm run check:following-month-browser` | Six scenarios: future recurring/dated/group classes and empty days, failure/retry, day continuation, retained data, saving a future class, and search-close refresh restoring its selected date |
+| `npm run check:desktop-browser` | Direct calendar entry, desktop rail at 940/1024/1440/1920px, profile header geometry, centered dialogs and focus, page navigation/Back, managed calendars, and the mobile breakpoint |
 | `npm run check:operations` | Notification pagination and acknowledgement, delivery error accounting, signed unsubscribe links, production configuration guards, migration replay, snapshot restore, and connection cleanup |
 | `scripts/production-audit.mjs` | Production browser navigation, accessibility, onboarding, authentication, social permissions, offline recovery, and response timing |
 | `npm run check:notifications-browser` | Legacy page and sheet pagination beyond 50 notifications, failed initial/older-page/cached refresh recovery, unread state, and viewer isolation |
@@ -34,11 +35,15 @@ intentionally changes passwords, saves classes, blocks users, and completes
 onboarding for synthetic accounts.
 
 ```sh
-npm run build
+NEXT_PUBLIC_ORIGIN=http://localhost:3100 npm run build
 npx playwright install chromium
 task_fixture_path=$(DATABASE_URL= node --import tsx scripts/audit-fixtures.ts | tail -n 1)
 AUDIT_FIXTURES="$task_fixture_path" AUDIT_BROWSERS=chromium npm run test:browser
 ```
+
+The public origin is compiled into authentication redirects. For this audit,
+build with `NEXT_PUBLIC_ORIGIN=http://localhost:3100`; changing only the server’s
+runtime environment does not change those built redirects.
 
 On a Mac with Chrome installed, set `AUDIT_CHROME_CHANNEL=chrome` to use it in the
 production audit instead of downloading bundled Chromium. The production runner
@@ -59,6 +64,19 @@ scenario changes the synthetic account's calendar. Use `AUDIT_BROWSER=webkit` or
 `AUDIT_BROWSER=firefox` for the other installed Playwright engines. Reports and
 screenshots are named by engine; `FOLLOWING_MONTH_CHECK_FILTER` selects a focused
 scenario and writes a separate report without replacing the full run.
+
+The desktop structure check seeds fresh disposable fixtures by default and owns
+port 3192. Run `AUDIT_CHROME_CHANNEL=chrome npm run check:desktop-browser` locally;
+`AUDIT_BROWSER=webkit` and `AUDIT_BROWSER=firefox` select the other engines. It
+also accepts `DESKTOP_FIXTURES` for focused local reruns. It ignores the
+production suite’s `AUDIT_FIXTURES`, whose sessions are deliberately revoked.
+
+Run `AUDIT_DESKTOP=1 npm run check:following-month-browser` to exercise the five
+calendar-data scenarios through the desktop toolbar. The mobile search-sheet
+scenario remains mobile-only; desktop page navigation and Back are covered by
+the desktop structure check. Desktop month reports have a `-desktop` suffix.
+Do not overlap two runners on the same port or let two servers open one PGlite
+directory. CI gates both desktop commands in addition to the mobile suite.
 
 ## Scale, accessibility, and visual audit
 

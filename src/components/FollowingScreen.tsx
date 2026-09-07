@@ -7,6 +7,7 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent, type TouchEvent } from "react";
 import Link from "next/link";
+import { useDesktopLayout } from "@/lib/use-desktop-layout";
 import { useFrontSheet } from "@/lib/use-front-sheet";
 import { useCalendarReturn } from "@/lib/use-calendar-return";
 import { haptic } from "@/lib/haptics";
@@ -222,6 +223,7 @@ export function FollowingScreen({
   mode?: "home" | "upcoming";
 }) {
   const router = useRouter();
+  const desktop = useDesktopLayout();
   const isHome = mode === "home";
   const calendarFollowing = usePathname().startsWith("/calendar/following");
   const {
@@ -238,7 +240,7 @@ export function FollowingScreen({
   const [scopeSummaryEntering, setScopeSummaryEntering] = useState(false);
   const [classSheetDismissed, setClassSheetDismissed] = useState(false);
   const communityFooterRef = useRef<HTMLElement | null>(null);
-  const { sheetRef: frontSheetRef, scopeRef: frontScopeRef } = useFrontSheet(!classSheetDismissed, () => setClassSheetDismissed(true));
+  const { sheetRef: frontSheetRef, scopeRef: frontScopeRef } = useFrontSheet(!desktop && !classSheetDismissed, () => setClassSheetDismissed(true));
   const [activityComments,setActivityComments]=useState<FeedItem|null>(null);
   const { sheetRef: commentSheetRef } = useFrontSheet(Boolean(activityComments), () => {
     const focused=document.activeElement;
@@ -838,7 +840,7 @@ export function FollowingScreen({
   };
   useEffect(() => {
     if (!selectedMonthDay || calendarView !== "day" || alignedMonthDay.current === selectedMonthDay) return;
-    if (calendarFollowing && !classSheetDismissed) return;
+    if (!desktop && calendarFollowing && !classSheetDismissed) return;
     if (selectedMonthDay > loadedThrough && calendarMonths[selectedMonthDay.slice(0, 7)] !== "loaded") return;
     const index = homeDays.findIndex((section) => section.iso === selectedMonthDay);
     if (index < 0) return;
@@ -855,14 +857,14 @@ export function FollowingScreen({
     return () => {
       if (monthScrollFrame.current !== null) cancelAnimationFrame(monthScrollFrame.current);
     };
-  }, [calendarView, selectedMonthDay, homeDays, calendarFollowing, classSheetDismissed, loadedThrough, calendarMonths]);
+  }, [desktop, calendarView, selectedMonthDay, homeDays, calendarFollowing, classSheetDismissed, loadedThrough, calendarMonths]);
   const nextMonth = plusDays(loadedThrough, 1).slice(0, 7);
   const [year, month] = todayIso.slice(0, 7).split("-").map(Number);
   const lastMonth = new Date(Date.UTC(year, month - 1 + FOLLOWING_MAX_MONTHS_AHEAD, 1)).toISOString().slice(0, 7);
   const canLoadMoreDates = nextMonth <= lastMonth;
   const loadMoreDates = () => void ensureMonth(nextMonth);
   useEffect(() => {
-    if (!isHome || calendarView !== "day" || (calendarFollowing && !classSheetDismissed) || visibleHomeCount >= homeDays.length) return undefined;
+    if (!isHome || calendarView !== "day" || (!desktop && calendarFollowing && !classSheetDismissed) || visibleHomeCount >= homeDays.length) return undefined;
     const target = homeMoreRef.current;
     if (!target) return undefined;
     if (typeof IntersectionObserver === "undefined") {
@@ -875,7 +877,7 @@ export function FollowingScreen({
     }, { rootMargin: "800px 0px" });
     observer.observe(target);
     return () => observer.disconnect();
-  }, [calendarFollowing, calendarView, classSheetDismissed, homeDays.length, isHome, visibleHomeCount]);
+  }, [desktop, calendarFollowing, calendarView, classSheetDismissed, homeDays.length, isHome, visibleHomeCount]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -1011,7 +1013,7 @@ export function FollowingScreen({
   return (
     <>
       {calendarError && <div className="pad" role="status"><p>The rest of your calendar couldn’t load. Your loaded classes are still available.</p><button type="button" className="ghost" onClick={() => void retryCalendar()}>Try again</button></div>}
-      {calendarFollowing && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
+      {!desktop && calendarFollowing && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
         {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={calendarView === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => { monthDayRequest.current += 1; setPendingMonthDay(null); setSelectedMonthDay(null); setCalendarView(calendarView === "month" ? "day" : "month"); }}><Icon name={calendarView === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /><NotificationDot /></button>}
         <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}${scopeTarget !== "following" ? " is-loading" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" aria-current="page" onClick={(event) => switchScope(event,"following")}>Explore</Link></nav>
         <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setFind(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" tabIndex={classSheetDismissed ? 0 : -1} aria-hidden={!classSheetDismissed} aria-label="Show Explore" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
@@ -1021,8 +1023,20 @@ export function FollowingScreen({
         <div><p>{followingSummaryText}</p></div>
         <button type="button" ref={revealButtonRef} className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show Explore" : "Show Explore calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button>
       </header></section></>}
-      {calendarFollowing && !classSheetDismissed && <section className={`calendar-action-sheet calendar-following-actions calendar-following-discover calendar-pull-sheet calendar-transition-surface${restoring ? " calendar-front-restoring" : ""}${scopeTarget !== "following" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Discover people, places, and groups"><div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack groupFrom="calendar-following" /></div><footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer></section>}
-      {(!calendarFollowing || classSheetDismissed) && <div className={calendarFollowing ? `calendar-foreground-sheet calendar-surface-schedule${returning ? " is-returning" : ""}` : undefined}>
+      {!desktop && calendarFollowing && !classSheetDismissed && <section className={`calendar-action-sheet calendar-following-actions calendar-following-discover calendar-pull-sheet calendar-transition-surface${restoring ? " calendar-front-restoring" : ""}${scopeTarget !== "following" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Discover people, places, and groups"><div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack groupFrom="calendar-following" /></div><footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer></section>}
+      <div className={`desktop-calendar-content${calendarFollowing && !classSheetDismissed ? " is-mobile-hidden" : ""}${!desktop && calendarFollowing && classSheetDismissed ? ` calendar-foreground-sheet calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
+      {calendarFollowing && <header className="calendar-page-header calendar-page-actions desktop-following-header">
+        <div className="calendar-page-title-row">
+          <div className="calendar-page-title"><h1>Following</h1></div>
+          <Link className="calendar-header-share" href="/discover"><Icon name="search" size={20} /><span>Find calendars</span></Link>
+        </div>
+        <div className="calendar-desktop-controls">
+          <span className="desktop-calendar-description">Classes from people, studios, and groups you follow</span>
+          <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
+            {(["day", "month"] as const).map((view) => <button key={view} type="button" className={calendarView === view ? "on" : ""} aria-label={view === "day" ? "Day view" : "Month view"} aria-pressed={calendarView === view} onClick={() => { monthDayRequest.current += 1; setPendingMonthDay(null); setSelectedMonthDay(null); setCalendarView(view); }}><Icon name={view === "day" ? "calendar_view_day" : "calendar_month"} size={21} /></button>)}
+          </div>
+        </div>
+      </header>}
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
@@ -1057,7 +1071,7 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && !calendarFollowing && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
-      {isHome && (!calendarFollowing || classSheetDismissed) && !firstRun && (
+      {isHome && !firstRun && (
         <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
           <div className="calendar-scope-row" aria-label="Calendar scope">
             <button type="button" className={`calendar-person-chip${calendarFilter === (calendarFollowing ? "following" : "all") ? " on" : ""}`} aria-pressed={calendarFilter === (calendarFollowing ? "following" : "all")} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter(calendarFollowing ? "following" : "all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
@@ -1092,7 +1106,7 @@ export function FollowingScreen({
       ) : isHome && calendarView === "day" && !selectedMonthDay && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status"><LoadingDots label="Loading your schedule"/></div>
       ) : (isHome ? calendarView === "day" && !selectedMonthDay && !followingSummary.length && shown.length === 0 : items.length === 0) ? (
-        calendarFollowing ? <section className="calendar-first-class"><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={restoreActionSurface}>Explore calendars</button></section> : firstRun ? (
+        calendarFollowing ? <section className="calendar-first-class"><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={() => desktop ? router.push("/discover") : restoreActionSurface()}>Explore calendars</button></section> : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="calendar-member-empty-figure" src="/illustrations/following-empty.png" alt="" width={356} height={600} />
@@ -1291,7 +1305,7 @@ export function FollowingScreen({
           </div>
         </>
       )}
-      </div>}
+      </div>
 
       {/* Empty-state discovery stays in a sheet; normal discovery is the
           header search and the Discover classes link. */}
