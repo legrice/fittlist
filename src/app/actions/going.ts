@@ -6,6 +6,7 @@ import { getDb, schema } from "@/db";
 import { hiddenFrom } from "@/lib/blocks";
 import { dowOfDate, occurrenceEnded, runsOn } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { writeAttendance, uuidValid } from "@/lib/event-registration";
 import { recordProductActivity } from "@/lib/product-activity";
 
 // Adding a class is a personal note, not a reservation. Nothing here talks to
@@ -18,6 +19,7 @@ export async function setGoing(
 ): Promise<{ ok: boolean; error?: string; rsvp?: boolean }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Sign in first." };
+  if (!uuidValid(classId) || typeof on !== "boolean") return { ok: false, error: "Invalid class request." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
   const parsedDate = new Date(`${occurrenceDate}T00:00:00Z`);
   if (Number.isNaN(parsedDate.valueOf()) || parsedDate.toISOString().slice(0, 10) !== occurrenceDate)
@@ -45,28 +47,8 @@ export async function setGoing(
     return { ok: false, error: "That class has already started." };
   }
 
-  if (on) {
-    await db
-      .insert(schema.attendances)
-      .values({ userId, classId, occurrenceDate })
-      .onConflictDoNothing({
-        target: [
-          schema.attendances.userId,
-          schema.attendances.classId,
-          schema.attendances.occurrenceDate,
-        ],
-      });
-  } else {
-    await db
-      .delete(schema.attendances)
-      .where(
-        and(
-          eq(schema.attendances.userId, userId),
-          eq(schema.attendances.classId, classId),
-          eq(schema.attendances.occurrenceDate, occurrenceDate),
-        ),
-      );
-  }
+  const result = await writeAttendance(userId, classId, occurrenceDate, on);
+  if (!result.ok) return result;
   await recordProductActivity(userId, on ? "class_saved" : "class_removed");
   revalidatePath("/feed");
   revalidatePath("/calendar");

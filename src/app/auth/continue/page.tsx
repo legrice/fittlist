@@ -1,3 +1,6 @@
+import { createHash } from "node:crypto";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "@/db";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { confirmMagicLink } from "@/app/actions/auth";
@@ -18,6 +21,8 @@ export default async function MagicContinuePage({
   searchParams: Promise<{ invited?: string }>;
 }) {
   const [{ invited }, token] = await Promise.all([searchParams, pendingMagicToken()]);
+  const [pending] = token ? await (await getDb()).select({registration:schema.magicLinks.registration}).from(schema.magicLinks).where(eq(schema.magicLinks.tokenHash,createHash("sha256").update(token).digest("hex"))).limit(1) : [];
+  const eventSignup = !!pending?.registration;
   return (
     <PublicInfoShell>
       <p className="about-kicker">Secure email link</p>
@@ -27,6 +32,7 @@ export default async function MagicContinuePage({
           <p>
             FittList hasn&rsquo;t signed you in or changed your account yet. Continue only if you requested this email.
           </p>
+          {eventSignup && <p>Continuing creates or signs into your FittList account and finishes your requested class registration if space remains. Your name and email go to the event’s admins. By continuing, you agree to the <Link href="/terms">Terms of Use</Link> and acknowledge the <Link href="/privacy">Privacy Policy</Link>.</p>}
           <form action={confirmMagicLink}>
             {invited === "1" && <input type="hidden" name="invited" value="1" />}
             <button className="btn si info-page-action" type="submit">

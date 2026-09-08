@@ -1,5 +1,6 @@
 "use server";
 
+import { validateRegistrationIntent, writeAttendance, type RegistrationIntent } from "@/lib/event-registration";
 import { createHash, randomBytes } from "crypto";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -226,6 +227,7 @@ export async function requestMagicLink(
   emailRaw: string,
   via: string | null = null,
   intent: "login" | "signup" | "reset" = "login",
+  event?: RegistrationIntent,
 ): Promise<{ ok: boolean; error?: string }> {
   if (typeof emailRaw !== "string" || emailRaw.length > 254 || (via !== null && typeof via !== "string")) {
     return { ok: false, error: "That doesn't look like an email address." };
@@ -236,12 +238,14 @@ export async function requestMagicLink(
   // remotely supplied string at runtime.
   const requestedIntent = intent === "reset" || intent === "signup" ? intent : "login";
 
+  const registration = event ? await validateRegistrationIntent(event) : null;
+  if (event && (!registration || intent === "reset")) return { ok: false, error: "This event registration is no longer available." };
   const db = await getDb();
 
   const ip = await requestIpAddress();
   const allowed = await takeAnonymousActionRateLimit(db, {
     action: "magic_link", target: { kind: "email", id: email }, ip,
-    limits: { ip: { max: MAX_LINKS_PER_IP, windowMs: MAGIC_TTL_MS }, target: { max: MAX_LINKS_PER_EMAIL, windowMs: MAGIC_TTL_MS } },
+    limits: { ip: { max: registration ? 200 : MAX_LINKS_PER_IP, windowMs: MAGIC_TTL_MS }, target: { max: MAX_LINKS_PER_EMAIL, windowMs: MAGIC_TTL_MS } },
   });
   if (!allowed) return { ok: false, error: "Too many links requested. Try again in a few minutes." };
 
@@ -255,7 +259,7 @@ export async function requestMagicLink(
   // turn a typo into a new account. The UI still shows the same generic "sent"
   // state as it does for an existing address.
   if (!existing && requestedIntent === "reset") return { ok: true };
-  if (!existing && !(await signupAllowed(email))) return { ok: false, error: INVITE_MSG };
+  if (!existing && !registration && !(await signupAllowed(email))) return { ok: false, error: INVITE_MSG };
   // An existing signup request is simply a login; only a known account can
   // receive reset authority.
   const purpose: "login" | "signup" | "reset" = existing
@@ -269,12 +273,18 @@ export async function requestMagicLink(
     ip,
     via: via ? slug(via).slice(0, 64) : null,
     purpose,
+    registration,
     expiresAt: new Date(Date.now() + MAGIC_TTL_MS),
   }).returning({ id: schema.magicLinks.id });
   const url = `${authOrigin()}/auth/magic?token=${token}`;
   const firstTime = !existing;
   const resetting = purpose === "reset";
-  const lines = firstTime
+  const lines = registration
+    ? [
+        `You requested a free class place on ${registration.date} using ${email}. Verify your email to finish registration and create or sign into your FittList account.`,
+        "Your place is confirmed only if space remains when you continue. If the class fills up, we’ll return you to the schedule to choose another. This one-time link expires in 15 minutes.",
+      ]
+    : firstTime
     ? [
         `You asked to create a fittlist account for ${email}. Use the button below to verify the address and continue.`,
         "The link works once and expires in 15 minutes. You'll choose your profile, then you can set a password for next time.",
@@ -291,16 +301,16 @@ export async function requestMagicLink(
   const delivery = await sendMessage({
     to: email,
     kind: "magic_link",
-    subject: firstTime
+    subject: registration ? "Confirm your free class registration" : firstTime
       ? "Finish creating your fittlist account"
       : resetting
         ? "Reset your fittlist password"
         : "Sign in to fittlist",
     text: `${lines.join("\n\n")}\n\n${url}\n\nIf you didn't ask for this, you can ignore this email. Nothing has changed on your account.`,
     html: emailHtml({
-      heading: firstTime ? "Verify your email" : resetting ? "Reset your password" : "Sign in to fittlist",
+      heading: registration ? "Finish your class signup" : firstTime ? "Verify your email" : resetting ? "Reset your password" : "Sign in to fittlist",
       body: lines,
-      cta: { label: firstTime ? "Verify and continue" : resetting ? "Continue password reset" : "Sign in", url },
+      cta: { label: registration ? "Verify and register" : firstTime ? "Verify and continue" : resetting ? "Continue password reset" : "Sign in", url },
       footer: `This was sent to ${email} because someone asked to sign in to fittlist with that address. If it wasn't you, ignore it. Nothing has changed on the account.`,
     }),
   });
@@ -322,6 +332,7 @@ export async function consumeMagicToken(
   via: string | null;
   passwordPrompt: "set" | "reset" | null;
   resetGrantId: string | null;
+  registrationHref?: string;
 } | null> {
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const db = await getDb();
@@ -353,13 +364,14 @@ export async function consumeMagicToken(
   // mint another session or reset grant.
   if (!row) return null;
 
+  const registration = row.registration ? await validateRegistrationIntent(row.registration) : null;
   let [user] = await db.select().from(schema.users).where(eq(schema.users.email, row.email));
   if (!user) {
     if (row.purpose === "reset") return null;
     // Defense in depth: requestMagicLink already gates, but never create an
-    // account here for an email that isn't invited.
-    if (!(await signupAllowed(row.email))) return null;
-    [user] = await db
+    // account here without an invitation or a valid public event signup.
+    if (!registration && !(await signupAllowed(row.email))) return null;
+    const [createdUser] = await db
       .insert(schema.users)
       .values({
         email: row.email,
@@ -368,8 +380,11 @@ export async function consumeMagicToken(
         avatarColor: await nextAvatarColor(),
         signupSource: await signupSource(),
       })
+      .onConflictDoNothing({ target: schema.users.email })
       .returning();
-    pushSignupPing(row.email);
+    user = createdUser ?? (await db.select().from(schema.users).where(eq(schema.users.email,row.email)))[0];
+    if (!user) return null;
+    if (createdUser) pushSignupPing(row.email);
     await acceptInvite(row.email, user.id);
     await claimRosterPlaceholders(row.email, user.id);
     // A matching coach-roster invitation intentionally promotes the account.
@@ -377,12 +392,33 @@ export async function consumeMagicToken(
     // exception, while discoverable remains false until setup is complete.
     [user] = await db.select().from(schema.users).where(eq(schema.users.id, user.id));
   }
+  let registrationHref: string | undefined;
+  if (registration) {
+    if (await profileRemovedByModeration(user.id, db)) return null;
+    // An inbox-verified name is enough to start. Photo, bio and following are
+    // optional; never overwrite an existing member’s profile or visibility.
+    if (!user.handle) {
+      const handle = `${slug(registration.name).slice(0, 28) || "member"}-${randomBytes(5).toString("hex")}`;
+      const userId = user.id;
+      await db.update(schema.users).set({handle, name:user.name || registration.name, onboardedAt:new Date()}).where(and(eq(schema.users.id,userId),isNull(schema.users.handle)));
+      [user] = await db.select().from(schema.users).where(eq(schema.users.id,userId));
+      if (!user) return null;
+    }
+    const [eventStudio] = await db.select({slug:schema.studios.slug,id:schema.studios.id}).from(schema.studios).where(eq(schema.studios.id,registration.studioId));
+    registrationHref = eventStudio ? `/s/${eventStudio.slug || eventStudio.id}/register?class=${registration.classId}&d=${registration.date}` : "/calendar";
+    try { await writeAttendance(user.id,registration.classId,registration.date,true,registration.studioId); }
+    catch { /* The signed-in return page offers a retry; no lost destination. */ }
+  } else if (row.registration) {
+    const [eventStudio] = await db.select({slug:schema.studios.slug,id:schema.studios.id}).from(schema.studios).where(eq(schema.studios.id,row.registration.studioId));
+    if (eventStudio) registrationHref = `/s/${eventStudio.slug || eventStudio.id}/register`;
+  }
   await createSession(user.id);
   const [pk] = await db
     .select({ id: schema.credentials.id })
     .from(schema.credentials)
     .where(eq(schema.credentials.userId, user.id));
   return {
+    registrationHref,
     needsProfile: !user.handle,
     fan: user.kind === "fan",
     via: row.via,
@@ -402,6 +438,7 @@ export async function confirmMagicLink(formData: FormData): Promise<void> {
   const result = token ? await consumeMagicToken(token) : null;
   await clearPendingMagicToken();
   if (!result) redirect(`/?expired=1${invited ? "&invited=1" : ""}`);
+  if (result.registrationHref) redirect(result.registrationHref);
   if (result.passwordPrompt) {
     await markPasswordPrompt(result.passwordPrompt, result.resetGrantId);
   }

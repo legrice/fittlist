@@ -82,6 +82,7 @@ export type ClassDetail = {
   /** How many said yes to this occurrence. Zero draws nothing: never ship
    *  an empty count. */
   rsvpCount: number;
+  eventRegistrationHref?: string;
   /** A gym's class, seen by somebody who could be on it. Null on a coach's own
    *  class, and for anyone with no standing at the studio. */
   shift: {
@@ -373,6 +374,7 @@ export async function classDetail(
     icsHref: `/api/cal/${key}/${c.id}`,
     myHandle,
     canAdd,
+    eventRegistrationHref: studio?.registrationDate === whenIso && c.registrationCapacity ? `/s/${studio.slug || studio.id}/register?class=${c.id}&d=${whenIso}` : undefined,
     rsvp: c.rsvp,
     rsvpCount,
     added,

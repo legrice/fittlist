@@ -699,9 +699,10 @@ export function ClassPeek({
           </>
         )}
 
+        {full?.eventRegistrationHref && !full.added && <Link className="btn si" href={full.eventRegistrationHref}>Sign up free</Link>}
         {/* RSVP says where the name goes before the tap, never after. */}
         {full?.canAdd && full.rsvp && (
-          <p className="clspeek-rsvpnote">Your name goes to whoever runs it when you RSVP.</p>
+          <p className="clspeek-rsvpnote">{full.eventRegistrationHref ? "Your name and email go to the event admins when you register." : "Your name goes to whoever runs it when you RSVP."}</p>
         )}
 
         {/* Share and Save stay available at the bottom while the class facts

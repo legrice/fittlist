@@ -368,6 +368,7 @@ export const studios = pgTable("studios", {
   // without making it a roster. The switch lives on the shifts screen's
   // overflow, with the studio's other settings.
   showCoaches: boolean("show_coaches").notNull().default(true),
+  registrationDate: date("registration_date", { mode: "string" }),
   // A reusable Monday-through-Sunday class template. Staffing deliberately
   // does not live here: changing the standard week changes what runs, never
   // who is coaching the dated rota.
@@ -771,6 +772,7 @@ export const classes = pgTable(
     // capacity, no waitlist, no check-in: capacity is the line that turns
     // RSVP into a booking system, and it was cut on purpose.
     rsvp: boolean("rsvp").notNull().default(false),
+    registrationCapacity: integer("registration_capacity"),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1006,6 +1008,7 @@ export const attendances = pgTable(
     // is telling the front desk, so these show exactly where the roster shows
     // (the coach and fellow goers) and nowhere public. Not users references,
     // on purpose: the friend without the app is still a person in the room.
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     companions: jsonb("companions").$type<string[]>().notNull().default([]),
     // Whether the mark shows to people who follow you: Home's Activity, an
     // Upcoming card's "also going" line. Public by default, because a feed
@@ -1410,6 +1413,7 @@ export const magicLinks = pgTable(
     // login | signup | reset. Reset is security authority, not presentation:
     // setPassword verifies this purpose before accepting a forgotten-password
     // change without the old password.
+    registration: jsonb("registration").$type<{ studioId: string; classId: string; date: string; name: string }>(),
     purpose: text("purpose").notNull().default("login"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),

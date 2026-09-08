@@ -47,6 +47,7 @@ jobs:
       - run: npm test
       - run: npm run check:data-integrity
       - run: npm run check:operations
+      - run: npm run check:event-registration
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Seed disposable browser fixtures
@@ -64,6 +65,8 @@ jobs:
         run: npm run check:notifications-browser
       - name: Following future-month navigation and recovery
         run: npm run check:following-month-browser
+      - name: Event signup and iPad registration desk
+        run: EVENT_BROWSER=chromium npm run check:event-browser
       - name: Collect sanitized report
         if: always()
         run: |

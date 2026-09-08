@@ -123,3 +123,7 @@ See [the release audit](IPHONE_TESTFLIGHT_AUDIT_2026-09-07.md) and [iOS setup](i
 `npm run check:ios-release` checks the generated native production configuration and rejects unsafe variants. Run `npm run ios:sync` first. Xcode runs the same release gate automatically. `npm run check:production-environment` verifies that production rejects the development secret and a hosted embedded database despite development overrides.
 
 The following-month transport fault harness disables service workers because worker-controlled WebKit requests bypass page interception. The ordinary production audit retains the worker and checks real offline/reconnect behavior.
+
+### Event registration and iPad desk
+
+Run `npm run check:event-registration` for isolated capacity, authorization and email-continuation checks. After building, run `npm run check:event-browser` for the attendee flow and iPad portrait/landscape desk checks in WebKit. CI uses `EVENT_BROWSER=chromium`. Both checks generate disposable databases and refuse production database configuration. See [Hudson Fit Expo setup](HUDSON_FIT_EXPO.md).

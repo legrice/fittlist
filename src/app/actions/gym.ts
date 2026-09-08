@@ -2078,6 +2078,11 @@ export async function mergeIntoGym(
   );
   if (!theirs) return { ok: false, error: "No gym runs this one." };
 
+  // Capacity-controlled event rosters cannot be merged through this legacy
+  // bulk migration path; each attendee must use the locked registration path.
+  if (theirs.registrationCapacity !== null || mine.registrationCapacity !== null)
+    return { ok: false, error: "Event registrations cannot be moved to another class." };
+
   // Only what is still ahead. A mark on a class that already ran is a record
   // of turning up, and it belongs where it was made.
   const today = todayIso();

@@ -827,6 +827,13 @@
       "when": 1788557406077,
       "tag": "0117_fixed_pyro",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1788882012974,
+      "tag": "0118_tranquil_butterfly",
+      "breakpoints": true
     }
   ]
 }
