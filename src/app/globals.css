@@ -15879,3 +15879,45 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .profile-banner-preview { aspect-ratio:16/5; margin:20px 0; overflow:hidden; border-radius:16px; display:grid; place-items:center; background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
 .profile-banner-preview img { width:100%; height:100%; object-fit:cover; }
 .profile-banner-controls { display:flex; flex-wrap:wrap; gap:12px; }
+
+/* Desktop top navigation; mobile keeps its existing navigation. */
+@media (min-width:940px) {
+  body:has(.desktop-top-header) { --desktop-rail-width:0px; }
+  .desktop-top-header {
+    inset:0 0 auto; width:100%; height:80px; padding:0 32px;
+    flex-direction:row; align-items:center; gap:32px; overflow:visible;
+    border-right:0; border-bottom:1px solid var(--kinetic-control-border);
+  }
+  .desktop-top-header .desktop-logo { margin:0; align-self:auto; flex-shrink:0; }
+  .desktop-top-header .desktop-nav { order:0; flex-direction:row; align-items:center; gap:6px; }
+  .desktop-top-header .desktop-nav-link { min-height:44px; padding:0 16px; border-radius:var(--radius-pill); gap:8px; }
+  .desktop-top-header .desktop-nav > .desktop-nav-link > .icon,
+  .desktop-top-header .desktop-calendar-main > .icon { display:none; }
+  .desktop-top-header .desktop-calendar-switcher { min-height:44px; grid-template-columns:minmax(0,1fr) 32px; border-radius:var(--radius-pill); }
+  .desktop-top-header .desktop-calendar-main { min-height:44px; padding-left:16px; }
+  .desktop-top-header .desktop-calendar-toggle { width:32px; min-height:44px; border-radius:0 var(--radius-pill) var(--radius-pill) 0; }
+  .desktop-top-header .desktop-nav-link.on, .desktop-top-header .desktop-calendar-switcher.on { background:var(--color-surface-muted); color:var(--ink); }
+  .desktop-top-header .desktop-calendar-menu { position:absolute; top:calc(100% + 12px); left:0; width:310px; max-height:calc(100dvh - 112px); overflow:auto; padding:8px; border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,.12); }
+  .desktop-header-tools { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .desktop-top-header .desktop-create { order:0; width:auto; min-height:42px; margin:0 6px 0 0; padding:0 20px; }
+  .desktop-header-tools > .desktop-nav-link { width:44px; height:44px; padding:0; justify-content:center; }
+  .desktop-tool-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .desktop-header-tools > .desktop-nav-link .desktop-count { position:absolute; top:0; right:-3px; }
+  .desktop-account { position:relative; }
+  .desktop-top-header .desktop-profile-link { position:relative; min-height:44px; padding:4px; border:0; border-radius:50%; background:transparent; cursor:pointer; }
+  .desktop-top-header .desktop-profile-link:hover { background:var(--color-surface-muted); }
+  .desktop-account-dot { position:absolute; right:1px; top:1px; width:9px; height:9px; border-radius:50%; background:var(--kinetic-accent); border:1px solid var(--paper); }
+  .desktop-account-menu { position:absolute; top:calc(100% + 12px); right:0; width:250px; padding:8px; max-height:calc(100dvh - 112px); overflow:auto; border:1px solid var(--line); border-radius:16px; background:var(--paper); color:var(--ink); box-shadow:0 12px 30px rgba(0,0,0,.12); }
+  .desktop-account-menu p { margin:8px 12px; color:var(--muted); overflow-wrap:anywhere; font-size:13px; }
+  .desktop-account-menu a { display:flex; align-items:center; gap:10px; min-height:44px; padding:8px 12px; border-radius:10px; color:inherit; text-decoration:none; font-size:14px; }
+  .desktop-account-menu a:hover { background:var(--color-surface-muted); }
+  .screen.hasnav:has(.desktop-top-header), .pub.hasnav:has(.desktop-top-header) { padding-left:0; padding-top:80px; }
+  .screen.hasnav:has(.desktop-top-header) > .pad, .pub.hasnav:has(.desktop-top-header) .profwrap { max-width:1360px; }
+  .screen.hasnav:has(.desktop-top-header) .scrollhead { left:0; top:80px; padding-inline:max(36px, calc((100vw - 1288px) / 2)); }
+}
+@media (min-width:940px) and (max-width:1100px) {
+  .desktop-top-header { padding-inline:24px; gap:20px; }
+  .desktop-header-tools { gap:6px; }
+  .desktop-top-header .desktop-nav-link { padding-inline:12px; }
+  .desktop-header-tools > .desktop-nav-link { padding:0; }
+}

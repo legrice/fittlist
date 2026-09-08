@@ -7,7 +7,7 @@ import { Icon } from "@/components/Icon";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { LinkPending } from "@/components/LinkPending";
 import { Wordmark } from "@/components/Wordmark";
-import { activeTab, navTabs, type NavTab } from "@/lib/nav";
+import { activeTab, type NavTab } from "@/lib/nav";
 import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
 
 type DesktopPerson = {
@@ -19,8 +19,8 @@ type DesktopPerson = {
 };
 
 /**
- * Desktop gets a real application frame rather than a phone header stretched
- * across a monitor. It is deliberately absent below the desktop breakpoint:
+ * The desktop header keeps primary destinations visible and account tools
+ * in a dropdown. It is absent below the desktop breakpoint:
  * the native app and mobile web keep their existing header and thumb bar.
  */
 export function DesktopChrome({
@@ -52,6 +52,19 @@ export function DesktopChrome({
   const here = activeTab(pathname, active);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const profileButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    setCalendarOpen(false); setProfileOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!profileOpen) return;
+    const outside = (event: PointerEvent) => { if (!profileRef.current?.contains(event.target as Node)) setProfileOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setProfileOpen(false); profileButton.current?.focus(); } };
+    document.addEventListener("pointerdown", outside); document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [profileOpen]);
 
   useEffect(() => {
     if (!calendarOpen) return;
@@ -59,7 +72,7 @@ export function DesktopChrome({
       if (!calendarRef.current?.contains(event.target as Node)) setCalendarOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setCalendarOpen(false);
+      if (event.key === "Escape") { setCalendarOpen(false); calendarRef.current?.querySelector<HTMLButtonElement>("button")?.focus(); }
     };
     document.addEventListener("pointerdown", closeOutside);
     document.addEventListener("keydown", closeOnEscape);
@@ -77,40 +90,14 @@ export function DesktopChrome({
   const calendarOn = personalOn || managedActive;
   const profileOn = pathname.startsWith(profileHref) || pathname.startsWith("/settings") ||
     (active === "calendar" && !pathname.startsWith("/calendar"));
-  // Profile is anchored to the bottom of the desktop rail. Every other
-  // primary destination, including Share, stays in the main navigation so
-  // removing the secondary right rail never removes a capability.
-  const links = navTabs(coach, scheduleHref, profileHref).filter((item) => item.id !== "calendar" && item.id !== "following");
-
   return (
     <>
-      <aside className="desktop-left" aria-label="Desktop navigation">
+      <header className="desktop-left desktop-top-header" aria-label="Desktop navigation">
         <Link className="desktop-logo" href="/calendar" aria-label="FittList calendar">
           <Wordmark variant="ink" />
         </Link>
-        <div className="desktop-profile-row">
-          <Link
-            className={`desktop-profile-link${profileOn ? " on" : ""}`}
-            href={profileHref}
-            aria-current={profileOn ? "page" : undefined}
-          >
-            {person.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={person.photo} alt="" />
-            ) : (
-              <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>
-            )}
-            <span>Profile</span>
-          </Link>
-          {admin && (
-            <Link className="desktop-profile-activity" href="/admin?activity=1" aria-label={adminActivity > 0 ? "New product activity" : "Product activity"}>
-              <Icon name="activity" size={19} />
-              {adminActivity > 0 && <i aria-hidden="true" />}
-            </Link>
-          )}
-        </div>
         <nav className="desktop-nav" aria-label="Main">
-          <div className={`desktop-calendar-switcher${calendarOn ? " on" : ""}${calendarOpen ? " open" : ""}`} ref={calendarRef}>
+          <div className={`desktop-calendar-switcher${calendarOn ? " on" : ""}${calendarOpen ? " open" : ""}`} ref={calendarRef} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCalendarOpen(false); }}>
             <Link className="desktop-calendar-main" href="/calendar" aria-current={personalOn ? "page" : undefined} onClick={() => setCalendarOpen(false)}>
               <Icon name="calendar_month" size={22} />
               <span>Calendar</span>
@@ -122,7 +109,7 @@ export function DesktopChrome({
               aria-label="Choose a calendar"
               aria-expanded={calendarOpen}
               aria-controls="desktop-calendar-menu"
-              onClick={() => setCalendarOpen((open) => !open)}
+              onClick={() => { setCalendarOpen((open) => !open); setProfileOpen(false); }}
             >
               <Icon name="expand_more" size={21} />
             </button>
@@ -154,45 +141,40 @@ export function DesktopChrome({
           <Link className={`desktop-nav-link${followingOn ? " on" : ""}`} href="/calendar/following" aria-current={followingOn ? "page" : undefined}>
             <Icon name="calendar_view_day" size={22} /><span>Following</span><LinkPending className="desktop-nav-spin" />
           </Link>
-          {links.map((item) => {
-            const on = here === item.id;
-            return (
-              <Link
-                key={item.id}
-                className={`desktop-nav-link${on ? " on" : ""}`}
-                href={item.href}
-                aria-current={on ? "page" : undefined}
-              >
-                <Icon name={item.icon} size={22} />
-                <span>{item.label}</span>
-                <LinkPending className="desktop-nav-spin" />
-              </Link>
-            );
-          })}
-          <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox" aria-current={pathname.startsWith("/inbox") ? "page" : undefined}>
+          <Link className={`desktop-nav-link${here === "discover" ? " on" : ""}`} href="/discover" aria-current={here === "discover" ? "page" : undefined}>Discover<LinkPending className="desktop-nav-spin" /></Link>
+        </nav>
+        <div className="desktop-header-tools">
+          <GlobalAdd triggerClassName="desktop-create" triggerLabel="Add" />
+          <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox" aria-label="Messages" title="Messages" aria-current={pathname.startsWith("/inbox") ? "page" : undefined}>
             <Icon name="chat_bubble" size={22} />
-            <span>Messages</span>
+            <span className="desktop-tool-label">Messages</span>
             <LinkPending className="desktop-nav-spin" />
             {messageUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${messageUnread} unread messages`}>{messageUnread > 99 ? "99+" : messageUnread}</b>}
           </Link>
-          <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications" aria-current={pathname.startsWith("/notifications") ? "page" : undefined}>
+          <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications" aria-label="Notifications" title="Notifications" aria-current={pathname.startsWith("/notifications") ? "page" : undefined}>
             <Icon name="notifications" size={22} />
-            <span>Notifications</span>
+            <span className="desktop-tool-label">Notifications</span>
             <LinkPending className="desktop-nav-spin" />
             {notificationUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread} unread notifications`}>{notificationUnread > 99 ? "99+" : notificationUnread}</b>}
           </Link>
-          {admin && (
-            <Link className={`desktop-nav-link${pathname.startsWith("/admin") ? " on" : ""}`} href="/admin">
-              <Icon name="admin_panel_settings" size={22} />
-              <span>Admin</span>
-              <LinkPending className="desktop-nav-spin" />
-              {adminAttention > 0 && <b className="desktop-count">{adminAttention > 9 ? "9+" : adminAttention}</b>}
-            </Link>
-          )}
-        </nav>
-        <GlobalAdd triggerClassName="desktop-create" triggerLabel="Add" />
-      </aside>
-
+          <div className="desktop-account" ref={profileRef} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setProfileOpen(false); }}>
+            <button ref={profileButton} type="button" className={`desktop-profile-link${profileOn ? " on" : ""}`} aria-label="Profile menu" aria-expanded={profileOpen} aria-controls="desktop-account-menu" onClick={() => { setProfileOpen(open => !open); setCalendarOpen(false); }}>
+              {person.photo ? <img src={person.photo} alt="" /> : <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>}
+              {admin && (adminAttention > 0 || adminActivity > 0) && <i className="desktop-account-dot" aria-label="Admin activity" />}
+            </button>
+            {profileOpen && <div id="desktop-account-menu" className="desktop-account-menu" onClick={() => setProfileOpen(false)}>
+              <p>{person.name}</p>
+              <Link href={profileHref}><Icon name="person" size={20} />Your profile</Link>
+              <Link href="/settings"><Icon name="settings" size={20} />Settings</Link>
+              <Link href={coach ? "/coachshare" : "/membershare"}><Icon name="reply" size={20} />Share</Link>
+              {admin && <>
+                <Link href="/admin"><Icon name="admin_panel_settings" size={20} />Admin{adminAttention > 0 && <b className="desktop-count">{adminAttention > 9 ? "9+" : adminAttention}</b>}</Link>
+                <Link href="/admin?activity=1"><Icon name="activity" size={20} />Product activity{adminActivity > 0 && <b className="desktop-count">New</b>}</Link>
+              </>}
+            </div>}
+          </div>
+        </div>
+      </header>
     </>
   );
 }

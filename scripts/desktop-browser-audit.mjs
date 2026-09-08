@@ -35,7 +35,7 @@ try {
   page.setDefaultTimeout(15000);
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
-  const rail = page.getByRole("complementary", { name: "Desktop navigation" });
+  const rail = page.locator(".desktop-top-header");
   async function visit(path) {
     // WebKit prepares the downloadable image for native sharing. Complete and
     // verify it before the route crawl unloads the document; otherwise WebKit
@@ -57,12 +57,12 @@ try {
   }
   async function frame() {
     await rail.waitFor();
-    assert(await rail.isVisible(), "Desktop rail is visible");
-    assert(await rail.evaluate(el => !el.closest("[inert]")), "Desktop rail is usable");
+    assert(await rail.isVisible(), "Desktop header is visible");
+    assert(await rail.evaluate(el => !el.closest("[inert]")), "Desktop header is usable");
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "No horizontal page overflow");
     const bounds = await rail.boundingBox();
     const content = await page.locator(".screen.hasnav > .pad,.pub.hasnav .profwrap").first().boundingBox();
-    assert(content && content.x >= bounds.x + bounds.width - 1, "Page content clears the rail");
+    assert(content && content.y >= bounds.y + bounds.height - 1, "Page content clears the header");
   }
   async function centeredDialog(name) {
     const dialog = page.getByRole("dialog", { name, exact: true });
@@ -89,7 +89,7 @@ try {
           await page.locator(".monthblock").nth(3).scrollIntoViewIfNeeded();
           const strip = page.locator(".scrollhead.on");
           await strip.waitFor();
-          assert((await strip.boundingBox()).x >= (await rail.boundingBox()).width, "Scrolled month toolbar leaves navigation accessible");
+          assert((await strip.boundingBox()).y >= (await rail.boundingBox()).height, "Scrolled month toolbar leaves navigation accessible");
         }
         await page.getByRole("button", { name: "Day view", exact: true }).click();
       }
@@ -133,7 +133,7 @@ try {
   for (const path of ["/calendar", "/calendar/following"]) {
     await firstPaint.goto(base + path);
     await firstPaint.getByRole("heading", { name: path === "/calendar" ? "Your calendar" : "Following", exact: true }).waitFor();
-    await firstPaint.getByRole("complementary", { name: "Desktop navigation" }).waitFor();
+    await firstPaint.locator(".desktop-top-header").waitFor();
     assert.equal(await firstPaint.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Server-rendered desktop hides mobile navigation surfaces");
     assert(await firstPaint.getByRole("button", { name: "Month view", exact: true }).isVisible(), "Desktop view controls appear before hydration");
     assert(await firstPaint.locator(".calendar-direct-schedule,.desktop-calendar-content").isVisible(), "Desktop schedule appears before hydration");
@@ -194,7 +194,7 @@ try {
   await visit("/calendar");
   await page.setViewportSize({ width: 939, height: 900 });
   await page.getByRole("button", { name: "Show your calendar", exact: true }).waitFor();
-  assert(!(await rail.isVisible()), "Desktop rail gives way to mobile navigation at 939px");
+  assert(!(await rail.isVisible()), "Desktop header gives way to mobile navigation at 939px");
   await page.getByRole("button", { name: "Show your calendar", exact: true }).click();
   await page.locator(".personal-calendar-list").waitFor();
   await page.setViewportSize({ width: 940, height: 900 });
