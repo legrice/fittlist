@@ -8027,8 +8027,7 @@ html[data-mode="dark"],
   .rota-month-view.mobile .rota-month-grid { min-width: 0; }
   .rota-month-view.mobile .rota-month-board { border: 0; border-radius: 0; background: transparent; }
   .rota-month-view.mobile .rota-month-weekdays { position: static; border-bottom: 1px solid var(--line); background: transparent; color: var(--ol); }
-  .rota-month-view.mobile .rota-month-weekdays span { min-height: 38px; border: 0; font-size: 0; }
-  .rota-month-view.mobile .rota-month-weekdays span::first-letter { font-size: 11px; }
+  .rota-month-view.mobile .rota-month-weekdays span { min-height: 38px; border: 0; font-size: 13px; }
   .rota-month-view.mobile .rota-month-day {
     min-height: 96px; padding: 7px 2px 5px; border-right: 0; border-bottom: 0; border-top: 1px solid var(--line); background: transparent; cursor: pointer;
   }
@@ -13585,8 +13584,10 @@ a.clspeek-by:active { opacity: .6; }
     background:var(--color-background);
   }
   .gym-manage-pad .rota-month-view.mobile .rota-month-board {
-    padding:12px; border-radius:24px; background:var(--color-white);
+    padding:0; border:0; border-radius:0; background:transparent; overflow:visible;
   }
+  .gym-manage-pad .rota-month-view.mobile .rota-month-weekdays { background:var(--color-shift); color:var(--color-white); }
+  .gym-manage-pad .rota-month-view.mobile .rota-month-day { background:transparent; color:var(--color-white); }
   .studio-calendar-controls { bottom:calc(18px + env(safe-area-inset-bottom)); }
 }
 

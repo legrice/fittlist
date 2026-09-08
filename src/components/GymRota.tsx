@@ -687,7 +687,7 @@ export function GymRota({
 
       {(desktop ? desktopView === "month" : mobileView === "month") ? (
         <div className={`rota-month-view${desktop ? "" : " mobile"}`}>
-          <div className="rota-month-toolbar">
+          {desktop && <div className="rota-month-toolbar">
             <div className="rota-month-nav">
               <button
                 aria-label="Previous month"
@@ -701,14 +701,14 @@ export function GymRota({
                 <Icon name="chevron_right" size={22} />
               </button>
             </div>
-          </div>
+          </div>}
 
           {monthLoading && !month ? (
             <div className="rota-month-loading"><LoadingDots label="Loading the month…"/></div>
           ) : month ? (
             <div className={`rota-month-board${monthLoading ? " loading" : ""}`}>
               <div className="rota-month-weekdays" aria-hidden="true">
-                {WEEKDAYS.map((day) => <span key={day}>{day}</span>)}
+                {WEEKDAYS.map((day) => <span key={day}>{desktop ? day : day.charAt(0)}</span>)}
               </div>
               <div className="rota-month-grid">
                 {month.days.map((day) => {
