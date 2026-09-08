@@ -282,7 +282,7 @@ export async function requestMagicLink(
   const lines = registration
     ? [
         `You requested a free class place on ${registration.date} using ${email}. Verify your email to finish registration and create or sign into your FittList account.`,
-        "Your place is confirmed only if space remains when you continue. If the class fills up, we’ll return you to the schedule to choose another. This one-time link expires in 15 minutes.",
+        "Your place is confirmed only if space remains when you continue. If the class fills up and its waitlist is enabled, you’ll join the waitlist instead. The event team will contact you if they can confirm a place. This one-time link expires in 15 minutes.",
       ]
     : firstTime
     ? [

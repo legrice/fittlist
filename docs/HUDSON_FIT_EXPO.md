@@ -1,13 +1,13 @@
 # Hudson Fit Expo registration
 
-Planned event: **Saturday, September 12, 2026**. Default **20 places per class**, editable separately. Full classes close registration; no waitlist, payment or ticketing integration is included.
+Planned event: **Saturday, September 12, 2026**. Default **20 places per class**, editable separately. Each class has an optional waitlist, off by default. No payment or ticketing integration is included.
 
 ## Setup on iPad
 
 1. Sign into FittList in Safari as an admin of the Hudson Fit Expo space.
 2. Build September 12’s dated classes in the space’s **Calendar**. Publish the classes people should be able to register for.
 3. Open **Event registrations** from the space dashboard.
-4. Preview September 12. Review each class and its capacity, then choose **Open registration for this date**.
+4. Preview September 12. Review each class and its capacity, enable waitlists for the classes that need them, then choose **Open registration for this date**.
 5. Scan the displayed QR code on another phone and complete an actual email signup before using the sign at the expo.
 6. For walk-ups, use **Send a walk-up signup link** to enter a name, email and class with the attendee’s permission. They verify on their own device; the iPad remains signed in as admin.
 7. Keep the iPad on the registration desk. Attendees register on their own phones; their sessions never replace the organizer’s session.
@@ -20,13 +20,15 @@ QR → free class → name and email → terms/privacy acknowledgement → secur
 
 The class/date/name intent travels in the server’s single-use email record, so a fresh browser opened from Mail retains it. Email previews do not consume the token. An inbox-verified new user receives a name and generated editable handle; photo, biography, password and following are deferred. Existing profiles and their visibility are preserved.
 
-Only confirmed registrations occupy places. An email request does not reserve a seat. If the class fills before verification, the member returns signed in and sees the full-class state. A transport failure can be retried without duplicating a registration. New event-path registrations are private in followers’ calendars by default; sharing is the attendee’s choice.
+Only confirmed registrations occupy places. An email request does not reserve a seat. If the class fills before verification, the member joins its enabled waitlist; otherwise they see the full-class state. A transport failure can be retried without duplicating a registration. New event-path registrations are private in followers’ calendars by default; sharing is the attendee’s choice.
 
 ## Organizer tally
 
 - Class registrations: one per member/class/date.
 - Unique attendees: one person even when registered for multiple classes.
 - Check-ins: class-specific, with an Undo control.
+- Waitlist counts and signup-ordered names/emails, separate from confirmed attendance. When a place opens, contact the first person to check they can attend, then choose **Confirm place**. No automatic promotion email is sent. If someone declines, use **Remove** to let the next person receive the place. New signups cannot jump the queue. Waiting attendees can leave from their signup page. Disabling a waitlist stops new joins but preserves existing entries.
+- CSV includes a Confirmed/Waitlisted status column.
 - Per-class capacity, registered count and checked-in count.
 - Name/email search, class filter, and CSV download.
 - Refresh every 15 seconds while the desk is visible, plus manual refresh. Automatic refresh pauses while capacities are being edited.
@@ -57,3 +59,5 @@ After a production build, `npm run check:event-browser` runs WebKit phone and iP
 Local production build, typecheck, lint, production regressions, data integrity and operations checks passed. The event-specific database checks passed, and WebKit exercised phone signup, opening the verification link in a fresh browser context, registration confirmation, the share sheet, private CSV access, QR delivery, and iPad portrait/landscape check-in/undo with accessibility checks. A missing-provider test confirms walk-up email failure leaves the organizer signed in and does not claim delivery.
 
 Browser authentication tests use a loopback HTTPS proxy with a disposable self-signed certificate, because production Secure cookies should not be weakened to accommodate HTTP localhost. Synthetic email tokens substitute for actual inbox delivery. These checks do not certify a physical iPad, venue Wi-Fi, real delivery, or multi-connection PostgreSQL load. Capacity serialization uses a PostgreSQL row lock shared by all ordinary saves and event registrations; concurrency tests here run in embedded PostgreSQL.
+
+Waitlist migration adds a separate queue with cascading user/class deletion. Waiting never counts as attendance or enables check-in. Promotions use the same class lock and capacity enforcement as registrations.

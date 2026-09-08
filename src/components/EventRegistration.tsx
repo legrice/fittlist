@@ -20,7 +20,7 @@ export function EventRegistration({event:initial,selectedId}:{event:EventSchedul
     window.addEventListener('focus',refresh);window.addEventListener('online',refresh);
     return ()=>{stopped=true;window.removeEventListener('focus',refresh);window.removeEventListener('online',refresh);};
   },[initial.slug]);
-  const cls = event.classes.find(c=>c.id===selected), full = !!cls && cls.capacity !== null && cls.count>=cls.capacity;
+  const cls = event.classes.find(c=>c.id===selected), full = !!cls && ((cls.capacity !== null && cls.count>=cls.capacity) || cls.waiting>0);
   const run = async (remove=false) => {
     if(busy.current || !cls || !event.date) return;
     busy.current=true;setPending(true);setMessage("");
@@ -49,12 +49,12 @@ export function EventRegistration({event:initial,selectedId}:{event:EventSchedul
           <button className="btn si" onClick={()=>setShare(true)}>Share that you’re going</button>
           <Link className="event-secondary" href="/calendar">View my calendar</Link>
           <details><summary>Can’t make it?</summary><p>Cancel to free your place for someone else.</p><button className="ghost" disabled={pending} onClick={()=>void run(true)}>Cancel registration</button></details>
-        </> : event.closed || cls.past ? <p role="status">Registration is closed for this class.</p> : full ? <><h2>This class is full</h2><p>Choose another class, or check back if someone cancels.</p></> : sent ? <>
-          <h2>Check your email</h2><p>We sent a secure link to <strong>{email}</strong>. Open it and tap Continue to finish signing up for this class.</p><p>Your place is confirmed after verification. Places aren’t held while you check your inbox.</p><button className="ghost" disabled={pending} onClick={()=>{setSent(false);setMessage("");}}>Change email or send again</button>
+        </> : cls.waitlisted ? <><h2>You’re on the waitlist</h2><p>You don’t have a confirmed place yet. The event team will contact you if they can confirm a place.</p><button className="ghost" disabled={pending} onClick={()=>void run(true)}>Leave waitlist</button></> : event.closed || cls.past ? <p role="status">Registration is closed for this class.</p> : full && !cls.waitlistEnabled ? <><h2>This class is full</h2><p>Choose another class, or check back if someone cancels.</p></> : sent ? <>
+          <h2>Check your email</h2><p>We sent a secure link to <strong>{email}</strong>. Open it and tap Continue to finish signing up for this class.</p><p>Verification confirms a place if available, or joins the waitlist when enabled. Places aren’t held while you check your inbox.</p><button className="ghost" disabled={pending} onClick={()=>{setSent(false);setMessage("");}}>Change email or send again</button>
         </> : <>
-          <p><strong>{Math.max(0,(cls.capacity ?? 0)-cls.count)} places left</strong></p>
-          <p>Your name and email will be shared with {event.name}’s admins to manage your registration. Your registration is private in FittList unless you choose to share it.</p>
-          {event.signedIn ? <><p>Registering as {event.viewerName || "your signed-in account"}.</p><button className="btn si" disabled={pending} onClick={()=>void run() }>{pending ? "Signing you up…" : "Sign up free"}</button></> : <form onSubmit={e=>{e.preventDefault();void run();}}>
+          <p><strong>{full ? "Join the waitlist · No confirmed place yet" : `${Math.max(0,(cls.capacity ?? 0)-cls.count)} places left`}</strong></p>
+          <p>{cls.waitlistEnabled && "If the class fills before you confirm, you’ll join its waitlist. "}Your name and email will be shared with {event.name}’s admins to manage your registration. Your registration is private in FittList unless you choose to share it.</p>
+          {event.signedIn ? <><p>Registering as {event.viewerName || "your signed-in account"}.</p><button className="btn si" disabled={pending} onClick={()=>void run() }>{pending ? "Saving…" : full ? "Join waitlist" : "Sign up free"}</button></> : <form onSubmit={e=>{e.preventDefault();void run();}}>
             <label>Your name<input autoComplete="name" required minLength={2} maxLength={80} value={name} onChange={e=>setName(e.target.value)} enterKeyHint="next" /></label>
             <label>Email address<input type="email" autoComplete="email" inputMode="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} enterKeyHint="send" /></label>
             <label className="event-consent"><input type="checkbox" required checked={consent} onChange={e=>setConsent(e.target.checked)} /><span>I agree to the <Link href="/terms" target="_blank">Terms of Use</Link> and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>. Continue creates or signs into my FittList account.</span></label>
@@ -65,7 +65,7 @@ export function EventRegistration({event:initial,selectedId}:{event:EventSchedul
         {message && <p role="alert">{message}</p>}
       </section> : <>
         <h2>Free classes</h2><p>Choose a class to reserve your place. Each attendee needs their own registration.</p>
-        {!event.date || !event.classes.length ? <p role="status">The schedule isn’t open yet. Please check back soon.</p> : event.closed ? <p role="status">The event is closed on this date.</p> : <div className="event-class-grid">{event.classes.map(c=><button className="event-class-card" key={c.id} onClick={()=>{setSelected(c.id);setSent(false);setMessage("");}}><strong className="event-time">{fmtTime(c.time)}</strong><span><strong>{c.name}</strong><small>{c.duration} min · {c.location}</small><b>{c.registered ? "You’re signed up" : c.past ? "Registration closed" : c.capacity!==null && c.count>=c.capacity ? "Full" : `${Math.max(0,(c.capacity ?? 0)-c.count)} places left · Sign up free`}</b></span></button>)}</div>}
+        {!event.date || !event.classes.length ? <p role="status">The schedule isn’t open yet. Please check back soon.</p> : event.closed ? <p role="status">The event is closed on this date.</p> : <div className="event-class-grid">{event.classes.map(c=><button className="event-class-card" key={c.id} onClick={()=>{setSelected(c.id);setSent(false);setMessage("");}}><strong className="event-time">{fmtTime(c.time)}</strong><span><strong>{c.name}</strong><small>{c.duration} min · {c.location}</small><b>{c.registered ? "You’re signed up" : c.waitlisted ? "You’re on the waitlist" : c.past ? "Registration closed" : (c.waiting>0 || c.capacity!==null && c.count>=c.capacity) ? c.waitlistEnabled ? "Join waitlist" : "Full" : `${Math.max(0,(c.capacity ?? 0)-c.count)} places left · Sign up free`}</b></span></button>)}</div>}
       </>}
       <p className="event-footnote">Questions? Ask the event team. <Link href={`/s/${event.slug}`}>View the space</Link></p>
     </div>

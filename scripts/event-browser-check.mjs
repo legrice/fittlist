@@ -38,12 +38,21 @@ try{
   await confirm.getByRole('heading',{name:'You’re signed up'}).waitFor();
   assert.match(confirm.url(),new RegExp(`/s/${f.slug}/register`));
   await confirm.getByRole('button',{name:'Share that you’re going'}).click();await confirm.getByRole('heading',{name:'RSVP sent'}).waitFor();
-  await fresh.close();
+  await confirm.goto(`${base}/s/${f.slug}/register?class=${f.classes[2].id}&d=${f.date}`);
+  await confirm.getByRole('button',{name:'Join waitlist',exact:true}).click();await confirm.getByRole('heading',{name:'You’re on the waitlist'}).waitFor();
+  await confirm.getByRole('button',{name:'Leave waitlist'}).click();await confirm.getByRole('button',{name:'Join waitlist',exact:true}).waitFor();
+  await confirm.getByRole('button',{name:'Join waitlist',exact:true}).click();await confirm.getByRole('heading',{name:'You’re on the waitlist'}).waitFor();
+  const memberCtx=await browser.newContext({ignoreHTTPSErrors:true});await memberCtx.addCookies([{name:'fl_session',value:f.member,url:base,httpOnly:true}]);const memberPage=await memberCtx.newPage();
+  await memberPage.goto(`${base}/s/${f.slug}/register?class=${f.classes[2].id}&d=${f.date}`);await memberPage.getByText('Can’t make it?',{exact:true}).click();await memberPage.getByRole('button',{name:'Cancel registration'}).click();await memberPage.getByRole('button',{name:'Join waitlist',exact:true}).waitFor();await memberCtx.close();
+
   for(const viewport of [{width:820,height:1180},{width:1180,height:820}]){
     const ctx=await browser.newContext({ignoreHTTPSErrors:true,viewport,reducedMotion:'reduce'});await ctx.addCookies([{name:'fl_session',value:f.admin,url:base,httpOnly:true}]);const desk=await ctx.newPage();
     await desk.goto(`${base}/s/${f.slug}/manage/registrations`);await desk.locator('.app-launch').waitFor({state:'detached'});
     await desk.getByRole('heading',{name:'Attendees',exact:true}).waitFor();
     if(viewport.width===820) {
+      await desk.getByRole('button',{name:'Confirm place',exact:true}).click();await desk.getByText('No one is waiting yet.',{exact:true}).waitFor();
+      await confirm.reload();await confirm.getByRole('heading',{name:'You’re signed up'}).waitFor();
+
       await desk.locator('.event-walkup > summary').click();
       await desk.getByLabel('Attendee name',{exact:true}).fill('Walk Up');await desk.getByLabel('Attendee email',{exact:true}).fill('walkup@example.test');await desk.getByLabel('Choose a class',{exact:true}).selectOption(f.classes[1].id);await desk.getByRole('checkbox',{name:'The attendee has asked me to send this signup link to their email.'}).check();
       await desk.getByRole('button',{name:'Send attendee signup link'}).click();await desk.getByRole('status').filter({hasText:'couldn’t send'}).or(desk.getByRole('status').filter({hasText:"couldn't send"})).waitFor();
@@ -59,5 +68,6 @@ try{
     const result=await new AxeBuilder({page:desk}).withTags(['wcag2a','wcag2aa']).analyze();assert.equal(result.violations.filter(v=>['serious','critical'].includes(v.impact)).length,0,JSON.stringify(result.violations.map(v=>v.id)));
     await desk.screenshot({path:`${f.directory}/ipad-${viewport.width}.png`,fullPage:true});await ctx.close();
   }
-  console.log(`PASS phone signup, fresh-browser email continuation, confirmed share, private export, QR, iPad portrait/landscape check-in and accessibility. Screenshots: ${f.directory}`);
+  await fresh.close();
+  console.log(`PASS waitlist join/leave and admin promotion, phone signup, fresh-browser email continuation, confirmed share, private export, QR, iPad portrait/landscape check-in and accessibility. Screenshots: ${f.directory}`);
 }finally{await browser?.close();server.kill('SIGTERM');proxy.close();}

@@ -23,7 +23,7 @@ export async function validateRegistrationIntent(value: unknown): Promise<Regist
 }
 
 /** All ordinary saves and expo registrations share this row lock and limit. */
-export async function writeAttendance(userId: string, classId: string, date: string, on: boolean, eventStudioId?: string) {
+export async function writeAttendance(userId: string, classId: string, date: string, on: boolean, eventStudioId?: string, promote = false) {
   if (!uuidValid(classId) || !validEventDate(date) || typeof on !== "boolean") return {ok:false, error:"That class or date is invalid."};
   const blocked = await hiddenFrom(userId);
   const db = await getDb();
@@ -36,7 +36,9 @@ export async function writeAttendance(userId: string, classId: string, date: str
       const [studio] = await tx.select().from(schema.studios).where(eq(schema.studios.id,eventStudioId));
       if (!studio || studio.registrationDate !== date || studio.accountUserId !== cls.userId || cls.studioId !== studio.id || !cls.registrationCapacity) return {ok:false,error:"Registration is not open for this class."};
     }
-    if (!on) { await tx.delete(schema.attendances).where(where); return {ok:true,rsvp:cls.rsvp}; }
+    const queueWhere = and(eq(schema.eventWaitlist.classId,classId),eq(schema.eventWaitlist.occurrenceDate,date));
+    const ownQueue = and(queueWhere,eq(schema.eventWaitlist.userId,userId));
+    if (!on) { await tx.delete(schema.attendances).where(where); await tx.delete(schema.eventWaitlist).where(ownQueue); return {ok:true,rsvp:cls.rsvp}; }
     if (!runsOn(cls,date,dowOfDate(date)) || occurrenceEnded(date,cls.startTime,cls.durationMin,cls.timeZone)) return {ok:false,error:"This class is no longer accepting registrations."};
     if (cls.studioId) {
       const [closed] = await tx.select({id:schema.studioClosedDays.id}).from(schema.studioClosedDays).where(and(eq(schema.studioClosedDays.studioId,cls.studioId),eq(schema.studioClosedDays.occurrenceDate,date)));
@@ -46,9 +48,18 @@ export async function writeAttendance(userId: string, classId: string, date: str
     if (already) return {ok:true,rsvp:cls.rsvp};
     if (cls.registrationCapacity !== null) {
       const [count] = await tx.select({n:sql<number>`count(*)::int`}).from(schema.attendances).where(and(eq(schema.attendances.classId,classId),eq(schema.attendances.occurrenceDate,date)));
-      if (count.n >= cls.registrationCapacity) return {ok:false,error:"This class is full. Please choose another class."};
+      const [first] = await tx.select().from(schema.eventWaitlist).where(queueWhere).orderBy(schema.eventWaitlist.createdAt,schema.eventWaitlist.id).limit(1);
+      if (promote && (!first || first.userId !== userId)) return {ok:false,error:"Confirm the first person on the waitlist. Refresh and try again."};
+      if (count.n >= cls.registrationCapacity || (first && !promote)) {
+        if (eventStudioId && cls.registrationWaitlist && !promote) {
+          await tx.insert(schema.eventWaitlist).values({userId,classId,occurrenceDate:date}).onConflictDoNothing();
+          return {ok:true,waitlisted:true,rsvp:cls.rsvp};
+        }
+        return {ok:false,error: first && count.n < cls.registrationCapacity ? "Available places are reserved for the waitlist. Contact the event team." : "This class is full. Please choose another class."};
+      }
     }
     await tx.insert(schema.attendances).values({userId,classId,occurrenceDate:date,...(eventStudioId ? {isPublic:false} : {})}).onConflictDoNothing();
+    await tx.delete(schema.eventWaitlist).where(ownQueue);
     return {ok:true,rsvp:cls.rsvp};
   });
 }

@@ -773,6 +773,7 @@ export const classes = pgTable(
     // RSVP into a booking system, and it was cut on purpose.
     rsvp: boolean("rsvp").notNull().default(false),
     registrationCapacity: integer("registration_capacity"),
+    registrationWaitlist: boolean("registration_waitlist").notNull().default(false),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1439,3 +1440,12 @@ export const credentials = pgTable(
   },
   (t) => [index("credentials_user").on(t.userId)],
 );
+
+// Separate from attendance: waiting never puts a class on a member's calendar.
+export const eventWaitlist = pgTable("event_waitlist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, {onDelete:"cascade"}),
+  classId: uuid("class_id").notNull().references(() => classes.id, {onDelete:"cascade"}),
+  occurrenceDate: date("occurrence_date", {mode:"string"}).notNull(),
+  createdAt: timestamp("created_at", {withTimezone:true}).notNull().defaultNow(),
+}, t => [uniqueIndex("event_waitlist_once").on(t.userId,t.classId,t.occurrenceDate), index("event_waitlist_queue").on(t.classId,t.occurrenceDate,t.createdAt)]);

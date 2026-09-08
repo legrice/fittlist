@@ -19,10 +19,10 @@ export async function registerForEvent(slug: string, classId: string, date: stri
   } catch {return {ok:false,error:"We couldn’t save that. Please try again."};}
 }
 export async function refreshEvent(slug: string) { return eventSchedule(slug); }
-export async function saveEventSettings(slug: string, date: string, capacities: {id:string;capacity:number}[]) {
+export async function saveEventSettings(slug: string, date: string, capacities: {id:string;capacity:number;waitlist?:boolean}[]) {
   const admin = await eventAdmin(slug);
   if (!admin) return {ok:false,error:"Only this space’s admins can manage registrations."};
-  if (!validEventDate(date) || !Array.isArray(capacities) || capacities.length>500 || capacities.some(c=>!uuidValid(c.id) || !Number.isInteger(c.capacity) || c.capacity<1 || c.capacity>1000)) return {ok:false,error:"Choose a date and capacities between 1 and 1,000."};
+  if (!validEventDate(date) || !Array.isArray(capacities) || capacities.length>500 || capacities.some(c=>!uuidValid(c.id) || (c.waitlist !== undefined && typeof c.waitlist !== "boolean") || !Number.isInteger(c.capacity) || c.capacity<1 || c.capacity>1000)) return {ok:false,error:"Choose a date and capacities between 1 and 1,000."};
   const db = await getDb();
   try {
     await db.transaction(async tx=>{
@@ -32,11 +32,12 @@ export async function saveEventSettings(slug: string, date: string, capacities: 
       for(const setting of capacities) {
         const [count] = await tx.select({n:sql<number>`count(*)::int`}).from(schema.attendances).where(and(eq(schema.attendances.classId,setting.id),eq(schema.attendances.occurrenceDate,date)));
         if(count.n>setting.capacity) throw Error("A capacity cannot be lower than the number already registered.");
-        await tx.update(schema.classes).set({registrationCapacity:setting.capacity,rsvp:true}).where(eq(schema.classes.id,setting.id));
+        await tx.update(schema.classes).set({registrationCapacity:setting.capacity,...(setting.waitlist !== undefined ? {registrationWaitlist:setting.waitlist} : {}),rsvp:true}).where(eq(schema.classes.id,setting.id));
       }
       if(admin.studio.registrationDate && admin.studio.registrationDate!==date && classes.length) {
         const [count] = await tx.select({n:sql<number>`count(*)::int`}).from(schema.attendances).where(and(inArray(schema.attendances.classId,classes.map(c=>c.id)),eq(schema.attendances.occurrenceDate,admin.studio.registrationDate)));
-        if(count.n) throw Error("This event already has registrations. Keep its date and create a separate event space for another date.");
+        const [waiting] = await tx.select({n:sql<number>`count(*)::int`}).from(schema.eventWaitlist).where(and(inArray(schema.eventWaitlist.classId,classes.map(c=>c.id)),eq(schema.eventWaitlist.occurrenceDate,admin.studio.registrationDate)));
+        if(count.n || waiting.n) throw Error("This event already has registrations. Keep its date and create a separate event space for another date.");
       }
       await tx.update(schema.studios).set({registrationDate:date}).where(eq(schema.studios.id,admin.studio.id));
     });
@@ -53,4 +54,32 @@ export async function checkInEvent(slug: string, attendanceId: string, checked: 
   if(!entry || entry.date!==admin.studio.registrationDate) return {ok:false,error:"Registration not found."};
   await db.update(schema.attendances).set({checkedInAt:checked ? new Date() : null}).where(eq(schema.attendances.id,attendanceId));
   revalidatePath(`/s/${slug}/manage/registrations`);return {ok:true};
+}
+
+export async function promoteEventWaitlist(slug:string, entryId:string) {
+  const admin=await eventAdmin(slug);
+  if(!admin || !uuidValid(entryId)) return {ok:false,error:"Only this space’s admins can confirm waitlisted attendees."};
+  const db=await getDb();
+  const [entry]=await db.select().from(schema.eventWaitlist).where(eq(schema.eventWaitlist.id,entryId));
+  if(!entry || entry.occurrenceDate!==admin.studio.registrationDate) return {ok:false,error:"Waitlist entry no longer available. Refresh the list."};
+  try {
+    const result=await writeAttendance(entry.userId,entry.classId,entry.occurrenceDate,true,admin.studio.id,true);
+    revalidatePath(`/s/${slug}/manage/registrations`);revalidatePath(`/s/${slug}/register`);revalidatePath('/calendar');
+    return result;
+  } catch {return {ok:false,error:"Couldn’t confirm this place. Refresh and try again."};}
+}
+
+export async function removeEventWaitlist(slug:string, entryId:string) {
+  const admin=await eventAdmin(slug);
+  if(!admin || !uuidValid(entryId)) return {ok:false,error:"Only this space’s admins can manage the waitlist."};
+  const db=await getDb();
+  try {
+    await db.transaction(async tx=>{
+      const [entry]=await tx.select({classId:schema.classes.id}).from(schema.eventWaitlist).innerJoin(schema.classes,eq(schema.classes.id,schema.eventWaitlist.classId)).where(and(eq(schema.eventWaitlist.id,entryId),eq(schema.classes.studioId,admin.studio.id),eq(schema.classes.userId,admin.studio.accountUserId || admin.studio.id),eq(schema.eventWaitlist.occurrenceDate,admin.studio.registrationDate || "0001-01-01")));
+      if(!entry) return;
+      await tx.select({id:schema.classes.id}).from(schema.classes).where(eq(schema.classes.id,entry.classId)).for("update");
+      await tx.delete(schema.eventWaitlist).where(eq(schema.eventWaitlist.id,entryId));
+    });
+    revalidatePath(`/s/${slug}/manage/registrations`);revalidatePath(`/s/${slug}/register`);return {ok:true};
+  } catch {return {ok:false,error:"Couldn’t remove this waitlist entry. Try again."};}
 }
