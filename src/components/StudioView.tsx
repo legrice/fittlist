@@ -375,6 +375,9 @@ export async function StudioView({
             name, where it is, and the two things you can do about it. */}
         <ProfileActionGate enabled={!signedIn} next={base}>
         <ProfileTabs
+          bannerPhoto={s.bannerPhoto}
+          canEditBanner={access.isManager}
+          bannerStudioId={s.id}
           base={base}
           tab={tab}
           tabs={[]}

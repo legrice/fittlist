@@ -190,6 +190,8 @@ export async function MemberProfileView({
             that makes the other two read as the same app. */}
         <ProfileActionGate enabled={!viewerId && !isOwner} next={`/${user.handle ?? ""}`} via={user.handle ?? undefined}>
         <ProfileTabs
+          bannerPhoto={user.bannerPhoto}
+          canEditBanner={isOwner}
           base={`/${user.handle ?? ""}`}
           tab="schedule"
           tabs={[]}

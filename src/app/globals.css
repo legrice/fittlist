@@ -15868,3 +15868,14 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 
 /* Temporarily hide community badges and shoutouts on every profile. */
 .profile-stamps, .profile-shoutouts { display:none; }
+
+.profile-seam-top { overflow:hidden; }
+.profile-banner-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.profile-banner-edit { position:absolute; right:20px; bottom:16px; z-index:3; width:40px; height:40px; display:grid; place-items:center; border:0; border-radius:50%; background:var(--kinetic-surface); color:var(--kinetic-text); }
+.profile-banner-scrim { z-index:120; }
+.profile-banner-sheet { max-width:620px; }
+.profile-banner-sheet > h2 { margin:0 48px 12px 0; }
+.profile-banner-sheet > p { margin:0 0 16px; }
+.profile-banner-preview { aspect-ratio:16/5; margin:20px 0; overflow:hidden; border-radius:16px; display:grid; place-items:center; background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
+.profile-banner-preview img { width:100%; height:100%; object-fit:cover; }
+.profile-banner-controls { display:flex; flex-wrap:wrap; gap:12px; }

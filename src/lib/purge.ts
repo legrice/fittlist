@@ -39,6 +39,7 @@ async function userImageCandidates(database: Database, userId: string): Promise<
       .select({
         photo: schema.users.photo,
         photoThumb: schema.users.photoThumb,
+        bannerPhoto: schema.users.bannerPhoto,
         storyPrefs: schema.users.storyPrefs,
       })
       .from(schema.users)
@@ -65,6 +66,7 @@ async function userImageCandidates(database: Database, userId: string): Promise<
   for (const person of people) {
     addManagedUrl(urls, person.photo);
     addManagedUrl(urls, person.photoThumb);
+    addManagedUrl(urls, person.bannerPhoto);
     addManagedUrl(urls, person.storyPrefs?.background);
   }
   for (const row of [...classes, ...templates, ...personal]) addManagedUrl(urls, row.image);
@@ -79,9 +81,10 @@ async function referencedImageUrls(database: Database): Promise<Set<string>> {
       database.select({
         photo: schema.users.photo,
         photoThumb: schema.users.photoThumb,
+        bannerPhoto: schema.users.bannerPhoto,
         storyPrefs: schema.users.storyPrefs,
       }).from(schema.users),
-      database.select({ photo: schema.studios.photo, standardWeek: schema.studios.standardWeek }).from(schema.studios),
+      database.select({ photo: schema.studios.photo, bannerPhoto: schema.studios.bannerPhoto, standardWeek: schema.studios.standardWeek }).from(schema.studios),
       database.select({ photo: schema.events.photo }).from(schema.events),
       database.select({ image: schema.classTemplates.image }).from(schema.classTemplates),
       database.select({ image: schema.studioClasses.image }).from(schema.studioClasses),
@@ -94,10 +97,12 @@ async function referencedImageUrls(database: Database): Promise<Set<string>> {
   for (const person of people) {
     addManagedUrl(urls, person.photo);
     addManagedUrl(urls, person.photoThumb);
+    addManagedUrl(urls, person.bannerPhoto);
     addManagedUrl(urls, person.storyPrefs?.background);
   }
   for (const studio of studios) {
     addManagedUrl(urls, studio.photo);
+    addManagedUrl(urls, studio.bannerPhoto);
     addStandardWeekImages(urls, studio.standardWeek);
   }
   for (const row of events) addManagedUrl(urls, row.photo);

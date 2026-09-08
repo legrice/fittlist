@@ -434,6 +434,8 @@ export async function PublicProfileView({
           }}
         >
         <ProfileTabs
+          bannerPhoto={user.bannerPhoto}
+          canEditBanner={isOwner}
           base={`/${handle}`}
           tab="schedule"
           tabs={[]}

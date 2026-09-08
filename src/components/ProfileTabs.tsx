@@ -1,5 +1,6 @@
 "use client";
 
+import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 import { useDesktopLayout } from "@/lib/use-desktop-layout";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
@@ -64,6 +65,9 @@ export function ProfileTabs({
   closingContent,
   infoSheet = false,
   desktopPlaceLayout = false,
+  bannerPhoto,
+  canEditBanner = false,
+  bannerStudioId,
   children,
 }: {
   /** The page's own URL: "/matt" for a person, "/s/ironbound" for a studio.
@@ -127,6 +131,9 @@ export function ProfileTabs({
    *  making profile information compete with functional section navigation. */
   infoSheet?: boolean;
   desktopPlaceLayout?: boolean;
+  bannerPhoto?: string | null;
+  canEditBanner?: boolean;
+  bannerStudioId?: string;
   children: ReactNode;
 }) {
   const desktop = useDesktopLayout();
@@ -295,6 +302,8 @@ export function ProfileTabs({
           </div>
         )}
         {!heroPhoto && !heroColor && <div className="profile-seam-top">
+          {bannerPhoto && <img className="profile-banner-image" src={bannerPhoto} alt="" />}
+          {canEditBanner && <ProfileBannerSetting compact studioId={bannerStudioId} />}
           {backTo ? <div className="profback"><BackLink className="evback" href={backTo.href} label={backTo.label} anywhere notUnder={base}><Icon name="arrow_back" size={23} /></BackLink></div> : null}
           <h1 className="profile-top-name">{name}</h1>
           {ownerTop&&<div className="ownertop profile-top-actions">{ownerTop}</div>}

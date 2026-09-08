@@ -1,5 +1,6 @@
 "use client";
 
+import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
 import { useCalendarScopeRecovery } from "@/lib/calendar-scope-recovery";
 import { useSearchHistory } from "@/lib/use-search-history";
@@ -764,6 +765,7 @@ export function CalendarScreen({
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
           <section><h3>Settings</h3><div className="calendar-action-list">
+            <ProfileBannerSetting />
             {!member && <button type="button" onClick={() => setSettingsView("away")}><span className="calendar-action-icon"><Icon name="schedule" size={23} /></span><span><strong>Set yourself as away</strong><small>Add away dates, a profile note, and an automatic reply</small></span><Icon name="chevron_right" size={20} /></button>}
             <button type="button" onClick={() => setSettingsView("reach")}><span className="calendar-action-icon"><Icon name="public_off" size={23} /></span><span><strong>Privacy &amp; communication</strong><small>Messages, visibility, and follower approvals</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSettingsView("account")}><span className="calendar-action-icon"><Icon name="lock" size={23} /></span><span><strong>Account &amp; preferences</strong><small>Login, notifications, and appearance</small></span><Icon name="chevron_right" size={20} /></button>

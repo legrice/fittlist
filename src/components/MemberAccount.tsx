@@ -1,5 +1,6 @@
 "use client";
 
+import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -119,6 +120,7 @@ export function MemberAccount({
           scroll, with sharing and privacy in the same block as your name. */}
       {showHeading && <h3 className="setgroup-h">Settings</h3>}
       <div className="settingslist">
+          <ProfileBannerSetting />
         <button className="setrow" onClick={() => setView("calendar")}>
           <span className="setrow-ic"><Icon name="event" size={24} /></span>
           <span className="setrow-txt">

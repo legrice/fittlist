@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   // 26px circle should not download the hero's file. Null on rows saved
   // before this existed; readers fall back to photo.
   photoThumb: text("photo_thumb"),
+  bannerPhoto: text("banner_photo"),
   // A short role/tagline shown under the name (e.g. "Strength coach").
   title: text("title"),
   // City / area shown under the name on the public profile (e.g. "Jersey City").
@@ -326,6 +327,7 @@ export const studios = pgTable("studios", {
   // directory; the id is the fallback for anything created before slugs.
   slug: text("slug").unique(),
   name: text("name").notNull(),
+  bannerPhoto: text("banner_photo"),
   address: text("address").notNull(),
   // "Studio" was the first kind of place in the directory, not the whole
   // category. Existing rows default to it; events, parks and virtual rooms

@@ -848,6 +848,13 @@
       "when": 1788884851915,
       "tag": "0120_little_namor",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1788909102596,
+      "tag": "0121_profile_banners",
+      "breakpoints": true
     }
   ]
 }
