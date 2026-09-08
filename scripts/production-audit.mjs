@@ -345,6 +345,7 @@ async function browserFlows(name,type) {
         await exit.waitFor();
         await exit.click();
         await page.waitForURL("**/calendar");
+        await page.locator(".you-route-nav").waitFor({state:"detached"});
       }
     }
     await page.setViewportSize({width:1440,height:900});
