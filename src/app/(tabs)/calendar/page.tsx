@@ -6,6 +6,7 @@ import type { ClassDto, StudioDto } from "@/lib/types";
 import { CalendarScreen } from "@/components/CalendarScreen";
 import { myWeek } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
+import { adminEmails } from "@/lib/admin";
 import { currentUser } from "@/lib/current-user";
 import { groupCalendarsForUser, managedCalendarsForUser } from "@/lib/managed-calendars";
 import { staffStudiosForUser } from "@/lib/staff-studios";
@@ -107,6 +108,7 @@ export default async function CalendarPage({
       studios={studios}
       openAdder={add === "1"}
       member={member}
+      isAdmin={adminEmails().includes(me.email.toLowerCase())}
       managedCalendars={managedCalendars}
       groupCalendars={groupCalendars}
       studioRelationships={studioRelationships}

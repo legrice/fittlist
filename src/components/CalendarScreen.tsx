@@ -135,6 +135,7 @@ export function CalendarScreen({
   savedDays = [],
   openAdder = false,
   member = false,
+  isAdmin = false,
   sheet = false,
   onClose,
   managedCalendars = [],
@@ -154,6 +155,7 @@ export function CalendarScreen({
   /** Members use this exact calendar too, but every row is attending. They
    *  have no relationship filter and Add opens the catalog directly. */
   member?: boolean;
+  isAdmin?: boolean;
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
@@ -766,6 +768,9 @@ export function CalendarScreen({
             <button type="button" onClick={() => setSettingsView("reach")}><span className="calendar-action-icon"><Icon name="public_off" size={23} /></span><span><strong>Privacy &amp; communication</strong><small>Messages, visibility, and follower approvals</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSettingsView("account")}><span className="calendar-action-icon"><Icon name="lock" size={23} /></span><span><strong>Account &amp; preferences</strong><small>Login, notifications, and appearance</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
+          {isAdmin && <section><h3>Admin</h3><div className="calendar-action-list">
+            <Link href="/admin"><span className="calendar-action-icon"><Icon name="admin_panel_settings" size={23} /></span><span><strong>Admin dashboard</strong><small>Manage people, studios, and event registration access</small></span><Icon name="chevron_right" size={20} /></Link>
+          </div></section>}
         </div>
         <footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer>
       </section>}
