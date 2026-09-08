@@ -7,6 +7,7 @@ import { NativeAppBridge } from "@/components/NativeAppBridge";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeModeSync } from "@/components/ThemeModeSync";
 import "./globals.css";
+import { LaunchScreen } from "@/components/LaunchScreen";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()),
@@ -65,6 +66,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body>
+        <LaunchScreen />
+        <noscript><style>{`.app-launch { display: none !important; }`}</style></noscript>
         <ThemeModeSync />
         <NativeAppBridge />
         <ScrollLock />

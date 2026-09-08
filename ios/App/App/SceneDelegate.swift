@@ -41,6 +41,8 @@ final class FittListBridgeViewController: CAPBridgeViewController {
 /// keeps one web product while the highest-value app surfaces become native.
 final class FittListShellViewController: UIViewController, UITabBarDelegate, WKScriptMessageHandler, MFMessageComposeViewControllerDelegate {
     private let bridge = FittListBridgeViewController()
+    private let launchCover = UIView()
+    private var launchDismissed = false
     private let headerView = UIView()
     private let statusBarSurface = UIView()
     private let tabBar = UITabBar()
@@ -126,6 +128,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         ])
 
         installWebHooks()
+        showLaunchCover()
         shareFileQueue.async { [weak self] in
             self?.pruneShareFileCache(keeping: nil)
             self?.removeAbandonedActiveShareFiles()
@@ -136,6 +139,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         super.viewDidLayoutSubviews()
         // The status-bar plugin may add its own background after appearance.
         view.bringSubviewToFront(statusBarSurface)
+        if !launchDismissed { view.bringSubviewToFront(launchCover) }
     }
 
     private func updateStatusBarSurface(_ channels: [Double]) {
@@ -270,9 +274,49 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         UITabBarItem(title: title, image: UIImage(systemName: symbol), tag: tag)
     }
 
+    private func showLaunchCover() {
+        launchCover.backgroundColor = UIColor(red: 16/255, green: 33/255, blue: 38/255, alpha: 1)
+        launchCover.frame = view.bounds
+        launchCover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        launchCover.accessibilityLabel = "Loading FittList"
+        launchCover.isAccessibilityElement = true
+        view.addSubview(launchCover)
+        let mark = UIView()
+        mark.translatesAutoresizingMaskIntoConstraints = false
+        launchCover.addSubview(mark)
+        NSLayoutConstraint.activate([
+            mark.centerXAnchor.constraint(equalTo: launchCover.centerXAnchor),
+            mark.centerYAnchor.constraint(equalTo: launchCover.centerYAnchor),
+            mark.widthAnchor.constraint(equalToConstant: 72),
+            mark.heightAnchor.constraint(equalToConstant: 69)
+        ])
+        for (index, width) in [72.0, 48.0, 24.0].enumerated() {
+            let bar = UIView(frame: CGRect(x: 0, y: Double(index) * 25.333, width: width, height: 18))
+            bar.backgroundColor = .white
+            bar.layer.cornerRadius = 2.667
+            mark.addSubview(bar)
+        }
+        if !UIAccessibility.isReduceMotionEnabled {
+            mark.alpha = 0
+            UIView.animate(withDuration: 0.18) { mark.alpha = 1 }
+        }
+        // A failed document must expose the bundled offline page or web retry,
+        // never strand someone behind a native cover that needs JavaScript.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 18) { [weak self] in self?.dismissLaunchCover() }
+    }
+
+    private func dismissLaunchCover() {
+        guard !launchDismissed else { return }
+        launchDismissed = true
+        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.22, animations: {
+            self.launchCover.alpha = 0
+        }, completion: { _ in self.launchCover.removeFromSuperview() })
+    }
+
     private func installWebHooks() {
         bridge.loadViewIfNeeded()
         guard let controller = bridge.webView?.configuration.userContentController else { return }
+        controller.add(self, name: "fittlistReady")
         controller.add(self, name: "fittlistRoute")
         controller.add(self, name: "fittlistExternal")
         controller.add(self, name: "fittlistTakeover")
@@ -367,6 +411,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         // Every privileged handler has the same main-frame/origin boundary,
         // including external links and appearance messages.
         guard isTrustedWebMessage(message) else { return }
+        if message.name == "fittlistReady" { dismissLaunchCover(); return }
         if message.name == "fittlistShareTarget", let payload = message.body as? [String: Any] {
             shareImage(payload)
             return

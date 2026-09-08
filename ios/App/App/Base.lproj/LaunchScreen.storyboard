@@ -12,11 +12,12 @@
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                    <imageView key="view" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                    </imageView>
+                    <view key="view" contentMode="scaleToFill" id="snD-IY-ifK">
+                        <rect key="frame" x="0" y="0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+<subviews><view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bar0"><rect key="frame" x="151.5" y="299.0" width="72" height="18"/><color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/><constraints><constraint firstAttribute="width" constant="72" id="width0"/><constraint firstAttribute="height" constant="18" id="height0"/></constraints></view><view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bar1"><rect key="frame" x="151.5" y="324.33299999999997" width="48" height="18"/><color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/><constraints><constraint firstAttribute="width" constant="48" id="width1"/><constraint firstAttribute="height" constant="18" id="height1"/></constraints></view><view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bar2"><rect key="frame" x="151.5" y="349.666" width="24" height="18"/><color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/><constraints><constraint firstAttribute="width" constant="24" id="width2"/><constraint firstAttribute="height" constant="18" id="height2"/></constraints></view></subviews><constraints><constraint firstItem="bar0" firstAttribute="leading" secondItem="snD-IY-ifK" secondAttribute="centerX" constant="-36" id="left0"/><constraint firstItem="bar0" firstAttribute="top" secondItem="snD-IY-ifK" secondAttribute="centerY" constant="-34.5" id="top0"/><constraint firstItem="bar1" firstAttribute="leading" secondItem="snD-IY-ifK" secondAttribute="centerX" constant="-36" id="left1"/><constraint firstItem="bar1" firstAttribute="top" secondItem="snD-IY-ifK" secondAttribute="centerY" constant="-9.167000000000002" id="top1"/><constraint firstItem="bar2" firstAttribute="leading" secondItem="snD-IY-ifK" secondAttribute="centerX" constant="-36" id="left2"/><constraint firstItem="bar2" firstAttribute="top" secondItem="snD-IY-ifK" secondAttribute="centerY" constant="16.165999999999997" id="top2"/></constraints>
+                        <color key="backgroundColor" red="0.062745098" green="0.129411765" blue="0.149019608" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
