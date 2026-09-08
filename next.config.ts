@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    // Redirect before the retired page or authenticated layout can render.
+    return [{ source: "/you", destination: "/calendar", permanent: false }];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: [

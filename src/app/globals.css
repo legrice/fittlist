@@ -15809,7 +15809,3 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .event-desk-setup { margin:20px 0; }
 .event-desk-setup > summary,.event-walkup > summary { min-height:44px; padding:10px 0; font-size:20px; font-weight:600; cursor:pointer; }
 .event-panel select { height:48px; }
-
-/* Standalone account links need the exit supplied by the profile sheet elsewhere. */
-.you-route-nav { max-width:620px; margin:0 auto; padding:12px 0; }
-.you-route-back { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 12px; border-radius:24px; color:var(--ink); background:var(--color-surface-muted); text-decoration:none; font-weight:600; }

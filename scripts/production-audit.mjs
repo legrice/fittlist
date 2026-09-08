@@ -341,12 +341,9 @@ async function browserFlows(name,type) {
       const response=await page.goto(base+route);assert(response.status()<400,`${name}: ${route}`);
       await page.waitForTimeout(120);
       if(route === "/you") {
-        const exit = page.getByRole("navigation",{name:"Account navigation"}).getByRole("link",{name:"Calendar",exact:true});
-        await exit.waitFor();
-        await exit.click();
         await page.waitForURL("**/calendar");
-        await page.locator(".you-route-nav").waitFor({state:"detached"});
         await page.locator(".calendar-scope-top").waitFor();
+        assert.equal(await page.locator(".youpage").count(),0,"Retired account page never renders");
       }
     }
     await page.setViewportSize({width:1440,height:900});
