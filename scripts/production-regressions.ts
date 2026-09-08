@@ -9,14 +9,14 @@ import { readClientMemory, loadClientMemory, setClientMemoryScope, invalidateCli
 import { authOrigin } from "../src/lib/auth-origin";
 
 async function main() {
-  assert.equal(calendarActivitySummary({teaching:0,attending:0,personal:4}),"You have 4 personal activities planned this week.","Personal workouts must not be described as an empty week");
-  assert.equal(calendarActivitySummary({teaching:0,attending:0,personal:1}),"You have 1 personal activity planned this week.");
+  assert.equal(calendarActivitySummary({teaching:0,attending:0,personal:4}),"You’ve got 4 workouts planned this week.","Personal workouts must not be described as an empty week");
+  assert.equal(calendarActivitySummary({teaching:0,attending:0,personal:1}),"You’ve got 1 workout planned this week.");
   for (const teaching of [0,2]) for (const attending of [0,3]) for (const personal of [0,4]) {
     const summary=calendarActivitySummary({teaching,attending,personal});
     assert.equal(summary.includes("nothing scheduled"),teaching+attending+personal===0);
     if(teaching) assert(summary.includes("teaching 2 classes"));
     if(attending) assert(summary.includes("attending 3"));
-    if(personal) assert(summary.includes("4 personal activities"),"Mixed weeks must include personal plans too");
+    if(personal) assert(summary.includes("4 workouts"),"Mixed weeks must include personal plans too");
   }
 
   const originEnv={NEXT_PUBLIC_ORIGIN:process.env.NEXT_PUBLIC_ORIGIN,VERCEL_ENV:process.env.VERCEL_ENV,VERCEL_URL:process.env.VERCEL_URL};

@@ -38,7 +38,7 @@ try {
     await check(`${viewport.width}px weekly activity summary`,async()=>{
       await page.goto(base+'/calendar');
       const mixed=page.locator('.calendar-summary-copy').first();await mixed.waitFor();
-      assert.match(await mixed.innerText(),/personal activit/,'Teaching weeks also include personal plans');
+      assert.match(await mixed.innerText(),/workouts? planned/,'Teaching weeks also include personal plans');
       const personalContext=await browser.newContext({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
       try {
         await personalContext.addCookies([{name:'fl_session',value:f.summaryMember.token,url:base,httpOnly:true}]);
@@ -48,7 +48,7 @@ try {
           await personalPage.evaluate(voice=>localStorage.setItem('fl-calendar-summary-voice',voice),voice);
           await personalPage.reload();
           const summary=personalPage.locator('.calendar-summary-copy').first();await summary.waitFor();
-          const text=await summary.innerText();assert.match(text,/4 personal activit/);assert(!text.includes('nothing scheduled'));
+          const text=await summary.innerText();assert.match(text,/4 workouts planned/);assert(!text.includes('nothing scheduled'));
         }
       } finally {await personalContext.close();}
     });

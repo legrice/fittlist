@@ -3,7 +3,7 @@ export function calendarActivitySummary({ teaching, attending, personal, studios
   teaching: number; attending: number; personal: number; studios?: number;
 }) {
   const classes = (n: number) => n === 1 ? "class" : "classes";
-  const activities = `${personal} personal ${personal === 1 ? "activity" : "activities"}`;
+  const activities = `${personal} ${personal === 1 ? "workout" : "workouts"}`;
   const studioText = studios ? ` at ${studios} ${studios === 1 ? "studio" : "studios"}` : "";
   const publicSummary = teaching && attending
     ? `You’re teaching ${teaching} ${classes(teaching)} and attending ${attending} this week.`
@@ -12,6 +12,6 @@ export function calendarActivitySummary({ teaching, attending, personal, studios
       : attending ? `You’re attending ${attending} ${classes(attending)} this week.` : "";
   if (personal) return publicSummary
     ? `${publicSummary} You also have ${activities} planned.`
-    : `You have ${activities} planned this week.`;
+    : `You’ve got ${activities} planned this week.`;
   return publicSummary || "You have nothing scheduled this week.";
 }
