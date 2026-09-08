@@ -340,6 +340,12 @@ async function browserFlows(name,type) {
     for(const route of ["/discover","/search?q=Audit","/auditcoach","/auditcoach/schedule",`/auditcoach/${f.classId}`,"/s/audit-studio","/s/audit-studio/schedule","/you","/settings","/calendar?add=1"]) {
       const response=await page.goto(base+route);assert(response.status()<400,`${name}: ${route}`);
       await page.waitForTimeout(120);
+      if(route === "/you") {
+        const exit = page.getByRole("navigation",{name:"Account navigation"}).getByRole("link",{name:"Calendar",exact:true});
+        await exit.waitFor();
+        await exit.click();
+        await page.waitForURL("**/calendar");
+      }
     }
     await page.setViewportSize({width:1440,height:900});
     await page.goto(`${base}/calendar`);

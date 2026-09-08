@@ -22,13 +22,14 @@ try {
     await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
     const page=await context.newPage();page.setDefaultTimeout(12000);
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
-    for(const path of ['/calendar','/calendar/following','/discover','/search','/auditcoach','/auditmember','/s/audit-studio','/s/audit-studio/manage','/s/audit-studio/manage/calendar','/s/audit-studio/manage/staff','/g/audit-group','/settings','/inbox','/notifications','/saved','/followers','/following','/coachshare','/support','/privacy','/terms']) {
+    for(const path of ['/you','/calendar','/calendar/following','/discover','/search','/auditcoach','/auditmember','/s/audit-studio','/s/audit-studio/manage','/s/audit-studio/manage/calendar','/s/audit-studio/manage/staff','/g/audit-group','/settings','/inbox','/notifications','/saved','/followers','/following','/coachshare','/support','/privacy','/terms']) {
       await check(`${viewport.width}px ${path}`,async()=>{
         const response=await page.goto(base+path);assert(response.status()<400,'Route loads');
         await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(100);
         assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No horizontal overflow');
         assert((await page.locator('body').innerText()) || await page.locator('input:visible').count(),'Screen has text or a visible search field');
         if(path==='/inbox')assert(await page.locator('.brandbar').isVisible(),'Native header navigation remains visible');
+        if(path==='/you'){const exit=page.getByRole('navigation',{name:'Account navigation'}).getByRole('link',{name:'Calendar',exact:true});await exit.waitFor();assert((await exit.boundingBox()).height>=44);await exit.click();await page.waitForURL('**/calendar');}
         if(path==='/settings')await page.getByRole('button',{name:'Back to profile',exact:true}).waitFor();
         if(path==='/discover')await page.getByRole('button',{name:'Back to calendar',exact:true}).waitFor();
         if(['/calendar','/auditcoach','/settings','/coachshare'].includes(path))await page.screenshot({path:`${f.directory}/iphone-${viewport.width}-${path.slice(1)}.png`});
