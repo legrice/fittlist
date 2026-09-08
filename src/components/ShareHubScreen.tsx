@@ -72,7 +72,7 @@ type ShareVoice = "straightforward" | "friendly" | "sassy" | "explicit" | "unfil
 type SharePerspective = "first" | "third";
 const SHARE_VOICES: { value:ShareVoice; label:string; emoji:string }[] = [
   { value:"straightforward", label:"Straightforward", emoji:"😐" },
-  { value:"friendly", label:"Friendly", emoji:"🙂" },
+  { value:"friendly", label:"Overly friendly", emoji:"🤩" },
   { value:"sassy", label:"Roast me", emoji:"😎" },
   { value:"explicit", label:"Explicit", emoji:"🤬" },
   { value:"unfiltered", label:"Unhinged", emoji:"🤫" },
@@ -1018,7 +1018,9 @@ export function ShareHubScreen({
       ? `${firstName} is ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`
       : `I’m ${activity} ${count} ${classWord} at ${places.size} ${placeWord} this week.`;
     const variant=(lines:string[]) => lines[shareVoiceVariant%lines.length];
-    if (shareVoice === "friendly") return `${context} Look at ${thirdPerson ? firstName : "me"} making the week count.`;
+    if (shareVoice === "friendly") return variant(thirdPerson
+      ? [`${context} Everybody say GO, ${firstName.toUpperCase()}, GO! Pom-poms up! Yes, we brought pom-poms!`,`${context} That’s our superstar! Gold star for ${firstName}! Actually, take the whole sheet!`,`${context} Three cheers for ${firstName}! Hip hip HOORAY! Louder in the back, please!`,`${context} The ${firstName} fan club is on its feet! We made shirts! We made a banner! We may never sit down!`,`${context} Bestie alert! ${firstName} has a whole cheer squad and we are being SO normal about this! Confetti!`]
+      : [`${context} Everybody say GO, ME, GO! Yes, I brought my own pom-poms!`,`${context} Gold star for me! Another gold star for me! You know what? I’m taking the whole sheet!`,`${context} I’ve got this! You’ve got this! Bestie, we’ve ALL got this! Group hug!`,`${context} My own biggest fan? Present! With a banner! And snacks! And absolutely no volume control!`,`${context} Cue my entrance music! Cue the confetti! I’m cheering for myself and yes, there’s choreography!`]);
     if (shareVoice === "sassy") return variant(thirdPerson
       ? [`${context} Wow, look at ${firstName} go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. ${firstName} really loves teaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally ${firstName} cast ${firstName} in every scene.`]
       : [`${context} Wow, look at me go, fitness royalty. Bow down, everyone.`,`${context} Somebody tell Rocky over here to slow down and leave some classes for everyone else.`,`${context} Okay, we getttt it. I really love teaching.`,`${context} As DJ Khaled said, another one?!`,`${context} A whole production, and naturally I cast myself in every scene.`]);

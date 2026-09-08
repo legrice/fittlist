@@ -1,22 +1,16 @@
-import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
 import { AppChrome } from "@/components/AppChrome";
-import { getDb, schema } from "@/db";
 import { loadNotificationSheet } from "@/app/actions/notifications";
 import { lookMode } from "@/lib/darkmode";
-import { getSessionUserId } from "@/lib/session";
+import { currentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/");
-  const db = await getDb();
-  const [me] = await db
-    .select({ look: schema.users.look })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId));
+  const me = await currentUser();
+  if (!me) redirect("/");
+  const userId = me.id;
   const notificationPage = await loadNotificationSheet();
 
   return (

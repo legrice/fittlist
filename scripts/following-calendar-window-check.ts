@@ -126,6 +126,24 @@ async function main() {
     assert.equal(await as(null, () => loadFollowingCalendarMonth(month)), null);
     await assert.rejects(as(viewer.id, () => loadFollowingCalendarMonth("2026-13")));
     console.log("PASS: month loads recheck account, group membership and unauthenticated access");
+
+    // Identities must not wait for later occurrence windows or stop at 16.
+    const extraCoaches = await db.insert(schema.users).values(Array.from({ length: 20 }, (_, i) => ({
+      name: `Rail coach ${i}`, email: `rail-${i}@example.test`, handle: `railcoach${i}`, kind: "coach",
+      photo: "large-original-not-needed", photoThumb: `/rail-${i}.webp`,
+    }))).returning();
+    await db.insert(schema.subscribers).values(extraCoaches.map(coach => ({
+      trainerUserId: coach.id, userId: viewer.id, email: viewer.email,
+    })));
+    const { buildDiscoverFeed } = await import("../src/lib/discoverfeed");
+    const seed = await buildDiscoverFeed(viewer.id, viewer, { calendarOnly: true, startDay: 0, endDay: 1 });
+    for (const coach of extraCoaches) {
+      assert.equal(seed.myRail.find(person => person.id === coach.id)?.photo, coach.photoThumb,
+        "Every followed coach has their thumbnail before later classes load");
+      assert(!seed.items.some(item => item.coachId === coach.id), "Fixture coach has no initial classes");
+    }
+    assert(!seed.myRail.some(person => person.id === blocked.id), "Blocked identities remain excluded");
+    console.log("PASS: all 20 followed faces arrive in the initial two-day seed without classes or original photos");
   } finally {
     await client.close();
     globalThis.__fittlistDb = undefined;

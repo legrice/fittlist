@@ -35,14 +35,12 @@ export default async function DiscoverPage() {
   // independent, so don't make them wait for every schedule and occurrence
   // to finish before their first query even starts.
   const [feed, savedStudioRows, groupRows, pinRows, managedCalendars] = await Promise.all([
-    // First paint is deliberately only today + tomorrow and the visible
-    // portion of the rail. The longer calendar horizon streams from
-    // the client after this page is already usable.
+    // Stream later dates, but include every followed coach identity now.
+    // The face row must not wait for the rest of the month to load.
     buildDiscoverFeed(userId, me, {
       calendarOnly: true,
       startDay: 0,
       endDay: 1,
-      initialRailLimit: 16,
     }),
     db.select({
       id: schema.studios.id,

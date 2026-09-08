@@ -145,9 +145,10 @@ try {
   await rail.getByRole("link", { name: /^Notifications/ }).click();
   await page.waitForURL("**/notifications"); await page.getByRole("heading", { name: "Notifications", exact: true }).waitFor(); await frame();
   await page.goBack(); await page.waitForURL("**/calendar"); await page.getByRole("heading", {name:"Your calendar",exact:true}).waitFor();
-  await rail.getByRole("link", { name: "Search", exact: true }).click();
-  await page.waitForURL("**/search"); await frame();
-  report.checks.push("Share, personal calendar, Notifications and Search navigate as pages; Back returns to their origins");
+  assert.equal(await rail.getByRole("link", { name: "Search", exact: true }).count(), 0, "Desktop discovery uses a single Discover link");
+  await rail.getByRole("link", { name: "Discover", exact: true }).click();
+  await page.waitForURL("**/discover"); await frame();
+  report.checks.push("Share, personal calendar, Notifications and Discover navigate as pages; Back returns to their origins");
 
   await visit("/calendar");
   const chooser = rail.getByRole("button", { name: "Choose a calendar", exact: true });

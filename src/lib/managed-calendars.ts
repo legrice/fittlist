@@ -3,7 +3,6 @@ import "server-only";
 import { cache } from "react";
 import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { staffStudiosForUser } from "@/lib/staff-studios";
 
 export type ManagedCalendarDestination = {
   id: string;
@@ -23,7 +22,11 @@ export type GroupCalendarDestination = Omit<ManagedCalendarDestination, "kind"> 
 export const managedCalendarsForUser = cache(async (userId: string): Promise<ManagedCalendarDestination[]> => {
   const db = await getDb();
   const [studios, memberGroups, ownedGroups] = await Promise.all([
-    staffStudiosForUser(userId),
+    db
+      .select({ id: schema.studios.id, name: schema.studios.name, slug: schema.studios.slug, photo: schema.studios.photo })
+      .from(schema.studioManagers)
+      .innerJoin(schema.studios, eq(schema.studios.id, schema.studioManagers.studioId))
+      .where(eq(schema.studioManagers.userId, userId)),
     db
       .select({ id: schema.groups.id, name: schema.groups.name, slug: schema.groups.slug, photo: schema.groups.photo })
       .from(schema.groupMembers)
@@ -37,7 +40,7 @@ export const managedCalendarsForUser = cache(async (userId: string): Promise<Man
 
   const groups = [...new Map([...ownedGroups, ...memberGroups].map((group) => [group.id, group])).values()];
   return [
-    ...studios.filter((studio) => studio.admin).map((studio) => ({ ...studio, kind: "studio" as const })),
+    ...studios.map((studio) => ({ ...studio, slug: studio.slug ?? studio.id, kind: "studio" as const })),
     ...groups.map((group) => ({ ...group, kind: "group" as const })),
   ].sort((a, b) => a.name.localeCompare(b.name));
 });

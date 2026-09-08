@@ -10,9 +10,10 @@ import { youAccountData } from "@/app/actions/you";
 import { settingsSheetData, type SettingsSheetData } from "@/app/actions/settings";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
-import { YouDashboard, type ProfileSettingsView, type YouAccountData } from "@/components/YouDashboard";
+import type { ProfileSettingsView, YouAccountData } from "@/components/YouDashboard";
 import { loadClientMemory, readClientMemory, writeClientMemory } from "@/lib/client-memory";
 
+const YouDashboard = dynamic(() => import("@/components/YouDashboard").then((module) => module.YouDashboard), { loading: () => <LoadingDots label="Opening your profile…" /> });
 const ProfileSheet = dynamic(() => import("@/components/ProfileSheet").then((module) => module.ProfileSheet));
 const MemberAccount = dynamic(() => import("@/components/MemberAccount").then((module) => module.MemberAccount));
 

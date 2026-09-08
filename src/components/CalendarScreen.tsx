@@ -88,7 +88,7 @@ const SUMMARY_VOICE_KEY = "fl-calendar-summary-voice";
 const SUMMARY_VARIANT_KEY = "fl-calendar-summary-variant";
 const SUMMARY_VOICES: { value:SummaryVoice; label:string; emoji:string }[] = [
   { value:"straightforward", label:"Straightforward", emoji:"😐" },
-  { value:"friendly", label:"Friendly", emoji:"🙂" },
+  { value:"friendly", label:"Overly friendly", emoji:"🤩" },
   { value:"sassy", label:"Roast me", emoji:"😎" },
   { value:"explicit", label:"Explicit", emoji:"🤬" },
   { value:"unfiltered", label:"Unhinged", emoji:"🤫" },
@@ -486,7 +486,15 @@ export function CalendarScreen({
     const variant=(options:string[]) => options[summaryVariant%options.length];
     let title=activitySummary;
     if (summaryVoice === "friendly")
-      title=coaching && attending ? variant([`${activitySummary} Look at you doing both.`,`${activitySummary} A nicely balanced week.`,`${activitySummary} Your week is looking good.`]) : coaching ? variant([`${activitySummary} You’ve got this.`,`${activitySummary} Your week is looking good.`,`${activitySummary} Ready when you are.`]) : attending ? variant([`${activitySummary} Something to look forward to.`,`${activitySummary} A good week is taking shape.`]) : personal ? `${activitySummary} You’ve made time for yourself.` : "You have nothing scheduled this week. A wide-open week. What sounds good?";
+      title=coaching && attending
+        ? variant([`${activitySummary} Teaching AND showing up for yourself?! Go, bestie, go! I made you a banner!`,`${activitySummary} Look at you doing both! Superstar behavior! Yes, I’m still clapping!`,`${activitySummary} Give me a Y! Give me an O! Give me a U! Who’s absolutely crushing this week? YOU!`])
+        : coaching
+          ? variant([`${activitySummary} Your classes! Your people! Your moment! Go get ’em, superstar!`,`${activitySummary} Bestie, you’re about to make so many people’s day! Pom-poms UP!`,`${activitySummary} That’s our coach! That’s our superstar! Am I cheering too loudly? Absolutely!`])
+          : attending
+            ? variant([`${activitySummary} You booked it, bestie! I’m on my feet! The crowd is going wild!`,`${activitySummary} Look at you showing up for yourself! Gold star! Another gold star! Take the whole sheet!`,`${activitySummary} Yes, you! With the plans! You’ve got this and I will be reminding you approximately every four seconds!`])
+            : personal
+              ? variant([`${activitySummary} Making time for YOU?! We love to see it, bestie! Standing ovation!`,`${activitySummary} Personal time on the calendar! Cue the confetti! I’m SO proud of you!`,`${activitySummary} Three cheers for making room for yourself! Hip hip HOORAY! Yes, we’re doing all three!`])
+              : variant(["You have nothing scheduled this week. A fresh start, bestie! So many possibilities! I’ve already got the pom-poms out!", "You have nothing scheduled this week. That’s okay, superstar! Your fan club is here whenever you’re ready!", "You have nothing scheduled this week. Even your downtime gets a gold star! Hydrate! Get cozy! Yes, I’m cheering for that too!"]);
     else if (summaryVoice === "sassy") {
       if (totalScheduled === 0)
         title=variant([`${roastContext} What the fuck are you doing here? That is less a schedule and more a blank document with ambition.`,`${roastContext} Your calendar is so empty it has started echoing. Add a class before somebody mistakes this for a minimalist art project.`,`${roastContext} Not one class. Not one plan. Just you opening a fitness calendar to admire all the available whitespace.`,`${roastContext} The audacity of checking it anyway is honestly the most exercise happening here.`,`${roastContext} Your schedule has achieved perfect stillness, which would be impressive if this were a meditation app and not a place for actual classes.`]);

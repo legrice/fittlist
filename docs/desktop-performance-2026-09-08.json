@@ -1,0 +1,236 @@
+{
+  "note": "Local production HTTP responses with embedded DB; excludes browser hydration and Discover's client-loaded directory.",
+  "rows": [
+    {
+      "path": "/calendar",
+      "run": 0,
+      "headersMs": 819,
+      "totalMs": 821,
+      "bytes": 101708
+    },
+    {
+      "path": "/calendar",
+      "run": 1,
+      "headersMs": 77,
+      "totalMs": 79,
+      "bytes": 101933
+    },
+    {
+      "path": "/calendar",
+      "run": 2,
+      "headersMs": 66,
+      "totalMs": 68,
+      "bytes": 101933
+    },
+    {
+      "path": "/calendar/following",
+      "run": 0,
+      "headersMs": 85,
+      "totalMs": 86,
+      "bytes": 38257
+    },
+    {
+      "path": "/calendar/following",
+      "run": 1,
+      "headersMs": 69,
+      "totalMs": 71,
+      "bytes": 38167
+    },
+    {
+      "path": "/calendar/following",
+      "run": 2,
+      "headersMs": 66,
+      "totalMs": 67,
+      "bytes": 38167
+    },
+    {
+      "path": "/discover",
+      "run": 0,
+      "headersMs": 32,
+      "totalMs": 34,
+      "bytes": 29023
+    },
+    {
+      "path": "/discover",
+      "run": 1,
+      "headersMs": 34,
+      "totalMs": 36,
+      "bytes": 29023
+    },
+    {
+      "path": "/discover",
+      "run": 2,
+      "headersMs": 32,
+      "totalMs": 34,
+      "bytes": 29023
+    },
+    {
+      "path": "/coachshare",
+      "run": 0,
+      "headersMs": 47,
+      "totalMs": 48,
+      "bytes": 38464
+    },
+    {
+      "path": "/coachshare",
+      "run": 1,
+      "headersMs": 50,
+      "totalMs": 52,
+      "bytes": 38464
+    },
+    {
+      "path": "/coachshare",
+      "run": 2,
+      "headersMs": 46,
+      "totalMs": 47,
+      "bytes": 38464
+    },
+    {
+      "path": "/inbox",
+      "run": 0,
+      "headersMs": 40,
+      "totalMs": 41,
+      "bytes": 25918
+    },
+    {
+      "path": "/inbox",
+      "run": 1,
+      "headersMs": 40,
+      "totalMs": 41,
+      "bytes": 25918
+    },
+    {
+      "path": "/inbox",
+      "run": 2,
+      "headersMs": 40,
+      "totalMs": 41,
+      "bytes": 25918
+    },
+    {
+      "path": "/notifications",
+      "run": 0,
+      "headersMs": 37,
+      "totalMs": 38,
+      "bytes": 21950
+    },
+    {
+      "path": "/notifications",
+      "run": 1,
+      "headersMs": 37,
+      "totalMs": 39,
+      "bytes": 21950
+    },
+    {
+      "path": "/notifications",
+      "run": 2,
+      "headersMs": 40,
+      "totalMs": 42,
+      "bytes": 21950
+    },
+    {
+      "path": "/settings",
+      "run": 0,
+      "headersMs": 66,
+      "totalMs": 69,
+      "bytes": 43614
+    },
+    {
+      "path": "/settings",
+      "run": 1,
+      "headersMs": 65,
+      "totalMs": 67,
+      "bytes": 43614
+    },
+    {
+      "path": "/settings",
+      "run": 2,
+      "headersMs": 50,
+      "totalMs": 52,
+      "bytes": 43614
+    },
+    {
+      "path": "/admin",
+      "run": 0,
+      "headersMs": 83,
+      "totalMs": 84,
+      "bytes": 34547
+    },
+    {
+      "path": "/admin",
+      "run": 1,
+      "headersMs": 74,
+      "totalMs": 75,
+      "bytes": 34547
+    },
+    {
+      "path": "/admin",
+      "run": 2,
+      "headersMs": 65,
+      "totalMs": 66,
+      "bytes": 34547
+    },
+    {
+      "path": "/auditcoach",
+      "run": 0,
+      "headersMs": 58,
+      "totalMs": 62,
+      "bytes": 55764
+    },
+    {
+      "path": "/auditcoach",
+      "run": 1,
+      "headersMs": 56,
+      "totalMs": 60,
+      "bytes": 55764
+    },
+    {
+      "path": "/auditcoach",
+      "run": 2,
+      "headersMs": 54,
+      "totalMs": 57,
+      "bytes": 55764
+    },
+    {
+      "path": "/s/audit-studio",
+      "run": 0,
+      "headersMs": 56,
+      "totalMs": 59,
+      "bytes": 52649
+    },
+    {
+      "path": "/s/audit-studio",
+      "run": 1,
+      "headersMs": 56,
+      "totalMs": 59,
+      "bytes": 52649
+    },
+    {
+      "path": "/s/audit-studio",
+      "run": 2,
+      "headersMs": 53,
+      "totalMs": 56,
+      "bytes": 52649
+    },
+    {
+      "path": "/g/audit-group",
+      "run": 0,
+      "headersMs": 55,
+      "totalMs": 57,
+      "bytes": 39747
+    },
+    {
+      "path": "/g/audit-group",
+      "run": 1,
+      "headersMs": 39,
+      "totalMs": 41,
+      "bytes": 39747
+    },
+    {
+      "path": "/g/audit-group",
+      "run": 2,
+      "headersMs": 37,
+      "totalMs": 39,
+      "bytes": 39747
+    }
+  ]
+}

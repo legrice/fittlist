@@ -154,9 +154,6 @@ export function DesktopChrome({
           <Link className={`desktop-nav-link${followingOn ? " on" : ""}`} href="/calendar/following" aria-current={followingOn ? "page" : undefined}>
             <Icon name="calendar_view_day" size={22} /><span>Following</span><LinkPending className="desktop-nav-spin" />
           </Link>
-          <Link className={`desktop-nav-link${pathname === "/search" ? " on" : ""}`} href="/search" aria-current={pathname === "/search" ? "page" : undefined}>
-            <Icon name="search" size={22} /><span>Search</span><LinkPending className="desktop-nav-spin" />
-          </Link>
           {links.map((item) => {
             const on = here === item.id;
             return (
@@ -175,17 +172,20 @@ export function DesktopChrome({
           <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox" aria-current={pathname.startsWith("/inbox") ? "page" : undefined}>
             <Icon name="chat_bubble" size={22} />
             <span>Messages</span>
+            <LinkPending className="desktop-nav-spin" />
             {messageUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${messageUnread} unread messages`}>{messageUnread > 99 ? "99+" : messageUnread}</b>}
           </Link>
           <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications" aria-current={pathname.startsWith("/notifications") ? "page" : undefined}>
             <Icon name="notifications" size={22} />
             <span>Notifications</span>
+            <LinkPending className="desktop-nav-spin" />
             {notificationUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread} unread notifications`}>{notificationUnread > 99 ? "99+" : notificationUnread}</b>}
           </Link>
           {admin && (
             <Link className={`desktop-nav-link${pathname.startsWith("/admin") ? " on" : ""}`} href="/admin">
               <Icon name="admin_panel_settings" size={22} />
               <span>Admin</span>
+              <LinkPending className="desktop-nav-spin" />
               {adminAttention > 0 && <b className="desktop-count">{adminAttention > 9 ? "9+" : adminAttention}</b>}
             </Link>
           )}

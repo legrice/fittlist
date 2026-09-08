@@ -1,23 +1,19 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { lookMode } from "@/lib/darkmode";
-import { getSessionUserId } from "@/lib/session";
+import { currentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
 export default async function InboxPage() {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/");
-  const db = await getDb();
-  const [me] = await db
-    .select({ id: schema.users.id, look: schema.users.look, email: schema.users.email })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId));
+  const me = await currentUser();
   if (!me) redirect("/");
+  const userId = me.id;
+  const db = await getDb();
 
   const [coachSide, mineSide] = await Promise.all([
     db
@@ -46,12 +42,17 @@ export default async function InboxPage() {
     : [];
   const coachById = new Map(coachNames.map((coach) => [coach.id, coach.name]));
   const ids = [...coachSide.map((thread) => thread.id), ...mine.map((thread) => thread.id)];
+  // Return one preview per thread, regardless of its conversation length.
   const messages = ids.length
     ? await db
-        .select()
+        .selectDistinctOn([schema.inquiryMessages.threadId], {
+          threadId: schema.inquiryMessages.threadId,
+          fromCoach: schema.inquiryMessages.fromCoach,
+          body: schema.inquiryMessages.body,
+        })
         .from(schema.inquiryMessages)
         .where(inArray(schema.inquiryMessages.threadId, ids))
-        .orderBy(desc(schema.inquiryMessages.createdAt))
+        .orderBy(schema.inquiryMessages.threadId, desc(schema.inquiryMessages.createdAt), desc(schema.inquiryMessages.id))
     : [];
   const latest = new Map<string, (typeof messages)[number]>();
   for (const message of messages) {
@@ -85,19 +86,23 @@ export default async function InboxPage() {
     id: schema.users.id,
     name: schema.users.name,
     handle: schema.users.handle,
-    photo: schema.users.photo,
-    photoThumb: schema.users.photoThumb,
+    photo: sql<string | null>`coalesce(${schema.users.photoThumb}, ${schema.users.photo})`,
     avatarColor: schema.users.avatarColor,
     kind: schema.users.kind,
     messagesOpen: schema.users.messagesOpen,
-  }).from(schema.users);
+  }).from(schema.users).where(and(
+    ne(schema.users.id, me.id),
+    ne(schema.users.kind, "gym"),
+    isNotNull(schema.users.handle),
+    ne(schema.users.handle, ""),
+    eq(schema.users.messagesOpen, true),
+  ));
   const messagePeople = messageRows
-    .filter((person) => person.id !== me.id && person.kind !== "gym" && person.handle && person.messagesOpen)
     .map((person) => ({
       id: person.id,
       name: person.name.trim() || person.handle!,
       handle: person.handle!,
-      photo: person.photoThumb ?? person.photo,
+      photo: person.photo,
       color: avatarColor(person),
     }))
     .sort((a, b) => a.name.localeCompare(b.name));

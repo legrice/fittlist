@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { globalComposerData } from "@/app/actions/composer";
@@ -11,15 +12,16 @@ import {
   findStudioMatches,
   type StudioMatch,
 } from "@/app/actions/studios";
-import { Adder } from "@/components/Adder";
-import { AddBrowse } from "@/components/AddBrowse";
-import { CreateGroupSheet } from "@/components/SavedScreen";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { TypeMultiSelect } from "@/components/TypePicker";
 import { readPhoto } from "@/lib/photo";
 import { PLACE_KIND_LABELS, PLACE_KINDS, type PlaceKind } from "@/lib/studio";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+
+const Adder = dynamic(() => import("@/components/Adder").then((module) => module.Adder));
+const AddBrowse = dynamic(() => import("@/components/AddBrowse").then((module) => module.AddBrowse));
+const CreateGroupSheet = dynamic(() => import("@/components/SavedScreen").then((module) => module.CreateGroupSheet));
 
 type ComposerData = {
   studios: StudioDto[];
