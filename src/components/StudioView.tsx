@@ -546,9 +546,8 @@ export async function StudioView({
           owner={access.isManager}
           initial={shoutoutRows.filter((row) => !hiddenShoutoutAuthors.has(row.authorUserId)).map((row) => ({ id: row.id, body: row.body, featured: !!row.featuredAt, authorName: row.authorName || "Someone", authorUserId: row.authorUserId }))}
         />
+        <section className="studio-desktop-updates"><h2 className="profile-section-title">Updates</h2><p>No updates yet.</p></section>
         </section>
-
-
 
         </ProfileTabs>
         </ProfileActionGate>

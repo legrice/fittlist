@@ -104,7 +104,8 @@ try {
           const schedule = await page.locator(".studio-profile-hub").boundingBox();
           assert(avatar.width >= 190 && avatar.x < box.x + box.width / 2, "Large place photo is left aligned");
           assert(text.y >= avatar.y + avatar.height, "Place name sits below the photo");
-          assert(about && schedule && about.x + about.width <= schedule.x, "About sits beside the schedule");
+          assert(about && schedule && schedule.x + schedule.width <= about.x, "About sits to the right of the profile and schedule");
+          assert(Math.abs(about.y - box.y) < 2, "About starts level with the banner");
           assert.equal(await page.locator(".profile-share-cta").count(), 0, "Place sharing CTA is removed");
         } else {
           assert(box.height > 80 && text.y >= box.y && text.y + text.height <= box.y + box.height, "Profile name has a real header box");

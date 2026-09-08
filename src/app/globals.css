@@ -15815,7 +15815,7 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .studio-calendar-list .explore-class-studio { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* Place profiles: cover and identity above an About / schedule desktop grid. */
-.studio-desktop-name { display:none; }
+.studio-desktop-name, .studio-desktop-schedule-title, .studio-desktop-updates { display:none; }
 @media (min-width: 940px) {
   .pub.studio-profile .pubhead:not(.pubhead-hero) {
     background:var(--kinetic-surface); border-radius:24px; padding-bottom:8px;
@@ -15841,19 +15841,30 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .pub.studio-profile .pubhead .pubbelow { padding:18px 32px 24px; background:var(--kinetic-surface); }
   .pub.studio-profile .profile-action-cluster { justify-content:flex-start; }
   .pub.studio-profile .profile-about-trigger { display:none; }
-  .studio-profile .pubpanel.has-info-sheet {
-    display:grid; grid-template-columns:minmax(240px, .8fr) minmax(0, 1.6fr);
-    gap:28px; align-items:start; padding-top:28px;
+  .studio-profile .profile-action-gate {
+    display:grid; grid-template-columns:minmax(0, 1.6fr) minmax(260px, 1fr);
+    gap:28px; align-items:start;
   }
+  .studio-profile .profile-action-gate > .pubhead { grid-column:1; grid-row:1; min-width:0; }
+  .studio-profile .profile-action-gate > .pubcard,
+  .studio-profile .pubpanel.has-info-sheet { display:contents; }
+  .studio-profile .pubstick-bare { display:none; }
   .studio-profile .pubpanel.has-info-sheet > #profile-about {
-    display:block; position:static; grid-column:1; grid-row:1; order:0;
+    display:block; position:static; grid-column:2; grid-row:1 / span 2; order:0;
     width:auto; height:auto; max-height:none; margin:0; padding:24px;
     overflow:visible; transform:none; border-radius:20px; background:var(--kinetic-surface);
   }
   .studio-profile .pubpanel.has-info-sheet > .studio-profile-hub {
-    grid-column:2; grid-row:1; min-width:0;
+    grid-column:1; grid-row:2; min-width:0;
   }
+  .studio-profile .studio-profile-hub > .group-tabs { display:none; }
+  .studio-desktop-schedule-title { display:block; margin:0 0 20px; font-size:24px; }
+  .studio-desktop-updates { display:block; margin-top:28px; padding-top:24px; border-top:1px solid var(--kinetic-control-border); }
+  .studio-desktop-updates p { color:var(--color-text-secondary); }
   .studio-profile-hub > .group-member-preview { margin-left:0; justify-content:flex-start; }
   .studio-profile #profile-about .profstudio { min-width:0; }
   .studio-profile #profile-about .profstudio-txt { min-width:0; overflow-wrap:anywhere; }
 }
+
+/* Temporarily hide community badges and shoutouts on every profile. */
+.profile-stamps, .profile-shoutouts { display:none; }
