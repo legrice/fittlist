@@ -95,9 +95,20 @@ try {
       }
       if (["/auditcoach", "/s/audit-studio", "/g/audit-group"].includes(route)) {
         const header = page.locator(".profile-seam-top,.group-seam-top");
-        const title = header.locator("h1");
+        const studioProfile = route === "/s/audit-studio";
+        const title = studioProfile ? page.locator(".studio-desktop-name") : header.locator("h1");
         const box = await header.boundingBox(), text = await title.boundingBox();
-        assert(box.height > 80 && text.y >= box.y && text.y + text.height <= box.y + box.height, "Profile name has a real header box");
+        if (studioProfile) {
+          const avatar = await page.locator(".profile-identity-lead .profav").boundingBox();
+          const about = await page.locator("#profile-about").boundingBox();
+          const schedule = await page.locator(".studio-profile-hub").boundingBox();
+          assert(avatar.width >= 190 && avatar.x < box.x + box.width / 2, "Large place photo is left aligned");
+          assert(text.y >= avatar.y + avatar.height, "Place name sits below the photo");
+          assert(about && schedule && about.x + about.width <= schedule.x, "About sits beside the schedule");
+          assert.equal(await page.locator(".profile-share-cta").count(), 0, "Place sharing CTA is removed");
+        } else {
+          assert(box.height > 80 && text.y >= box.y && text.y + text.height <= box.y + box.height, "Profile name has a real header box");
+        }
         assert(await title.evaluate(el => getComputedStyle(el).color !== getComputedStyle(el.parentElement).backgroundColor), "Profile name contrasts with its header");
         const more = page.getByRole("button", { name: route.startsWith("/g/") ? "More group actions" : "More profile actions", exact: true });
         assert(await more.evaluate(el => { const r = el.getBoundingClientRect(); return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)); }), "Profile action is not covered by the identity panel");

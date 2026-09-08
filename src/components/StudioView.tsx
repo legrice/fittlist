@@ -379,10 +379,9 @@ export async function StudioView({
           tab={tab}
           tabs={[]}
           infoSheet
+          desktopPlaceLayout
           name={s.name}
           summary={null}
-          sharePrompt="Know someone who would love this place?"
-          shareLabel="Share this place"
           title={s.types.slice(0, 2).join(" · ") || placeKindLabel(s.placeKind)}
           location={studioCity}
           // The same full-bleed hero a coach's page wears, by Matt's call:
@@ -494,7 +493,7 @@ export async function StudioView({
         </section>} />
 
         <section id="profile-about" className="profile-anchor-section">
-        <h2 className="profile-section-title">Info</h2>
+        <h2 className="profile-section-title">About</h2>
         {/* What kind of place this is, first thing under the tabs: it is the
             answer to "is this for me", and it used to sit above the photo
             where it read as a caption on the name. */}
@@ -510,7 +509,6 @@ export async function StudioView({
 
         {s.about?.trim() && (
           <div className="studsec studsec-first">
-            <h2 className="prof-sec-h">About</h2>
             <ProfileAbout text={s.about} />
           </div>
         )}

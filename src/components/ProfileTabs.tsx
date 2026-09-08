@@ -63,6 +63,7 @@ export function ProfileTabs({
   sectionToggle = false,
   closingContent,
   infoSheet = false,
+  desktopPlaceLayout = false,
   children,
 }: {
   /** The page's own URL: "/matt" for a person, "/s/ironbound" for a studio.
@@ -125,6 +126,7 @@ export function ProfileTabs({
   /** Move the existing profile-about section into an About sheet instead of
    *  making profile information compete with functional section navigation. */
   infoSheet?: boolean;
+  desktopPlaceLayout?: boolean;
   children: ReactNode;
 }) {
   const desktop = useDesktopLayout();
@@ -299,6 +301,7 @@ export function ProfileTabs({
         </div>}
         <div className="pubidentity pubidentity-paper">
             {!heroPhoto && !heroColor && <div className="profile-identity-lead">{avatar}</div>}
+            {desktopPlaceLayout && <h1 className="studio-desktop-name">{name}</h1>}
             {handle ? <p className="profhandle">@{handle}</p> : null}
             {(title.trim() || location.trim()) && (
               <div className="profile-eyebrow">
