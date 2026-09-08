@@ -139,13 +139,12 @@ try {
   assert.equal(await page.locator(".share-takeover-scrim").count(), 0, "Share uses its desktop page");
   await page.goBack(); await page.waitForURL("**/calendar"); await page.getByRole("heading", { name: "Your calendar", exact: true }).waitFor();
   await visit("/you");
-  await page.getByRole("link", { name: "Open personal calendar", exact: true }).click();
   await page.waitForURL("**/calendar"); await page.getByRole("heading", { name: "Your calendar", exact: true }).waitFor(); await frame();
   assert.equal(await page.locator(".personal-calendar-scrim").count(), 0, "Personal calendar uses its desktop page");
-  await page.goBack(); await page.waitForURL("**/you"); await page.locator(".youpage").waitFor();
-  await page.locator(".youaccount-row").filter({ hasText: "Notifications" }).click();
+  assert.equal(await page.locator(".youpage").count(),0,"Old account links resolve to the current desktop calendar");
+  await rail.getByRole("link", { name: /^Notifications/ }).click();
   await page.waitForURL("**/notifications"); await page.getByRole("heading", { name: "Notifications", exact: true }).waitFor(); await frame();
-  await page.goBack(); await page.waitForURL("**/you"); await page.locator(".youpage").waitFor();
+  await page.goBack(); await page.waitForURL("**/calendar"); await page.getByRole("heading", {name:"Your calendar",exact:true}).waitFor();
   await rail.getByRole("link", { name: "Search", exact: true }).click();
   await page.waitForURL("**/search"); await frame();
   report.checks.push("Share, personal calendar, Notifications and Search navigate as pages; Back returns to their origins");
