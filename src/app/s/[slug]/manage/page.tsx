@@ -66,6 +66,7 @@ export default async function ManageStudioPage({
       studioName={studio.name}
       studioSlug={studioSlug}
       hasAccount={!!studio.accountUserId}
+      registrationPro={studio.registrationPro}
       classCount={classes}
       openShiftCount={openShifts}
       staffCount={coaches.length}

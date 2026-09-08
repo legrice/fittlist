@@ -10,7 +10,8 @@ async function main(){
   const db=await getDb();
   const [gym,admin,member]=await db.insert(schema.users).values([{email:'event-gym@example.test',name:'Expo',kind:'gym'},{email:'event-admin@example.test',name:'Expo Admin',handle:'expoadmin',kind:'coach',onboardedAt:new Date()},{email:'event-member@example.test',name:'Jordan Lane',handle:'jordanlane',kind:'fan',onboardedAt:new Date()}]).returning();
   const date='2099-09-12',dow=(new Date(date+'T12:00:00Z').getUTCDay()+6)%7;
-  const [studio]=await db.insert(schema.studios).values({name:'Hudson Fit Expo',slug:'hudson-fit-expo',address:'Expo demonstration hall',accountUserId:gym.id,registrationDate:date,placeKind:'event'}).returning();
+  const [studio]=await db.insert(schema.studios).values({name:'Hudson Fit Expo',slug:'hudson-fit-expo',address:'Expo demonstration hall',accountUserId:gym.id,registrationDate:date,registrationPro:true,placeKind:'event'}).returning();
+  await db.insert(schema.studios).values({name:'Unapproved space',slug:'pro-disabled',address:'Test hall',registrationDate:date});
   await db.insert(schema.studioManagers).values({studioId:studio.id,userId:admin.id});
   const classes=await db.insert(schema.classes).values(['Strength Circuit','Morning Yoga','Dance Fitness','Pilates Flow'].map((name,i)=>({userId:gym.id,studioId:studio.id,name,dayOfWeek:dow,specificDate:date,startTime:`${String(10+i).padStart(2,'0')}:00`,durationMin:45,isPublic:true,rsvp:true,registrationCapacity:i===2 ? 1 : 20,registrationWaitlist:i===2}))).returning();
   await db.insert(schema.attendances).values({userId:member.id,classId:classes[0].id,occurrenceDate:date,isPublic:false});

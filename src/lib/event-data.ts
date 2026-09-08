@@ -13,12 +13,12 @@ export async function eventStudio(key: string) {
 }
 export async function eventAdmin(key: string) {
   const studio = await eventStudio(key), me = await currentUser();
-  if (!studio || !me || !(await studioAccess(studio.id,me)).isManager) return null;
+  if (!studio?.registrationPro || !me || !(await studioAccess(studio.id,me)).isManager) return null;
   return {studio,me};
 }
 export async function eventSchedule(key: string, admin = false, previewDate?: string) {
   const studio = await eventStudio(key);
-  if (!studio) return null;
+  if (!studio?.registrationPro) return null;
   const db = await getDb(), me = await currentUser();
   if (admin && (!me || !(await studioAccess(studio.id,me)).isManager)) return null;
   const date = admin && previewDate ? previewDate : studio.registrationDate;

@@ -1,0 +1,1 @@
+ALTER TABLE "studios" ADD COLUMN "registration_pro" boolean DEFAULT false NOT NULL;

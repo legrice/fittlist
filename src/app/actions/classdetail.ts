@@ -374,7 +374,7 @@ export async function classDetail(
     icsHref: `/api/cal/${key}/${c.id}`,
     myHandle,
     canAdd,
-    eventRegistrationHref: studio?.registrationDate === whenIso && c.registrationCapacity ? `/s/${studio.slug || studio.id}/register?class=${c.id}&d=${whenIso}` : undefined,
+    eventRegistrationHref: studio?.registrationPro && studio.registrationDate === whenIso && c.registrationCapacity ? `/s/${studio.slug || studio.id}/register?class=${c.id}&d=${whenIso}` : undefined,
     rsvp: c.rsvp,
     rsvpCount,
     added,

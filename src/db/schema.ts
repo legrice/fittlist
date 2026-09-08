@@ -369,6 +369,7 @@ export const studios = pgTable("studios", {
   // overflow, with the studio's other settings.
   showCoaches: boolean("show_coaches").notNull().default(true),
   registrationDate: date("registration_date", { mode: "string" }),
+  registrationPro: boolean("registration_pro").notNull().default(false),
   // A reusable Monday-through-Sunday class template. Staffing deliberately
   // does not live here: changing the standard week changes what runs, never
   // who is coaching the dated rota.

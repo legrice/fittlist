@@ -146,6 +146,7 @@ export default async function AdminPage({
     classCount: classCountByStudio.get(s.id) ?? 0,
     managers: (managersByStudio.get(s.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
     hasAccount: !!s.accountUserId,
+    registrationPro: s.registrationPro,
   }));
 
   const userById = new Map(users.map((u) => [u.id, u]));

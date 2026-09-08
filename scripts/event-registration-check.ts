@@ -22,12 +22,13 @@ async function main() {
   const {getDb,schema}=await import('../src/db');
   const {writeAttendance,validateRegistrationIntent,csvCell}=await import('../src/lib/event-registration');
   const {eventRoster,eventWaitingRoster,eventSchedule}=await import('../src/lib/event-data');
-  const {saveEventSettings,removeEventWaitlist,promoteEventWaitlist,checkInEvent,registerForEvent}=await import('../src/app/actions/event-registration');
+  const {saveEventSettings,refreshEventDesk,removeEventWaitlist,promoteEventWaitlist,checkInEvent,registerForEvent}=await import('../src/app/actions/event-registration');
   const {consumeMagicToken}=await import('../src/app/actions/auth');
+  const {adminSetRegistrationPro}=await import('../src/app/actions/admin');
   const {setGoing}=await import('../src/app/actions/going');
   const db=await getDb();
   const people=await db.insert(schema.users).values(Array.from({length:8},(_,i)=>({email:`event-${i}@example.test`,name:`Event ${i}`,handle:`event${i}`,kind:i===0?'gym':'fan',onboardedAt:new Date()}))).returning();
-  const [studio,other]=await db.insert(schema.studios).values([{name:'Test Expo',slug:'test-expo',address:'Test hall',accountUserId:people[0].id,registrationDate:'2099-09-12'},{name:'Other Expo',slug:'other-expo',address:'Other hall'}]).returning();
+  const [studio,other]=await db.insert(schema.studios).values([{name:'Test Expo',slug:'test-expo',address:'Test hall',accountUserId:people[0].id,registrationDate:'2099-09-12',registrationPro:true},{name:'Other Expo',slug:'other-expo',address:'Other hall'}]).returning();
   await db.insert(schema.studioManagers).values({studioId:studio.id,userId:people[1].id});
   const date='2099-09-12',dow=(new Date(date+'T12:00:00Z').getUTCDay()+6)%7;
   const [cls,second]=await db.insert(schema.classes).values([{userId:people[0].id,studioId:studio.id,name:'Expo Strength',dayOfWeek:dow,specificDate:date,startTime:'10:00',durationMin:45,isPublic:true,rsvp:true,registrationCapacity:2},{userId:people[0].id,studioId:studio.id,name:'Expo Yoga',dayOfWeek:dow,specificDate:date,startTime:'11:00',durationMin:45,isPublic:true,rsvp:true,registrationCapacity:20}]).returning();
@@ -46,6 +47,8 @@ async function main() {
   assert(!(await as(2,()=>saveEventSettings(studio.slug!,date,[{id:cls.id,capacity:10}]))).ok);
   assert(!(await as(1,()=>saveEventSettings(studio.slug!,date,[{id:cls.id,capacity:1}]))).ok,'Cannot shrink below current tally');
   assert((await as(1,()=>checkInEvent(studio.slug!,entries[0].id,true))).ok);
+  assert((await as(1,()=>refreshEventDesk(studio.slug!,date)))?.roster.find(r=>r.id===entries[0].id)?.checkedInAt,'Desk refresh returns the saved check-in');
+  assert.equal(await as(2,()=>refreshEventDesk(studio.slug!,date)),null,'Attendees cannot fetch desk data');
   assert((await as(1,()=>eventRoster(studio.slug!)))?.find(r=>r.id===entries[0].id)?.checkedInAt);
   assert((await as(1,()=>checkInEvent(studio.slug!,entries[0].id,false))).ok);
   assert(!(await as(1,()=>checkInEvent(other.slug!,entries[0].id,true))).ok);
@@ -89,6 +92,20 @@ async function main() {
   assert(!(await as(7,()=>registerForEvent(studio.slug!,cls.id,date,true))).ok,'Disabled waitlist rejects new joins');
   await db.insert(schema.studioClosedDays).values({studioId:studio.id,occurrenceDate:date});
   assert(!(await writeAttendance(people[7].id,second.id,date,true,studio.id)).ok,'Closure stops signup');
-  console.log('PASS waitlist ordering, promotion, privacy, cancellation, disabled queues, event capacity races, idempotency, cancellation, roster isolation, admin checks, unique tally, email continuation, minimal profile, token replay, CSV safety and closed dates');
+  assert(!(await as(1,()=>adminSetRegistrationPro(studio.id,true))).ok,'Space admins cannot grant Pro');
+  process.env.ADMIN_EMAILS=people[1].email;
+  assert((await as(1,()=>adminSetRegistrationPro(studio.id,false))).ok);
+  assert.equal(await as(1,()=>eventSchedule(studio.slug!,true)),null,'Pro disabled blocks organizer route');
+  assert.equal(await request.run(new Map(),()=>eventSchedule(studio.slug!)),null,'Pro disabled blocks public signup');
+  assert.equal(await as(1,()=>eventRoster(studio.slug!)),null);
+  assert.equal(await as(1,()=>refreshEventDesk(studio.slug!,date)),null);
+  assert.equal(await as(1,()=>eventWaitingRoster(studio.slug!)),null);
+  assert.equal(await validateRegistrationIntent(intent),null,'Pro disabled blocks email signup');
+  assert(!(await as(1,()=>saveEventSettings(studio.slug!,date,[{id:cls.id,capacity:20}]))).ok);
+  assert(!(await writeAttendance(people[7].id,cls.id,date,true)).ok,'Ordinary save cannot bypass Pro');
+  assert((await as(1,()=>adminSetRegistrationPro(studio.id,true))).ok);
+  assert(await as(1,()=>eventSchedule(studio.slug!,true)));
+  process.env.ADMIN_EMAILS='';
+  console.log('PASS Pro access enforcement,  waitlist ordering, promotion, privacy, cancellation, disabled queues, event capacity races, idempotency, cancellation, roster isolation, admin checks, unique tally, email continuation, minimal profile, token replay, CSV safety and closed dates');
 }
 main().then(()=>process.exit(0)).catch(e=>{console.error(e.message);process.exit(1);});

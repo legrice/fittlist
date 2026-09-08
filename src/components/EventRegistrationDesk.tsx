@@ -1,27 +1,31 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { withTimeout } from "@/lib/async";
 import { requestMagicLink } from "@/app/actions/auth";
-import { checkInEvent, removeEventWaitlist, promoteEventWaitlist, saveEventSettings } from "@/app/actions/event-registration";
+import { checkInEvent, refreshEventDesk, removeEventWaitlist, promoteEventWaitlist, saveEventSettings } from "@/app/actions/event-registration";
 import type { EventSchedule } from "@/lib/event-data";
 import { fmtTime, fmtDateLong } from "@/lib/format";
 
 type Attendee = {id:string;name:string;email:string;classId:string;className:string;time:string;date:string;checkedInAt:string|null};
-export function EventRegistrationDesk({event,roster,waiting,rosterTruncated,publishedDate}:{event:EventSchedule;roster:Attendee[];waiting:Omit<Attendee,"checkedInAt">[];rosterTruncated:boolean;publishedDate:string|null}) {
-  const router=useRouter();const [query,setQuery]=useState(""),[filter,setFilter]=useState(""),[message,setMessage]=useState(""),[pending,setPending]=useState(""),[capacities,setCapacities]=useState<Record<string,number>>(()=>Object.fromEntries(event.classes.map(c=>[c.id,c.capacity ?? 20])));
+export function EventRegistrationDesk(initial:{event:EventSchedule;roster:Attendee[];waiting:Omit<Attendee,"checkedInAt">[];rosterTruncated:boolean;publishedDate:string|null}) {
+  const [snapshot,setSnapshot]=useState(initial);
+  const {event,roster,waiting,rosterTruncated,publishedDate}=snapshot;
+  const router=useRouter(), refreshSequence=useRef(0);
+  const refresh=useCallback(async()=>{const revision=++refreshSequence.current;const data=await withTimeout(refreshEventDesk(initial.event.slug,initial.event.date!),10000);if(revision!==refreshSequence.current)return;if(data)setSnapshot(data);else router.refresh();},[initial.event.slug,initial.event.date,router]);
+  const [query,setQuery]=useState(""),[filter,setFilter]=useState(""),[message,setMessage]=useState(""),[pending,setPending]=useState(""),[capacities,setCapacities]=useState<Record<string,number>>(()=>Object.fromEntries(event.classes.map(c=>[c.id,c.capacity ?? 20])));
   const [waitlists,setWaitlists]=useState<Record<string,boolean>>(()=>Object.fromEntries(event.classes.map(c=>[c.id,c.waitlistEnabled])));
   const [walkName,setWalkName]=useState(""),[walkEmail,setWalkEmail]=useState(""),[walkClass,setWalkClass]=useState(""),[walkConsent,setWalkConsent]=useState(false);
   const busy=useRef(false), dirty=useRef(false);
   useEffect(()=>{if(!dirty.current){setCapacities(Object.fromEntries(event.classes.map(c=>[c.id,c.capacity ?? 20])));setWaitlists(Object.fromEntries(event.classes.map(c=>[c.id,c.waitlistEnabled])));}},[event]);
-  useEffect(()=>{const refresh=()=>{if(document.visibilityState==='visible' && !busy.current && !dirty.current)router.refresh();};const interval=setInterval(refresh,15000);window.addEventListener('focus',refresh);window.addEventListener('online',refresh);return()=>{clearInterval(interval);window.removeEventListener('focus',refresh);window.removeEventListener('online',refresh);};},[router]);
-  const act=async(id:string,fn:()=>Promise<{ok:boolean;error?:string}>)=>{if(busy.current)return;busy.current=true;setPending(id);setMessage("");try{const result=await withTimeout(fn(),20000);setMessage(result.ok ? (id==='walkup' ? "Signup link sent. The attendee must verify their email to register or join the waitlist." : "Saved") : result.error || "Couldn’t save. Try again.");if(result.ok){if(id==='settings')dirty.current=false;router.refresh();}}catch{setMessage("Connection interrupted. Refresh and try again.");}finally{busy.current=false;setPending("");}};
+  useEffect(()=>{const update=()=>{if(document.visibilityState==='visible' && !busy.current && !dirty.current)void refresh().catch(()=>setMessage('Couldn’t refresh the tally. Try Refresh tally.'));};const interval=setInterval(update,15000);window.addEventListener('focus',update);window.addEventListener('online',update);return()=>{clearInterval(interval);window.removeEventListener('focus',update);window.removeEventListener('online',update);};},[refresh]);
+  const act=async(id:string,fn:()=>Promise<{ok:boolean;error?:string}>)=>{if(busy.current)return;busy.current=true;refreshSequence.current++;setPending(id);setMessage("");try{const result=await withTimeout(fn(),20000);setMessage(result.ok ? (id==='walkup' ? "Signup link sent. The attendee must verify their email to register or join the waitlist." : "Saved") : result.error || "Couldn’t save. Try again.");if(result.ok){if(id==='settings')dirty.current=false;await refresh();}}catch{setMessage("Connection interrupted. Refresh and try again.");}finally{busy.current=false;setPending("");}};
   const visible=roster.filter(r=>(!filter || r.classId===filter) && `${r.name} ${r.email}`.toLowerCase().includes(query.toLowerCase()));
   const published=publishedDate===event.date;
   return <main className="event-desk">
     <header><Link href={`/s/${event.slug}/manage`}>← Space dashboard</Link><h1>{event.name}</h1><p>Registration desk · {event.date ? fmtDateLong(event.date) : "Choose a date"}</p></header>
-    <div className="event-desk-toolbar"><button className="ghost" onClick={()=>router.refresh()}>Refresh tally</button>{published && <><Link className="btn" href={`/s/${event.slug}/register`} target="_blank">Open attendee signup</Link><a className="ghost" href={`/api/events/${event.slug}/export`}>Export attendee CSV</a></>}</div>
+    <div className="event-desk-toolbar"><button className="ghost" disabled={!!pending} onClick={()=>void act("refresh",async()=>({ok:true}))}>Refresh tally</button>{published && <><Link className="btn" href={`/s/${event.slug}/register`} target="_blank">Open attendee signup</Link><a className="ghost" href={`/api/events/${event.slug}/export`}>Export attendee CSV</a></>}</div>
     <div className="event-stats"><div><strong>{event.classes.reduce((n,c)=>n+c.count,0)}</strong><span>Class registrations</span></div><div><strong>{event.uniqueAttendees}</strong><span>Unique attendees</span></div><div><strong>{event.classes.reduce((n,c)=>n+c.checked,0)}</strong><span>Class check-ins</span></div></div>
     <p role="status" aria-live="polite">{message || "Refreshes every 15 seconds while this page is open."}</p>
     <details className="event-desk-setup" open={!published}><summary>Event setup and signup QR</summary><div className="event-desk-columns"><section className="event-panel">

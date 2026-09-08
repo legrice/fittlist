@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import {
   adminActOnRequest,
   adminAddStudio,
+  adminSetRegistrationPro,
   adminAddStudioManager,
   adminAddStudioManagerById,
   adminSearchAccounts,
@@ -69,6 +70,7 @@ type Studio = {
   managers: { userId: string; name: string; email: string }[];
   /** It has its own account, so it can run a schedule. */
   hasAccount: boolean;
+  registrationPro: boolean;
 };
 type Invite = {
   id: string;
@@ -1436,6 +1438,8 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
           door on this studio, so it reads as handing over keys rather than
           ticking a box. */}
       <div className="adminmgrs">
+        <button className="linktoggle" disabled={pending} aria-pressed={s.registrationPro} onClick={()=>start(async()=>{const result=await adminSetRegistrationPro(s.id,!s.registrationPro);toast(result.ok ? (s.registrationPro ? "Event registrations disabled" : "Pro event registrations enabled") : result.error || "Couldn’t update access");})}>{s.registrationPro ? "Disable Pro event registrations" : "Enable Pro event registrations"}</button>
+        <p className="adminmgr-em">Only site admins can grant this feature. This does not charge the space.</p>
         {s.managers.map((m) => (
           <div key={m.userId} className="adminmgr">
             <span className="adminmgr-nm">{m.name}</span>

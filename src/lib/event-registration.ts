@@ -18,7 +18,7 @@ export async function validateRegistrationIntent(value: unknown): Promise<Regist
   const db = await getDb();
   const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, v.studioId));
   const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, v.classId));
-  if (!studio || studio.registrationDate !== v.date || !cls || cls.userId !== studio.accountUserId || cls.studioId !== studio.id || !cls.isPublic || !cls.registrationCapacity || !runsOn(cls,v.date,dowOfDate(v.date))) return null;
+  if (!studio?.registrationPro || studio.registrationDate !== v.date || !cls || cls.userId !== studio.accountUserId || cls.studioId !== studio.id || !cls.isPublic || !cls.registrationCapacity || !runsOn(cls,v.date,dowOfDate(v.date))) return null;
   return {...v, name:v.name.trim()};
 }
 
@@ -34,10 +34,14 @@ export async function writeAttendance(userId: string, classId: string, date: str
     const where = and(eq(schema.attendances.userId,userId),eq(schema.attendances.classId,classId),eq(schema.attendances.occurrenceDate,date));
     if (eventStudioId) {
       const [studio] = await tx.select().from(schema.studios).where(eq(schema.studios.id,eventStudioId));
-      if (!studio || studio.registrationDate !== date || studio.accountUserId !== cls.userId || cls.studioId !== studio.id || !cls.registrationCapacity) return {ok:false,error:"Registration is not open for this class."};
+      if (!studio?.registrationPro || studio.registrationDate !== date || studio.accountUserId !== cls.userId || cls.studioId !== studio.id || !cls.registrationCapacity) return {ok:false,error:"Registration is not open for this class."};
     }
     const queueWhere = and(eq(schema.eventWaitlist.classId,classId),eq(schema.eventWaitlist.occurrenceDate,date));
     const ownQueue = and(queueWhere,eq(schema.eventWaitlist.userId,userId));
+    if (on && cls.registrationCapacity !== null && cls.studioId) {
+      const [space] = await tx.select({enabled:schema.studios.registrationPro}).from(schema.studios).where(eq(schema.studios.id,cls.studioId));
+      if (!space?.enabled) return {ok:false,error:"Event registration is not available for this space."};
+    }
     if (!on) { await tx.delete(schema.attendances).where(where); await tx.delete(schema.eventWaitlist).where(ownQueue); return {ok:true,rsvp:cls.rsvp}; }
     if (!runsOn(cls,date,dowOfDate(date)) || occurrenceEnded(date,cls.startTime,cls.durationMin,cls.timeZone)) return {ok:false,error:"This class is no longer accepting registrations."};
     if (cls.studioId) {

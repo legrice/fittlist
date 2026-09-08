@@ -3,7 +3,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { eventAdmin, eventSchedule, eventStudio } from "@/lib/event-data";
+import { eventAdmin, eventRoster, eventWaitingRoster, eventSchedule, eventStudio } from "@/lib/event-data";
 import { validEventDate, uuidValid, writeAttendance } from "@/lib/event-registration";
 import { dowOfDate, runsOn } from "@/lib/format";
 
@@ -82,4 +82,12 @@ export async function removeEventWaitlist(slug:string, entryId:string) {
     });
     revalidatePath(`/s/${slug}/manage/registrations`);revalidatePath(`/s/${slug}/register`);return {ok:true};
   } catch {return {ok:false,error:"Couldn’t remove this waitlist entry. Try again."};}
+}
+
+export async function refreshEventDesk(slug:string,date:string) {
+  if(!validEventDate(date))return null;
+  const admin=await eventAdmin(slug);if(!admin)return null;
+  const [event,roster,waiting]=await Promise.all([eventSchedule(slug,true,date),eventRoster(slug),eventWaitingRoster(slug)]);
+  if(!event || !roster || !waiting)return null;
+  return {event,roster:roster.slice(0,10000).map(r=>({...r,checkedInAt:r.checkedInAt?.toISOString() ?? null})),waiting,rosterTruncated:roster.length>10000,publishedDate:admin.studio.registrationDate};
 }

@@ -39,7 +39,9 @@ jobs:
           node --input-type=module <<'NODE'
           import { appendFileSync } from "node:fs";
           import { randomBytes } from "node:crypto";
-          appendFileSync(process.env.GITHUB_ENV, `SESSION_SECRET=${randomBytes(32).toString("hex")}\nPGLITE_DATA_DIR=${process.env.RUNNER_TEMP}/fittlist-build-db\n`);
+          const fixtureSecret = randomBytes(32).toString("hex");
+          console.log(`::add-mask::${fixtureSecret}`);
+          appendFileSync(process.env.GITHUB_ENV, `SESSION_SECRET=${fixtureSecret}\nPGLITE_DATA_DIR=${process.env.RUNNER_TEMP}/fittlist-build-db\n`);
           NODE
       - run: npm run build
       - run: npm run typecheck

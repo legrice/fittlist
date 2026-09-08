@@ -10,11 +10,12 @@ import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 
 export function StudioManageDashboard({
-  studioName, studioSlug, hasAccount, classCount, openShiftCount, staffCount, requests, admin,
+  studioName, studioSlug, registrationPro, hasAccount, classCount, openShiftCount, staffCount, requests, admin,
 }: {
   studioName: string;
   studioSlug: string;
   hasAccount: boolean;
+  registrationPro?: boolean;
   classCount: number;
   openShiftCount: number;
   staffCount: number;
@@ -61,7 +62,7 @@ export function StudioManageDashboard({
       </div>
 
       <div className="studio-dashboard-grid">
-        <Link className="studio-dashboard-card" href={`${base}/registrations`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="groups" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Event registrations</strong><small>Signup link, class limits and attendee check-in</small></span><Icon name="arrow_forward" size={22} /></Link>
+        {registrationPro && <Link className="studio-dashboard-card" href={`${base}/registrations`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="groups" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Event registrations</strong><small>Signup link, class limits and attendee check-in · Pro</small></span><Icon name="arrow_forward" size={22} /></Link>}
         <Link className="studio-dashboard-card" href={`${base}/calendar?show=all`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="calendar_month" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Calendar</strong><small>{classSummary}</small></span><Icon name="arrow_forward" size={22} /></Link>
         <Link className="studio-dashboard-card" href={`${base}/calendar?show=open&view=week`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="event_available" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Open shifts</strong><small>{openShiftSummary}</small></span><Icon name="arrow_forward" size={22} /></Link>
         <Link className="studio-dashboard-card" href={`/s/${studioSlug}/shifts?preview=coach`} prefetch={false}><span className="studio-dashboard-card-icon"><Icon name="visibility" size={28} /></span><span className="studio-dashboard-card-copy"><strong>Coach view</strong><small>See your shifts and open coverage as coaches do</small></span><Icon name="arrow_forward" size={22} /></Link>

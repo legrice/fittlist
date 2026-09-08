@@ -870,3 +870,16 @@ export async function adminBroadcast(
   revalidatePath("/", "layout");
   return { ok: true, sent: targets.length };
 }
+
+/** Founder-controlled entitlement; space admins cannot grant themselves Pro. */
+export async function adminSetRegistrationPro(studioId:string, enabled:boolean) {
+  if (!(await currentAdmin())) return {ok:false,error:"Only site admins can change Pro access."};
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studioId) || typeof enabled!=="boolean") return {ok:false,error:"Invalid space or access setting."};
+  try {
+    const db=await getDb();
+    const [studio]=await db.update(schema.studios).set({registrationPro:enabled}).where(eq(schema.studios.id,studioId)).returning({slug:schema.studios.slug});
+    if(!studio) return {ok:false,error:"Space not found."};
+    revalidatePath('/admin');revalidatePath(`/s/${studio.slug || studioId}`,'layout');
+    return {ok:true};
+  } catch {return {ok:false,error:"Couldn’t update Pro access. Try again."};}
+}

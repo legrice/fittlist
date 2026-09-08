@@ -4,7 +4,7 @@ Planned event: **Saturday, September 12, 2026**. Default **20 places per class**
 
 ## Setup on iPad
 
-1. Sign into FittList in Safari as an admin of the Hudson Fit Expo space.
+1. In the FittList site **Admin → Studios**, find Hudson Fit Expo and choose **Enable Pro event registrations**. Only site admins can grant access; ordinary space admins cannot enable it themselves. Then sign in as an admin of that space.
 2. Build September 12’s dated classes in the space’s **Calendar**. Publish the classes people should be able to register for.
 3. Open **Event registrations** from the space dashboard.
 4. Preview September 12. Review each class and its capacity, enable waitlists for the classes that need them, then choose **Open registration for this date**.
@@ -61,3 +61,9 @@ Local production build, typecheck, lint, production regressions, data integrity 
 Browser authentication tests use a loopback HTTPS proxy with a disposable self-signed certificate, because production Secure cookies should not be weakened to accommodate HTTP localhost. Synthetic email tokens substitute for actual inbox delivery. These checks do not certify a physical iPad, venue Wi-Fi, real delivery, or multi-connection PostgreSQL load. Capacity serialization uses a PostgreSQL row lock shared by all ordinary saves and event registrations; concurrency tests here run in embedded PostgreSQL.
 
 Waitlist migration adds a separate queue with cascading user/class deletion. Waiting never counts as attendance or enables check-in. Promotions use the same class lock and capacity enforcement as registrations.
+
+## Pro rollout
+
+Event registration is a per-space Pro entitlement, disabled by default for every existing and newly created space. Deployment alone does not enable it. Site Admin → Studios provides the access switch; enabling it does not start billing. Approved spaces get the Event registrations dashboard card; server-side checks also protect organizer tools, public signup, QR, exports, waitlists, email continuation and ordinary capacity-controlled saves. Attendees do not need Pro to join an approved event. Disabling access preserves existing records and hides the feature until it is re-enabled. Existing confirmed attendees can still remove a saved class from their own calendar.
+
+This is manually granted Pro access, not a subscription checkout or payment integration.
