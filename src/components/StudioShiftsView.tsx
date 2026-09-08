@@ -13,6 +13,7 @@ import { BackLink } from "@/components/BackLink";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { AgendaAvatar } from "@/components/Agenda";
+import { fmtDayHeaderRel } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { StudioManageNav } from "@/components/StudioManageNav";
 import { Toast, useToast } from "@/components/Toast";
@@ -110,6 +111,9 @@ export function StudioShiftsView({
   ];
 
   const rows = tab === "mine" ? view.mine : tab === "open" ? view.open : view.all;
+  const dateGroups = [...new Set(rows.map((shift) => shift.iso))].sort().map((iso) => ({
+    iso, shifts: rows.filter((shift) => shift.iso === iso),
+  }));
 
   return (
     <div className="pad studio-shifts-view">
@@ -220,14 +224,16 @@ export function StudioShiftsView({
               : "Every shift has somebody on it."}
         </p>
       ) : (
-        <div className="settingslist">
-          {rows.map((s) => (
-            <div key={`${s.classId}-${s.iso}`} className="setrow staffrow">
+        <div className="staff-calendar">
+          {dateGroups.map((group) => <section className="staff-calendar-day" key={group.iso}>
+            <h2>{fmtDayHeaderRel(group.iso)}</h2>
+            <div className="staff-calendar-rows">{group.shifts.map((s) => (
+            <div key={`${s.classId}-${s.iso}`} className="staff-calendar-card">
+              <div className="staff-calendar-time"><strong>{s.timeLabel.split(" · ").at(-1)}</strong><small>{s.durationMin} min</small></div>
               <span className="setrow-txt">
-                <span className="t">{s.name}</span>
+                <span className="t" title={s.name}>{s.name}</span>
                 <span className="s">
-                  {s.timeLabel} · {s.durationMin} min
-                  {s.where ? ` · ${s.where}` : ""}
+                  {s.where || view.studioName}
                   {tab !== "mine" && s.onName ? ` · ${s.onName}` : ""}
                 </span>
                 {s.pending && <span className="staffpend">{s.pending}</span>}
@@ -266,7 +272,7 @@ export function StudioShiftsView({
                 </button>
               ) : null}
             </div>
-          ))}
+          ))}</div></section>)}
         </div>
       )}
 
