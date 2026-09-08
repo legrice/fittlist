@@ -30,6 +30,28 @@ const [publicClass, privateClass] = await db.insert(schema.classes).values([
   { userId:owner.id, name:"Audit Strength", dayOfWeek:dow, startTime:"23:00", durationMin:45, studioId:studio.id, isPublic:true },
   { userId:owner.id, name:"CONFIDENTIAL COACH CLASS", dayOfWeek:dow, startTime:"23:00", durationMin:30, isPublic:false },
 ]).returning();
+// Claimed studio attribution is independent of a coach's personal shift visibility.
+const [studioAccount, scheduledCoach, coverCoach] = await db.insert(schema.users).values([
+  {email:"schedule-account@example.test",name:"Schedule Account",kind:"gym"},
+  {email:"scheduled-coach@example.test",name:"Scheduled Coach",handle:"scheduledcoach",kind:"coach",shiftsPublic:false},
+  {email:"cover-coach@example.test",name:"Cover Coach",handle:"covercoach",kind:"coach",shiftsPublic:false},
+]).returning();
+const [namedStudio, hiddenStudio] = await db.insert(schema.studios).values([
+  {name:"Named Schedule Studio",slug:"named-schedule-studio",address:"100 Test Street",accountUserId:studioAccount.id,showCoaches:true},
+  {name:"Hidden Schedule Studio",slug:"hidden-schedule-studio",address:"200 Test Street",accountUserId:studioAccount.id,showCoaches:false},
+]).returning();
+const scheduleDate = new Date(`${iso}T12:00:00Z`);scheduleDate.setUTCDate(scheduleDate.getUTCDate()+1);
+const scheduleIso = scheduleDate.toISOString().slice(0,10);
+const scheduleRows = await db.insert(schema.classes).values([
+  {name:"Regular Assignment",studioId:namedStudio.id},
+  {name:"Covered Assignment",studioId:namedStudio.id},
+  {name:"Open Assignment",studioId:namedStudio.id},
+  {name:"Hidden Assignment",studioId:hiddenStudio.id},
+].map(row=>({...row,userId:studioAccount.id,coachUserId:scheduledCoach.id,dayOfWeek:(scheduleDate.getUTCDay()+6)%7,specificDate:scheduleIso,startTime:"17:00",durationMin:50,isPublic:true}))).returning();
+await db.insert(schema.shiftCovers).values([
+  {classId:scheduleRows[1].id,occurrenceDate:scheduleIso,coachUserId:coverCoach.id},
+  {classId:scheduleRows[2].id,occurrenceDate:scheduleIso,coachUserId:null},
+]);
 const [group] = await db.insert(schema.groups).values({name:"Audit Group",slug:"audit-group",ownerUserId:owner.id,inviteToken:randomBytes(24).toString("hex"),visibility:"public"}).returning();
 await db.insert(schema.groupMembers).values([{groupId:group.id,userId:owner.id,role:"owner"},{groupId:group.id,userId:member.id,role:"member"}]);
 await db.insert(schema.groupClasses).values({groupId:group.id,classId:publicClass.id,occurrenceDate:iso});

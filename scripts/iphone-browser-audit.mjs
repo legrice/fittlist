@@ -52,6 +52,36 @@ try {
         }
       } finally {await personalContext.close();}
     });
+    await check(`${viewport.width}px studio schedule cards`,async()=>{
+      await page.goto(base+'/s/named-schedule-studio');
+      const cards=page.locator('.studio-calendar-list .calendar-following-card');
+      await cards.first().waitFor();assert.equal(await cards.count(),3);
+      const regular=cards.filter({hasText:'Regular Assignment'});
+      const covered=cards.filter({hasText:'Covered Assignment'});
+      const open=cards.filter({hasText:'Open Assignment'});
+      assert.match(await regular.locator('.explore-class-coach').innerText(),/Scheduled Coach/);
+      assert.match(await covered.locator('.explore-class-coach').innerText(),/Cover Coach/);
+      assert(!(await covered.innerText()).includes('Scheduled Coach'));
+      assert(!(await open.innerText()).includes('Scheduled Coach'));
+      assert.match(await open.locator('.explore-class-coach').innerText(),/Named Schedule Studio/);
+      assert.equal(await page.locator('.studio-calendar-list .dayband').count(),1);
+      const time=await regular.locator('.explore-class-time').boundingBox();
+      const title=await regular.locator('.explore-class-name').boundingBox();
+      const coach=await regular.locator('.explore-class-coach').boundingBox();
+      assert(time.x<title.x&&Math.abs(time.y-title.y)<5&&coach.y<time.y,'Coach above time/title grid');
+      assert(await regular.locator('.explore-class-name').evaluate(el=>getComputedStyle(el).whiteSpace==='nowrap'));
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No horizontal overflow');
+      const save=regular.getByRole('button',{name:'Save to your plans',exact:true});
+      await save.click();await regular.getByRole('button',{name:'Saved to your plans',exact:true}).waitFor();
+      await page.reload();await regular.getByRole('button',{name:'Saved to your plans',exact:true}).waitFor();
+      await regular.getByRole('button',{name:'Saved to your plans',exact:true}).click();await regular.getByRole('button',{name:'Save to your plans',exact:true}).waitFor();
+      await regular.locator('a.activity-card-main').click();await page.locator('.sheet.clsfull').waitFor();
+      await page.keyboard.press('Escape');
+      await page.screenshot({path:`${f.directory}/studio-schedule-${viewport.width}.png`,fullPage:true});
+      await page.goto(base+'/s/hidden-schedule-studio');
+      await page.locator('.studio-calendar-list .calendar-following-card').waitFor();
+      assert(!(await page.locator('.studio-calendar-list').innerText()).includes('Scheduled Coach'),'Studio can hide coach names');
+    });
     await check(`${viewport.width}px dialogs and accessibility`,async()=>{
       await page.goto(base+'/auditcoach');
       await page.getByRole('button',{name:'More profile actions',exact:true}).click();

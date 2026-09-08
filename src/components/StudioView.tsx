@@ -168,7 +168,7 @@ export async function StudioView({
       : [];
     const coachIds = [
       ...new Set(
-        [...official.map((row) => row.coachUserId), ...covers.map((row) => row.coachUserId)].filter(
+        [...official.map((row) => row.coachUserId ?? (row.userId !== s.accountUserId ? row.userId : null)), ...covers.map((row) => row.coachUserId)].filter(
           (id): id is string => !!id,
         ),
       ),
@@ -180,7 +180,7 @@ export async function StudioView({
             name: schema.users.name,
             photo: schema.users.photo,
             avatarColor: schema.users.avatarColor,
-            shiftsPublic: schema.users.shiftsPublic,
+            photoThumb: schema.users.photoThumb,
           })
           .from(schema.users)
           .where(inArray(schema.users.id, coachIds))
@@ -197,17 +197,20 @@ export async function StudioView({
       for (const c of official) {
         if (!runsOn(c, iso, dow) || occurrenceEnded(iso, c.startTime, c.durationMin, c.timeZone)) continue;
         const cover = coverBySlot.get(`${c.id}|${iso}`);
-        const coach = coachById.get(cover ? cover.coachUserId ?? "" : c.coachUserId ?? "");
-        const nameCoach = s.showCoaches && coach?.shiftsPublic ? coach : null;
+        const coachId = cover ? cover.coachUserId : c.coachUserId ?? (c.userId !== s.accountUserId ? c.userId : null);
+        const coach = coachById.get(coachId ?? "");
+        // shiftsPublic controls the coach's own profile, not the studio's attribution.
+        const nameCoach = s.showCoaches ? coach : null;
         items.push({
           id: c.id,
           name: c.name,
           startTime: c.startTime,
           durationMin: c.durationMin,
           coachName: nameCoach?.name ?? null,
-          coachPhoto: nameCoach?.photo ?? null,
+          coachPhoto: nameCoach?.photoThumb ?? nameCoach?.photo ?? null,
           coachColor: nameCoach ? avatarColor(nameCoach) : null,
           where: c.location,
+          canSave: signedIn && viewerId !== c.userId && viewerId !== c.coachUserId && viewerId !== coachId,
         });
       }
       items.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
@@ -267,6 +270,7 @@ export async function StudioView({
           startTime: c.startTime,
           durationMin: c.durationMin,
           base,
+          canSave: signedIn && viewerId !== c.userId && viewerId !== c.coachUserId,
           coachName: nameOf.get(c.userId) ?? null,
           coachPhoto: faceOf.get(c.userId)?.photo ?? null,
           coachColor: faceOf.get(c.userId)?.color ?? null,
@@ -280,10 +284,14 @@ export async function StudioView({
   }
 
   const hasSchedule = days.length > 0;
-  // The viewer's going marks used to load here so each row's ribbon could
-  // say Added. The ribbon left every list when plans did, and the new rows
-  // carry no add at all, so the query went with it: a query nobody reads is
-  // one that gets slower without anybody noticing.
+  const scheduleIds = [...new Set(days.flatMap((day) => day.items.map((item) => item.id)))];
+  const savedRows = viewerId && scheduleIds.length ? await db
+    .select({ classId: schema.attendances.classId, iso: schema.attendances.occurrenceDate })
+    .from(schema.attendances)
+    .where(and(eq(schema.attendances.userId, viewerId), inArray(schema.attendances.classId, scheduleIds),
+      gte(schema.attendances.occurrenceDate, days[0].iso), lte(schema.attendances.occurrenceDate, days[days.length - 1].iso))) : [];
+  const savedKeys = new Set(savedRows.map((row) => `${row.classId}|${row.iso}`));
+  days = days.map((day) => ({ ...day, items: day.items.map((item) => ({ ...item, saved: savedKeys.has(`${item.id}|${day.iso}`) })) }));
   // Every studio page wears the same three tabs now, whatever it holds:
   // Schedule leads (it is what the link is for, and an empty one is the
   // pitch), About is the categories and the words, Coaches is who teaches
@@ -470,6 +478,7 @@ export async function StudioView({
           {hasSchedule ? (
             <StudioSchedule
               slug={s.slug ?? s.id}
+              studioName={s.name}
               days={days}
               accent={avatarColor({ id: s.id })}
             />

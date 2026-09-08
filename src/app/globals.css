@@ -15809,3 +15809,7 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .event-desk-setup { margin:20px 0; }
 .event-desk-setup > summary,.event-walkup > summary { min-height:44px; padding:10px 0; font-size:20px; font-weight:600; cursor:pointer; }
 .event-panel select { height:48px; }
+
+/* Public studio cards use the same coach, Save and time grid as Following. */
+.studio-calendar-list .activity-card-main { text-decoration:none; }
+.studio-calendar-list .explore-class-studio { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

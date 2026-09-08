@@ -170,7 +170,7 @@ try {
   await page.locator("#profile-about").waitFor(); await frame();
   assert.equal(await page.locator(".profile-info-scrim:visible").count(), 0, "Desktop About expands in the profile page");
   await page.getByRole("button", { name: "About", exact: true }).click();
-  const cls = page.locator(".profile-calendar-list .clline[data-cid]").first();
+  const cls = page.locator(".profile-calendar-list [data-cid]").first();
   await cls.click();
   const detail = page.locator(".sheet.clsfull");
   await detail.waitFor();
