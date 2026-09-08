@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { calendarActivitySummary } from "../src/lib/calendar-summary";
 import { hashPassword, verifyPassword, passwordProblem, DUMMY_PASSWORD_HASH } from "../src/lib/password";
 import { motionDuration, resistedSheetDistance, sheetShouldDismiss } from "../src/lib/motion";
 import { withTimeout } from "../src/lib/async";
@@ -8,6 +9,16 @@ import { readClientMemory, loadClientMemory, setClientMemoryScope, invalidateCli
 import { authOrigin } from "../src/lib/auth-origin";
 
 async function main() {
+  assert.equal(calendarActivitySummary({teaching:0,attending:0,personal:4}),"You have 4 personal activities planned this week.","Personal workouts must not be described as an empty week");
+  assert.equal(calendarActivitySummary({teaching:0,attending:0,personal:1}),"You have 1 personal activity planned this week.");
+  for (const teaching of [0,2]) for (const attending of [0,3]) for (const personal of [0,4]) {
+    const summary=calendarActivitySummary({teaching,attending,personal});
+    assert.equal(summary.includes("nothing scheduled"),teaching+attending+personal===0);
+    if(teaching) assert(summary.includes("teaching 2 classes"));
+    if(attending) assert(summary.includes("attending 3"));
+    if(personal) assert(summary.includes("4 personal activities"),"Mixed weeks must include personal plans too");
+  }
+
   const originEnv={NEXT_PUBLIC_ORIGIN:process.env.NEXT_PUBLIC_ORIGIN,VERCEL_ENV:process.env.VERCEL_ENV,VERCEL_URL:process.env.VERCEL_URL};
   try {
     process.env.NEXT_PUBLIC_ORIGIN="https://fittlist.co";

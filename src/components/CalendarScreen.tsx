@@ -1,5 +1,6 @@
 "use client";
 
+import { calendarActivitySummary } from "@/lib/calendar-summary";
 import { useCalendarScopeRecovery } from "@/lib/calendar-scope-recovery";
 import { useSearchHistory } from "@/lib/use-search-history";
 import { NotificationDot } from "@/components/NotificationDot";
@@ -479,27 +480,20 @@ export function CalendarScreen({
       });
     }
     const classWord=(count:number) => count === 1 ? "class" : "classes";
-    const studioSummary=coachingStudios.size ? ` at ${coachingStudios.size} ${coachingStudios.size === 1 ? "studio" : "studios"}` : "";
-    const activitySummary=coaching && attending
-      ? `You’re teaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`
-      : coaching
-        ? `You’re teaching ${coaching} ${classWord(coaching)}${studioSummary} this week.`
-        : attending
-          ? `You’re attending ${attending} ${classWord(attending)} this week.`
-          : "You have nothing scheduled this week.";
+    const activitySummary=calendarActivitySummary({teaching:coaching,attending,personal,studios:coachingStudios.size});
     const totalScheduled=coaching+attending+personal;
     const roastContext=activitySummary;
     const variant=(options:string[]) => options[summaryVariant%options.length];
     let title=activitySummary;
     if (summaryVoice === "friendly")
-      title=coaching && attending ? variant([`${activitySummary} Look at you doing both.`,`${activitySummary} A nicely balanced week.`,`${activitySummary} Your week is looking good.`]) : coaching ? variant([`${activitySummary} You’ve got this.`,`${activitySummary} Your week is looking good.`,`${activitySummary} Ready when you are.`]) : attending ? variant([`${activitySummary} Something to look forward to.`,`${activitySummary} A good week is taking shape.`]) : personal ? `You’ve made time for ${personal} personal ${classWord(personal)} this week.` : "You have nothing scheduled this week. A wide-open week. What sounds good?";
+      title=coaching && attending ? variant([`${activitySummary} Look at you doing both.`,`${activitySummary} A nicely balanced week.`,`${activitySummary} Your week is looking good.`]) : coaching ? variant([`${activitySummary} You’ve got this.`,`${activitySummary} Your week is looking good.`,`${activitySummary} Ready when you are.`]) : attending ? variant([`${activitySummary} Something to look forward to.`,`${activitySummary} A good week is taking shape.`]) : personal ? `${activitySummary} You’ve made time for yourself.` : "You have nothing scheduled this week. A wide-open week. What sounds good?";
     else if (summaryVoice === "sassy") {
       if (totalScheduled === 0)
         title=variant([`${roastContext} What the fuck are you doing here? That is less a schedule and more a blank document with ambition.`,`${roastContext} Your calendar is so empty it has started echoing. Add a class before somebody mistakes this for a minimalist art project.`,`${roastContext} Not one class. Not one plan. Just you opening a fitness calendar to admire all the available whitespace.`,`${roastContext} The audacity of checking it anyway is honestly the most exercise happening here.`,`${roastContext} Your schedule has achieved perfect stillness, which would be impressive if this were a meditation app and not a place for actual classes.`]);
       else if (totalScheduled < 3)
         title=variant([`${roastContext} That’s it? You opened a whole calendar for that like the rest of the week needed professional supervision.`,`${roastContext} An adorable little schedule. Tiny, manageable, and apparently still important enough to require its own app.`,`${roastContext} Pace yourself, hero. At this rate you may need almost one full hand to count everything you’re doing.`,`${roastContext} The calendar equivalent of dipping one toe in the pool and announcing that you swim now.`,`${roastContext} Blink carefully or your entire fitness era will be over before you notice it started.`]);
       else if (totalScheduled < 7)
-        title=variant([`${roastContext} Wow, look at you go, fitness royalty. Bow down, everyone.`,`${roastContext} Slow down there, Rocky. Leave some classes for the rest of us.`,`${roastContext} Okay, we getttt it. You love teaching.`,`${roastContext} You know what they say: those who can’t do, teach, and apparently put the whole thing on their calendar.`,`${roastContext} As DJ Khaled said, another one?!`]);
+        title=variant([`${roastContext} Wow, look at you go, fitness royalty. Bow down, everyone.`,`${roastContext} Slow down there, Rocky. Leave some classes for the rest of us.`,`${roastContext} Okay, we getttt it. You love ${coaching ? "teaching" : "a busy calendar"}.`,coaching ? `${roastContext} You know what they say: those who can’t do, teach, and apparently put the whole thing on their calendar.` : `${roastContext} Your trainers called. They’d like a day off too.`,`${roastContext} As DJ Khaled said, another one?!`]);
       else
         title=variant([`${roastContext} Apparently you are the exhausted hero this city never asked for, personally holding the fitness industry together one aggressively scheduled class at a time.`,`${roastContext} Congratulations on becoming the main character, the supporting cast, and the overworked production assistant in the heroic saga of your own completely unhinged week.`,`${roastContext} Save some fitness for everyone else, legend. Your calendar looks like it was assembled by someone who believes rest days are malicious gossip.`,`${roastContext} This is not a schedule anymore; it is a public declaration that you intend to save the entire week through charisma, caffeine, and a deeply concerning refusal to sit down.`,`${roastContext} Behold the hero of the group chat, bravely taking on more classes than anyone requested and somehow preparing to mention every single one of them.`]);
     }
@@ -524,7 +518,9 @@ export function CalendarScreen({
         title=variant([`${roastContext} Holy fucking shit, the calendar has achieved sentience and immediately spent it all on decorative gravy.`,`${roastContext} Everything is absolutely batshit. A forklift-certified possum is running payroll from inside a watermelon.`,`${roastContext} Jesus tap-dancing Christ, Thursday has twelve elbows and keeps whispering about the forbidden coupon.`,`${roastContext} The week needs a fire marshal, a structural engineer, and somebody willing to explain taxes to a haunted pelican.`,`${roastContext} This schedule kicked down the door, ate a protein bar sideways, and challenged the concept of furniture to a duel.`]);
     }
     else if (summaryVoice === "shakespearean")
-      title=coaching && attending ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to teach and ${attending} to attend.`,`By my troth, thou teachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to teach.`,`By my troth, thou teachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${classWord(personal)} this week.` : "Thou hast nothing scheduled this week.";
+      title=coaching && attending ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} and attending ${attending} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} to teach and ${attending} to attend.`,`By my troth, thou teachest ${coaching} and attendest ${attending} ${classWord(attending)} this week.`]) : coaching ? variant([`Hark! Thou art teaching ${coaching} ${classWord(coaching)} this week.`,`Lo, this week bears ${coaching} ${classWord(coaching)} for thee to teach.`,`By my troth, thou teachest ${coaching} ${classWord(coaching)} this week.`]) : attending ? `Hark! Thou art attending ${attending} ${classWord(attending)} this week.` : personal ? `Thou hast ${personal} personal ${personal === 1 ? "activity" : "activities"} this week.` : "Thou hast nothing scheduled this week.";
+    if (summaryVoice === "shakespearean" && personal && (coaching || attending))
+      title+=` Thou hast also planned ${personal} personal ${personal === 1 ? "activity" : "activities"}.`;
     if (classes.length === 0 && savedDays.every((day) => day.items.length === 0)) title="You have nothing on your calendar yet.";
     return { title };
   },[classes,savedDays,savedByIso,studioById,todayIso,summaryVoice,summaryVariant]);
