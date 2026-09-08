@@ -1077,7 +1077,7 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && !calendarFollowing && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
-      {isHome && !firstRun && (
+      {isHome && !firstRun && !(calendarFollowing && followingSummary.length === 0 && items.length === 0) && (
         <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
           <div className="calendar-scope-row" aria-label="Calendar scope">
             <button type="button" className={`calendar-person-chip${calendarFilter === (calendarFollowing ? "following" : "all") ? " on" : ""}`} aria-pressed={calendarFilter === (calendarFollowing ? "following" : "all")} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter(calendarFollowing ? "following" : "all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
@@ -1112,7 +1112,7 @@ export function FollowingScreen({
       ) : isHome && calendarView === "day" && !selectedMonthDay && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status"><LoadingDots label="Loading your schedule"/></div>
       ) : (isHome ? calendarView === "day" && !selectedMonthDay && !followingSummary.length && shown.length === 0 : items.length === 0) ? (
-        calendarFollowing ? <section className="calendar-first-class"><p>{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</p>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={() => desktop ? router.push("/discover") : restoreActionSurface()}>Explore calendars</button></section> : firstRun ? (
+        calendarFollowing ? <section className="calendar-first-class" aria-labelledby="following-empty-title"><h2 id="following-empty-title" className="following-empty-title">{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</h2>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={() => desktop ? router.push("/discover") : restoreActionSurface()}>Explore calendars</button></section> : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="calendar-member-empty-figure" src="/illustrations/following-empty.png" alt="" width={356} height={600} />

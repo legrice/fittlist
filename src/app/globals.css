@@ -14809,6 +14809,7 @@ a.clspeek-by:active { opacity: .6; }
 
 .calendar-first-class { padding:24px 0; text-align:center; }
 .calendar-first-class h2 { margin:0 0 10px; }
+.calendar-first-class > .following-empty-title { margin:0 auto 24px; max-width:440px; font-size:28px; font-weight:600; line-height:1.15; letter-spacing:-.025em; }
 .calendar-first-class > p { margin:0 auto 24px; max-width:440px; font-size:20px; line-height:1.4; }
 .calendar-first-class .calendar-empty-actions .btn { width:100%; min-height:54px; font-size:18px; }
 .suggested-follows { margin:24px 0; text-align:left; }
