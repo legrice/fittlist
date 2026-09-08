@@ -90,6 +90,24 @@ try {
   assert(ready, "Local month server ready");
   browser = await ({ chromium, webkit, firefox }[browserName]).launch(browserName === "chromium" && process.env.AUDIT_CHROME_CHANNEL ? { channel: process.env.AUDIT_CHROME_CHANNEL } : {});
 
+  await checked("Month weekday header stays pinned and clears in day view", async () => {
+    const { context: c, page } = await context();
+    try {
+      await openFollowing(page);
+      await showMonth(page, monthOf(f.dates.far));
+      await page.locator(".scrollhead.on .monthhead").waitFor();
+      const before = await page.locator(".scrollhead.on").boundingBox();
+      await page.evaluate(() => window.scrollBy(0, 160));
+      await pause(150);
+      const after = await page.locator(".scrollhead.on").boundingBox();
+      assert(before && after && Math.abs(before.y - after.y) < 2, "Weekday rail stays at the viewport edge");
+      assert(after.y >= 0 && after.y + after.height < 240, "Pinned header remains within the top of the viewport");
+      assert((await page.locator(".scrollhead-d").innerText()).trim(), "Pinned header names the visible month");
+      await page.getByRole("button", { name: desktop ? "Day view" : "Switch to day view", exact: true }).click();
+      assert.equal(await page.locator(".scrollhead").count(), 0, "Month header is removed in day view");
+    } finally { await c.close(); }
+  });
+
   await checked("Beyond 30 and 180 days: recurring, dated, empty, and deduplicated", async () => {
     const { context: c, page } = await context();
     const requests = []; page.on("request", request => { const ym = actionMonth(request); if (ym) requests.push(ym); });

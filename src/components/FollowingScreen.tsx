@@ -24,7 +24,7 @@ import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { useFollowingCalendar } from "@/lib/use-following-calendar";
 import { FOLLOWING_MAX_MONTHS_AHEAD } from "@/lib/calendar-window";
-import { MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
+import { CalSticky, MonthHeadRow, MonthScroll, ScrollHead, monthLabel, useScrolledPast, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
 import { BodyPortal } from "@/components/BodyPortal";
@@ -414,6 +414,8 @@ export function FollowingScreen({
     };
   }, [calendarDirectoryOpen]);
   const [calendarView, setCalendarView] = useState<"day" | "month">("day");
+  const [ymInView, setYmInView] = useState<string | null>(null);
+  const scrolled = useScrolledPast(120);
   const [followingMonthHorizon, setFollowingMonthHorizon] = useState(12);
   const [selectedMonthDay, setSelectedMonthDay] = useState<string | null>(null);
   const [pendingMonthDay, setPendingMonthDay] = useState<string | null>(null);
@@ -1219,8 +1221,9 @@ export function FollowingScreen({
           <div className="cardwrap home-schedule">
             {isHome && calendarView === "month" ? (
               <>
-                <MonthHeadRow />
-                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={requestVisibleMonth} onMonthVisible={requestVisibleMonth} monthStates={calendarMonths} onRetryMonth={(month) => pendingMonthDay?.startsWith(month) ? void openMonthDay(pendingMonthDay) : void ensureMonth(month)} emptyDayAction="open" monthsAhead={followingMonthHorizon} onNeedMore={followingMonthHorizon < FOLLOWING_MAX_MONTHS_AHEAD ? () => setFollowingMonthHorizon((value) => Math.min(FOLLOWING_MAX_MONTHS_AHEAD, value + 12)) : undefined} />
+                <CalSticky><MonthHeadRow /></CalSticky>
+                <ScrollHead on={scrolled} label={ymInView ? monthLabel(ymInView, todayIso) : ""} sub={<MonthHeadRow />} />
+                <MonthScroll todayIso={todayIso} items={monthItems} onDay={openMonthDay} onMonthInView={setYmInView} onMonthVisible={requestVisibleMonth} monthStates={calendarMonths} onRetryMonth={(month) => pendingMonthDay?.startsWith(month) ? void openMonthDay(pendingMonthDay) : void ensureMonth(month)} emptyDayAction="open" monthsAhead={followingMonthHorizon} onNeedMore={followingMonthHorizon < FOLLOWING_MAX_MONTHS_AHEAD ? () => setFollowingMonthHorizon((value) => Math.min(FOLLOWING_MAX_MONTHS_AHEAD, value + 12)) : undefined} />
               </>
             ) : isHome ? (
                 <div className="cash-activity-list">

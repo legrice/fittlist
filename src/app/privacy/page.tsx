@@ -91,7 +91,7 @@ const SEEN: { t: string; s: string }[] = [
   },
   {
     t: "Your week is open unless you close it",
-    s: "By default anyone can see the classes you are going to. Turn on Account privacy in your settings and only followers you have approved can, and a stranger is told nothing at all about what is behind it.",
+    s: "By default anyone can see the classes you are going to. Turn on Require approval to follow in your settings and only followers you have approved can, and a stranger is told nothing at all about what is behind it.",
   },
   {
     t: "Your private entries stay private",

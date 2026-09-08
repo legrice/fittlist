@@ -34,9 +34,9 @@ export function DiscoverableToggle({ initialOn }: { initialOn: boolean }) {
       <button className="setrow" onClick={toggle} aria-pressed={on}>
         <span className="setrow-ic"><Icon name={on ? "travel_explore" : "public_off"} size={24} /></span>
         <span className="setrow-txt">
-          <span className="t">Listed in Discover</span>
+          <span className="t">Show in Discover</span>
           <span className="s">
-            {on ? "People can find you in Discover" : "Off, only people with your link"}
+            {on ? "Your profile appears in Discover" : "Hidden from Discover. Your profile link still works."}
           </span>
         </span>
         <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
