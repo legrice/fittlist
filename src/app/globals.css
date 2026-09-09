@@ -16101,7 +16101,10 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   }
 }
 
-.desktop-calendar-summary { margin:0 0 24px; max-width:60ch; font-size:20px; line-height:1.45; color:var(--kinetic-text); text-align:left; }
+.calendar-page-title h1.calendar-summary-heading { margin:0; max-width:42ch; font-size:clamp(22px,2.1vw,32px); line-height:1.2; color:var(--kinetic-text); text-align:left; overflow-wrap:anywhere; }
+.calendar-page-title-row:has(.calendar-summary-heading) { align-items:flex-start; gap:24px; }
+.calendar-page-title-row:has(.calendar-summary-heading) .calendar-page-title { flex:1; }
+.calendar-page-title-row:has(.calendar-summary-heading) .following-heading-actions { flex-shrink:0; }
 .group-admin-heading { padding:24px 0; }
 .group-admin-heading h1 { margin:16px 0 8px; }
 .group-admin-panel { margin-top:24px; padding:24px; background:var(--kinetic-surface); border-radius:24px; }

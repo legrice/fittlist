@@ -1051,7 +1051,7 @@ export function FollowingScreen({
       <div className={`desktop-calendar-content${calendarFollowing && !classSheetDismissed ? " is-mobile-hidden" : ""}${!desktop && calendarFollowing && classSheetDismissed ? ` calendar-foreground-sheet calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
       {calendarFollowing && <header className="calendar-page-header calendar-page-actions desktop-following-header">
         <div className="calendar-page-title-row">
-          <div className="calendar-page-title"><h1>Following</h1></div>
+          <div className="calendar-page-title"><h1 className="calendar-summary-heading">{followingSummaryText}</h1></div>
           <div className="following-heading-actions">
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             {(["day", "month"] as const).map((view) => <button key={view} type="button" className={calendarView === view ? "on" : ""} aria-label={view === "day" ? "Day view" : "Month view"} aria-pressed={calendarView === view} onClick={() => { monthDayRequest.current += 1; setPendingMonthDay(null); setSelectedMonthDay(null); setCalendarView(view); }}><Icon name={view === "day" ? "calendar_view_day" : "calendar_month"} size={21} /></button>)}
@@ -1061,7 +1061,6 @@ export function FollowingScreen({
         </div>
       </header>}
       <div className={`calendar-workspace following-workspace${followingSidebar ? " has-sidebar" : ""}`}><div className="following-schedule-column">
-      {desktop && calendarFollowing && <p className="desktop-calendar-summary">{followingSummaryText}</p>}
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">

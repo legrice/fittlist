@@ -80,7 +80,11 @@ try {
     for (const route of ["/calendar", "/calendar/following", "/auditcoach", "/s/audit-studio", "/g/audit-group", "/s/audit-studio/manage"]) {
       await visit(route); await frame();
       if (route === "/calendar" || route === "/calendar/following") {
-        await page.getByRole("heading", { name: route === "/calendar" ? "Your calendar" : "Following", exact: true }).waitFor();
+        await page.locator(".calendar-summary-heading").waitFor();
+        const summary = page.locator(".calendar-summary-heading");
+        const summaryBox = await summary.boundingBox();
+        const actionsBox = await page.locator(".calendar-heading-actions,.following-heading-actions").boundingBox();
+        assert(actionsBox.x >= summaryBox.x + summaryBox.width, "Heading actions stay to the right of the summary");
         assert.equal(await page.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Calendar opens directly without a reveal surface");
         assert.equal(await rail.locator('[aria-current="page"]').count(), 1, "One primary rail destination is selected");
         if (route === "/calendar") {
@@ -156,7 +160,7 @@ try {
   const firstPaint = await initial.newPage();
   for (const path of ["/calendar", "/calendar/following"]) {
     await firstPaint.goto(base + path);
-    await firstPaint.getByRole("heading", { name: path === "/calendar" ? "Your calendar" : "Following", exact: true }).waitFor();
+    await firstPaint.locator(".calendar-summary-heading").waitFor();
     await firstPaint.locator(".desktop-top-header").waitFor();
     assert.equal(await firstPaint.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Server-rendered desktop hides mobile navigation surfaces");
     assert(await firstPaint.getByRole("button", { name: "Month view", exact: true }).isVisible(), "Desktop view controls appear before hydration");
@@ -173,14 +177,14 @@ try {
   await page.getByRole("button", { name: "Share your week", exact: true }).click();
   await page.waitForURL("**/coachshare"); await page.locator(".shpage").waitFor(); await frame();
   assert.equal(await page.locator(".share-takeover-scrim").count(), 0, "Share uses its desktop page");
-  await page.goBack(); await page.waitForURL("**/calendar"); await page.getByRole("heading", { name: "Your calendar", exact: true }).waitFor();
+  await page.goBack(); await page.waitForURL("**/calendar"); await page.locator(".calendar-summary-heading").waitFor();
   await visit("/you");
-  await page.waitForURL("**/calendar"); await page.getByRole("heading", { name: "Your calendar", exact: true }).waitFor(); await frame();
+  await page.waitForURL("**/calendar"); await page.locator(".calendar-summary-heading").waitFor(); await frame();
   assert.equal(await page.locator(".personal-calendar-scrim").count(), 0, "Personal calendar uses its desktop page");
   assert.equal(await page.locator(".youpage").count(),0,"Old account links resolve to the current desktop calendar");
   await rail.getByRole("link", { name: /^Notifications/ }).click();
   await page.waitForURL("**/notifications"); await page.getByRole("heading", { name: "Notifications", exact: true }).waitFor(); await frame();
-  await page.goBack(); await page.waitForURL("**/calendar"); await page.getByRole("heading", {name:"Your calendar",exact:true}).waitFor();
+  await page.goBack(); await page.waitForURL("**/calendar"); await page.locator(".calendar-summary-heading").waitFor();
   assert.equal(await rail.getByRole("link", { name: "Search", exact: true }).count(), 0, "Desktop discovery uses a single Discover link");
   await rail.getByRole("link", { name: "Discover", exact: true }).click();
   await page.waitForURL("**/discover"); await frame();

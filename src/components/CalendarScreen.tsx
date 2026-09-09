@@ -801,7 +801,7 @@ export function CalendarScreen({
         <div className="calendar-page-title-row">
           <div className="calendar-page-title">
             {sheet ? <button type="button" className="calendar-page-back" aria-label="Back" onClick={onClose}><Icon name="arrow_back" size={23} /></button> : <Link className="calendar-page-back" href="/you" aria-label="Back to You"><Icon name="arrow_back" size={23} /></Link>}
-            <h1>Your calendar</h1>
+            <h1 className="calendar-summary-heading">{calendarWeekSummary.title}</h1>
           </div>
           <div className="calendar-heading-actions">
             {desktop && <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
@@ -822,7 +822,6 @@ export function CalendarScreen({
 
       <div className={`calendar-workspace${view === "list" && !sheet ? " has-sidebar" : ""}`}>
       <div className={`cardwrap calendar-cardwrap calendar-direct-schedule${!sheet && !classSheetDismissed ? " is-mobile-hidden" : ""}${!desktop && !sheet && classSheetDismissed ? ` calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
-      {desktop && <p className="desktop-calendar-summary">{calendarWeekSummary.title}</p>}
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
           where every day band underneath pins: one writer for that number,
