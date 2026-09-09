@@ -50,6 +50,10 @@ export function DesktopChrome({
 }) {
   const pathname = usePathname();
   const here = activeTab(pathname, active);
+  const searchInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (searchInput.current) searchInput.current.value = pathname === "/search" ? new URLSearchParams(window.location.search).get("q") ?? "" : "";
+  }, [pathname]);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -143,6 +147,11 @@ export function DesktopChrome({
           </Link>
           <Link className={`desktop-nav-link${here === "discover" ? " on" : ""}`} href="/discover" aria-current={here === "discover" ? "page" : undefined}>Discover<LinkPending className="desktop-nav-spin" /></Link>
         </nav>
+        <form className="desktop-header-search" action="/search" role="search">
+          <Icon name="search" size={20} />
+          <input ref={searchInput} type="search" name="q" aria-label="Search FittList" placeholder="Search FittList" minLength={2} required />
+          <button type="submit" aria-label="Search"><Icon name="arrow_forward" size={18} /></button>
+        </form>
         <div className="desktop-header-tools">
           <GlobalAdd triggerClassName="desktop-create" triggerLabel="Add" />
           <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox" aria-label="Messages" title="Messages" aria-current={pathname.startsWith("/inbox") ? "page" : undefined}>

@@ -77,8 +77,8 @@ function writeRecent(userId: string, hit: RecentHit): RecentHit[] {
   return next;
 }
 
-export function SearchScreen({ todayIso, userId, query, showRecents = true }: { todayIso: string; userId: string; query?: string; showRecents?: boolean }) {
-  const [localQuery, setLocalQuery] = useState("");
+export function SearchScreen({ todayIso, userId, query, showRecents = true, initialQuery = "" }: { todayIso: string; userId: string; query?: string; showRecents?: boolean; initialQuery?: string }) {
+  const [localQuery, setLocalQuery] = useState(initialQuery);
   const q = query ?? localQuery;
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);

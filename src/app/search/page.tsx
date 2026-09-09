@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 // the tab bar, no tab lit. Unlike Discover, this is direct lookup: results are
 // organized by what they are and match their own names rather than nearby or
 // related metadata.
-export default async function SearchPage() {
+export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -26,7 +27,7 @@ export default async function SearchPage() {
     <section className="screen hasnav" data-mode={lookMode(me?.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
-        <SearchScreen todayIso={todayIso()} userId={userId} />
+        <SearchScreen key={q ?? ""} todayIso={todayIso()} userId={userId} initialQuery={q ?? ""} />
       </div>
     </section>
   );
