@@ -166,7 +166,7 @@ export async function MemberProfileView({
 
   return (
     <div
-      className={`pub memberpub${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
+      className={`pub person-profile memberpub${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
       data-mode={await viewerLook()}
     >
       <div className="profwrap">
@@ -190,6 +190,7 @@ export async function MemberProfileView({
             that makes the other two read as the same app. */}
         <ProfileActionGate enabled={!viewerId && !isOwner} next={`/${user.handle ?? ""}`} via={user.handle ?? undefined}>
         <ProfileTabs
+          desktopPlaceLayout
           bannerPhoto={user.bannerPhoto}
           canEditBanner={isOwner}
           base={`/${user.handle ?? ""}`}
@@ -250,7 +251,7 @@ export async function MemberProfileView({
           }
           closingContent={null}
         >
-        <section id="profile-schedule" className="profile-anchor-section">
+        <section id="profile-schedule" className="profile-anchor-section"><h2 className="studio-desktop-schedule-title">Schedule</h2>
         {week.length > 0 ? (
           <ClassOpener handle="">
             <CalendarList days={memberCalendarDays(week, name)} className="profile-calendar-list profile-person-calendar-list" />

@@ -47,6 +47,16 @@ async function main() {
   assert((await as(0,()=>saveProfileBanner(image,studio.id))).ok);
   assert((await as(0,()=>loadProfileBanner(studio.id)))?.banner);
   assert((await as(0,()=>saveProfileBanner(null,studio.id))).ok);
+  const [group]=await db.insert(schema.groups).values({ownerUserId:people[0].id,name:'Banner group',slug:'banner-group',inviteToken:'banner-test-invite',photo:'original-group-photo'}).returning();
+  assert(!(await as(1,()=>saveProfileBanner(image,undefined,group.id))).ok,'Nonmember cannot edit group banner');
+  await db.insert(schema.groupMembers).values({groupId:group.id,userId:people[1].id,role:'member'});
+  assert(!(await as(1,()=>saveProfileBanner(image,undefined,group.id))).ok,'Ordinary member cannot edit group banner');
+  assert((await as(0,()=>saveProfileBanner(image,undefined,group.id))).ok,'Owner can upload banner');
+  assert((await as(0,()=>loadProfileBanner(undefined,group.id)))?.banner);
+  await db.update(schema.groupMembers).set({role:'admin'}).where(eq(schema.groupMembers.groupId,group.id));
+  assert((await as(1,()=>saveProfileBanner(null,undefined,group.id))).ok,'Group admin can remove banner');
+  const [savedGroup]=await db.select().from(schema.groups).where(eq(schema.groups.id,group.id));
+  assert.equal(savedGroup.bannerPhoto,null);assert.equal(savedGroup.photo,'original-group-photo');
   console.log('PASS banner ownership, studio permissions, invalid images, resizing, avatar preservation and removal');
 }
 main().then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1);});

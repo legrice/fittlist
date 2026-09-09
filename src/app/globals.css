@@ -15817,53 +15817,53 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 /* Place profiles: cover and identity above an About / schedule desktop grid. */
 .studio-desktop-name, .studio-desktop-schedule-title, .studio-desktop-updates { display:none; }
 @media (min-width: 940px) {
-  .pub.studio-profile .pubhead:not(.pubhead-hero) {
+  .pub:is(.studio-profile,.person-profile) .pubhead:not(.pubhead-hero) {
     background:var(--kinetic-surface); border-radius:24px; padding-bottom:8px;
   }
-  .studio-profile .profile-seam-top { height:220px; }
-  .studio-profile .profile-seam-top .profile-top-name { display:none; }
-  .pub.studio-profile .pubhead:not(.pubhead-hero) .pubidentity-paper {
+  :is(.studio-profile,.person-profile) .profile-seam-top { height:220px; }
+  :is(.studio-profile,.person-profile) .profile-seam-top .profile-top-name { display:none; }
+  .pub:is(.studio-profile,.person-profile) .pubhead:not(.pubhead-hero) .pubidentity-paper {
     padding:0 32px; align-items:flex-start; text-align:left; background:var(--kinetic-surface);
   }
-  .studio-profile .pubhead:not(.pubhead-hero) .profile-identity-lead {
+  :is(.studio-profile,.person-profile) .pubhead:not(.pubhead-hero) .profile-identity-lead {
     align-self:flex-start; justify-content:flex-start; transform:none; margin:-80px 0 20px;
     position:relative;
   }
-  .pub.studio-profile .profav {
+  .pub:is(.studio-profile,.person-profile) .profav {
     width:200px; height:200px; min-width:200px; flex-basis:200px;
     border:6px solid var(--kinetic-surface); box-sizing:border-box;
   }
-  .studio-profile .studio-desktop-name {
+  :is(.studio-profile,.person-profile) .studio-desktop-name {
     display:block; margin:0 0 12px; font-size:clamp(26px,2.6vw,36px);
     line-height:1.15; letter-spacing:-.035em; overflow-wrap:anywhere;
   }
-  .studio-profile .profile-eyebrow { align-items:flex-start; text-align:left; }
-  .pub.studio-profile .pubhead .pubbelow { padding:18px 32px 24px; background:var(--kinetic-surface); }
-  .pub.studio-profile .profile-action-cluster { justify-content:flex-start; }
-  .pub.studio-profile .profile-about-trigger { display:none; }
-  .studio-profile .profile-action-gate {
+  :is(.studio-profile,.person-profile) .profile-eyebrow { align-items:flex-start; text-align:left; }
+  .pub:is(.studio-profile,.person-profile) .pubhead .pubbelow { padding:18px 32px 24px; background:var(--kinetic-surface); }
+  .pub:is(.studio-profile,.person-profile) .profile-action-cluster { justify-content:flex-start; }
+  .pub:is(.studio-profile,.person-profile) .profile-about-trigger { display:none; }
+  :is(.studio-profile,.person-profile) .profile-action-gate {
     display:grid; grid-template-columns:minmax(0, 1.6fr) minmax(260px, 1fr);
     gap:28px; align-items:start;
   }
-  .studio-profile .profile-action-gate > .pubhead { grid-column:1; grid-row:1; min-width:0; }
-  .studio-profile .profile-action-gate > .pubcard,
-  .studio-profile .pubpanel.has-info-sheet { display:contents; }
-  .studio-profile .pubstick-bare { display:none; }
-  .studio-profile .pubpanel.has-info-sheet > #profile-about {
+  :is(.studio-profile,.person-profile) .profile-action-gate > .pubhead { grid-column:1; grid-row:1; min-width:0; }
+  :is(.studio-profile,.person-profile) .profile-action-gate > .pubcard,
+  :is(.studio-profile,.person-profile) .pubpanel.has-info-sheet { display:contents; }
+  :is(.studio-profile,.person-profile) .pubstick-bare { display:none; }
+  :is(.studio-profile,.person-profile) .pubpanel.has-info-sheet > #profile-about {
     display:block; position:static; grid-column:2; grid-row:1 / span 2; order:0;
     width:auto; height:auto; max-height:none; margin:0; padding:24px;
     overflow:visible; transform:none; border-radius:20px; background:var(--kinetic-surface);
   }
-  .studio-profile .pubpanel.has-info-sheet > .studio-profile-hub {
+  :is(.studio-profile,.person-profile) .pubpanel.has-info-sheet > .studio-profile-hub {
     grid-column:1; grid-row:2; min-width:0;
   }
-  .studio-profile .studio-profile-hub > .group-tabs { display:none; }
+  :is(.studio-profile,.person-profile) .studio-profile-hub > .group-tabs { display:none; }
   .studio-desktop-schedule-title { display:block; margin:0 0 20px; font-size:24px; }
   .studio-desktop-updates { display:block; margin-top:28px; padding-top:24px; border-top:1px solid var(--kinetic-control-border); }
   .studio-desktop-updates p { color:var(--color-text-secondary); }
   .studio-profile-hub > .group-member-preview { margin-left:0; justify-content:flex-start; }
-  .studio-profile #profile-about .profstudio { min-width:0; }
-  .studio-profile #profile-about .profstudio-txt { min-width:0; overflow-wrap:anywhere; }
+  :is(.studio-profile,.person-profile) #profile-about .profstudio { min-width:0; }
+  :is(.studio-profile,.person-profile) #profile-about .profstudio-txt { min-width:0; overflow-wrap:anywhere; }
 }
 
 /* Temporarily hide community badges and shoutouts on every profile. */
@@ -15996,3 +15996,29 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .calendar-rail-right { right:2px; }
   .calendar-scope-carousel .calendar-rail-arrow:disabled { visibility:hidden; pointer-events:none; }
 }
+
+@media (min-width:940px) {
+  .person-profile .pubstick { display:none; }
+  .person-profile .pubpanel.has-info-sheet > #profile-schedule { grid-column:1; grid-row:2; min-width:0; margin:0; }
+  .person-profile #profile-about { min-width:0; }
+  .group-page .group-main { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr); gap:28px; align-items:start; }
+  .pub.group-page .group-hero { align-items:stretch; grid-column:1; grid-row:1; min-width:0; background:var(--kinetic-surface); border-radius:24px; overflow:hidden; }
+  .group-page .group-seam-top { height:220px; position:relative; }
+  .group-page .group-seam-name { display:none; }
+  .group-page .group-profile-photo { align-self:flex-start; flex:0 0 200px; min-height:200px; width:200px; height:200px; margin:-80px 0 20px 32px; border:6px solid var(--kinetic-surface); position:relative; box-sizing:border-box; }
+  .group-page .group-profile-photo img { width:100%; height:100%; }
+  .group-page .group-hero-copy { padding:0 32px 24px; text-align:left; }
+  .group-page .group-copy-name { display:block; font-size:clamp(26px,2.6vw,36px); margin:0 0 20px; }
+  .group-page .group-hero-copy .profacts { justify-content:flex-start; }
+  .group-page .group-hero-copy .profile-about-trigger { display:none; }
+  .group-hub { display:contents; }
+  .group-hub-main { grid-column:1; grid-row:2; min-width:0; }
+  .group-hub-main > .group-tabs { display:none; }
+  .group-profile-about { grid-column:2; grid-row:1 / span 2; padding:24px; min-width:0; border-radius:20px; background:var(--kinetic-surface); }
+  .group-profile-about > h2 { margin:0 0 16px; font-size:22px; }
+  .group-profile-about > p { white-space:pre-wrap; overflow-wrap:anywhere; }
+  .group-profile-about > .group-updates-title { margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
+  .group-seam-top .profile-banner-edit { bottom:16px; }
+}
+
+@media (min-width:940px) { .group-about-action { display:none; } }

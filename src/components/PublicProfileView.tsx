@@ -397,7 +397,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className={`pub profile person-profile-light${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
+      className={`pub person-profile profile person-profile-light${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
@@ -434,6 +434,7 @@ export async function PublicProfileView({
           }}
         >
         <ProfileTabs
+          desktopPlaceLayout
           bannerPhoto={user.bannerPhoto}
           canEditBanner={isOwner}
           base={`/${handle}`}
@@ -542,7 +543,7 @@ export async function PublicProfileView({
               to show means no tab) and Contact is a sheet now, so both fall
               back to the schedule rather than rendering an empty page under a
               tab that isn't there. */}
-          <section id="profile-schedule" className="profile-anchor-section">{schedule}</section>
+          <section id="profile-schedule" className="profile-anchor-section"><h2 className="studio-desktop-schedule-title">Schedule</h2>{schedule}</section>
           <section id="profile-about" className="profile-anchor-section">
             <h2 className="profile-section-title">Info</h2>
             {about}

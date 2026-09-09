@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition, type ReactNode } from "react";
+import { useDesktopLayout } from "@/lib/use-desktop-layout";
 import { useRouter } from "next/navigation";
 import { addGroupComment, addGroupPost, toggleGroupReaction } from "@/app/actions/groups";
 import { setGoing } from "@/app/actions/going";
@@ -18,13 +19,14 @@ export type GroupUpdate = {
   reactions:{ reaction:string; count:number; mine:boolean }[];
 };
 
-export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, memberPreview, initialTab="schedule" }: { slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[]; schedule:ReactNode; members:ReactNode; memberPreview:{id:string; name:string; photo:string|null; color:string}[]; initialTab?:"schedule"|"updates"|"members" }) {
+export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, memberPreview, about, initialTab="schedule" }: { about?:string; slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[]; schedule:ReactNode; members:ReactNode; memberPreview:{id:string; name:string; photo:string|null; color:string}[]; initialTab?:"schedule"|"updates"|"members" }) {
+  const desktop = useDesktopLayout();
   const [tab,setTab]=useState(initialTab === "schedule" ? "schedule" : "updates");
   const [seen,setSeen]=useState<number | null>(null);
   useEffect(()=>{const key=`group-updates-seen:${slug}:${viewerId}`;const previous=Number(localStorage.getItem(key)||0);if(initialTab==="updates"){const now=Date.now();localStorage.setItem(key,String(now));setSeen(now);}else setSeen(previous);},[slug,viewerId,initialTab]);
   const unread=seen===null?0:updates.filter(update=>new Date(update.createdAt).getTime()>seen && update.author.id!==viewerId).length;
   const [membersOpen,setMembersOpen]=useState(initialTab === "members");
-  return <>
+  return <div className="group-hub"><div className="group-hub-main">
     <button type="button" className="group-member-preview" onClick={()=>setMembersOpen(true)} aria-label={`View ${memberPreview.length} members`}>
       <span className="group-member-faces">{memberPreview.slice(0,5).map(member=><span key={member.id} style={{background:member.color}}>{member.photo ? <img src={member.photo} alt=""/> : member.name.charAt(0)}</span>)}</span>
       <span>{memberPreview.length} {memberPreview.length === 1 ? "member" : "members"}</span><Icon name="chevron_right" size={17}/>
@@ -33,9 +35,12 @@ export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, 
       <button type="button" role="tab" tabIndex={tab==="schedule"?0:-1} aria-selected={tab==="schedule"} className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button>
       <button type="button" role="tab" tabIndex={tab==="updates"?0:-1} aria-selected={tab==="updates"} className={tab==="updates"?"on":""} onClick={()=>{setTab("updates");setSeen(Date.now());localStorage.setItem(`group-updates-seen:${slug}:${viewerId}`,String(Date.now()));}}>Updates{unread > 0 && <span className="profile-update-count">{unread}</span>}</button>
     </div>
-    {tab==="schedule" ? schedule : <GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates} />}
+    {desktop && <h2 className="studio-desktop-schedule-title">Schedule</h2>}
+    {desktop || tab==="schedule" ? schedule : <GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates} />}
+    </div>
+    {desktop && <aside className="group-profile-about"><h2>About</h2><p>{about || "No description has been added yet."}</p><h2 className="group-updates-title">Updates</h2><GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates}/></aside>}
     {membersOpen && <BodyPortal><div className="sheet-scrim" onClick={event=>{if(event.target===event.currentTarget)setMembersOpen(false);}}><section className="sheet group-members-sheet" role="dialog" aria-modal="true" aria-label="Group members" onKeyDown={event=>{if(event.key==="Escape"){event.stopPropagation();setMembersOpen(false);}}}><button autoFocus type="button" className="sheetclose sheet-dismiss" aria-label="Close members" onClick={()=>setMembersOpen(false)}><Icon name="close" size={20}/></button>{members}</section></div></BodyPortal>}
-  </>;
+  </div>;
 }
 
 function GroupUpdates({ slug, canPost, viewerId, updates }: { slug:string; canPost:boolean; viewerId:string|null; updates:GroupUpdate[] }) {

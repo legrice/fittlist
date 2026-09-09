@@ -114,7 +114,7 @@ try {
       if (["/auditcoach", "/s/audit-studio", "/g/audit-group"].includes(route)) {
         const header = page.locator(".profile-seam-top,.group-seam-top");
         const studioProfile = route === "/s/audit-studio";
-        const title = studioProfile ? page.locator(".studio-desktop-name") : header.locator("h1");
+        const title = route.startsWith("/g/") ? page.locator(".group-copy-name") : page.locator(".studio-desktop-name");
         const box = await header.boundingBox(), text = await title.boundingBox();
         if (studioProfile) {
           const avatar = await page.locator(".profile-identity-lead .profav").boundingBox();
@@ -126,7 +126,12 @@ try {
           assert(Math.abs(about.y - box.y) < 2, "About starts level with the banner");
           assert.equal(await page.locator(".profile-share-cta").count(), 0, "Place sharing CTA is removed");
         } else {
-          assert(box.height > 80 && text.y >= box.y && text.y + text.height <= box.y + box.height, "Profile name has a real header box");
+          const group = route.startsWith("/g/");
+          const avatar = await page.locator(group ? ".group-profile-photo" : ".profile-identity-lead .profav").boundingBox();
+          const about = await page.locator(group ? ".group-profile-about" : "#profile-about").boundingBox();
+          assert(avatar.width >= 190 && avatar.height >= 190, "Profile photo is large and square");
+          assert(text.y >= avatar.y + avatar.height, "Profile name is below the photo");
+          assert(about.x >= box.x + box.width && Math.abs(about.y - box.y) < 2, "About sits beside the banner");
         }
         assert(await title.evaluate(el => getComputedStyle(el).color !== getComputedStyle(el.parentElement).backgroundColor), "Profile name contrasts with its header");
         const more = page.getByRole("button", { name: route.startsWith("/g/") ? "More group actions" : "More profile actions", exact: true });

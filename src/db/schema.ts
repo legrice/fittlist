@@ -1157,6 +1157,7 @@ export const groups = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     photo: text("photo"),
+    bannerPhoto: text("banner_photo"),
     slug: text("slug").notNull().unique(),
     description: text("description"),
     purpose: text("purpose").notNull().default("plan"),

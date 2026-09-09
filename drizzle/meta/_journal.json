@@ -855,6 +855,13 @@
       "when": 1788909102596,
       "tag": "0121_profile_banners",
       "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1788914048807,
+      "tag": "0122_group_profile_banner",
+      "breakpoints": true
     }
   ]
 }

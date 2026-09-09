@@ -57,7 +57,7 @@ async function userImageCandidates(database: Database, userId: string): Promise<
       .from(schema.personalClasses)
       .where(eq(schema.personalClasses.userId, userId)),
     database
-      .select({ photo: schema.groups.photo })
+      .select({ photo: schema.groups.photo, bannerPhoto: schema.groups.bannerPhoto })
       .from(schema.groups)
       .where(eq(schema.groups.ownerUserId, userId)),
   ]);
@@ -70,7 +70,7 @@ async function userImageCandidates(database: Database, userId: string): Promise<
     addManagedUrl(urls, person.storyPrefs?.background);
   }
   for (const row of [...classes, ...templates, ...personal]) addManagedUrl(urls, row.image);
-  for (const group of groups) addManagedUrl(urls, group.photo);
+  for (const group of groups) { addManagedUrl(urls, group.photo); addManagedUrl(urls, group.bannerPhoto); }
   return urls;
 }
 
@@ -90,7 +90,7 @@ async function referencedImageUrls(database: Database): Promise<Set<string>> {
       database.select({ image: schema.studioClasses.image }).from(schema.studioClasses),
       database.select({ image: schema.classes.image }).from(schema.classes),
       database.select({ image: schema.personalClasses.image }).from(schema.personalClasses),
-      database.select({ photo: schema.groups.photo }).from(schema.groups),
+      database.select({ photo: schema.groups.photo, bannerPhoto: schema.groups.bannerPhoto }).from(schema.groups),
     ]);
 
   const urls = new Set<string>();
@@ -107,7 +107,7 @@ async function referencedImageUrls(database: Database): Promise<Set<string>> {
   }
   for (const row of events) addManagedUrl(urls, row.photo);
   for (const row of [...templates, ...catalog, ...classes, ...personal]) addManagedUrl(urls, row.image);
-  for (const group of groups) addManagedUrl(urls, group.photo);
+  for (const group of groups) { addManagedUrl(urls, group.photo); addManagedUrl(urls, group.bannerPhoto); }
   return urls;
 }
 

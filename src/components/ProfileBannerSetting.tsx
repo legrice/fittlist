@@ -7,7 +7,7 @@ import { readPhoto } from "@/lib/photo";
 import { Icon } from "@/components/Icon";
 import { BodyPortal } from "@/components/BodyPortal";
 
-export function ProfileBannerSetting({ studioId, compact = false }: { studioId?: string; compact?: boolean }) {
+export function ProfileBannerSetting({ studioId, groupId, compact = false }: { studioId?: string; groupId?: string; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [changed, setChanged] = useState(false);
@@ -23,7 +23,7 @@ export function ProfileBannerSetting({ studioId, compact = false }: { studioId?:
     if (!open) return;
     let active = true;
     setReady(false); setChanged(false); setError("");
-    void loadProfileBanner(studioId).then(value => {
+    void loadProfileBanner(studioId, groupId).then(value => {
       if (!active) return;
       if (!value) { setError("This profile is not available to edit."); return; }
       setPhoto(value.banner); setReady(true);
@@ -32,11 +32,11 @@ export function ProfileBannerSetting({ studioId, compact = false }: { studioId?:
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { active = false; document.body.style.overflow = previous; };
-  }, [open, studioId]);
+  }, [open, studioId, groupId]);
   const save = async () => {
     setBusy(true); setError("");
     try {
-      const result = await saveProfileBanner(photo, studioId);
+      const result = await saveProfileBanner(photo, studioId, groupId);
       if (!result.ok) { setError(result.error || "Couldn’t save the banner."); return; }
       setOpen(false); trigger.current?.focus(); router.refresh();
     } catch { setError("Couldn’t save the banner. Please try again."); }
