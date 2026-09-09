@@ -5,7 +5,6 @@ import { isDesktopViewport } from "@/lib/use-desktop-layout";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Icon } from "@/components/Icon";
-import { LinkPending } from "@/components/LinkPending";
 import { preloadShareEditor, ShareTakeover } from "@/components/ShareTakeover";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 import { sharePerformance } from "@/lib/share-performance";
@@ -135,7 +134,6 @@ export function NavBar({
           return (
             <Link key={t.id} className={cls} data-tab={t.id} href={t.href} aria-label={t.label} aria-current={on ? "page" : undefined}>
               {inner}
-              <LinkPending className="tapspin-tab" />
             </Link>
           );
         })}

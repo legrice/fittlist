@@ -35,22 +35,21 @@ try {
   for (let i = 0; i < 120; i++) { assert.equal(server.exitCode, null); try { if ((await fetch(base)).ok) { ready = true; break; } } catch {} await pause(500); }
   assert(ready, "Audit server ready");
   browser = await chromium.launch();
-  await check("Navigation dots animate and honor reduced motion", async page => {
+  await check("Navigation labels stay visible without inline loading dots", async page => {
     let release;
+    let requestStarted;
+    const started = new Promise(resolve => { requestStarted = resolve; });
     const gate = new Promise(resolve => { release = resolve; });
     await page.goto(`${base}/calendar`);
     await page.route(url => url.origin === base && url.pathname === "/discover", async route => {
+      requestStarted();
       const response = await route.fetch(); await gate; await route.fulfill({ response }).catch(() => {});
     });
     try {
-      await page.emulateMedia({ reducedMotion: "no-preference" });
       await page.locator('.desktop-top-header').getByRole("link", { name: "Discover", exact: true }).click();
-      const dot = page.locator('.desktop-nav-link .link-pending-dots > span').first();
-      await dot.waitFor();
-      assert.equal(await dot.evaluate(el => getComputedStyle(el).animationName), "calendar-loading-dance");
-      await page.screenshot({ path: `${f.directory}/desktop-loading-dots.png` });
-      await page.emulateMedia({ reducedMotion: "reduce" });
-      assert.equal(await dot.evaluate(el => getComputedStyle(el).animationName), "none");
+      await started;
+      assert.equal(await page.locator('.desktop-top-header .link-pending-dots').count(), 0);
+      assert(await page.locator('.desktop-top-header').getByRole("link", { name: "Discover", exact: true }).isVisible());
       release(); await page.waitForURL("**/discover");
       await page.locator(".discover-results-workspace").waitFor();
     } finally { release(); }
@@ -78,6 +77,9 @@ try {
       await page.goto(`${base}/search?q=Audit`);
       await page.getByRole("status", { name: "Searching…", exact: true }).waitFor();
       assert.equal(await page.locator('.loading-dots > span').first().evaluate(el => getComputedStyle(el).animationName), "none", "Reduced motion disables dancing");
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+      assert.equal(await page.locator('.loading-dots > span').first().evaluate(el => getComputedStyle(el).animationName), "calendar-loading-dance", "Content loading dots still animate");
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.getByRole("heading", { name: "Search is unavailable" }).waitFor();
       assert(held);
       await page.getByRole("button", { name: "Try again", exact: true }).click();

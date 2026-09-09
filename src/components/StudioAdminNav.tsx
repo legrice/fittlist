@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/Icon";
-import { LinkPending } from "@/components/LinkPending";
 
 export function StudioAdminNav({ name, slug, registrationPro }: { name: string; slug: string; registrationPro: boolean }) {
   const pathname = usePathname();
@@ -34,7 +33,7 @@ export function StudioAdminNav({ name, slug, registrationPro }: { name: string; 
       {sections.map(section => <div className="studio-admin-nav-section" key={section.label}>
         <h2>{section.label}</h2>
         {section.links.map(link => <Link key={link.label} href={link.href} prefetch={false} className="studio-admin-nav-link" aria-current={link.active ? "page" : undefined}>
-          <Icon name={link.icon} size={21} /><span>{link.label}</span><LinkPending />
+          <Icon name={link.icon} size={21} /><span>{link.label}</span>
         </Link>)}
       </div>)}
       <div className="studio-admin-nav-section studio-admin-nav-preview">

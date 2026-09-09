@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { GlobalAdd } from "@/components/GlobalAdd";
-import { LinkPending } from "@/components/LinkPending";
 import { Wordmark } from "@/components/Wordmark";
 import { activeTab, type NavTab } from "@/lib/nav";
 import type { ManagedCalendarDestination } from "@/lib/managed-calendars";
@@ -108,7 +107,6 @@ export function DesktopChrome({
             <Link className="desktop-calendar-main" href="/calendar" aria-current={personalOn ? "page" : undefined} onClick={() => setCalendarOpen(false)}>
               <Icon name="calendar_month" size={22} />
               <span>Calendar</span>
-              <LinkPending className="desktop-nav-spin" />
             </Link>
             <button
               type="button"
@@ -147,9 +145,9 @@ export function DesktopChrome({
             )}
           </div>
           <Link className={`desktop-nav-link${followingOn ? " on" : ""}`} href="/calendar/following" aria-current={followingOn ? "page" : undefined}>
-            <Icon name="calendar_view_day" size={22} /><span>Following</span><LinkPending className="desktop-nav-spin" />
+            <Icon name="calendar_view_day" size={22} /><span>Following</span>
           </Link>
-          <Link className={`desktop-nav-link${here === "discover" ? " on" : ""}`} href="/discover" aria-current={here === "discover" ? "page" : undefined}>Discover<LinkPending className="desktop-nav-spin" /></Link>
+          <Link className={`desktop-nav-link${here === "discover" ? " on" : ""}`} href="/discover" aria-current={here === "discover" ? "page" : undefined}>Discover</Link>
         </nav>
         <form className="desktop-header-search" action="/search" role="search">
           <Icon name="search" size={20} />
@@ -160,13 +158,11 @@ export function DesktopChrome({
           <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox" aria-label="Messages" title="Messages" aria-current={pathname.startsWith("/inbox") ? "page" : undefined}>
             <Icon name="chat_bubble" size={22} />
             <span className="desktop-tool-label">Messages</span>
-            <LinkPending className="desktop-nav-spin" />
             {messageUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${messageUnread} unread messages`}>{messageUnread > 99 ? "99+" : messageUnread}</b>}
           </Link>
           <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications" aria-label="Notifications" title="Notifications" aria-current={pathname.startsWith("/notifications") ? "page" : undefined}>
             <Icon name="notifications" size={22} />
             <span className="desktop-tool-label">Notifications</span>
-            <LinkPending className="desktop-nav-spin" />
             {notificationUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread} unread notifications`}>{notificationUnread > 99 ? "99+" : notificationUnread}</b>}
           </Link>
           <div className="desktop-account" ref={profileRef}>
