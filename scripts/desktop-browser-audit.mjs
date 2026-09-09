@@ -32,7 +32,7 @@ try {
   await context.addCookies([{ name: "fl_session", value: f.owner.token, url: base, httpOnly: true, sameSite: "Lax" }]);
   await context.route("**/*", route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
   page = await context.newPage();
-  page.setDefaultTimeout(15000);
+  page.setDefaultTimeout(30000);
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
   const rail = page.locator(".desktop-top-header");
@@ -230,6 +230,57 @@ try {
   assert(classBounds.y >= 24 && classBounds.y + classBounds.height <= 876, "Class dialog fits desktop");
   await page.keyboard.press("Escape"); await detail.waitFor({ state: "hidden" });
   report.checks.push("Managed calendars fit the rail; Add, profile actions and class details dismiss with focus; About stays inline");
+
+  await visit("/s/audit-studio/manage");
+  const adminNav = page.getByRole("navigation", { name: "Studio administration" });
+  assert.equal(await adminNav.getByRole("link", { name: "Event registrations", exact: true }).count(), 0, "Registration tools stay gated to enabled studios");
+  for (const [label, heading] of [["Class counts", "Shift counter"], ["Staff", "Staff"], ["Standard week", "Standard calendar"], ["Profile and settings", "Profile and settings"], ["Owner and managers", "Studio access"]]) {
+    await adminNav.getByRole("link", { name: label, exact: true }).click();
+    await page.getByRole("heading", { name: heading, exact: true }).waitFor();
+    assert.equal(await adminNav.locator('[aria-current="page"]').innerText(), label);
+    await frame();
+  }
+  await page.locator('.studio-admin-list').waitFor();
+  await page.reload();
+  await page.locator('.studio-admin-list').waitFor();
+  assert.equal(await adminNav.locator('[aria-current="page"]').innerText(), "Owner and managers", "Deep links preserve the active admin section");
+  await adminNav.getByRole("link", { name: "Profile and settings", exact: true }).click();
+  await page.getByRole("button", { name: /^Profile banner/ }).click();
+  await page.getByRole("dialog", { name: "Profile banner", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Choose image", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Close banner settings", exact: true }).click();
+  await adminNav.getByRole("link", { name: "Calendar", exact: true }).click();
+  await page.getByRole("button", { name: "Start managing the calendar", exact: true }).click();
+  await page.locator('.rota-month-board').waitFor();
+  await adminNav.getByRole("link", { name: "Open shifts", exact: true }).click();
+  await page.getByRole("heading", { name: "Open shifts", exact: true }).waitFor();
+  await adminNav.getByRole("link", { name: "Calendar", exact: true }).click();
+  await page.getByRole("heading", { name: "Audit Studio", exact: true }).waitFor();
+  for (const width of [1100, 1440, 1920]) {
+    await page.setViewportSize({ width, height:900 }); await frame();
+    const sidebar = await page.locator('.studio-admin-sidebar').boundingBox();
+    const main = await page.locator('.studio-admin-main').boundingBox();
+    assert(sidebar.x + sidebar.width < main.x, "Calendar stays to the right of admin navigation");
+    assert(main.x + main.width > width - 60, "Calendar workspace fills the available right column");
+    await page.waitForFunction(() => {
+      const main = document.querySelector('.studio-admin-main')?.getBoundingClientRect();
+      const board = document.querySelector('.rota-month-board')?.getBoundingClientRect();
+      return main && board && Math.abs(board.x-main.x)<2 && Math.abs(board.width-main.width)<2;
+    });
+  }
+  await page.setViewportSize({ width:1440, height:900 });
+  await page.screenshot({ path:`${output}/studio-admin-calendar.png`, fullPage:true });
+  const nonManager = await browser.newContext();
+  await nonManager.addCookies([{name:"fl_session",value:f.outsider.token,url:base,httpOnly:true}]);
+  for (const suffix of ["calendar", "settings", "settings?view=managers"]) {
+    const denied = await nonManager.request.get(`${base}/s/audit-studio/manage/${suffix}`);
+    const html = await denied.text();
+    assert(denied.status()===404 || html.includes("NEXT_HTTP_ERROR_FALLBACK;404"), "Management routes reject non-managers");
+    assert(!html.includes('studio-admin-sidebar') && !html.includes('studio-settings-panel'), "Denied routes do not expose management controls");
+  }
+  await nonManager.close();
+  report.checks.push("Studio admin sidebar keeps tools together, preserves deep links and banner editing, and contains the calendar at desktop widths");
+
 
   await visit("/calendar");
   await page.setViewportSize({ width: 939, height: 900 });

@@ -16117,3 +16117,40 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .desktop-nav-link:has(.link-pending-dots):not([aria-label]), .desktop-calendar-main:has(.link-pending-dots) { padding-right:40px; }
 @media(prefers-reduced-motion:reduce) { .link-pending-dots > span { animation:none; } }
 .class-open-loading { position:fixed; left:50%; bottom:100px; transform:translateX(-50%); z-index:90; display:grid; place-items:center; padding:12px 20px; border-radius:999px; background:var(--kinetic-surface); color:var(--kinetic-text); box-shadow:0 4px 24px #0002; pointer-events:none; }
+
+/* Keep every managed-place tool in the same desktop workspace. */
+.studio-admin-sidebar { display:none; }
+.studio-admin-main { min-width:0; }
+.screen.hasnav .studio-admin-main > .pad { width:100%; max-width:none; margin:0; padding-inline:0; }
+.studio-settings-page { padding:24px 0 60px; }
+.studio-settings-page > header { margin-bottom:24px; }
+.studio-settings-page > header h1 { margin:0 0 8px; }
+.studio-settings-page > header p { margin:0; color:var(--muted); }
+.studio-settings-panel { padding:24px; border-radius:24px; background:var(--kinetic-surface); color:var(--kinetic-text); }
+.studio-settings-panel h2 { margin-top:0; }
+@media (min-width:940px) {
+  .screen.hasnav:has(.desktop-top-header) > .pad.studio-manage-shell {
+    width:100%; max-width:none; margin-inline:0; padding-inline:clamp(24px,2.5vw,48px);
+  }
+  .studio-admin-workspace { display:grid; grid-template-columns:220px minmax(0,1fr); gap:32px; align-items:start; padding-top:24px; }
+  .studio-admin-sidebar { display:block; position:sticky; top:104px; max-height:calc(100dvh - 128px); overflow-y:auto; padding-bottom:20px; color:var(--kinetic-text); scrollbar-width:thin; }
+  .studio-admin-identity { display:grid; gap:6px; padding:8px 12px 24px; }
+  .studio-admin-identity > span { font-size:13px; color:var(--muted); }
+  .studio-admin-identity > strong { font-size:20px; line-height:1.2; overflow-wrap:anywhere; }
+  .studio-admin-nav-section { margin-bottom:20px; }
+  .studio-admin-nav-section h2 { margin:0 12px 6px; font-size:12px; font-weight:700; color:var(--muted); }
+  .studio-admin-nav-link { display:flex; align-items:center; gap:10px; min-height:44px; padding:10px 12px; border-radius:12px; color:var(--kinetic-text); text-decoration:none; font-size:14px; font-weight:600; }
+  .studio-admin-nav-link > .icon { flex:0 0 auto; }
+  .studio-admin-nav-link > span:not(.link-pending-dots):not(.icon) { flex:1; }
+  .studio-admin-nav-link:hover { background:var(--kinetic-surface); }
+  .studio-admin-nav-link[aria-current="page"] { background:var(--color-surface-muted); font-weight:700; }
+  .studio-admin-nav-link:focus-visible { outline:2px solid var(--kinetic-text); outline-offset:-2px; }
+  .studio-admin-nav-preview { border-top:1px solid var(--line); padding-top:16px; }
+  .studio-admin-main .studio-manage-nav { display:none; }
+  .studio-admin-main .event-desk { padding:0 0 60px; }
+  .studio-settings-page { padding-top:12px; max-width:850px; }
+  .studio-admin-main .rota-month-board { overflow:auto; }
+}
+@media (min-width:1360px) {
+  .studio-admin-main .rota-month-board { overflow:visible; }
+}

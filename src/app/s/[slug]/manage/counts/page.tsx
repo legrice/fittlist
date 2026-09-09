@@ -1,14 +1,9 @@
-import { eq, or } from "drizzle-orm";
-import { notFound } from "next/navigation";
-import { getDb, schema } from "@/db";
-import { currentUser } from "@/lib/current-user";
-import { studioAccess } from "@/lib/studioaccess";
+import { managedStudio } from "@/lib/managed-studio";
+import Link from "next/link";
 import { gymCounts } from "@/app/actions/gym";
 import { GymCountsView } from "@/components/GymCountsView";
 
 export const dynamic = "force-dynamic";
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // The shift counter, counted from the rota. Manager only, reached from the
 // studio's calendar workspace.
@@ -21,24 +16,18 @@ export default async function CountsPage({
 }) {
   const { slug } = await params;
   const { m, from, to } = await searchParams;
-  const db = await getDb();
-  const [studio] = await db
-    .select()
-    .from(schema.studios)
-    .where(
-      UUID_RE.test(slug)
-        ? or(eq(schema.studios.slug, slug), eq(schema.studios.id, slug))
-        : eq(schema.studios.slug, slug),
-    );
-  if (!studio) notFound();
-  const me = await currentUser();
-  if (!me) notFound();
-  const viewerId = me.id;
-  const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
-  if (!access.isManager) notFound();
+  const { studio } = await managedStudio(slug);
 
-  const counts = await gymCounts(studio.id, m, from, to);
   const base = `/s/${studio.slug ?? studio.id}/manage`;
+  if (!studio.accountUserId) return <main className="studio-settings-page">
+    <header><h1>Shift counter</h1><p>{studio.name}</p></header>
+    <div className="studio-settings-panel">
+      <h2>Start with your calendar</h2>
+      <p>Turn on your studio calendar to track classes and coach totals here.</p>
+      <Link className="btn" href={`${base}/calendar`} prefetch={false}>Open calendar</Link>
+    </div>
+  </main>;
+  const counts = await gymCounts(studio.id, m, from, to);
   return (
     <GymCountsView
       studioName={studio.name}

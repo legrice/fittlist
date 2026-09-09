@@ -23,6 +23,7 @@ import { setStudioShowCoaches } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
+import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 
 // Everything about running a studio that isn't already a control on the
 // shifts screen. It used to float on the studio's public page, which put a
@@ -38,6 +39,8 @@ export function StudioAdminSheet({
   approvalOn = true,
   settingsTrigger = false,
   dashboardTrigger = false,
+  embedded = false,
+  initialView = "settings",
 }: {
   slug: string;
   /** The gym account is on, so the rota and the counts exist to link to. */
@@ -54,13 +57,16 @@ export function StudioAdminSheet({
   /** Use the settings control shown in the studio-management header. */
   settingsTrigger?: boolean;
   dashboardTrigger?: boolean;
+  embedded?: boolean;
+  initialView?: "settings" | "managers";
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
   const [editOpen, setEditOpen] = useState(false);
   const [names, setNames] = useState(showCoaches);
   const [approvals, setApprovals] = useState(approvalOn);
   const [views, setViews] = useState<number | null | undefined>(pageViews);
-  const [adminsOpen, setAdminsOpen] = useState(false);
+  const [adminsOpen, setAdminsOpen] = useState(embedded && initialView === "managers");
+  const [adminsError, setAdminsError] = useState(false);
   const [standardOpen, setStandardOpen] = useState(false);
   const [standardDate, setStandardDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [admins, setAdmins] = useState<StaffPerson[] | null>(null);
@@ -142,7 +148,7 @@ export function StudioAdminSheet({
   };
 
   const closeAdminSheet = () => {
-    setOpen(false);
+    if (!embedded) setOpen(false);
     setAdminsOpen(false);
     setStandardOpen(false);
     setAdminConfirm(null);
@@ -152,8 +158,9 @@ export function StudioAdminSheet({
     setAdminsOpen(true);
     if (admins !== null || adminsPending) return;
     startAdmins(async () => {
+      setAdminsError(false);
       const result = await withTimeout(studioManagersForSettings(studio.id)).catch(() => null);
-      if (!result) {toast("Couldn’t load admins. Close and try again.");return;}
+      if (!result) {setAdminsError(true);return;}
       setAdmins(result.people);
       setCanManageAdmins(result.canManage);
     });
@@ -235,9 +242,17 @@ export function StudioAdminSheet({
     toast(`${person.name} is now the owner`);
   };
 
+  useEffect(() => {
+    if (!embedded) return;
+    openAdmin();
+    if (initialView === "managers") openAdmins();
+    // The settings page is keyed by studio and view; load only on entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embedded, initialView]);
+
   return (
     <>
-      <button
+      {!embedded && <button
         className={dashboardTrigger ? "setrow studio-dashboard-settings-row" : settingsTrigger ? "iconbtn studio-manage-settings" : "btn ghost staffbar-b staffmore"}
         aria-label="Studio settings"
         onClick={openAdmin}
@@ -247,19 +262,19 @@ export function StudioAdminSheet({
           <span className="setrow-txt"><span className="t">Studio settings</span><span className="s">Details, standard week, managers, and schedule rules</span></span>
           <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </> : <Icon name={settingsTrigger ? "settings" : "more_horiz"} size={settingsTrigger ? 22 : 20} />}
-      </button>
+      </button>}
 
       {open && (
         <div
-          className="sheet-scrim"
+          className={embedded ? "studio-settings-inline" : "sheet-scrim"}
           onClick={(e) => {
-            if (e.target === e.currentTarget) closeAdminSheet();
+            if (!embedded && e.target === e.currentTarget) closeAdminSheet();
           }}
         >
-          <div className="sheet studio-admin-sheet">
-            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={closeAdminSheet}>
+          <div className={embedded ? "studio-settings-panel studio-admin-sheet" : "sheet studio-admin-sheet"}>
+            {!embedded && <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={closeAdminSheet}>
               <Icon name="close" size={20} />
-            </button>
+            </button>}
             {adminConfirm ? (
               <div className="studio-admin-confirm">
                 <h2>
@@ -314,7 +329,7 @@ export function StudioAdminSheet({
               </div>
             ) : adminsOpen ? (
               <div className="studio-admin-access">
-                <button className="studio-admin-view-back" onClick={() => setAdminsOpen(false)}>
+                <button className="studio-admin-view-back" onClick={() => embedded ? router.push(`/s/${slug}/manage/settings`) : setAdminsOpen(false)}>
                   <Icon name="arrow_back" size={20} />
                   Studio settings
                 </button>
@@ -323,7 +338,7 @@ export function StudioAdminSheet({
                   One owner holds the master role. Managers can run the studio without changing ownership.
                 </p>
                 {admins === null ? (
-                  <p className="adminempty"><LoadingDots label="Loading admins…"/></p>
+                  adminsError ? <div className="adminempty" role="alert"><p>Couldn’t load admins.</p><button className="btn ghost" onClick={openAdmins}>Try again</button></div> : <p className="adminempty"><LoadingDots label="Loading admins…"/></p>
                 ) : (
                   <div className="settingslist studio-admin-list">
                     {admins.map((admin) => (
@@ -434,7 +449,7 @@ export function StudioAdminSheet({
               <button
                 className="setrow"
                 onClick={() => {
-                  setOpen(false);
+                  if (!embedded) setOpen(false);
                   setEditOpen(true);
                 }}
               >
@@ -445,7 +460,8 @@ export function StudioAdminSheet({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
-              <button className="setrow" onClick={openAdmins}>
+              {embedded && <ProfileBannerSetting studioId={studio.id} />}
+              <button className="setrow" onClick={() => embedded ? router.push(`/s/${slug}/manage/settings?view=managers`) : openAdmins()}>
                 <span className="setrow-ic"><Icon name="admin_panel_settings" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Owner and managers</span>

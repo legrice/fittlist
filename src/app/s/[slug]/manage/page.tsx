@@ -1,15 +1,10 @@
-import { eq, or } from "drizzle-orm";
-import { notFound, redirect } from "next/navigation";
-import { getDb, schema } from "@/db";
-import { currentUser } from "@/lib/current-user";
-import { studioAccess } from "@/lib/studioaccess";
+import { redirect } from "next/navigation";
+import { managedStudio } from "@/lib/managed-studio";
 import { gymCoaches, gymSchedule, shiftRequests } from "@/app/actions/gym";
 import { StudioManageDashboard } from "@/components/StudioManageDashboard";
 import type { PlaceKind } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // The rota, for the people who run the place. Everything on this screen is
 // behind studioAccess: not a manager, and the page isn't there at all, which
@@ -23,22 +18,7 @@ export default async function ManageStudioPage({
 }) {
   const { slug } = await params;
   const legacyParams = await searchParams;
-  const db = await getDb();
-  const [studio] = await db
-    .select()
-    .from(schema.studios)
-    .where(
-      UUID_RE.test(slug)
-        ? or(eq(schema.studios.slug, slug), eq(schema.studios.id, slug))
-        : eq(schema.studios.slug, slug),
-    );
-  if (!studio) notFound();
-
-  const me = await currentUser();
-  if (!me) notFound();
-  const viewerId = me.id;
-  const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
-  if (!access.isManager) notFound();
+  const { studio } = await managedStudio(slug);
 
   const [week, coaches, requests] = await Promise.all([
     gymSchedule(studio.id, 0),

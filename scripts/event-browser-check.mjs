@@ -33,6 +33,7 @@ try{
   for(const route of [`/api/events/pro-disabled/qr`,`/api/events/pro-disabled/export`]) assert.equal((await anon.request.get(base+route)).status(),404,'Unapproved space feature routes are unavailable');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.bringToFront();await page.evaluate(()=>document.fonts.ready);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   const a11y=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa']).analyze();assert.equal(a11y.violations.filter(v=>['serious','critical'].includes(v.impact)).length,0,JSON.stringify(a11y.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))));
   await page.screenshot({path:`${f.directory}/phone-signup.png`,fullPage:true});
   // A different browser context represents the email app opening a fresh tab.
@@ -52,6 +53,11 @@ try{
     const ctx=await browser.newContext({ignoreHTTPSErrors:true,viewport,reducedMotion:'reduce'});await ctx.addCookies([{name:'fl_session',value:f.admin,url:base,httpOnly:true}]);const desk=await ctx.newPage();
     await desk.goto(`${base}/s/${f.slug}/manage/registrations`);await desk.locator('.app-launch').waitFor({state:'detached'});
     await desk.getByRole('heading',{name:'Attendees',exact:true}).waitFor();
+    if(viewport.width>=940) {
+      const adminNav=desk.getByRole('navigation',{name:'Studio administration'});
+      assert.equal(await adminNav.locator('[aria-current="page"]').innerText(),'Event registrations');
+      assert(await desk.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Event workspace fits beside admin navigation');
+    }
     await desk.getByRole('combobox',{name:'Choose a signup QR',exact:true}).selectOption(f.classes[1].id);
     const signupLink=desk.getByRole('link',{name:'Open this signup page',exact:true});
     assert.equal(await signupLink.getAttribute('href'),`/s/${f.slug}/register?class=${f.classes[1].id}&d=${f.date}`);

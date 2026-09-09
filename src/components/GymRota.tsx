@@ -5,7 +5,7 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   applyStandardDay,
@@ -184,6 +184,9 @@ export function GymRota({
   const [coachPick, setCoachPick] = useState<CoachPick | null>(null);
   const [monthMenu, setMonthMenu] = useState<string | null>(null);
   const [dayMenu, setDayMenu] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const requestedFilter = searchParams.get("show");
+  const requestedView = searchParams.get("view");
   const [shiftFilter, setShiftFilter] = useState<ShiftFilter>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [desktop, setDesktop] = useState(false);
@@ -288,7 +291,7 @@ export function GymRota({
     restore();
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
-  }, [studioId]);
+  }, [studioId, requestedFilter]);
 
   useEffect(() => {
     if (!hasAccount) return;
@@ -322,7 +325,7 @@ export function GymRota({
       media.removeEventListener("change", sync);
       window.removeEventListener("popstate", restoreMonth);
     };
-  }, [hasAccount, loadMonth, month]);
+  }, [hasAccount, loadMonth, month, requestedView]);
 
   const refreshView = () => {
     router.refresh();
