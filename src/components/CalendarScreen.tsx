@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarMiniMonth } from "@/components/CalendarMiniMonth";
 import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
 import { useCalendarScopeRecovery } from "@/lib/calendar-scope-recovery";
@@ -218,6 +219,7 @@ export function CalendarScreen({
   const [ymInView, setYmInView] = useState<string | null>(null);
   const [dayHorizon, setDayHorizon] = useState(180);
   const [monthHorizon, setMonthHorizon] = useState(12);
+  const [jumpDate, setJumpDate] = useState<string | null>(null);
   const dayMoreRef = useRef<HTMLButtonElement>(null);
   const lastAutoDayCount = useRef(-1);
   const scrolled = useScrolledPast(120);
@@ -671,6 +673,15 @@ export function CalendarScreen({
     return () => observer.disconnect();
   }, [desktop, classSheetDismissed, sheet, view, dayHorizon, days.length]);
 
+  useEffect(() => {
+    if (!jumpDate || view !== "list") return;
+    const frame = requestAnimationFrame(() => {
+      const target = document.getElementById(`day-${jumpDate}`);
+      if (target) { target.scrollIntoView({ block: "start" }); setJumpDate(null); }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [jumpDate, days, view]);
+
   // Tapping a day in the grid goes back to the list and lands on it. The grid
   // answers "what does the month look like"; a day is a list of classes, and
   // that is a thing the list already draws well.
@@ -687,10 +698,20 @@ export function CalendarScreen({
     const offset = Math.max(0, Math.floor((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${todayIso}T00:00:00Z`)) / 864e5));
     if (offset >= dayHorizon) setDayHorizon(offset + 28);
     setView("list");
-    requestAnimationFrame(() => {
-      document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start" });
-    });
+    setJumpDate(iso);
   }, [ensureComposer, monthItems, todayIso, dayHorizon]);
+
+  const calendarFilter = (
+<label className="calendar-desktop-filter">
+            <span className="sr-only">View calendar</span>
+            <select value={filter} onChange={(event) => setFilter(event.target.value as CalendarFilter)}>
+              <option value="all">View: All</option>
+              {!member && <option value="coaching">View: Teaching</option>}
+              <option value="saved">View: Saved</option>
+              <option value="personal">View: Personal</option>
+            </select>
+          </label>
+  );
 
   // Whether this coach has published anything at all, not whether the next
   // eight weeks do: the empty state offers the thing to do only when there is
@@ -784,16 +805,8 @@ export function CalendarScreen({
           </div>
           <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
         </div>
-        <div className="calendar-desktop-controls">
-          <label className="calendar-desktop-filter">
-            <span className="sr-only">View calendar</span>
-            <select value={filter} onChange={(event) => setFilter(event.target.value as CalendarFilter)}>
-              <option value="all">View: All</option>
-              {!member && <option value="coaching">View: Teaching</option>}
-              <option value="saved">View: Saved</option>
-              <option value="personal">View: Personal</option>
-            </select>
-          </label>
+        <div className={`calendar-desktop-controls${view === "list" && !sheet ? " has-calendar-sidebar" : ""}`}>
+          {calendarFilter}
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
             <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
@@ -801,6 +814,7 @@ export function CalendarScreen({
         </div>
       </header>
 
+      <div className={`calendar-workspace${view === "list" && !sheet ? " has-sidebar" : ""}`}>
       <div className={`cardwrap calendar-cardwrap calendar-direct-schedule${!sheet && !classSheetDismissed ? " is-mobile-hidden" : ""}${!desktop && !sheet && classSheetDismissed ? ` calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
@@ -834,6 +848,12 @@ export function CalendarScreen({
           </button>
         </>
       )}
+      </div>
+
+      {desktop && !sheet && view === "list" && <aside className="calendar-date-sidebar" aria-label="Calendar navigation">
+        <CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openDay} />
+        <section className="calendar-sidebar-filters"><h2>Show on your calendar</h2>{calendarFilter}</section>
+      </aside>}
       </div>
 
       {/* Month view needs its weekday rail fixed above the grid. Day view

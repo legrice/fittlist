@@ -83,7 +83,18 @@ try {
         await page.getByRole("heading", { name: route === "/calendar" ? "Your calendar" : "Following", exact: true }).waitFor();
         assert.equal(await page.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Calendar opens directly without a reveal surface");
         assert.equal(await rail.locator('[aria-current="page"]').count(), 1, "One primary rail destination is selected");
+        if (route === "/calendar") {
+          const sidebar = page.getByRole("complementary", { name: "Calendar navigation" });
+          await sidebar.waitFor();
+          const left = await page.locator(".calendar-workspace > .calendar-cardwrap").boundingBox();
+          const right = await sidebar.boundingBox();
+          assert(right.x >= left.x + left.width, "Date navigator sits beside the schedule");
+          assert.equal(await page.getByRole("combobox", { name: "View calendar" }).count(), 1, "Only one visible calendar filter");
+          const date = sidebar.locator(".calendar-mini-grid button:not(:disabled)").first();
+          if (await date.count()) { await date.click(); assert(await date.getAttribute("aria-pressed") === "true", "Date selection is reflected"); }
+        }
         await page.getByRole("button", { name: "Month view", exact: true }).click();
+        assert.equal(await page.locator(".calendar-date-sidebar:visible").count(), 0, "Month view uses the full width");
         await page.locator(".monthblock").first().waitFor();
         if (route === "/calendar") {
           await page.locator(".monthblock").nth(3).scrollIntoViewIfNeeded();
