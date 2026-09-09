@@ -6,7 +6,7 @@ import {spawn,execFileSync} from 'node:child_process';
 import {webkit, chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 const fixture=execFileSync(process.execPath,['--import','tsx','scripts/event-fixtures.ts'],{env:{...process.env,DATABASE_URL:''},encoding:'utf8'}).trim().split('\n').at(-1);
-const f=JSON.parse(fs.readFileSync(fixture,'utf8')),base='https://localhost:3196';
+const f=JSON.parse(fs.readFileSync(fixture,'utf8')),base='https://127.0.0.1:3196';
 const log=fs.openSync(`${f.directory}/server.log`,'w');
 const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','-p','3195','-H','127.0.0.1'],{env:{...process.env,DATABASE_URL:'',PGLITE_DATA_DIR:f.dataDir,SESSION_SECRET:f.secret,ADMIN_EMAILS:'',ALLOW_EMBEDDED_DB_IN_PRODUCTION:'true',RESEND_API_KEY:'',BLOB_READ_WRITE_TOKEN:'',INVITE_ONLY:'false',FANS_ENABLED:'true',NEXT_PUBLIC_ORIGIN:base},stdio:['ignore',log,log]});
 execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',`${f.directory}/key.pem`,'-out',`${f.directory}/cert.pem`,'-days','1','-subj','/CN=localhost'],{stdio:'ignore'});
@@ -51,6 +51,13 @@ try{
     const ctx=await browser.newContext({ignoreHTTPSErrors:true,viewport,reducedMotion:'reduce'});await ctx.addCookies([{name:'fl_session',value:f.admin,url:base,httpOnly:true}]);const desk=await ctx.newPage();
     await desk.goto(`${base}/s/${f.slug}/manage/registrations`);await desk.locator('.app-launch').waitFor({state:'detached'});
     await desk.getByRole('heading',{name:'Attendees',exact:true}).waitFor();
+    await desk.getByRole('combobox',{name:'Choose a signup QR',exact:true}).selectOption(f.classes[1].id);
+    const signupLink=desk.getByRole('link',{name:'Open this signup page',exact:true});
+    assert.equal(await signupLink.getAttribute('href'),`/s/${f.slug}/register?class=${f.classes[1].id}&d=${f.date}`);
+    const classQr=desk.locator('.event-qr img').last();
+    await classQr.evaluate(img=>img.decode());
+    assert.match(await classQr.getAttribute('src'),new RegExp(`class=${f.classes[1].id}&d=${f.date}`));
+
     if(viewport.width===820) {
       await desk.getByRole('button',{name:'Confirm place',exact:true}).click();await desk.getByText('No one is waiting yet.',{exact:true}).waitFor();
       await confirm.reload();await confirm.getByRole('heading',{name:'You’re signed up'}).waitFor();

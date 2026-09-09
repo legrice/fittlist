@@ -23,6 +23,10 @@ export function EventRegistrationDesk(initial:{event:EventSchedule;roster:Attend
   const act=async(id:string,fn:()=>Promise<{ok:boolean;error?:string}>)=>{if(busy.current)return;busy.current=true;refreshSequence.current++;setPending(id);setMessage("");try{const result=await withTimeout(fn(),20000);setMessage(result.ok ? (id==='walkup' ? "Signup link sent. The attendee must verify their email to register or join the waitlist." : "Saved") : result.error || "Couldn’t save. Try again.");if(result.ok){if(id==='settings')dirty.current=false;await refresh();}}catch{setMessage("Connection interrupted. Refresh and try again.");}finally{busy.current=false;setPending("");}};
   const visible=roster.filter(r=>(!filter || r.classId===filter) && `${r.name} ${r.email}`.toLowerCase().includes(query.toLowerCase()));
   const published=publishedDate===event.date;
+  const [qrClass,setQrClass]=useState("");
+  const qrSelection=event.classes.find(c=>c.id===qrClass && c.public && c.capacity);
+  const qrQuery=qrSelection ? `?class=${encodeURIComponent(qrSelection.id)}&d=${encodeURIComponent(event.date!)}` : "";
+  const signupHref=`/s/${event.slug}/register${qrQuery}`;
   return <main className="event-desk">
     <header><Link href={`/s/${event.slug}/manage`}>← Space dashboard</Link><h1>{event.name}</h1><p>Registration desk · {event.date ? fmtDateLong(event.date) : "Choose a date"}</p></header>
     <div className="event-desk-toolbar"><button className="ghost" disabled={!!pending} onClick={()=>void act("refresh",async()=>({ok:true}))}>Refresh tally</button>{published && <><Link className="btn" href={`/s/${event.slug}/register`} target="_blank">Open attendee signup</Link><a className="ghost" href={`/api/events/${event.slug}/export`}>Export attendee CSV</a></>}</div>
@@ -41,6 +45,15 @@ export function EventRegistrationDesk(initial:{event:EventSchedule;roster:Attend
       <h2>Attendee signup</h2>{published ? <><img src={`/api/events/${event.slug}/qr`} alt={`QR code for ${event.name} registration`} width={240} height={240}/><p>Have attendees scan this with their own phones. Keep your iPad on this registration desk.</p><Link href={`/s/${event.slug}/register`} target="_blank">fittlist.co/s/{event.slug}/register</Link></> : <p>Save the event’s date and class limits to activate its signup link and QR code.</p>}
       <p>Attendees verify their email, confirm a place, and can share the class. Optional profile setup comes later.</p>
     </section></div></details>
+    {published && <section className="event-panel event-qr">
+      <h2>Class signup QR</h2>
+      <label>Choose a signup QR<select aria-label="Choose a signup QR" value={qrSelection?.id || ""} onChange={e=>setQrClass(e.target.value)}><option value="">All event classes</option>{event.classes.filter(c=>c.public && c.capacity).map(c=><option key={c.id} value={c.id}>{fmtTime(c.time)} · {c.name}</option>)}</select></label>
+      <h3>{qrSelection ? `${fmtTime(qrSelection.time)} · ${qrSelection.name}` : event.name}</h3>
+      <img key={qrQuery} src={`/api/events/${event.slug}/qr${qrQuery}`} alt={`Signup QR for ${qrSelection?.name || event.name}`} width={320} height={320}/>
+      <p>Scan, enter your name and email, then confirm by email. Your confirmed class goes straight into your FittList calendar. No profile setup needed.</p>
+      <Link className="event-secondary" href={signupHref} target="_blank">Open this signup page</Link>
+      <a className="event-secondary" href={`/api/events/${event.slug}/qr${qrQuery}`} target="_blank" rel="noopener noreferrer">Open QR full screen</a>
+    </section>}
     {published && <details className="event-panel event-walkup"><summary>Send a walk-up signup link</summary><p>Enter the attendee’s details with their permission. They confirm by email on their own device; your iPad stays signed in as an admin.</p><form onSubmit={e=>{e.preventDefault();if(!walkConsent)return;void act('walkup',async()=>{const result=await requestMagicLink(walkEmail,null,"signup",{studioId:event.id,classId:walkClass,date:event.date!,name:walkName});if(result.ok){setWalkName("");setWalkEmail("");setWalkClass("");setWalkConsent(false);}return result;});}}>
       <div className="event-roster-filters"><label>Attendee name<input autoComplete="off" required minLength={2} maxLength={80} value={walkName} onChange={e=>setWalkName(e.target.value)} /></label><label>Attendee email<input autoComplete="off" type="email" inputMode="email" required maxLength={254} value={walkEmail} onChange={e=>setWalkEmail(e.target.value)} /></label></div>
       <label>Choose a class<select aria-label="Choose a class" required value={walkClass} onChange={e=>setWalkClass(e.target.value)}><option value="">Select a class</option>{event.classes.filter(c=>c.public && c.capacity && !c.past && !event.closed && (c.count<c.capacity || c.waitlistEnabled)).map(c=><option key={c.id} value={c.id}>{fmtTime(c.time)} · {c.name} · {c.waiting>0 || c.count>=c.capacity! ? "Waitlist" : `${c.capacity!-c.count} places left`}</option>)}</select></label>

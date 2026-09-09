@@ -33,6 +33,15 @@ async function main() {
   const date='2099-09-12',dow=(new Date(date+'T12:00:00Z').getUTCDay()+6)%7;
   const [cls,second]=await db.insert(schema.classes).values([{userId:people[0].id,studioId:studio.id,name:'Expo Strength',dayOfWeek:dow,specificDate:date,startTime:'10:00',durationMin:45,isPublic:true,rsvp:true,registrationCapacity:2},{userId:people[0].id,studioId:studio.id,name:'Expo Yoga',dayOfWeek:dow,specificDate:date,startTime:'11:00',durationMin:45,isPublic:true,rsvp:true,registrationCapacity:20}]).returning();
   async function as<T>(i:number,fn:()=>Promise<T>){const token=await new SignJWT({uid:people[i].id,sv:0}).setProtectedHeader({alg:'HS256'}).setExpirationTime('1h').sign(new TextEncoder().encode(process.env.SESSION_SECRET));return request.run(new Map([['fl_session',token]]),fn);}
+  const {GET:qr}=await import('../src/app/api/events/[slug]/qr/route');
+  const qrParams={params:Promise.resolve({slug:studio.slug!})};
+  const qrResponse=await qr(new Request(`https://example.test/api/events/test-expo/qr?class=${cls.id}&d=${date}`),qrParams);
+  assert.equal(qrResponse.status,200,'Specific class QR is available');
+  const QRCode=(await import('qrcode')).default;
+  const {siteOrigin}=await import('../src/lib/format');
+  assert.equal(await qrResponse.text(),await QRCode.toString(`${siteOrigin()}/s/test-expo/register?class=${cls.id}&d=${date}`,{type:'svg',margin:3,errorCorrectionLevel:'M'}),'QR encodes the exact class and event date');
+  assert.equal((await qr(new Request(`https://example.test/api/events/test-expo/qr?class=${cls.id}&d=2099-09-13`),qrParams)).status,404,'Stale dates cannot create a class QR');
+  assert.equal((await qr(new Request(`https://example.test/api/events/test-expo/qr?class=${other.id}&d=${date}`),qrParams)).status,404,'Unknown classes cannot create a QR');
   const intent={studioId:studio.id,classId:cls.id,date,name:'Taylor Reed'};
   assert(await validateRegistrationIntent(intent));assert.equal(await validateRegistrationIntent({...intent,studioId:other.id}),null);assert.equal(await validateRegistrationIntent({...intent,date:'2099-02-31'}),null);
   const attempts=await Promise.all([2,3,4].map(i=>writeAttendance(people[i].id,cls.id,date,true,studio.id)));
