@@ -55,6 +55,8 @@ export function DesktopChrome({
     if (searchInput.current) searchInput.current.value = pathname === "/search" ? new URLSearchParams(window.location.search).get("q") ?? "" : "";
   }, [pathname]);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  // Safari can blur the trigger with no relatedTarget before a menu link
+  // receives its click. Close on outside pointer, Escape or navigation instead.
   const calendarRef = useRef<HTMLDivElement>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -101,7 +103,7 @@ export function DesktopChrome({
           <Wordmark variant="ink" />
         </Link>
         <nav className="desktop-nav" aria-label="Main">
-          <div className={`desktop-calendar-switcher${calendarOn ? " on" : ""}${calendarOpen ? " open" : ""}`} ref={calendarRef} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCalendarOpen(false); }}>
+          <div className={`desktop-calendar-switcher${calendarOn ? " on" : ""}${calendarOpen ? " open" : ""}`} ref={calendarRef}>
             <Link className="desktop-calendar-main" href="/calendar" aria-current={personalOn ? "page" : undefined} onClick={() => setCalendarOpen(false)}>
               <Icon name="calendar_month" size={22} />
               <span>Calendar</span>
@@ -166,7 +168,7 @@ export function DesktopChrome({
             <LinkPending className="desktop-nav-spin" />
             {notificationUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread} unread notifications`}>{notificationUnread > 99 ? "99+" : notificationUnread}</b>}
           </Link>
-          <div className="desktop-account" ref={profileRef} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setProfileOpen(false); }}>
+          <div className="desktop-account" ref={profileRef}>
             <button ref={profileButton} type="button" className={`desktop-profile-link${profileOn ? " on" : ""}`} aria-label="Profile menu" aria-expanded={profileOpen} aria-controls="desktop-account-menu" onClick={() => { setProfileOpen(open => !open); setCalendarOpen(false); }}>
               {person.photo ? <img src={person.photo} alt="" /> : <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>}
               {admin && (adminAttention > 0 || adminActivity > 0) && <i className="desktop-account-dot" aria-label="Admin activity" />}

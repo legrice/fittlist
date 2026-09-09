@@ -190,6 +190,12 @@ try {
   }
   await destinations.filter({ hasText: "Studio calendar" }).click();
   await page.waitForURL("**/s/audit-studio/manage/calendar"); await page.getByRole("heading", { name: "Calendar", exact: true }).waitFor(); await frame();
+  await chooser.click();
+  await rail.getByRole("menuitem", { name: "Audit Group Group calendar", exact: true }).click();
+  await page.waitForURL("**/g/audit-group");
+  await rail.getByRole("button", { name: "Profile menu", exact: true }).click();
+  await rail.getByRole("link", { name: "Settings", exact: true }).click();
+  await page.waitForURL("**/settings");
   await visit("/calendar");
   const add = rail.getByRole("button", { name: "Add", exact: true });
   await add.focus();
