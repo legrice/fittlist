@@ -1051,12 +1051,11 @@ export function FollowingScreen({
       {calendarFollowing && <header className="calendar-page-header calendar-page-actions desktop-following-header">
         <div className="calendar-page-title-row">
           <div className="calendar-page-title"><h1>Following</h1></div>
-          <Link className="calendar-header-share" href="/discover"><Icon name="search" size={20} /><span>Find calendars</span></Link>
-        </div>
-        <div className="calendar-desktop-controls">
-          <span className="desktop-calendar-description">Classes from people, studios, and groups you follow</span>
+          <div className="following-heading-actions">
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             {(["day", "month"] as const).map((view) => <button key={view} type="button" className={calendarView === view ? "on" : ""} aria-label={view === "day" ? "Day view" : "Month view"} aria-pressed={calendarView === view} onClick={() => { monthDayRequest.current += 1; setPendingMonthDay(null); setSelectedMonthDay(null); setCalendarView(view); }}><Icon name={view === "day" ? "calendar_view_day" : "calendar_month"} size={21} /></button>)}
+          </div>
+          <Link className="calendar-header-share" href="/discover"><Icon name="search" size={20} /><span>Find calendars</span></Link>
           </div>
         </div>
       </header>}
@@ -1095,7 +1094,7 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && !calendarFollowing && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
-      {!followingSidebar && calendarScope}
+      {calendarScope}
       {isHome && !calendarFollowing && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && calendarFilter !== "people" && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{selectedCalendar.label}</span>
@@ -1323,10 +1322,9 @@ export function FollowingScreen({
       )}
       </div>
       {followingSidebar && <aside className="calendar-date-sidebar following-date-sidebar" aria-label="Following calendar navigation">
-        <CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openMonthDay} onMonthChange={showSidebarMonth} />
+        <CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openMonthDay} onMonthChange={showSidebarMonth} showHint={false} />
         {calendarMonths[sidebarMonth] === "loading" && <p role="status">Loading dates…</p>}
         {calendarMonths[sidebarMonth] === "error" && <button type="button" className="calendar-load-more" onClick={() => void ensureMonth(sidebarMonth)}>Retry loading dates</button>}
-        <section className="calendar-sidebar-filters"><h2>Calendars you follow</h2>{calendarScope}</section>
       </aside>}
       </div>
       </div>

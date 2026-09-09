@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icon";
 
-export function CalendarMiniMonth({ todayIso, dates, onDay, onMonthChange }: {
+export function CalendarMiniMonth({ todayIso, dates, onDay, onMonthChange, showHint = true }: {
   todayIso: string;
   dates: ReadonlyMap<string, readonly unknown[]>;
   onDay: (iso: string) => void;
+  showHint?: boolean;
   onMonthChange?: (month: string) => void;
 }) {
   const [offset, setOffset] = useState(0);
@@ -29,6 +30,6 @@ export function CalendarMiniMonth({ todayIso, dates, onDay, onMonthChange }: {
         return <button key={iso} type="button" className={`${total ? "has-classes" : ""}${selected === iso ? " selected" : ""}`} disabled={iso < todayIso || !total} aria-current={iso === todayIso ? "date" : undefined} aria-pressed={selected === iso} aria-label={`${new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, ${total} ${total === 1 ? "class" : "classes"}`} onClick={() => { setSelected(iso); onDay(iso); }}>{i + 1}{total > 0 && <i aria-hidden="true" />}</button>;
       })}
     </div>
-    <p>Highlighted dates have classes in this view.</p>
+    {showHint && <p>Highlighted dates have classes in this view.</p>}
   </section>;
 }

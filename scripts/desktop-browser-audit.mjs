@@ -98,7 +98,7 @@ try {
           await sidebar.waitFor();
           const left = await page.locator(".following-schedule-column").boundingBox();
           assert((await sidebar.boundingBox()).x >= left.x + left.width, "Following date navigator sits beside its schedule");
-          assert.equal(await sidebar.locator('[aria-label="Calendar scope"]').count(), 1, "Following filters live in the sidebar");
+          assert.equal(await page.locator('.following-schedule-column [aria-label="Calendar scope"]').count(), 1, "Following filters sit above the listing");
         }
         await page.getByRole("button", { name: "Month view", exact: true }).click();
         assert.equal(await page.locator(".calendar-date-sidebar:visible").count(), 0, "Month view uses the full width");

@@ -15957,11 +15957,6 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 
 @media (min-width:940px) {
   .following-schedule-column { min-width:0; }
-  .following-date-sidebar .calendar-scope-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 8px; overflow:visible; padding:0; }
-  .following-date-sidebar .calendar-person-chip { width:100%; min-width:0; }
-  .following-date-sidebar .calendar-person-chip small { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
-  .following-date-sidebar .following-head { margin:0; }
-  .following-date-sidebar .calendar-sidebar-filters { max-height:40vh; overflow-y:auto; }
   .screen.hasnav .following-workspace [id^="feed-day-"] { scroll-margin-top:100px; }
   .following-workspace.has-sidebar .dayband { top:80px; }
 }
@@ -15981,4 +15976,10 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 @media (min-width:940px) and (max-width:1100px) {
   .discover-results-workspace { grid-template-columns:minmax(0,1fr) 270px; gap:24px; }
   .discover-filter-sidebar { padding:16px; }
+}
+
+@media (min-width:940px) {
+  .following-heading-actions { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .desktop-following-header .calendar-page-title-row { align-items:center; }
+  .following-schedule-column .explore-calendar-rail { max-width:100%; min-width:0; }
 }
