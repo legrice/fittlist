@@ -15965,3 +15965,20 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .screen.hasnav .following-workspace [id^="feed-day-"] { scroll-margin-top:100px; }
   .following-workspace.has-sidebar .dayband { top:80px; }
 }
+
+.discover-filter-sidebar > h2, .discover-filter-label { display:none; }
+@media (min-width:940px) {
+  .discover-results-workspace { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:32px; align-items:start; margin-top:24px; }
+  .discover-results-column { grid-column:1; grid-row:1; min-width:0; }
+  .discover-filter-sidebar { grid-column:2; grid-row:1; position:sticky; top:104px; padding:20px; border:1px solid var(--kinetic-control-border); border-radius:20px; background:var(--kinetic-surface); }
+  .discover-filter-sidebar > h2 { display:block; margin:0 0 18px; font-size:18px; font-weight:700; }
+  .discover-filter-sidebar .discover-tab-filters { display:flex; flex-direction:column; align-items:stretch; gap:16px; margin:0; padding:0; overflow:visible; }
+  .discover-filter-sidebar .discover-tab-filters > label { display:block; width:100%; min-width:0; max-width:none; flex:none; }
+  .discover-filter-label { display:block; margin:0 0 7px; font-size:13px; font-weight:600; color:var(--muted); }
+  .discover-filter-sidebar select { width:100%; min-width:0; }
+  .discover-results-column > :first-child { margin-top:0; }
+}
+@media (min-width:940px) and (max-width:1100px) {
+  .discover-results-workspace { grid-template-columns:minmax(0,1fr) 270px; gap:24px; }
+  .discover-filter-sidebar { padding:16px; }
+}
