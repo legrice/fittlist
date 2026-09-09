@@ -16029,3 +16029,25 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   }
   .studio-manage-shell > .gym-manage-pad { width:100%; max-width:none; margin-inline:0; padding-inline:0; }
 }
+
+/* Keep the footer behind the mobile action surface as its rounded edge lifts. */
+@media (max-width:939px) {
+  .calendar-action-sheet:has(> .calendar-community-footer) {
+    isolation:isolate;
+    background:var(--kinetic-canvas-dark);
+  }
+  .calendar-action-sheet > :is(.calendar-action-hub,.calendar-following-surface) {
+    border-bottom-left-radius:32px;
+    border-bottom-right-radius:32px;
+    box-shadow:0 16px 24px -18px rgba(0,0,0,.3);
+  }
+  .calendar-action-sheet > .calendar-community-footer {
+    position:sticky;
+    bottom:0;
+    flex-shrink:0;
+    background:var(--kinetic-canvas-dark);
+  }
+}
+@media (max-width:939px) and (prefers-reduced-motion:reduce) {
+  .calendar-action-sheet > .calendar-community-footer { position:relative; }
+}
