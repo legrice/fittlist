@@ -1,4 +1,6 @@
 "use client";
+import { withTimeout } from "@/lib/async";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -91,7 +93,8 @@ export function GroupAddClass({ slug }: { slug: string }) {
   const show = () => {
     setOpen(true);
     if (catalog || loading) return;
-    startLoading(async () => setCatalog(await groupClassCatalog()));
+    setError("");
+    startLoading(async () => { try {setCatalog(await withTimeout(groupClassCatalog()));} catch {setError("Couldn’t load classes. Close and try again.");} });
   };
   const close = () => { if (!pending) { setOpen(false); setSelected([]); setError(""); } };
   const save = () => start(async () => {
@@ -103,8 +106,8 @@ export function GroupAddClass({ slug }: { slug: string }) {
     router.refresh();
   });
   const createNew = () => startLoading(async () => {
-    const data = composer ?? await globalComposerData();
-    if (!data) return setError("Sign in to create a class.");
+    const data = composer ?? await withTimeout(globalComposerData()).catch(() => null);
+    if (!data) return setError("Couldn’t load class tools. Please try again.");
     if (!data.canCoach) return setError("A new public class needs a coach profile. You can still add any nearby class below.");
     setComposer(data);
     setOpen(false);
@@ -164,7 +167,7 @@ function NearbyClassPicker({ catalog, selected, toggle, loading }: { catalog: Gr
     }
     return true;
   });
-  return <section className="group-nearby-classes"><div className="group-nearby-head"><h3>Classes near you</h3><small>{visible.length} {visible.length === 1 ? "class" : "classes"}</small></div><div className="group-class-filters" aria-label="Filter nearby classes"><label><span>When</span><select value={when} onChange={(event) => setWhen(event.target.value)}><option value="today">Today</option><option value="tomorrow">Tomorrow</option><option value="week">This week</option><option value="month">Next 30 days</option></select></label><label><span>Activity</span><select value={classType} onChange={(event) => setClassType(event.target.value)}><option value="">All activities</option>{classTypes.map((value) => <option value={value} key={value}>{value}</option>)}</select></label><label><span>Place</span><select value={place} onChange={(event) => setPlace(event.target.value)}><option value="">All places</option>{places.map((value) => <option value={value} key={value}>{value}</option>)}</select></label><label><span>Distance</span><select value={distance} onChange={(event) => setDistance(event.target.value)} disabled={catalog?.myLat == null || catalog.myLng == null}><option value="">Any distance</option><option value="2">Within 2 miles</option><option value="5">Within 5 miles</option><option value="10">Within 10 miles</option><option value="25">Within 25 miles</option></select></label></div><div className="create-group-classes">{loading && !catalog ? <p>Finding classes near you…</p> : !visible.length ? <p>No public classes match these filters.</p> : visible.map((item) => { const key=`${item.classId}|${item.iso}`; const on=selected.includes(key); return <button type="button" className={`create-group-class${on ? " on" : ""}`} onClick={() => toggle(key)} key={key}><span><strong>{item.name}</strong><small>{item.detail}</small></span><Icon name={on ? "check_circle" : "add_circle"} size={22} /></button>; })}</div></section>;
+  return <section className="group-nearby-classes"><div className="group-nearby-head"><h3>Classes near you</h3><small>{visible.length} {visible.length === 1 ? "class" : "classes"}</small></div><div className="group-class-filters" aria-label="Filter nearby classes"><label><span>When</span><select value={when} onChange={(event) => setWhen(event.target.value)}><option value="today">Today</option><option value="tomorrow">Tomorrow</option><option value="week">This week</option><option value="month">Next 30 days</option></select></label><label><span>Activity</span><select value={classType} onChange={(event) => setClassType(event.target.value)}><option value="">All activities</option>{classTypes.map((value) => <option value={value} key={value}>{value}</option>)}</select></label><label><span>Place</span><select value={place} onChange={(event) => setPlace(event.target.value)}><option value="">All places</option>{places.map((value) => <option value={value} key={value}>{value}</option>)}</select></label><label><span>Distance</span><select value={distance} onChange={(event) => setDistance(event.target.value)} disabled={catalog?.myLat == null || catalog.myLng == null}><option value="">Any distance</option><option value="2">Within 2 miles</option><option value="5">Within 5 miles</option><option value="10">Within 10 miles</option><option value="25">Within 25 miles</option></select></label></div><div className="create-group-classes">{loading && !catalog ? <LoadingDots label="Finding classes near you"/> : !visible.length ? <p>No public classes match these filters.</p> : visible.map((item) => { const key=`${item.classId}|${item.iso}`; const on=selected.includes(key); return <button type="button" className={`create-group-class${on ? " on" : ""}`} onClick={() => toggle(key)} key={key}><span><strong>{item.name}</strong><small>{item.detail}</small></span><Icon name={on ? "check_circle" : "add_circle"} size={22} /></button>; })}</div></section>;
 }
 
 function offsetIso(iso: string, days: number) {

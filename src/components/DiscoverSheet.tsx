@@ -6,8 +6,10 @@ import { LoadingDots } from "@/components/LoadingDots";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { discoverPeople, type DiscoverData } from "@/app/actions/discover";
-import { searchDirectory, type SearchGroup } from "@/app/actions/search";
+import type { DiscoverData } from "@/app/actions/discover";
+import { discoverPeople } from "@/lib/directory-client";
+import type { SearchGroup } from "@/app/actions/search";
+import { searchDirectory } from "@/lib/directory-client";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { DiscoverList } from "@/components/DiscoverList";
 import { Icon } from "@/components/Icon";
@@ -53,6 +55,7 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
     readClientMemory<DiscoverData>(DISCOVER_PEOPLE_MEMORY_KEY),
   );
   const [dataFailed, setDataFailed] = useState(false);
+  const [dataRetry, setDataRetry] = useState(0);
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
@@ -72,6 +75,7 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
 
   useEffect(() => {
     let live = true;
+    setDataFailed(false);
     void loadClientMemory(DISCOVER_PEOPLE_MEMORY_KEY, discoverPeople)
       .then((next) => {
         if (live && next !== null) {
@@ -80,13 +84,13 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
         }
       })
       .catch(() => {
-        // A stale value remains useful; without one, keep the existing loader.
+        // A stale value remains useful; otherwise show a recoverable error.
         if (live && data === null) setDataFailed(true);
       });
     return () => {
       live = false;
     };
-  }, []);
+  }, [dataRetry]);
 
   useEffect(() => {
     const needle = q.trim();
@@ -149,7 +153,7 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
           <h2 id="discover-sheet-title">Discover</h2>
           <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
         </div>
-        {data ? <DiscoverList people={data.people} studios={[]} cities={data.cities} myCity={data.myCity} myLat={data.myLat} myLng={data.myLng} groups={[]} upcoming={[]} backHref="/calendar" hideBack /> : <p className="dissheet-wait"><LoadingDots label="Loading Discover…"/></p>}
+        {data ? <DiscoverList people={data.people} studios={[]} cities={data.cities} myCity={data.myCity} myLat={data.myLat} myLng={data.myLng} groups={[]} upcoming={[]} backHref="/calendar" hideBack /> : dataFailed ? <p className="dissheet-wait">Couldn’t load Discover. <button type="button" className="ghost" onClick={() => setDataRetry(value => value + 1)}>Try again</button></p> : <p className="dissheet-wait"><LoadingDots label="Loading Discover…"/></p>}
       </section>
     </div>,
     document.body,
@@ -274,7 +278,7 @@ export function DiscoverSheet({ onClose, full = false }: { onClose: () => void; 
             </div>
           </>
         ) : dataFailed ? (
-          <p className="dissheet-wait">Couldn&rsquo;t load coaches. Try again in a moment.</p>
+          <p className="dissheet-wait">Couldn&rsquo;t load coaches. <button type="button" className="ghost" onClick={() => setDataRetry(value => value + 1)}>Try again</button></p>
         ) : (
           // Nothing dramatic while it loads: the sheet is already up and the
           // list is the only thing in it, so a spinner would be a second

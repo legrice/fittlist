@@ -1,0 +1,516 @@
+{
+  "before": {
+    "note": "Local production HTTP responses with embedded DB; excludes browser hydration and Discover's client-loaded directory.",
+    "rows": [
+      {
+        "path": "/calendar",
+        "run": 0,
+        "headersMs": 816,
+        "totalMs": 818,
+        "bytes": 103817
+      },
+      {
+        "path": "/calendar",
+        "run": 1,
+        "headersMs": 78,
+        "totalMs": 80,
+        "bytes": 104042
+      },
+      {
+        "path": "/calendar",
+        "run": 2,
+        "headersMs": 70,
+        "totalMs": 72,
+        "bytes": 104042
+      },
+      {
+        "path": "/calendar/following",
+        "run": 0,
+        "headersMs": 85,
+        "totalMs": 88,
+        "bytes": 38717
+      },
+      {
+        "path": "/calendar/following",
+        "run": 1,
+        "headersMs": 74,
+        "totalMs": 76,
+        "bytes": 38627
+      },
+      {
+        "path": "/calendar/following",
+        "run": 2,
+        "headersMs": 68,
+        "totalMs": 70,
+        "bytes": 38627
+      },
+      {
+        "path": "/discover",
+        "run": 0,
+        "headersMs": 34,
+        "totalMs": 39,
+        "bytes": 27875
+      },
+      {
+        "path": "/discover",
+        "run": 1,
+        "headersMs": 35,
+        "totalMs": 37,
+        "bytes": 27875
+      },
+      {
+        "path": "/discover",
+        "run": 2,
+        "headersMs": 32,
+        "totalMs": 33,
+        "bytes": 27875
+      },
+      {
+        "path": "/coachshare",
+        "run": 0,
+        "headersMs": 60,
+        "totalMs": 63,
+        "bytes": 37008
+      },
+      {
+        "path": "/coachshare",
+        "run": 1,
+        "headersMs": 65,
+        "totalMs": 66,
+        "bytes": 37008
+      },
+      {
+        "path": "/coachshare",
+        "run": 2,
+        "headersMs": 58,
+        "totalMs": 60,
+        "bytes": 37008
+      },
+      {
+        "path": "/inbox",
+        "run": 0,
+        "headersMs": 45,
+        "totalMs": 48,
+        "bytes": 24770
+      },
+      {
+        "path": "/inbox",
+        "run": 1,
+        "headersMs": 48,
+        "totalMs": 49,
+        "bytes": 24770
+      },
+      {
+        "path": "/inbox",
+        "run": 2,
+        "headersMs": 42,
+        "totalMs": 44,
+        "bytes": 24770
+      },
+      {
+        "path": "/notifications",
+        "run": 0,
+        "headersMs": 35,
+        "totalMs": 37,
+        "bytes": 20517
+      },
+      {
+        "path": "/notifications",
+        "run": 1,
+        "headersMs": 33,
+        "totalMs": 34,
+        "bytes": 20517
+      },
+      {
+        "path": "/notifications",
+        "run": 2,
+        "headersMs": 33,
+        "totalMs": 34,
+        "bytes": 20517
+      },
+      {
+        "path": "/settings",
+        "run": 0,
+        "headersMs": 53,
+        "totalMs": 55,
+        "bytes": 43215
+      },
+      {
+        "path": "/settings",
+        "run": 1,
+        "headersMs": 47,
+        "totalMs": 48,
+        "bytes": 43215
+      },
+      {
+        "path": "/settings",
+        "run": 2,
+        "headersMs": 38,
+        "totalMs": 39,
+        "bytes": 43215
+      },
+      {
+        "path": "/admin",
+        "run": 0,
+        "headersMs": 48,
+        "totalMs": 50,
+        "bytes": 39736
+      },
+      {
+        "path": "/admin",
+        "run": 1,
+        "headersMs": 47,
+        "totalMs": 48,
+        "bytes": 39736
+      },
+      {
+        "path": "/admin",
+        "run": 2,
+        "headersMs": 42,
+        "totalMs": 43,
+        "bytes": 39736
+      },
+      {
+        "path": "/auditcoach",
+        "run": 0,
+        "headersMs": 41,
+        "totalMs": 45,
+        "bytes": 55192
+      },
+      {
+        "path": "/auditcoach",
+        "run": 1,
+        "headersMs": 37,
+        "totalMs": 40,
+        "bytes": 55192
+      },
+      {
+        "path": "/auditcoach",
+        "run": 2,
+        "headersMs": 41,
+        "totalMs": 45,
+        "bytes": 55192
+      },
+      {
+        "path": "/s/audit-studio",
+        "run": 0,
+        "headersMs": 39,
+        "totalMs": 42,
+        "bytes": 52995
+      },
+      {
+        "path": "/s/audit-studio",
+        "run": 1,
+        "headersMs": 35,
+        "totalMs": 38,
+        "bytes": 52995
+      },
+      {
+        "path": "/s/audit-studio",
+        "run": 2,
+        "headersMs": 35,
+        "totalMs": 38,
+        "bytes": 52995
+      },
+      {
+        "path": "/g/audit-group",
+        "run": 0,
+        "headersMs": 41,
+        "totalMs": 43,
+        "bytes": 41329
+      },
+      {
+        "path": "/g/audit-group",
+        "run": 1,
+        "headersMs": 40,
+        "totalMs": 41,
+        "bytes": 41329
+      },
+      {
+        "path": "/g/audit-group",
+        "run": 2,
+        "headersMs": 39,
+        "totalMs": 41,
+        "bytes": 41329
+      }
+    ]
+  },
+  "after": {
+    "note": "Local production HTTP responses with embedded DB; excludes browser hydration and Discover's client-loaded directory.",
+    "rows": [
+      {
+        "path": "/calendar",
+        "run": 0,
+        "headersMs": 842,
+        "totalMs": 845,
+        "bytes": 103817
+      },
+      {
+        "path": "/calendar",
+        "run": 1,
+        "headersMs": 74,
+        "totalMs": 76,
+        "bytes": 104042
+      },
+      {
+        "path": "/calendar",
+        "run": 2,
+        "headersMs": 66,
+        "totalMs": 68,
+        "bytes": 104042
+      },
+      {
+        "path": "/calendar/following",
+        "run": 0,
+        "headersMs": 62,
+        "totalMs": 64,
+        "bytes": 38611
+      },
+      {
+        "path": "/calendar/following",
+        "run": 1,
+        "headersMs": 51,
+        "totalMs": 53,
+        "bytes": 38521
+      },
+      {
+        "path": "/calendar/following",
+        "run": 2,
+        "headersMs": 56,
+        "totalMs": 58,
+        "bytes": 38521
+      },
+      {
+        "path": "/discover",
+        "run": 0,
+        "headersMs": 28,
+        "totalMs": 29,
+        "bytes": 27693
+      },
+      {
+        "path": "/discover",
+        "run": 1,
+        "headersMs": 32,
+        "totalMs": 33,
+        "bytes": 27693
+      },
+      {
+        "path": "/discover",
+        "run": 2,
+        "headersMs": 26,
+        "totalMs": 28,
+        "bytes": 27693
+      },
+      {
+        "path": "/coachshare",
+        "run": 0,
+        "headersMs": 44,
+        "totalMs": 45,
+        "bytes": 37008
+      },
+      {
+        "path": "/coachshare",
+        "run": 1,
+        "headersMs": 37,
+        "totalMs": 38,
+        "bytes": 37008
+      },
+      {
+        "path": "/coachshare",
+        "run": 2,
+        "headersMs": 38,
+        "totalMs": 41,
+        "bytes": 37008
+      },
+      {
+        "path": "/inbox",
+        "run": 0,
+        "headersMs": 42,
+        "totalMs": 44,
+        "bytes": 24770
+      },
+      {
+        "path": "/inbox",
+        "run": 1,
+        "headersMs": 33,
+        "totalMs": 34,
+        "bytes": 24770
+      },
+      {
+        "path": "/inbox",
+        "run": 2,
+        "headersMs": 33,
+        "totalMs": 34,
+        "bytes": 24770
+      },
+      {
+        "path": "/notifications",
+        "run": 0,
+        "headersMs": 27,
+        "totalMs": 29,
+        "bytes": 20517
+      },
+      {
+        "path": "/notifications",
+        "run": 1,
+        "headersMs": 27,
+        "totalMs": 28,
+        "bytes": 20517
+      },
+      {
+        "path": "/notifications",
+        "run": 2,
+        "headersMs": 30,
+        "totalMs": 31,
+        "bytes": 20517
+      },
+      {
+        "path": "/settings",
+        "run": 0,
+        "headersMs": 53,
+        "totalMs": 55,
+        "bytes": 43215
+      },
+      {
+        "path": "/settings",
+        "run": 1,
+        "headersMs": 39,
+        "totalMs": 41,
+        "bytes": 43215
+      },
+      {
+        "path": "/settings",
+        "run": 2,
+        "headersMs": 58,
+        "totalMs": 60,
+        "bytes": 43215
+      },
+      {
+        "path": "/admin",
+        "run": 0,
+        "headersMs": 57,
+        "totalMs": 59,
+        "bytes": 39736
+      },
+      {
+        "path": "/admin",
+        "run": 1,
+        "headersMs": 52,
+        "totalMs": 53,
+        "bytes": 39736
+      },
+      {
+        "path": "/admin",
+        "run": 2,
+        "headersMs": 49,
+        "totalMs": 50,
+        "bytes": 39736
+      },
+      {
+        "path": "/auditcoach",
+        "run": 0,
+        "headersMs": 64,
+        "totalMs": 68,
+        "bytes": 55192
+      },
+      {
+        "path": "/auditcoach",
+        "run": 1,
+        "headersMs": 60,
+        "totalMs": 64,
+        "bytes": 55192
+      },
+      {
+        "path": "/auditcoach",
+        "run": 2,
+        "headersMs": 62,
+        "totalMs": 67,
+        "bytes": 55192
+      },
+      {
+        "path": "/s/audit-studio",
+        "run": 0,
+        "headersMs": 62,
+        "totalMs": 65,
+        "bytes": 52995
+      },
+      {
+        "path": "/s/audit-studio",
+        "run": 1,
+        "headersMs": 60,
+        "totalMs": 63,
+        "bytes": 52995
+      },
+      {
+        "path": "/s/audit-studio",
+        "run": 2,
+        "headersMs": 58,
+        "totalMs": 62,
+        "bytes": 52995
+      },
+      {
+        "path": "/g/audit-group",
+        "run": 0,
+        "headersMs": 62,
+        "totalMs": 65,
+        "bytes": 43703
+      },
+      {
+        "path": "/g/audit-group",
+        "run": 1,
+        "headersMs": 64,
+        "totalMs": 66,
+        "bytes": 43703
+      },
+      {
+        "path": "/g/audit-group",
+        "run": 2,
+        "headersMs": 58,
+        "totalMs": 60,
+        "bytes": 43703
+      }
+    ]
+  },
+  "loading": {
+    "checks": [
+      {
+        "name": "Navigation dots animate and honor reduced motion",
+        "status": "passed",
+        "elapsedMs": 794
+      },
+      {
+        "name": "Directory API requires sign-in, stays private and rejects invalid input",
+        "status": "passed",
+        "elapsedMs": 106
+      },
+      {
+        "name": "Stalled search shows dots, times out, and retries while the old response remains held",
+        "status": "passed",
+        "elapsedMs": 14805
+      },
+      {
+        "name": "A newer search completes before an older held query",
+        "status": "passed",
+        "elapsedMs": 1090
+      },
+      {
+        "name": "Discover failed directory retries and does not prefetch every profile",
+        "status": "passed",
+        "elapsedMs": 754
+      },
+      {
+        "name": "Add recovers from a failed composer read",
+        "status": "passed",
+        "elapsedMs": 298
+      },
+      {
+        "name": "Studio month failure releases loading and retry preserves the calendar",
+        "status": "passed",
+        "elapsedMs": 3377
+      }
+    ],
+    "limits": [
+      "Isolated synthetic data and simulated transport faults; no production data or emails."
+    ]
+  }
+}

@@ -93,7 +93,7 @@ export function PersonRow({
 }) {
   return (
     <div className="disrow">
-      <Link className="disrow-main" href={`/${c.handle}?from=${from}`}>
+      <Link prefetch={false} className="disrow-main" href={`/${c.handle}?from=${from}`}>
         <span className="disrow-avwrap">
           {c.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -157,7 +157,7 @@ export function PersonRow({
 /** A place: the whole row is the link, and it carries no pill. */
 export function StudioRow({ studio: st, from }: { studio: DirStudio; from: string }) {
   return (
-    <Link className="disrow disrow-studio" href={`/s/${st.slug}?from=${from}`}>
+    <Link prefetch={false} className="disrow disrow-studio" href={`/s/${st.slug}?from=${from}`}>
       <span className="disrow-avwrap">
         {st.photo ? (
           // eslint-disable-next-line @next/next/no-img-element

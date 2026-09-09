@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { withTimeout } from "@/lib/async";
+import { LoadingDots } from "@/components/LoadingDots";
 import { globalComposerData } from "@/app/actions/composer";
 import { setGoing } from "@/app/actions/going";
 import type { PersonalMatch } from "@/app/actions/personal";
@@ -89,9 +91,9 @@ export function GlobalAdd({
     setMatching(true);
     const timer = window.setTimeout(async () => {
       try {
-        const matches = await findStudioMatches(query, placeKind);
+        const matches = await withTimeout(findStudioMatches(query, placeKind));
         if (current) setPlaceMatches(matches);
-      } finally {
+      } catch { if(current)setPlaceMatches([]); } finally {
         if (current) setMatching(false);
       }
     }, 220);
@@ -132,12 +134,16 @@ export function GlobalAdd({
     close();
     setGroupOpen(true);
   };
+  const loadComposer = async () => {
+    try { return data ?? await withTimeout(globalComposerData()); }
+    catch { return null; }
+  };
   const openChooser = () => {
     if (placeOnly) {
       startTransition(async () => {
-        const loaded = data ?? (await globalComposerData());
+        const loaded = await loadComposer();
         if (!loaded) {
-          toast("Sign in to add to FittList");
+          toast("Couldn’t open Add. Please try again.");
           return;
         }
         setData(loaded);
@@ -148,9 +154,9 @@ export function GlobalAdd({
     }
     if (classOnly) {
       startTransition(async () => {
-        const loaded = data ?? (await globalComposerData());
+        const loaded = await loadComposer();
         if (!loaded) {
-          toast("Sign in to add to FittList");
+          toast("Couldn’t open Add. Please try again.");
           return;
         }
         setData(loaded);
@@ -161,9 +167,9 @@ export function GlobalAdd({
       return;
     }
     startTransition(async () => {
-      const loaded = data ?? (await globalComposerData());
+      const loaded = await loadComposer();
       if (!loaded) {
-        toast("Sign in to add to FittList");
+        toast("Couldn’t open Add. Please try again.");
         return;
       }
       setData(loaded);
@@ -176,9 +182,9 @@ export function GlobalAdd({
       return;
     }
     startTransition(async () => {
-      const loaded = data ?? (await globalComposerData());
+      const loaded = await loadComposer();
       if (!loaded) {
-        toast("Sign in to add to FittList");
+        toast("Couldn’t open Add. Please try again.");
         return;
       }
       setData(loaded);
@@ -560,7 +566,7 @@ export function GlobalAdd({
         aria-disabled={pending}
         onClick={() => { if (!pending) openChooser(); }}
       >
-        <Icon name="add" size={triggerIconSize ?? (classOnly ? 30 : 24)} />
+        {pending ? <LoadingDots label="Opening Add" /> : <Icon name="add" size={triggerIconSize ?? (classOnly ? 30 : 24)} />}
         {triggerLabel && <span>{triggerLabel}</span>}
       </button>
       {composer}

@@ -88,7 +88,7 @@ export function HeaderAccountButton({
     if (settingsData) {
       void loadClientMemory("settings-sheet", settingsSheetData).then((next) => {
         if (next) setSettingsData(next);
-      });
+      }).catch(() => {});
       return;
     }
     try {

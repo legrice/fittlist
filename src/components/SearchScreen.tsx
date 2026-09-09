@@ -5,7 +5,8 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { searchDirectory, type SearchGroup } from "@/app/actions/search";
+import type { SearchGroup } from "@/app/actions/search";
+import { searchDirectory } from "@/lib/directory-client";
 import { ClassResults } from "@/components/ClassResults";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
@@ -86,6 +87,7 @@ export function SearchScreen({ todayIso, userId, query, showRecents = true, init
   const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [asked, setAsked] = useState("");
   const [recent, setRecent] = useState<RecentHit[]>([]);
   const [recentExpanded, setRecentExpanded] = useState(false);
@@ -161,7 +163,7 @@ export function SearchScreen({ todayIso, userId, query, showRecents = true, init
       }
     }, 220);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, retry]);
 
   const short = q.trim().length < MIN;
   const nothing = !short && !busy && asked === q.trim() && people.length + studios.length + classes.length + groups.length === 0;
@@ -246,7 +248,7 @@ export function SearchScreen({ todayIso, userId, query, showRecents = true, init
       ) : failed ? (
         <div className="empty-block" role="status" aria-live="polite">
           <h2>Search is unavailable</h2>
-          <p>Try again in a moment.</p>
+          <p>Try again in a moment.</p><button className="ghost" type="button" onClick={() => setRetry(value => value + 1)}>Try again</button>
         </div>
       ) : nothing ? (
         <div className="empty-block">
@@ -284,7 +286,7 @@ export function SearchScreen({ todayIso, userId, query, showRecents = true, init
               <h2 className="srchhead">Groups <span>{groups.length}</span></h2>
               <div className="search-group-list">
                 {groups.map((group) => (
-                  <Link className="search-group-row" href={`/g/${group.slug}?from=search`} key={group.id}>
+                  <Link prefetch={false} className="search-group-row" href={`/g/${group.slug}?from=search`} key={group.id}>
                     {group.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={group.photo} alt="" />

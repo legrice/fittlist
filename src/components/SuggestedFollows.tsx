@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { discoverPeople, type DiscoverData } from "@/app/actions/discover";
+import type { DiscoverData } from "@/app/actions/discover";
+import { discoverPeople } from "@/lib/directory-client";
 import { FavoritePersonButton } from "@/components/FavoritePersonButton";
 import { withTimeout } from "@/lib/async";
 

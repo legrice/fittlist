@@ -1,5 +1,6 @@
 "use client";
 
+import { withTimeout } from "@/lib/async";
 import { LoadingDots } from "@/components/LoadingDots";
 
 
@@ -89,7 +90,7 @@ export function StudioAdminSheet({
     let cancelled = false;
     const timer = window.setTimeout(() => {
       startManagerSearch(async () => {
-        const candidates = await searchStudioManagerCandidates(studio.id, managerSearch);
+        const candidates = await withTimeout(searchStudioManagerCandidates(studio.id, managerSearch)).catch(() => {toast("Couldn’t search admins. Please try again.");return [];});
         if (!cancelled) setManagerCandidates(candidates);
       });
     }, 250);
@@ -131,8 +132,8 @@ export function StudioAdminSheet({
     setOpen(true);
     if (!canSchedule || views !== undefined || viewsPending) return;
     startViews(async () => {
-      const result = await studioPageViews(studio.id);
-      if (!result.ok) {
+      const result = await withTimeout(studioPageViews(studio.id)).catch(() => null);
+      if (!result?.ok) {
         setViews(null);
         return;
       }
@@ -151,7 +152,8 @@ export function StudioAdminSheet({
     setAdminsOpen(true);
     if (admins !== null || adminsPending) return;
     startAdmins(async () => {
-      const result = await studioManagersForSettings(studio.id);
+      const result = await withTimeout(studioManagersForSettings(studio.id)).catch(() => null);
+      if (!result) {toast("Couldn’t load admins. Close and try again.");return;}
       setAdmins(result.people);
       setCanManageAdmins(result.canManage);
     });

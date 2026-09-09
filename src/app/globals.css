@@ -16106,3 +16106,11 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .group-admin-heading h1 { margin:16px 0 8px; }
 .group-admin-panel { margin-top:24px; padding:24px; background:var(--kinetic-surface); border-radius:24px; }
 .group-admin-panel h2 { margin:0 0 20px; }
+
+.link-pending-dots { display:inline-flex; align-items:center; justify-content:center; gap:3px; width:20px; height:16px; color:inherit; }
+.link-pending-dots > span { width:4px; height:4px; border-radius:50%; background:currentColor; animation:calendar-loading-dance 900ms ease-in-out infinite; }
+.link-pending-dots > span:nth-child(2) { animation-delay:120ms; }
+.link-pending-dots > span:nth-child(3) { animation-delay:240ms; }
+.desktop-nav-link:has(.link-pending-dots):not([aria-label]), .desktop-calendar-main:has(.link-pending-dots) { padding-right:40px; }
+@media(prefers-reduced-motion:reduce) { .link-pending-dots > span { animation:none; } }
+.class-open-loading { position:fixed; left:50%; bottom:100px; transform:translateX(-50%); z-index:90; display:grid; place-items:center; padding:12px 20px; border-radius:999px; background:var(--kinetic-surface); color:var(--kinetic-text); box-shadow:0 4px 24px #0002; pointer-events:none; }

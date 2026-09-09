@@ -496,10 +496,14 @@ export function ShareHubScreen({
     if (!adderPromise.current) {
       adderPromise.current = loadClientMemory("calendar-composer", () => loadCalendarComposerData(false));
     }
-    const loaded = await adderPromise.current;
-    adderPromise.current = null;
-    if (loaded) setAdderData(loaded);
-    return loaded;
+    const request = adderPromise.current;
+    try {
+      const loaded = await request;
+      if (loaded) setAdderData(loaded);
+      return loaded;
+    } finally {
+      if (adderPromise.current === request) adderPromise.current = null;
+    }
   };
   const openAdder = async () => {
     if (adderBusy) return;
@@ -544,7 +548,7 @@ export function ShareHubScreen({
       // A cache hit opens the editor without waiting. Refresh its remembered
       // source quietly for the next visit, without moving fields under the
       // user's fingers after the form is already on screen.
-      if (remembered) void loadClientMemory(detailKey, () => personalDetail(id));
+      if (remembered) void loadClientMemory(detailKey, () => personalDetail(id)).catch(() => {});
       setPick(null);
       setEdit({
         id: d.id,

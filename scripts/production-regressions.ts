@@ -75,8 +75,11 @@ async function main() {
   await Promise.all([loadClientMemory("private",loader),loadClientMemory("private",loader)]);
   assert.equal(calls,1);
   invalidateClientMemory("private");assert.equal(readClientMemory("private"),null);
-  await assert.rejects(loadClientMemory("retry",()=>withTimeout(new Promise(()=>{}),5)));
+  let releaseTimedOut!: (value:string)=>void;
+  await assert.rejects(loadClientMemory("retry",()=>new Promise<string>(resolve=>{releaseTimedOut=resolve;}),5),/timed out/);
   assert.equal(await loadClientMemory("retry",()=>Promise.resolve("recovered")),"recovered");
+  releaseTimedOut("stale");await Promise.resolve();
+  assert.equal(readClientMemory("retry"),"recovered","Timed-out reads cannot overwrite a successful retry");
   console.log("Production regressions passed: password limits, image validation, sheet thresholds, bounded reads, account-scoped cache and retry.");
 }
 void main();

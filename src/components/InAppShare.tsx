@@ -28,10 +28,13 @@ export function InAppShare({
   const [sent, setSent] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(initialPeople === null);
   const [failed, setFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [pending, start] = useTransition();
 
   useEffect(() => {
     let live = true;
+    setFailed(false);
+    setLoading(initialPeople === null);
     void loadClientMemory(SHARE_PEOPLE_MEMORY_KEY, peopleForSharing)
       .then((rows) => {
         if (live && rows !== null) {
@@ -45,7 +48,7 @@ export function InAppShare({
       })
       .finally(() => live && setLoading(false));
     return () => { live = false; };
-  }, []);
+  }, [retry]);
 
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -91,7 +94,7 @@ export function InAppShare({
             <b>{sent[person.id] ? "Sent" : person.name}</b>
           </button>
         ))}
-        {!loading && failed && <p>Couldn&rsquo;t load people right now.</p>}
+        {!loading && failed && <p>Couldn&rsquo;t load people right now. <button type="button" className="ghost" onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
         {!loading && !failed && shown.length === 0 && <p>No people match that.</p>}
         {loading && <p><LoadingDots label="Finding people…"/></p>}
       </div>

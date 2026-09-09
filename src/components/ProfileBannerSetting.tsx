@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadProfileBanner, saveProfileBanner } from "@/app/actions/profile-banner";
 import { readPhoto } from "@/lib/photo";
+import { withTimeout } from "@/lib/async";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Icon } from "@/components/Icon";
 import { BodyPortal } from "@/components/BodyPortal";
 
@@ -23,7 +25,7 @@ export function ProfileBannerSetting({ studioId, groupId, compact = false }: { s
     if (!open) return;
     let active = true;
     setReady(false); setChanged(false); setError("");
-    void loadProfileBanner(studioId, groupId).then(value => {
+    void withTimeout(loadProfileBanner(studioId, groupId)).then(value => {
       if (!active) return;
       if (!value) { setError("This profile is not available to edit."); return; }
       setPhoto(value.banner); setReady(true);
@@ -63,8 +65,8 @@ export function ProfileBannerSetting({ studioId, groupId, compact = false }: { s
         setBusy(true); setError(""); readPhoto(file, image => { setPhoto(image); setChanged(true); setBusy(false); }, () => { setError("That photo couldn’t be read."); setBusy(false); });
       }}/>
       {error && <p role="alert">{error}</p>}
-      {!ready && !error && <p role="status">Loading banner…</p>}
-      <div className="profile-banner-controls"><button type="button" className="ghost" disabled={!ready || busy} onClick={() => input.current?.click()}>Choose image</button><button type="button" className="ghost" disabled={!ready || busy || !photo} onClick={() => { setPhoto(null); setChanged(true); }}>Remove image</button><button type="button" className="btn" disabled={!ready || busy || !changed} onClick={() => void save()}>{busy ? "Working…" : "Save banner"}</button></div>
+      {!ready && !error && <LoadingDots label="Loading banner"/>}
+      <div className="profile-banner-controls"><button type="button" className="ghost" disabled={!ready || busy} onClick={() => input.current?.click()}>Choose image</button><button type="button" className="ghost" disabled={!ready || busy || !photo} onClick={() => { setPhoto(null); setChanged(true); }}>Remove image</button><button type="button" className="btn" disabled={!ready || busy || !changed} onClick={() => void save()}>{busy ? <LoadingDots label="Saving banner"/> : "Save banner"}</button></div>
     </section></div></BodyPortal>}
   </>;
 }

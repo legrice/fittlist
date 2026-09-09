@@ -66,6 +66,8 @@ export function CoachPeek({
   const rememberedPeek = readClientMemory<Peek>(memoryKey);
   const [peek, setPeek] = useState<Peek | null>(rememberedPeek);
   const [missing, setMissing] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [messageOpen, setMessageOpen] = useState(false);
   const [relationship, setRelationship] = useState<"off" | "following" | "requested" | null>(rememberedPeek ? (rememberedPeek.following ? "following" : "off") : null);
   const [pinned, setPinned] = useState(initialPinned);
@@ -113,7 +115,10 @@ export function CoachPeek({
   }, []);
 
   useEffect(() => {
+    let active = true;
+    setLoadFailed(false);
     loadClientMemory(memoryKey, () => personPeek(id)).then((res) => {
+      if (!active) return;
       if (!res) {
         invalidateClientMemory(memoryKey);
         setPeek(null);
@@ -124,8 +129,9 @@ export function CoachPeek({
       setPeek(res);
       setMissing(false);
       setRelationship(res.following ? "following" : "off");
-    });
-  }, [id, memoryKey]);
+    }).catch(() => { if (active) setLoadFailed(true); });
+    return () => { active = false; };
+  }, [id, memoryKey, retry]);
 
   useEffect(() => setPinned(initialPinned), [initialPinned]);
 
@@ -225,13 +231,14 @@ export function CoachPeek({
           </button>
           {!self && relationship !== null && <button className={`iconbtn peekpin${pinned ? " on" : ""}`} type="button" disabled={pinPending} aria-label={pinned ? `Remove ${name} from favorites` : `Add ${name} to favorites`} aria-pressed={pinned} onClick={togglePin}><Icon name={pinned ? "star_filled" : "star"} size={21} /></button>}
         </div>
-        {!peek && !missing && (
+        {!peek && !missing && !loadFailed && (
           <div className="peekloading" role="status" aria-live="polite" aria-busy="true">
             <span aria-hidden="true" />
             <p><LoadingDots label="Loading schedule"/></p>
           </div>
         )}
         {missing && <p className="peekempty">That schedule isn&rsquo;t available.</p>}
+        {loadFailed && <p className="peekempty" role="status">Couldn’t refresh this schedule. <button type="button" className="ghost" onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
 
         {/* Identity stays compact: face beside the name, then the person's
             role and location underneath. Actions remain on their own row. */}

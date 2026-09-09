@@ -1325,7 +1325,7 @@ export function FollowingScreen({
       </div>
       {followingSidebar && <aside className="calendar-date-sidebar following-date-sidebar" aria-label="Following calendar navigation">
         <CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openMonthDay} onMonthChange={showSidebarMonth} showHint={false} />
-        {calendarMonths[sidebarMonth] === "loading" && <p role="status">Loading dates…</p>}
+        {calendarMonths[sidebarMonth] === "loading" && <LoadingDots label="Loading dates…"/>}
         {calendarMonths[sidebarMonth] === "error" && <button type="button" className="calendar-load-more" onClick={() => void ensureMonth(sidebarMonth)}>Retry loading dates</button>}
       </aside>}
       </div>

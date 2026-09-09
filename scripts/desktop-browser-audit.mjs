@@ -201,7 +201,11 @@ try {
   await page.waitForURL("**/g/audit-group/manage");
   await page.getByRole("heading", { name:"Members", exact:true }).waitFor();
   const anonymous=await browser.newContext();
-  assert.equal((await anonymous.request.get(base+"/g/audit-group/manage")).status(),404,"Group admin center rejects anonymous access");
+  const denied = await anonymous.request.get(base+"/g/audit-group/manage");
+  const deniedBody = await denied.text();
+  // A loading boundary streams HTTP 200 before the authorization check settles.
+  assert(denied.status() === 404 || deniedBody.includes("NEXT_HTTP_ERROR_FALLBACK;404"), "Group admin center rejects anonymous access");
+  assert(!deniedBody.includes("Profile and settings") && !deniedBody.includes("inviteToken"), "Denied response contains no group management data");
   await anonymous.close();
   await rail.getByRole("button", { name: "Profile menu", exact: true }).click();
   await rail.getByRole("link", { name: "Settings", exact: true }).click();

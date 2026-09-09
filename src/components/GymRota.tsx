@@ -1,5 +1,6 @@
 "use client";
 
+import { withTimeout } from "@/lib/async";
 import { LoadingDots } from "@/components/LoadingDots";
 
 
@@ -190,6 +191,8 @@ export function GymRota({
   const [mobileView, setMobileView] = useState<"day" | "month">("day");
   const [month, setMonth] = useState<GymMonthDto | null>(null);
   const [monthLoading, setMonthLoading] = useState(false);
+  const [monthError,setMonthError]=useState(false);
+  const requestedMonth=useRef<string|undefined>(undefined);
   const [selectedDayIso, setSelectedDayIso] = useState(() => {
     const initialDays = week?.days ?? [];
     const today = localTodayIso();
@@ -247,6 +250,8 @@ export function GymRota({
 
   const loadMonth = useCallback(async (key?: string, force = false) => {
     const request = ++monthRequest.current;
+    requestedMonth.current=key;
+    setMonthError(false);
     if (key && !force) {
       const cached = monthCache.current.get(key);
       if (cached) {
@@ -256,11 +261,14 @@ export function GymRota({
       }
     }
     setMonthLoading(true);
-    const data = await gymMonth(studioId, key);
-    if (request !== monthRequest.current) return;
-    if (data) monthCache.current.set(data.month, data);
-    setMonth(data);
-    setMonthLoading(false);
+    try {
+      const data = await withTimeout(gymMonth(studioId, key));
+      if (request !== monthRequest.current) return;
+      if (!data) throw new Error("Month unavailable");
+      monthCache.current.set(data.month, data);
+      setMonth(data);
+    } catch { if (request === monthRequest.current) setMonthError(true); }
+    finally { if (request === monthRequest.current) setMonthLoading(false); }
   }, [studioId]);
 
   useEffect(() => {
@@ -703,6 +711,8 @@ export function GymRota({
             </div>
           </div>}
 
+          {monthError && <p role="status">Couldn’t load that month. <button type="button" className="ghost" onClick={() => void loadMonth(requestedMonth.current,true)}>Try again</button></p>}
+          {monthLoading && !!month && <LoadingDots label="Loading the month" />}
           {monthLoading && !month ? (
             <div className="rota-month-loading"><LoadingDots label="Loading the month…"/></div>
           ) : month ? (

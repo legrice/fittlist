@@ -32,7 +32,8 @@ try{
   const disabledPage=await anon.newPage();await disabledPage.goto(base+'/s/pro-disabled/register');await disabledPage.getByRole('heading',{name:"That page isn’t here."}).waitFor();await disabledPage.close();
   for(const route of [`/api/events/pro-disabled/qr`,`/api/events/pro-disabled/export`]) assert.equal((await anon.request.get(base+route)).status(),404,'Unapproved space feature routes are unavailable');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  const a11y=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa']).analyze();assert.equal(a11y.violations.filter(v=>['serious','critical'].includes(v.impact)).length,0,JSON.stringify(a11y.violations.map(v=>v.id)));
+  await page.bringToFront();await page.evaluate(()=>document.fonts.ready);
+  const a11y=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa']).analyze();assert.equal(a11y.violations.filter(v=>['serious','critical'].includes(v.impact)).length,0,JSON.stringify(a11y.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))));
   await page.screenshot({path:`${f.directory}/phone-signup.png`,fullPage:true});
   // A different browser context represents the email app opening a fresh tab.
   const fresh=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844},reducedMotion:'reduce'}),confirm=await fresh.newPage();

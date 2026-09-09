@@ -55,6 +55,7 @@ export function AddBrowse({
     readClientMemory<AddBrowseData>(ADD_BROWSE_MEMORY_KEY),
   );
   const [loadFailed, setLoadFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const marksRef = useRef<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
@@ -65,6 +66,7 @@ export function AddBrowse({
 
   useEffect(() => {
     let live = true;
+    setLoadFailed(false);
     void loadClientMemory(ADD_BROWSE_MEMORY_KEY, addBrowse)
       .then((data) => {
         if (data === null) {
@@ -89,7 +91,7 @@ export function AddBrowse({
     return () => {
       live = false;
     };
-  }, []);
+  }, [retry]);
 
   useEffect(() => {
     document.body.classList.add("sheet-open");
@@ -199,7 +201,7 @@ export function AddBrowse({
         </div>
 
         <div className="addbrowse-results">
-          {!days && loadFailed && <p className="peekempty">Couldn&rsquo;t load classes. Try again in a moment.</p>}
+          {!days && loadFailed && <p className="peekempty">Couldn&rsquo;t load classes. <button type="button" className="ghost" onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
           {!days && !loadFailed && <p className="peekempty"><LoadingDots label="Looking at the week…"/></p>}
           {days && days.length === 0 && (
             <p className="peekempty">Nothing listed near you this week yet.</p>

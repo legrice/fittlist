@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { loadNotificationSheet } from "@/app/actions/notifications";
+import { withTimeout } from "@/lib/async";
 import { LoadingDots } from "@/components/LoadingDots";
 import { MarkNotificationsSeen } from "@/components/MarkNotificationsSeen";
 import type { Notif } from "@/components/UpdatesScreen";
@@ -28,7 +29,7 @@ export function NotificationFeed({ initialPage, renderList }: {
     setFailed(false);
     try {
       const result = more && page?.nextCursor
-        ? await loadNotificationSheet(page.nextCursor)
+        ? await withTimeout(loadNotificationSheet(page.nextCursor))
         : await loadClientMemory(MEMORY_KEY, loadNotificationSheet);
       if (mounted.current && result) setPage((current) => more && current ? {
         notifications: [...new Map([...current.notifications, ...result.notifications].map((item) => [item.id, item])).values()],

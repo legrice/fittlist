@@ -61,6 +61,8 @@ jobs:
         run: npm run test:browser
       - name: Desktop structure and navigation
         run: npm run check:desktop-browser
+      - name: Desktop stalled reads and retry recovery
+        run: npm run check:desktop-loading
       - name: Desktop future-month navigation and recovery
         run: AUDIT_DESKTOP=1 npm run check:following-month-browser
       - name: Notification pagination and failure recovery

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { Toast, useToast } from "@/components/Toast";
+import { LoadingDots } from "@/components/LoadingDots";
 import {
   invalidateClientMemory,
   loadClientMemory,
@@ -36,6 +37,7 @@ const DeferredClassPeek = dynamic<DeferredClassPeekProps>(() =>
     }
     return OpenedClassPeek;
   }),
+  { loading: () => <div className="class-open-loading"><LoadingDots label="Opening class" /></div> },
 );
 
 const classMemoryKey = (base: string, id: string, iso?: string) =>
@@ -58,6 +60,7 @@ export function ClassOpener({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<ClassDetail | null>(null);
+  const [loading, setLoading] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   const openRequest = useRef(0);
 
@@ -82,6 +85,7 @@ export function ClassOpener({
           const key = classMemoryKey(base, classId, iso);
           const remembered = readClientMemory<ClassDetail>(key);
           const request = ++openRequest.current;
+          setLoading(!remembered);
           if (remembered) setOpen(remembered);
           else setOpen(null);
           void loadClientMemory<ClassDetail | null>(key, () =>
@@ -104,12 +108,13 @@ export function ClassOpener({
               // A remembered answer is still useful when a quiet refresh
               // fails. A cold tap has no sheet to preserve, so say so.
               if (request === openRequest.current && !remembered)
-                toast("That class isn't available");
-            });
+                toast("Couldn’t open that class. Please try again.");
+            }).finally(() => { if (request === openRequest.current) setLoading(false); });
         }}
       >
         {children}
       </div>
+      {loading && <div className="class-open-loading"><LoadingDots label="Opening class" /></div>}
       {open && (
         <DeferredClassPeek
           detail={open}

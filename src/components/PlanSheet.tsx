@@ -7,6 +7,7 @@ import {
   type PersonalDetail,
 } from "@/app/actions/personal";
 import { Icon } from "@/components/Icon";
+import { LoadingDots } from "@/components/LoadingDots";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { fmtDateLong } from "@/lib/format";
 import {
@@ -60,6 +61,8 @@ export function PlanSheet({
   const p = loaded?.id === id ? loaded : remembered;
   const [missingId, setMissingId] = useState<string | null>(null);
   const missing = missingId === id;
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [cardOpen, setCardOpen] = useState(share);
   const [confirm, setConfirm] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -70,6 +73,7 @@ export function PlanSheet({
     const cached = readClientMemory<PersonalDetail>(key) ?? null;
     setLoaded(cached);
     setMissingId(null);
+    setLoadFailed(false);
     const request = ++detailRequest.current;
     let live = true;
     void loadClientMemory<PersonalDetail | null>(key, () => personalDetail(id))
@@ -85,11 +89,11 @@ export function PlanSheet({
         }
       })
       // A quiet refresh should not replace a remembered entry with an error.
-      .catch(() => {});
+      .catch(() => { if (live && request === detailRequest.current) setLoadFailed(true); });
     return () => {
       live = false;
     };
-  }, [id]);
+  }, [id, retry]);
 
   const where = p?.studioName || p?.location || "";
 
@@ -113,6 +117,8 @@ export function PlanSheet({
           <Icon name="close" size={20} />
         </button>
         <span className="clspeek-grab" aria-hidden="true" />
+        {loadFailed && <p role="status">Couldn’t refresh this plan. <button type="button" className="ghost" onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
+        {!p && !missing && !loadFailed && <LoadingDots label="Loading plan" />}
 
         {missing ? (
           <p className="lead" style={{ textAlign: "center", margin: "56px 0" }}>

@@ -35,6 +35,7 @@
     "check:calendar-window": "node --import tsx scripts/following-calendar-window-check.ts",
     "check:following-month-browser": "node scripts/following-month-audit.mjs",
     "check:desktop-browser": "node scripts/desktop-browser-audit.mjs",
+    "check:desktop-loading": "node scripts/desktop-loading-audit.mjs",
     "check:desktop-performance": "node scripts/desktop-performance-audit.mjs",
     "check:ios-release": "python3 scripts/check-ios-release.py && python3 scripts/ios-release-check.py && node --import tsx scripts/native-link-check.ts",
     "check:iphone-browser": "node scripts/iphone-browser-audit.mjs",

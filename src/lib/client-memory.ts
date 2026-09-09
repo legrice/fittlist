@@ -1,5 +1,7 @@
 "use client";
 
+import { withTimeout } from "@/lib/async";
+
 const DEFAULT_MAX_AGE_MS = 5 * 60 * 1000;
 const MAX_ENTRIES = 100;
 const SCOPE_SEPARATOR = "\u0000";
@@ -93,18 +95,19 @@ export function writeClientMemory<T>(key: string, value: T): void {
 export function loadClientMemory<T>(
   key: string,
   loader: () => Promise<T | null>,
+  timeoutMs = 15_000,
 ): Promise<T | null> {
   const scopedKey = clientKey(key);
   // Before the account scope is bootstrapped (and during SSR), preserve the
   // caller's loading behavior without putting data in shared module memory.
-  if (scopedKey === null) return loader();
+  if (scopedKey === null) return withTimeout(Promise.resolve().then(loader), timeoutMs);
 
   const pending = inFlight.get(scopedKey);
   if (pending) return pending as Promise<T | null>;
 
   const startedRevision = revisionFor(scopedKey);
   const request = Promise.resolve()
-    .then(loader)
+    .then(() => withTimeout(loader(), timeoutMs))
     .then((value) => {
       // Invalidation or an account change removes this exact promise. That
       // prevents a late response from restoring data that is no longer valid.
