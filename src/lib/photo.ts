@@ -157,8 +157,16 @@ async function scaleTo(
   maxEdge: number,
   quality: number,
   dataUrlLimit = DATA_URL_LIMIT,
+  cropAspectRatio?: number,
 ): Promise<string> {
-  let { width, height } = photo;
+  let sourceWidth = photo.width, sourceHeight = photo.height;
+  if (cropAspectRatio) {
+    if (sourceWidth / sourceHeight > cropAspectRatio) sourceWidth = sourceHeight * cropAspectRatio;
+    else sourceHeight = sourceWidth / cropAspectRatio;
+  }
+  const sourceX = (photo.width - sourceWidth) / 2;
+  const sourceY = (photo.height - sourceHeight) / 2;
+  let width = sourceWidth, height = sourceHeight;
   if (width > height && width > maxEdge) {
     height = (height * maxEdge) / width;
     width = maxEdge;
@@ -173,7 +181,7 @@ async function scaleTo(
   const draw = (nextWidth: number, nextHeight: number) => {
     canvas.width = Math.max(1, Math.round(nextWidth));
     canvas.height = Math.max(1, Math.round(nextHeight));
-    context.drawImage(photo.source, 0, 0, canvas.width, canvas.height);
+    context.drawImage(photo.source, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
   };
 
   try {
@@ -218,6 +226,17 @@ async function scaleTo(
     // from the same decoded source on memory-constrained iPhones.
     canvas.width = 1;
     canvas.height = 1;
+  }
+}
+
+/** Match the saved banner's center crop before upload. The compressed data
+ * URL, including base64 overhead, stays below 700KB even for detailed photos. */
+export async function readBannerPhoto(file: File): Promise<string> {
+  const photo = await decodeFile(file);
+  try {
+    return await scaleTo(photo, 1600, 0.82, 700_000, 1600 / 500);
+  } finally {
+    photo.release();
   }
 }
 
