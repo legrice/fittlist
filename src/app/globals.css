@@ -7930,8 +7930,8 @@ html[data-mode="dark"],
 }
 .rota-day-menu > button:hover:not(:disabled, [aria-disabled="true"]) { background: var(--color-surface-hover); }
 .rotaempty {
-  margin: 0; padding: 18px 20px; border: 1px dashed var(--color-border);
-  border-radius: var(--radius-card); background: var(--color-surface-muted);
+  margin: 0; padding: 8px 0; border: 0;
+  border-radius: 0; background: transparent;
   font-size: 13px; color: var(--color-text-secondary);
 }
 /* The rota's slots are the same class card the coach page and the studio page
@@ -8069,6 +8069,7 @@ html[data-mode="dark"],
 .studio-calendar-controls {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
+.calendar-revealed-controls.studio-calendar-controls { justify-content:space-between; }
 .rota-calendar-tools {
   min-width: 0; margin-left: auto; display: flex; align-items: center; justify-content: flex-end; gap: 8px;
 }
