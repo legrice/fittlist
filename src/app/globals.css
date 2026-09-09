@@ -16076,3 +16076,27 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   }
   .desktop-add-fab:hover { filter:brightness(.96); }
 }
+
+/* Profile identity and schedule share one continuous desktop card. */
+@media (min-width:940px) {
+  :is(.studio-profile,.person-profile) .profile-action-gate,
+  .group-page .group-main {
+    row-gap:0;
+    grid-template-rows:auto 1fr;
+  }
+  .pub:is(.studio-profile,.person-profile) .pubhead:not(.pubhead-hero),
+  .pub.group-page .group-hero {
+    margin-bottom:0;
+    border-bottom-left-radius:0;
+    border-bottom-right-radius:0;
+  }
+  :is(.studio-profile,.person-profile) .pubpanel.has-info-sheet > .studio-profile-hub,
+  .person-profile .pubpanel.has-info-sheet > #profile-schedule,
+  .group-page .group-hub-main {
+    align-self:stretch;
+    margin:0;
+    padding:24px 32px 32px;
+    background:var(--kinetic-surface);
+    border-radius:0 0 24px 24px;
+  }
+}
