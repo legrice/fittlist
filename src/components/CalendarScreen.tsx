@@ -803,15 +803,21 @@ export function CalendarScreen({
             {sheet ? <button type="button" className="calendar-page-back" aria-label="Back" onClick={onClose}><Icon name="arrow_back" size={23} /></button> : <Link className="calendar-page-back" href="/you" aria-label="Back to You"><Icon name="arrow_back" size={23} /></Link>}
             <h1>Your calendar</h1>
           </div>
-          <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
-        </div>
-        <div className={`calendar-desktop-controls${view === "list" && !sheet ? " has-calendar-sidebar" : ""}`}>
-          {calendarFilter}
-          <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
+          <div className="calendar-heading-actions">
+            {desktop && <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
             <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
+          </div>}
+          <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
           </div>
         </div>
+        {(!desktop || view !== "list" || sheet) && <div className={`calendar-desktop-controls${view === "list" && !sheet ? " has-calendar-sidebar" : ""}`}>
+          {calendarFilter}
+          {!desktop && <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
+            <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
+            <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
+          </div>}
+        </div>}
       </header>
 
       <div className={`calendar-workspace${view === "list" && !sheet ? " has-sidebar" : ""}`}>

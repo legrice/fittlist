@@ -16062,3 +16062,5 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   box-shadow:none;
   border-radius:0;
 }
+
+.calendar-heading-actions { display:flex; align-items:center; gap:12px; margin-left:auto; flex-shrink:0; }
