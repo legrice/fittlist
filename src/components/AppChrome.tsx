@@ -92,7 +92,7 @@ export async function AppChrome({
       <DesktopChrome
         coach={isCoach}
         scheduleHref={scheduleHref}
-        profileHref={profileHref}
+        profileHref={me.handle ? `/${me.handle}` : "/settings"}
         notificationUnread={unread.notifications}
         messageUnread={unread.messages}
         admin={isAdmin}

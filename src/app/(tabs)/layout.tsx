@@ -118,7 +118,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <DesktopChrome
           coach={isCoach}
           scheduleHref={scheduleHref}
-          profileHref={profileHref}
+          profileHref={me.handle ? `/${me.handle}` : "/settings"}
           notificationUnread={unread.notifications}
           messageUnread={unread.messages}
           admin={isAdmin}

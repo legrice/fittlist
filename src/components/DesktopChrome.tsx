@@ -173,7 +173,7 @@ export function DesktopChrome({
               {person.photo ? <img src={person.photo} alt="" /> : <span className="desktop-profile-avatar-empty" style={{ background: person.color }}>{person.initial}</span>}
               {admin && (adminAttention > 0 || adminActivity > 0) && <i className="desktop-account-dot" aria-label="Admin activity" />}
             </button>
-            {profileOpen && <div id="desktop-account-menu" className="desktop-account-menu" onClick={() => setProfileOpen(false)}>
+            {profileOpen && <div id="desktop-account-menu" className="desktop-account-menu">
               <p>{person.name}</p>
               <Link href={profileHref}><Icon name="person" size={20} />Your profile</Link>
               <Link href="/settings"><Icon name="settings" size={20} />Settings</Link>
