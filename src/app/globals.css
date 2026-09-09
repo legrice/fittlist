@@ -16064,3 +16064,15 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 }
 
 .calendar-heading-actions { display:flex; align-items:center; gap:12px; margin-left:auto; flex-shrink:0; }
+
+.desktop-add-fab { display:none; }
+@media (min-width:940px) {
+  .desktop-add-fab {
+    position:fixed; right:32px; bottom:32px; z-index:35;
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    min-height:60px; padding:0 24px; border:0; border-radius:var(--radius-pill);
+    background:var(--kinetic-accent); color:var(--kinetic-inverse);
+    box-shadow:0 6px 20px rgba(0,0,0,.18); font:inherit; font-weight:700; cursor:pointer;
+  }
+  .desktop-add-fab:hover { filter:brightness(.96); }
+}

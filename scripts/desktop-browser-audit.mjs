@@ -203,7 +203,7 @@ try {
   await rail.getByRole("link", { name: "Settings", exact: true }).click();
   await page.waitForURL("**/settings");
   await visit("/calendar");
-  const add = rail.getByRole("button", { name: "Add", exact: true });
+  const add = page.getByRole("button", { name: "Add", exact: true });
   await add.focus();
   await add.press("Enter"); await centeredDialog("Create");
   await page.waitForFunction(el => el === document.activeElement, await add.elementHandle());

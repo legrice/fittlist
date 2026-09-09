@@ -155,7 +155,6 @@ export function DesktopChrome({
           <button type="submit" aria-label="Search"><Icon name="arrow_forward" size={18} /></button>
         </form>
         <div className="desktop-header-tools">
-          <GlobalAdd triggerClassName="desktop-create" triggerLabel="Add" />
           <Link className={`desktop-nav-link${pathname.startsWith("/inbox") ? " on" : ""}`} href="/inbox" aria-label="Messages" title="Messages" aria-current={pathname.startsWith("/inbox") ? "page" : undefined}>
             <Icon name="chat_bubble" size={22} />
             <span className="desktop-tool-label">Messages</span>
@@ -186,6 +185,7 @@ export function DesktopChrome({
           </div>
         </div>
       </header>
+      <GlobalAdd triggerClassName="desktop-add-fab" triggerLabel="Add" triggerIconSize={24} />
     </>
   );
 }
