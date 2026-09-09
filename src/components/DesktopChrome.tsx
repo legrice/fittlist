@@ -94,6 +94,7 @@ export function DesktopChrome({
   const personalOn = pathname === "/calendar";
   const followingOn = pathname === "/feed" || pathname.startsWith("/calendar/following");
   const calendarOn = personalOn || managedActive;
+  const showCalendarAdd = personalOn || followingOn || managedCalendars.some(calendar => pathname === managedHref(calendar));
   const profileOn = pathname.startsWith(profileHref) || pathname.startsWith("/settings") ||
     (active === "calendar" && !pathname.startsWith("/calendar"));
   return (
@@ -185,7 +186,7 @@ export function DesktopChrome({
           </div>
         </div>
       </header>
-      <GlobalAdd triggerClassName="desktop-add-fab" triggerLabel="Add" triggerIconSize={24} />
+      {showCalendarAdd && <GlobalAdd triggerClassName="desktop-add-fab" triggerLabel="Add" triggerIconSize={24} />}
     </>
   );
 }
