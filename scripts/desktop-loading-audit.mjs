@@ -22,7 +22,13 @@ async function check(name, run) {
   const page = await context.newPage(); page.setDefaultTimeout(20000);
   try { await run(page, context); report.checks.push({ name, status: "passed", elapsedMs: Math.round(performance.now() - start) }); console.log(`PASS ${name}`); }
   catch (error) { report.checks.push({ name, status: "failed", error: error.message }); console.log(`FAIL ${name}: ${error.message}`); await page.screenshot({ path: `${f.directory}/loading-failure-${report.checks.length}.png` }); }
-  finally { await context.close(); }
+  finally {
+    // URL changes can precede the streamed page response. Drain released
+    // fault-injection handlers before disposing their request context.
+    await page.unrouteAll({ behavior: "wait" });
+    await context.unrouteAll({ behavior: "wait" });
+    await context.close();
+  }
 }
 try {
   let ready = false;
@@ -46,6 +52,7 @@ try {
       await page.emulateMedia({ reducedMotion: "reduce" });
       assert.equal(await dot.evaluate(el => getComputedStyle(el).animationName), "none");
       release(); await page.waitForURL("**/discover");
+      await page.locator(".discover-results-workspace").waitFor();
     } finally { release(); }
   });
   await check("Directory API requires sign-in, stays private and rejects invalid input", async (page, context) => {
