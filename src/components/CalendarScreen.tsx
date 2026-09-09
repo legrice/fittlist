@@ -822,6 +822,7 @@ export function CalendarScreen({
 
       <div className={`calendar-workspace${view === "list" && !sheet ? " has-sidebar" : ""}`}>
       <div className={`cardwrap calendar-cardwrap calendar-direct-schedule${!sheet && !classSheetDismissed ? " is-mobile-hidden" : ""}${!desktop && !sheet && classSheetDismissed ? ` calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
+      {desktop && <p className="desktop-calendar-summary">{calendarWeekSummary.title}</p>}
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
           where every day band underneath pins: one writer for that number,

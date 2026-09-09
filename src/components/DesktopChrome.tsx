@@ -89,12 +89,12 @@ export function DesktopChrome({
   }, [calendarOpen]);
 
   const managedHref = (calendar: ManagedCalendarDestination) =>
-    calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`;
+    calendar.kind === "studio" ? `/s/${calendar.slug}/manage` : `/g/${calendar.slug}/manage`;
   const managedActive = managedCalendars.some((calendar) => pathname.startsWith(managedHref(calendar)));
   const personalOn = pathname === "/calendar";
   const followingOn = pathname === "/feed" || pathname.startsWith("/calendar/following");
   const calendarOn = personalOn || managedActive;
-  const showCalendarAdd = personalOn || followingOn || managedCalendars.some(calendar => pathname === managedHref(calendar));
+  const showCalendarAdd = personalOn || followingOn || managedCalendars.some(calendar => pathname === (calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`));
   const profileOn = pathname.startsWith(profileHref) || pathname.startsWith("/settings") ||
     (active === "calendar" && !pathname.startsWith("/calendar"));
   return (
@@ -127,8 +127,9 @@ export function DesktopChrome({
                   <span><strong>Your calendar</strong><small>Your classes and shifts</small></span>
                   {personalOn && <Icon name="check" size={18} />}
                 </Link>
-                {managedCalendars.length > 0 && <p role="presentation">Managed calendars</p>}
-                {managedCalendars.map((calendar) => {
+                {(["studio", "group"] as const).map(kind => <div key={kind} role="group" aria-label={kind === "studio" ? "Studios" : "Groups"}>
+                {managedCalendars.some(calendar => calendar.kind === kind) && <p role="presentation">{kind === "studio" ? "Studios" : "Groups"}</p>}
+                {managedCalendars.filter(calendar => calendar.kind === kind).map((calendar) => {
                   const href = managedHref(calendar);
                   const selected = pathname.startsWith(href);
                   return (
@@ -137,11 +138,11 @@ export function DesktopChrome({
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         {calendar.photo ? <img src={calendar.photo} alt="" /> : <Icon name={calendar.kind === "studio" ? "storefront" : "groups"} size={19} />}
                       </span>
-                      <span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio calendar" : "Group calendar"}</small></span>
+                      <span><strong>{calendar.name}</strong><small>{calendar.kind === "studio" ? "Studio admin center" : "Group admin center"}</small></span>
                       {selected && <Icon name="check" size={18} />}
                     </Link>
                   );
-                })}
+                })}</div>)}
               </div>
             )}
           </div>

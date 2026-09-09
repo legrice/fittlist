@@ -1061,6 +1061,7 @@ export function FollowingScreen({
         </div>
       </header>}
       <div className={`calendar-workspace following-workspace${followingSidebar ? " has-sidebar" : ""}`}><div className="following-schedule-column">
+      {desktop && calendarFollowing && <p className="desktop-calendar-summary">{followingSummaryText}</p>}
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">

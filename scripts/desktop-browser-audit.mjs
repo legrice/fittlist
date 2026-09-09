@@ -194,11 +194,15 @@ try {
   for (const destination of await destinations.all()) {
     assert(await destination.evaluate(el => { const r = el.getBoundingClientRect(), rail = el.closest(".desktop-left").getBoundingClientRect(); return r.x >= rail.x && r.right <= rail.right; }), "Calendar destination fits within the rail");
   }
-  await destinations.filter({ hasText: "Studio calendar" }).click();
-  await page.waitForURL("**/s/audit-studio/manage/calendar"); await page.getByRole("heading", { name: "Calendar", exact: true }).waitFor(); await frame();
+  await destinations.filter({ hasText: "Studio admin center" }).click();
+  await page.waitForURL("**/s/audit-studio/manage"); await page.getByRole("heading", { name: "Audit Studio", exact: true }).waitFor(); await frame();
   await chooser.click();
-  await rail.getByRole("menuitem", { name: "Audit Group Group calendar", exact: true }).click();
-  await page.waitForURL("**/g/audit-group");
+  await rail.getByRole("menuitem", { name: "Audit Group Group admin center", exact: true }).click();
+  await page.waitForURL("**/g/audit-group/manage");
+  await page.getByRole("heading", { name:"Members", exact:true }).waitFor();
+  const anonymous=await browser.newContext();
+  assert.equal((await anonymous.request.get(base+"/g/audit-group/manage")).status(),404,"Group admin center rejects anonymous access");
+  await anonymous.close();
   await rail.getByRole("button", { name: "Profile menu", exact: true }).click();
   await rail.getByRole("link", { name: "Settings", exact: true }).click();
   await page.waitForURL("**/settings");
