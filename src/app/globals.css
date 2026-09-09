@@ -16022,3 +16022,10 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 }
 
 @media (min-width:940px) { .group-about-action { display:none; } }
+
+@media (min-width:940px) {
+  .screen.hasnav:has(.desktop-top-header) > .pad.studio-manage-shell:has(.gym-manage-pad) {
+    width:100%; max-width:none; margin-inline:0; padding-inline:clamp(24px, 2.5vw, 48px);
+  }
+  .studio-manage-shell > .gym-manage-pad { width:100%; max-width:none; margin-inline:0; padding-inline:0; }
+}
