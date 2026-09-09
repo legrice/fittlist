@@ -107,7 +107,8 @@ try {
           await page.locator(".monthblock").nth(3).scrollIntoViewIfNeeded();
           const strip = page.locator(".scrollhead.on");
           await strip.waitFor();
-          assert((await strip.boundingBox()).y >= (await rail.boundingBox()).height, "Scrolled month toolbar leaves navigation accessible");
+          const stripBox=await strip.boundingBox(), navBox=await rail.boundingBox();
+          assert(stripBox.y >= navBox.y + navBox.height, `Scrolled month toolbar leaves navigation accessible: ${JSON.stringify({stripBox,navBox,style:await strip.evaluate(e=>({top:getComputedStyle(e).top,transform:getComputedStyle(e).transform}))})}`);
         }
         await page.getByRole("button", { name: "Day view", exact: true }).click();
       }
@@ -207,10 +208,8 @@ try {
   await add.press("Enter"); await centeredDialog("Create");
   await page.waitForFunction(el => el === document.activeElement, await add.elementHandle());
   await visit("/s/audit-studio");
-  await page.getByRole("button", { name: "About", exact: true }).click();
   await page.locator("#profile-about").waitFor(); await frame();
-  assert.equal(await page.locator(".profile-info-scrim:visible").count(), 0, "Desktop About expands in the profile page");
-  await page.getByRole("button", { name: "About", exact: true }).click();
+  assert.equal(await page.locator(".profile-info-scrim:visible").count(), 0, "Desktop About stays visible in the profile page");
   const cls = page.locator(".profile-calendar-list [data-cid]").first();
   await cls.click();
   const detail = page.locator(".sheet.clsfull");

@@ -15913,7 +15913,7 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .desktop-account-menu a:hover { background:var(--color-surface-muted); }
   .screen.hasnav:has(.desktop-top-header), .pub.hasnav:has(.desktop-top-header) { padding-left:0; padding-top:80px; }
   .screen.hasnav:has(.desktop-top-header) > .pad, .pub.hasnav:has(.desktop-top-header) .profwrap { max-width:1360px; }
-  .screen.hasnav:has(.desktop-top-header) .scrollhead { left:0; top:80px; padding-inline:max(36px, calc((100vw - 1288px) / 2)); }
+  .screen.hasnav:has(.desktop-top-header) .scrollhead { left:0; top:80px; transform:none; padding-inline:max(36px, calc((100vw - 1288px) / 2)); }
 }
 @media (min-width:940px) and (max-width:1100px) {
   .desktop-top-header { padding-inline:24px; gap:20px; }
