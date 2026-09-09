@@ -24,6 +24,7 @@ import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { useFollowingCalendar } from "@/lib/use-following-calendar";
 import { FOLLOWING_MAX_MONTHS_AHEAD } from "@/lib/calendar-window";
+import { CalendarScopeRail } from "@/components/CalendarScopeRail";
 import { CalendarMiniMonth } from "@/components/CalendarMiniMonth";
 import { CalSticky, MonthHeadRow, MonthScroll, ScrollHead, monthLabel, useScrolledPast, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
@@ -1025,12 +1026,12 @@ export function FollowingScreen({
   const followingSidebar = desktop && calendarFollowing && calendarView === "day";
   const calendarScope = (<>{isHome && !firstRun && !(calendarFollowing && followingSummary.length === 0 && items.length === 0) && (
         <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
-          <div className="calendar-scope-row" aria-label="Calendar scope">
+          <CalendarScopeRail>
             <button type="button" className={`calendar-person-chip${calendarFilter === (calendarFollowing ? "following" : "all") ? " on" : ""}`} aria-pressed={calendarFilter === (calendarFollowing ? "following" : "all")} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter(calendarFollowing ? "following" : "all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
             {!calendarFollowing && <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>}
             {sortedCoachOptions.map((coach, index) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-label={`Show ${coach.name}’s calendar`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading={index < 16 ? "eager" : "lazy"} decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={26} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
             {!calendarFollowing && <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>}
-          </div>
+          </CalendarScopeRail>
         </header>
       )}</>);
   return (

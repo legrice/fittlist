@@ -15983,3 +15983,16 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .desktop-top-header { gap:14px; padding-inline:24px; }
   .desktop-top-header .desktop-nav { gap:2px; }
 }
+
+.calendar-rail-arrow { display:none; }
+@media (min-width:940px) {
+  .following-schedule-column .calendar-scope-carousel { position:relative; min-width:0; width:100%; overflow:hidden; }
+  .following-schedule-column .calendar-scope-carousel .calendar-scope-row { width:100%; max-width:100%; margin-inline:0; padding-inline:4px; overflow-x:auto; }
+  .calendar-scope-carousel.can-scroll-right .calendar-scope-row { mask-image:linear-gradient(to right, black calc(100% - 64px), transparent); }
+  .calendar-scope-carousel.can-scroll-left .calendar-scope-row { mask-image:linear-gradient(to right, transparent, black 64px); }
+  .calendar-scope-carousel.can-scroll-left.can-scroll-right .calendar-scope-row { mask-image:linear-gradient(to right, transparent, black 64px, black calc(100% - 64px), transparent); }
+  .calendar-scope-carousel .calendar-rail-arrow { position:absolute; top:35%; z-index:2; display:grid; place-items:center; width:36px; height:36px; padding:0; border:1px solid var(--line); border-radius:50%; background:var(--paper); color:var(--ink); cursor:pointer; }
+  .calendar-rail-left { left:2px; }
+  .calendar-rail-right { right:2px; }
+  .calendar-scope-carousel .calendar-rail-arrow:disabled { visibility:hidden; pointer-events:none; }
+}
