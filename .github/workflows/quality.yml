@@ -65,6 +65,8 @@ jobs:
         run: npm run check:desktop-loading
       - name: Large photo banner compression and saving
         run: npm run check:banner-browser
+      - name: Studio Back navigation and history
+        run: npm run check:back-browser
       - name: Desktop future-month navigation and recovery
         run: AUDIT_DESKTOP=1 npm run check:following-month-browser
       - name: Notification pagination and failure recovery

@@ -1,112 +1,92 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
-// A record of the pages you've walked through in this tab.
-//
-// Every "back" control in the app knows where it points but not whether that
-// page is actually behind you, so they all pushed. A push labelled back is how
-// you get a loop: tap into a class, tap the coach's name, and Back walks you
-// between the two forever because history only ever grew.
-//
-// This keeps a small stack so those controls can pop instead. Pathnames only,
-// which is deliberate: a destination carrying a query string ("/app?acct=1"
-// opens the account overlay) is a different page from the bare one and must
-// never be satisfied by popping to it.
+// Track actual browser entries, including query changes and replacements.
+// Pathname-only tracking cannot tell a Back from a Forward, or count the
+// calendar's month entries when returning to the page that opened it.
+const KEY = "fl-history-v2";
+const STATE_KEY = "__flNavigationKey";
+const MAX = 100;
+type Entry = { key: string; url: string };
+let entries: Entry[] = [];
+let current = -1;
+const localUrl = () => `${location.pathname}${location.search}${location.hash}`;
+const pathnameOf = (url: string) => url.split(/[?#]/)[0];
 
-const KEY = "fl-hist";
-const MAX = 20;
-
-export function navStack(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = sessionStorage.getItem(KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((p) => typeof p === "string") : [];
-  } catch {
-    return [];
-  }
+function persist() {
+  try { sessionStorage.setItem(KEY, JSON.stringify(entries)); } catch { /* In-memory tracking still works. */ }
 }
 
-/** The page underneath the one you're on, if we know it. */
-export function pageBeneath(): string | null {
-  const stack = navStack();
-  return stack.length >= 2 ? stack[stack.length - 2] : null;
-}
-
-/**
- * One screen, whatever it's calling itself.
- *
- * A coach's page answers to "/sarah" (the schedule), "/sarah/about",
- * "/sarah/studios" and the legacy "/sarah/schedule"; a studio's adds
- * "/contact", which is still a section there. They're separate routes, but
- * one screen wearing several URLs: the header is identical and only the
- * section below it differs. A back control pointing at "/sarah" should pop
- * off any of them rather than pushing another entry onto the pile.
- */
+/** One screen, including the older URLs for its profile sections. */
 export function samePage(a: string, b: string): boolean {
-  const bare = (u: string) => u.replace(/\/(schedule|about|studios|coaches|contact)$/, "") || "/";
+  const bare = (url: string) => pathnameOf(url).replace(/\/(schedule|about|studios|coaches|contact)$/, "") || "/";
   return a === b || bare(a) === bare(b);
 }
 
-function write(stack: string[]) {
-  try {
-    sessionStorage.setItem(KEY, JSON.stringify(stack.slice(-MAX)));
-  } catch {
-    // A full or blocked sessionStorage just means back controls keep pushing.
+/** Number of actual browser entries back to an eligible destination. */
+export function backSteps(href: string, anywhere: boolean, notUnder?: string): number | null {
+  if (typeof window === "undefined" || entries[current]?.key !== history.state?.[STATE_KEY]) return null;
+  const here = location.pathname;
+  for (let i = current - 1; i >= 0; i--) {
+    const path = pathnameOf(entries[i].url);
+    // Month/filter changes are still the same page. A parent's Back must
+    // also skip its own child tools, even when they were opened directly.
+    if (path === here || (notUnder && (path === notUnder || path.startsWith(`${notUnder}/`)))) continue;
+    if (anywhere || (href.includes("?") ? entries[i].url === href : samePage(path, href))) return current - i;
+    return null;
   }
+  return null;
 }
 
 export function NavTrack() {
-  const pathname = usePathname();
-  // Whether the navigation about to be recorded was a step backwards.
-  //
-  // This used to be guessed from the pathname: landing on the page beneath the
-  // top was taken for a back. That guess is wrong exactly where it matters
-  // most, because a profile and a class link to each other. Tap into a class
-  // and then tap the coach's name and you arrive at a pathname that IS the one
-  // beneath, so a genuine step forward was recorded as a step back, the class
-  // fell off the stack, and the profile's arrow no longer knew you had come
-  // from it.
-  //
-  // popstate is the fact rather than the guess. It fires for the browser
-  // button, for a swipe, and for router.back(), and never for a push.
-  //
-  // It is only available for a navigation inside this document, though. A back
-  // that reloads the page (out of the bfcache, or off a hard-loaded entry)
-  // brings up a fresh listener that never saw the event, so the first run
-  // after a load still has to guess, and the old pathname test is the best
-  // guess there is. After that, popstate is authoritative.
-  const popped = useRef(false);
-  const first = useRef(true);
-
   useEffect(() => {
-    const onPop = () => {
-      popped.current = true;
+    const push = history.pushState;
+    const replace = history.replaceState;
+    const newKey = () => crypto.randomUUID();
+    try {
+      const saved: unknown = JSON.parse(sessionStorage.getItem(KEY) || "[]");
+      entries = Array.isArray(saved) ? saved.filter((entry): entry is Entry => !!entry && typeof entry.key === "string" && typeof entry.url === "string" && entry.url.startsWith("/") && !entry.url.startsWith("//")) : [];
+    } catch { entries = []; }
+    current = entries.findIndex(entry => entry.key === history.state?.[STATE_KEY]);
+    const adopt = () => {
+      const key = newKey();
+      // Unknown history is a cold entry, not a reason to guess an origin.
+      entries = [{ key, url: localUrl() }];
+      current = 0;
+      replace.call(history, { ...history.state, [STATE_KEY]: key }, "");
+      persist();
     };
+    if (current < 0) adopt();
+    else { entries[current].url = localUrl(); persist(); }
+
+    const trackedPush: History["pushState"] = function(this: History, data, unused, url) {
+      const key = newKey();
+      push.call(this, { ...data, [STATE_KEY]: key }, unused, url);
+      entries = [...entries.slice(0, current + 1), { key, url: localUrl() }].slice(-MAX);
+      current = entries.length - 1;
+      persist();
+    };
+    const trackedReplace: History["replaceState"] = function(this: History, data, unused, url) {
+      const key = entries[current]?.key ?? newKey();
+      replace.call(this, { ...data, [STATE_KEY]: key }, unused, url);
+      if (current < 0) { entries = [{ key, url: localUrl() }]; current = 0; }
+      else entries[current] = { key, url: localUrl() };
+      persist();
+    };
+    const onPop = () => {
+      current = entries.findIndex(entry => entry.key === history.state?.[STATE_KEY]);
+      if (current < 0) adopt();
+      else { entries[current].url = localUrl(); persist(); }
+    };
+    history.pushState = trackedPush;
+    history.replaceState = trackedReplace;
     window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+    return () => {
+      if (history.pushState === trackedPush) history.pushState = push;
+      if (history.replaceState === trackedReplace) history.replaceState = replace;
+      window.removeEventListener("popstate", onPop);
+    };
   }, []);
-
-  useEffect(() => {
-    const fresh = first.current;
-    first.current = false;
-    const popEvent = popped.current;
-    // Consumed either way, including on the early return: a popstate that
-    // didn't change the path (a hash, a query) must not leave the flag set for
-    // whatever navigation comes next.
-    popped.current = false;
-    const stack = navStack();
-    const top = stack[stack.length - 1];
-    if (top === pathname) return;
-    const wentBack = popEvent || (fresh && stack.length >= 2 && stack[stack.length - 2] === pathname);
-    if (wentBack && stack.length >= 2) {
-      write(stack.slice(0, -1));
-      return;
-    }
-    write([...stack, pathname]);
-  }, [pathname]);
-
   return null;
 }

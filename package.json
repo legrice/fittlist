@@ -37,6 +37,7 @@
     "check:desktop-browser": "node scripts/desktop-browser-audit.mjs",
     "check:desktop-loading": "node scripts/desktop-loading-audit.mjs",
     "check:banner-browser": "node scripts/banner-browser-check.mjs",
+    "check:back-browser": "node scripts/back-browser-check.mjs",
     "check:desktop-performance": "node scripts/desktop-performance-audit.mjs",
     "check:ios-release": "python3 scripts/check-ios-release.py && python3 scripts/ios-release-check.py && node --import tsx scripts/native-link-check.ts",
     "check:iphone-browser": "node scripts/iphone-browser-audit.mjs",

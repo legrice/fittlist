@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { pageBeneath, samePage } from "@/components/NavTrack";
+import { backSteps } from "@/components/NavTrack";
 
 // A "back" navigation: slide the current page out to the right, uncovering
 // what's beneath, and flag the previous page to enter from the left — the
@@ -16,44 +16,17 @@ export function useSlideBack() {
     busy.current = false;
     return () => { if (resetTimer.current) clearTimeout(resetTimer.current); };
   }, [pathname]);
-  // No href means we don't know the destination by name — walk the history
-  // instead, which is literally "where you tapped this from".
-  //
-  // With one, we pop if the page beneath is that destination and push if it
-  // isn't. Pushing unconditionally is what made the coach page and a class
-  // page trap you: both of them link to each other, so every "back" tap added
-  // a step and the browser button could only walk back through the pile.
-  //
-  // `anywhere` widens that: pop to whatever is underneath whether or not it
-  // matches, and use the href only when nothing is. That is what a profile's
-  // arrow means now that it is the only way off the page: back to wherever you
-  // came from, and to the app's front door on a cold open, where "wherever you
-  // came from" is somebody else's website.
-  //
-  // `notUnder` is what stops that becoming a trap. A class belongs to the
-  // profile it hangs off, and its own back points at that profile, so a
-  // profile that pops into one of its own classes bounces forever: open a
-  // class link cold, tap the coach, tap back, and you are on the class again
-  // with nothing but the same two taps available. A page underneath that lives
-  // inside this one is not somewhere you came from, it is somewhere you went,
-  // so the arrow steps over it to the named destination instead.
+  // Use real history for known origins. Cold-open and parent fallbacks
+  // replace the current entry so a Back button never creates a new loop.
   return (href?: string, anywhere = false, notUnder?: string) => {
     if (busy.current) return;
     busy.current = true;
     resetTimer.current = setTimeout(() => { busy.current = false; }, 2000);
     const go = () => {
       if (!href) return router.back();
-      const beneath = pageBeneath();
-      if (anywhere) {
-        const mine = !!beneath && !!notUnder && (beneath === notUnder || beneath.startsWith(`${notUnder}/`));
-        if (beneath && !mine) return router.back();
-        return router.push(href);
-      }
-      // A destination carrying a query string is a different screen from the
-      // bare one ("/app?acct=1" opens the account overlay), so it never counts
-      // as already being underneath.
-      if (beneath && !href.includes("?") && samePage(beneath, href)) return router.back();
-      router.push(href);
+      const steps = backSteps(href, anywhere, notUnder);
+      if (steps !== null) return window.history.go(-steps);
+      router.replace(href);
     };
     if (typeof window !== "undefined") {
       try { sessionStorage.setItem("fl-nav", "back"); } catch { /* Navigation does not require storage. */ }
