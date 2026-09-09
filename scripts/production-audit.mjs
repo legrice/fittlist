@@ -105,7 +105,7 @@ async function signupFlow(browser) {
   await page.getByRole("button",{name:"Finish setup",exact:true}).click();
   await page.waitForURL("**/calendar");
   await page.getByRole("button",{name:"Not now",exact:true}).first().click();
-  await page.getByText("You have nothing on your calendar yet.",{exact:true}).waitFor();
+  await page.getByLabel("Calendar summary",{exact:true}).getByText("You have nothing on your calendar yet.",{exact:true}).waitFor();
   assert.equal(await page.getByRole("heading",{name:"Studios",exact:true}).count(),0);
   assert.equal(await page.locator(".calendar-onboarding-actions").count(),0);
   await page.getByRole("button",{name:"Share week",exact:true}).click();
@@ -126,7 +126,7 @@ async function signupFlow(browser) {
   await page.waitForURL("**/discover?half=groups");
   assert.equal(await page.getByRole("tab",{name:"Groups",exact:true}).getAttribute("aria-selected"),"true");
   await page.goto(`${base}/calendar/following`);
-  await page.getByText("Find your people. See what’s on their calendars.",{exact:true}).waitFor();
+  await page.locator(".calendar-following-head").getByText("Find your people. See what’s on their calendars.",{exact:true}).waitFor();
   await page.getByRole("tab",{name:"People",exact:true}).waitFor();
   report.security.push("New-account You/Following empty states, no Studios section, group discovery and creation entry");
   const result=await action(context,"profile","updateProfile",[{name:"Audit Updated User",title:"Runner",about:"Updated through the real profile action",instagram:"",website:"",location:"New York, NY",locationLat:40.71,locationLng:-74.0}]);
