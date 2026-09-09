@@ -158,13 +158,16 @@ try {
     try {
       await openFollowing(page);
       const initialMonth = monthOf(f.iso);
-      await waitDom(page, () => document.querySelector(".cash-days-more") || [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Show more dates"));
+      const more = page.getByRole("button", { name: "Show more dates", exact: true });
       for (let i = 0; i < 12; i++) {
+        // An exhausted render window can briefly have neither control while
+        // the background response appends more days. Keep scrolling those
+        // newly mounted groups until the actual continuation button appears.
+        await waitDom(page, () => document.querySelector(".cash-days-more") || [...document.querySelectorAll("button")].some(button => button.textContent.trim() === "Show more dates"));
+        if (await more.isVisible()) break;
         const sentinel = page.locator(".cash-days-more");
         if (await sentinel.count()) { const before = await page.locator(".cash-day").count(); await page.evaluate(() => document.querySelector(".cash-days-more")?.scrollIntoView({ block: "center", behavior: "instant" })); await waitDom(page, n => document.querySelectorAll(".cash-day").length > n || !document.querySelector(".cash-days-more"), before); }
-        else break;
       }
-      const more = page.getByRole("button", { name: "Show more dates", exact: true });
       await more.waitFor();
       const before = await page.locator(".cash-day").last().getAttribute("id");
       await more.click();
