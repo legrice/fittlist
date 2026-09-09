@@ -16051,3 +16051,14 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 @media (max-width:939px) and (prefers-reduced-motion:reduce) {
   .calendar-action-sheet > .calendar-community-footer { position:relative; }
 }
+
+/* Empty calendar messages belong on the page, without a blank card behind them. */
+.calendar-surface-schedule .wkempty,
+.calendar-cardwrap:has(> .wkempty),
+.home-schedule:has(> .dayempty),
+.cash-day > div:has(> .dayempty) {
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  border-radius:0;
+}
