@@ -24,6 +24,7 @@ import { CalendarList, ClassLine, type WeekRow } from "@/components/WeekView";
 import { toggleCalendarPin } from "@/app/actions/pins";
 import { useFollowingCalendar } from "@/lib/use-following-calendar";
 import { FOLLOWING_MAX_MONTHS_AHEAD } from "@/lib/calendar-window";
+import { CalendarMiniMonth } from "@/components/CalendarMiniMonth";
 import { CalSticky, MonthHeadRow, MonthScroll, ScrollHead, monthLabel, useScrolledPast, type MonthCellItem } from "@/components/CalendarBits";
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { GlobalAdd } from "@/components/GlobalAdd";
@@ -424,6 +425,11 @@ export function FollowingScreen({
   useEffect(() => {
     alignedMonthDay.current = null;
   }, [initialItems, initialCoaches, initialCats, initialMyRail]);
+  const [sidebarMonth, setSidebarMonth] = useState(todayIso.slice(0, 7));
+  const showSidebarMonth = useCallback((month: string) => {
+    setSidebarMonth(month);
+    if (!calendarMonths[month]) void ensureMonth(month);
+  }, [calendarMonths, ensureMonth]);
   const requestVisibleMonth = useCallback((month: string) => {
     if (!calendarMonths[month]) void ensureMonth(month);
   }, [calendarMonths, ensureMonth]);
@@ -1016,6 +1022,17 @@ export function FollowingScreen({
     const p = f.place as string[];
     return p.length === 1 ? p[0] : `${p.length} places`;
   };
+  const followingSidebar = desktop && calendarFollowing && calendarView === "day";
+  const calendarScope = (<>{isHome && !firstRun && !(calendarFollowing && followingSummary.length === 0 && items.length === 0) && (
+        <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
+          <div className="calendar-scope-row" aria-label="Calendar scope">
+            <button type="button" className={`calendar-person-chip${calendarFilter === (calendarFollowing ? "following" : "all") ? " on" : ""}`} aria-pressed={calendarFilter === (calendarFollowing ? "following" : "all")} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter(calendarFollowing ? "following" : "all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
+            {!calendarFollowing && <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>}
+            {sortedCoachOptions.map((coach, index) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-label={`Show ${coach.name}’s calendar`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading={index < 16 ? "eager" : "lazy"} decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={26} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
+            {!calendarFollowing && <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>}
+          </div>
+        </header>
+      )}</>);
   return (
     <>
       {calendarError && <div className="pad" role="status"><p>The rest of your calendar couldn’t load. Your loaded classes are still available.</p><button type="button" className="ghost" onClick={() => void retryCalendar()}>Try again</button></div>}
@@ -1043,6 +1060,7 @@ export function FollowingScreen({
           </div>
         </div>
       </header>}
+      <div className={`calendar-workspace following-workspace${followingSidebar ? " has-sidebar" : ""}`}><div className="following-schedule-column">
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
@@ -1077,16 +1095,7 @@ export function FollowingScreen({
         </header>
       )}
       {isHome && !calendarFollowing && <PersonalCalendarSheetTrigger className="mobile-calendar-personal-trigger" ariaLabel="Open personal calendar" buttonRef={personalCalendarTriggerRef}>Open personal calendar</PersonalCalendarSheetTrigger>}
-      {isHome && !firstRun && !(calendarFollowing && followingSummary.length === 0 && items.length === 0) && (
-        <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
-          <div className="calendar-scope-row" aria-label="Calendar scope">
-            <button type="button" className={`calendar-person-chip${calendarFilter === (calendarFollowing ? "following" : "all") ? " on" : ""}`} aria-pressed={calendarFilter === (calendarFollowing ? "following" : "all")} onClick={() => { setIncludeYou(true); setSelectedPeople(new Set()); setCalendarFilter(calendarFollowing ? "following" : "all"); }}><span className="calendar-person-face calendar-all-face"><Icon name="calendar_month" size={29} /></span><small>All</small></button>
-            {!calendarFollowing && <button type="button" className={`calendar-person-chip${calendarFilter === "you" ? " on" : ""}`} aria-pressed={calendarFilter === "you"} onClick={() => { const selecting = calendarFilter !== "you"; setIncludeYou(selecting); setSelectedPeople(new Set()); setCalendarFilter(selecting ? "you" : "people"); }}><span className="calendar-person-face" style={{ background:meFace.color }}>{meFace.photo ? <img src={meFace.photo} alt="" /> : <span>{(meFace.name.trim().charAt(0) || "?").toUpperCase()}</span>}</span><small>You</small></button>}
-            {sortedCoachOptions.map((coach, index) => <button key={coach.id} type="button" className={`calendar-person-chip${selectedPeople.has(coach.id) ? " on" : ""}`} aria-label={`Show ${coach.name}’s calendar`} aria-pressed={selectedPeople.has(coach.id)} onClick={() => togglePerson(coach.id)}><span className="calendar-person-face" style={{ background:coach.color }}>{coach.photo ? <img src={coach.photo} alt="" loading={index < 16 ? "eager" : "lazy"} decoding="async" /> : <span>{(coach.name.trim().charAt(0) || "?").toUpperCase()}</span>}{pins.has(`person:${coach.id}`) && <Icon className="calendar-person-star" name="star_filled" size={26} />}</span><small>{coach.name.split(/\s+/)[0]}</small></button>)}
-            {!calendarFollowing && <Link className="calendar-person-chip calendar-discover-chip" href="/discover?half=people" aria-label="Discover more people"><span className="calendar-person-face"><Icon name="search" size={25} /></span><small>Discover</small></Link>}
-          </div>
-        </header>
-      )}
+      {!followingSidebar && calendarScope}
       {isHome && !calendarFollowing && selectedCalendar && calendarFilter !== "all" && calendarFilter !== "following" && calendarFilter !== "people" && (
         <div className="feedfilterbar following-coach-context">
           <span className="feedfilter-txt">{selectedCalendar.label}</span>
@@ -1312,6 +1321,14 @@ export function FollowingScreen({
           </div>
         </>
       )}
+      </div>
+      {followingSidebar && <aside className="calendar-date-sidebar following-date-sidebar" aria-label="Following calendar navigation">
+        <CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openMonthDay} onMonthChange={showSidebarMonth} />
+        {calendarMonths[sidebarMonth] === "loading" && <p role="status">Loading dates…</p>}
+        {calendarMonths[sidebarMonth] === "error" && <button type="button" className="calendar-load-more" onClick={() => void ensureMonth(sidebarMonth)}>Retry loading dates</button>}
+        <section className="calendar-sidebar-filters"><h2>Calendars you follow</h2>{calendarScope}</section>
+      </aside>}
+      </div>
       </div>
 
       {/* Empty-state discovery stays in a sheet; normal discovery is the

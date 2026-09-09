@@ -15954,3 +15954,14 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .calendar-workspace.has-sidebar { grid-template-columns:minmax(0,1fr) 270px; gap:24px; }
   .calendar-mini-month, .calendar-sidebar-filters { padding:16px; }
 }
+
+@media (min-width:940px) {
+  .following-schedule-column { min-width:0; }
+  .following-date-sidebar .calendar-scope-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 8px; overflow:visible; padding:0; }
+  .following-date-sidebar .calendar-person-chip { width:100%; min-width:0; }
+  .following-date-sidebar .calendar-person-chip small { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+  .following-date-sidebar .following-head { margin:0; }
+  .following-date-sidebar .calendar-sidebar-filters { max-height:40vh; overflow-y:auto; }
+  .screen.hasnav .following-workspace [id^="feed-day-"] { scroll-margin-top:100px; }
+  .following-workspace.has-sidebar .dayband { top:80px; }
+}

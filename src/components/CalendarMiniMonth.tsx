@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icon";
 
-export function CalendarMiniMonth({ todayIso, dates, onDay }: {
+export function CalendarMiniMonth({ todayIso, dates, onDay, onMonthChange }: {
   todayIso: string;
   dates: ReadonlyMap<string, readonly unknown[]>;
   onDay: (iso: string) => void;
+  onMonthChange?: (month: string) => void;
 }) {
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [year, month] = todayIso.split("-").map(Number);
   const first = new Date(Date.UTC(year, month - 1 + offset, 1));
   const label = first.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+  const monthKey = first.toISOString().slice(0, 7);
+  useEffect(() => { onMonthChange?.(monthKey); }, [monthKey, onMonthChange]);
   const leading = (first.getUTCDay() + 6) % 7;
   const count = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
   return <section className="calendar-mini-month" aria-label="Jump to a date">
