@@ -15368,7 +15368,10 @@ body:has(.studio-dashboard, .studio-shifts-view),
 .explore-calendar-rail-all { margin-bottom:24px; }
 .following-coach-context.explore-coach-context { background:transparent; border:0; border-radius:0; padding:0; min-height:36px; margin:14px 0 24px; color:var(--kinetic-inverse); }
 .explore-coach-context .feedfilter-txt { color:var(--kinetic-inverse); }
-.explore-coach-context .feedfilter-link { display:inline-flex; align-items:center; gap:3px; flex-shrink:0; min-height:30px; padding:6px 12px; border:0; border-radius:var(--radius-pill); background:var(--kinetic-accent); color:var(--kinetic-text); font-size:12px; font-weight:700; text-decoration:none; }
+.explore-coach-context .feedfilter-link { display:inline-flex; align-items:center; gap:3px; flex-shrink:0; min-height:30px; padding:6px 12px; border:1px solid color-mix(in srgb,var(--kinetic-inverse) 24%,transparent); border-radius:var(--radius-pill); background:color-mix(in srgb,var(--kinetic-inverse) 12%,transparent); color:var(--kinetic-inverse); font-size:12px; font-weight:700; text-decoration:none; }
+@media (hover:hover) and (pointer:fine) {
+  .explore-coach-context .feedfilter-link:hover { background:color-mix(in srgb,var(--kinetic-inverse) 20%,transparent); text-decoration:none; }
+}
 
 .class-actions-scrim { z-index:160; }
 .sheet.class-actions-sheet { padding:0 0 calc(16px + env(safe-area-inset-bottom)); background:var(--kinetic-canvas-light); }
