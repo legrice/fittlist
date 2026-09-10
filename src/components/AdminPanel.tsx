@@ -1356,6 +1356,13 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
   }, [q, adding]);
   const looksEmail = /.+@.+\..+/.test(q.trim());
   const removable = s.coachCount === 0 && s.classCount === 0;
+  const toggleCheckInDesk = () => start(async () => {
+    const enabled = !s.registrationPro;
+    try {
+      const result = await adminSetRegistrationPro(s.id, enabled);
+      toast(result.ok ? `Check-in desk turned ${enabled ? "on" : "off"}` : result.error || "Couldn’t update check-in desk access.");
+    } catch { toast("Couldn’t update check-in desk access. Try again."); }
+  });
 
   const addById = (userId: string) =>
     start(async () => {
@@ -1438,8 +1445,13 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
           door on this studio, so it reads as handing over keys rather than
           ticking a box. */}
       <div className="adminmgrs">
-        <button className="linktoggle" disabled={pending} aria-pressed={s.registrationPro} onClick={()=>start(async()=>{const result=await adminSetRegistrationPro(s.id,!s.registrationPro);toast(result.ok ? (s.registrationPro ? "Event registrations disabled" : "Pro event registrations enabled") : result.error || "Couldn’t update access");})}>{s.registrationPro ? "Disable Pro event registrations" : "Enable Pro event registrations"}</button>
-        <p className="adminmgr-em">Only site admins can grant this feature. This does not charge the space.</p>
+        {(s.managers.length > 0 || s.registrationPro) ? <>
+          <button className="setrow" role="switch" aria-label="Check-in desk" aria-checked={s.registrationPro} disabled={pending} onClick={toggleCheckInDesk}>
+            <span className="setrow-txt"><span className="t">Check-in desk · {s.registrationPro ? "On" : "Off"}</span><span className="s">Event signup, QR codes, attendee lists and check-in</span></span>
+            <span className={`switch${s.registrationPro ? " on" : ""}`} aria-hidden="true"><span className="switch-knob" /></span>
+          </button>
+          <p className="adminmgr-em">Only app admins can change this. Turning it off hides Front desk and pauses event signup; existing registrations are kept.</p>
+        </> : <p className="adminmgr-em">Add an owner or manager to enable the check-in desk.</p>}
         {s.managers.map((m) => (
           <div key={m.userId} className="adminmgr">
             <span className="adminmgr-nm">{m.name}</span>

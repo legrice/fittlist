@@ -873,13 +873,16 @@ export async function adminBroadcast(
 
 /** Founder-controlled entitlement; space admins cannot grant themselves Pro. */
 export async function adminSetRegistrationPro(studioId:string, enabled:boolean) {
-  if (!(await currentAdmin())) return {ok:false,error:"Only site admins can change Pro access."};
+  if (!(await currentAdmin())) return {ok:false,error:"Only app admins can change check-in desk access."};
   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studioId) || typeof enabled!=="boolean") return {ok:false,error:"Invalid space or access setting."};
   try {
     const db=await getDb();
-    const [studio]=await db.update(schema.studios).set({registrationPro:enabled}).where(eq(schema.studios.id,studioId)).returning({slug:schema.studios.slug});
-    if(!studio) return {ok:false,error:"Space not found."};
+    const [studio]=await db.update(schema.studios).set({registrationPro:enabled}).where(and(
+      eq(schema.studios.id,studioId),
+      enabled ? inArray(schema.studios.id,db.select({studioId:schema.studioManagers.studioId}).from(schema.studioManagers)) : undefined,
+    )).returning({slug:schema.studios.slug});
+    if(!studio) return {ok:false,error:enabled ? "Add an owner or manager before enabling the check-in desk." : "Studio not found."};
     revalidatePath('/admin');revalidatePath(`/s/${studio.slug || studioId}`,'layout');
     return {ok:true};
-  } catch {return {ok:false,error:"Couldn’t update Pro access. Try again."};}
+  } catch {return {ok:false,error:"Couldn’t update check-in desk access. Try again."};}
 }

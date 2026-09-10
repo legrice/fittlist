@@ -8,7 +8,7 @@ import AxeBuilder from '@axe-core/playwright';
 const fixture=execFileSync(process.execPath,['--import','tsx','scripts/event-fixtures.ts'],{env:{...process.env,DATABASE_URL:''},encoding:'utf8'}).trim().split('\n').at(-1);
 const f=JSON.parse(fs.readFileSync(fixture,'utf8')),base='https://127.0.0.1:3196';
 const log=fs.openSync(`${f.directory}/server.log`,'w');
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','-p','3195','-H','127.0.0.1'],{env:{...process.env,DATABASE_URL:'',PGLITE_DATA_DIR:f.dataDir,SESSION_SECRET:f.secret,ADMIN_EMAILS:'',ALLOW_EMBEDDED_DB_IN_PRODUCTION:'true',RESEND_API_KEY:'',BLOB_READ_WRITE_TOKEN:'',INVITE_ONLY:'false',FANS_ENABLED:'true',NEXT_PUBLIC_ORIGIN:base},stdio:['ignore',log,log]});
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','-p','3195','-H','127.0.0.1'],{env:{...process.env,DATABASE_URL:'',PGLITE_DATA_DIR:f.dataDir,SESSION_SECRET:f.secret,ADMIN_EMAILS:f.appAdminEmail,ALLOW_EMBEDDED_DB_IN_PRODUCTION:'true',RESEND_API_KEY:'',BLOB_READ_WRITE_TOKEN:'',INVITE_ONLY:'false',FANS_ENABLED:'true',NEXT_PUBLIC_ORIGIN:base},stdio:['ignore',log,log]});
 execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',`${f.directory}/key.pem`,'-out',`${f.directory}/cert.pem`,'-days','1','-subj','/CN=localhost'],{stdio:'ignore'});
 const proxy=https.createServer({key:fs.readFileSync(`${f.directory}/key.pem`),cert:fs.readFileSync(`${f.directory}/cert.pem`)},(req,res)=>{
   const upstream=http.request({hostname:'127.0.0.1',port:3195,path:req.url,method:req.method,headers:req.headers},response=>{
@@ -21,6 +21,31 @@ let browser;
 try{
   for(let i=0;i<90;i++){if(server.exitCode!==null)throw Error('Local event server could not start');try{if((await fetch('http://127.0.0.1:3195')).ok)break;}catch{}await new Promise(r=>setTimeout(r,500));}
   browser=await (process.env.EVENT_BROWSER==='chromium' ? chromium : webkit).launch();
+  const appCtx=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:1440,height:900},reducedMotion:'reduce'});
+  await appCtx.addCookies([{name:'fl_session',value:f.appAdmin,url:base,httpOnly:true}]);
+  const access=await appCtx.newPage();
+  await access.goto(base+'/admin');await access.getByRole('button',{name:'Studios',exact:true}).click();
+  const card=access.locator('.admincard').filter({has:access.getByRole('link',{name:/Hudson Fit Expo/})});
+  const toggle=card.getByRole('switch',{name:'Check-in desk',exact:true});
+  assert.equal(await toggle.getAttribute('aria-checked'),'true');
+  const unmanaged=access.locator('.admincard').filter({has:access.getByRole('link',{name:/Unapproved space/})});
+  assert.equal(await unmanaged.getByRole('switch',{name:'Check-in desk',exact:true}).count(),0,'Unmanaged studios cannot enable the desk');
+  await toggle.click();await card.getByRole('switch',{name:'Check-in desk',checked:false}).waitFor();
+  await access.reload();await access.getByRole('button',{name:'Studios',exact:true}).click();
+  await card.getByRole('switch',{name:'Check-in desk',checked:false}).waitFor();
+  const managerCtx=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:1440,height:900}});
+  await managerCtx.addCookies([{name:'fl_session',value:f.admin,url:base,httpOnly:true}]);
+  const manager=await managerCtx.newPage();await manager.goto(`${base}/s/${f.slug}/manage`);
+  assert.equal(await manager.getByRole('link',{name:/Front desk/}).count(),0,'Turning off hides manager entry points');
+  assert.equal((await managerCtx.request.get(`${base}/api/events/${f.slug}/export`)).status(),404,'Turning off blocks desk data');
+  await access.setViewportSize({width:393,height:852});
+  await toggle.click();await card.getByRole('switch',{name:'Check-in desk',checked:true}).waitFor();
+  assert(await access.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'App-admin switch fits a phone');
+  await manager.reload();await manager.getByRole('navigation',{name:'Studio administration'}).getByRole('link',{name:'Front desk',exact:true}).waitFor();
+  const restored=await managerCtx.request.get(`${base}/api/events/${f.slug}/export`);
+  assert(restored.ok());assert.match(await restored.text(),/event-member@example.test/,'Turning access back on preserves registrations');
+  await managerCtx.close();await appCtx.close();
+  console.log('PASS app-admin desk switch, unmanaged restriction, persisted off state, manager access revocation, mobile enable and retained registrations');
   const anon=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844},serviceWorkers:'block',reducedMotion:'reduce'}),page=await anon.newPage();
   await page.goto(`${base}/s/${f.slug}/register`);await page.locator('.app-launch').waitFor({state:'detached'});
   await page.getByRole('button').filter({hasText:'Morning Yoga'}).click();

@@ -103,6 +103,8 @@ async function main() {
   assert(!(await writeAttendance(people[7].id,second.id,date,true,studio.id)).ok,'Closure stops signup');
   assert(!(await as(1,()=>adminSetRegistrationPro(studio.id,true))).ok,'Space admins cannot grant Pro');
   process.env.ADMIN_EMAILS=people[1].email;
+  assert(!(await as(1,()=>adminSetRegistrationPro(other.id,true))).ok,'App admin cannot enable an unmanaged studio');
+  assert((await as(1,()=>adminSetRegistrationPro(other.id,false))).ok,'App admin can always turn access off');
   assert((await as(1,()=>adminSetRegistrationPro(studio.id,false))).ok);
   assert.equal(await as(1,()=>eventSchedule(studio.slug!,true)),null,'Pro disabled blocks organizer route');
   assert.equal(await request.run(new Map(),()=>eventSchedule(studio.slug!)),null,'Pro disabled blocks public signup');
