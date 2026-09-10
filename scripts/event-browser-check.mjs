@@ -51,11 +51,17 @@ try{
 
   for(const viewport of [{width:820,height:1180},{width:1180,height:820}]){
     const ctx=await browser.newContext({ignoreHTTPSErrors:true,viewport,reducedMotion:'reduce'});await ctx.addCookies([{name:'fl_session',value:f.admin,url:base,httpOnly:true}]);const desk=await ctx.newPage();
-    await desk.goto(`${base}/s/${f.slug}/manage/registrations`);await desk.locator('.app-launch').waitFor({state:'detached'});
+    await desk.goto(`${base}/s/${f.slug}/manage`);await desk.locator('.app-launch').waitFor({state:'detached'});
+    const frontDeskCard=desk.locator('.studio-dashboard-card').filter({hasText:'Front desk'});
+    await frontDeskCard.click();await desk.waitForURL(`${base}/s/${f.slug}/manage/registrations`);
+    await desk.getByRole('button',{name:'Back to studio admin',exact:true}).click();
+    await desk.waitForURL(`${base}/s/${f.slug}/manage`);
+    if(viewport.width>=940) await desk.getByRole('navigation',{name:'Studio administration'}).getByRole('link',{name:'Front desk',exact:true}).click();
+    else await frontDeskCard.click();
     await desk.getByRole('heading',{name:'Attendees',exact:true}).waitFor();
     if(viewport.width>=940) {
       const adminNav=desk.getByRole('navigation',{name:'Studio administration'});
-      assert.equal(await adminNav.locator('[aria-current="page"]').innerText(),'Event registrations');
+      assert.equal(await adminNav.locator('[aria-current="page"]').innerText(),'Front desk');
       assert(await desk.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Event workspace fits beside admin navigation');
     }
     await desk.getByRole('combobox',{name:'Choose a signup QR',exact:true}).selectOption(f.classes[1].id);

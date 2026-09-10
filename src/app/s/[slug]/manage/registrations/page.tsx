@@ -3,7 +3,7 @@ import { eventAdmin, eventWaitingRoster, eventRoster, eventSchedule } from "@/li
 import { validEventDate } from "@/lib/event-registration";
 import { EventRegistrationDesk } from "@/components/EventRegistrationDesk";
 export const dynamic = "force-dynamic";
-export const metadata = {title:"Event registration desk · FittList",robots:{index:false,follow:false}};
+export const metadata = {title:"Front desk · FittList",robots:{index:false,follow:false}};
 export default async function RegistrationDeskPage({params,searchParams}:{params:Promise<{slug:string}>;searchParams:Promise<{date?:string}>}) {
   const {slug} = await params, q = await searchParams;
   const admin=await eventAdmin(slug);if(!admin)notFound();

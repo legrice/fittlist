@@ -233,7 +233,7 @@ try {
 
   await visit("/s/audit-studio/manage");
   const adminNav = page.getByRole("navigation", { name: "Studio administration" });
-  assert.equal(await adminNav.getByRole("link", { name: "Event registrations", exact: true }).count(), 0, "Registration tools stay gated to enabled studios");
+  assert.equal(await adminNav.getByRole("link", { name: "Front desk", exact: true }).count(), 0, "Registration tools stay gated to enabled studios");
   for (const [label, heading] of [["Class counts", "Shift counter"], ["Staff", "Staff"], ["Standard week", "Standard calendar"], ["Profile and settings", "Profile and settings"], ["Owner and managers", "Studio access"]]) {
     await adminNav.getByRole("link", { name: label, exact: true }).click();
     await page.getByRole("heading", { name: heading, exact: true }).waitFor();

@@ -18,10 +18,10 @@ export function StudioAdminNav({ name, slug, registrationPro }: { name: string; 
     ] },
     { label: "People", links: [
       { label: "Staff", icon: "groups", href: `${base}/staff`, active: path.startsWith("/staff") },
-      ...(registrationPro ? [{ label: "Event registrations", icon: "groups", href: `${base}/registrations`, active: path === "/registrations" }] : []),
     ] },
     { label: "Studio", links: [
       { label: "Overview", icon: "storefront", href: base, active: path === "" },
+      ...(registrationPro ? [{ label: "Front desk", icon: "groups", href: `${base}/registrations`, active: path === "/registrations" }] : []),
       { label: "Class counts", icon: "activity", href: `${base}/counts`, active: path === "/counts" },
       { label: "Owner and managers", icon: "admin_panel_settings", href: `${base}/settings?view=managers`, active: path === "/settings" && query.get("view") === "managers" },
       { label: "Profile and settings", icon: "settings", href: `${base}/settings`, active: path === "/settings" && query.get("view") !== "managers" },
