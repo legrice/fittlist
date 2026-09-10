@@ -79,12 +79,15 @@ try{
     await desk.goto(`${base}/s/${f.slug}/manage`);await desk.locator('.app-launch').waitFor({state:'detached'});
     const frontDeskCard=desk.locator('.studio-dashboard-card').filter({hasText:'Front desk'});
     await frontDeskCard.click();await desk.waitForURL(`${base}/s/${f.slug}/manage/registrations`);
-    await desk.getByRole('button',{name:'Back to studio admin',exact:true}).click();
+    if(viewport.width>=940) await desk.getByRole('navigation',{name:'Studio administration'}).getByRole('link',{name:'Dashboard',exact:true}).click();
+    else await desk.getByRole('button',{name:'Back to studio admin',exact:true}).click();
     await desk.waitForURL(`${base}/s/${f.slug}/manage`);
     if(viewport.width>=940) await desk.getByRole('navigation',{name:'Studio administration'}).getByRole('link',{name:'Front desk',exact:true}).click();
     else await frontDeskCard.click();
     await desk.getByRole('heading',{name:'Attendees',exact:true}).waitFor();
     if(viewport.width>=940) {
+      assert(await desk.getByRole('heading',{name:'Front desk',exact:true}).isVisible(),'Front desk has a page heading');
+      assert.equal(await desk.locator('.event-desk-studio-name:visible,.event-desk-back:visible').count(),0,'Desktop desk does not repeat the studio identity or Back');
       const adminNav=desk.getByRole('navigation',{name:'Studio administration'});
       assert.equal(await adminNav.locator('[aria-current="page"]').innerText(),'Front desk');
       assert(await desk.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Event workspace fits beside admin navigation');

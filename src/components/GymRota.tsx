@@ -651,7 +651,18 @@ export function GymRota({
   return (
     <div className={`pad gym-manage-pad${desktop ? " desktop" : ""}`}>
       <div className="studio-manage-top pagetop">
-        <div className="studio-manage-topbar">
+        {desktop ? <div className="studio-calendar-toolbar">
+          <h1 className="studio-calendar-accessible-title">Calendar</h1>
+          <label>View<select aria-label="Calendar view" value={`${desktopView}:${shiftFilter}`} onChange={event => {
+            const [view, filter] = event.target.value.split(":");
+            chooseDesktopView(view === "week" ? "week" : "month");
+            if (isShiftFilter(filter)) chooseShiftFilter(filter);
+          }}>
+            {(["month", "week"] as const).map(view => <optgroup key={view} label={view === "month" ? "Month" : "Week"}>
+              {([["all","All shifts"],["assigned","All coaches"],["open","Open shifts"],["mine","My shifts"]] as const).map(([filter,label]) => <option key={filter} value={`${view}:${filter}`}>{view === "month" ? "Month" : "Week"} · {label}</option>)}
+            </optgroup>)}
+          </select></label>
+        </div> : <div className="studio-manage-topbar">
           <BackLink
             className="evback studio-manage-back"
             href={dashboardHref}
@@ -664,7 +675,7 @@ export function GymRota({
           <button className="calendar-menu-button" aria-label="Calendar filters" onClick={() => setFilterOpen(true)}>
             <Icon name="tune" size={23} />
           </button>
-        </div>
+        </div>}
         {visibleDrafts > 0 && (
           <button className="rota-publish" disabled={pending} onClick={publishDrafts}>
             Publish {visibleDrafts} {visibleDrafts === 1 ? "draft" : "drafts"}
@@ -672,7 +683,7 @@ export function GymRota({
         )}
       </div>
 
-      {filterOpen && (
+      {!desktop && filterOpen && (
         <div className="calendar-drawer-scrim" onClick={(event) => event.target === event.currentTarget && setFilterOpen(false)}>
           <aside className="calendar-drawer" role="dialog" aria-modal="true" aria-labelledby="rota-filter-title">
             <div className="calendar-drawer-head"><h2 id="rota-filter-title">Calendar filters</h2><button className="iconbtn sheet-dismiss" aria-label="Close" onClick={() => setFilterOpen(false)}><Icon name="close" size={20} /></button></div>

@@ -233,6 +233,9 @@ try {
 
   await visit("/s/audit-studio/manage");
   const adminNav = page.getByRole("navigation", { name: "Studio administration" });
+  assert.deepEqual(await adminNav.locator('.studio-admin-nav-section').first().getByRole('link').allTextContents(), ['Dashboard', 'Calendar', 'Staff'], 'Primary admin links appear in order');
+  assert.equal(await adminNav.getByRole('heading').count(), 0, 'Sidebar does not repeat section labels');
+  assert(await page.getByRole('button', { name:'Back from studio admin', exact:true }).isVisible(), 'Prominent admin Back is available');
   assert.equal(await page.locator('.studio-dashboard-hero:visible').count(), 0, "Desktop overview starts with admin tools, without a duplicate hero");
   const identity = page.locator('.studio-admin-identity');
   assert.equal(await identity.locator('strong').innerText(), "Audit Studio", "Studio name heads the admin sidebar");
@@ -259,10 +262,11 @@ try {
   await adminNav.getByRole("link", { name: "Calendar", exact: true }).click();
   await page.getByRole("button", { name: "Start managing the calendar", exact: true }).click();
   await page.locator('.rota-month-board').waitFor();
-  await adminNav.getByRole("link", { name: "Open shifts", exact: true }).click();
-  await page.getByRole("heading", { name: "Open shifts", exact: true }).waitFor();
+  await page.getByRole("combobox", { name: "Calendar view", exact: true }).selectOption("week:open");
+  await page.locator(".rota-open-summary").waitFor();
   await adminNav.getByRole("link", { name: "Calendar", exact: true }).click();
-  await page.getByRole("heading", { name: "Audit Studio", exact: true }).waitFor();
+  await page.getByRole("combobox", { name: "Calendar view", exact: true }).selectOption("month:all");
+  await page.locator(".rota-month-board").waitFor();
   for (const width of [1100, 1440, 1920]) {
     await page.setViewportSize({ width, height:900 }); await frame();
     const sidebar = await page.locator('.studio-admin-sidebar').boundingBox();

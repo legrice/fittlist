@@ -16255,3 +16255,15 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 }
 
 @media (max-width:939px) { .studio-dashboard-heading p { color:var(--kinetic-inverse); opacity:.75; } }
+
+.event-desk-page-title { display:none; }
+@media (min-width:940px) {
+  .studio-admin-back { display:flex; align-items:center; gap:8px; width:100%; min-height:44px; margin:0 0 20px; padding:10px 12px; border:1px solid var(--line); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--ink); font-size:15px; font-weight:700; }
+  .studio-admin-nav-section + .studio-admin-nav-section { border-top:1px solid var(--line); padding-top:16px; }
+  .studio-admin-main .studio-manage-back, .studio-admin-main .event-desk-back, .studio-admin-main .event-desk-studio-name, .studio-admin-main .event-desk-mobile-label { display:none; }
+  .studio-admin-main .event-desk-page-title { display:inline; }
+  .studio-calendar-toolbar { display:flex; justify-content:flex-end; margin-bottom:20px; }
+  .studio-calendar-toolbar label { display:flex; align-items:center; gap:10px; color:var(--ink); font-size:14px; font-weight:600; }
+  .studio-calendar-toolbar select { min-height:44px; padding:10px 16px; border:1px solid var(--line); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--ink); font:inherit; }
+  .studio-calendar-accessible-title { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+}

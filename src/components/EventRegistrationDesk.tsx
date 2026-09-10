@@ -29,7 +29,7 @@ export function EventRegistrationDesk(initial:{event:EventSchedule;roster:Attend
   const qrQuery=qrSelection ? `?class=${encodeURIComponent(qrSelection.id)}&d=${encodeURIComponent(event.date!)}` : "";
   const signupHref=`/s/${event.slug}/register${qrQuery}`;
   return <main className="event-desk">
-    <header><BackLink className="ghost" href={`/s/${event.slug}/manage`} label="Back to studio admin">← Studio admin</BackLink><h1>{event.name}</h1><p>Front desk · {event.date ? fmtDateLong(event.date) : "Choose a date"}</p></header>
+    <header><BackLink className="ghost event-desk-back" href={`/s/${event.slug}/manage`} label="Back to studio admin">← Studio admin</BackLink><h1><span className="event-desk-studio-name">{event.name}</span><span className="event-desk-page-title">Front desk</span></h1><p><span className="event-desk-mobile-label">Front desk · </span>{event.date ? fmtDateLong(event.date) : "Choose a date"}</p></header>
     <div className="event-desk-toolbar"><button className="ghost" disabled={!!pending} onClick={()=>void act("refresh",async()=>({ok:true}))}>Refresh tally</button>{published && <><Link className="btn" href={`/s/${event.slug}/register`} target="_blank">Open attendee signup</Link><a className="ghost" href={`/api/events/${event.slug}/export`}>Export attendee CSV</a></>}</div>
     <div className="event-stats"><div><strong>{event.classes.reduce((n,c)=>n+c.count,0)}</strong><span>Class registrations</span></div><div><strong>{event.uniqueAttendees}</strong><span>Unique attendees</span></div><div><strong>{event.classes.reduce((n,c)=>n+c.checked,0)}</strong><span>Class check-ins</span></div></div>
     <p role="status" aria-live="polite">{message || "Refreshes every 15 seconds while this page is open."}</p>

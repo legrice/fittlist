@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 
 export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: string; slug: string; photo: string | null; registrationPro: boolean }) {
@@ -9,25 +10,22 @@ export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: s
   const query = useSearchParams();
   const base = `/s/${slug}/manage`;
   const path = pathname.split("/manage")[1] || "";
-  const openShifts = path === "/calendar" && query.get("show") === "open";
   const sections = [
-    { label: "Schedule", links: [
-      { label: "Calendar", icon: "calendar_month", href: `${base}/calendar?show=all`, active: path === "/calendar" && !openShifts },
-      { label: "Open shifts", icon: "event_available", href: `${base}/calendar?show=open&view=week`, active: openShifts },
-      { label: "Standard week", icon: "calendar_view_day", href: `${base}/standard`, active: path === "/standard" },
-    ] },
-    { label: "People", links: [
-      { label: "Staff", icon: "groups", href: `${base}/staff`, active: path.startsWith("/staff") },
-    ] },
-    { label: "Studio", links: [
+    { label: "Primary", links: [
       { label: "Dashboard", icon: "storefront", href: base, active: path === "" },
+      { label: "Calendar", icon: "calendar_month", href: `${base}/calendar?show=all`, active: path === "/calendar" },
+      { label: "Staff", icon: "groups", href: `${base}/staff`, active: path.startsWith("/staff") },
       ...(registrationPro ? [{ label: "Front desk", icon: "groups", href: `${base}/registrations`, active: path === "/registrations" }] : []),
+    ] },
+    { label: "Tools", links: [
+      { label: "Standard week", icon: "calendar_view_day", href: `${base}/standard`, active: path === "/standard" },
       { label: "Class counts", icon: "activity", href: `${base}/counts`, active: path === "/counts" },
       { label: "Owner and managers", icon: "admin_panel_settings", href: `${base}/settings?view=managers`, active: path === "/settings" && query.get("view") === "managers" },
       { label: "Profile and settings", icon: "settings", href: `${base}/settings`, active: path === "/settings" && query.get("view") !== "managers" },
     ] },
   ];
   return <aside className="studio-admin-sidebar">
+    <BackLink className="studio-admin-back" href={`/s/${slug}`} anywhere notUnder={base} label="Back from studio admin"><Icon name="arrow_back" size={20}/><span>Back</span></BackLink>
     <div className="studio-admin-identity">
       <span className="studio-admin-photo">{photo ? <img src={photo} alt="" /> : <Icon name="storefront" size={32} />}</span>
       <strong>{name}</strong>
@@ -35,7 +33,6 @@ export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: s
     </div>
     <nav aria-label="Studio administration">
       {sections.map(section => <div className="studio-admin-nav-section" key={section.label}>
-        <h2>{section.label}</h2>
         {section.links.map(link => <Link key={link.label} href={link.href} prefetch={false} className="studio-admin-nav-link" aria-current={link.active ? "page" : undefined}>
           <Icon name={link.icon} size={21} /><span>{link.label}</span>
         </Link>)}
