@@ -280,8 +280,9 @@ body {
   overflow-x: hidden; /* clip the page-slide transition, no horizontal scrollbar */
 }
 button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--si) 72%, transparent);
+/* One keyboard focus outline; composite fields highlight their shell instead. */
+:where(a[href], button, summary, input, select, textarea, [role="button"], [tabindex]):not(:disabled):focus-visible {
+  outline: 2px solid currentColor;
   outline-offset: 2px;
 }
 a { color: inherit; }
@@ -6682,7 +6683,6 @@ html[data-mode="dark"],
 .discover-tab-empty { margin:22px 0 0; padding:28px 18px; border-radius:var(--radius-card); background:var(--color-surface-muted); color:var(--muted); font-size:14px; line-height:1.45; text-align:center; }
 .dissearchrow.discover-searchrow { margin: 0 0 var(--space-1); padding-top: 0; }
 .discover-searchrow .dissearch { box-shadow: none; }
-.discover-searchrow .dissearch:focus-within { box-shadow: 0 0 0 3px var(--si); }
 .discover-search-door { min-height:50px; color:var(--muted); text-decoration:none; }
 .discover-filterrow {
   display:flex; align-items:center; gap:var(--space-1); overflow-x:auto; overflow-y:hidden;
@@ -7291,16 +7291,11 @@ html[data-mode="dark"],
   box-shadow: none;
 }
 [data-mode="dark"] .dissearch { background: var(--card); box-shadow: none; border: 1px solid var(--line); }
-/* The focus ring goes round the whole pill, not round the input inside it.
-   The global `input:focus-visible` rule beats a plain `.dissearch-in` on
-   specificity, so it drew a rounded box inside a rounded box: two controls
-   where there is one. Search autofocuses its box, so this is what you arrive
-   to. The ring itself stays, because it is how a keyboard says where it is. */
+/* Search is one field: highlight the pill, never an inner input rectangle. */
 .dissearch-in:focus-visible { outline: none; }
-.dissearch:focus-within {
-  box-shadow: 0 0 0 3px var(--si);
-}
-[data-mode="dark"] .dissearch:focus-within { box-shadow: 0 0 0 3px var(--si); }
+.dissearch:focus-within,
+[data-mode="dark"] .dissearch:focus-within { border-color:var(--ink); }
+.dissearch:has(input:focus-visible) { box-shadow:0 0 0 1px var(--ink); }
 .dissearch-ic { color: var(--ol); flex-shrink: 0; }
 .dissearch-in {
   flex: 1; min-width: 0; border: none; background: none; outline: none; padding: 12px 0;
@@ -14775,10 +14770,6 @@ a.clspeek-by:active { opacity: .6; }
 }
 :where(button, a, [role="button"]) { touch-action:manipulation; }
 :where(button, [role="button"]):not(:disabled):active { opacity:.82; }
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline:2px solid var(--color-text-primary);
-  outline-offset:3px;
-}
 .calendar-pull-sheet { transition:transform var(--motion-sheet) var(--motion-settle); will-change:auto; }
 .calendar-pull-sheet.is-pulling { transition:none; will-change:transform; }
 @media (max-width:939px) {
@@ -15881,6 +15872,8 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 @media (min-width:940px) {
   body:has(.desktop-top-header) { --desktop-rail-width:0px; }
   .desktop-top-header {
+    --paper:var(--color-surface);
+    background:var(--color-surface);
     inset:0 0 auto; width:100%; height:80px; padding:0 32px;
     flex-direction:row; align-items:center; gap:32px; overflow:visible;
     border-right:0; border-bottom:1px solid var(--kinetic-control-border);
@@ -15902,7 +15895,6 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .desktop-header-tools > .desktop-nav-link .desktop-count { position:absolute; top:0; right:-3px; }
   .desktop-account { position:relative; }
   .desktop-top-header .desktop-profile-link { position:relative; min-height:44px; padding:4px; border:0; border-radius:50%; background:transparent; cursor:pointer; }
-  .desktop-top-header .desktop-profile-link:hover:not(:disabled, [aria-disabled="true"]) { background:var(--color-surface-muted); }
   .desktop-account-dot { position:absolute; right:1px; top:1px; width:9px; height:9px; border-radius:50%; background:var(--kinetic-accent); border:1px solid var(--paper); }
   .desktop-account-menu { position:absolute; top:calc(100% + 12px); right:0; width:250px; padding:8px; max-height:calc(100dvh - 112px); overflow:auto; border:1px solid var(--line); border-radius:16px; background:var(--paper); color:var(--ink); box-shadow:0 12px 30px rgba(0,0,0,.12); }
   .desktop-account-menu p { margin:8px 12px; color:var(--muted); overflow-wrap:anywhere; font-size:13px; }
@@ -15969,8 +15961,10 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 @media (min-width:940px) {
   .desktop-top-header { gap:20px; }
   .desktop-header-search { display:flex; align-items:center; flex:1; min-width:120px; gap:8px; height:42px; padding:0 10px 0 14px; border:1px solid var(--line); border-radius:var(--radius-pill); background:var(--ground); color:var(--muted); }
+  .desktop-header-search input:focus-visible { outline:none; }
   .desktop-header-search input { flex:1; min-width:0; width:100%; border:0; background:transparent; color:var(--ink); font:inherit; font-size:14px; outline:none; }
-  .desktop-header-search:focus-within { outline:2px solid var(--ink); outline-offset:2px; }
+  .desktop-header-search:focus-within { border-color:var(--ink); }
+  .desktop-header-search:has(input:focus-visible) { box-shadow:0 0 0 1px var(--ink); }
   .desktop-header-search button { display:grid; place-items:center; width:28px; height:32px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--ink); cursor:pointer; }
   .desktop-header-tools { margin-left:0; flex-shrink:0; }
   .screen.hasnav .discover-searchrow { display:none; }
@@ -16151,23 +16145,36 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .studio-admin-main .rota-month-board { overflow:visible; }
 }
 
-/* Shared interaction feedback. Tint the existing surface so selected states,
-   brand colors, borders and shadows keep their meaning. Never move the target. */
+/* Low-specificity hover feedback lets component treatments take precedence.
+   Text links and standalone identities do not need a rectangular surface. */
 @media (hover:hover) and (pointer:fine) {
-  :is(button, a[href], summary, [role="button"]):not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):hover {
+  :where(button, a[href], summary, [role="button"]):not(:disabled):where(:not([aria-disabled="true"], [aria-busy="true"])):hover {
     background-image:linear-gradient(color-mix(in srgb,currentColor 8%,transparent),color-mix(in srgb,currentColor 8%,transparent));
   }
   :is(a[href], button):is(.trayitem, .calendar-person-chip):not(:disabled):not([aria-disabled="true"]):hover,
-  a[href]:has(> .wm):hover,
-  .desktop-top-header .desktop-logo:hover {
+  :is(a[href], button):has(> .wm):hover,
+  .desktop-top-header .desktop-logo:hover,
+  .desktop-top-header .desktop-profile-link:hover,
+  a.discover-person-main:hover,
+  a[href]:not([class]):not(:has(.wm, img, .icon)):hover,
+  :is(.tertiary, .feedfilter-link, .following-manage, .event-secondary):hover,
+  :is(p, li) > a[href]:hover {
     background-image:none;
   }
+  :is(a[href], button):has(> .wm), .desktop-top-header .desktop-logo {
+    transition:opacity var(--motion-state);
+  }
+  :is(a[href], button):has(> .wm):hover,
+  .desktop-top-header .desktop-logo:hover {
+    background-color:transparent;
+    opacity:.8;
+  }
+  .desktop-top-header .desktop-profile-link:hover { background-color:transparent; }
   :is(a[href], button).trayitem:not(:disabled):not([aria-disabled="true"]):hover .trayav,
   :is(a[href], button).calendar-person-chip:not(:disabled):not([aria-disabled="true"]):hover .calendar-person-face,
   a.discover-person-main:hover .discover-person-face,
   .desktop-top-header .desktop-profile-link:hover > :is(img, .desktop-profile-avatar-empty) {
-    outline:2px solid var(--ink);
-    outline-offset:3px;
+    opacity:.8;
   }
   :is(a[href], button).trayitem:not(:disabled):not([aria-disabled="true"]):hover .trayitem-nm,
   :is(a[href], button).calendar-person-chip:not(:disabled):not([aria-disabled="true"]):hover small,
@@ -16179,7 +16186,6 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
     text-underline-offset:3px;
     text-decoration-thickness:1.5px;
   }
-  a[href]:has(> .wm):hover .wm { opacity:.8; }
   :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]), select, textarea):not(:disabled):not([readonly]):not([aria-invalid="true"]):hover {
     border-color:color-mix(in srgb,currentColor 55%,transparent);
   }
@@ -16195,11 +16201,13 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .studio-admin-nav-link[aria-current="page"]:hover { background-color:var(--color-surface-muted); }
 }
 
-/* A two-color ring remains visible against both light and dark surfaces. */
-:is(a[href], button, summary, input, select, textarea, [role="button"], [tabindex]):not(:disabled):focus-visible {
-  outline:2px solid var(--kinetic-text);
-  outline-offset:2px;
-  box-shadow:0 0 0 4px var(--kinetic-inverse);
-}
 :is(button, input, select, textarea):disabled,
 [aria-disabled="true"] { cursor:not-allowed; }
+
+:is(.group-handle, .create-group-search) input:focus-visible { outline:none; }
+/* Borderless search fields still need a visible keyboard location. */
+:is(.newmessage-search, .inappshare-search, .calendar-directory-search):has(input:focus-visible) {
+  outline:2px solid var(--ink);
+  outline-offset:2px;
+}
+:is(.newmessage-search, .inappshare-search, .calendar-directory-search) input:focus-visible { outline:none; }
