@@ -27,7 +27,7 @@ export default async function StudioManageLayout({ children, params }: { childre
         <div className="pad studio-manage-shell">
           <AppChrome userId={me.id} bar active="calendar" social />
           <div className="studio-admin-workspace">
-            <StudioAdminNav name={studio.name} slug={studio.slug ?? studio.id} registrationPro={studio.registrationPro} />
+            <StudioAdminNav photo={studio.photo} name={studio.name} slug={studio.slug ?? studio.id} registrationPro={studio.registrationPro} />
             <div className="studio-admin-main">{children}</div>
           </div>
         </div>

@@ -27,12 +27,14 @@ try {
     await context.route("**/*", route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
     const page = await context.newPage(); page.setDefaultTimeout(20000);
     await page.goto(base + path);
+    await page.waitForFunction(() => Boolean(history.state?.__flNavigationKey));
     return { context, page };
   }
   const studio = "/s/audit-studio", admin = `${studio}/manage`, calendar = `${admin}/calendar`;
   async function at(page, path) {
     await page.waitForURL(url => url.pathname === path);
-    await page.locator(path === studio ? '.profback button' : '.studio-manage-back').first().waitFor();
+    if (path === calendar && page.viewportSize().width >= 940) await page.locator('.gym-manage-pad.desktop').waitFor();
+    await page.locator(path === studio ? '.profback button' : path === admin && page.viewportSize().width >= 940 ? '.studio-admin-identity' : '.studio-manage-back').first().waitFor();
   }
   async function openAdmin(page) {
     const link = page.getByRole("link", { name: "Admin dashboard", exact: true });
@@ -40,7 +42,9 @@ try {
     await link.click(); await at(page, admin);
   }
   async function back(page, path) {
-    await page.locator('.studio-manage-back').first().click(); await at(page, path);
+    if (new URL(page.url()).pathname === admin && page.viewportSize().width >= 940) await page.goBack();
+    else await page.locator('.studio-manage-back').first().click();
+    await at(page, path);
   }
   const setup = await open(1440, calendar);
   await setup.page.getByRole("button", { name: "Start managing the calendar", exact: true }).click();
@@ -66,7 +70,7 @@ try {
         await openAdmin(page);
         await page.locator('.studio-dashboard-card').filter({ hasText: "Calendar" }).first().click(); await at(page, calendar);
         await page.getByRole("navigation", { name: "Studio administration" }).getByRole("link", { name: "Overview", exact: true }).click(); await at(page, admin);
-        await back(page, studio);
+        await page.getByRole("link", { name: "View public profile", exact: true }).click(); await at(page, studio);
       }
       console.log(`PASS ${browserName} ${width}: studio → admin → calendar, refresh, month entries, browser Forward, and Back without loops`);
     } finally { await context.close(); }
@@ -75,7 +79,14 @@ try {
     try {
       await at(cold.page, calendar);
       const depth = await cold.page.evaluate(() => history.length);
-      await back(cold.page, admin); await back(cold.page, studio);
+      await back(cold.page, admin);
+      if (width >= 940) {
+        assert.equal(await cold.page.evaluate(() => history.length), depth, "Calendar fallback does not add history");
+        await cold.page.getByRole("link", { name: "View public profile", exact: true }).click(); await at(cold.page, studio);
+        console.log(`PASS ${browserName} ${width}: cold calendar returns to admin, public profile remains accessible`);
+        continue;
+      }
+      await back(cold.page, studio);
       await cold.page.locator('.profback button').first().click();
       await cold.page.waitForURL(url => url.pathname === "/calendar/following");
       assert.equal(await cold.page.evaluate(() => history.length), depth, "Fallback Back never adds history entries");
@@ -89,7 +100,7 @@ try {
     await page.getByRole("menuitem", { name: /Audit Studio/ }).click(); await at(page, admin);
     await page.locator('.studio-dashboard-card').filter({ hasText: "Calendar" }).first().click(); await at(page, calendar);
     await back(page, admin);
-    await page.locator('.studio-manage-back').click();
+    await page.goBack();
     await page.waitForURL(url => url.pathname === "/calendar");
     await page.locator('.calendar-summary-heading').waitFor();
     console.log(`PASS ${browserName}: admin returns to the personal calendar when opened from its dropdown`);

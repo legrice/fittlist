@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/Icon";
 
-export function StudioAdminNav({ name, slug, registrationPro }: { name: string; slug: string; registrationPro: boolean }) {
+export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: string; slug: string; photo: string | null; registrationPro: boolean }) {
   const pathname = usePathname();
   const query = useSearchParams();
   const base = `/s/${slug}/manage`;
   const path = pathname.split("/manage")[1] || "";
+  const Name = path === "" ? "h1" : "strong";
   const openShifts = path === "/calendar" && query.get("show") === "open";
   const sections = [
     { label: "Schedule", links: [
@@ -28,7 +29,11 @@ export function StudioAdminNav({ name, slug, registrationPro }: { name: string; 
     ] },
   ];
   return <aside className="studio-admin-sidebar">
-    <div className="studio-admin-identity"><span>Admin center</span><strong>{name}</strong></div>
+    <div className="studio-admin-identity">
+      <span className="studio-admin-photo">{photo ? <img src={photo} alt="" /> : <Icon name="storefront" size={32} />}</span>
+      <Name>{name}</Name>
+      <span>Admin center</span>
+    </div>
     <nav aria-label="Studio administration">
       {sections.map(section => <div className="studio-admin-nav-section" key={section.label}>
         <h2>{section.label}</h2>

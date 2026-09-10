@@ -233,6 +233,13 @@ try {
 
   await visit("/s/audit-studio/manage");
   const adminNav = page.getByRole("navigation", { name: "Studio administration" });
+  assert.equal(await page.locator('.studio-dashboard-hero:visible').count(), 0, "Desktop overview starts with admin tools, without a duplicate hero");
+  const identity = page.locator('.studio-admin-identity');
+  assert.equal(await identity.locator('h1').innerText(), "Audit Studio", "Studio name heads the admin sidebar");
+  const photoBox = await identity.locator('.studio-admin-photo').boundingBox();
+  const nameBox = await identity.locator('h1').boundingBox();
+  const captionBox = await identity.getByText('Admin center', { exact:true }).boundingBox();
+  assert(photoBox.x === nameBox.x && photoBox.y + photoBox.height <= nameBox.y && nameBox.y + nameBox.height <= captionBox.y, "Sidebar identity stacks photo, name and Admin center, left aligned");
   assert.equal(await adminNav.getByRole("link", { name: "Front desk", exact: true }).count(), 0, "Registration tools stay gated to enabled studios");
   for (const [label, heading] of [["Class counts", "Shift counter"], ["Staff", "Staff"], ["Standard week", "Standard calendar"], ["Profile and settings", "Profile and settings"], ["Owner and managers", "Studio access"]]) {
     await adminNav.getByRole("link", { name: label, exact: true }).click();
@@ -260,6 +267,9 @@ try {
     await page.setViewportSize({ width, height:900 }); await frame();
     const sidebar = await page.locator('.studio-admin-sidebar').boundingBox();
     const main = await page.locator('.studio-admin-main').boundingBox();
+    assert.equal(sidebar.x, 0, "Admin sidebar attaches to the left viewport edge");
+    assert.equal(sidebar.y, 80, "Admin sidebar starts directly under the header");
+    assert.equal(sidebar.y + sidebar.height, 900, "Admin sidebar fills the viewport below the header");
     assert(sidebar.x + sidebar.width < main.x, "Calendar stays to the right of admin navigation");
     assert(main.x + main.width > width - 60, "Calendar workspace fills the available right column");
     await page.waitForFunction(() => {
