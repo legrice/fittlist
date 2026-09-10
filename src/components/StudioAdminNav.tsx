@@ -9,7 +9,6 @@ export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: s
   const query = useSearchParams();
   const base = `/s/${slug}/manage`;
   const path = pathname.split("/manage")[1] || "";
-  const Name = path === "" ? "h1" : "strong";
   const openShifts = path === "/calendar" && query.get("show") === "open";
   const sections = [
     { label: "Schedule", links: [
@@ -21,7 +20,7 @@ export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: s
       { label: "Staff", icon: "groups", href: `${base}/staff`, active: path.startsWith("/staff") },
     ] },
     { label: "Studio", links: [
-      { label: "Overview", icon: "storefront", href: base, active: path === "" },
+      { label: "Dashboard", icon: "storefront", href: base, active: path === "" },
       ...(registrationPro ? [{ label: "Front desk", icon: "groups", href: `${base}/registrations`, active: path === "/registrations" }] : []),
       { label: "Class counts", icon: "activity", href: `${base}/counts`, active: path === "/counts" },
       { label: "Owner and managers", icon: "admin_panel_settings", href: `${base}/settings?view=managers`, active: path === "/settings" && query.get("view") === "managers" },
@@ -31,7 +30,7 @@ export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: s
   return <aside className="studio-admin-sidebar">
     <div className="studio-admin-identity">
       <span className="studio-admin-photo">{photo ? <img src={photo} alt="" /> : <Icon name="storefront" size={32} />}</span>
-      <Name>{name}</Name>
+      <strong>{name}</strong>
       <span>Admin center</span>
     </div>
     <nav aria-label="Studio administration">

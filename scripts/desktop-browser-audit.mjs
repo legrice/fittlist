@@ -199,7 +199,7 @@ try {
     assert(await destination.evaluate(el => { const r = el.getBoundingClientRect(), rail = el.closest(".desktop-left").getBoundingClientRect(); return r.x >= rail.x && r.right <= rail.right; }), "Calendar destination fits within the rail");
   }
   await destinations.filter({ hasText: "Studio admin center" }).click();
-  await page.waitForURL("**/s/audit-studio/manage"); await page.getByRole("heading", { name: "Audit Studio", exact: true }).waitFor(); await frame();
+  await page.waitForURL("**/s/audit-studio/manage"); await page.getByRole("heading", { name: "Dashboard", exact: true }).waitFor(); await frame();
   await chooser.click();
   await rail.getByRole("menuitem", { name: "Audit Group Group admin center", exact: true }).click();
   await page.waitForURL("**/g/audit-group/manage");
@@ -235,9 +235,9 @@ try {
   const adminNav = page.getByRole("navigation", { name: "Studio administration" });
   assert.equal(await page.locator('.studio-dashboard-hero:visible').count(), 0, "Desktop overview starts with admin tools, without a duplicate hero");
   const identity = page.locator('.studio-admin-identity');
-  assert.equal(await identity.locator('h1').innerText(), "Audit Studio", "Studio name heads the admin sidebar");
+  assert.equal(await identity.locator('strong').innerText(), "Audit Studio", "Studio name heads the admin sidebar");
   const photoBox = await identity.locator('.studio-admin-photo').boundingBox();
-  const nameBox = await identity.locator('h1').boundingBox();
+  const nameBox = await identity.locator('strong').boundingBox();
   const captionBox = await identity.getByText('Admin center', { exact:true }).boundingBox();
   assert(photoBox.x === nameBox.x && photoBox.y + photoBox.height <= nameBox.y && nameBox.y + nameBox.height <= captionBox.y, "Sidebar identity stacks photo, name and Admin center, left aligned");
   assert.equal(await adminNav.getByRole("link", { name: "Front desk", exact: true }).count(), 0, "Registration tools stay gated to enabled studios");

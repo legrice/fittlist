@@ -55,7 +55,7 @@ try {
     const { context, page } = await open(width, studio);
     try {
       await openAdmin(page);
-      await page.locator('.studio-dashboard-card').filter({ hasText: "Calendar" }).first().click(); await at(page, calendar);
+      await page.locator('.studio-dashboard-calendar-link').click(); await at(page, calendar);
       if (width === 1440) {
         await page.getByRole("button", { name: "Next month", exact: true }).click();
         await page.getByRole("button", { name: "Next month", exact: true }).click();
@@ -68,8 +68,8 @@ try {
       await back(page, admin); await back(page, studio);
       if (width === 1440) {
         await openAdmin(page);
-        await page.locator('.studio-dashboard-card').filter({ hasText: "Calendar" }).first().click(); await at(page, calendar);
-        await page.getByRole("navigation", { name: "Studio administration" }).getByRole("link", { name: "Overview", exact: true }).click(); await at(page, admin);
+        await page.locator('.studio-dashboard-calendar-link').click(); await at(page, calendar);
+        await page.getByRole("navigation", { name: "Studio administration" }).getByRole("link", { name: "Dashboard", exact: true }).click(); await at(page, admin);
         await page.getByRole("link", { name: "View public profile", exact: true }).click(); await at(page, studio);
       }
       console.log(`PASS ${browserName} ${width}: studio → admin → calendar, refresh, month entries, browser Forward, and Back without loops`);
@@ -98,7 +98,7 @@ try {
     const page = origin.page;
     await page.getByRole("button", { name: "Choose a calendar", exact: true }).click();
     await page.getByRole("menuitem", { name: /Audit Studio/ }).click(); await at(page, admin);
-    await page.locator('.studio-dashboard-card').filter({ hasText: "Calendar" }).first().click(); await at(page, calendar);
+    await page.locator('.studio-dashboard-calendar-link').click(); await at(page, calendar);
     await back(page, admin);
     await page.goBack();
     await page.waitForURL(url => url.pathname === "/calendar");

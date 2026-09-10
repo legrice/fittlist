@@ -35,8 +35,8 @@ export default async function ManageStudioPage({
     }
     redirect(`/s/${studioSlug}/manage/calendar?${query.toString()}`);
   }
-  const classes = week?.days.reduce((total, day) => total + day.items.length, 0) ?? 0;
-  const openShifts = week?.days.reduce(
+  const classes = week?.days.filter(day => !day.closed).reduce((total, day) => total + day.items.length, 0) ?? 0;
+  const openShifts = week?.days.filter(day => !day.closed).reduce(
     (total, day) => total + day.items.filter((item) => !item.onUserId).length,
     0,
   ) ?? 0;
@@ -47,6 +47,7 @@ export default async function ManageStudioPage({
       studioSlug={studioSlug}
       hasAccount={!!studio.accountUserId}
       registrationPro={studio.registrationPro}
+      week={week}
       classCount={classes}
       openShiftCount={openShifts}
       staffCount={coaches.length}
