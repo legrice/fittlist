@@ -49,7 +49,7 @@ for (const { file, size, radius, fill } of ICONS) {
 }
 
 // iOS applies its own corner mask; supply an opaque full-size square.
-await sharp(Buffer.from(square(1024, 0, 79.2)))
+await sharp(Buffer.from(square(1024, 0, 68)))
   .removeAlpha().png()
   .toFile("ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png");
 
