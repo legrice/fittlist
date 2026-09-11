@@ -4,7 +4,9 @@ export const dynamic = "force-dynamic";
 
 /** Apple fetches this through the extensionless .well-known rewrite. */
 export function GET() {
-  const teamId = process.env.APPLE_TEAM_ID?.trim();
+  // Public identifier verified against the signed FittList iOS archive.
+  // Keep the website association available without deployment-only setup.
+  const teamId = process.env.APPLE_TEAM_ID?.trim() || "58MG79EU7S";
   if (!teamId || !/^[A-Z0-9]{10}$/.test(teamId)) {
     return NextResponse.json(
       { error: "APPLE_TEAM_ID is not configured" },

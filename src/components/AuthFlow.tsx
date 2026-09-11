@@ -625,7 +625,7 @@ export function AuthFlow({
                 if (sheet === "login") document.getElementById("auth-password")?.focus();
                 else submitAuth();
               }}
-              autoComplete="email"
+              autoComplete={sheet === "login" ? "username" : "email"}
               autoCapitalize="none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
