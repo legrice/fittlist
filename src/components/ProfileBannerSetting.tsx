@@ -60,7 +60,7 @@ export function ProfileBannerSetting({ studioId, groupId, compact = false }: { s
     }}>
       <button ref={closeButton} type="button" className="sheetclose sheet-dismiss" onClick={close} disabled={busy} aria-label="Close banner settings"><Icon name="close" size={20}/></button>
       <h2>Profile banner</h2><p>Choose a wide image. Your profile photo stays separate.</p>
-      <div className="profile-banner-preview">{photo ? <img src={photo} alt="Banner preview"/> : <span>No banner image</span>}</div>
+      {photo ? <div className="profile-banner-preview"><img src={photo} alt="Banner preview"/></div> : <button type="button" className="profile-banner-upload" disabled={!ready || busy} onClick={() => input.current?.click()}><Icon name="image" size={32}/><strong>{preparing ? "Preparing image…" : "Add image"}</strong><span>Choose a wide photo for your banner</span></button>}
       <input ref={input} type="file" accept="image/*" hidden onChange={async event => {
         const file = event.target.files?.[0]; event.currentTarget.value = ""; if (!file) return;
         setBusy(true); setPreparing(true); setError("");
@@ -70,7 +70,13 @@ export function ProfileBannerSetting({ studioId, groupId, compact = false }: { s
       }}/>
       {error && <p role="alert">{error}</p>}
       {!ready && !error && <LoadingDots label="Loading banner"/>}
-      <div className="profile-banner-controls"><button type="button" className="ghost" disabled={!ready || busy} onClick={() => input.current?.click()}>Choose image</button><button type="button" className="ghost" disabled={!ready || busy || !photo} onClick={() => { setPhoto(null); setChanged(true); }}>Remove image</button><button type="button" className="btn" disabled={!ready || busy || !changed} onClick={() => void save()}>{busy ? <LoadingDots label={preparing ? "Preparing banner" : "Saving banner"}/> : "Save banner"}</button></div>
+      <div className="profile-banner-controls">
+        {photo && <div className="profile-banner-image-actions">
+          <button type="button" className="btn ghost" disabled={!ready || busy} onClick={() => input.current?.click()}>Change image</button>
+          <button type="button" className="btn ghost" disabled={!ready || busy} onClick={() => { setPhoto(null); setChanged(true); }}>Remove image</button>
+        </div>}
+        {(changed || busy) && <button type="button" className="btn" disabled={!ready || busy || !changed} onClick={() => void save()}>{busy ? <LoadingDots label={preparing ? "Preparing banner" : "Saving banner"}/> : "Save banner"}</button>}
+      </div>
     </section></div></BodyPortal>}
   </>;
 }
