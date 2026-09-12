@@ -1,5 +1,7 @@
 "use client";
 
+import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
+
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -133,6 +135,7 @@ export function MemberProfileEditor({
               <Icon name="close" size={20} />
             </button>
             <h2>Your profile</h2>
+            <ProfileBannerSetting />
             <p className="lead">
               This is what a coach sees when you follow them, and what anyone opening your link
               sees.

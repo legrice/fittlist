@@ -1,5 +1,7 @@
 "use client";
 
+import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
+
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
@@ -319,6 +321,7 @@ export function ProfileOwnerBar({
               <Icon name="close" size={20} />
             </button>
             <h2>Edit profile</h2>
+            <ProfileBannerSetting />
             <div className="editphoto">
               {pPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element

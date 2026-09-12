@@ -1,6 +1,5 @@
 "use client";
 
-import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -448,7 +447,6 @@ export function ProfileSheet({
 
         {page && showHeading && <h3 className="setgroup-h">Settings</h3>}
         <div className="settingslist">
-          <ProfileBannerSetting />
           <button className="setrow" onClick={() => openView("away")}>
             <span className="setrow-ic"><Icon name="schedule" size={24} /></span>
             <span className="setrow-txt">
