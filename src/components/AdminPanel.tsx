@@ -108,6 +108,7 @@ type Stats = {
 };
 
 export function AdminPanel({
+  flyerVisits = 0,
   adminEmail,
   reports,
   studioReports = [],
@@ -128,6 +129,7 @@ export function AdminPanel({
   activityOpen = false,
   dark = false,
 }: {
+  flyerVisits?: number;
   adminEmail: string;
   reports: ReportedClass[];
   studioReports?: ReportedStudio[];
@@ -290,6 +292,21 @@ export function AdminPanel({
                 <a className="adminback" href="/api/share-app-qr" target="_blank" rel="noopener noreferrer">Open large QR</a>
                 <a className="adminback" href="/api/share-app-qr?download=1" download="fittlist-login-qr.png">Download QR</a>
                 <a className="adminback" href="https://www.fittlist.co/?join=login" target="_blank" rel="noopener noreferrer">Open login</a>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details className="admin-app-share">
+          <summary>Town flyers · {flyerVisits} link visits · Show QR code</summary>
+          <div className="admin-app-share-content">
+            <img src="/api/share-app-qr?campaign=flyer" alt="QR code for the town flyer campaign" width={320} height={320} />
+            <div><h2>Flyer traffic</h2>
+              <p>{flyerVisits} visits through the flyer link. Repeat opens count separately; known bots are excluded. Refresh this page to update.</p>
+              <p>Scans open FittList with the source town_flyer, medium qr, and campaign around_town.</p>
+              <div className="admin-app-share-actions">
+                <a className="adminback" href="/api/share-app-qr?campaign=flyer" target="_blank" rel="noopener noreferrer">Open large QR</a>
+                <a className="adminback" href="/api/share-app-qr?campaign=flyer&amp;download=1" download="fittlist-flyer-qr.png">Download flyer QR</a>
               </div>
             </div>
           </div>

@@ -1453,3 +1453,9 @@ export const eventWaitlist = pgTable("event_waitlist", {
   occurrenceDate: date("occurrence_date", {mode:"string"}).notNull(),
   createdAt: timestamp("created_at", {withTimezone:true}).notNull().defaultNow(),
 }, t => [uniqueIndex("event_waitlist_once").on(t.userId,t.classId,t.occurrenceDate), index("event_waitlist_queue").on(t.classId,t.occurrenceDate,t.createdAt)]);
+
+// Aggregate flyer link opens, without storing visitor identifiers.
+export const flyerVisits = pgTable("flyer_visits", {
+  date: date("date").primaryKey(),
+  count: integer("count").notNull().default(0),
+});

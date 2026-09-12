@@ -1,4 +1,4 @@
-import { desc, eq, isNull, notInArray } from "drizzle-orm";
+import { sql, desc, eq, isNull, notInArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { NON_PERSON_KINDS } from "@/lib/roster";
@@ -262,6 +262,7 @@ export default async function AdminPage({
 
   // The pulse: everything public that changed, newest first, and how much of
   // it is new since the admin last opened the list.
+  const [flyerTotal] = await db.select({ count: sql<number>`coalesce(sum(${schema.flyerVisits.count}), 0)::int` }).from(schema.flyerVisits);
   const activityEntries = await adminActivity(100);
   const seenAt = admin.adminActivityAt?.getTime() ?? 0;
   const fmtWhen = (d: Date) =>
@@ -276,6 +277,7 @@ export default async function AdminPage({
 
   return (
     <AdminPanel
+      flyerVisits={flyerTotal?.count ?? 0}
       adminEmail={admin.email}
       reports={reports}
       studioReports={studioReports}
