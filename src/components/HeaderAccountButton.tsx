@@ -5,7 +5,7 @@ import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { youAccountData } from "@/app/actions/you";
 import { settingsSheetData, type SettingsSheetData } from "@/app/actions/settings";
 import { BodyPortal } from "@/components/BodyPortal";
@@ -37,6 +37,7 @@ export function HeaderAccountButton({
   const dashboardRequest = useRef<Promise<YouAccountData | null> | null>(null);
   const dashboardLoaded = useRef(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (data) writeClientMemory("you-dashboard", data);
@@ -83,6 +84,18 @@ export function HeaderAccountButton({
     setOpen(false);
     router.push(fallbackHref);
   };
+  useEffect(() => {
+    try {
+      const target = sessionStorage.getItem("fl-reopen-you");
+      if (target && target === window.location.pathname + window.location.search) {
+        sessionStorage.removeItem("fl-reopen-you");
+        void show();
+      }
+    } catch { /* Account navigation works without session storage. */ }
+    // Reopen the account sheet only after returning from its profile editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   const openSettings = async (view: ProfileSettingsView) => {
     setSettingsView(view);
     if (settingsData) {

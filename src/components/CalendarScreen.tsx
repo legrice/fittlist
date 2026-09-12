@@ -1,7 +1,6 @@
 "use client";
 
 import { CalendarMiniMonth } from "@/components/CalendarMiniMonth";
-import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
 import { useCalendarScopeRecovery } from "@/lib/calendar-scope-recovery";
 import { useSearchHistory } from "@/lib/use-search-history";
@@ -786,7 +785,6 @@ export function CalendarScreen({
             <button type="button" onClick={() => setCalendarSyncOpen(true)}><span className="calendar-action-icon"><Icon name="event" size={23} /></span><span><strong>Calendar &amp; sync</strong><small>Connect Google, Apple, or Outlook</small></span><Icon name="chevron_right" size={20} /></button>
           </div></section>
           <section><h3>Settings</h3><div className="calendar-action-list">
-            <ProfileBannerSetting />
             {!member && <button type="button" onClick={() => setSettingsView("away")}><span className="calendar-action-icon"><Icon name="schedule" size={23} /></span><span><strong>Set yourself as away</strong><small>Add away dates, a profile note, and an automatic reply</small></span><Icon name="chevron_right" size={20} /></button>}
             <button type="button" onClick={() => setSettingsView("reach")}><span className="calendar-action-icon"><Icon name="public_off" size={23} /></span><span><strong>Privacy &amp; communication</strong><small>Messages, visibility, and follower approvals</small></span><Icon name="chevron_right" size={20} /></button>
             <button type="button" onClick={() => setSettingsView("account")}><span className="calendar-action-icon"><Icon name="lock" size={23} /></span><span><strong>Account &amp; preferences</strong><small>Login, notifications, and appearance</small></span><Icon name="chevron_right" size={20} /></button>
@@ -1188,7 +1186,7 @@ export function CalendarScreen({
       )}
       <Toast msg={toastMsg} on={toastOn} />
       {handle && <QrSheet handle={handle} open={profileQrOpen} onClose={() => setProfileQrOpen(false)} onToast={toast} />}
-      {profileActionsOpen && <BodyPortal><div className="sheet-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setProfileActionsOpen(false); }}><section className="sheet profile-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="profile-actions-title" onMouseDown={(event) => event.stopPropagation()}><button type="button" className="iconbtn sheetclose sheet-dismiss" aria-label="Close profile options" onClick={() => setProfileActionsOpen(false)}><Icon name="close" size={20} /></button><h2 id="profile-actions-title">Profile</h2><div className="calendar-action-list"><Link href={handle ? `/${handle}?edit=1` : "/settings?edit=1"} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="edit" size={23} /></span><span><strong>Edit profile</strong><small>Update your photo and profile details</small></span><Icon name="chevron_right" size={20} /></Link>{handle && <Link href={`/${handle}`} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="person" size={23} /></span><span><strong>View public profile</strong><small>See what other people see</small></span><Icon name="chevron_right" size={20} /></Link>}</div></section></div></BodyPortal>}
+      {profileActionsOpen && <BodyPortal><div className="sheet-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setProfileActionsOpen(false); }}><section className="sheet profile-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="profile-actions-title" onMouseDown={(event) => event.stopPropagation()}><button type="button" className="iconbtn sheetclose sheet-dismiss" aria-label="Close profile options" onClick={() => setProfileActionsOpen(false)}><Icon name="close" size={20} /></button><h2 id="profile-actions-title">Profile</h2><div className="calendar-action-list"><Link href={handle ? `/${handle}?edit=1&from=you` : "/settings?edit=1"} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="edit" size={23} /></span><span><strong>Edit profile</strong><small>Update your photo and profile details</small></span><Icon name="chevron_right" size={20} /></Link>{handle && <Link href={`/${handle}`} onClick={() => setProfileActionsOpen(false)}><span className="calendar-action-icon"><Icon name="person" size={23} /></span><span><strong>View public profile</strong><small>See what other people see</small></span><Icon name="chevron_right" size={20} /></Link>}</div></section></div></BodyPortal>}
       {shareOpen && <ShareTakeover onClosed={() => setShareOpen(false)} />}
       {notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
       {createGroupOpen && <CreateGroupSheet onClose={() => setCreateGroupOpen(false)} />}

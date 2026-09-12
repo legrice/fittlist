@@ -180,7 +180,7 @@ export function YouDashboard({
 
       <div className="youquickactions" aria-label="Profile actions">
         {me.coaching ? (
-          <Link href={`/${me.handle}?edit=1`}>
+          <Link href={`/${me.handle}?edit=1&from=profile`} onClick={() => { try { sessionStorage.setItem("fl-profile-edit-origin", window.location.pathname + window.location.search); } catch {} }}>
             <Icon name="edit" size={18} />
             <span>Edit profile</span>
           </Link>

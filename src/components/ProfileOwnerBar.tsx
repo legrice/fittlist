@@ -3,6 +3,7 @@
 import { ProfileBannerSetting } from "@/components/ProfileBannerSetting";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useSlideBack } from "@/components/BackLink";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { myWeekText } from "@/app/actions/weektext";
@@ -68,6 +69,22 @@ export function ProfileOwnerBar({
   handle: string;
 }) {
   const router = useRouter();
+  const back = useSlideBack();
+  const returnToYou = useRef(false);
+  const reopenPanel = useRef(false);
+  const closeEdit = () => {
+    setEditOpen(false);
+    if (returnToYou.current) {
+      let origin = "/calendar";
+      try {
+        const saved = sessionStorage.getItem("fl-profile-edit-origin");
+        if (saved?.startsWith("/") && !saved.startsWith("//")) origin = saved;
+        if (reopenPanel.current) sessionStorage.setItem("fl-reopen-you", origin);
+        sessionStorage.removeItem("fl-profile-edit-origin");
+      } catch {}
+      back(origin);
+    }
+  };
   const [toastMsg, toastOn, toast] = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [pName, setPName] = useState(name);
@@ -105,9 +122,13 @@ export function ProfileOwnerBar({
   // ?edit=1 arrives from the account tile's Edit profile — open straight into
   // the editor rather than making them find the button again.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("edit")) {
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("edit")) {
+      returnToYou.current = ["profile", "you"].includes(query.get("from") || "");
+      reopenPanel.current = query.get("from") === "profile";
       openEdit();
-      window.history.replaceState(null, "", window.location.pathname);
+      query.delete("edit");
+      window.history.replaceState(window.history.state, "", window.location.pathname + (query.size ? `?${query}` : ""));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -157,7 +178,7 @@ export function ProfileOwnerBar({
         return;
       }
       pendingLink.current = null;
-      setEditOpen(false);
+      closeEdit();
       toast("Profile saved");
       router.refresh();
     });
@@ -313,12 +334,12 @@ export function ProfileOwnerBar({
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setEditOpen(false);
+            if (e.target === e.currentTarget) closeEdit();
           }}
         >
           <div className="sheet">
-            <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={() => setEditOpen(false)}>
-              <Icon name="close" size={20} />
+            <button className="iconbtn sheetclose sheet-dismiss" aria-label={returnToYou.current ? "Back to You" : "Close"} onClick={closeEdit}>
+              <Icon name={returnToYou.current ? "arrow_back" : "close"} size={20} />
             </button>
             <h2>Edit profile</h2>
             <ProfileBannerSetting />

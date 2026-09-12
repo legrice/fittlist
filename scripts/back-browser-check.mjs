@@ -46,6 +46,17 @@ try {
     else await page.locator('.studio-manage-back').first().click();
     await at(page, path);
   }
+  {
+    const { context, page } = await open(393, "/calendar");
+    await page.locator(".calendar-action-icon.profile-avatar").click();
+    await page.getByRole("link", { name: /Edit profile/ }).click();
+    await page.getByRole("heading", { name: "Edit profile", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Back to You", exact: true }).last().click();
+    await page.waitForURL(url => url.pathname === "/calendar");
+    await page.getByRole("region", { name: "Calendar actions" }).waitFor();
+    console.log("PASS mobile: You → Edit profile → Back restores You");
+    await context.close();
+  }
   const setup = await open(1440, calendar);
   await setup.page.getByRole("button", { name: "Start managing the calendar", exact: true }).click();
   await setup.page.locator('.rota-month-board').waitFor();
