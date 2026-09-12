@@ -16267,3 +16267,13 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .studio-calendar-toolbar select { min-height:44px; padding:10px 16px; border:1px solid var(--line); border-radius:var(--radius-pill); background:var(--color-surface); color:var(--ink); font:inherit; }
   .studio-calendar-accessible-title { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 }
+
+.admin-app-share { margin: 20px 0; border: 1px solid var(--line); border-radius: 24px; padding: 20px; }
+.admin-app-share summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
+.admin-app-share summary:hover { opacity: .75; }
+.admin-app-share summary:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.admin-app-share-content { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; padding-top: 20px; }
+.admin-app-share-content img { width: min(100%, 320px); height: auto; background: white; border-radius: 16px; }
+.admin-app-share-content > div { flex: 1 1 240px; }
+.admin-app-share-content p { margin: 12px 0 20px; }
+.admin-app-share-actions { display: flex; flex-wrap: wrap; gap: 12px; }

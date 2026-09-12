@@ -279,6 +279,22 @@ export function AdminPanel({
           <Stat n={stats.requests} label="Requests" />
         </div>
 
+        <details className="admin-app-share">
+          <summary>Share FittList · Show QR code</summary>
+          <div className="admin-app-share-content">
+            <img src="/api/share-app-qr" alt="Scan to open FittList login" width={320} height={320} />
+            <div>
+              <h2>Meet your next favorite class.</h2>
+              <p>Scan to log in to FittList, or create an account from the login screen.</p>
+              <div className="admin-app-share-actions">
+                <a className="adminback" href="/api/share-app-qr" target="_blank" rel="noopener noreferrer">Open large QR</a>
+                <a className="adminback" href="/api/share-app-qr?download=1" download="fittlist-login-qr.png">Download QR</a>
+                <a className="adminback" href="https://www.fittlist.co/?join=login" target="_blank" rel="noopener noreferrer">Open login</a>
+              </div>
+            </div>
+          </div>
+        </details>
+
         {vapidKey && <AdminPushToggle vapidKey={vapidKey} />}
 
         {/* Icons, not words: five labelled pills didn't fit a phone, and the
