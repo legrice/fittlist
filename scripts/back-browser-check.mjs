@@ -100,9 +100,27 @@ try {
       await page.getByRole('combobox',{name:'Calendar view',exact:true}).selectOption('month:all');
       await page.getByRole('button',{name:'Next month',exact:true}).click();
       await page.getByRole('button',{name:'Next month',exact:true}).click();
-      await page.reload(); await at(page,calendar);
-      await page.getByRole('navigation',{name:'Studio administration'}).getByRole('link',{name:'Staff',exact:true}).click();
-      await page.getByRole('heading',{name:'Staff',exact:true}).waitFor();
+      // Navigation must finish even when the reloaded month is still fetching.
+      let releaseMonth;
+      let monthStarted;
+      const heldMonth = new Promise(resolve => { releaseMonth = resolve; });
+      const startedMonth = new Promise(resolve => { monthStarted = resolve; });
+      await page.route("**/api/studios/*/manage-data?*", async route => {
+        if (new URL(route.request().url()).searchParams.get("view") === "month") {
+          monthStarted();
+          await heldMonth;
+        }
+        await route.continue();
+      });
+      try {
+        await page.reload(); await at(page,calendar);
+        await Promise.race([startedMonth, new Promise((_, reject) => setTimeout(() => reject(new Error("Month request did not start")), 10000))]);
+        await page.getByRole('navigation',{name:'Studio administration'}).getByRole('link',{name:'Staff',exact:true}).click();
+        await page.getByRole('heading',{name:'Staff',exact:true}).waitFor();
+      } finally {
+        releaseMonth();
+        await page.unrouteAll({ behavior: "wait" });
+      }
       await page.getByRole('button',{name:'Back from studio admin',exact:true}).click();
       await page.waitForURL(url=>url.pathname===source);
       console.log(`PASS ${browserName}: sidebar Back skips admin pages and month changes, returns to ${source}`);

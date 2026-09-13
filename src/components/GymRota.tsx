@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchStudioMonth } from "@/lib/studio-client-data";
 import { withTimeout } from "@/lib/async";
 import { LoadingDots } from "@/components/LoadingDots";
 
@@ -11,7 +12,6 @@ import {
   applyStandardDay,
   closeGymDay,
   enableStudioSchedule,
-  gymMonth,
   openGymDay,
   publishGymDrafts,
   setShiftCover,
@@ -265,7 +265,7 @@ export function GymRota({
     }
     setMonthLoading(true);
     try {
-      const data = await withTimeout(gymMonth(studioId, key));
+      const data = await withTimeout(fetchStudioMonth(studioId, key));
       if (request !== monthRequest.current) return;
       if (!data) throw new Error("Month unavailable");
       monthCache.current.set(data.month, data);

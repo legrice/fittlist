@@ -133,7 +133,10 @@ try {
     await page.locator('.rota-month-board').waitFor();
     const previous = await page.locator('.rota-month-nav strong').innerText();
     let failed = false;
-    await page.route("**/*", route => { if (!failed && actionName(route.request()) === "gymMonth") { failed = true; return route.abort(); } return route.fallback(); });
+    await page.route("**/api/studios/*/manage-data?*", route => {
+      if (!failed && new URL(route.request().url()).searchParams.get("view") === "month") { failed = true; return route.abort(); }
+      return route.fallback();
+    });
     await page.getByRole("button", { name: "Next month", exact: true }).click();
     await page.getByRole("button", { name: "Try again", exact: true }).waitFor();
     assert.equal(await page.locator('.rota-month-board.loading').count(), 0);

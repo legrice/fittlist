@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchStudioManagers, fetchStudioPageViews } from "@/lib/studio-client-data";
 import { withTimeout } from "@/lib/async";
 import { LoadingDots } from "@/components/LoadingDots";
 
@@ -13,8 +14,6 @@ import {
   saveStandardWeek,
   setStudioShiftApproval,
   searchStudioManagerCandidates,
-  studioManagersForSettings,
-  studioPageViews,
   transferStudioOwnership,
   type StaffPerson,
   type StudioManagerCandidate,
@@ -138,7 +137,7 @@ export function StudioAdminSheet({
     setOpen(true);
     if (!canSchedule || views !== undefined || viewsPending) return;
     startViews(async () => {
-      const result = await withTimeout(studioPageViews(studio.id)).catch(() => null);
+      const result = await withTimeout(fetchStudioPageViews(studio.id)).catch(() => null);
       if (!result?.ok) {
         setViews(null);
         return;
@@ -159,7 +158,7 @@ export function StudioAdminSheet({
     if (admins !== null || adminsPending) return;
     startAdmins(async () => {
       setAdminsError(false);
-      const result = await withTimeout(studioManagersForSettings(studio.id)).catch(() => null);
+      const result = await withTimeout(fetchStudioManagers(studio.id)).catch(() => null);
       if (!result) {setAdminsError(true);return;}
       setAdmins(result.people);
       setCanManageAdmins(result.canManage);
@@ -190,7 +189,7 @@ export function StudioAdminSheet({
       return;
     }
     setAdminEmail("");
-    const refreshed = await studioManagersForSettings(studio.id);
+    const refreshed = await fetchStudioManagers(studio.id);
     setAdmins(refreshed.people);
     setCanManageAdmins(refreshed.canManage);
     toast("Manager added");
@@ -207,7 +206,7 @@ export function StudioAdminSheet({
     }
     setManagerSearch("");
     setManagerCandidates([]);
-    const refreshed = await studioManagersForSettings(studio.id);
+    const refreshed = await fetchStudioManagers(studio.id);
     setAdmins(refreshed.people);
     setCanManageAdmins(refreshed.canManage);
     toast(`${person.name} is now a manager`);
@@ -236,7 +235,7 @@ export function StudioAdminSheet({
       toast(result.error ?? "Couldn't transfer ownership");
       return;
     }
-    const refreshed = await studioManagersForSettings(studio.id);
+    const refreshed = await fetchStudioManagers(studio.id);
     setAdmins(refreshed.people);
     setCanManageAdmins(refreshed.canManage);
     toast(`${person.name} is now the owner`);
