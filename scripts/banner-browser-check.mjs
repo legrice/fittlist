@@ -41,8 +41,10 @@ try {
     const edit = page.getByRole("button", { name: "Edit profile banner", exact: true });
     await edit.click();
     const dialog = page.getByRole("dialog", { name: "Profile banner", exact: true });
-    await dialog.getByRole("button", { name: "Choose image", exact: true }).waitFor();
-    await page.waitForFunction(() => ![...document.querySelectorAll('.profile-banner-controls button')].find(el => el.textContent === "Choose image")?.disabled);
+    await dialog.getByRole("button", { name: /^Add image/ }).waitFor();
+    assert.equal(await dialog.getByRole("button", { name: "Remove image", exact: true }).count(), 0, "No remove action for an empty banner");
+    assert.equal(await dialog.getByRole("button", { name: "Save banner", exact: true }).count(), 0, "No save action before a change");
+    await page.waitForFunction(() => document.querySelector(".profile-banner-upload")?.disabled === false);
     await dialog.locator('input[type="file"]').setInputFiles({ name: "large-phone-photo.jpg", mimeType: "image/jpeg", buffer });
     const save = dialog.getByRole("button", { name: "Save banner", exact: true });
     await save.waitFor();

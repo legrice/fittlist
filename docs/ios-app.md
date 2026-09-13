@@ -7,11 +7,11 @@ FittList is a Capacitor shell around `https://www.fittlist.co`. The server-rende
 - Display name: **FittList**
 - Bundle identifier: `co.fittlist.app`
 - Marketing version: `1.0`
-- Current build: `7`, provisional until checked against App Store Connect
+- Latest uploaded build: `8` (version `1.0`), uploaded September 11, 2026; App Store Connect processing/review status must still be checked before distribution.
 - Minimum deployment: iOS 16.0
 - Device family: `1` (iPhone), portrait only
 - Catalyst, Mac-designed-for-iPhone and Vision-designed-for-iPhone build support disabled
-- Existing branded 1024px opaque icon and launch storyboard retained
+- Flat green-on-dark 1024px opaque app icon, with the smaller mark introduced in build 8; launch storyboard retained
 
 Family 1 removes the native iPad target/layout. Apple may still offer an iPhone app in iPad compatibility mode; do not claim a complete iPad installation ban or add fictitious hardware requirements. Check App Store Connect's Mac and Apple Vision Pro availability separately.
 
@@ -46,14 +46,14 @@ Xcode also runs `scripts/check-ios-release.py` on every Release build, including
 
 1. Select the correct paid Developer team under Signing & Capabilities. Obtain the appropriate distribution signing/provisioning configuration. The repository intentionally does not guess the current organization team.
 2. Enable Associated Domains for `co.fittlist.app`. The entitlements are `applinks:www.fittlist.co` and `webcredentials:www.fittlist.co`.
-3. Set `APPLE_TEAM_ID` in the production web deployment. Confirm `https://www.fittlist.co/.well-known/apple-app-site-association` returns 200 JSON, without redirects, containing this team's app identifier for both services. It returned 503 during the 2026-09-07 audit.
+3. Set `APPLE_TEAM_ID` in the production web deployment. Confirm `https://www.fittlist.co/.well-known/apple-app-site-association` returns 200 JSON, without redirects, containing this team's app identifier for both services. It returned 503 during the 2026-09-07 audit. This is resolved: the endpoint defaults to the verified FittList team, and both the live endpoint and Apple’s cached association returned 200 with the correct app identifier on September 13.
 4. Deploy the reviewed web changes through the normal approved release process. Recheck authentication, sharing and associations against the live origin.
-5. Confirm the highest uploaded build number; increase build 7 if it is already used. Choose a generic iOS device and **Product > Archive**. Validate the signed archive before uploading.
+5. Confirm the highest uploaded build number; use a number above the highest uploaded build. Choose a generic iOS device and **Product > Archive**. Validate the signed archive before uploading.
 6. In App Store Connect, check identity, iPhone-only product description, availability on Mac/Vision, privacy answers, age-rating answers, export-compliance answers, beta description, feedback email, review contact and a working reviewer account. Complete external beta review and any outstanding agreements.
 
 The installed toolchain during the audit was Xcode 26.6 with iOS SDK 26.5. Apple requires SDK 26 or later for uploads from April 28, 2026. The deployment minimum and upload SDK are separate settings.
 
-Do not upload the pre-existing archive under `AppStore/`: its embedded server configuration is not canonical production. That archive and directory have been left unchanged.
+Do not upload the legacy `AppStore/Builds/FittList-1.0-6.xcarchive`: its embedded server configuration is not canonical production. Builds 7 and 8 were subsequently archived with the production origin and successfully uploaded.
 
 ## Native behavior and permissions
 
@@ -70,7 +70,7 @@ Review privacy answers against actual production analytics, image storage, datab
 
 ## Verification
 
-See [the iPhone release audit](IPHONE_TESTFLIGHT_AUDIT_2026-09-07.md) for evidence and remaining release gates. Useful commands:
+See [the current external-testing checklist](TESTFLIGHT_EXTERNAL_2026-09-13.md) and [the historical iPhone release audit](IPHONE_TESTFLIGHT_AUDIT_2026-09-07.md) for evidence and remaining release gates. Useful commands:
 
 ```sh
 npm run typecheck

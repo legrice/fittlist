@@ -151,7 +151,7 @@ try {
       assert.equal(commits,1,'Recovery commits exactly one destination');
       release();await Promise.all(held);
       await page.unroute('**/calendar/following**');
-      await page.goBack();await page.getByRole('navigation',{name:'Calendar view',exact:true}).waitFor();
+      await page.goBack();await page.waitForURL(url=>url.pathname==='/calendar',{timeout:12000});await page.getByRole('navigation',{name:'Calendar view',exact:true}).waitFor();
       assert.equal(new URL(page.url()).pathname,'/calendar');
     } finally {release();await Promise.all(held);await isolated.close();}
   });
