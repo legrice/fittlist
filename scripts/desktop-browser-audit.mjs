@@ -80,6 +80,10 @@ try {
     for (const route of ["/calendar", "/calendar/following", "/auditcoach", "/s/audit-studio", "/g/audit-group", "/s/audit-studio/manage"]) {
       await visit(route); await frame();
       if (route === "/calendar" || route === "/calendar/following") {
+        // The server header exists before the responsive client rail mounts.
+        // Measure the completed desktop layout, not that intermediate frame.
+        await page.locator(".calendar-app-workspace .calendar-desktop-sheet").waitFor();
+        await frame();
         await page.locator(".calendar-summary-heading").waitFor();
         const summary = page.locator(".calendar-summary-heading");
         const summaryBox = await summary.boundingBox();
