@@ -71,6 +71,11 @@ async function main() {
   await db.delete(schema.users).where(eq(schema.users.id,admin.id));
   assert.equal((await db.select().from(schema.nativePushDevices)).length,0);
   assert.equal((await db.select().from(schema.nativePushDeliveries)).length,0);
+  process.env.CRON_SECRET = "test-cron";
+  process.env.SCHEDULED_EMAILS_ENABLED = "false";
+  for (const route of [await import("../src/app/api/cron/weekly/route"), await import("../src/app/api/cron/daily/route"), await import("../src/app/api/cron/shifts/route")]) {
+    assert.equal((await route.GET(new Request("https://example.test/api/cron", { headers: { authorization: "Bearer test-cron" } }))).status, 204, "Push scheduler activation must not enable email schedules");
+  }
   await client.close();
   console.log("PASS native push: migration, routing, privacy, preferences, account switching, revocation, retries, token cleanup, deletion");
 }

@@ -12,6 +12,10 @@ Device registrations are bound to the current account, session version and expir
 
 A durable database outbox is written before sending. Next.js response-lifetime work attempts immediate delivery. `/api/cron/push` retries every five minutes and requires `CRON_SECRET`. Temporary failures use exponential backoff, with a maximum of eight attempts and a 24-hour expiry. Invalid or unregistered device tokens are removed. As with other retrying delivery systems, a process crash after Apple accepts a push but before the database acknowledges it can cause a duplicate.
 
+## Release status
+
+FittList 1.0 (9) was archived and accepted by App Store Connect on September 13, 2026. The Apple app identifier now has Push Notifications enabled. The production, app-scoped APNs key was created; its downloaded private key still needs to be placed in Vercel before server activation. No real-device delivery has been verified.
+
 ## Production activation
 
 1. Enable Push Notifications for Apple App ID `co.fittlist.app` in team `58MG79EU7S`.
@@ -22,6 +26,7 @@ A durable database outbox is written before sending. Next.js response-lifetime w
    - `APNS_PRIVATE_KEY`: full `.p8` contents, preserving newlines (escaped `\n` is also accepted).
    - `APNS_ENVIRONMENT`: `production`.
    - Ensure `CRON_SECRET` and `ADMIN_EMAILS` are configured.
+   - When adding a previously missing `CRON_SECRET`, set `SCHEDULED_EMAILS_ENABLED=false` first to keep the existing email schedules inactive. Push retries remain enabled. Enable scheduled emails separately when intended.
 4. Redeploy the server so the secrets become available. Migration `0124_native_push` runs through the existing lazy migration system. No credentials belong in client configuration or git.
 5. Sync the iOS project, refresh provisioning with the push entitlement, increment the build number, archive and upload a new TestFlight build. Existing build 8 cannot receive native push because it lacks the plugin.
 6. Install the new TestFlight build on an iPhone and enable notifications. Verify one follow, one message and one town-flyer link open with isolated test accounts. Check delivery in foreground, background and terminated states, then tap each notification. Verify opt-out and logout stop later deliveries.

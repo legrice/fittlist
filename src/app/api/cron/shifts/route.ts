@@ -8,6 +8,7 @@ async function run(req: Request): Promise<Response> {
   const auth = req.headers.get("authorization");
   const key = new URL(req.url).searchParams.get("key");
   if (auth !== `Bearer ${secret}` && key !== secret) return new Response("Unauthorized", { status: 401 });
+  if (process.env.SCHEDULED_EMAILS_ENABLED === "false") return new Response(null, { status: 204 });
   return Response.json({ ok: true, ...(await sendShiftReminders()) });
 }
 

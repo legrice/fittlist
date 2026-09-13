@@ -7,7 +7,7 @@ FittList is a Capacitor shell around `https://www.fittlist.co`. The server-rende
 - Display name: **FittList**
 - Bundle identifier: `co.fittlist.app`
 - Marketing version: `1.0`
-- Latest uploaded build: `8` (version `1.0`), uploaded September 11, 2026; App Store Connect processing/review status must still be checked before distribution.
+- Latest uploaded build: `9` (version `1.0`), accepted by App Store Connect on September 13, 2026. Includes native push registration and the APNs entitlement; server credential activation and device delivery remain separate checks.
 - Minimum deployment: iOS 16.0
 - Device family: `1` (iPhone), portrait only
 - Catalyst, Mac-designed-for-iPhone and Vision-designed-for-iPhone build support disabled
@@ -62,7 +62,7 @@ Do not upload the legacy `AppStore/Builds/FittList-1.0-6.xcarchive`: its embedde
 - Warm and cold universal links are validated and rebased to the shell's origin. Long inactivity triggers a session check; a server outage is not treated as logout.
 - Native PNG sharing has bounded caching, session-scoped cache keys, cancellation and retry, protected local files, and same-origin redirect enforcement. Share caches are temporary, not synchronized.
 - Camera, selected photos, photo-library saving and location descriptions correspond to actual optional features. No contacts, microphone, native calendar database or background-location permission is requested.
-- There is no native push registration/APNs entitlement/background mode. In-app notifications work; do not promise native push to TestFlight testers.
+- Build 9 includes native push registration and the APNs entitlement. Alert notifications do not require a silent-push background mode. See [native push activation](NATIVE_PUSH.md); delivery is not live until the server credentials are configured.
 - The current login UI uses email/password, email links and passkeys. The unused native Sign in with Apple handler and entitlement were removed. Google Calendar is a calendar connection, not a login button; it now starts in a browser so consent and callback share a cookie jar.
 - The privacy manifest declares sandbox file timestamps (`C617.1`) for share-cache maintenance. Capacitor 8.5's key-value store uses files, not UserDefaults; a speculative UserDefaults declaration was not added.
 

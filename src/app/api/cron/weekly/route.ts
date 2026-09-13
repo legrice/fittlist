@@ -19,6 +19,8 @@ async function run(req: Request): Promise<Response> {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  if (process.env.SCHEDULED_EMAILS_ENABLED === "false") return new Response(null, { status: 204 });
+
   const result = await sendWeeklyDigests();
   return Response.json({ ok: true, ...result });
 }

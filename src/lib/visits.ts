@@ -21,7 +21,7 @@ export async function recordVisit(trainerUserId: string): Promise<void> {
       target: [schema.pageVisits.trainerUserId, schema.pageVisits.date],
       set: { count: sql`${schema.pageVisits.count} + 1` },
     });
-  try { await pushToAdmins({ title: "Profile viewed", body: "Someone opened a coach profile.", url: "/admin?tab=activity" }); } catch { console.error("profile activity push failed"); }
+  try { await pushToAdmins({ title: "Profile viewed", body: "Someone opened a FittList profile.", url: "/admin?tab=activity" }); } catch { console.error("profile activity push failed"); }
 }
 
 export async function recordScheduleOpen(trainerUserId: string): Promise<void> {
