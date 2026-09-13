@@ -28,7 +28,7 @@ async function checked(name, fn) {
   if (desktop && name.startsWith("Search close")) return;
   const start = performance.now();
   try { const detail = await fn(); report.checks.push({ name, status: "passed", elapsedMs: Math.round(performance.now() - start), ...detail }); console.log(`PASS ${name}`); }
-  catch (error) { report.checks.push({ name, status: "failed", elapsedMs: Math.round(performance.now() - start), message: String(error) }); console.log(`FAIL ${name}: ${error.message}`); }
+  catch (error) { report.checks.push({ name, status: "failed", elapsedMs: Math.round(performance.now() - start), message: String(error) }); console.log(`FAIL ${name}: ${error.stack || error.message}`); }
   fs.writeFileSync(output, JSON.stringify(report, null, 2));
 }
 async function context() {
@@ -53,7 +53,16 @@ async function openFollowing(page) {
   const reveal = page.getByRole("button", { name: "Show Explore calendar", exact: true });
   if (!desktop && await reveal.isVisible()) await reveal.click();
 }
+async function revealDesktopControls(page) {
+  if (!desktop) return;
+  // These controls live at the top of the page. Playwright's minimum scroll
+  // can leave them underneath the sticky header or discovery panel on Linux.
+  // Return to the page header, as a person changing views would do.
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  
+}
 async function showMonth(page, ym, loaded = true) {
+  await revealDesktopControls(page);
   const switcher = page.getByRole("button", { name: desktop ? "Month view" : "Switch to month view", exact: true });
   if (await switcher.isVisible()) await switcher.click();
   const block = page.locator(`#month-${ym}`);
@@ -110,6 +119,7 @@ try {
       assert(before && after && Math.abs(before.y - after.y) < 2, "Weekday rail stays at the viewport edge");
       assert(after.y >= 0 && after.y + after.height < 240, "Pinned header remains within the top of the viewport");
       assert((await page.locator(".scrollhead-d").innerText()).trim(), "Pinned header names the visible month");
+      await revealDesktopControls(page);
       await page.getByRole("button", { name: desktop ? "Day view" : "Switch to day view", exact: true }).click();
       assert.equal(await page.locator(".scrollhead").count(), 0, "Month header is removed in day view");
     } finally { await c.close(); }
