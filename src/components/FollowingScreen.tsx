@@ -1023,6 +1023,11 @@ export function FollowingScreen({
     const p = f.place as string[];
     return p.length === 1 ? p[0] : `${p.length} places`;
   };
+  const explorePanelRef = useRef<HTMLElement>(null);
+  const openExplorePanel = () => {
+    explorePanelRef.current?.scrollIntoView({ block:"nearest" });
+    explorePanelRef.current?.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')?.focus();
+  };
   const followingSidebar = desktop && calendarFollowing;
   const calendarScope = (<>{isHome && !firstRun && !(calendarFollowing && followingSummary.length === 0 && items.length === 0) && (
         <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
@@ -1056,7 +1061,7 @@ export function FollowingScreen({
           <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             {(["day", "month"] as const).map((view) => <button key={view} type="button" className={calendarView === view ? "on" : ""} aria-label={view === "day" ? "Day view" : "Month view"} aria-pressed={calendarView === view} onClick={() => { monthDayRequest.current += 1; setPendingMonthDay(null); setSelectedMonthDay(null); setCalendarView(view); }}><Icon name={view === "day" ? "calendar_view_day" : "calendar_month"} size={21} /></button>)}
           </div>
-          <Link className="calendar-header-share" href="/discover"><Icon name="search" size={20} /><span>Find calendars</span></Link>
+          <button type="button" className="calendar-header-share" onClick={openExplorePanel}><Icon name="search" size={20} /><span>Explore</span></button>
           </div>
         </div>
       </header>}
@@ -1121,7 +1126,7 @@ export function FollowingScreen({
       ) : isHome && calendarView === "day" && !selectedMonthDay && shown.length === 0 && calendarPending ? (
         <div className="calendar-stream-loading" role="status"><LoadingDots label="Loading your schedule"/></div>
       ) : (isHome ? calendarView === "day" && !selectedMonthDay && !followingSummary.length && shown.length === 0 : items.length === 0) ? (
-        calendarFollowing ? <section className="calendar-first-class" aria-labelledby="following-empty-title"><h2 id="following-empty-title" className="following-empty-title">{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</h2>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={() => desktop ? router.push("/discover") : restoreActionSurface()}>Explore calendars</button></section> : firstRun ? (
+        calendarFollowing ? <section className="calendar-first-class" aria-labelledby="following-empty-title"><h2 id="following-empty-title" className="following-empty-title">{followingSummary.length === 0 ? "Follow people, studios, or groups to see their classes here." : "Classes from the calendars you follow will appear here."}</h2>{followingSummary.length === 0 && <SuggestedFollows />}<button className="btn" type="button" onClick={() => desktop ? openExplorePanel() : restoreActionSurface()}>Explore calendars</button></section> : firstRun ? (
           <section className="calendar-member-empty" aria-labelledby="calendar-empty-title">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="calendar-member-empty-figure" src="/illustrations/following-empty.png" alt="" width={356} height={600} />
@@ -1322,7 +1327,7 @@ export function FollowingScreen({
         </>
       )}
       </div>
-      {followingSidebar && <aside className="calendar-desktop-sheet calendar-desktop-explore" aria-label="Discover people, places, and groups">
+      {followingSidebar && <aside ref={explorePanelRef} className="calendar-desktop-sheet calendar-desktop-explore" aria-label="Discover people, places, and groups">
         <h2 className="calendar-desktop-sheet-title">Explore</h2>
         <div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack groupFrom="calendar-following" /></div>
         <details className="calendar-desktop-dates"><summary>Jump to a date</summary>

@@ -185,24 +185,26 @@ try {
   await rail.getByRole("link", { name: /^Notifications/ }).click();
   await page.waitForURL("**/notifications"); await page.getByRole("heading", { name: "Notifications", exact: true }).waitFor(); await frame();
   await page.goBack(); await page.waitForURL("**/calendar"); await page.locator(".calendar-summary-heading").waitFor();
-  assert.equal(await rail.getByRole("link", { name: "Search", exact: true }).count(), 0, "Desktop discovery uses a single Discover link");
-  await rail.getByRole("link", { name: "Discover", exact: true }).click();
-  await page.waitForURL("**/discover"); await frame();
-  report.checks.push("Share, personal calendar, Notifications and Discover navigate as pages; Back returns to their origins");
+  assert.equal(await rail.getByRole("link", { name: "Discover", exact: true }).count(), 0, "Discovery lives alongside Following");
+  await rail.getByRole("link", { name: "Following", exact: true }).click();
+  await page.waitForURL("**/calendar/following"); await frame();
+  const explorePanel = page.locator(".calendar-desktop-explore");
+  await explorePanel.getByRole("tab", { name: "People", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Explore", exact: true }).click();
+  assert(await explorePanel.getByRole("tab", { name: "People", exact: true }).evaluate(el => el === document.activeElement), "Explore focuses the discovery panel");
+  report.checks.push("Following combines followed schedules and discovery in one workspace");
 
-  await visit("/calendar");
-  const chooser = rail.getByRole("button", { name: "Choose a calendar", exact: true });
-  await chooser.click();
-  const destinations = rail.getByRole("menuitem");
-  assert.equal(await rail.locator('.desktop-calendar-menu > .selected').count(), 1, "Only your current calendar is selected");
-  for (const destination of await destinations.all()) {
-    assert(await destination.evaluate(el => { const r = el.getBoundingClientRect(), rail = el.closest(".desktop-left").getBoundingClientRect(); return r.x >= rail.x && r.right <= rail.right; }), "Calendar destination fits within the rail");
-  }
-  await destinations.filter({ hasText: "Studio admin center" }).click();
+  await rail.getByRole("link", { name: "You", exact: true }).click();
+  await page.waitForURL("**/calendar");
+  assert.equal(await rail.getByRole("button", { name: "Choose a calendar", exact: true }).count(), 0, "You is a direct destination without a dropdown");
+  assert.equal(await rail.getByRole("link", { name: "You", exact: true }).getAttribute("aria-current"), "page");
+  await page.locator(".calendar-desktop-sheet").getByRole("link", { name: "Admin Audit Studio", exact: true }).click();
   await page.waitForURL("**/s/audit-studio/manage"); await page.getByRole("heading", { name: "Dashboard", exact: true }).waitFor(); await frame();
-  await chooser.click();
-  await rail.getByRole("menuitem", { name: "Audit Group Group admin center", exact: true }).click();
-  await page.waitForURL("**/g/audit-group/manage");
+  await rail.getByRole("link", { name: "You", exact: true }).click();
+  await page.waitForURL("**/calendar");
+  await page.locator(".calendar-desktop-sheet").getByRole("link", { name: "Admin Audit Group", exact: true }).click();
+  await page.waitForURL("**/g/audit-group");
+  await visit("/g/audit-group/manage");
   await page.getByRole("heading", { name:"Members", exact:true }).waitFor();
   const anonymous=await browser.newContext();
   const denied = await anonymous.request.get(base+"/g/audit-group/manage");
@@ -229,7 +231,7 @@ try {
   const classBounds = await detail.boundingBox();
   assert(classBounds.y >= 24 && classBounds.y + classBounds.height <= 876, "Class dialog fits desktop");
   await page.keyboard.press("Escape"); await detail.waitFor({ state: "hidden" });
-  report.checks.push("Managed calendars fit the rail; Add, profile actions and class details dismiss with focus; About stays inline");
+  report.checks.push("Managed calendars open from You; Add, profile actions and class details dismiss with focus; About stays inline");
 
   await visit("/s/audit-studio/manage");
   const adminNav = page.getByRole("navigation", { name: "Studio administration" });
