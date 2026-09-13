@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { staffView } from "@/app/actions/gym";
 import { StudioShiftsView } from "@/components/StudioShiftsView";
+import { AppChrome } from "@/components/AppChrome";
 import { viewerLook } from "@/lib/look";
 
 export const dynamic = "force-dynamic";
@@ -54,8 +55,11 @@ export default async function ShiftsPage({
   const view = await staffView(studio.id);
   if (!view) notFound();
   return (
-    <section className="screen" data-mode={await viewerLook()}>
+    <section className="screen hasnav" data-mode={await viewerLook()}>
+      <div className="pad studio-manage-shell">
+      <AppChrome userId={viewerId} bar active="calendar" social />
       <StudioShiftsView
+        photo={studio.photo}
         view={view}
         canSchedule={!!studio.accountUserId}
         pageViews={null}
@@ -63,6 +67,7 @@ export default async function ShiftsPage({
         studio={null}
         coachPreview={coachPreview}
       />
+      </div>
     </section>
   );
 }

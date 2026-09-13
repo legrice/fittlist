@@ -16123,7 +16123,8 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
     width:100%; max-width:none; margin:0; padding:0;
   }
   .studio-admin-workspace { --studio-admin-sidebar-width:260px; padding:32px clamp(24px,2.5vw,48px) 40px calc(var(--studio-admin-sidebar-width) + 32px); }
-  .studio-admin-sidebar { display:block; position:fixed; inset:80px auto 0 0; z-index:30; width:var(--studio-admin-sidebar-width); overflow-y:auto; overscroll-behavior:contain; padding:28px 16px 24px; background:var(--color-surface); border-right:1px solid var(--kinetic-control-border); color:var(--ink); scrollbar-width:thin; }
+  /* Keep the sidebar below the global header and its dropdown menus (z-index:30). */
+  .studio-admin-sidebar { display:block; position:fixed; inset:80px auto 0 0; z-index:29; width:var(--studio-admin-sidebar-width); overflow-y:auto; overscroll-behavior:contain; padding:28px 16px 24px; background:var(--color-surface); border-right:1px solid var(--kinetic-control-border); color:var(--ink); scrollbar-width:thin; }
   .studio-admin-identity { display:grid; gap:6px; padding:8px 12px 24px; }
   .studio-admin-photo { display:grid; place-items:center; width:72px; height:72px; margin-bottom:10px; border-radius:50%; overflow:hidden; background:var(--color-surface-muted); }
   .studio-admin-photo img { width:100%; height:100%; object-fit:cover; }
@@ -16286,3 +16287,37 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 .profile-banner-image-actions { display:flex; gap:12px; width:100%; }
 .profile-banner-image-actions .btn { flex:1; width:auto; min-height:48px; font-size:16px; }
 @media (hover:hover) { .profile-banner-upload:not(:disabled):hover { background:var(--si-tint); border-color:var(--ink); } }
+
+/* Coach workspace shares the studio shell, with shift tools for staff. */
+.studio-coach-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.studio-coach-workspace .studio-admin-nav-link:is(button) { width:100%; border:0; background:transparent; text-align:left; cursor:pointer; font-family:inherit; }
+.studio-coach-workspace .studio-admin-nav-link[aria-current="page"] { background:var(--color-surface-muted); }
+.studio-coach-view > .adminempty { padding:28px; border-radius:24px; background:var(--kinetic-surface); color:var(--kinetic-text); }
+@media (min-width:940px) {
+  .studio-coach-view > .studio-manage-top, .studio-coach-tabs { display:none; }
+  .studio-coach-view .staff-calendar-day > h2 { top:80px; background:var(--kinetic-canvas-light); color:var(--kinetic-text); }
+}
+@media (max-width:939px) {
+  .studio-coach-heading { display:none; }
+  .studio-coach-view .studio-manage-top h1 { font-size:28px; }
+  .studio-coach-view .studio-dashboard-stats { margin-top:24px; }
+}
+
+/* Let the calendar's front and rear sheets reach the viewport edge on tablets.
+   The shared 940px desktop breakpoint keeps landscape iPads in desktop mode. */
+@media (max-width:939px) {
+  .screen.hasnav:has(.calendar-scope-hero) > .pad { max-width:none; }
+}
+@media (min-width:600px) and (max-width:939px) {
+  .screen.hasnav:has(.calendar-scope-hero) { --page-gutter:32px; }
+  .calendar-summary-copy > strong { font-size:30px; line-height:1.15; }
+  .calendar-summary-copy > small { font-size:17px; }
+  .calendar-action-list strong { font-size:20px; }
+  .calendar-action-list small { font-size:16px; }
+  .calendar-action-hub > section > h3,
+  .calendar-action-section-head h3 { font-size:18px; }
+  .calendar-action-sheet .calendar-quick-actions :is(button,a) { min-height:48px; font-size:16px; }
+  .calendar-action-section-head :is(a,button) { min-height:36px; font-size:15px; }
+  .calendar-action-list > :is(button,a) { min-height:100px; padding:20px; gap:18px; }
+  .calendar-action-list { gap:16px; }
+}

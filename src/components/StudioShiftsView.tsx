@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -20,19 +21,10 @@ import { Toast, useToast } from "@/components/Toast";
 
 type Tab = "mine" | "open" | "all" | "requests";
 
-// The studio's shifts, for whoever works here.
-//
-// The arrangement the spec insists on: My shifts is the default tab for
-// everyone, admin or not. A manager is almost always also a coach, and a
-// manager-only mode that hides their own shifts is the thing to avoid; their
-// extra powers are extra tabs, not a different screen.
-//
-// All shifts is deliberately a link to the rota rather than a fourth list
-// here. The rota is already a real dated week with adding, editing and
-// assigning on it, and a second calendar would drift from it the way the
-// class row drifted into six copies.
+// Coach shift tools share the studio workspace on desktop and compact tabs on mobile.
 export function StudioShiftsView({
   view,
+  photo,
   pageViews,
   studio,
   showCoaches = true,
@@ -40,6 +32,7 @@ export function StudioShiftsView({
   coachPreview = false,
 }: {
   view: StaffView;
+  photo: string | null;
   /** The studio's own settings, behind the overflow. Null for a staff coach:
    *  the sheet is the manager's, and so is everything in it. */
   pageViews: number | null;
@@ -104,7 +97,7 @@ export function StudioShiftsView({
   const managerMode = view.isManager && !coachPreview;
   const tabs: { key: Tab; label: string; n?: number }[] = [
     { key: "mine", label: "My shifts", n: view.mine.length },
-    { key: "open", label: "Open", n: view.open.length },
+    { key: "open", label: "Open shifts", n: view.open.length },
     ...(managerMode
       ? ([{ key: "requests", label: "Requests", n: view.requests.length }] as const)
       : []),
@@ -116,7 +109,26 @@ export function StudioShiftsView({
   }));
 
   return (
-    <div className="pad studio-shifts-view">
+    <div className="studio-admin-workspace studio-coach-workspace">
+      <aside className="studio-admin-sidebar">
+        <Link className="studio-admin-back" href={coachPreview ? `/s/${view.slug}/manage` : `/s/${view.slug}`}><Icon name="arrow_back" size={20}/><span>{coachPreview ? "Back to admin" : "Back"}</span></Link>
+        <div className="studio-admin-identity">
+          <span className="studio-admin-photo">{photo ? <img src={photo} alt="" /> : <Icon name="storefront" size={32}/>}</span>
+          <strong>{view.studioName}</strong>
+          <span>{coachPreview ? "Coach view preview" : "Coach center"}</span>
+        </div>
+        <nav aria-label="Studio coaching">
+          <div className="studio-admin-nav-section">
+            {tabs.map(t => <button type="button" key={t.key} className="studio-admin-nav-link" aria-current={tab === t.key ? "page" : undefined} onClick={() => setTab(t.key)}><Icon name={t.key === "mine" ? "calendar_month" : t.key === "open" ? "event_available" : "notifications"} size={21}/><span>{t.label}</span><span>{t.n ?? 0}</span></button>)}
+          </div>
+          <div className="studio-admin-nav-section studio-admin-nav-preview">
+            <Link className="studio-admin-nav-link" href="/calendar"><Icon name="calendar_month" size={21}/><span>My calendar</span></Link>
+            <Link className="studio-admin-nav-link" href={`/s/${view.slug}`}><Icon name="storefront" size={21}/><span>View studio profile</span><Icon name="arrow_outward" size={17}/></Link>
+          </div>
+        </nav>
+      </aside>
+      <main className="studio-admin-main">
+      <div className="pad studio-shifts-view studio-coach-view">
       <div className="studio-manage-top pagetop">
         <BackLink
           className="evback studio-manage-back"
@@ -158,7 +170,15 @@ export function StudioShiftsView({
         </div>
       )}
 
-      <div className="pubtabs distabs" aria-label="Shifts">
+      <header className="studio-dashboard-heading studio-coach-heading">
+        <div><h1>{tabs.find(t => t.key === tab)?.label}</h1><p>Next two weeks</p></div>
+        <Link className="studio-dashboard-calendar-link" href="/calendar"><Icon name="calendar_month" size={19}/>My calendar</Link>
+      </header>
+      <dl className="studio-dashboard-stats studio-coach-stats">
+        <div><dt>My shifts</dt><dd>{view.mine.length}</dd><small>In the next two weeks</small></div>
+        <div><dt>Open shifts</dt><dd>{view.open.length}</dd><small>Available to pick up</small></div>
+      </dl>
+      <div className="pubtabs distabs studio-coach-tabs" aria-label="Shifts">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -503,6 +523,8 @@ export function StudioShiftsView({
         </div>
       )}
       <Toast msg={toastMsg} on={toastOn} />
+      </div>
+      </main>
     </div>
   );
 }
