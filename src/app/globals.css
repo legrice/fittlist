@@ -16330,14 +16330,14 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   }
   .screen.hasnav:has(.calendar-app-workspace) { --calendar-rail-width:clamp(340px,38vw,520px); }
   .screen.hasnav:has(.calendar-app-workspace) > .pad {
-    width:calc(100% - var(--calendar-rail-width)); max-width:none; margin-inline:0;
+    width:calc(100% - var(--calendar-rail-width)); max-width:none; margin-inline:var(--calendar-rail-width) 0;
     padding-inline:clamp(24px,2.5vw,48px);
   }
   .calendar-app-workspace.has-sidebar { display:block; }
   .screen.hasnav:has(.calendar-app-workspace) .calendar-page-title-row { flex-wrap:wrap; }
   .screen.hasnav:has(.calendar-app-workspace) .calendar-page-title { flex-basis:100%; }
   .screen.hasnav:has(.calendar-app-workspace) .scrollhead {
-    right:var(--calendar-rail-width); padding-inline:clamp(24px,2.5vw,48px);
+    left:var(--calendar-rail-width); right:0; padding-inline:clamp(24px,2.5vw,48px);
   }
   .screen.hasnav:has(.calendar-app-workspace) .calendar-summary-heading,
   .calendar-app-workspace > :not(.calendar-desktop-sheet) :is(.dayband-d,.cash-day > h2,.calendar-person-chip small,.calendar-first-class,.wkempty-t,.wkempty-s,.calendar-selection-empty,.feedfilter-txt) { color:var(--kinetic-inverse); }
@@ -16353,9 +16353,9 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
     --color-surface:var(--kinetic-surface);
     --color-surface-muted:var(--kinetic-badge);
     --color-text-primary:var(--kinetic-text);
-    position:fixed; inset:80px 0 0 auto; z-index:20; width:var(--calendar-rail-width);
+    position:fixed; inset:80px auto 0 0; z-index:20; width:var(--calendar-rail-width);
     min-width:0; max-height:none; overflow-y:auto; overscroll-behavior:contain;
-    padding:28px 24px; border-radius:0; border-left:1px solid var(--kinetic-control-border);
+    padding:28px 24px; border-radius:0; border-right:1px solid var(--kinetic-control-border);
     background:var(--kinetic-canvas-light); color:var(--kinetic-text);
     scrollbar-width:thin; scrollbar-gutter:stable;
   }

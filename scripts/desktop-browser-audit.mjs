@@ -94,9 +94,9 @@ try {
         if (route === "/calendar") {
           const sidebar = page.getByRole("complementary", { name: "Calendar actions" });
           await sidebar.waitFor();
-          const left = await page.locator(".calendar-workspace > .calendar-cardwrap").boundingBox();
-          const right = await sidebar.boundingBox();
-          assert(right.x >= left.x + left.width, "Personal action sheet sits beside the schedule");
+          const schedule = await page.locator(".calendar-workspace > .calendar-cardwrap").boundingBox();
+          const hub = await sidebar.boundingBox();
+          assert(hub.x + hub.width <= schedule.x, "Personal action sheet sits left of the schedule");
           assert.equal(await page.getByRole("combobox", { name: "View calendar" }).count(), 1, "Only one visible calendar filter");
           await sidebar.locator("summary").filter({ hasText: "Jump to a date" }).click();
           const date = sidebar.locator(".calendar-mini-grid button:not(:disabled)").first();
@@ -105,17 +105,18 @@ try {
         if (route === "/calendar/following") {
           const sidebar = page.getByRole("complementary", { name: "Discover people, places, and groups" });
           await sidebar.waitFor();
-          const left = await page.locator(".following-schedule-column").boundingBox();
-          assert((await sidebar.boundingBox()).x >= left.x + left.width, "Discovery sheet sits beside the followed schedule");
+          const schedule = await page.locator(".following-schedule-column").boundingBox();
+          const hub = await sidebar.boundingBox();
+          assert(hub.x + hub.width <= schedule.x, "Discovery sheet sits left of the followed schedule");
           assert.equal(await page.locator('.following-schedule-column [aria-label="Calendar scope"]').count(), 1, "Following filters sit above the listing");
         }
         const panel = page.locator(".calendar-desktop-sheet");
         const panelBox = await panel.boundingBox();
         assert.equal(await panel.evaluate(el => getComputedStyle(el).position), "fixed");
         assert.equal(await panel.evaluate(el => getComputedStyle(el).borderTopLeftRadius), "0px");
-        assert.equal(Math.round(panelBox.y), 80, "Right rail begins below the global header");
-        assert.equal(Math.round(panelBox.x + panelBox.width), width, "Right rail reaches the screen edge");
-        assert.equal(Math.round(panelBox.y + panelBox.height), page.viewportSize().height, "Right rail fills the viewport height");
+        assert.equal(Math.round(panelBox.y), 80, "Left rail begins below the global header");
+        assert.equal(Math.round(panelBox.x), 0, "Left rail reaches the screen edge");
+        assert.equal(Math.round(panelBox.y + panelBox.height), page.viewportSize().height, "Left rail fills the viewport height");
         await page.getByRole("button", { name: "Month view", exact: true }).click();
         assert.equal(await page.locator(".calendar-desktop-sheet:visible").count(), 1, "Month view keeps the action sheet accessible");
         await page.locator(".monthblock").first().waitFor();
@@ -124,6 +125,7 @@ try {
           const strip = page.locator(".scrollhead.on");
           await strip.waitFor();
           const stripBox=await strip.boundingBox(), navBox=await rail.boundingBox();
+          assert(stripBox.x >= panelBox.x + panelBox.width, "Scrolled month toolbar clears the left rail");
           assert(stripBox.y >= navBox.y + navBox.height, `Scrolled month toolbar leaves navigation accessible: ${JSON.stringify({stripBox,navBox,style:await strip.evaluate(e=>({top:getComputedStyle(e).top,transform:getComputedStyle(e).transform}))})}`);
         }
         await page.getByRole("button", { name: "Day view", exact: true }).click();
