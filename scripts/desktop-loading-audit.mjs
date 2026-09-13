@@ -23,10 +23,15 @@ async function check(name, run) {
   try { await run(page, context); report.checks.push({ name, status: "passed", elapsedMs: Math.round(performance.now() - start) }); console.log(`PASS ${name}`); }
   catch (error) { report.checks.push({ name, status: "failed", error: error.message }); console.log(`FAIL ${name}: ${error.message}`); await page.screenshot({ path: `${f.directory}/loading-failure-${report.checks.length}.png` }); }
   finally {
-    // URL changes can precede the streamed page response. Drain released
-    // fault-injection handlers before disposing their request context.
-    await page.unrouteAll({ behavior: "wait" });
-    await context.unrouteAll({ behavior: "wait" });
+    // Assertions are finished. Stop both interception layers together before
+    // closing: streamed requests can otherwise fall through from a removed
+    // page handler to a context handler that is also being torn down.
+    // Playwright's teardown mode absorbs only late handler errors here;
+    // exceptions during the actual check still fail it above.
+    await Promise.all([
+      page.unrouteAll({ behavior: "ignoreErrors" }),
+      context.unrouteAll({ behavior: "ignoreErrors" }),
+    ]);
     await context.close();
   }
 }
