@@ -121,9 +121,9 @@ try {
         releaseMonth();
         await page.unrouteAll({ behavior: "wait" });
       }
-      await page.getByRole('button',{name:'Back from studio admin',exact:true}).click();
-      await page.waitForURL(url=>url.pathname===source);
-      console.log(`PASS ${browserName}: sidebar Back skips admin pages and month changes, returns to ${source}`);
+      assert.equal(await page.locator(".studio-admin-back").count(), 0);
+      await page.goBack(); await at(page,calendar);
+      console.log(`PASS ${browserName}: browser Back returns from Staff to Calendar after entry from ${source}`);
     } catch (error) {
       console.log("Back navigation failure", { source, path:new URL(origin.page.url()).pathname, headings:await origin.page.locator("h1").allTextContents() });
       throw error;
@@ -132,10 +132,9 @@ try {
   const coldDesktop = await open(1440, calendar);
   try {
     await at(coldDesktop.page,calendar);
-    const depth = await coldDesktop.page.evaluate(()=>history.length);
-    await coldDesktop.page.getByRole('button',{name:'Back from studio admin',exact:true}).click(); await at(coldDesktop.page,studio);
-    assert.equal(await coldDesktop.page.evaluate(()=>history.length),depth,'Cold admin Back replaces the entry, avoiding loops');
-    console.log(`PASS ${browserName}: cold desktop admin safely falls back to studio profile`);
+    assert.equal(await coldDesktop.page.locator(".studio-admin-back").count(), 0);
+    await coldDesktop.page.getByRole("link", { name:"View public profile", exact:true }).click(); await at(coldDesktop.page,studio);
+    console.log(`PASS ${browserName}: desktop admin retains its public profile link without a Back button`);
   } finally { await coldDesktop.context.close(); }
 
 } finally {

@@ -111,7 +111,6 @@ export function StudioShiftsView({
   return (
     <div className="studio-admin-workspace studio-coach-workspace">
       <aside className="studio-admin-sidebar">
-        <Link className="studio-admin-back" href={coachPreview ? `/s/${view.slug}/manage` : `/s/${view.slug}`}><Icon name="arrow_back" size={20}/><span>{coachPreview ? "Back to admin" : "Back"}</span></Link>
         <div className="studio-admin-identity">
           <span className="studio-admin-photo">{photo ? <img src={photo} alt="" /> : <Icon name="storefront" size={32}/>}</span>
           <strong>{view.studioName}</strong>

@@ -84,7 +84,7 @@ try {
         const summary = page.locator(".calendar-summary-heading");
         const summaryBox = await summary.boundingBox();
         const actionsBox = await page.locator(".calendar-heading-actions,.following-heading-actions").boundingBox();
-        assert(actionsBox.x >= summaryBox.x + summaryBox.width, "Heading actions stay to the right of the summary");
+        assert(actionsBox.y >= summaryBox.y + summaryBox.height, "Heading controls sit below the summary in the schedule column");
         assert.equal(await page.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Calendar opens directly without a reveal surface");
         assert.equal(await rail.locator('[aria-current="page"]').count(), 1, "One primary rail destination is selected");
         if (route === "/calendar") {
@@ -105,6 +105,13 @@ try {
           assert((await sidebar.boundingBox()).x >= left.x + left.width, "Discovery sheet sits beside the followed schedule");
           assert.equal(await page.locator('.following-schedule-column [aria-label="Calendar scope"]').count(), 1, "Following filters sit above the listing");
         }
+        const panel = page.locator(".calendar-desktop-sheet");
+        const panelBox = await panel.boundingBox();
+        assert.equal(await panel.evaluate(el => getComputedStyle(el).position), "fixed");
+        assert.equal(await panel.evaluate(el => getComputedStyle(el).borderTopLeftRadius), "0px");
+        assert.equal(Math.round(panelBox.y), 80, "Right rail begins below the global header");
+        assert.equal(Math.round(panelBox.x + panelBox.width), width, "Right rail reaches the screen edge");
+        assert.equal(Math.round(panelBox.y + panelBox.height), page.viewportSize().height, "Right rail fills the viewport height");
         await page.getByRole("button", { name: "Month view", exact: true }).click();
         assert.equal(await page.locator(".calendar-desktop-sheet:visible").count(), 1, "Month view keeps the action sheet accessible");
         await page.locator(".monthblock").first().waitFor();
@@ -238,7 +245,7 @@ try {
   const adminNav = page.getByRole("navigation", { name: "Studio administration" });
   assert.deepEqual(await adminNav.locator('.studio-admin-nav-section').first().getByRole('link').allTextContents(), ['Dashboard', 'Calendar', 'Staff'], 'Primary admin links appear in order');
   assert.equal(await adminNav.getByRole('heading').count(), 0, 'Sidebar does not repeat section labels');
-  assert(await page.getByRole('button', { name:'Back from studio admin', exact:true }).isVisible(), 'Prominent admin Back is available');
+  assert.equal(await page.locator(".studio-admin-back").count(), 0, "Desktop studio sidebar has no Back button");
   assert.equal(await page.locator('.studio-dashboard-hero:visible').count(), 0, "Desktop overview starts with admin tools, without a duplicate hero");
   const identity = page.locator('.studio-admin-identity');
   assert.equal(await identity.locator('strong').innerText(), "Audit Studio", "Studio name heads the admin sidebar");

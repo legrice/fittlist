@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 
 export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: string; slug: string; photo: string | null; registrationPro: boolean }) {
@@ -25,7 +24,6 @@ export function StudioAdminNav({ name, slug, photo, registrationPro }: { name: s
     ] },
   ];
   return <aside className="studio-admin-sidebar">
-    <BackLink className="studio-admin-back" href={`/s/${slug}`} anywhere notUnder={base} label="Back from studio admin"><Icon name="arrow_back" size={20}/><span>Back</span></BackLink>
     <div className="studio-admin-identity">
       <span className="studio-admin-photo">{photo ? <img src={photo} alt="" /> : <Icon name="storefront" size={32} />}</span>
       <strong>{name}</strong>
