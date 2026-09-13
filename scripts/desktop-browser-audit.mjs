@@ -88,24 +88,25 @@ try {
         assert.equal(await page.locator(".calendar-action-sheet:visible,.calendar-scope-hero:visible").count(), 0, "Calendar opens directly without a reveal surface");
         assert.equal(await rail.locator('[aria-current="page"]').count(), 1, "One primary rail destination is selected");
         if (route === "/calendar") {
-          const sidebar = page.getByRole("complementary", { name: "Calendar navigation" });
+          const sidebar = page.getByRole("complementary", { name: "Calendar actions" });
           await sidebar.waitFor();
           const left = await page.locator(".calendar-workspace > .calendar-cardwrap").boundingBox();
           const right = await sidebar.boundingBox();
-          assert(right.x >= left.x + left.width, "Date navigator sits beside the schedule");
+          assert(right.x >= left.x + left.width, "Personal action sheet sits beside the schedule");
           assert.equal(await page.getByRole("combobox", { name: "View calendar" }).count(), 1, "Only one visible calendar filter");
+          await sidebar.locator("summary").filter({ hasText: "Jump to a date" }).click();
           const date = sidebar.locator(".calendar-mini-grid button:not(:disabled)").first();
           if (await date.count()) { await date.click(); assert(await date.getAttribute("aria-pressed") === "true", "Date selection is reflected"); }
         }
         if (route === "/calendar/following") {
-          const sidebar = page.getByRole("complementary", { name: "Following calendar navigation" });
+          const sidebar = page.getByRole("complementary", { name: "Discover people, places, and groups" });
           await sidebar.waitFor();
           const left = await page.locator(".following-schedule-column").boundingBox();
-          assert((await sidebar.boundingBox()).x >= left.x + left.width, "Following date navigator sits beside its schedule");
+          assert((await sidebar.boundingBox()).x >= left.x + left.width, "Discovery sheet sits beside the followed schedule");
           assert.equal(await page.locator('.following-schedule-column [aria-label="Calendar scope"]').count(), 1, "Following filters sit above the listing");
         }
         await page.getByRole("button", { name: "Month view", exact: true }).click();
-        assert.equal(await page.locator(".calendar-date-sidebar:visible").count(), 0, "Month view uses the full width");
+        assert.equal(await page.locator(".calendar-desktop-sheet:visible").count(), 1, "Month view keeps the action sheet accessible");
         await page.locator(".monthblock").first().waitFor();
         if (route === "/calendar") {
           await page.locator(".monthblock").nth(3).scrollIntoViewIfNeeded();
@@ -259,7 +260,9 @@ try {
   await adminNav.getByRole("link", { name: "Profile and settings", exact: true }).click();
   await page.getByRole("button", { name: /^Profile banner/ }).click();
   await page.getByRole("dialog", { name: "Profile banner", exact: true }).waitFor();
-  await page.getByRole("button", { name: "Choose image", exact: true }).waitFor();
+  const uploadBanner = page.getByRole("dialog", { name: "Profile banner", exact: true }).getByRole("button", { name: /^Add image/ });
+  const [bannerChooser] = await Promise.all([page.waitForEvent("filechooser"), uploadBanner.click()]);
+  assert.equal(await bannerChooser.element().getAttribute("accept"), "image/*", "Banner picker accepts images");
   await page.getByRole("button", { name: "Close banner settings", exact: true }).click();
   await adminNav.getByRole("link", { name: "Calendar", exact: true }).click();
   await page.getByRole("button", { name: "Start managing the calendar", exact: true }).click();

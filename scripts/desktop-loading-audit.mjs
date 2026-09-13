@@ -41,17 +41,17 @@ try {
     const started = new Promise(resolve => { requestStarted = resolve; });
     const gate = new Promise(resolve => { release = resolve; });
     await page.goto(`${base}/calendar`);
-    await page.route(url => url.origin === base && url.pathname === "/discover", async route => {
+    await page.route(url => url.origin === base && url.pathname === "/calendar/following", async route => {
       requestStarted();
       const response = await route.fetch(); await gate; await route.fulfill({ response }).catch(() => {});
     });
     try {
-      await page.locator('.desktop-top-header').getByRole("link", { name: "Discover", exact: true }).click();
+      await page.locator('.desktop-top-header').getByRole("link", { name: "Following", exact: true }).click();
       await started;
       assert.equal(await page.locator('.desktop-top-header .link-pending-dots').count(), 0);
-      assert(await page.locator('.desktop-top-header').getByRole("link", { name: "Discover", exact: true }).isVisible());
-      release(); await page.waitForURL("**/discover");
-      await page.locator(".discover-results-workspace").waitFor();
+      assert(await page.locator('.desktop-top-header').getByRole("link", { name: "Following", exact: true }).isVisible());
+      release(); await page.waitForURL("**/calendar/following");
+      await page.locator(".calendar-desktop-explore .discover-results-workspace").waitFor();
     } finally { release(); }
   });
   await check("Directory API requires sign-in, stays private and rejects invalid input", async (page, context) => {

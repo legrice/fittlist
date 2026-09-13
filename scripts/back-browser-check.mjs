@@ -94,8 +94,7 @@ try {
       const page = origin.page;
       if(source === studio) await openAdmin(page);
       else {
-        await page.getByRole("button", { name:"Choose a calendar", exact:true }).click();
-        await page.getByRole("menuitem", { name:/Audit Studio/ }).click(); await at(page,admin);
+        await page.locator(".calendar-desktop-sheet").getByRole("link", { name:"Admin Audit Studio", exact:true }).click(); await at(page,admin);
       }
       await page.locator('.studio-dashboard-calendar-link').click(); await at(page,calendar);
       await page.getByRole('combobox',{name:'Calendar view',exact:true}).selectOption('month:all');
@@ -107,6 +106,9 @@ try {
       await page.getByRole('button',{name:'Back from studio admin',exact:true}).click();
       await page.waitForURL(url=>url.pathname===source);
       console.log(`PASS ${browserName}: sidebar Back skips admin pages and month changes, returns to ${source}`);
+    } catch (error) {
+      console.log("Back navigation failure", { source, path:new URL(origin.page.url()).pathname, headings:await origin.page.locator("h1").allTextContents() });
+      throw error;
     } finally { await origin.context.close(); }
   }
   const coldDesktop = await open(1440, calendar);

@@ -965,6 +965,11 @@ export function MonthScroll({
   emptyDayAction?: "add" | "open";
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  // Loading a month changes the parent's callback. Keep observation alive
+  // while those requests update state, including during rapid scrolls.
+  const monthVisibleRef = useRef(onMonthVisible);
+  monthVisibleRef.current = onMonthVisible;
+  const loadsMonths = !!onMonthVisible;
   const moreRef = useRef<HTMLButtonElement>(null);
   const thisYm = todayIso.slice(0, 7);
   const [y0, m0] = thisYm.split("-").map(Number);
@@ -995,21 +1000,21 @@ export function MonthScroll({
     return () => io.disconnect();
   }, [onMonthInView, monthsAhead]);
   useEffect(() => {
-    if (!onMonthVisible) return;
+    if (!loadsMonths) return;
     const blocks = wrapRef.current?.querySelectorAll<HTMLElement>("[data-ym]");
     if (!blocks?.length) return;
     if (typeof IntersectionObserver === "undefined") {
-      onMonthVisible(thisYm);
+      monthVisibleRef.current?.(thisYm);
       return;
     }
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
-        if (entry.isIntersecting && entry.target instanceof HTMLElement && entry.target.dataset.ym) onMonthVisible(entry.target.dataset.ym);
+        if (entry.isIntersecting && entry.target instanceof HTMLElement && entry.target.dataset.ym) monthVisibleRef.current?.(entry.target.dataset.ym);
       }
     }, { rootMargin: "400px 0px" });
     blocks.forEach((block) => observer.observe(block));
     return () => observer.disconnect();
-  }, [onMonthVisible, monthsAhead, thisYm]);
+  }, [loadsMonths, monthsAhead, thisYm]);
   useEffect(() => {
     const target = moreRef.current;
     if (!target || !onNeedMore || typeof IntersectionObserver === "undefined") return;

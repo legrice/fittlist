@@ -59,7 +59,14 @@ async function showMonth(page, ym, loaded = true) {
   const block = page.locator(`#month-${ym}`);
   await block.waitFor();
   await block.evaluate(el => el.scrollIntoView({ block: "center", behavior: "instant" }));
-  if (loaded) await waitDom(page, id => document.getElementById(id)?.dataset.loadState === "loaded", `month-${ym}`);
+  if (loaded) {
+    try { await waitDom(page, id => document.getElementById(id)?.dataset.loadState === "loaded", `month-${ym}`); }
+    catch (error) {
+      console.log("Month load failure", await block.evaluate(el => ({ month:el.dataset.ym, state:el.dataset.loadState, bounds:el.getBoundingClientRect().toJSON(), scrollY, height:innerHeight })), page.auditNetwork);
+      await page.screenshot({path:`${f.directory}/month-load-failure.png`});
+      throw error;
+    }
+  }
   if (loaded && ym === monthOf(f.dates.far)) await page.screenshot({ path: `${f.directory}/${browserName}-future-month.png`, animations: "disabled" });
   return block;
 }

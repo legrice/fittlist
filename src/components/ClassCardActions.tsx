@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -33,13 +33,15 @@ export function ClassCardActions({
   const [justAdded, setJustAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
-  const [pending, start] = useTransition();
+  // Saving is complete when this request settles, independently of a route refresh.
+  const [pending, setPending] = useState(false);
   const submitting = useRef(false);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  const toggle = () => {
+  const toggle = async () => {
     if (submitting.current) return;
     submitting.current = true;
+    setPending(true);
     const next = !on;
     setOn(next);
     if (next) {
@@ -49,18 +51,16 @@ export function ClassCardActions({
     } else {
       setJustAdded(false);
     }
-    start(async () => {
-      try {
-        const res = await setGoing(classId, iso, next);
-        if (!res.ok) throw new Error(res.error ?? "Couldn’t save that change. Try again.");
-        haptic(next ? "success" : "selection");
-        if (next) announceSaved(classId, iso);
-      } catch (error) {
-        setOn(!next);
-        setJustAdded(false);
-        toast(error instanceof Error ? error.message : "Check your connection and try again.");
-      } finally { submitting.current = false; }
-    });
+    try {
+      const res = await setGoing(classId, iso, next);
+      if (!res.ok) throw new Error(res.error ?? "Couldn’t save that change. Try again.");
+      haptic(next ? "success" : "selection");
+      if (next) announceSaved(classId, iso);
+    } catch (error) {
+      setOn(!next);
+      setJustAdded(false);
+      toast(error instanceof Error ? error.message : "Check your connection and try again.");
+    } finally { submitting.current = false; setPending(false); }
   };
 
   return (
