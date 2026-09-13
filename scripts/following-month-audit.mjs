@@ -40,6 +40,7 @@ async function context() {
   await context.route("**/*", route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
   const page = await context.newPage(); page.setDefaultTimeout(20000);
   await page.bringToFront();
+  if(process.env.AUDIT_CPU_RATE) await (await context.newCDPSession(page)).send("Emulation.setCPUThrottlingRate", {rate:Number(process.env.AUDIT_CPU_RATE)});
   page.auditNetwork = [];
   page.on("response", response => { const request = response.request(); if (request.headers()["next-action"]) page.auditNetwork.push({ action: actionMonth(request) || "background", status: response.status() }); });
   page.on("requestfailed", request => { if (request.headers()["next-action"]) page.auditNetwork.push({ action: actionMonth(request) || "background", failure: request.failure()?.errorText }); });
@@ -55,16 +56,21 @@ async function openFollowing(page) {
 }
 async function revealDesktopControls(page) {
   if (!desktop) return;
-  // These controls live at the top of the page. Playwright's minimum scroll
-  // can leave them underneath the sticky header or discovery panel on Linux.
-  // Return to the page header, as a person changing views would do.
+  // Return to the top-of-page controls rather than relying on a minimum
+  // scroll that can leave them underneath the sticky header or side panel.
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
-  
 }
 async function showMonth(page, ym, loaded = true) {
   await revealDesktopControls(page);
   const switcher = page.getByRole("button", { name: desktop ? "Month view" : "Switch to month view", exact: true });
-  if (await switcher.isVisible()) await switcher.click();
+  if (await switcher.isVisible()) {
+    try { await switcher.click(); }
+    catch(error) {
+      console.log("View control geometry", await switcher.evaluate(el => ({scrollY,rect:el.getBoundingClientRect().toJSON(),header:el.closest(".calendar-page-header")?.getBoundingClientRect().toJSON()})));
+      await page.screenshot({path:`${f.directory}/view-control-failure.png`});
+      throw error;
+    }
+  }
   const block = page.locator(`#month-${ym}`);
   await block.waitFor();
   await block.evaluate(el => el.scrollIntoView({ block: "center", behavior: "instant" }));

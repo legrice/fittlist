@@ -423,8 +423,10 @@ export function FollowingScreen({
   const [pendingMonthDay, setPendingMonthDay] = useState<string | null>(null);
   const monthDayRequest = useRef(0);
   const alignedMonthDay = useRef<string | null>(null);
+  const monthAlignmentFrames = useRef(0);
   useEffect(() => {
     alignedMonthDay.current = null;
+    monthAlignmentFrames.current = 0;
   }, [initialItems, initialCoaches, initialCats, initialMyRail]);
   const [sidebarMonth, setSidebarMonth] = useState(todayIso.slice(0, 7));
   const showSidebarMonth = useCallback((month: string) => {
@@ -533,6 +535,7 @@ export function FollowingScreen({
     monthDayRequest.current += 1;
     setPendingMonthDay(null);
     alignedMonthDay.current = null;
+    monthAlignmentFrames.current = 0;
     window.scrollTo({ top:0, behavior:"auto" });
     setClassSheetDismissed(false);
     requestAnimationFrame(() => {
@@ -848,6 +851,7 @@ export function FollowingScreen({
     if (!await ensureMonth(iso.slice(0, 7)) || request !== monthDayRequest.current) return;
     setPendingMonthDay(null);
     alignedMonthDay.current = null;
+    monthAlignmentFrames.current = 0;
     setSelectedMonthDay(iso);
     setCalendarView("day");
   };
@@ -860,11 +864,14 @@ export function FollowingScreen({
     setVisibleHomeDayCount((count) => Math.max(count, index + 1));
     // Let content-visibility's estimated heights settle before finishing the
     // jump. Aligning once can leave a distant day thousands of pixels away.
-    let frames = 0;
+    // Preserve the attempt count across data/layout rerenders. Resetting a
+    // local counter on each effect restart can keep pulling the user back to
+    // this day forever on slower devices.
     const align = () => {
       document.getElementById(`feed-day-${selectedMonthDay}`)?.scrollIntoView({ block: "start", behavior: "instant" });
-      monthScrollFrame.current = ++frames < 6 ? requestAnimationFrame(align) : null;
-      if (frames === 6) alignedMonthDay.current = selectedMonthDay;
+      monthAlignmentFrames.current += 1;
+      monthScrollFrame.current = monthAlignmentFrames.current < 6 ? requestAnimationFrame(align) : null;
+      if (monthAlignmentFrames.current >= 6) alignedMonthDay.current = selectedMonthDay;
     };
     monthScrollFrame.current = requestAnimationFrame(align);
     return () => {
