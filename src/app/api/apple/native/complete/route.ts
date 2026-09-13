@@ -117,7 +117,7 @@ export async function POST(req: Request) {
         signupSource: await signupSource(),
       })
       .returning();
-    pushSignupPing(email);
+    await pushSignupPing(email);
     await acceptInvite(email, user.id);
     await claimRosterPlaceholders(email, user.id);
     [user] = await db.select().from(schema.users).where(eq(schema.users.id, user.id));

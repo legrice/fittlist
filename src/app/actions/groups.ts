@@ -253,6 +253,7 @@ export async function addGroupPost(slug: string, value: string) {
   const safetyError = objectionableContentError(body);
   if (safetyError) return { ok:false, error:safetyError } as const;
   const [post] = await member.db.insert(schema.groupPosts).values({ groupId:member.groupId, authorUserId:member.userId, body, kind:"update" }).returning({ id:schema.groupPosts.id });
+  await (await import("@/lib/product-activity")).recordProductActivity(member.userId, "group_posted");
   await notifyGroup(member.groupId, member.userId, `New update in ${member.groupName}`, body, `/g/${slug}?tab=updates#post-${post.id}`);
   revalidatePath(`/g/${slug}`);
   return { ok:true } as const;
@@ -269,6 +270,7 @@ export async function addGroupComment(slug: string, postId: string, value: strin
   if (!post) return { ok:false, error:"That update is no longer available." } as const;
   if ((await hiddenFrom(member.userId)).has(post.authorUserId)) return { ok:false, error:"That update is no longer available." } as const;
   await member.db.insert(schema.groupPostComments).values({ postId, authorUserId:member.userId, body });
+  await (await import("@/lib/product-activity")).recordProductActivity(member.userId, "comment_posted");
   if (post.authorUserId !== member.userId) await addNotification(post.authorUserId, { type:"group_update", title:`New reply in ${member.groupName}`, body, href:`/g/${slug}?tab=updates#post-${postId}`, actorUserId:member.userId });
   revalidatePath(`/g/${slug}`);
   return { ok:true } as const;
@@ -310,7 +312,8 @@ export async function updateGroupDetails(slug: string, input: { name: string; de
     const photo = await storeImage(photoInput, "group");
     stage = "group update";
     await manager.db.update(schema.groups).set({ name, description: description || null, photo }).where(eq(schema.groups.id, manager.groupId));
-    revalidatePath(`/g/${slug}`);
+    await (await import("@/lib/product-activity")).recordProductActivity(await getSessionUserId(), "group_updated");
+  revalidatePath(`/g/${slug}`);
     revalidatePath("/saved");
     return { ok: true } as const;
   } catch (error) {
@@ -324,6 +327,7 @@ export async function updateGroupVisibility(slug: string, visibility: "public" |
   if (!manager) return { ok: false, error: "Only group admins can change privacy." } as const;
   if (!["public", "unlisted", "private"].includes(visibility)) return { ok: false, error: "Choose a privacy option." } as const;
   await manager.db.update(schema.groups).set({ visibility }).where(eq(schema.groups.id, manager.groupId));
+  await (await import("@/lib/product-activity")).recordProductActivity(await getSessionUserId(), "group_updated");
   revalidatePath(`/g/${slug}`);
   return { ok: true } as const;
 }

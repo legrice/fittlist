@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { sessionSecret } from "@/lib/secret";
 import { cache } from "react";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 
 const COOKIE = "fl_session";
@@ -77,6 +77,13 @@ export const getSessionUserId = cache(async (): Promise<string | null> => {
 
 export async function destroySession() {
   const jar = await cookies();
+  const device = jar.get("fl_push_device")?.value;
+  const userId = device ? await getSessionUserId() : null;
+  if (device && /^[0-9a-f-]{36}$/i.test(device) && userId) {
+    const db = await getDb();
+    await db.delete(schema.nativePushDevices).where(and(eq(schema.nativePushDevices.id, device), eq(schema.nativePushDevices.userId, userId)));
+  }
+  jar.delete("fl_push_device");
   // Overwrite with an already-expired cookie using the SAME path the session
   // was set with, so the browser actually drops it.
   jar.set(COOKIE, "", {

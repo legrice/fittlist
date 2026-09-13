@@ -7,6 +7,7 @@ import {
   setNotificationPref,
   type NotifPrefs,
 } from "@/app/actions/notifprefs";
+import { NativePushSettings } from "@/components/NativePushSettings";
 import { Icon } from "@/components/Icon";
 
 // Settings > Notifications. Three switches, all about email. The in-app
@@ -58,7 +59,7 @@ export function NotificationPrefs() {
         </span>
         <span className="setrow-txt">
           <span className="t">Notifications</span>
-          <span className="s">Which emails you get from fittlist</span>
+          <span className="s">Push notifications and emails</span>
         </span>
         <span className="setrow-chev">
           <Icon name="chevron_right" size={22} />
@@ -77,6 +78,8 @@ export function NotificationPrefs() {
                 <Icon name="close" size={20} />
               </button>
               <h2>Notifications</h2>
+              <NativePushSettings />
+              <h3>Email</h3>
               <p className="lead">
                 These settings control which updates also reach your email inbox.
               </p>

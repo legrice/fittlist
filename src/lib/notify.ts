@@ -1,5 +1,6 @@
 import { and, count, desc, eq, inArray, isNull, lt, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { pushToUser, pushToAdmins } from "@/lib/push";
 import { getDb, schema } from "@/db";
 
 // The coach's in-app activity feed. Kept deliberately small: a row per event,
@@ -24,6 +25,15 @@ export async function addNotification(userId: string, n: NewNotification): Promi
     href: n.href ?? null,
     actorUserId: n.actorUserId ?? null,
   });
+  if (n.type === "follow_request") {
+    try { await pushToAdmins({ title: "FittList activity", body: "Someone requested to follow a private profile.", url: "/admin?tab=activity" }); } catch { console.error("follow activity push failed"); }
+  }
+  const category = ["follow", "follow_request", "follow_approved"].includes(n.type) ? "follows" : ["message", "feedback", "feedback_reply"].includes(n.type) ? "messages" : null;
+  if (category) {
+    try { await pushToUser(userId, { title: n.title, body: n.body ?? "", url: n.href || (category === "messages" ? "/inbox" : "/notifications") }, category); }
+    catch { console.error("notification push could not be queued"); }
+  }
+
 }
 
 export async function unreadNotifications(userId: string): Promise<number> {

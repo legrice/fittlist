@@ -1,4 +1,5 @@
 "use server";
+import { recordProductActivity } from "@/lib/product-activity";
 
 import { and, desc, eq, inArray, like } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -251,6 +252,7 @@ export async function reportContent(input: {
   }
   revalidatePath("/admin");
   revalidatePath("/", "layout");
+  if (inserted.length) await recordProductActivity(reporterUserId, "content_reported");
   return { ok: true, alreadyReported: inserted.length === 0, blocked };
 }
 
@@ -294,6 +296,7 @@ export async function reportMessageByToken(input: {
   }).onConflictDoNothing().returning({ id: schema.contentReports.id });
   if (input.stopConversation) await db.update(schema.inquiryThreads).set({ requesterClosedAt: new Date() }).where(eq(schema.inquiryThreads.id, threadId));
   revalidatePath("/admin");
+  if (inserted.length) await recordProductActivity(null, "content_reported");
   return { ok: true, alreadyReported: inserted.length === 0, blocked: !!input.stopConversation };
 }
 

@@ -1,5 +1,7 @@
 "use server";
 
+import { recordProductActivity } from "@/lib/product-activity";
+
 import { and, eq, gte, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
@@ -343,6 +345,7 @@ export async function updateProfile(input: {
     after(() => syncUserToGoogle(userId).catch((error) => console.error("gcal timezone sync failed", error)));
   }
 
+  await recordProductActivity(userId, "profile_updated");
   revalidatePath("/calendar");
   if (user?.handle) revalidatePath(`/${user.handle}`);
   return { ok: true };

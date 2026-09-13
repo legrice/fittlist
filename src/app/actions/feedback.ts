@@ -1,4 +1,5 @@
 "use server";
+import { recordProductActivity } from "@/lib/product-activity";
 
 import { and, asc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -109,6 +110,7 @@ export async function sendFeedback(bodyRaw: string): Promise<{ ok: boolean; erro
     .insert(schema.inquiryMessages)
     .values({ threadId: thread.id, fromCoach: false, body });
 
+  await recordProductActivity(userId, "message_sent");
   const who = me.name.trim() || me.email;
   await addNotification(host.id, {
     type: "feedback",

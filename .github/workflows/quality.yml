@@ -47,6 +47,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
+      - run: npm run check:push-api
       - run: npm run check:data-integrity
       - run: npm run check:operations
       - run: npm run check:event-registration

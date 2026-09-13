@@ -637,6 +637,30 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Native tokens stay bound to the account/session that enabled this device.
+export const nativePushDevices = pgTable("native_push_devices", {
+  id: uuid("id").primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  sessionVersion: integer("session_version").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  follows: boolean("follows").notNull().default(true),
+  messages: boolean("messages").notNull().default(true),
+  adminActivity: boolean("admin_activity").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const nativePushDeliveries = pgTable("native_push_deliveries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  deviceId: uuid("device_id").notNull().references(() => nativePushDevices.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  category: text("category").notNull(),
+  payload: jsonb("payload").$type<{ title: string; body: string; url: string }>().notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  availableAt: timestamp("available_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [index("native_push_due").on(t.availableAt)]);
+
 export const classTemplates = pgTable(
   "class_templates",
   {

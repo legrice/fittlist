@@ -327,6 +327,7 @@ export async function confirmEmailFollow(): Promise<void> {
   if (activated) {
     followChanged();
     if (activated.isNew) {
+      await (await import("@/lib/product-activity")).recordProductActivity(activated.account?.id ?? null, "favorite_person_added");
       // The transaction has committed before either external side effect is
       // scheduled. Each is best-effort and cannot roll relational state back.
       after(async () => {

@@ -384,7 +384,7 @@ export async function consumeMagicToken(
       .returning();
     user = createdUser ?? (await db.select().from(schema.users).where(eq(schema.users.email,row.email)))[0];
     if (!user) return null;
-    if (createdUser) pushSignupPing(row.email);
+    if (createdUser) await pushSignupPing(row.email);
     await acceptInvite(row.email, user.id);
     await claimRosterPlaceholders(row.email, user.id);
     // A matching coach-roster invitation intentionally promotes the account.

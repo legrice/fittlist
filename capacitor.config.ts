@@ -42,6 +42,7 @@ const config: CapacitorConfig = {
     webContentsDebuggingEnabled: development,
   },
   plugins: {
+    PushNotifications: { presentationOptions: ["sound", "banner", "list"] },
     StatusBar: {
       // Reserve the system status area instead of laying the web view beneath
       // the clock, Dynamic Island and signal indicators.

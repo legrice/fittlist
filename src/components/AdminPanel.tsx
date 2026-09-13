@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { NativePushSettings } from "@/components/NativePushSettings";
 import { AdminPushToggle } from "@/components/AdminPushToggle";
 import { adminMarkActivitySeen } from "@/app/actions/admin";
 import { createPortal } from "react-dom";
@@ -312,6 +313,7 @@ export function AdminPanel({
           </div>
         </details>
 
+        <NativePushSettings />
         {vapidKey && <AdminPushToggle vapidKey={vapidKey} />}
 
         {/* Icons, not words: five labelled pills didn't fit a phone, and the

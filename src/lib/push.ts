@@ -1,11 +1,11 @@
 import { eq, inArray } from "drizzle-orm";
 import webpush from "web-push";
 import { getDb, schema } from "@/db";
+import { queueNativePush, type PushCategory } from "@/lib/native-push";
+import { apnsConfigured } from "@/lib/apns";
 import { adminEmails } from "@/lib/admin";
 
-// Web push, one job: ping the admin's phone when someone new joins. The VAPID
-// pair lives in env (generate once with `npx web-push generate-vapid-keys`);
-// without it the whole feature quietly sits out, the toggle included.
+// Browser subscriptions use VAPID; installed iOS devices use APNs.
 export function vapidPublicKey(): string | null {
   return process.env.VAPID_PUBLIC_KEY || null;
 }
@@ -27,7 +27,8 @@ export async function pushToUser(userId: string, payload: {
   title: string;
   body: string;
   url: string;
-}): Promise<void> {
+}, category: PushCategory = "updates"): Promise<void> {
+  await queueNativePush([userId], payload, category);
   if (!configured()) return;
   webpush.setVapidDetails(
     `mailto:${process.env.MAIL_REPLY_TO || "hello@fittlist.co"}`,
@@ -44,7 +45,7 @@ export async function pushToUser(userId: string, payload: {
       await webpush.sendNotification(
         { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
         JSON.stringify(payload),
-        { TTL: 60 * 60 * 24 },
+        { TTL: 60 * 60 * 24, timeout: 10000 },
       );
     } catch (err: unknown) {
       const code = failureStatus(err);
@@ -64,18 +65,19 @@ export async function pushToAdmins(payload: {
   body: string;
   url: string;
 }): Promise<void> {
+  const emails = adminEmails();
+  if (!configured() && !apnsConfigured()) return;
+  const db = await getDb();
+  if (!emails.length) return;
+  const admins = await db.select({ id: schema.users.id, email: schema.users.email }).from(schema.users);
+  const adminIds = admins.filter(u => emails.includes(u.email.toLowerCase())).map(u => u.id);
+  if (!adminIds.length) return;
+  await queueNativePush(adminIds, payload, "adminActivity");
   if (!configured()) return;
   webpush.setVapidDetails(
     `mailto:${process.env.MAIL_REPLY_TO || "hello@fittlist.co"}`,
-    process.env.VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!,
+    process.env.VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!,
   );
-  const db = await getDb();
-  const admins = await db
-    .select({ id: schema.users.id, email: schema.users.email })
-    .from(schema.users);
-  const adminIds = admins.filter((u) => adminEmails().includes(u.email.toLowerCase())).map((u) => u.id);
-  if (!adminIds.length) return;
   const subs = await db
     .select()
     .from(schema.pushSubscriptions)
@@ -86,7 +88,7 @@ export async function pushToAdmins(payload: {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           JSON.stringify(payload),
-          { TTL: 60 * 60 * 24 },
+          { TTL: 60 * 60 * 24, timeout: 10000 },
         );
       } catch (err: unknown) {
         const code = failureStatus(err);
@@ -102,7 +104,7 @@ export async function pushToAdmins(payload: {
   );
 }
 
-/** The one caller today: a fresh account, from any of the four doors. Just
+/** A fresh account, from any of the four sign-in methods. Just
  *  the email: the name and the coach/member choice both land later in
  *  onboarding, and the admin People tab has the rest one tap away. */
 export async function pushSignupPing(email: string): Promise<void> {

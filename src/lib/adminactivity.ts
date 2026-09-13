@@ -1,3 +1,4 @@
+import { ACTIVITY_LABELS, type ProductActivityKind } from "@/lib/product-activity";
 import { and, count, countDistinct, desc, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
@@ -101,7 +102,11 @@ export async function adminActivity(limit = 100): Promise<ActivityEntry[]> {
   };
   for (const e of productEvents) {
     const label = productWords[e.kind];
-    if (!label) continue;
+    if (!label) {
+      const text = ACTIVITY_LABELS[e.kind as ProductActivityKind];
+      if (text) out.push({ when: e.createdAt, icon: "notifications", text });
+      continue;
+    }
     out.push({
       when: e.createdAt,
       icon: label.icon,

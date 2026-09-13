@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { nativeLinkDestination } from "@/lib/native-navigation";
+import { usePathname } from "next/navigation";
+import { refreshDevicePush } from "@/lib/native-push-client";
 import { clearClientMemory } from "@/lib/client-memory";
 
 /** The seam between the server-rendered product and its iOS container. */
 export function NativeAppBridge() {
   const [offline, setOffline] = useState(false);
+  const pathname = usePathname();
+  useEffect(() => { void refreshDevicePush().catch(() => {}); }, [pathname]);
 
   useEffect(() => {
     let live = true;
@@ -62,6 +66,13 @@ export function NativeAppBridge() {
         if (replace) window.location.replace(destination);
         else window.location.assign(destination);
       };
+      if (Capacitor.isPluginAvailable("PushNotifications")) {
+        const { PushNotifications } = await import("@capacitor/push-notifications");
+        keepListener(await PushNotifications.addListener("pushNotificationActionPerformed", ({ notification }) => {
+          const path = notification.data?.url;
+          if (typeof path === "string" && path.startsWith("/") && !path.startsWith("//") && !/[\\\r\n]/.test(path)) openLink(`https://www.fittlist.co${path}`);
+        }));
+      }
       App.addListener("appUrlOpen", ({ url }) => openLink(url)).then(keepListener).catch(() => {});
       // appUrlOpen alone misses links delivered before the JS bridge mounts.
       // Remember only a digest, never an email-login token from the launch URL.
@@ -78,6 +89,7 @@ export function NativeAppBridge() {
       let inactiveAt = Date.now();
       App.addListener("appStateChange", ({ isActive }) => {
         if (!isActive) { inactiveAt = Date.now(); return; }
+        void refreshDevicePush().catch(() => {});
         void Network.getStatus().then(({ connected }) => { if (live) setOffline(!connected); }).catch(() => {});
         if (Date.now() - inactiveAt < 15 * 60 * 1000 || window.location.pathname === "/") return;
         resumeRequest?.abort();

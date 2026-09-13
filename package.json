@@ -27,7 +27,7 @@
     "ios:open": "cap open ios",
     "ios:run": "cap run ios",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx scripts/production-regressions.ts",
+    "test": "node --import tsx scripts/production-regressions.ts && npm run check:push",
     "test:browser": "node scripts/production-audit.mjs",
     "check:notifications-browser": "node scripts/notification-browser-audit.mjs",
     "check:data-integrity": "node --import tsx scripts/data-integrity-audit.ts && node --import tsx scripts/saved-visibility-check.ts && npm run check:calendar-window",
@@ -43,7 +43,9 @@
     "check:iphone-browser": "node scripts/iphone-browser-audit.mjs",
     "check:production-environment": "node --import tsx scripts/production-environment-check.ts",
     "check:event-registration": "node --import tsx scripts/event-registration-check.ts",
-    "check:event-browser": "node scripts/event-browser-check.mjs"
+    "check:event-browser": "node scripts/event-browser-check.mjs",
+    "check:push": "node --import tsx scripts/native-push-check.ts",
+    "check:push-api": "node scripts/native-push-api-check.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",
@@ -53,6 +55,7 @@
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/ios": "^8.5.0",
     "@capacitor/network": "^8.0.1",
+    "@capacitor/push-notifications": "^8.1.2",
     "@capacitor/share": "^8.0.1",
     "@capacitor/status-bar": "^8.0.3",
     "@electric-sql/pglite": "^0.2.17",

@@ -1,4 +1,5 @@
 "use server";
+import { recordProductActivity } from "@/lib/product-activity";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
@@ -14,6 +15,7 @@ export async function registerForEvent(slug: string, classId: string, date: stri
   if (!studio || studio.registrationDate !== date) return {ok:false,error:"Registration is closed for this date."};
   try {
     const result = await writeAttendance(userId,classId,date,on,studio.id);
+    if (result.ok) await recordProductActivity(userId, "event_registration");
     revalidatePath(`/s/${slug}/register`); revalidatePath(`/s/${slug}/manage/registrations`); revalidatePath('/calendar');
     return result;
   } catch {return {ok:false,error:"We couldn’t save that. Please try again."};}
@@ -41,6 +43,7 @@ export async function saveEventSettings(slug: string, date: string, capacities: 
       }
       await tx.update(schema.studios).set({registrationDate:date}).where(eq(schema.studios.id,admin.studio.id));
     });
+    await recordProductActivity(await getSessionUserId(), "event_updated");
     revalidatePath(`/s/${slug}/manage/registrations`);revalidatePath(`/s/${slug}/register`);
     return {ok:true};
   } catch(error) {const safeMessages = ["A selected class is no longer on this date. Refresh and try again.", "A capacity cannot be lower than the number already registered.", "This event already has registrations. Keep its date and create a separate event space for another date."];
@@ -64,6 +67,7 @@ export async function promoteEventWaitlist(slug:string, entryId:string) {
   if(!entry || entry.occurrenceDate!==admin.studio.registrationDate) return {ok:false,error:"Waitlist entry no longer available. Refresh the list."};
   try {
     const result=await writeAttendance(entry.userId,entry.classId,entry.occurrenceDate,true,admin.studio.id,true);
+    await recordProductActivity(await getSessionUserId(), "event_updated");
     revalidatePath(`/s/${slug}/manage/registrations`);revalidatePath(`/s/${slug}/register`);revalidatePath('/calendar');
     return result;
   } catch {return {ok:false,error:"Couldn’t confirm this place. Refresh and try again."};}
@@ -80,6 +84,7 @@ export async function removeEventWaitlist(slug:string, entryId:string) {
       await tx.select({id:schema.classes.id}).from(schema.classes).where(eq(schema.classes.id,entry.classId)).for("update");
       await tx.delete(schema.eventWaitlist).where(eq(schema.eventWaitlist.id,entryId));
     });
+    await recordProductActivity(await getSessionUserId(), "event_updated");
     revalidatePath(`/s/${slug}/manage/registrations`);revalidatePath(`/s/${slug}/register`);return {ok:true};
   } catch {return {ok:false,error:"Couldn’t remove this waitlist entry. Try again."};}
 }

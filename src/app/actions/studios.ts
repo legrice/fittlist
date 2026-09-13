@@ -1,5 +1,7 @@
 "use server";
 
+import { recordProductActivity } from "@/lib/product-activity";
+
 import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
@@ -191,6 +193,7 @@ export async function createStudio(
       instagram: details.instagram?.trim().replace(/^@/, "") || null,
     })
     .returning();
+  await recordProductActivity(userId, "studio_created");
   return {
     ok: true,
     studio: {
@@ -357,6 +360,7 @@ export async function updateStudio(
       syncUserToGoogle(ownerId).catch((error) => console.error("gcal studio timezone sync failed", error)),
     )));
   }
+  await recordProductActivity(userId, "studio_updated");
   revalidatePath(`/s/${slug}`);
   if (existing.slug && existing.slug !== slug) revalidatePath(`/s/${existing.slug}`);
   revalidatePath("/admin");

@@ -1,5 +1,7 @@
 "use server";
 
+import { recordProductActivity } from "@/lib/product-activity";
+
 import { randomUUID } from "node:crypto";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -481,6 +483,8 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     }
   }
 
+  await recordProductActivity(userId, "class_updated");
+
   // Subscribers get the schedule as one weekly digest (see sendWeeklyDigests),
   // not a per-change email, so publishing just updates the page + Google sync.
   syncGoogleAfter(userId);
@@ -704,6 +708,7 @@ export async function deleteClass(
 
   if (!outcome.ok) return outcome;
   if (outcome.changed) {
+    await recordProductActivity(userId, "class_deleted");
     if (outcome.told.length && "about" in outcome && outcome.about)
       after(() => notifyCancelled(outcome.about, outcome.told));
     syncGoogleAfter(outcome.ownerId);

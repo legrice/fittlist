@@ -1,3 +1,4 @@
+import { pushToAdmins } from "@/lib/push";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mondayOfCurrentWeek, todayIso } from "@/lib/format";
@@ -20,6 +21,7 @@ export async function recordVisit(trainerUserId: string): Promise<void> {
       target: [schema.pageVisits.trainerUserId, schema.pageVisits.date],
       set: { count: sql`${schema.pageVisits.count} + 1` },
     });
+  try { await pushToAdmins({ title: "Profile viewed", body: "Someone opened a coach profile.", url: "/admin?tab=activity" }); } catch { console.error("profile activity push failed"); }
 }
 
 export async function recordScheduleOpen(trainerUserId: string): Promise<void> {
@@ -31,6 +33,7 @@ export async function recordScheduleOpen(trainerUserId: string): Promise<void> {
       target: [schema.pageVisits.trainerUserId, schema.pageVisits.date],
       set: { scheduleOpens: sql`${schema.pageVisits.scheduleOpens} + 1` },
     });
+  try { await pushToAdmins({ title: "Schedule opened", body: "Someone opened a coach schedule.", url: "/admin?tab=activity" }); } catch { console.error("schedule activity push failed"); }
 }
 
 // All-time totals for the coach's analytics.

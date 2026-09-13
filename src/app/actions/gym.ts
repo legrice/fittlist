@@ -1,4 +1,5 @@
 "use server";
+import { recordProductActivity } from "@/lib/product-activity";
 
 import { randomUUID } from "node:crypto";
 import { and, eq, gte, ilike, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
@@ -1035,6 +1036,7 @@ export async function addGymClass(
         startTime: r.startTime,
       });
   }
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   // What was made, not what was asked for: the sheet says "15 added" and the
   // grid may have skipped slots that already ran.
@@ -1193,6 +1195,7 @@ export async function updateGymClass(
   }
   if (coachUserId)
     await tellAboutDuplicate(db, coachUserId, studio, { name, dayOfWeek, startTime: input.startTime });
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1221,6 +1224,7 @@ export async function publishGymDrafts(
     .update(schema.classes)
     .set({ isPublic: true })
     .where(inArray(schema.classes.id, drafts.map((d) => d.id)));
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   return { ok: true, count: drafts.length };
@@ -1313,7 +1317,8 @@ export async function deleteGymClass(
       if (wasOn && iso >= today)
         await tellCoach(wasOn, studio.name, existing.name, when, false);
     }
-    revalidatePath(`/s/${studio.slug ?? studio.id}`);
+    await recordProductActivity(await getSessionUserId(), "studio_updated");
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
     return { ok: true, count: 1 };
   }
 
@@ -1326,6 +1331,7 @@ export async function deleteGymClass(
   await db.delete(schema.classes).where(eq(schema.classes.id, classId));
   if (existing.coachUserId)
     await tellCoach(existing.coachUserId, studio.name, existing.name, whenOfRow(existing), false);
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true, count: 1 };
 }
@@ -1411,6 +1417,7 @@ export async function closeGymDay(
     const coachId = cover ? cover.coachUserId : row.coachUserId;
     if (coachId) await tellCoach(coachId, studio.name, row.name, `${when}, ${fmtTime(row.startTime)}`, false);
   }
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
@@ -1499,6 +1506,7 @@ export async function openGymDay(
     const coachId = cover ? cover.coachUserId : row.coachUserId;
     if (coachId) await tellCoach(coachId, studio.name, row.name, `${when}, ${fmtTime(row.startTime)}`, true);
   }
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/shifts`);
@@ -1619,6 +1627,7 @@ export async function setShiftCover(
         href: "/calendar",
       });
   }
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
@@ -1753,6 +1762,7 @@ export async function giveUpShift(
     true,
   );
   revalidatePath("/calendar");
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1859,6 +1869,7 @@ export async function claimShift(
     false,
   );
   revalidatePath("/calendar");
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -1980,7 +1991,8 @@ export async function sendShiftTo(
       false,
     );
     revalidatePath("/calendar");
-    revalidatePath(`/s/${studio.slug ?? studio.id}`);
+    await recordProductActivity(await getSessionUserId(), "studio_updated");
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
     revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
     return { ok: true };
   }
@@ -2025,6 +2037,7 @@ export async function sendShiftTo(
     false,
   );
   revalidatePath("/calendar");
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -2369,6 +2382,7 @@ export async function enableStudioSchedule(
     .update(schema.studios)
     .set({ accountUserId: account.id })
     .where(and(eq(schema.studios.id, studioId), isNull(schema.studios.accountUserId)));
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
@@ -3171,6 +3185,7 @@ export async function addStudioManager(
     body: "You can now help manage its page and calendar.",
     url: `/s/${studio.slug ?? studio.id}/manage`,
   });
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
@@ -3212,6 +3227,7 @@ export async function removeStudioManager(
     .where(
       and(eq(schema.studioManagers.studioId, studioId), eq(schema.studioManagers.userId, targetId)),
     );
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
@@ -3622,6 +3638,7 @@ export async function answerShiftRequest(
     });
   }
   revalidatePath("/calendar");
+  await recordProductActivity(await getSessionUserId(), "studio_updated");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);

@@ -49,7 +49,7 @@ const HOLDS: { t: string; s: string }[] = [
   },
   {
     t: "Notifications",
-    s: "The alerts waiting for you in the app, and, if you turn them on, a browser push subscription so your device can be reached.",
+    s: "The alerts waiting for you in the app, and, if you turn them on, a browser push subscription or Apple device token so your device can be reached. We store notification preferences and pending alerts to deliver them and retry temporary failures.",
   },
   {
     t: "Counts",

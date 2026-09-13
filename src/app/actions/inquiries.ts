@@ -1,5 +1,7 @@
 "use server";
 
+import { recordProductActivity } from "@/lib/product-activity";
+
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
@@ -190,6 +192,7 @@ export async function sendInquiry(
     .returning();
 
   await db.insert(schema.inquiryMessages).values({ threadId: thread.id, fromCoach: false, body: message });
+  await recordProductActivity(viewerId, "message_sent");
 
   // Keep this in notification history as well as the Messages thread. That
   // history still powers direct links and delivery outside the app.
@@ -296,6 +299,7 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
   if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   await db.insert(schema.inquiryMessages).values({ threadId, fromCoach: true, body });
+  await recordProductActivity(userId, "message_sent");
   await db
     .update(schema.inquiryThreads)
     .set({ lastMessageAt: new Date(), coachUnread: 0 })
@@ -398,6 +402,7 @@ export async function replyAsRequester(threadId: string, bodyRaw: string): Promi
   if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   await db.insert(schema.inquiryMessages).values({ threadId, fromCoach: false, body });
+  await recordProductActivity(userId, "message_sent");
   await db
     .update(schema.inquiryThreads)
     .set({
@@ -463,6 +468,7 @@ export async function replyByToken(token: string, bodyRaw: string): Promise<Resu
   if (!allowed) return { ok: false, error: ANONYMOUS_ACTION_RETRY_ERROR };
 
   await db.insert(schema.inquiryMessages).values({ threadId, fromCoach: false, body });
+  await recordProductActivity(requesterAccount?.id ?? null, "message_sent");
   await db
     .update(schema.inquiryThreads)
     .set({ lastMessageAt: new Date(), coachUnread: sql`${schema.inquiryThreads.coachUnread} + 1` })
