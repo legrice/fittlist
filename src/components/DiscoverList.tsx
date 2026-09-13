@@ -1,5 +1,6 @@
 "use client";
 
+import { BodyPortal } from "@/components/BodyPortal";
 import { LoadingDots } from "@/components/LoadingDots";
 
 
@@ -131,7 +132,7 @@ export function DiscoverList({ people,studios=[],cities,myLat=null,myLng=null,st
     {tab==="groups"&&<div className="discover-results-workspace"><FilterRow><Filter label="Distance" value={groupDistance} onChange={(value)=>chooseDistance(value,setGroupDistance)} all="Any distance" options={distanceOptions} disabled={locationPending}/><Filter label="Purpose" value={purpose} onChange={setPurpose} all="Any purpose" options={[["plan","Plan together"],["community","Community"],["event","Events"]]}/><Filter label="Sort" value={groupSort} onChange={setGroupSort} all="Newest" options={[["name","Name"]]}/></FilterRow><div className="discover-results-column">{directoryLoading?<div className="directory-loading"><LoadingDots label="Loading groups…"/></div>:directoryFailed?<Empty>Couldn’t load groups. <button type="button" className="ghost" onClick={retryDirectory}>Try again</button></Empty>:shownGroups.length?<GroupGrid groups={shownGroups} from={groupFrom}/>:groupRows.length?<Empty>There are no groups matching these filters.</Empty>:<div className="discover-groups-empty"><span><Icon name="groups" size={32}/></span><h2>Plan fitness together</h2><p>Groups are shared calendars and updates for the people you train with. Add classes, invite members, and keep everyone&rsquo;s plans in one place.</p><button type="button" className="btn si" onClick={()=>setGroupCreateOpen(true)}><Icon name="add" size={21}/>Create a group</button></div>}</div></div>}
     {!hideBack&&<Link className="logoutbtn" href={backHref}>Back to your week</Link>}
     {groupCreateOpen&&(
-      <CreateGroupSheet onClose={()=>setGroupCreateOpen(false)}/>
+      <BodyPortal><CreateGroupSheet onClose={()=>setGroupCreateOpen(false)}/></BodyPortal>
     )}
     <Toast msg={toastMsg} on={toastOn}/>
   </>;

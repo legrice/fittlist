@@ -747,18 +747,8 @@ export function CalendarScreen({
       setAddOpen(true);
     }
   };
-  return (
-    <>
-      {/* "See it" from a save toast lands here with ?hl: light the row. */}
-      <HighlightOnLand />
-      {!desktop && !sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
-          {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={view === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => setView(view === "month" ? "list" : "month")}><Icon name={view === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /><NotificationDot /></button>}
-          <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}${scopeTarget !== "you" ? " is-loading" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Explore</Link></nav>
-          <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" tabIndex={classSheetDismissed ? 0 : -1} aria-hidden={!classSheetDismissed} aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
-        </div>
-        {scopeTarget !== "you" && <BodyPortal><div className="calendar-scope-loading" role="status" aria-label="Loading calendar"><span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" /></div></BodyPortal>}
-        <section inert={classSheetDismissed} aria-hidden={classSheetDismissed} className={`calendar-scope-hero calendar-transition-surface${classSheetDismissed ? " is-schedule" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" ref={revealButtonRef} className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
-      {!desktop && !sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${restoring ? " calendar-front-restoring" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
+  // One set of actions serves the mobile front sheet and desktop side panel.
+  const actionHub = (
         <div className="calendar-action-hub">
           <section className="calendar-quick-actions" aria-label="Quick actions"><div>
             <button type="button" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} />Share week</button>
@@ -793,6 +783,20 @@ export function CalendarScreen({
             <Link href="/admin"><span className="calendar-action-icon"><Icon name="admin_panel_settings" size={23} /></span><span><strong>Admin dashboard</strong><small>Manage people, studios, and event registration access</small></span><Icon name="chevron_right" size={20} /></Link>
           </div></section>}
         </div>
+  );
+  return (
+    <>
+      {/* "See it" from a save toast lands here with ?hl: light the row. */}
+      <HighlightOnLand />
+      {!desktop && !sheet && <><div className={`calendar-scope-top${classSheetDismissed ? " is-expanded" : ""}${returning ? " is-returning" : ""}`} ref={frontScopeRef}>
+          {classSheetDismissed ? <button type="button" className="calendar-scope-search calendar-scope-view" aria-label={view === "month" ? "Switch to day view" : "Switch to month view"} onClick={() => setView(view === "month" ? "list" : "month")}><Icon name={view === "month" ? "calendar_month" : "calendar_view_day"} size={23} /></button> : <button type="button" className="calendar-scope-search calendar-scope-notifications" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}><Icon name="notifications" size={23} /><NotificationDot /></button>}
+          <nav className={`calendar-mode-tabs${classSheetDismissed ? " is-collapsed" : ""}${scopeTarget !== "you" ? " is-loading" : ""}`} data-active={scopeTarget} aria-label="Calendar view"><Link href="/calendar" aria-current="page" onClick={(event) => switchScope(event,"you")}>You</Link><Link href="/calendar/following" tabIndex={classSheetDismissed ? -1 : undefined} onClick={(event) => switchScope(event,"following")}>Explore</Link></nav>
+          <span className="calendar-scope-actions"><button type="button" className="calendar-scope-search calendar-scope-search-open" aria-label="Search FittList" onClick={() => setDiscoverOpen(true)}><Icon name="search" size={23} /></button><button type="button" className="calendar-scope-search calendar-scope-close" tabIndex={classSheetDismissed ? 0 : -1} aria-hidden={!classSheetDismissed} aria-label="Show calendar actions" onClick={restoreActionSurface}><Icon name="close" size={23} /></button></span>
+        </div>
+        {scopeTarget !== "you" && <BodyPortal><div className="calendar-scope-loading" role="status" aria-label="Loading calendar"><span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" /></div></BodyPortal>}
+        <section inert={classSheetDismissed} aria-hidden={classSheetDismissed} className={`calendar-scope-hero calendar-transition-surface${classSheetDismissed ? " is-schedule" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`}><section className="calendar-section-summary personal-upcoming-summary" aria-label="Calendar summary">{bare ? <><div className="calendar-summary-copy"><strong>{calendarWeekSummary.title}</strong></div></> : <button type="button" className="calendar-summary-copy" aria-label="Change calendar voice" onClick={() => setSummaryVoiceOpen(true)}><strong>{calendarWeekSummary.title.split(/(we get+t it|love)/i).map((part,index) => /^(we get+t it|love)$/i.test(part) ? <em key={`${part}-${index}`}>{part}</em> : part)}</strong></button>}<button type="button" ref={revealButtonRef} className={`calendar-summary-reveal${classSheetDismissed ? " is-open" : ""}`} aria-label={classSheetDismissed ? "Show calendar actions" : "Show your calendar"} aria-expanded={classSheetDismissed} onClick={() => classSheetDismissed ? restoreActionSurface() : setClassSheetDismissed(true)}><Icon name="expand_more" size={25} /></button></section></section></>}
+      {!desktop && !sheet && !classSheetDismissed && <section className={`calendar-action-sheet calendar-pull-sheet calendar-transition-surface${restoring ? " calendar-front-restoring" : ""}${scopeTarget !== "you" ? " calendar-surface-leaving" : ""}${scopeSummaryEntering ? " calendar-surface-entering" : ""}`} ref={frontSheetRef} aria-label="Calendar actions">
+        {actionHub}
         <footer ref={communityFooterRef} className="calendar-community-footer"><Wordmark variant="cloud" /><p>Thanks for being part of the community.</p><nav aria-label="FittList links"><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav><small>© {new Date().getFullYear()} FittList</small></footer>
       </section>}
       <header className="calendar-page-header calendar-page-actions">
@@ -809,16 +813,16 @@ export function CalendarScreen({
           <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
           </div>
         </div>
-        {(!desktop || view !== "list" || sheet) && <div className={`calendar-desktop-controls${view === "list" && !sheet ? " has-calendar-sidebar" : ""}`}>
+        <div className="calendar-desktop-controls">
           {calendarFilter}
           {!desktop && <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
             <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
           </div>}
-        </div>}
+        </div>
       </header>
 
-      <div className={`calendar-workspace${view === "list" && !sheet ? " has-sidebar" : ""}`}>
+      <div className={`calendar-workspace${!sheet ? " has-sidebar calendar-app-workspace" : ""}`}>
       <div className={`cardwrap calendar-cardwrap calendar-direct-schedule${!sheet && !classSheetDismissed ? " is-mobile-hidden" : ""}${!desktop && !sheet && classSheetDismissed ? ` calendar-surface-schedule${returning ? " is-returning" : ""}` : ""}`}>
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
@@ -854,9 +858,10 @@ export function CalendarScreen({
       )}
       </div>
 
-      {desktop && !sheet && view === "list" && <aside className="calendar-date-sidebar" aria-label="Calendar navigation">
-        <CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openDay} />
-        <section className="calendar-sidebar-filters"><h2>Show on your calendar</h2>{calendarFilter}</section>
+      {desktop && !sheet && <aside className="calendar-desktop-sheet" aria-label="Calendar actions">
+        <h2 className="calendar-desktop-sheet-title">Your space</h2>
+        {actionHub}
+        <details className="calendar-desktop-dates"><summary>Jump to a date</summary><CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openDay} /></details>
       </aside>}
       </div>
 

@@ -1023,7 +1023,7 @@ export function FollowingScreen({
     const p = f.place as string[];
     return p.length === 1 ? p[0] : `${p.length} places`;
   };
-  const followingSidebar = desktop && calendarFollowing && calendarView === "day";
+  const followingSidebar = desktop && calendarFollowing;
   const calendarScope = (<>{isHome && !firstRun && !(calendarFollowing && followingSummary.length === 0 && items.length === 0) && (
         <header className={`following-head explore-calendar-rail${calendarFollowing && (calendarFilter === "following" || calendarFilter === "all") ? " explore-calendar-rail-all" : ""}`}>
           <CalendarScopeRail>
@@ -1060,7 +1060,7 @@ export function FollowingScreen({
           </div>
         </div>
       </header>}
-      <div className={`calendar-workspace following-workspace${followingSidebar ? " has-sidebar" : ""}`}><div className="following-schedule-column">
+      <div className={`calendar-workspace following-workspace${followingSidebar ? " has-sidebar calendar-app-workspace" : ""}`}><div className="following-schedule-column">
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
@@ -1322,10 +1322,14 @@ export function FollowingScreen({
         </>
       )}
       </div>
-      {followingSidebar && <aside className="calendar-date-sidebar following-date-sidebar" aria-label="Following calendar navigation">
+      {followingSidebar && <aside className="calendar-desktop-sheet calendar-desktop-explore" aria-label="Discover people, places, and groups">
+        <h2 className="calendar-desktop-sheet-title">Explore</h2>
+        <div className="calendar-following-surface"><DiscoverList people={[]} studios={[]} cities={[]} groups={[]} upcoming={[]} backHref="/calendar/following" hideBack groupFrom="calendar-following" /></div>
+        <details className="calendar-desktop-dates"><summary>Jump to a date</summary>
         <CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openMonthDay} onMonthChange={showSidebarMonth} showHint={false} />
         {calendarMonths[sidebarMonth] === "loading" && <LoadingDots label="Loading dates…"/>}
         {calendarMonths[sidebarMonth] === "error" && <button type="button" className="calendar-load-more" onClick={() => void ensureMonth(sidebarMonth)}>Retry loading dates</button>}
+        </details>
       </aside>}
       </div>
       </div>

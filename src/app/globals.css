@@ -16321,3 +16321,44 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .calendar-action-list > :is(button,a) { min-height:100px; padding:20px; gap:18px; }
   .calendar-action-list { gap:16px; }
 }
+
+/* Desktop expresses the mobile layers side by side: dark schedule, light hub. */
+@media (min-width:940px) {
+  .screen.hasnav:has(.calendar-app-workspace),
+  .screen.hasnav:has(.calendar-app-workspace) > .pad {
+    background:var(--kinetic-canvas-dark);
+  }
+  .calendar-app-workspace.has-sidebar { grid-template-columns:minmax(0,1fr) minmax(340px, .72fr); gap:32px; }
+  .screen.hasnav:has(.calendar-app-workspace) .calendar-summary-heading,
+  .calendar-app-workspace > :not(.calendar-desktop-sheet) :is(.dayband-d,.cash-day > h2,.calendar-person-chip small,.calendar-first-class,.wkempty-t,.wkempty-s,.calendar-selection-empty,.feedfilter-txt) { color:var(--kinetic-inverse); }
+  .screen.hasnav .calendar-app-workspace > :not(.calendar-desktop-sheet) :is(.dayband,.cash-day > h2) { background:var(--kinetic-canvas-dark); }
+  .screen.hasnav:has(.calendar-app-workspace) .calendar-page-header { background:transparent; }
+  .screen.hasnav:has(.calendar-app-workspace) .calendar-cardwrap,
+  .calendar-app-workspace .following-schedule-column { background:transparent; }
+  .calendar-app-workspace > :not(.calendar-desktop-sheet) .monthblock {
+    padding:20px; margin-bottom:20px; border-radius:24px; background:var(--kinetic-surface); color:var(--kinetic-text);
+  }
+  .screen.hasnav:has(.calendar-app-workspace) .scrollhead { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
+  .calendar-desktop-sheet {
+    --color-surface:var(--kinetic-surface);
+    --color-surface-muted:var(--kinetic-badge);
+    --color-text-primary:var(--kinetic-text);
+    position:sticky; top:104px; min-width:0; max-height:calc(100dvh - 128px); overflow-y:auto;
+    padding:24px; border-radius:28px; background:var(--kinetic-canvas-light); color:var(--kinetic-text);
+    scrollbar-width:thin; scrollbar-gutter:stable;
+  }
+  .calendar-desktop-sheet-title { margin:0 0 20px; font-size:24px; line-height:1.2; }
+  .calendar-desktop-sheet .calendar-action-hub { display:grid; gap:24px; }
+  .calendar-desktop-sheet .calendar-action-list > :is(button,a) { padding:14px; grid-template-columns:40px minmax(0,1fr) 18px; gap:10px; }
+  .calendar-desktop-sheet .calendar-action-icon { width:40px; height:40px; }
+  .calendar-desktop-sheet .calendar-quick-actions > div { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .calendar-desktop-sheet .calendar-quick-actions :is(button,a) { padding-inline:8px; font-size:13px; }
+  .calendar-desktop-sheet .calendar-following-surface { min-width:0; padding:0; background:transparent; }
+  .calendar-desktop-sheet .discover-results-workspace { display:block; }
+  .calendar-desktop-sheet :is(.discover-person-grid,.discover-studio-grid) { grid-template-columns:1fr; }
+  .calendar-desktop-sheet .discover-searchrow { min-width:0; }
+  .calendar-desktop-sheet .discover-class-filters { flex-wrap:wrap; }
+  .calendar-desktop-dates { margin-top:24px; padding-top:20px; border-top:1px solid var(--kinetic-control-border); }
+  .calendar-desktop-dates > summary { padding:8px 0; font-weight:600; cursor:pointer; }
+  .calendar-desktop-dates .calendar-mini-month { margin-top:12px; }
+}
