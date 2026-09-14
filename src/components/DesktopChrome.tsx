@@ -83,7 +83,7 @@ export function DesktopChrome({
         <nav className="desktop-nav" aria-label="Main">
           <Link className={`desktop-nav-link${youOn ? " on" : ""}`} href="/calendar" aria-current={personalOn ? "page" : undefined}>You</Link>
           <Link className={`desktop-nav-link${followingOn ? " on" : ""}`} href="/calendar/following" aria-current={followingOn ? "page" : undefined}>
-            <Icon name="calendar_view_day" size={22} /><span>Following</span>
+            <Icon name="calendar_view_day" size={22} /><span>Explore</span>
           </Link>
         </nav>
         <form className="desktop-header-search" action="/search" role="search">

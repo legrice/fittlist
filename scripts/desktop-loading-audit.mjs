@@ -51,10 +51,10 @@ try {
       const response = await route.fetch(); await gate; await route.fulfill({ response }).catch(() => {});
     });
     try {
-      await page.locator('.desktop-top-header').getByRole("link", { name: "Following", exact: true }).click();
+      await page.locator('.desktop-top-header').getByRole("link", { name: "Explore", exact: true }).click();
       await started;
       assert.equal(await page.locator('.desktop-top-header .link-pending-dots').count(), 0);
-      assert(await page.locator('.desktop-top-header').getByRole("link", { name: "Following", exact: true }).isVisible());
+      assert(await page.locator('.desktop-top-header').getByRole("link", { name: "Explore", exact: true }).isVisible());
       release(); await page.waitForURL("**/calendar/following");
       await page.locator(".calendar-desktop-explore .discover-results-workspace").waitFor();
     } finally { release(); }

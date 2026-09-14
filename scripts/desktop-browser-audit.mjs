@@ -200,7 +200,7 @@ try {
   await page.waitForURL("**/notifications"); await page.getByRole("heading", { name: "Notifications", exact: true }).waitFor(); await frame();
   await page.goBack(); await page.waitForURL("**/calendar"); await page.locator(".calendar-summary-heading").waitFor();
   assert.equal(await rail.getByRole("link", { name: "Discover", exact: true }).count(), 0, "Discovery lives alongside Following");
-  await rail.getByRole("link", { name: "Following", exact: true }).click();
+  await rail.getByRole("link", { name: "Explore", exact: true }).click();
   await page.waitForURL("**/calendar/following"); await frame();
   const explorePanel = page.locator(".calendar-desktop-explore");
   await explorePanel.getByRole("tab", { name: "People", exact: true }).waitFor();
