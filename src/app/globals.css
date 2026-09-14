@@ -16322,11 +16322,11 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .calendar-action-list { gap:16px; }
 }
 
-/* Desktop expresses the mobile layers side by side: dark schedule, light hub. */
+/* Desktop uses one light canvas with a fixed hub beside the schedule. */
 @media (min-width:940px) {
   .screen.hasnav:has(.calendar-app-workspace),
   .screen.hasnav:has(.calendar-app-workspace) > .pad {
-    background:var(--kinetic-canvas-dark);
+    background:var(--kinetic-canvas-light);
   }
   .screen.hasnav:has(.calendar-app-workspace) { --calendar-rail-width:clamp(340px,38vw,520px); }
   .screen.hasnav:has(.calendar-app-workspace) > .pad {
@@ -16334,21 +16334,21 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
     padding-inline:clamp(24px,2.5vw,48px);
   }
   .calendar-app-workspace.has-sidebar { display:block; }
-  .screen.hasnav:has(.calendar-app-workspace) .calendar-page-title-row { flex-wrap:wrap; }
+  .screen.hasnav:has(.calendar-app-workspace) .calendar-page-title-row { flex-wrap:wrap; gap:12px; }
   .screen.hasnav:has(.calendar-app-workspace) .calendar-page-title { flex-basis:100%; }
   .screen.hasnav:has(.calendar-app-workspace) .scrollhead {
     left:var(--calendar-rail-width); right:0; padding-inline:clamp(24px,2.5vw,48px);
   }
   .screen.hasnav:has(.calendar-app-workspace) .calendar-summary-heading,
-  .calendar-app-workspace > :not(.calendar-desktop-sheet) :is(.dayband-d,.cash-day > h2,.calendar-person-chip small,.calendar-first-class,.wkempty-t,.wkempty-s,.calendar-selection-empty,.feedfilter-txt) { color:var(--kinetic-inverse); }
-  .screen.hasnav .calendar-app-workspace > :not(.calendar-desktop-sheet) :is(.dayband,.cash-day > h2) { background:var(--kinetic-canvas-dark); }
-  .screen.hasnav:has(.calendar-app-workspace) .calendar-page-header { background:transparent; }
+  .calendar-app-workspace > :not(.calendar-desktop-sheet) :is(.dayband-d,.cash-day > h2,.calendar-person-chip small,.calendar-first-class,.wkempty-t,.wkempty-s,.calendar-selection-empty,.feedfilter-txt) { color:var(--kinetic-text); }
+  .screen.hasnav .calendar-app-workspace > :not(.calendar-desktop-sheet) :is(.dayband,.cash-day > h2) { background:var(--kinetic-canvas-light); }
+  .screen.hasnav:has(.calendar-app-workspace) .calendar-page-header { background:transparent; margin-bottom:16px; padding-top:24px; }
   .screen.hasnav:has(.calendar-app-workspace) .calendar-cardwrap,
   .calendar-app-workspace .following-schedule-column { background:transparent; }
   .calendar-app-workspace > :not(.calendar-desktop-sheet) .monthblock {
     padding:20px; margin-bottom:20px; border-radius:24px; background:var(--kinetic-surface); color:var(--kinetic-text);
   }
-  .screen.hasnav:has(.calendar-app-workspace) .scrollhead { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
+  .screen.hasnav:has(.calendar-app-workspace) .scrollhead { background:var(--kinetic-canvas-light); color:var(--kinetic-text); }
   .calendar-desktop-sheet {
     --color-surface:var(--kinetic-surface);
     --color-surface-muted:var(--kinetic-badge);
