@@ -71,7 +71,7 @@ export function DesktopChrome({
   const personalOn = pathname === "/calendar";
   const followingOn = pathname === "/feed" || pathname.startsWith("/calendar/following");
   const youOn = personalOn || managedActive;
-  const showCalendarAdd = personalOn || followingOn || managedCalendars.some(calendar => pathname === (calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`));
+  const showCalendarAdd = followingOn || managedCalendars.some(calendar => pathname === (calendar.kind === "studio" ? `/s/${calendar.slug}/manage/calendar` : `/g/${calendar.slug}`));
   const profileOn = pathname.startsWith(profileHref) || pathname.startsWith("/settings") ||
     (active === "calendar" && !pathname.startsWith("/calendar"));
   return (

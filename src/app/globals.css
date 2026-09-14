@@ -16374,3 +16374,13 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .calendar-desktop-dates > summary { padding:8px 0; font-weight:600; cursor:pointer; }
   .calendar-desktop-dates .calendar-mini-month { margin-top:12px; }
 }
+
+@media (min-width:940px) {
+  .screen.hasnav:has(.calendar-app-workspace) .calendar-heading-actions { width:100%; gap:12px; }
+  .calendar-heading-actions .calendar-desktop-filter { margin-right:auto; min-width:140px; flex:0 1 240px; }
+  .calendar-heading-actions .calendar-desktop-view { flex-shrink:0; }
+  .calendar-heading-actions .calendar-header-add { background:var(--color-lime); flex-shrink:0; }
+  .calendar-desktop-sheet .calendar-quick-actions :is(button,a),
+  .calendar-desktop-sheet .calendar-action-list > :is(button,a),
+  .calendar-desktop-sheet .calendar-action-section-head > :is(button,a) { border:1px solid var(--kinetic-control-border); }
+}

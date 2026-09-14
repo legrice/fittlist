@@ -98,6 +98,11 @@ try {
           const hub = await sidebar.boundingBox();
           assert(hub.x >= schedule.x + schedule.width, "Personal action sheet sits right of the schedule");
           assert.equal(await page.getByRole("combobox", { name: "View calendar" }).count(), 1, "Only one visible calendar filter");
+          const filterBox = await page.getByRole("combobox", { name: "View calendar" }).boundingBox();
+          const toggleBox = await page.getByRole("button", { name: "Day view", exact: true }).boundingBox();
+          const addBox = await page.getByRole("button", { name: "Add", exact: true }).boundingBox();
+          assert(Math.abs(filterBox.y + filterBox.height / 2 - toggleBox.y - toggleBox.height / 2) < 2, "View filter aligns with day/month toggle");
+          assert(addBox.x > toggleBox.x && Math.abs(addBox.y + addBox.height / 2 - toggleBox.y - toggleBox.height / 2) < 2, "Add sits beside the view toggle");
           await sidebar.locator("summary").filter({ hasText: "Jump to a date" }).click();
           const date = sidebar.locator(".calendar-mini-grid button:not(:disabled)").first();
           if (await date.count()) { await date.click(); assert(await date.getAttribute("aria-pressed") === "true", "Date selection is reflected"); }
@@ -188,7 +193,7 @@ try {
   }
   report.checks.push("Discovery, search, profile, messages, notifications, settings, share and studio calendar retain the rail");
   await visit("/calendar");
-  await page.getByRole("button", { name: "Share your week", exact: true }).click();
+  await page.getByRole("button", { name: "Share week", exact: true }).click();
   await page.waitForURL("**/coachshare"); await page.locator(".shpage").waitFor(); await frame();
   assert.equal(await page.locator(".share-takeover-scrim").count(), 0, "Share uses its desktop page");
   await page.goBack(); await page.waitForURL("**/calendar"); await page.locator(".calendar-summary-heading").waitFor();

@@ -1,5 +1,6 @@
 "use client";
 
+import { GlobalAdd } from "@/components/GlobalAdd";
 import { CalendarMiniMonth } from "@/components/CalendarMiniMonth";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
 import { useCalendarScopeRecovery } from "@/lib/calendar-scope-recovery";
@@ -806,20 +807,21 @@ export function CalendarScreen({
             <h1 className="calendar-summary-heading">{calendarWeekSummary.title}</h1>
           </div>
           <div className="calendar-heading-actions">
+            {desktop && calendarFilter}
             {desktop && <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
             <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
           </div>}
-          <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>
+          {desktop ? <GlobalAdd triggerClassName="calendar-header-share calendar-header-add" triggerLabel="Add" triggerIconSize={20} /> : <button type="button" className="calendar-header-share" aria-label="Share your week" onClick={openShare}><Icon name="reply" className="share-arrow-forward" size={20} /><span>Share</span></button>}
           </div>
         </div>
-        <div className="calendar-desktop-controls">
+        {!desktop && <div className="calendar-desktop-controls">
           {calendarFilter}
           {!desktop && <div className="calendar-desktop-view" role="group" aria-label="Calendar view">
             <button type="button" className={view === "list" ? "on" : ""} aria-label="Day view" aria-pressed={view === "list"} onClick={() => setView("list")}><Icon name="calendar_view_day" size={21} /></button>
             <button type="button" className={view === "month" ? "on" : ""} aria-label="Month view" aria-pressed={view === "month"} onClick={() => setView("month")}><Icon name="calendar_month" size={21} /></button>
           </div>}
-        </div>
+        </div>}
       </header>
 
       <div className={`calendar-workspace${!sheet ? " has-sidebar calendar-app-workspace" : ""}`}>
@@ -859,7 +861,6 @@ export function CalendarScreen({
       </div>
 
       {desktop && !sheet && <aside className="calendar-desktop-sheet" aria-label="Calendar actions">
-        <h2 className="calendar-desktop-sheet-title">Your space</h2>
         {actionHub}
         <details className="calendar-desktop-dates"><summary>Jump to a date</summary><CalendarMiniMonth todayIso={todayIso} dates={monthItems} onDay={openDay} /></details>
       </aside>}
