@@ -27,8 +27,6 @@ import { objectionableContentError } from "@/lib/content-safety";
 
 const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const MAX_ENTRIES = 30; // a week has room for a lot of training, not for a spreadsheet
-
 export type PersonalMatch = {
   classId: string;
   name: string;
@@ -181,13 +179,6 @@ export async function addPersonalClass(input: {
     return sameName && sameFreePlace;
   });
   if (ownDuplicate) return { ok: false, error: "That is already in your week." };
-
-  const mine = await db
-    .select({ id: schema.personalClasses.id })
-    .from(schema.personalClasses)
-    .where(eq(schema.personalClasses.userId, userId));
-  if (mine.length + days.length > MAX_ENTRIES)
-    return { ok: false, error: "That's plenty for one week." };
 
   const classType = input.classType?.trim().slice(0, 40) || null;
   const description = input.description?.trim().slice(0, 600) || null;
