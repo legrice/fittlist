@@ -646,6 +646,7 @@ export const nativePushDevices = pgTable("native_push_devices", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   follows: boolean("follows").notNull().default(true),
   messages: boolean("messages").notNull().default(true),
+  updates: boolean("updates").notNull().default(true),
   adminActivity: boolean("admin_activity").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -1123,7 +1124,7 @@ export const productActivity = pgTable(
     kind: text("kind").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("product_activity_created").on(t.createdAt)],
+  (t) => [index("product_activity_created").on(t.createdAt), index("product_activity_actor_kind_created").on(t.actorUserId, t.kind, t.createdAt)],
 );
 
 export const pageVisits = pgTable(

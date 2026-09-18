@@ -75,7 +75,7 @@ const HOLDS: { t: string; s: string }[] = [
 
 const NEVER: string[] = [
   "There are no ads, and there is no advertising network in the app.",
-  "There is no advertising analytics, no tracking pixel, and no cross-site behavioral profile. Performance measurement is used only to operate FittList.",
+  "There is no advertising analytics, no tracking pixel, and no cross-site behavioral profile. Performance measurement is used only to operate FittList. We also record first-party account activity, such as daily app use, broad feature use and screen errors, to understand adoption and improve the beta. These events do not include searches, message content, or the classes and people you view.",
   "Your personal information is never sold, rented, shared or brokered.",
   "We do not build a profile of you to sell to anyone, because nobody here is the product.",
 ];

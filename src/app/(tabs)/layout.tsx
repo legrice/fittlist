@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { avatarColor } from "@/lib/avatar";
 import { feedbackHost, feedbackPromptDueFor } from "@/lib/feedback";
 import { unreadHeaderCounts } from "@/lib/notify";
+import { BetaUsage } from "@/components/BetaUsage";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
@@ -114,6 +115,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
 
   return (
     <ClientCacheScope viewerId={userId}>
+      <BetaUsage viewerId={userId} />
       <section className="screen hasnav" data-mode={lookMode(me.look)}>
         <DesktopChrome
           coach={isCoach}

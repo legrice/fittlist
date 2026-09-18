@@ -8,6 +8,7 @@ import { listStudioReports, listStudioSuggestions } from "@/app/actions/studios"
 import { listContentReports } from "@/app/actions/content-reports";
 import { adminActivity } from "@/lib/adminactivity";
 import { vapidPublicKey } from "@/lib/push";
+import { adminBetaAnalytics } from "@/lib/admin-beta";
 import { AdminPanel } from "@/components/AdminPanel";
 import { lookMode } from "@/lib/darkmode";
 
@@ -277,6 +278,7 @@ export default async function AdminPage({
 
   return (
     <AdminPanel
+      betaData={await adminBetaAnalytics()}
       flyerVisits={flyerTotal?.count ?? 0}
       adminEmail={admin.email}
       reports={reports}

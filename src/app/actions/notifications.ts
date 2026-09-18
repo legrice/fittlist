@@ -48,11 +48,10 @@ export async function markUpdatesSeen(notificationIds: string[]): Promise<void> 
 }
 
 export async function hasNewNotifications(): Promise<boolean> {
-  const userId = await getSessionUserId();
-  if (!userId) return false;
-  const { getDb, schema } = await import("@/db");
-  const { and, eq, isNull, notInArray } = await import("drizzle-orm");
-  const db = await getDb();
-  const rows = await db.select({id:schema.notifications.id}).from(schema.notifications).where(and(eq(schema.notifications.userId,userId),isNull(schema.notifications.readAt),notInArray(schema.notifications.type,["message","feedback"]))).limit(1);
-  return rows.length > 0;
+  const { currentUser } = await import("@/lib/current-user");
+  const { unreadHeaderCounts } = await import("@/lib/notify");
+  const me = await currentUser();
+  if (!me) return false;
+  const counts = await unreadHeaderCounts(me.id, me.email);
+  return counts.notifications > 0 || counts.messages > 0;
 }

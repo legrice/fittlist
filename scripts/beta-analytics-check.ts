@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import { betaAnalytics, type AnalyticsPerson, type AnalyticsEvent } from "../src/lib/beta-analytics";
+const now = new Date("2026-10-01T12:00:00Z");
+const date = (days: number) => new Date(now.getTime() - days * 86400000);
+const person = (id: string, ago: number, email = `${id}@example.test`): AnalyticsPerson => ({ id, email, name: id, kind: "fan", createdAt: date(ago), onboardedAt: null, signupSource: "beta" });
+const event = (id: string | null, kind: string, ago: number): AnalyticsEvent => ({ actorUserId: id, kind, createdAt: date(ago) });
+const people = [person("new", 3), { ...person("activated", 2), onboardedAt: date(1) }, person("mature", 20), person("young", 10), person("old", 40), person("admin", 1), person("review", 1, "review@fittlist.co"), { ...person("gym", 1), kind: "gym" }];
+const events = [event("mature", "app_active", 25), event("mature", "app_active", 12), event("young", "app_active", 2), event("activated", "class_saved", 1), event("activated", "class_saved", 1), event("activated", "calendar_viewed", 1), event("activated", "calendar_viewed", 1), event("new", "screen_error", 0), event("admin", "class_saved", 0), event("review", "class_saved", 0), event("gym", "class_saved", 0), event(null, "class_saved", 0), event("deleted", "class_saved", 0), event("old", "app_active", 30)];
+const report = betaAnalytics(people, events, ["admin@example.test"], now, 7);
+assert.equal(report.newUsers, 2); assert.equal(report.activated, 1); assert.equal(report.onboarded, 1);
+assert.equal(report.active, 2, "Errors alone do not inflate active accounts");
+assert.equal(report.features.find(row => row.label === "Classes saved")?.events, 2);
+assert.equal(report.features.find(row => row.label === "Classes saved")?.users, 1);
+assert.equal(report.features.find(row => row.label === "Calendar opened")?.events, 1, "Concurrent daily signals count once");
+assert.equal(report.retention.eligible, 1); assert.equal(report.retention.returned, 1, "Only mature fully observed cohorts qualify");
+assert.equal(report.stuck.length, 1); assert.equal(report.stuck[0].id, "new");
+assert.equal(betaAnalytics(people, [], [], now, 7).retention.eligible, 0, "Missing historical visits are not failed retention");
+console.log("PASS beta analytics: exclusions, activation, distinct accounts/days, error isolation, mature retention, follow-up cues");

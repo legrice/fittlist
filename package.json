@@ -27,7 +27,7 @@
     "ios:open": "cap open ios",
     "ios:run": "cap run ios",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx scripts/production-regressions.ts && npm run check:push",
+    "test": "node --import tsx scripts/production-regressions.ts && npm run check:push && npm run check:beta-analytics",
     "test:browser": "node scripts/production-audit.mjs",
     "check:notifications-browser": "node scripts/notification-browser-audit.mjs",
     "check:data-integrity": "node --import tsx scripts/data-integrity-audit.ts && node --import tsx scripts/saved-visibility-check.ts && npm run check:calendar-window",
@@ -45,7 +45,8 @@
     "check:event-registration": "node --import tsx scripts/event-registration-check.ts",
     "check:event-browser": "node scripts/event-browser-check.mjs",
     "check:push": "node --import tsx scripts/native-push-check.ts",
-    "check:push-api": "node scripts/native-push-api-check.mjs"
+    "check:push-api": "node scripts/native-push-api-check.mjs",
+    "check:beta-analytics": "node --import tsx scripts/beta-analytics-check.ts"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

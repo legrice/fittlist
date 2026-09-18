@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { NotificationFeed } from "@/components/NotificationFeed";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
-import { NotificationList } from "@/components/UpdatesScreen";
+
 
 export function NotificationsSheet({ onClose }: { onClose: () => void }) {
   const sheet = useRef<HTMLElement>(null);
@@ -32,7 +32,7 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
             </button>
           </header>
           <div className="utility-sheet-content">
-            <NotificationFeed renderList={(notifications) => <NotificationList notifications={notifications} />} />
+            <NotificationCenter />
           </div>
         </section>
       </div>

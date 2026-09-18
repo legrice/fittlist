@@ -1,4 +1,5 @@
 "use client";
+import { sendUsage } from "@/lib/usage-client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
@@ -189,6 +190,7 @@ export function ClassPeek({
   // neither a handle nor a slug.
   const detailKey = cls.base?.replace(/^s\//, "");
   const detailMemoryKey = detailKey ? classMemoryKey(detailKey, cls.id, cls.iso) : null;
+  useEffect(() => { sendUsage("class_viewed"); }, [cls.id]);
   const [confirm, setConfirm] = useState<"occurrence" | "all" | null>(null);
   const [pending, start] = useTransition();
   // The depth, loaded only when somebody asks for it. Most taps are somebody

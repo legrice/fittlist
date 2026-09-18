@@ -30,6 +30,7 @@ export function NativePushSettings() {
   };
   const rows: Array<{ key: keyof DevicePushPreferences; title: string; sub: string }> = [
     { key: "follows", title: "Follows", sub: "New followers and follow requests" },
+    { key: "updates", title: "Important updates", sub: "Class cancellations, schedule changes, and account updates" },
     { key: "messages", title: "Messages", sub: "New messages and replies" },
     ...(settings?.admin ? [{ key: "adminActivity" as const, title: "All app activity", sub: "Admin alerts for activity across FittList, including town-flyer link opens" }] : []),
   ];

@@ -5,8 +5,8 @@ import { adminEmails } from "@/lib/admin";
 import { apnsConfigured, sendApns, type PushPayload } from "@/lib/apns";
 
 export type PushCategory = "follows" | "messages" | "adminActivity" | "updates";
-export function deviceAllows(device: { follows: boolean; messages: boolean; adminActivity: boolean }, category: string) {
-  return category === "updates" || (category === "follows" && device.follows) || (category === "messages" && device.messages) || (category === "adminActivity" && device.adminActivity);
+export function deviceAllows(device: { follows: boolean; messages: boolean; adminActivity: boolean; updates?: boolean }, category: string) {
+  return (category === "updates" && device.updates !== false) || (category === "follows" && device.follows) || (category === "messages" && device.messages) || (category === "adminActivity" && device.adminActivity);
 }
 export async function queueNativePush(userIds: string[], payload: PushPayload, category: PushCategory) {
   if (!apnsConfigured() || !userIds.length) return;

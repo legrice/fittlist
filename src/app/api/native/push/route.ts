@@ -21,9 +21,9 @@ export async function GET(request: Request) {
   if (!me) return Response.json({ error: "Sign in to enable notifications." }, { status: 401, headers });
   const id = new URL(request.url).searchParams.get("device");
   const db = await getDb();
-  const [device] = id && uuid.test(id) ? await db.select({ follows: schema.nativePushDevices.follows, messages: schema.nativePushDevices.messages, adminActivity: schema.nativePushDevices.adminActivity })
+  const [device] = id && uuid.test(id) ? await db.select({ follows: schema.nativePushDevices.follows, messages: schema.nativePushDevices.messages, updates: schema.nativePushDevices.updates, adminActivity: schema.nativePushDevices.adminActivity })
     .from(schema.nativePushDevices).where(and(eq(schema.nativePushDevices.id, id), eq(schema.nativePushDevices.userId, me.id))) : [];
-  return Response.json({ configured: apnsConfigured(), admin: me.admin, enabled: !!device, preferences: device ?? { follows: true, messages: true, adminActivity: false } }, { headers });
+  return Response.json({ configured: apnsConfigured(), admin: me.admin, enabled: !!device, preferences: device ?? { follows: true, messages: true, updates: true, adminActivity: false } }, { headers });
 }
 export async function POST(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin || !request.headers.get("content-type")?.includes("application/json"))
@@ -46,17 +46,20 @@ export async function POST(request: Request) {
   if (input.refresh === true) {
     const [existing] = await db.select().from(schema.nativePushDevices).where(and(eq(schema.nativePushDevices.id, input.id), eq(schema.nativePushDevices.userId, me.id)));
     if (!existing) return Response.json({ error: "Enable notifications first." }, { status: 409, headers });
-    input.preferences = { follows: existing.follows, messages: existing.messages, adminActivity: me.admin && existing.adminActivity };
+    input.preferences = { follows: existing.follows, messages: existing.messages, updates: existing.updates, adminActivity: me.admin && existing.adminActivity };
   }
   if (typeof input.token !== "string" || !/^[0-9a-f]{64,256}$/i.test(input.token)
-    || !input.preferences || ["follows", "messages", "adminActivity"].some(k => typeof input.preferences[k] !== "boolean"))
+    || !input.preferences || (input.preferences.updates !== undefined && typeof input.preferences.updates !== "boolean") || ["follows", "messages", "adminActivity"].some(k => typeof input.preferences[k] !== "boolean"))
     return Response.json({ error: "Invalid device settings." }, { status: 400, headers });
   if (input.preferences.adminActivity && !me.admin) return Response.json({ error: "Not authorized." }, { status: 403, headers });
+  const [prior] = await db.select({ updates: schema.nativePushDevices.updates }).from(schema.nativePushDevices).where(and(eq(schema.nativePushDevices.id, input.id), eq(schema.nativePushDevices.userId, me.id)));
+  // Older builds omit this preference; retain an existing opt-out.
+  const updates = input.preferences.updates ?? prior?.updates ?? true;
   // The session has already been verified by viewer(); use its actual expiry.
   const token = jar.get("fl_session")!.value;
   const exp = decodeJwt(token).exp!;
   const values = { userId: me.id, token: input.token.toLowerCase(), sessionVersion: me.version, expiresAt: new Date(exp * 1000),
-    follows: input.preferences.follows, messages: input.preferences.messages, adminActivity: me.admin && input.preferences.adminActivity, updatedAt: new Date() };
+    follows: input.preferences.follows, messages: input.preferences.messages, updates, adminActivity: me.admin && input.preferences.adminActivity, updatedAt: new Date() };
   await db.transaction(async tx => {
     // Reinstallation or account switching must not leave a second owner of the same APNs token.
     await tx.delete(schema.nativePushDevices).where(and(eq(schema.nativePushDevices.token, values.token), ne(schema.nativePushDevices.id, input.id)));

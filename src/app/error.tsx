@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { sendUsage } from "@/lib/usage-client";
 import Link from "next/link";
 
 export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
+    sendUsage("screen_error");
     console.error("app route failed", { digest: error.digest, message: error.message });
   }, [error]);
 

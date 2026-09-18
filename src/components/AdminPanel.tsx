@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminBetaAnalytics } from "@/components/AdminBetaAnalytics";
+import type { AdminBetaData } from "@/lib/admin-beta";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { NativePushSettings } from "@/components/NativePushSettings";
@@ -109,6 +111,7 @@ type Stats = {
 };
 
 export function AdminPanel({
+  betaData,
   flyerVisits = 0,
   adminEmail,
   reports,
@@ -145,6 +148,7 @@ export function AdminPanel({
   referrers: Referrer[];
   requests: Request[];
   stats: Stats;
+  betaData?: AdminBetaData;
   /** null = VAPID keys not configured; the pings row hides itself. */
   vapidKey?: string | null;
   /** The pulse: what changed across the app, newest first, nothing private. */
@@ -281,6 +285,8 @@ export function AdminPanel({
           <Stat n={stats.pendingInvites} label="Invites pending" />
           <Stat n={stats.requests} label="Requests" />
         </div>
+
+        {betaData && <AdminBetaAnalytics data={betaData} />}
 
         <details className="admin-app-share">
           <summary>Share FittList · Show QR code</summary>

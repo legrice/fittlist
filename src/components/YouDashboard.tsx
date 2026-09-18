@@ -2,12 +2,12 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { updateProfilePhoto } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
-import { useDesktopLayout } from "@/lib/use-desktop-layout";
+
 import { PersonalCalendarSheetTrigger } from "@/components/PersonalCalendarSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassOpener } from "@/components/ClassOpener";
@@ -15,7 +15,7 @@ import { readPhotoPair } from "@/lib/photo";
 import { QrSheet } from "@/components/QrSheet";
 import { ProfileShare } from "@/components/ProfileShare";
 
-const NotificationsSheet = dynamic(() => import("@/components/NotificationsSheet").then((module) => module.NotificationsSheet));
+
 
 export type YouFavoritePerson = {
   id: string;
@@ -87,7 +87,6 @@ export function YouDashboard({
   me,
   managed,
   isAdmin,
-  unread,
   people = [],
   places = [],
   yourGroups = [],
@@ -96,7 +95,7 @@ export function YouDashboard({
   onOpenSettings,
 }: YouAccountData & Partial<Pick<YouDashboardData, "people" | "places" | "yourGroups" | "favoriteGroups" | "savedItems">> & { onOpenSettings?: (view: ProfileSettingsView) => void }) {
   const router = useRouter();
-  const desktop = useDesktopLayout();
+
   const initial = (me.name.charAt(0) || "?").toUpperCase();
   const managedGroups = yourGroups.filter((group) => group.role === "owner" || group.role === "admin");
   const profileGroups = [...yourGroups, ...favoriteGroups.filter((group) => !yourGroups.some((mine) => mine.id === group.id))];
@@ -105,7 +104,7 @@ export function YouDashboard({
   const [photoPreview, setPhotoPreview] = useState(me.photo);
   const [photoPending, startPhoto] = useTransition();
   const [qrOpen, setQrOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
   const [toastMsg, toastOn, toast] = useToast();
 
   const savePhoto = (file: File) => {
@@ -192,22 +191,8 @@ export function YouDashboard({
         )}
       </div>
 
-      <AccountGroup title="Updates">
-        <AccountRow
-          icon="chat_bubble"
-          title="Messages"
-          detail={unread.messages > 0 ? `${unread.messages} unread` : "Conversations and class questions"}
-          href="/inbox"
-          count={unread.messages}
-        />
-        <AccountRow
-          icon="notifications"
-          title="Notifications"
-          detail={unread.notifications > 0 ? `${unread.notifications} unread` : "Follows, saves, and account activity"}
-          href={desktop ? "/notifications" : undefined}
-          onClick={desktop ? undefined : () => setNotificationsOpen(true)}
-          count={unread.notifications}
-        />
+      <AccountGroup title="Preferences">
+        <NotificationPrefs />
       </AccountGroup>
 
       <AccountGroup title="Your calendars">
@@ -279,7 +264,7 @@ export function YouDashboard({
         </div>
       )}
       <Toast msg={toastMsg} on={toastOn} />
-      {notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
+
     </main>
   );
 }

@@ -23,9 +23,17 @@ try {
  let state=await (await read(fixture.member)).json();assert.equal(state.enabled,true);assert.equal(state.admin,false);assert(!JSON.stringify(state).includes(deviceToken));
  assert.equal((await (await read(fixture.outsider)).json()).enabled,false);
  await save(fixture.outsider,{id:device,enabled:false});assert.equal((await (await read(fixture.member)).json()).enabled,true);
- await save(fixture.member,{id:device,enabled:true,token:deviceToken,preferences:{...prefs,messages:false}});
+ await save(fixture.member,{id:device,enabled:true,token:deviceToken,preferences:{...prefs,messages:false,updates:false}});
  await save(fixture.member,{id:device,enabled:true,token:deviceToken,refresh:true,preferences:prefs});
  assert.equal((await (await read(fixture.member)).json()).preferences.messages,false,'Refresh preserves preferences');
+ assert.equal((await (await read(fixture.member)).json()).preferences.updates,false,'Old clients and refresh preserve update opt-out');
+ const usage=(who,input,origin=base)=>fetch(`${base}/api/usage`,{method:'POST',headers:{origin,'content-type':'application/json',...(who?{cookie:`fl_session=${who.token}`}:{})},body:JSON.stringify(input)});
+ assert.equal((await usage(null,{kind:'app_active'})).status,401);
+ assert.equal((await usage(fixture.member,{kind:'app_active'},'https://evil.test')).status,403);
+ assert.equal((await usage(fixture.member,{kind:'arbitrary_content'})).status,400);
+ assert.equal((await usage(fixture.member,{kind:'class_viewed',classId:'private-content'})).status,400);
+ assert.equal((await usage(fixture.member,{kind:'app_active'})).status,204);
+ assert.equal((await usage(fixture.member,{kind:'app_active'})).status,204);
  // The same physical device changes account; it must have one owner.
  await save(fixture.owner,{id:device,enabled:true,token:deviceToken,preferences:{...prefs,adminActivity:true}});
  assert.equal((await (await read(fixture.member)).json()).enabled,false);

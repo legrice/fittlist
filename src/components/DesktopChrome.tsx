@@ -100,7 +100,7 @@ export function DesktopChrome({
           <Link className={`desktop-nav-link${pathname.startsWith("/notifications") ? " on" : ""}`} href="/notifications" aria-label="Notifications" title="Notifications" aria-current={pathname.startsWith("/notifications") ? "page" : undefined}>
             <Icon name="notifications" size={22} />
             <span className="desktop-tool-label">Notifications</span>
-            {notificationUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread} unread notifications`}>{notificationUnread > 99 ? "99+" : notificationUnread}</b>}
+            {notificationUnread + messageUnread > 0 && <b className="desktop-count desktop-unread-count" aria-label={`${notificationUnread + messageUnread} unread notifications and messages`}>{notificationUnread + messageUnread > 99 ? "99+" : notificationUnread + messageUnread}</b>}
           </Link>
           <div className="desktop-account" ref={profileRef}>
             <button ref={profileButton} type="button" className={`desktop-profile-link${profileOn ? " on" : ""}`} aria-label="Profile menu" aria-expanded={profileOpen} aria-controls="desktop-account-menu" onClick={() => setProfileOpen(open => !open)}>

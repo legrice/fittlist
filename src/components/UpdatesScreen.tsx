@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
-import { NotificationFeed, type NotificationPage } from "@/components/NotificationFeed";
+import { NotificationCenter } from "@/components/NotificationCenter";
+import { type NotificationPage } from "@/components/NotificationFeed";
 import { NewMessage, type MessagePerson } from "@/components/NewMessage";
 
 // Notifications and Messages share the same quiet list grammar, but each owns
@@ -206,7 +207,7 @@ export function UpdatesScreen({
       </div>
 
       {mode === "notifications" ? (
-        <NotificationFeed initialPage={notificationPage} renderList={(notifications) => <NotificationList notifications={notifications} />} />
+        <NotificationCenter initialPage={notificationPage} />
       ) : (
         <ThreadList threads={threads ?? []} people={messagePeople} />
       )}

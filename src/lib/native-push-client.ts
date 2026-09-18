@@ -1,6 +1,6 @@
 "use client";
 
-export type DevicePushPreferences = { follows: boolean; messages: boolean; adminActivity: boolean };
+export type DevicePushPreferences = { follows: boolean; messages: boolean; updates: boolean; adminActivity: boolean };
 export type DevicePushStatus = { configured: boolean; admin: boolean; enabled: boolean; preferences: DevicePushPreferences };
 export function pushDeviceId() {
   let id = localStorage.getItem("fl-push-device");

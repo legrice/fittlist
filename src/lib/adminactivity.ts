@@ -1,4 +1,4 @@
-import { ACTIVITY_LABELS, type ProductActivityKind } from "@/lib/product-activity";
+import { PRODUCT_ACTIVITY_KINDS, ACTIVITY_LABELS, type ProductActivityKind } from "@/lib/product-activity";
 import { and, count, countDistinct, desc, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
@@ -23,7 +23,7 @@ export async function adminActivity(limit = 100): Promise<ActivityEntry[]> {
     // Activity must never take the product down. During a rolling deploy an
     // old database can briefly serve new code before its migration finishes;
     // the feed simply omits those coarse events until the table is ready.
-    db.select().from(schema.productActivity).orderBy(desc(schema.productActivity.createdAt)).limit(300).catch(() => []),
+    db.select().from(schema.productActivity).where(inArray(schema.productActivity.kind, PRODUCT_ACTIVITY_KINDS)).orderBy(desc(schema.productActivity.createdAt)).limit(300).catch(() => []),
   ]);
   const userById = new Map(users.map((u) => [u.id, u]));
   const admins = new Set(
@@ -139,7 +139,7 @@ export async function adminNewActivityCount(adminUserId: string): Promise<number
     db.select({ n: count() }).from(schema.studios).where(gt(schema.studios.createdAt, since)),
     db.select({ n: count() }).from(schema.studioEdits).where(gt(schema.studioEdits.createdAt, since)),
     db.select({ n: count() }).from(schema.events).where(gt(schema.events.createdAt, since)),
-    db.select({ n: count() }).from(schema.productActivity).where(gt(schema.productActivity.createdAt, since)).catch(() => [{ n: 0 }]),
+    db.select({ n: count() }).from(schema.productActivity).where(and(gt(schema.productActivity.createdAt, since), inArray(schema.productActivity.kind, PRODUCT_ACTIVITY_KINDS))).catch(() => [{ n: 0 }]),
   ]);
   return [newUsers, classes, studios, edits, events, product]
     .reduce((total, rows) => total + Number(rows[0]?.n ?? 0), 0);
@@ -194,7 +194,7 @@ export async function adminActivityFreshSince(seenAt: Date | null): Promise<bool
     db
       .select({ id: schema.productActivity.id })
       .from(schema.productActivity)
-      .where(gt(schema.productActivity.createdAt, since))
+      .where(and(gt(schema.productActivity.createdAt, since), inArray(schema.productActivity.kind, PRODUCT_ACTIVITY_KINDS)))
       .limit(1)
       .catch(() => []),
   ]);

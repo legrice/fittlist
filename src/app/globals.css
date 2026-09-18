@@ -16384,3 +16384,14 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
   .calendar-desktop-sheet .calendar-action-list > :is(button,a),
   .calendar-desktop-sheet .calendar-action-section-head > :is(button,a) { border:1px solid var(--kinetic-control-border); }
 }
+
+/* First-party beta usage in the admin panel. */
+.admin-beta{margin:24px 0;padding:24px;background:var(--paper);border:1px solid var(--line);border-radius:20px;color:var(--ink)}
+.admin-beta-header{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}
+.admin-beta-header h2{margin:0;font-size:24px}.admin-beta-header p{margin:8px 0 16px}.admin-beta-header select{padding:8px;border-radius:8px;background:var(--paper);color:var(--ink);border:1px solid var(--line)}
+.admin-beta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.admin-beta-metric{padding:16px;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;gap:8px}.admin-beta-metric strong{font-size:24px;font-weight:600}.admin-beta-metric span{font-size:14px}
+.admin-beta-note{font-size:13px;line-height:1.6;opacity:.8}.admin-beta details{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}.admin-beta summary{cursor:pointer;font-weight:600}.admin-beta-table{overflow-x:auto;margin-top:12px}.admin-beta table{width:100%;border-collapse:collapse;text-align:left}.admin-beta th,.admin-beta td{padding:10px;border-bottom:1px solid var(--line);font-size:14px}.admin-beta li{margin:12px 0;overflow-wrap:anywhere}
+@media(max-width:600px){.admin-beta{padding:16px}.admin-beta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-beta-metric{padding:12px}.admin-beta-metric strong{font-size:20px}}
+
+.notification-center-tabs{display:flex;gap:8px;margin:8px 0 20px}.notification-center-tabs button{padding:10px 16px;border:1px solid var(--line);border-radius:24px;background:var(--paper);color:var(--ink);font:inherit}.notification-center-tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}

@@ -1,10 +1,11 @@
-import { and, desc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, ne, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { lookMode } from "@/lib/darkmode";
+import { inboxThreads } from "@/lib/inbox-threads";
 import { currentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
@@ -15,73 +16,7 @@ export default async function InboxPage() {
   const userId = me.id;
   const db = await getDb();
 
-  const [coachSide, mineSide] = await Promise.all([
-    db
-      .select()
-      .from(schema.inquiryThreads)
-      .where(eq(schema.inquiryThreads.coachUserId, userId))
-      .orderBy(desc(schema.inquiryThreads.lastMessageAt)),
-    db
-      .select()
-      .from(schema.inquiryThreads)
-      .where(
-        and(
-          eq(schema.inquiryThreads.requesterEmail, me.email),
-          eq(schema.inquiryThreads.kind, "inquiry"),
-        ),
-      )
-      .orderBy(desc(schema.inquiryThreads.lastMessageAt)),
-  ]);
-  const mine = mineSide.filter((thread) => thread.coachUserId !== userId);
-  const coachIds = [...new Set(mine.map((thread) => thread.coachUserId))];
-  const coachNames = coachIds.length
-    ? await db
-        .select({ id: schema.users.id, name: schema.users.name })
-        .from(schema.users)
-        .where(inArray(schema.users.id, coachIds))
-    : [];
-  const coachById = new Map(coachNames.map((coach) => [coach.id, coach.name]));
-  const ids = [...coachSide.map((thread) => thread.id), ...mine.map((thread) => thread.id)];
-  // Return one preview per thread, regardless of its conversation length.
-  const messages = ids.length
-    ? await db
-        .selectDistinctOn([schema.inquiryMessages.threadId], {
-          threadId: schema.inquiryMessages.threadId,
-          fromCoach: schema.inquiryMessages.fromCoach,
-          body: schema.inquiryMessages.body,
-        })
-        .from(schema.inquiryMessages)
-        .where(inArray(schema.inquiryMessages.threadId, ids))
-        .orderBy(schema.inquiryMessages.threadId, desc(schema.inquiryMessages.createdAt), desc(schema.inquiryMessages.id))
-    : [];
-  const latest = new Map<string, (typeof messages)[number]>();
-  for (const message of messages) {
-    if (!latest.has(message.threadId)) latest.set(message.threadId, message);
-  }
-  const threads = [
-    ...coachSide.map((thread) => {
-      const last = latest.get(thread.id);
-      return {
-        id: thread.id,
-        who: thread.requesterName || thread.requesterEmail,
-        preview: last ? `${last.fromCoach ? "You: " : ""}${last.body}` : "",
-        unread: thread.coachUnread,
-        at: thread.lastMessageAt,
-        feedback: thread.kind === "feedback",
-      };
-    }),
-    ...mine.map((thread) => {
-      const last = latest.get(thread.id);
-      return {
-        id: thread.id,
-        who: coachById.get(thread.coachUserId) || "Coach",
-        preview: last ? `${last.fromCoach ? "" : "You: "}${last.body}` : "",
-        unread: thread.requesterUnread,
-        at: thread.lastMessageAt,
-        feedback: false,
-      };
-    }),
-  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const threads = await inboxThreads(me);
   const messageRows = await db.select({
     id: schema.users.id,
     name: schema.users.name,

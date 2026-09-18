@@ -32,6 +32,8 @@ async function main() {
   assert(Buffer.byteLength(apnsBody({ ...payload, title: "😀".repeat(500), body: "😀".repeat(1000) }, randomUUID())) < 4096);
   assert.equal(deviceAllows({ follows:false, messages:true, adminActivity:false }, "follows"), false);
   assert.equal(deviceAllows({ follows:true, messages:true, adminActivity:true }, "unknown"), false);
+  assert.equal(deviceAllows({ follows:true, messages:true, updates:false, adminActivity:false }, "updates"), false);
+  assert.equal(deviceAllows({ follows:true, messages:true, updates:true, adminActivity:false }, "updates"), true);
   await addNotification(member.id, { type:"follow", title: "A new follower", actorUserId:other.id });
   await addNotification(member.id, { type:"message", title: "Message", body:"Private message content", href:"/inbox" });
   await addNotification(member.id, { type:"feedback_reply", title:"Reply", href:"/inbox" });
