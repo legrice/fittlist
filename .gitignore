@@ -16,3 +16,8 @@ server.log
 planedit-*.png
 filt-*.png
 nav-*.png
+
+# Private release signing material and built distribution assets
+.release/
+*.jks
+*.keystore

@@ -4,15 +4,18 @@ import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 import { apnsConfigured, sendApns, type PushPayload } from "@/lib/apns";
 
+import { fcmConfigured, sendFcm } from "@/lib/fcm";
+export const nativePushConfigured = (platform: string) => platform === "android" ? fcmConfigured() : platform === "ios" && apnsConfigured();
+
 export type PushCategory = "follows" | "messages" | "adminActivity" | "updates";
 export function deviceAllows(device: { follows: boolean; messages: boolean; adminActivity: boolean; updates?: boolean }, category: string) {
   return (category === "updates" && device.updates !== false) || (category === "follows" && device.follows) || (category === "messages" && device.messages) || (category === "adminActivity" && device.adminActivity);
 }
-export async function queueNativePush(userIds: string[], payload: PushPayload, category: PushCategory) {
-  if (!apnsConfigured() || !userIds.length) return;
+export async function queueNativePush(userIds: string[], payload: PushPayload, category: PushCategory, platform?: "ios" | "android") {
+  if ((!apnsConfigured() && !fcmConfigured()) || !userIds.length) return;
   const db = await getDb();
   const devices = await db.select().from(schema.nativePushDevices).where(and(inArray(schema.nativePushDevices.userId, userIds), gt(schema.nativePushDevices.expiresAt, new Date())));
-  const rows = devices.filter(d => deviceAllows(d, category)).map(d => ({ deviceId: d.id, userId: d.userId, category, payload }));
+  const rows = devices.filter(d => (!platform || d.platform === platform) && nativePushConfigured(d.platform) && deviceAllows(d, category)).map(d => ({ deviceId: d.id, userId: d.userId, category, payload }));
   if (!rows.length) return;
   const queued = await db.insert(schema.nativePushDeliveries).values(rows).returning({ id: schema.nativePushDeliveries.id });
   // Durable rows precede the best-effort immediate send. Cron recovers work
@@ -20,8 +23,8 @@ export async function queueNativePush(userIds: string[], payload: PushPayload, c
   try { after(async () => { await flushNativePush(queued.map(r => r.id)); }); }
   catch { /* Scripts and tests have no response lifetime; cron owns the queue. */ }
 }
-export async function flushNativePush(ids?: string[], deliver: typeof sendApns = sendApns) {
-  if (!apnsConfigured()) return { configured: false, sent: 0, retried: 0 };
+export async function flushNativePush(ids?: string[], deliver?: typeof sendApns) {
+  if (!apnsConfigured() && !fcmConfigured()) return { configured: false, sent: 0, retried: 0 };
   const db = await getDb();
   const due = await db.select().from(schema.nativePushDeliveries).where(and(lte(schema.nativePushDeliveries.availableAt, new Date()), ids ? inArray(schema.nativePushDeliveries.id, ids) : undefined)).limit(20);
   let sent = 0, retried = 0;
@@ -38,7 +41,12 @@ export async function flushNativePush(ids?: string[], deliver: typeof sendApns =
       || !deviceAllows(target.device, row.category) || (row.category === "adminActivity" && !adminEmails().includes(target.email.toLowerCase()))
       || Date.now() - row.createdAt.getTime() > 86400000) { await discard(); continue; }
     try {
-      const result = await deliver(target.device.token, row.payload, row.id);
+      if (!nativePushConfigured(target.device.platform)) {
+        await db.update(schema.nativePushDeliveries).set({availableAt:new Date(Date.now()+300000), attempts:claimed.attempts-1}).where(eq(schema.nativePushDeliveries.id,row.id));
+        continue;
+      }
+      const transport = deliver ?? (target.device.platform === "android" ? sendFcm : sendApns);
+      const result = await transport(target.device.token, row.payload, row.id);
       if (result.status === 200) { await discard(); sent++; continue; }
       if (result.status === 410 || result.reason === "BadDeviceToken" || result.reason === "Unregistered") {
         await db.delete(schema.nativePushDevices).where(and(eq(schema.nativePushDevices.id, target.device.id), eq(schema.nativePushDevices.token, target.device.token))); continue;

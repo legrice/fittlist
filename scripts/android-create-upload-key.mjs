@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {randomBytes} from 'node:crypto';
+import {spawnSync} from 'node:child_process';
+const directory=path.resolve('.release/android');
+const keystore=path.join(directory,'fittlist-upload.jks');
+const credentialsPath=path.join(directory,'signing.json');
+if(fs.existsSync(keystore)||fs.existsSync(credentialsPath)) throw new Error('Upload key already exists; refusing to replace it');
+fs.mkdirSync(directory,{recursive:true,mode:0o700});
+const password=randomBytes(32).toString('hex');
+const javaHome=process.env.JAVA_HOME||'/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home';
+const result=spawnSync(path.join(javaHome,'bin/keytool'),['-genkeypair','-keystore',keystore,'-storetype','JKS','-alias','fittlist-upload','-keyalg','RSA','-keysize','3072','-validity','10000','-dname','CN=FittList, O=FittList LLC, C=US','-storepass:env','FITT_KEY_PASSWORD','-keypass:env','FITT_KEY_PASSWORD'],{env:{...process.env,FITT_KEY_PASSWORD:password},encoding:'utf8'});
+if(result.status!==0) throw new Error('Upload key generation failed');
+fs.chmodSync(keystore,0o600);
+fs.writeFileSync(credentialsPath,JSON.stringify({FITT_ANDROID_KEYSTORE:keystore,FITT_ANDROID_STORE_PASSWORD:password,FITT_ANDROID_KEY_PASSWORD:password,FITT_ANDROID_KEY_ALIAS:'fittlist-upload'},null,2)+'\n',{mode:0o600});
+console.log('Created local Android upload key and signing settings in .release/android (excluded from Git).');

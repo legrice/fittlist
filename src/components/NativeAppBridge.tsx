@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { refreshDevicePush } from "@/lib/native-push-client";
 import { clearClientMemory } from "@/lib/client-memory";
 
-/** The seam between the server-rendered product and its iOS container. */
+/** The seam between the server-rendered product and its native containers. */
 export function NativeAppBridge() {
   const [offline, setOffline] = useState(false);
   const pathname = usePathname();
@@ -26,7 +26,7 @@ export function NativeAppBridge() {
     window.addEventListener("online", setNetwork);
     window.addEventListener("offline", setNetwork);
     void (async () => {
-      const { Capacitor } = await import("@capacitor/core");
+      const { Capacitor, registerPlugin } = await import("@capacitor/core");
       if (!live || !Capacitor.isNativePlatform()) return;
       const [{ App }, { Network }, { StatusBar, Style }] = await Promise.all([
         import("@capacitor/app"),
@@ -37,12 +37,14 @@ export function NativeAppBridge() {
 
       document.documentElement.dataset.native = Capacitor.getPlatform();
       void StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+      const systemBars = Capacitor.getPlatform() === "android" ? registerPlugin<{setStyle(options: {style: string}): Promise<void>}>("SystemBars") : null;
       const syncStatusBar = () => {
         const dark = document.documentElement.dataset.mode === "dark";
         // Capacitor names these values for the background they sit on:
         // Style.Dark is light glyphs for a dark background, and Style.Light
         // is dark glyphs for a light background.
         void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => {});
+        void systemBars?.setStyle({style: dark ? "DARK" : "LIGHT"}).catch(() => {});
         const background = getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
         void StatusBar.setBackgroundColor({ color: background || (dark ? "#192126" : "#F3F4F6") }).catch(() => {});
       };

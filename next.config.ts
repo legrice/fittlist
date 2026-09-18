@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      { source: "/.well-known/assetlinks.json", destination: "/api/android-app-links" },
       {
         source: "/.well-known/apple-app-site-association",
         destination: "/api/apple-app-site-association",

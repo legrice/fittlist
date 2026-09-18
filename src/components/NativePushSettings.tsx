@@ -35,7 +35,7 @@ export function NativePushSettings() {
     ...(settings?.admin ? [{ key: "adminActivity" as const, title: "All app activity", sub: "Admin alerts for activity across FittList, including town-flyer link opens" }] : []),
   ];
   return <section aria-label="Push notifications">
-    <h3>On this iPhone</h3>
+    <h3>On this device</h3>
     <p>Get notifications even when FittList is closed.</p>
     {settings && !settings.configured && <p role="status">Push notifications are being set up. Please check back soon.</p>}
     <button className="setrow" role="switch" aria-checked={settings?.enabled ?? false} disabled={busy || !settings?.configured}

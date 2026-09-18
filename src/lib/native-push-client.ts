@@ -9,15 +9,17 @@ export function pushDeviceId() {
 }
 export async function nativePushAvailable() {
   const { Capacitor } = await import("@capacitor/core");
-  return Capacitor.getPlatform() === "ios" && Capacitor.isPluginAvailable("PushNotifications");
+  return ["ios", "android"].includes(Capacitor.getPlatform()) && Capacitor.isPluginAvailable("PushNotifications");
 }
 export async function readDevicePush(): Promise<DevicePushStatus> {
-  const response = await fetch(`/api/native/push?device=${pushDeviceId()}`, { cache: "no-store" });
+  const { Capacitor } = await import("@capacitor/core");
+  const response = await fetch(`/api/native/push?device=${pushDeviceId()}&platform=${Capacitor.getPlatform()}`, { cache: "no-store" });
   if (!response.ok) throw Object.assign(new Error(response.status === 401 ? "Sign in to enable notifications." : "Couldn’t load notification settings."), { status: response.status });
   return response.json();
 }
 async function saveDevicePush(input: object) {
-  const response = await fetch("/api/native/push", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: pushDeviceId(), ...input }) });
+  const { Capacitor } = await import("@capacitor/core");
+  const response = await fetch("/api/native/push", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: pushDeviceId(), platform: Capacitor.getPlatform(), ...input }) });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "Couldn’t save notification settings.");
 }
@@ -30,7 +32,7 @@ async function registerToken() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       return await new Promise<string>((resolve, reject) => {
-        timer = setTimeout(() => reject(new Error("Couldn’t connect to Apple notifications. Please try again.")), 15000);
+        timer = setTimeout(() => reject(new Error("Couldn’t connect to notifications. Please try again.")), 15000);
         void (async () => {
           handles.push(await PushNotifications.addListener("registration", token => resolve(token.value)));
           handles.push(await PushNotifications.addListener("registrationError", () => reject(new Error("Couldn’t register this device for notifications."))));
@@ -45,7 +47,9 @@ export async function enableDevicePush(preferences: DevicePushPreferences, promp
   const { PushNotifications } = await import("@capacitor/push-notifications");
   let permission = await PushNotifications.checkPermissions();
   if (permission.receive === "prompt" && prompt) permission = await PushNotifications.requestPermissions();
-  if (permission.receive !== "granted") throw new Error("Allow notifications for FittList in iPhone Settings.");
+  if (permission.receive !== "granted") throw new Error("Allow notifications for FittList in device Settings.");
+  const { Capacitor } = await import("@capacitor/core");
+  if (Capacitor.getPlatform() === "android") await PushNotifications.createChannel({id:"fittlist_activity", name:"FittList activity", description:"Followers, messages, and important updates", importance:4, visibility:0, sound:"default"});
   const token = await registerToken();
   await saveDevicePush({ enabled: true, token, preferences });
 }

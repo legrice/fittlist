@@ -642,6 +642,7 @@ export const nativePushDevices = pgTable("native_push_devices", {
   id: uuid("id").primaryKey(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(),
+  platform: text("platform").notNull().default("ios"),
   sessionVersion: integer("session_version").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   follows: boolean("follows").notNull().default(true),

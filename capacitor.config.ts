@@ -35,6 +35,11 @@ const config: CapacitorConfig = {
     cleartext: development && server.protocol === "http:",
     errorPath: "offline.html",
   },
+  android: {
+    allowMixedContent: false,
+    webContentsDebuggingEnabled: development,
+    backgroundColor: "#fdfcf7",
+  },
   ios: {
     contentInset: "never",
     preferredContentMode: "mobile",
@@ -42,6 +47,7 @@ const config: CapacitorConfig = {
     webContentsDebuggingEnabled: development,
   },
   plugins: {
+    SystemBars: { style: "LIGHT", insetsHandling: "css" },
     PushNotifications: { presentationOptions: ["sound", "banner", "list"] },
     StatusBar: {
       // Reserve the system status area instead of laying the web view beneath

@@ -6,7 +6,7 @@ const path=execFileSync(process.execPath,['--import','tsx','scripts/audit-fixtur
 const fixture=JSON.parse(fs.readFileSync(path,'utf8'));
 const base='http://localhost:3198';
 const log=fs.openSync(`${fixture.directory}/push-api.log`,'w');
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','-p','3198'],{env:{...process.env,DATABASE_URL:'',PGLITE_DATA_DIR:fixture.dataDir,SESSION_SECRET:fixture.secret,ALLOW_EMBEDDED_DB_IN_PRODUCTION:'true',ADMIN_EMAILS:fixture.owner.email,APNS_KEY_ID:'test',APNS_TEAM_ID:'test',APNS_PRIVATE_KEY:'test',CRON_SECRET:'test-cron',RESEND_API_KEY:'',BLOB_READ_WRITE_TOKEN:''},stdio:['ignore',log,log]});
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','-p','3198'],{env:{...process.env,DATABASE_URL:'',PGLITE_DATA_DIR:fixture.dataDir,SESSION_SECRET:fixture.secret,ALLOW_EMBEDDED_DB_IN_PRODUCTION:'true',ADMIN_EMAILS:fixture.owner.email,APNS_KEY_ID:'test',APNS_TEAM_ID:'test',APNS_PRIVATE_KEY:'test',FCM_PROJECT_ID:'test-project',FCM_CLIENT_EMAIL:'test@example.test',FCM_PRIVATE_KEY:'test',CRON_SECRET:'test-cron',RESEND_API_KEY:'',BLOB_READ_WRITE_TOKEN:''},stdio:['ignore',log,log]});
 const device=randomUUID(), deviceToken='a'.repeat(64), prefs={follows:true,messages:true,adminActivity:false};
 const read=(who,id=device)=>fetch(`${base}/api/native/push?device=${id}`,{headers:who?{cookie:`fl_session=${who.token}`}:{}});
 const save=(who,input,origin=base)=>fetch(`${base}/api/native/push`,{method:'POST',headers:{origin,'content-type':'application/json',...(who?{cookie:`fl_session=${who.token}`}:{})},body:JSON.stringify(input)});
@@ -27,6 +27,12 @@ try {
  await save(fixture.member,{id:device,enabled:true,token:deviceToken,refresh:true,preferences:prefs});
  assert.equal((await (await read(fixture.member)).json()).preferences.messages,false,'Refresh preserves preferences');
  assert.equal((await (await read(fixture.member)).json()).preferences.updates,false,'Old clients and refresh preserve update opt-out');
+ const androidId=randomUUID(), androidToken='CaseSensitive_TOKEN:abc12345';
+ assert.equal((await save(fixture.member,{id:androidId,platform:'windows',enabled:true,token:androidToken,preferences:prefs})).status,400);
+ assert.equal((await save(fixture.member,{id:androidId,platform:'android',enabled:true,token:'invalid token',preferences:prefs})).status,400);
+ assert.equal((await save(fixture.member,{id:androidId,platform:'android',enabled:true,token:androidToken,preferences:prefs})).status,200);
+ const androidRead=await fetch(`${base}/api/native/push?device=${androidId}&platform=android`,{headers:{cookie:`fl_session=${fixture.member.token}`}});
+ const androidState=await androidRead.json();assert.equal(androidState.enabled,true);assert.equal(androidState.configured,true);assert(!JSON.stringify(androidState).includes(androidToken));
  const usage=(who,input,origin=base)=>fetch(`${base}/api/usage`,{method:'POST',headers:{origin,'content-type':'application/json',...(who?{cookie:`fl_session=${who.token}`}:{})},body:JSON.stringify(input)});
  assert.equal((await usage(null,{kind:'app_active'})).status,401);
  assert.equal((await usage(fixture.member,{kind:'app_active'},'https://evil.test')).status,403);

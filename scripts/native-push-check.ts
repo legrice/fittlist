@@ -6,11 +6,16 @@ import { migrate } from "drizzle-orm/pglite/migrator";
 import { eq } from "drizzle-orm";
 import * as schema from "../src/db/schema";
 import { apnsBody, safePushPath } from "../src/lib/apns";
+import { fcmBody, validPushToken } from "../src/lib/fcm";
 import { deviceAllows, queueNativePush, flushNativePush } from "../src/lib/native-push";
 import { addNotification } from "../src/lib/notify";
 import { recordProductActivity } from "../src/lib/product-activity";
 
 async function main() {
+  assert(validPushToken("android", "CaseSensitive_TOKEN:abc12345"));
+  assert(!validPushToken("android", "token with spaces"));
+  assert(!validPushToken("ios", "CaseSensitive_TOKEN:abc12345"));
+  assert.equal(fcmBody("test", {title:"Test",body:"Body",url:"//evil.example"},"id").message.data.url,"/notifications");
   // Use an isolated in-memory database and a fake transport: never contact Apple.
   const client = new PGlite();
   const db = drizzle(client, { schema });
@@ -20,6 +25,15 @@ async function main() {
   process.env.ADMIN_EMAILS = "admin@example.test";
   delete process.env.VAPID_PUBLIC_KEY; delete process.env.VAPID_PRIVATE_KEY;
   const [member, admin, other] = await db.insert(schema.users).values([{ email: "member@example.test" }, { email: "admin@example.test" }, { email: "other@example.test" }]).returning();
+  process.env.FCM_PROJECT_ID="test-project"; process.env.FCM_CLIENT_EMAIL="test@example.test"; process.env.FCM_PRIVATE_KEY="test";
+  const androidDevice=randomUUID();
+  await db.insert(schema.nativePushDevices).values({id:androidDevice,userId:other.id,token:"CaseSensitive_TOKEN:abc12345",platform:"android",sessionVersion:other.sessionVersion,expiresAt:new Date(Date.now()+86400000)});
+  await queueNativePush([other.id], {title:"Android",body:"Test",url:"/calendar"},"updates","android");
+  const androidSent:string[]=[];
+  await flushNativePush(undefined,async token=>{androidSent.push(token);return {status:200};});
+  assert.deepEqual(androidSent,["CaseSensitive_TOKEN:abc12345"],"Android token retains case and uses durable delivery");
+  await db.delete(schema.nativePushDevices).where(eq(schema.nativePushDevices.id,androidDevice));
+  delete process.env.FCM_PROJECT_ID; delete process.env.FCM_CLIENT_EMAIL; delete process.env.FCM_PRIVATE_KEY;
   const deviceId = randomUUID(), adminDevice = randomUUID();
   await db.insert(schema.nativePushDevices).values([
     { id: deviceId, userId: member.id, token: "a".repeat(64), sessionVersion: member.sessionVersion, expiresAt: new Date(Date.now()+86400000) },
