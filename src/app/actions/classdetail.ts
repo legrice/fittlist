@@ -341,7 +341,7 @@ export async function classDetail(
   // exists for a signed-in viewer on a future date: who taught a class is not
   // a question that should depend on either.
   const onDuty =
-    user.kind === "gym" ? shiftCoach(await shiftNaming([c.id]), c.id, whenIso) : null;
+    user.kind === "gym" ? shiftCoach(await shiftNaming([c.id], { includeStudioCoaches: true }), c.id, whenIso) : null;
   const who = onDuty ?? user;
 
   return {

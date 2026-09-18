@@ -76,6 +76,31 @@ async function main() {
     try { await work(); results.push({ stage: at, name, ok: true }); console.log(`PASS ${at}: ${name}`); }
     catch (error) { const message = error instanceof Error ? error.message : String(error); results.push({ stage: at, name, ok: false, error: message }); console.error(`FAIL ${at}: ${name}: ${message}`); }
   }
+  await check(2, "Saved studio classes name the assigned coach and dated cover", async () => {
+    const { myWeek } = await import("../src/lib/week");
+    const { shiftNaming, shiftCoach } = await import("../src/lib/coachweek");
+    const [teacher, cover] = await db.insert(schema.users).values([
+      { email: "saved-teacher@example.test", name: "Coach Tom", handle: "savedteacher", kind: "coach", shiftsPublic: false },
+      { email: "saved-cover@example.test", name: "Cover Coach", handle: "savedcover", kind: "coach", shiftsPublic: false },
+    ]).returning();
+    const [place] = await db.insert(schema.studios).values({ name: "Ironman Performance", slug: "saved-attribution", address: "1 Test Street", showCoaches: true }).returning();
+    const [slot] = await db.insert(schema.classes).values({ userId: gym.id, coachUserId: teacher.id, studioId: place.id, name: "Saved strength", dayOfWeek: 0, specificDate: date, startTime: "08:00", durationMin: 50, isPublic: true }).returning();
+    await db.insert(schema.attendances).values({ userId: member.id, classId: slot.id, occurrenceDate: date });
+    const saved = async () => (await myWeek(member.id)).flatMap(day => day.items).find(item => item.classId === slot.id)!;
+    assert.equal((await saved()).coachName, "Coach Tom");
+    assert.equal((await saved()).where, "Ironman Performance");
+    assert.equal((await saved()).handle, "s/saved-attribution", "Class links retain their canonical studio route");
+    assert.equal(shiftCoach(await shiftNaming([slot.id]), slot.id, date), null, "Default coach privacy remains intact");
+    await db.insert(schema.shiftCovers).values({ classId: slot.id, occurrenceDate: date, coachUserId: cover.id });
+    assert.equal((await saved()).coachName, "Cover Coach");
+    await db.update(schema.shiftCovers).set({ coachUserId: null }).where(eq(schema.shiftCovers.classId, slot.id));
+    assert.equal((await saved()).coachName, gym.name, "An open slot must not name the standing coach");
+    await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.classId, slot.id));
+    await db.update(schema.studios).set({ showCoaches: false }).where(eq(schema.studios.id, place.id));
+    assert.equal((await saved()).coachName, gym.name, "Hidden coach names remain hidden");
+    await db.update(schema.users).set({ shiftsPublic: true }).where(eq(schema.users.id, teacher.id));
+    assert.equal((await saved()).coachName, "Coach Tom", "A coach who publishes the shift remains its source");
+  });
   await check(2, "recurrence end date and cancellations", async () => {
     const c = { specificDate: null, dayOfWeek: 0, endsOn: "2096-04-16", skipDates: [date] };
     assert.equal(runsOn(c, date, 0), false);

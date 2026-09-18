@@ -203,6 +203,7 @@ export async function sharedWeek(
   // on it comes from the rota, where that coach shows their shifts.
   const naming = await shiftNaming(
     classRows.filter((c) => coachById.get(c.userId)?.kind === "gym").map((c) => c.id),
+    { includeStudioCoaches: true },
   );
   const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((s): s is string => !!s))];
   const studios = studioIds.length
@@ -392,6 +393,7 @@ export async function myWeek(
   // on it comes from the rota, where that coach shows their shifts.
   const naming = await shiftNaming(
     classRows.filter((c) => coachById.get(c.userId)?.kind === "gym").map((c) => c.id),
+    { includeStudioCoaches: true },
   );
 
   // Both halves' studios in one query: a class's, and the places on your own

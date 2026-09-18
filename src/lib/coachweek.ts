@@ -1,4 +1,4 @@
-import { and, getTableColumns, gte, inArray, isNull, lte, ne, or, sql, type SQL } from "drizzle-orm";
+import { and, eq, getTableColumns, gte, inArray, isNull, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { dowOfDate } from "@/lib/format";
 
@@ -384,7 +384,9 @@ export type ShiftNaming = {
  * `classes.coachUserId`, with a `shift_covers` row winning for one date the
  * way it does everywhere else.
  *
- * It is gated on that coach's own `shiftsPublic`, and that gate is the whole
+ * Saved classes and their details may also name a coach already published
+ * by the studio when `includeStudioCoaches` is set. Otherwise,
+ * it is gated on that coach's own `shiftsPublic`, and that gate is the whole
  * privacy argument. With it on they have already published the shift as
  * theirs and it carries their name on their own public page, so naming them
  * here says a fact they published in the place somebody is reading it. With
@@ -394,15 +396,16 @@ export type ShiftNaming = {
  */
 export async function shiftNaming(
   classIds: string[],
-  options: { includePrivate?: boolean } = {},
+  options: { includePrivate?: boolean; includeStudioCoaches?: boolean } = {},
 ): Promise<ShiftNaming> {
   const empty: ShiftNaming = { standing: new Map(), perDate: new Map() };
   if (!classIds.length) return empty;
   const db = await getDb();
   const [rows, covers] = await Promise.all([
     db
-      .select({ id: schema.classes.id, coachUserId: schema.classes.coachUserId })
+      .select({ id: schema.classes.id, coachUserId: schema.classes.coachUserId, showCoaches: schema.studios.showCoaches })
       .from(schema.classes)
+      .leftJoin(schema.studios, eq(schema.classes.studioId, schema.studios.id))
       .where(inArray(schema.classes.id, classIds)),
     db.select().from(schema.shiftCovers).where(inArray(schema.shiftCovers.classId, classIds)),
   ]);
@@ -429,19 +432,25 @@ export async function shiftNaming(
     .from(schema.users)
     .where(inArray(schema.users.id, ids));
   const nameable = new Map(
-    people.filter((u) => options.includePrivate || u.shiftsPublic).map((u) => [u.id, u]),
+    people.map((u) => [u.id, u]),
   );
+
+  const studioNamedClasses = new Set(rows.filter((r) => r.showCoaches).map((r) => r.id));
+  const canName = (u: typeof people[number], classId: string) =>
+    options.includePrivate || u.shiftsPublic ||
+    (options.includeStudioCoaches && studioNamedClasses.has(classId));
 
   const standing = new Map<string, ShiftPerson>();
   for (const r of rows) {
     const u = r.coachUserId ? nameable.get(r.coachUserId) : undefined;
-    if (u) standing.set(r.id, u);
+    if (u && canName(u, r.id)) standing.set(r.id, u);
   }
   const perDate = new Map<string, ShiftPerson | null>();
   for (const c of covers) {
+    const person = c.coachUserId ? nameable.get(c.coachUserId) : undefined;
     perDate.set(
       `${c.classId}|${c.occurrenceDate}`,
-      (c.coachUserId ? nameable.get(c.coachUserId) : null) ?? null,
+      person && canName(person, c.classId) ? person : null,
     );
   }
   return { standing, perDate };
