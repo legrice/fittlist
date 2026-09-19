@@ -50,19 +50,19 @@ function ClassCard({ item, profile = false }: { item: typeof classes[number]; pr
 }
 
 function CalendarScreen() {
+  const [selectedPerson, setSelectedPerson] = useState("All");
+  const people = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
   return <>
-    <div className={styles.screenTop}><div><span className={styles.eyebrow}>YOUR WEEK</span><h1>Calendar</h1></div><Button size="icon-lg" aria-label="Add to calendar"><Plus size={20}/></Button></div>
-    <Tabs defaultValue="you"><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList>
-      <TabsContent value="you"><div className={styles.weekStrip}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span className={index === 5 ? styles.selectedDay : ""} key={index}><small>{day}</small><strong>{14 + index}</strong></span>)}</div><SectionTitle aside={<Badge variant="secondary">3 plans</Badge>}>Coming up</SectionTitle>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
-      <TabsContent value="following"><div className={styles.weekStrip}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span className={index === 5 ? styles.selectedDay : ""} key={index}><small>{day}</small><strong>{14 + index}</strong></span>)}</div><SectionTitle aside={<Badge variant="secondary">2 classes</Badge>}>From people you follow</SectionTitle>{classes.slice(0,2).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+    <Tabs defaultValue="you"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList><Button size="icon-lg" aria-label="Add to calendar"><Plus size={20}/></Button></div>
+      <TabsContent value="you"><div className={styles.calendarSummary}><strong>You have three plans this week. Looking good.</strong><span>Here’s what’s coming up on your calendar.</span></div><div className={styles.weekStrip}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span className={index === 5 ? styles.selectedDay : ""} key={index}><small>{day}</small><strong>{14 + index}</strong></span>)}</div><SectionTitle aside={<Badge variant="secondary">3 plans</Badge>}>Coming up</SectionTitle>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+      <TabsContent value="following"><div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div><div className={styles.weekStrip}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span className={index === 5 ? styles.selectedDay : ""} key={index}><small>{day}</small><strong>{14 + index}</strong></span>)}</div><SectionTitle aside={<Badge variant="secondary">{selectedPerson === "All" ? "3 classes" : "1 class"}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{classes.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
     </Tabs>
   </>;
 }
 
 function DiscoverScreen() {
   return <>
-    <div className={styles.screenTop}><div><span className={styles.eyebrow}>FIND YOUR PEOPLE</span><h1>Discover</h1></div><Button variant="outline" size="icon-lg" aria-label="Filters"><Settings2 size={19}/></Button></div>
-    <label className={styles.search}><Search size={19}/><Input placeholder="People, places, classes" aria-label="Search" /></label>
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input placeholder="People, places, classes" aria-label="Search" /></label><Button variant="outline" size="icon-lg" aria-label="Filters"><Settings2 size={19}/></Button></div>
     <Tabs defaultValue="people"><TabsList className={styles.fullTabs}><TabsTrigger value="people">People</TabsTrigger><TabsTrigger value="studios">Studios</TabsTrigger><TabsTrigger value="classes">Classes</TabsTrigger></TabsList>
       <TabsContent value="people"><SectionTitle>People near you</SectionTitle><div className={styles.stack}>
         {[{name:"Erin Clyne", title:"Yoga Teacher + Clinical Sports Massage", initials:"EC", color:"#D8C6B4"},{name:"Freddie Morgan",title:"Strength & mobility coach",initials:"FM",color:"#AFCFEC"},{name:"Matt LeGrice",title:"Strength & mobility coach",initials:"ML",color:"#C8C3DB"}].map(person=><Card key={person.name} className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>)}</div></TabsContent>
@@ -74,7 +74,7 @@ function DiscoverScreen() {
 
 function GroupsScreen() {
   return <>
-    <div className={styles.screenTop}><div><span className={styles.eyebrow}>MOVE TOGETHER</span><h1>Groups</h1></div><Button size="icon-lg" aria-label="Create a group"><Plus size={20}/></Button></div>
+    <div className={styles.topAction}><Button size="icon-lg" aria-label="Create a group"><Plus size={20}/></Button></div>
     <Card className={styles.groupHero}><CardHeader><div className={styles.groupSymbol}><Users size={28}/></div><Badge variant="secondary">Joined</Badge><CardTitle>Gals who like to move</CardTitle><p>Find a class, make a plan, and bring your people.</p></CardHeader><CardContent className={styles.groupHeroFooter}><div className={styles.faceStack}><Face initials="EC" color="#D8C6B4"/><Face initials="FM" color="#AFCFEC"/><Face initials="AL" color="#C8C3DB"/></div><span>4 members</span><ChevronRight size={18}/></CardContent></Card>
     <Tabs defaultValue="schedule"><TabsList className={styles.fullTabs}><TabsTrigger value="schedule">Schedule</TabsTrigger><TabsTrigger value="updates">Updates</TabsTrigger></TabsList>
       <TabsContent value="schedule"><SectionTitle>Group schedule</SectionTitle>{classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item} profile/></section>)}</TabsContent>
@@ -85,8 +85,7 @@ function GroupsScreen() {
 
 function InboxScreen() {
   return <>
-    <div className={styles.screenTop}><div><span className={styles.eyebrow}>STAY IN THE LOOP</span><h1>Inbox</h1></div><Button variant="outline" size="icon-lg" aria-label="New message"><Plus size={20}/></Button></div>
-    <Tabs defaultValue="notifications"><TabsList className={styles.fullTabs}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList>
+    <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList><Button variant="outline" size="icon-lg" aria-label="New message"><Plus size={20}/></Button></div>
       <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></div></TabsContent>
       <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></TabsContent>
     </Tabs>
@@ -95,7 +94,7 @@ function InboxScreen() {
 
 function YouScreen() {
   return <>
-    <div className={styles.screenTop}><div><span className={styles.eyebrow}>YOUR SPACE</span><h1>You</h1></div><Button variant="outline" size="icon-lg" aria-label="Settings"><Settings2 size={19}/></Button></div>
+    <div className={styles.topAction}><Button variant="outline" size="icon-lg" aria-label="Settings"><Settings2 size={19}/></Button></div>
     <Card className={styles.profileCard}><CardContent><Face initials="ML" color="#C8C3DB" size={68}/><div><h2>Matt LeGrice</h2><span>@mattlegrice</span><p>Strength & mobility coach · Jersey City, NJ</p></div><Button variant="outline">Edit profile</Button></CardContent></Card>
     <SectionTitle>Your calendars</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><CalendarDays size={20}/><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Users size={20}/><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card></div>
     <SectionTitle>Preferences</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Bell size={20}/><div><strong>Notifications</strong><span>Choose what you hear about</span></div><ChevronRight size={18}/></CardContent></Card>
