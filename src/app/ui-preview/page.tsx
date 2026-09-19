@@ -93,7 +93,7 @@ function GroupsScreen() {
 
 function UpdatesScreen() {
   return <>
-    <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList><Button variant="outline" size="icon-lg" aria-label="New message"><Plus size={20}/></Button></div>
+    <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList></div>
       <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></div></TabsContent>
       <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></TabsContent>
     </Tabs>
