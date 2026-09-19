@@ -15,10 +15,6 @@
 .shareWeekButton:hover { background:#e8edef; }
 .secondaryHeroButton { border:1px solid #cbd6da; background:transparent; color:#fff; }
 .secondaryHeroButton:hover { background:#344148; }
-.followingSummary { align-items:center; gap:20px; text-align:center; }
-.followingSummary strong { max-width:320px; }
-.discoverMoreButton { min-height:44px; padding:0 26px; border:0; border-radius:999px; background:#fff; color:#192126; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
-.discoverMoreButton:hover { background:#e8edef; }
 .peopleRail { display:flex; gap:12px; overflow-x:auto; margin:0 -20px 18px; padding:2px 20px 8px; scrollbar-width:none; }
 .peopleRail::-webkit-scrollbar { display:none; }
 .personFilter { display:flex; flex:none; flex-direction:column; align-items:center; gap:5px; width:64px; padding:0; border:0; background:transparent; color:#536067; font:inherit; }
