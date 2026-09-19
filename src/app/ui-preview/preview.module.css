@@ -132,3 +132,8 @@
 .memberGrid [data-slot="avatar"] { flex:none; }
 .groupForm { display:flex; flex-direction:column; gap:20px; }
 .groupForm label { display:flex; flex-direction:column; gap:8px; font-size:14px; }
+
+.calendarYouPanel { padding-bottom:64px; }
+.addFab { position:absolute; right:20px; bottom:calc(88px + env(safe-area-inset-bottom)); z-index:10; display:grid; place-items:center; width:58px; height:58px; border-radius:50%; background:#a1e510; color:#192126; box-shadow:0 5px 18px #19212626; text-decoration:none; }
+.addFab:hover { background:#b0ed35; }
+.addFab:focus-visible { outline:3px solid #192126; outline-offset:3px; }
