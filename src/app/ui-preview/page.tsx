@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, CalendarDays, ChevronRight, Compass, Heart, Mail, MapPin, Plus, Search, Settings2, Users } from "lucide-react";
+import { Bell, CalendarDays, ChevronRight, Compass, Mail, MapPin, Plus, Search, Settings2, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ const screens: { id: Screen; label: string; icon: typeof CalendarDays }[] = [
   { id: "discover", label: "Discover", icon: Compass },
   { id: "groups", label: "Groups", icon: Users },
   { id: "inbox", label: "Inbox", icon: Mail },
-  { id: "you", label: "You", icon: Heart },
+  { id: "you", label: "You", icon: UserRound },
 ];
 
 const classes = [
@@ -34,12 +34,17 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
   return <div className={styles.sectionTitle}><h2>{children}</h2>{aside}</div>;
 }
 
-function ClassCard({ item }: { item: typeof classes[number] }) {
+function ClassCard({ item, profile = false }: { item: typeof classes[number]; profile?: boolean }) {
   return <Card className={styles.classCard}>
-    <CardContent className={styles.classCardBody}>
-      <div className={styles.classMeta}><strong>{item.time}</strong><span>{item.duration}</span></div>
-      <div className={styles.classCopy}><strong>{item.name}</strong><span>{item.place}</span><div className={styles.coach}><Face initials={item.coach.split(" ").map((part) => part[0]).join("")} color={item.color} size={24}/>{item.coach}</div></div>
-      <ChevronRight size={18} aria-hidden="true" />
+    <CardContent className={profile ? styles.profileClassBody : styles.classCardBody}>
+      <div className={styles.classAttribution}><Face initials={item.coach.split(" ").map((part) => part[0]).join("")} color={item.color} size={28}/><span>{item.coach}</span></div>
+      {profile ? <div className={styles.profileClassDetails}>
+        <div className={styles.profileClassMeta}><strong>{item.time}</strong><span>{item.duration}</span></div>
+        <div className={styles.profileClassCopy}><strong>{item.name}</strong><span>{item.place}</span></div>
+      </div> : <div className={styles.classDetails}>
+        <div><strong>{item.name}</strong><strong>{item.time}</strong></div>
+        <div><span>{item.place}</span><span>{item.duration}</span></div>
+      </div>}
     </CardContent>
   </Card>;
 }
@@ -47,9 +52,10 @@ function ClassCard({ item }: { item: typeof classes[number] }) {
 function CalendarScreen() {
   return <>
     <div className={styles.screenTop}><div><span className={styles.eyebrow}>YOUR WEEK</span><h1>Calendar</h1></div><Button size="icon-lg" aria-label="Add to calendar"><Plus size={20}/></Button></div>
-    <div className={styles.weekStrip}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span className={index === 5 ? styles.selectedDay : ""} key={index}><small>{day}</small><strong>{14 + index}</strong></span>)}</div>
-    <SectionTitle aside={<Badge variant="secondary">3 plans</Badge>}>Coming up</SectionTitle>
-    {classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}
+    <Tabs defaultValue="you"><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList>
+      <TabsContent value="you"><div className={styles.weekStrip}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span className={index === 5 ? styles.selectedDay : ""} key={index}><small>{day}</small><strong>{14 + index}</strong></span>)}</div><SectionTitle aside={<Badge variant="secondary">3 plans</Badge>}>Coming up</SectionTitle>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+      <TabsContent value="following"><div className={styles.weekStrip}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span className={index === 5 ? styles.selectedDay : ""} key={index}><small>{day}</small><strong>{14 + index}</strong></span>)}</div><SectionTitle aside={<Badge variant="secondary">2 classes</Badge>}>From people you follow</SectionTitle>{classes.slice(0,2).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+    </Tabs>
   </>;
 }
 
@@ -71,7 +77,7 @@ function GroupsScreen() {
     <div className={styles.screenTop}><div><span className={styles.eyebrow}>MOVE TOGETHER</span><h1>Groups</h1></div><Button size="icon-lg" aria-label="Create a group"><Plus size={20}/></Button></div>
     <Card className={styles.groupHero}><CardHeader><div className={styles.groupSymbol}><Users size={28}/></div><Badge variant="secondary">Joined</Badge><CardTitle>Gals who like to move</CardTitle><p>Find a class, make a plan, and bring your people.</p></CardHeader><CardContent className={styles.groupHeroFooter}><div className={styles.faceStack}><Face initials="EC" color="#D8C6B4"/><Face initials="FM" color="#AFCFEC"/><Face initials="AL" color="#C8C3DB"/></div><span>4 members</span><ChevronRight size={18}/></CardContent></Card>
     <Tabs defaultValue="schedule"><TabsList className={styles.fullTabs}><TabsTrigger value="schedule">Schedule</TabsTrigger><TabsTrigger value="updates">Updates</TabsTrigger></TabsList>
-      <TabsContent value="schedule"><SectionTitle>Group schedule</SectionTitle>{classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+      <TabsContent value="schedule"><SectionTitle>Group schedule</SectionTitle>{classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item} profile/></section>)}</TabsContent>
       <TabsContent value="updates"><SectionTitle>Latest updates</SectionTitle><Card className={styles.simpleCard}><CardHeader><div className={styles.inlinePerson}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie Morgan</strong><span>Added Sculpt to the group calendar</span></div></div></CardHeader><CardContent><p>Anyone joining on Sunday?</p><Button variant="outline" size="sm">Reply</Button></CardContent></Card></TabsContent>
     </Tabs>
   </>;
