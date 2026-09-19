@@ -7,7 +7,7 @@ The Capacitor Android app uses package `co.fittlist.app`, version 1.0, versionCo
 1. Sign into Google Play Console and select FittList LLC's developer account, or register one. Registration, verification, fees and agreements are completed by the account owner.
 2. Register `co.fittlist.app` as an Android app in a Firebase project. Download `google-services.json` to `android/app/google-services.json`. This client configuration is ignored by Git. Do not substitute a service-account key here.
 3. Enable the Firebase Cloud Messaging HTTP v1 API. Create a dedicated service account with only Firebase Cloud Messaging API Admin permissions for this project. The account owner completes credential creation. Store its project_id, client_email and private_key as production Vercel secrets FCM_PROJECT_ID, FCM_CLIENT_EMAIL and FCM_PRIVATE_KEY, then redeploy. The private key must never be included in the Android bundle or Git.
-4. Accept Google's SDK license and install platform API 36, build tools 36.0.0 and platform tools. This Mac's Java 21 and command-line SDK tools are installed with Homebrew; the SDK installation is waiting for owner license consent. Local SDK root: `/private/tmp/fittlist-android-sdk` (temporary; install to a durable location before relying on later builds).
+4. Accept Google's SDK license and install platform API 36, build tools 36.0.0 and platform tools. This Mac's Java 21 and command-line SDK tools are installed with Homebrew. The owner approved the SDK license, and API 36, build tools 35.0.0/36.0.0 and platform tools are installed. Local SDK root: `/private/tmp/fittlist-android-sdk` (temporary; install to a durable location before relying on later builds).
 
 ## Signing and build
 
