@@ -4,9 +4,8 @@
 .content { flex:1; min-height:0; overflow:auto; padding:28px 20px 36px; scrollbar-width:thin; }
 .topControls { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
 .topControls > :first-child { flex:1; min-width:0; }
-.topControls > button,.topAction button { flex:none; width:42px; height:42px; border-radius:14px; background:#192126; color:white; }
-.topControls > button[data-variant="outline"],.topAction button[data-variant="outline"] { border:1px solid #d5dde1; background:#fff; color:#192126; }
-.topAction { display:flex; justify-content:flex-end; margin-bottom:16px; }
+.topControls > button { flex:none; width:42px; height:42px; border-radius:14px; background:#192126; color:white; }
+.topControls > button[data-variant="outline"] { border:1px solid #d5dde1; background:#fff; color:#192126; }
 .calendarSummary { display:flex; flex-direction:column; gap:9px; margin:2px 0 18px; padding:24px 22px; border-radius:22px; background:#192126; color:white; }
 .calendarSummary strong { max-width:290px; font-size:28px; line-height:1.14; letter-spacing:-.035em; }
 .yourCalendarSummary { align-items:center; gap:22px; padding:34px 22px; background:#fffef0; color:#192126; text-align:center; }
