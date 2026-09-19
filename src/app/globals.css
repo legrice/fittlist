@@ -15619,7 +15619,7 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
     margin:0 var(--page-gutter) 16px;
     border-bottom:0;
   }
-  .group-hub-main > .group-schedule-section {
+  .group-hub-main > :is(.group-schedule-section,.group-updates) {
     padding-inline:var(--page-gutter);
   }
   .group-tabs.group-segmented-tabs button {
