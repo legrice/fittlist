@@ -99,3 +99,6 @@
 .settingsRow strong { font-size:15px; line-height:1.25; }
 .settingsRow > div > span { color:#69767d; font-size:13px; line-height:1.4; }
 .settingsRow > svg { flex:none; color:#89959b; }
+
+.sectionIntro { margin:-4px 0 16px; color:#69767d; font-size:14px; line-height:1.4; }
+.discoverySection { margin-top:30px; padding-top:2px; border-top:1px solid #dce3e6; }

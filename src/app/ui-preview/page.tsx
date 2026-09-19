@@ -62,29 +62,28 @@ function CalendarScreen({ onExplore }: { onExplore: () => void }) {
 function ExploreScreen() {
   return <>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input placeholder="People, places, classes" aria-label="Search" /></label><Button variant="outline" size="icon-lg" aria-label="Filters"><Settings2 size={19}/></Button></div>
-    <Tabs defaultValue="people"><TabsList className={styles.fullTabs}><TabsTrigger value="people">People</TabsTrigger><TabsTrigger value="studios">Studios</TabsTrigger><TabsTrigger value="classes">Classes</TabsTrigger></TabsList>
-      <TabsContent value="people"><SectionTitle>People near you</SectionTitle><div className={styles.stack}>
-        {[{name:"Erin Clyne", title:"Yoga Teacher + Clinical Sports Massage", initials:"EC", color:"#D8C6B4"},{name:"Freddie Morgan",title:"Strength & mobility coach",initials:"FM",color:"#AFCFEC"},{name:"Matt LeGrice",title:"Strength & mobility coach",initials:"ML",color:"#C8C3DB"}].map(person=><Card key={person.name} className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>)}</div></TabsContent>
-      <TabsContent value="studios"><SectionTitle>Studios nearby</SectionTitle><Card className={styles.simpleCard}><CardContent><strong>Ironbound Performance Athletics</strong><p>Strength training · Jersey City</p></CardContent></Card></TabsContent>
-      <TabsContent value="classes"><SectionTitle>Classes nearby</SectionTitle>{classes.slice(0,2).map((item)=><div className={styles.daySection} key={item.name}><ClassCard item={item}/></div>)}</TabsContent>
-    </Tabs>
+    <section><SectionTitle>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>
+      {classes.slice(0,2).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}
+    </section>
+    <section><SectionTitle>People to move with</SectionTitle><div className={styles.stack}>
+      {[{name:"Erin Clyne", title:"Yoga Teacher + Clinical Sports Massage", initials:"EC", color:"#D8C6B4"},{name:"Freddie Morgan",title:"Strength & mobility coach",initials:"FM",color:"#AFCFEC"},{name:"Matt LeGrice",title:"Strength & mobility coach",initials:"ML",color:"#C8C3DB"}].map(person=><Card key={person.name} className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>)}
+    </div></section>
+    <section><SectionTitle>Places nearby</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>Ironbound Performance Athletics</strong><span>Strength training · Jersey City</span></div><ChevronRight size={18}/></CardContent></Card></section>
   </>;
 }
 
 function GroupsScreen() {
   return <>
-    <Tabs defaultValue="yours"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Groups view"><TabsTrigger value="yours">Your groups</TabsTrigger><TabsTrigger value="discover">Discover groups</TabsTrigger></TabsList><Button size="icon-lg" aria-label="Create a group"><Plus size={20}/></Button></div>
-      <TabsContent value="yours"><Card className={styles.groupHero}><CardHeader><div className={styles.groupSymbol}><Users size={28}/></div><Badge variant="secondary">Joined</Badge><CardTitle>Gals who like to move</CardTitle><p>Find a class, make a plan, and bring your people.</p></CardHeader><CardContent className={styles.groupHeroFooter}><div className={styles.faceStack}><Face initials="EC" color="#D8C6B4"/><Face initials="FM" color="#AFCFEC"/><Face initials="AL" color="#C8C3DB"/></div><span>4 members</span><ChevronRight size={18}/></CardContent></Card>
-        <Tabs defaultValue="schedule"><TabsList className={styles.fullTabs}><TabsTrigger value="schedule">Schedule</TabsTrigger><TabsTrigger value="updates">Updates</TabsTrigger></TabsList>
-          <TabsContent value="schedule"><SectionTitle>Group schedule</SectionTitle>{classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
-          <TabsContent value="updates"><SectionTitle>Latest updates</SectionTitle><Card className={styles.simpleCard}><CardHeader><div className={styles.inlinePerson}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie Morgan</strong><span>Added Sculpt to the group calendar</span></div></div></CardHeader><CardContent><p>Anyone joining on Sunday?</p><Button variant="outline" size="sm">Reply</Button></CardContent></Card></TabsContent>
-        </Tabs>
-      </TabsContent>
-      <TabsContent value="discover"><SectionTitle>Groups near you</SectionTitle><div className={styles.stack}>
-        <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Jersey City Run Club</strong><span>Running · 28 members</span></div><ChevronRight size={18}/></CardContent></Card>
-        <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Sunday Sweat Crew</strong><span>Group fitness · 16 members</span></div><ChevronRight size={18}/></CardContent></Card>
-      </div></TabsContent>
-    </Tabs>
+    <SectionTitle aside={<Button variant="outline" size="sm"><Plus size={16}/> Create</Button>}>Your groups</SectionTitle>
+    <Card className={styles.groupHero}><CardHeader><div className={styles.groupSymbol}><Users size={28}/></div><Badge variant="secondary">Joined</Badge><CardTitle>Gals who like to move</CardTitle><p>Find a class, make a plan, and bring your people.</p></CardHeader><CardContent className={styles.groupHeroFooter}><div className={styles.faceStack}><Face initials="EC" color="#D8C6B4"/><Face initials="FM" color="#AFCFEC"/><Face initials="AL" color="#C8C3DB"/></div><span>4 members</span><ChevronRight size={18}/></CardContent></Card>
+    <section><SectionTitle>Coming up together</SectionTitle>
+      {classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}
+    </section>
+    <section><SectionTitle>Latest from your group</SectionTitle><Card className={styles.simpleCard}><CardHeader><div className={styles.inlinePerson}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie Morgan</strong><span>Added Sculpt to the group calendar</span></div></div></CardHeader><CardContent><p>Anyone joining on Sunday?</p><Button variant="outline" size="sm">Reply</Button></CardContent></Card></section>
+    <section className={styles.discoverySection}><SectionTitle>Groups near you</SectionTitle><p className={styles.sectionIntro}>Make your next class a group plan.</p><div className={styles.stack}>
+      <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Jersey City Run Club</strong><span>Running · 28 members</span></div><ChevronRight size={18}/></CardContent></Card>
+      <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Sunday Sweat Crew</strong><span>Group fitness · 16 members</span></div><ChevronRight size={18}/></CardContent></Card>
+    </div></section>
   </>;
 }
 
@@ -131,7 +130,7 @@ function YouScreen() {
 export default function UiPreview() {
   const [screen,setScreen]=useState<Screen>("calendar");
   return <div className={styles.preview}><div className={styles.notice}>shadcn/ui mobile concept · sample content</div><div className={styles.phone}>
-    <main className={styles.content}><h1 className={styles.pageTitle}>{screens.find(({ id }) => id === screen)?.label}</h1>{screen==="calendar"?<CalendarScreen onExplore={() => setScreen("explore")}/>:screen==="explore"?<ExploreScreen/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
+    <main key={screen} className={styles.content}><h1 className={styles.pageTitle}>{screens.find(({ id }) => id === screen)?.label}</h1>{screen==="calendar"?<CalendarScreen onExplore={() => setScreen("explore")}/>:screen==="explore"?<ExploreScreen/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
     <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>setScreen(id)}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
 }
