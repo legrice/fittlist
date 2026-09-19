@@ -124,7 +124,7 @@ function GroupsScreen() {
       <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: ["Matt LeGrice"], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
         <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
         <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
-        <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only — changes last while you’re on this page.</p>
+        <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only. Changes last while you’re on this page.</p>
       </form>
     </> : group ? <>
       {back}
