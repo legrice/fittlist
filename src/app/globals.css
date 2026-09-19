@@ -15615,6 +15615,10 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
     gap:28px; margin:0 0 16px; padding:0; border-bottom:1px solid var(--kinetic-control-border);
     border-radius:0; background:transparent;
   }
+  .group-hub-main > .group-tabs.group-segmented-tabs {
+    margin:0 var(--page-gutter) 16px;
+    border-bottom:0;
+  }
   .group-tabs.group-segmented-tabs button {
     flex:0 0 auto; min-height:44px; padding:8px 2px;
     border:0; border-bottom:3px solid transparent; border-radius:0;
