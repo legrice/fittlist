@@ -9,7 +9,6 @@
 .topAction { display:flex; justify-content:flex-end; margin-bottom:16px; }
 .calendarSummary { display:flex; flex-direction:column; gap:9px; margin:2px 0 18px; padding:24px 22px; border-radius:22px; background:#192126; color:white; }
 .calendarSummary strong { max-width:290px; font-size:28px; line-height:1.14; letter-spacing:-.035em; }
-.calendarSummary span { color:#cad4d8; font-size:13px; }
 .peopleRail { display:flex; gap:12px; overflow-x:auto; margin:0 -20px 18px; padding:2px 20px 8px; scrollbar-width:none; }
 .peopleRail::-webkit-scrollbar { display:none; }
 .personFilter { display:flex; flex:none; flex-direction:column; align-items:center; gap:5px; width:64px; padding:0; border:0; background:transparent; color:#536067; font:inherit; }
@@ -22,12 +21,6 @@
 .sectionTitle { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:28px 0 12px; }
 .sectionTitle h2 { margin:0; font-size:20px; font-weight:700; letter-spacing:-.025em; }
 .sectionTitle [data-slot="badge"] { border-radius:999px; background:#e8edef; color:#46545c; }
-.weekStrip { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; padding:6px; border:1px solid #e1e6e9; border-radius:19px; background:#fff; }
-.weekStrip span { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:58px; border-radius:14px; }
-.weekStrip small { color:#77848b; font-size:12px; }
-.weekStrip strong { font-size:16px; }
-.weekStrip .selectedDay { background:#192126; color:#fff; }
-.weekStrip .selectedDay small { color:#d9e2e5; }
 .daySection { margin:20px 0; }
 .daySection h3 { margin:0 0 9px; color:#536067; font-size:14px; font-weight:700; }
 .classCard,.personCard,.simpleCard { gap:0; padding:0; border:1px solid #e1e6e9; border-radius:19px; background:#fff; box-shadow:0 2px 8px #19212608; }
