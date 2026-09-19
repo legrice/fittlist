@@ -1,3 +1,10 @@
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
 /* The native shell owns the iPhone safe area; this selector is inert in Safari. */
 html[data-native="ios"] body, html[data-native="android"] body { padding-top: env(safe-area-inset-top); }
 
@@ -147,7 +154,7 @@ html[data-native="ios"] body, html[data-native="android"] body { padding-top: en
   --grad-top: var(--color-background);
   --grad-mid: var(--color-background);
   --ground: var(--color-background);
-  --card: var(--color-surface);
+  --card: oklch(1 0 0);
   --ink: var(--color-text-primary);
   --ol: var(--color-text-secondary);
   /* Legacy semantic names still used by older surfaces. Keep every alias
@@ -247,6 +254,36 @@ html[data-native="ios"] body, html[data-native="android"] body { padding-top: en
   /* Elevation is expressed with surface contrast and rules, not shadows. */
   --soft-shadow: none;
   --soft-shadow-lg: none;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --ui-muted: var(--color-surface-muted);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4180,7 +4217,6 @@ button.ps-card { cursor: pointer; }
 .pubhead:has(.profbanner) .profback { top: 12px; left: 0; }
 .pubhead:has(.profbanner) .ownertop { top: 12px; right: 0; }
 
-
 /* The actions, as pills: the one that starts something is filled, the one that
    reports a state is outlined. */
 .profacts {
@@ -6655,7 +6691,6 @@ html[data-mode="dark"],
 /* "I'm going" lives on the class page; the week only reports it. */
 /* A member's account: who you are, then the switches. No public page, no QR,
    no stats — those are a coach's. */
-
 
 /* ---- discover (the directory) ---- */
 /* People or places. The tab decides what the box below is searching, which is
@@ -9515,7 +9550,6 @@ html[data-mode="dark"],
 .paldot-lbl { font-size: 11px; font-weight: 600; color: var(--ol); }
 .paldot.sel .paldot-lbl { color: var(--ink); }
 
-
 /* The range, as two rails. A date field is the same question asked in a way
    somebody has to type, and the answer is nearly always one of the next few
    days. Seven is the ceiling because the canvas is fixed and planStory has to
@@ -11134,19 +11168,11 @@ html[data-mode="dark"],
    is the one thing of ours that beat it.
    --------------------------------------------------------------------------- */
 
-
-
-
 /* Transparent with a hairline, not filled: they are a way of looking rather
    than a thing to do, and the one filled control on this screen is the plus. */
 
 /* Greyed at the ends rather than hidden. A control that disappears moves the
    one beside it under a thumb that was already reaching for it. */
-
-
-
-
-
 
 /* No gap: the rows are divided by their own hairline now, and a gap as well
    would be the break said twice. */
@@ -11167,7 +11193,6 @@ html[data-mode="dark"],
 /* The last row in a day owns no line: the gap to the next day heading is the
    break, and a rule hanging under the last class is a line to nothing. */
 
-
 /* The class name is the biggest thing in a list, on purpose.
    This is a calendar app: what somebody is reading down a week is the names
    of classes, and everything else on the row (where, when, whose) is a caption
@@ -11175,12 +11200,8 @@ html[data-mode="dark"],
    label; at 22 it is the row and the rest arranges itself underneath. Typing
    is most of what this app has to be good at, so it commits. */
 
-
-
 /* Following leads with whose class it is: the dot carries their colour, which
    is the same colour their circle wears on the rail above. */
-
-
 
 /* A week with nothing in it, as a screen rather than an apology. Dashed,
    because a solid card would look like something that failed to load. */
@@ -12221,7 +12242,6 @@ a.clspeek-by:active { opacity: .6; }
    heading already said the day, and a gutter repeating it is the date twice. */
 /* Nothing to override: Following's rows are the calendar's rows, hairline and
    all. Two lists of classes drawn two ways is what this build exists to undo. */
-
 
 /* ---------------------------------------------------------------------------
    One list of classes, everywhere there is one.
@@ -14910,7 +14930,6 @@ a.clspeek-by:active { opacity: .6; }
 }
 .calendar-revealed-controls > .calendar-add-pill::after { background: none; }
 
-
 /* The month strip belongs below the calendar toolbar, like the date bands. */
 .screen:has(.calendar-scope-top.is-expanded) .scrollhead {
   top: 70px;
@@ -15615,7 +15634,8 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
     gap:28px; margin:0 0 16px; padding:0; border-bottom:1px solid var(--kinetic-control-border);
     border-radius:0; background:transparent;
   }
-  .group-hub-main > .group-tabs.group-segmented-tabs {
+  .group-hub-main > .group-content-tabs > .group-tabs.group-segmented-tabs {
+    width:calc(100% - (2 * var(--page-gutter)));
     margin:0 var(--page-gutter) 16px;
     border-bottom:0;
   }
@@ -15628,6 +15648,7 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
     background:transparent; color:var(--color-text-secondary);
   }
   .group-tabs.group-segmented-tabs button.on { border-bottom:3px solid var(--kinetic-canvas-dark); background:transparent; color:var(--kinetic-text); }
+  .group-hub-main .group-tabs.group-segmented-tabs [data-slot="tabs-trigger"] { flex:1; }
   .group-page .group-main { max-width:none; margin:0; padding-top:0; }
   .pub.group-page .group-hero { display:flex; flex-direction:column; align-items:center; gap:0; padding:0 0 20px; border:0; background:var(--kinetic-canvas-light); }
   .group-seam-top { display:block; position:relative; width:100%; height:132px; border-radius:24px 24px 0 0; }
@@ -16045,7 +16066,7 @@ html[data-native="ios"] :is(.profile-seam-top,.group-seam-top):has(.profile-bann
   .group-page .group-hero-copy .profile-about-trigger { display:none; }
   .group-hub { display:contents; }
   .group-hub-main { grid-column:1; grid-row:2; min-width:0; }
-  .group-hub-main > .group-tabs { display:none; }
+  .group-hub-main > .group-content-tabs { display:none; }
   .group-profile-about { grid-column:2; grid-row:1 / span 2; padding:24px; min-width:0; border-radius:20px; background:var(--kinetic-surface); }
   .group-profile-about > h2 { margin:0 0 16px; font-size:22px; }
   .group-profile-about > p { white-space:pre-wrap; overflow-wrap:anywhere; }
@@ -16433,3 +16454,13 @@ html[data-native="ios"] :is(.profile-seam-top,.group-seam-top):has(.profile-bann
 @media(max-width:600px){.admin-beta{padding:16px}.admin-beta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-beta-metric{padding:12px}.admin-beta-metric strong{font-size:20px}}
 
 .notification-center-tabs{display:flex;gap:8px;margin:8px 0 20px}.notification-center-tabs button{padding:10px 16px;border:1px solid var(--line);border-radius:24px;background:var(--paper);color:var(--ink);font:inherit}.notification-center-tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+@theme inline { --font-heading: var(--font-sans); --font-sans: var(--font-sans); --color-sidebar-ring: var(--sidebar-ring); --color-sidebar-border: var(--sidebar-border); --color-sidebar-accent-foreground: var(--sidebar-accent-foreground); --color-sidebar-accent: var(--sidebar-accent); --color-sidebar-primary-foreground: var(--sidebar-primary-foreground); --color-sidebar-primary: var(--sidebar-primary); --color-sidebar-foreground: var(--sidebar-foreground); --color-sidebar: var(--sidebar); --color-chart-5: var(--chart-5); --color-chart-4: var(--chart-4); --color-chart-3: var(--chart-3); --color-chart-2: var(--chart-2); --color-chart-1: var(--chart-1); --color-ring: var(--ring); --color-input: var(--input); --color-border: var(--border); --color-destructive: var(--destructive); --color-accent-foreground: var(--accent-foreground); --color-accent: var(--accent); --color-muted-foreground: var(--muted-foreground); --color-muted: var(--muted); --color-secondary-foreground: var(--secondary-foreground); --color-secondary: var(--secondary); --color-primary-foreground: var(--primary-foreground); --color-primary: var(--primary); --color-popover-foreground: var(--popover-foreground); --color-popover: var(--popover); --color-card-foreground: var(--card-foreground); --color-card: var(--card); --color-foreground: var(--foreground); --color-background: var(--background); --radius-sm: calc(var(--radius) * 0.6); --radius-md: calc(var(--radius) * 0.8); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) * 1.4); --radius-2xl: calc(var(--radius) * 1.8); --radius-3xl: calc(var(--radius) * 2.2); --radius-4xl: calc(var(--radius) * 2.6); }
+
+.dark { --background: oklch(0.145 0 0); --foreground: oklch(0.985 0 0); --card: oklch(0.205 0 0); --card-foreground: oklch(0.985 0 0); --popover: oklch(0.205 0 0); --popover-foreground: oklch(0.985 0 0); --primary: oklch(0.922 0 0); --primary-foreground: oklch(0.205 0 0); --secondary: oklch(0.269 0 0); --secondary-foreground: oklch(0.985 0 0); --muted: oklch(0.269 0 0); --muted-foreground: oklch(0.708 0 0); --accent: oklch(0.269 0 0); --accent-foreground: oklch(0.985 0 0); --destructive: oklch(0.704 0.191 22.216); --border: oklch(1 0 0 / 10%); --input: oklch(1 0 0 / 15%); --ring: oklch(0.556 0 0); --chart-1: oklch(0.87 0 0); --chart-2: oklch(0.556 0 0); --chart-3: oklch(0.439 0 0); --chart-4: oklch(0.371 0 0); --chart-5: oklch(0.269 0 0); --sidebar: oklch(0.205 0 0); --sidebar-foreground: oklch(0.985 0 0); --sidebar-primary: oklch(0.488 0.243 264.376); --sidebar-primary-foreground: oklch(0.985 0 0); --sidebar-accent: oklch(0.269 0 0); --sidebar-accent-foreground: oklch(0.985 0 0); --sidebar-border: oklch(1 0 0 / 10%); --sidebar-ring: oklch(0.556 0 0); }
+
+/* Preserve FittList's text token and self-hosted type while using shadcn utilities. */
+@theme inline {
+  --color-muted: var(--ui-muted);
+  --font-sans: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}

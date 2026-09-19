@@ -9,7 +9,8 @@ import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ReportContentButton } from "@/components/ReportContentButton";
-import { tabListKeyDown } from "@/lib/tab-list-keyboard";
+import { Avatar as UiAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type GroupUpdate = {
   id:string; kind:string; body:string | null; createdAt:string;
@@ -28,13 +29,15 @@ export function GroupHub({ slug, canPost, viewerId, updates, schedule, members, 
   const [membersOpen,setMembersOpen]=useState(initialTab === "members");
   return <div className="group-hub"><div className="group-hub-main">
     <button type="button" className="group-member-preview" onClick={()=>setMembersOpen(true)} aria-label={`View ${memberPreview.length} members`}>
-      <span className="group-member-faces">{memberPreview.slice(0,5).map(member=><span key={member.id} style={{background:member.color}}>{member.photo ? <img src={member.photo} alt=""/> : member.name.charAt(0)}</span>)}</span>
+      <span className="group-member-faces">{memberPreview.slice(0,5).map(member=><UiAvatar key={member.id} style={{background:member.color}}><AvatarImage src={member.photo ?? undefined} alt=""/><AvatarFallback>{member.name.charAt(0)}</AvatarFallback></UiAvatar>)}</span>
       <span>{memberPreview.length} {memberPreview.length === 1 ? "member" : "members"}</span><Icon name="chevron_right" size={17}/>
     </button>
-    <div className="group-tabs group-segmented-tabs" role="tablist" aria-label="Group content" onKeyDown={tabListKeyDown}>
-      <button type="button" role="tab" tabIndex={tab==="schedule"?0:-1} aria-selected={tab==="schedule"} className={tab==="schedule"?"on":""} onClick={()=>setTab("schedule")}>Schedule</button>
-      <button type="button" role="tab" tabIndex={tab==="updates"?0:-1} aria-selected={tab==="updates"} className={tab==="updates"?"on":""} onClick={()=>{setTab("updates");setSeen(Date.now());localStorage.setItem(`group-updates-seen:${slug}:${viewerId}`,String(Date.now()));}}>Updates{unread > 0 && <span className="profile-update-count">{unread}</span>}</button>
-    </div>
+    <Tabs className="group-content-tabs" value={tab} onValueChange={(value)=>{setTab(value as "schedule"|"updates");if(value==="updates"){const now=Date.now();setSeen(now);localStorage.setItem(`group-updates-seen:${slug}:${viewerId}`,String(now));}}}>
+      <TabsList className="group-tabs group-segmented-tabs" aria-label="Group content">
+        <TabsTrigger value="schedule" className={tab==="schedule"?"on":""}>Schedule</TabsTrigger>
+        <TabsTrigger value="updates" className={tab==="updates"?"on":""}>Updates{unread > 0 && <span className="profile-update-count">{unread}</span>}</TabsTrigger>
+      </TabsList>
+    </Tabs>
     {desktop && <h2 className="studio-desktop-schedule-title">Schedule</h2>}
     {desktop || tab==="schedule" ? schedule : <GroupUpdates slug={slug} canPost={canPost} viewerId={viewerId} updates={updates} />}
     </div>
