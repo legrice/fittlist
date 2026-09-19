@@ -75,11 +75,17 @@ function DiscoverScreen() {
 
 function GroupsScreen() {
   return <>
-    <div className={styles.topAction}><Button size="icon-lg" aria-label="Create a group"><Plus size={20}/></Button></div>
-    <Card className={styles.groupHero}><CardHeader><div className={styles.groupSymbol}><Users size={28}/></div><Badge variant="secondary">Joined</Badge><CardTitle>Gals who like to move</CardTitle><p>Find a class, make a plan, and bring your people.</p></CardHeader><CardContent className={styles.groupHeroFooter}><div className={styles.faceStack}><Face initials="EC" color="#D8C6B4"/><Face initials="FM" color="#AFCFEC"/><Face initials="AL" color="#C8C3DB"/></div><span>4 members</span><ChevronRight size={18}/></CardContent></Card>
-    <Tabs defaultValue="schedule"><TabsList className={styles.fullTabs}><TabsTrigger value="schedule">Schedule</TabsTrigger><TabsTrigger value="updates">Updates</TabsTrigger></TabsList>
-      <TabsContent value="schedule"><SectionTitle>Group schedule</SectionTitle>{classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item} profile/></section>)}</TabsContent>
-      <TabsContent value="updates"><SectionTitle>Latest updates</SectionTitle><Card className={styles.simpleCard}><CardHeader><div className={styles.inlinePerson}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie Morgan</strong><span>Added Sculpt to the group calendar</span></div></div></CardHeader><CardContent><p>Anyone joining on Sunday?</p><Button variant="outline" size="sm">Reply</Button></CardContent></Card></TabsContent>
+    <Tabs defaultValue="yours"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Groups view"><TabsTrigger value="yours">Your groups</TabsTrigger><TabsTrigger value="discover">Discover groups</TabsTrigger></TabsList><Button size="icon-lg" aria-label="Create a group"><Plus size={20}/></Button></div>
+      <TabsContent value="yours"><Card className={styles.groupHero}><CardHeader><div className={styles.groupSymbol}><Users size={28}/></div><Badge variant="secondary">Joined</Badge><CardTitle>Gals who like to move</CardTitle><p>Find a class, make a plan, and bring your people.</p></CardHeader><CardContent className={styles.groupHeroFooter}><div className={styles.faceStack}><Face initials="EC" color="#D8C6B4"/><Face initials="FM" color="#AFCFEC"/><Face initials="AL" color="#C8C3DB"/></div><span>4 members</span><ChevronRight size={18}/></CardContent></Card>
+        <Tabs defaultValue="schedule"><TabsList className={styles.fullTabs}><TabsTrigger value="schedule">Schedule</TabsTrigger><TabsTrigger value="updates">Updates</TabsTrigger></TabsList>
+          <TabsContent value="schedule"><SectionTitle>Group schedule</SectionTitle>{classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item} profile/></section>)}</TabsContent>
+          <TabsContent value="updates"><SectionTitle>Latest updates</SectionTitle><Card className={styles.simpleCard}><CardHeader><div className={styles.inlinePerson}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie Morgan</strong><span>Added Sculpt to the group calendar</span></div></div></CardHeader><CardContent><p>Anyone joining on Sunday?</p><Button variant="outline" size="sm">Reply</Button></CardContent></Card></TabsContent>
+        </Tabs>
+      </TabsContent>
+      <TabsContent value="discover"><SectionTitle>Groups near you</SectionTitle><div className={styles.stack}>
+        <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Jersey City Run Club</strong><span>Running · 28 members</span></div><ChevronRight size={18}/></CardContent></Card>
+        <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Sunday Sweat Crew</strong><span>Group fitness · 16 members</span></div><ChevronRight size={18}/></CardContent></Card>
+      </div></TabsContent>
     </Tabs>
   </>;
 }

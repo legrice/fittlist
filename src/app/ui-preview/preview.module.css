@@ -77,6 +77,7 @@
 .profileCard p { margin:8px 0 4px; }
 .profileCard button { border:0; border-radius:999px; background:#fff; color:#192126; }
 .menuRow { display:flex; align-items:center; gap:12px; }
+.menuRow > .discoverGroupIcon { display:grid; flex:none; place-items:center; width:42px; height:42px; border-radius:13px; background:#e6ecef; color:#192126; }
 .menuRow > svg:first-child { color:#536067; }
 .menuRow > svg:last-child { margin-left:auto; color:#89959b; }
 .dock { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; flex:none; padding:10px 8px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid #e0e6e9; background:#fff; }
