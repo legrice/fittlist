@@ -11,8 +11,15 @@
 .calendarSummary strong { max-width:290px; font-size:28px; line-height:1.14; letter-spacing:-.035em; }
 .yourCalendarSummary { align-items:center; gap:22px; padding:34px 22px; background:#fffef0; color:#192126; text-align:center; }
 .yourCalendarSummary strong { max-width:320px; }
+.heroActions { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; width:100%; }
 .shareWeekButton { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 26px; border-radius:999px; background:#192126; color:#fff; font-size:14px; font-weight:700; text-decoration:none; }
 .shareWeekButton:hover { background:#344148; }
+.secondaryHeroButton { border:1px solid #192126; background:transparent; color:#192126; }
+.secondaryHeroButton:hover { background:#e8e9db; }
+.followingSummary { align-items:center; gap:20px; text-align:center; }
+.followingSummary strong { max-width:320px; }
+.discoverMoreButton { min-height:44px; padding:0 26px; border:0; border-radius:999px; background:#fff; color:#192126; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+.discoverMoreButton:hover { background:#e8edef; }
 .peopleRail { display:flex; gap:12px; overflow-x:auto; margin:0 -20px 18px; padding:2px 20px 8px; scrollbar-width:none; }
 .peopleRail::-webkit-scrollbar { display:none; }
 .personFilter { display:flex; flex:none; flex-direction:column; align-items:center; gap:5px; width:64px; padding:0; border:0; background:transparent; color:#536067; font:inherit; }
