@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Activity, ArrowLeft, Bell, CalendarDays, ChevronRight, Clock, GlobeLock, LockKeyhole, MapPin, Plus, Search, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
@@ -102,19 +102,51 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   </>;
 }
 
+const sampleGroups = [
+  { id: "gals", name: "Gals who like to move", category: "Group fitness", description: "Find a class, make a plan, and bring your people.", image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85", members: ["Erin Clyne", "Freddie Morgan", "Alex Lee", "Matt LeGrice"], classIndexes: [1, 2] },
+  { id: "run", name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
+  { id: "sweat", name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
+];
 function GroupsScreen() {
-  return <>
-    <SectionTitle aside={<Button variant="outline" size="sm"><Plus size={16}/> Create</Button>}>Your groups</SectionTitle>
-    <Card className={styles.groupHero}><CardHeader><div className={styles.groupSymbol}><Users size={28}/></div><Badge variant="secondary">Joined</Badge><CardTitle>Gals who like to move</CardTitle><p>Find a class, make a plan, and bring your people.</p></CardHeader><CardContent className={styles.groupHeroFooter}><div className={styles.faceStack}><Face initials="EC" color="#D8C6B4"/><Face initials="FM" color="#AFCFEC"/><Face initials="AL" color="#C8C3DB"/></div><span>4 members</span><ChevronRight size={18}/></CardContent></Card>
-    <section><SectionTitle>Coming up together</SectionTitle>
-      {classes.slice(1).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}
-    </section>
-    <section><SectionTitle>Latest from your group</SectionTitle><Card className={styles.simpleCard}><CardHeader><div className={styles.inlinePerson}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie Morgan</strong><span>Added Sculpt to the group calendar</span></div></div></CardHeader><CardContent><p>Anyone joining on Sunday?</p><Button variant="outline" size="sm">Reply</Button></CardContent></Card></section>
-    <section className={styles.discoverySection}><SectionTitle>Groups near you</SectionTitle><p className={styles.sectionIntro}>Make your next class a group plan.</p><div className={styles.stack}>
-      <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Jersey City Run Club</strong><span>Running · 28 members</span></div><ChevronRight size={18}/></CardContent></Card>
-      <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><Users size={21}/></div><div><strong>Sunday Sweat Crew</strong><span>Group fitness · 16 members</span></div><ChevronRight size={18}/></CardContent></Card>
-    </div></section>
-  </>;
+  const [groups, setGroups] = useState(sampleGroups);
+  const [joined, setJoined] = useState(["gals"]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const top = useRef<HTMLDivElement>(null);
+  useEffect(() => { top.current?.closest("main")?.scrollTo({ top: 0 }); }, [selected]);
+  const group = groups.find(item => item.id === selected);
+  const back = <button className={styles.backButton} onClick={() => setSelected(null)}><ArrowLeft size={19}/>Back to Groups</button>;
+  const ownGroups = groups.filter(item => joined.includes(item.id));
+  return <div ref={top}>
+    {selected === "create" ? <>
+      {back}<SectionTitle>Start a group</SectionTitle><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
+      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: ["Matt LeGrice"], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
+        <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
+        <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
+        <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only — changes last while you’re on this page.</p>
+      </form>
+    </> : group ? <>
+      {back}
+      {group.image && <img className={styles.groupDetailPhoto} src={group.image} alt=""/>}
+      <SectionTitle>{group.name}</SectionTitle><p className={styles.sectionIntro}>{group.description}</p>
+      <div className={styles.groupDetailMeta}><span>{group.category} · Jersey City</span>{joined.includes(group.id) ? <Badge variant="secondary">Joined</Badge> : <Button onClick={() => { setJoined(ids => [...ids, group.id]); setGroups(items => items.map(item => item.id === group.id ? { ...item, members: [...item.members, "Matt LeGrice"] } : item)); }}>Join group</Button>}</div>
+      <SectionTitle aside={<Badge variant="secondary">{group.members.length}</Badge>}>Who’s in the group</SectionTitle>
+      <div className={styles.memberGrid}>{group.members.map((member,index) => <div key={member}><Face initials={member.split(" ").map(part => part[0]).join("")} color={["#D8C6B4", "#AFCFEC", "#C8C3DB"][index % 3]} size={44}/><span>{member}</span></div>)}</div>
+      <SectionTitle>Upcoming classes</SectionTitle>
+      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{classes[index].day}</h3><ClassCard item={classes[index]}/></section>) : <p className={styles.sectionIntro}>No classes planned yet. Check back for the next group plan.</p>}
+    </> : <>
+      <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
+      <div className={styles.stack}>{ownGroups.map(item => <button key={item.id} className={styles.ownedGroup} onClick={() => setSelected(item.id)}>
+        {item.image ? <img src={item.image} alt=""/> : <span className={styles.groupPlaceholder}><Users size={28}/></span>}<span><strong>{item.name}</strong><small>{item.members.length} members</small></span><ChevronRight size={18}/>
+      </button>)}</div>
+      <button className={styles.startGroup} onClick={() => setSelected("create")}><span className={styles.groupPlaceholder}><Plus size={26}/></span><span><strong>Start a new group</strong><small>Bring your people together</small></span><ChevronRight size={20}/></button>
+      <SectionTitle>Groups to explore</SectionTitle><p className={styles.sectionIntro}>Find your people around Jersey City.</p>
+      <div className={styles.exploreGroupList}>{groups.filter(item => !joined.includes(item.id)).map(item => <button key={item.id} className={styles.exploreGroupCard} onClick={() => setSelected(item.id)}>
+        <img src={item.image} alt="" loading="lazy"/><span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category} · Jersey City</span><span>{item.description}</span><small><Users size={15}/>{item.members.length} members<ChevronRight size={17}/></small></span>
+      </button>)}</div>
+    </>}
+  </div>;
 }
 
 function UpdatesScreen() {
