@@ -15619,6 +15619,9 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
     margin:0 var(--page-gutter) 16px;
     border-bottom:0;
   }
+  .group-hub-main > .group-schedule-section {
+    padding-inline:var(--page-gutter);
+  }
   .group-tabs.group-segmented-tabs button {
     flex:0 0 auto; min-height:44px; padding:8px 2px;
     border:0; border-bottom:3px solid transparent; border-radius:0;
