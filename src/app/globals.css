@@ -15692,6 +15692,15 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 @media(prefers-reduced-motion:reduce) { .loading-dots > span { animation:none; } }
 .route-loading-dots { min-height:60dvh; display:grid; place-items:center; background:var(--kinetic-canvas-light); color:var(--kinetic-text); }
 .route-loading-calendar { background:var(--kinetic-canvas-dark); color:var(--kinetic-inverse); }
+@media (max-width: 939px) {
+  .tabloading .route-loading-calendar {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    min-height: 100dvh;
+    width: 100vw;
+  }
+}
 .calendar-following-discover .discover-follow-button { min-height:34px; padding:7px 11px; font-size:11px; }
 .calendar-following-discover :is(.discover-person-tile,.discover-studio-row) { padding-top:16px; padding-bottom:16px; }
 .calendar-following-discover .discover-group-grid { row-gap:16px; }
@@ -15862,6 +15871,28 @@ html:has(.simple-welcome), body:has(.simple-welcome), .screen.ob:has(.simple-wel
 
 .profile-seam-top { overflow:hidden; }
 .profile-banner-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+/* The native shell paints the status area with this same image and crop. */
+html[data-native="ios"] :is(.profile-seam-top,.group-seam-top) .profile-banner-image {
+  top:calc(-1 * var(--native-profile-status-height, 0px));
+  height:calc(100% + var(--native-profile-status-height, 0px));
+}
+html[data-native="ios"] :is(.profile-seam-top,.group-seam-top):has(.profile-banner-image) { border-radius:0; }
+@media (max-width:939px) {
+  .profile-seam-top:has(.profile-banner-image) { overflow:visible; border-radius:0; }
+  .profile-seam-top .profile-banner-image { height:calc(100% + 44px); }
+  html[data-native="ios"] .profile-seam-top .profile-banner-image {
+    height:calc(100% + var(--native-profile-status-height, 0px) + 44px);
+  }
+  :is(.profile-seam-top,.group-seam-top):has(.profile-banner-image)::before {
+    content:""; position:absolute; inset:0 0 auto; height:126px; z-index:1;
+    background:linear-gradient(to bottom, rgba(0,0,0,.42), rgba(0,0,0,0));
+    pointer-events:none;
+  }
+  :is(.profile-seam-top,.group-seam-top):has(.profile-banner-image) :is(.profile-top-name,.group-seam-name) {
+    z-index:2; text-shadow:0 2px 8px rgba(0,0,0,.5);
+  }
+  .pubhead:not(.pubhead-hero):has(.profile-banner-image) .pubidentity-paper { z-index:1; }
+}
 .profile-banner-edit { position:absolute; right:20px; bottom:16px; z-index:3; width:40px; height:40px; display:grid; place-items:center; border:0; border-radius:50%; background:var(--kinetic-surface); color:var(--kinetic-text); }
 .profile-banner-scrim { z-index:120; }
 .profile-banner-sheet { max-width:620px; }

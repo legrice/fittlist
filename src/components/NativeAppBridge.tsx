@@ -39,16 +39,26 @@ export function NativeAppBridge() {
       void StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
       const systemBars = Capacitor.getPlatform() === "android" ? registerPlugin<{setStyle(options: {style: string}): Promise<void>}>("SystemBars") : null;
       const syncStatusBar = () => {
-        const dark = document.documentElement.dataset.mode === "dark";
+        const loading = document.querySelector('.tabloading .route-loading-calendar');
+        const dark = !!loading || document.documentElement.dataset.mode === "dark";
         // Capacitor names these values for the background they sit on:
         // Style.Dark is light glyphs for a dark background, and Style.Light
         // is dark glyphs for a light background.
         void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => {});
         void systemBars?.setStyle({style: dark ? "DARK" : "LIGHT"}).catch(() => {});
-        const background = getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
+        const background = loading ? getComputedStyle(loading).backgroundColor : getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
         void StatusBar.setBackgroundColor({ color: background || (dark ? "#192126" : "#F3F4F6") }).catch(() => {});
       };
       syncStatusBar();
+      let loadingVisible = !!document.querySelector('.tabloading .route-loading-calendar');
+      const loadingObserver = new MutationObserver(() => {
+        const visible = !!document.querySelector('.tabloading .route-loading-calendar');
+        if (visible === loadingVisible) return;
+        loadingVisible = visible;
+        syncStatusBar();
+      });
+      loadingObserver.observe(document.body, { childList: true, subtree: true });
+      removers.push(async () => loadingObserver.disconnect());
       window.addEventListener("fittlist:themechange", syncStatusBar);
       removers.push(async () => window.removeEventListener("fittlist:themechange", syncStatusBar));
       Network.getStatus().then(({ connected }) => {

@@ -7,6 +7,7 @@ import { DesktopChrome } from "@/components/DesktopChrome";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { currentUser } from "@/lib/current-user";
 import { ClientCacheScope } from "@/components/ClientCacheScope";
+import { BetaUsage } from "@/components/BetaUsage";
 import { managedCalendarsForUser } from "@/lib/managed-calendars";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
@@ -89,6 +90,7 @@ export async function AppChrome({
   const header = (
     <>
       <ClientCacheScope viewerId={userId}>{null}</ClientCacheScope>
+      <BetaUsage viewerId={userId} />
       <DesktopChrome
         coach={isCoach}
         scheduleHref={scheduleHref}

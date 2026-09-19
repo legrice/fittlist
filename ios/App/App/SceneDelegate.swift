@@ -45,6 +45,12 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
     private var launchDismissed = false
     private let headerView = UIView()
     private let statusBarSurface = UIView()
+    private let statusBarBanner = UIImageView()
+    private let statusBarBannerShade = CAGradientLayer()
+    private var statusBarBannerSource: String?
+    private var statusBarBannerHeight: CGFloat = 0
+    private var statusBarBannerTask: URLSessionDataTask?
+    private var sentStatusBarHeight: CGFloat = -1
     private let tabBar = UITabBar()
     private var settingsButton: UIButton?
     private var bridgeTopToHeader: NSLayoutConstraint?
@@ -119,6 +125,14 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         statusBarSurface.translatesAutoresizingMaskIntoConstraints = false
         statusBarSurface.isUserInteractionEnabled = false
         statusBarSurface.backgroundColor = view.backgroundColor
+        statusBarSurface.clipsToBounds = true
+        statusBarBanner.contentMode = .scaleAspectFill
+        statusBarBanner.isHidden = true
+        statusBarSurface.addSubview(statusBarBanner)
+        statusBarBannerShade.colors = [UIColor.black.withAlphaComponent(0.56).cgColor,
+                                       UIColor.black.withAlphaComponent(0.42).cgColor]
+        statusBarBannerShade.isHidden = true
+        statusBarSurface.layer.addSublayer(statusBarBannerShade)
         view.addSubview(statusBarSurface)
         NSLayoutConstraint.activate([
             statusBarSurface.topAnchor.constraint(equalTo: view.topAnchor),
@@ -137,6 +151,14 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        statusBarBanner.frame = CGRect(x: 0, y: 0, width: statusBarSurface.bounds.width,
+                                       height: statusBarSurface.bounds.height + statusBarBannerHeight)
+        statusBarBannerShade.frame = statusBarSurface.bounds
+        let statusHeight = statusBarSurface.bounds.height
+        if statusHeight > 0, abs(statusHeight - sentStatusBarHeight) > 0.5 {
+            sentStatusBarHeight = statusHeight
+            bridge.webView?.evaluateJavaScript("document.documentElement.style.setProperty('--native-profile-status-height', '\(statusHeight)px')")
+        }
         // The status-bar plugin may add its own background after appearance.
         view.bringSubviewToFront(statusBarSurface)
         if !launchDismissed { view.bringSubviewToFront(launchCover) }
@@ -156,7 +178,53 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         view.bringSubviewToFront(statusBarSurface)
     }
 
+    private func updateStatusBarBanner(source: String?, height: Double?) {
+        guard let source, !source.isEmpty, let height, height > 0, height < 1000 else {
+            statusBarBannerTask?.cancel()
+            statusBarBannerTask = nil
+            statusBarBannerSource = nil
+            statusBarBannerHeight = 0
+            statusBarBanner.image = nil
+            statusBarBanner.isHidden = true
+            statusBarBannerShade.isHidden = true
+            return
+        }
+        statusBarBannerHeight = CGFloat(height)
+        statusBarBanner.frame = CGRect(x: 0, y: 0, width: statusBarSurface.bounds.width,
+                                       height: statusBarSurface.bounds.height + statusBarBannerHeight)
+        if source == statusBarBannerSource { return }
+        statusBarBannerTask?.cancel()
+        statusBarBannerTask = nil
+        statusBarBannerSource = source
+        statusBarBanner.image = nil
+        statusBarBanner.isHidden = true
+        statusBarBannerShade.isHidden = true
+
+        let show: (Data) -> Void = { [weak self] data in
+            guard let self, self.statusBarBannerSource == source,
+                  data.count <= 4_000_000, let image = UIImage(data: data) else { return }
+            self.statusBarBanner.image = image
+            self.statusBarBanner.isHidden = false
+            self.statusBarBannerShade.isHidden = false
+        }
+        if source.hasPrefix("data:image/jpeg;base64,") {
+            let encoded = String(source.dropFirst("data:image/jpeg;base64,".count))
+            if let data = Data(base64Encoded: encoded), data.count <= 4_000_000 { show(data) }
+            return
+        }
+        guard let url = URL(string: source), url.scheme == "https", url.user == nil, url.password == nil,
+              let host = url.host?.lowercased(),
+              host == "fittlist.co" || host == "www.fittlist.co" || host.hasSuffix(".blob.vercel-storage.com") else { return }
+        statusBarBannerTask = shareSession.dataTask(with: url) { data, response, error in
+            guard error == nil, let response = response as? HTTPURLResponse,
+                  response.statusCode == 200, let data, data.count <= 4_000_000 else { return }
+            DispatchQueue.main.async { show(data) }
+        }
+        statusBarBannerTask?.resume()
+    }
+
     deinit {
+        statusBarBannerTask?.cancel()
         shareDownloadTask?.cancel()
         shareSession.invalidateAndCancel()
     }
@@ -338,8 +406,13 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
             (() => {
               let lastRoute = '';
               const send = () => {
-                const header = document.querySelector('.calendar-scope-top, .group-seam-top');
-                const background = getComputedStyle(header || document.body).backgroundColor;
+                const loading = document.querySelector('.tabloading .route-loading-calendar');
+                const header = document.querySelector('.profile-seam-top, .calendar-scope-top, .group-seam-top');
+                const profileHero = document.querySelector('.pub.profile .pubhero-media');
+                const banner = document.querySelector('.profile-seam-top .profile-banner-image, .group-seam-top .profile-banner-image');
+                const background = profileHero && !loading
+                  ? 'rgb(17, 31, 36)'
+                  : getComputedStyle(loading || header || document.body).backgroundColor;
                 const channels = background.match(/[0-9.]+/g)?.map(Number) || [];
                 const chrome = channels.length >= 3 && (channels.length < 4 || channels[3] > 0)
                   ? channels.slice(0, 3)
@@ -348,9 +421,13 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
                   path: location.pathname,
                   settings: !!document.querySelector('.brandbar [aria-label="Settings"]'),
                   active: document.querySelector('.navwrap a[aria-current="page"]')?.dataset.tab || null,
+                  banner: !loading && banner ? banner.currentSrc || banner.src : null,
+                  bannerHeight: !loading && banner ? banner.parentElement?.getBoundingClientRect().height
+                    + (banner.parentElement?.classList.contains('profile-seam-top') ? 44 : 0) : null,
                   chrome
                 };
-                const next = JSON.stringify(route);
+                const next = JSON.stringify({ ...route, banner: route.banner?.startsWith('data:')
+                  ? `${route.banner.slice(0, 96)}:${route.banner.length}` : route.banner });
                 if (next === lastRoute) return;
                 lastRoute = next;
                 window.webkit.messageHandlers.fittlistRoute.postMessage(route);
@@ -358,7 +435,7 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
               let renderTimer;
               const sendAfterRender = () => { clearTimeout(renderTimer); renderTimer = setTimeout(send, 80); };
               // React can finish the next route after pushState fires.
-              new MutationObserver(sendAfterRender).observe(document.body, { childList: true, subtree: true });
+              new MutationObserver(sendAfterRender).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
               addEventListener('fittlist:themechange', sendAfterRender);
               const push = history.pushState.bind(history);
               const replace = history.replaceState.bind(history);
@@ -433,6 +510,8 @@ final class FittListShellViewController: UIViewController, UITabBarDelegate, WKS
         if message.frameInfo.isMainFrame, let channels = route["chrome"] as? [Double] {
             updateStatusBarSurface(channels)
         }
+        updateStatusBarBanner(source: route["banner"] as? String, height: route["bannerHeight"] as? Double)
+        bridge.webView?.evaluateJavaScript("document.documentElement.style.setProperty('--native-profile-status-height', '\(statusBarSurface.bounds.height)px')")
         setTakeover(false)
         settingsButton?.isHidden = !(route["settings"] as? Bool ?? false)
         let active = route["active"] as? String

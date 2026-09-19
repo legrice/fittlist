@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
 import { sendUsage } from "@/lib/usage-client";
 import type { UsageKind } from "@/lib/beta-analytics";
 const sent = new Set<string>();
@@ -9,7 +10,8 @@ export function BetaUsage({ viewerId }: { viewerId: string }) {
   useEffect(() => {
     const record = () => {
       if (document.visibilityState !== "visible") return;
-      const kinds: UsageKind[] = ["app_active"];
+      const platform = Capacitor.getPlatform();
+      const kinds: UsageKind[] = ["app_active", platform === "ios" ? "ios_active" : platform === "android" ? "android_active" : "web_active"];
       if (path === "/calendar" || path === "/app") kinds.push("calendar_viewed");
       if (path === "/feed" || path.startsWith("/following") || path === "/discover" || path === "/search") kinds.push("explore_viewed");
       kinds.forEach(kind => {
