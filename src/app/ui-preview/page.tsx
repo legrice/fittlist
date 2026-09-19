@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, Bell, CalendarDays, ChevronRight, Clock, GlobeLock, LockKeyhole, MapPin, Plus, Search, Settings2, ShieldUser, UserRound, Users } from "lucide-react";
+import { Activity, ArrowLeft, Bell, CalendarDays, ChevronRight, Clock, GlobeLock, LockKeyhole, MapPin, Plus, Search, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,23 +59,46 @@ function CalendarScreen({ onExplore }: { onExplore: () => void }) {
   </>;
 }
 
-function ExploreScreen() {
+type ExplorePage = "classes" | "people" | "places";
+const explorePeople = [
+  { name: "Erin Clyne", title: "Yoga Teacher + Clinical Sports Massage", initials: "EC", color: "#D8C6B4", specialty: "Yoga" },
+  { name: "Freddie Morgan", title: "Strength & mobility coach", initials: "FM", color: "#AFCFEC", specialty: "Strength" },
+  { name: "Matt LeGrice", title: "Strength & mobility coach", initials: "ML", color: "#C8C3DB", specialty: "Strength" },
+];
+const explorePlaces = [
+  { name: "Asana Soul Practice", type: "Yoga", location: "Jersey City, NJ" },
+  { name: "Jane DO Jersey City", type: "Sculpt", location: "Jersey City, NJ" },
+  { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ" },
+];
+function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
+  return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>;
+}
+function ExplorePlace({ place }: { place: typeof explorePlaces[number] }) {
+  return <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card>;
+}
+function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void }) {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("");
+  const matches = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
+  const shownClasses = classes.filter(item => matches(`${item.name} ${item.place} ${item.coach}`) && (!filter || item.duration === filter));
+  const shownPeople = explorePeople.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
+  const shownPlaces = explorePlaces.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.type === filter));
+  const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
+  if (!page) return <>
+    <section><SectionTitle aside={more("classes")}>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>{classes.slice(0,2).map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</section>
+    <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.stack}>{explorePeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
+    <section><SectionTitle aside={more("places")}>Places nearby</SectionTitle><div className={styles.stack}>{explorePlaces.slice(0,2).map(place => <ExplorePlace key={place.name} place={place}/>)}</div></section>
+  </>;
+  const title = page.charAt(0).toUpperCase() + page.slice(1);
+  const options = page === "classes" ? ["50 min", "60 min"] : page === "people" ? ["Yoga", "Strength"] : ["Yoga", "Sculpt", "Strength"];
+  const count = page === "classes" ? shownClasses.length : page === "people" ? shownPeople.length : shownPlaces.length;
   return <>
-    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input placeholder="People, places, classes" aria-label="Search" /></label><Button variant="outline" size="icon-lg" aria-label="Filters"><Settings2 size={19}/></Button></div>
-    <Tabs defaultValue="classes">
-      <TabsList variant="line" className={styles.exploreCategories} aria-label="Explore categories">
-        <TabsTrigger value="classes"><CalendarDays/><span>Classes</span></TabsTrigger>
-        <TabsTrigger value="people"><Users/><span>People</span></TabsTrigger>
-        <TabsTrigger value="places"><MapPin/><span>Places</span></TabsTrigger>
-      </TabsList>
-    <TabsContent value="classes"><SectionTitle>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>
-      {classes.slice(0,2).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}
-    </TabsContent>
-    <TabsContent value="people"><SectionTitle>People to move with</SectionTitle><div className={styles.stack}>
-      {[{name:"Erin Clyne", title:"Yoga Teacher + Clinical Sports Massage", initials:"EC", color:"#D8C6B4"},{name:"Freddie Morgan",title:"Strength & mobility coach",initials:"FM",color:"#AFCFEC"},{name:"Matt LeGrice",title:"Strength & mobility coach",initials:"ML",color:"#C8C3DB"}].map(person=><Card key={person.name} className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>)}
-    </div></TabsContent>
-    <TabsContent value="places"><SectionTitle>Places nearby</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>Ironbound Performance Athletics</strong><span>Strength training · Jersey City</span></div><ChevronRight size={18}/></CardContent></Card></TabsContent>
-    </Tabs>
+    <button className={styles.backButton} onClick={() => onNavigate(null)}><ArrowLeft size={19}/>Back to Explore</button>
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
+    <label className={styles.categoryFilter}>{page === "classes" ? "Duration" : page === "people" ? "Specialty" : "Place type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "classes" ? "durations" : page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
+    <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
+    {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
+    {page === "classes" ? shownClasses.map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>) : <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownPlaces.map(place => <ExplorePlace key={place.name} place={place}/>)}</div>}
   </>;
 }
 
@@ -136,8 +159,9 @@ function YouScreen() {
 
 export default function UiPreview() {
   const [screen,setScreen]=useState<Screen>("calendar");
+  const [explorePage,setExplorePage]=useState<ExplorePage | null>(null);
   return <div className={styles.preview}><div className={styles.notice}>shadcn/ui mobile concept · sample content</div><div className={styles.phone}>
-    <main key={screen} className={styles.content} aria-label={screens.find(({ id }) => id === screen)?.label}>{screen==="calendar"?<CalendarScreen onExplore={() => setScreen("explore")}/>:screen==="explore"?<ExploreScreen/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
-    <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>setScreen(id)}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
+    <main key={`${screen}-${explorePage ?? "home"}`} className={styles.content} aria-label={screens.find(({ id }) => id === screen)?.label}>{screen==="calendar"?<CalendarScreen onExplore={() => setScreen("explore")}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
+    <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
 }
