@@ -62,13 +62,20 @@ function CalendarScreen({ onExplore }: { onExplore: () => void }) {
 function ExploreScreen() {
   return <>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input placeholder="People, places, classes" aria-label="Search" /></label><Button variant="outline" size="icon-lg" aria-label="Filters"><Settings2 size={19}/></Button></div>
-    <section><SectionTitle>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>
+    <Tabs defaultValue="classes">
+      <TabsList variant="line" className={styles.exploreCategories} aria-label="Explore categories">
+        <TabsTrigger value="classes"><CalendarDays/><span>Classes</span></TabsTrigger>
+        <TabsTrigger value="people"><Users/><span>People</span></TabsTrigger>
+        <TabsTrigger value="places"><MapPin/><span>Places</span></TabsTrigger>
+      </TabsList>
+    <TabsContent value="classes"><SectionTitle>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>
       {classes.slice(0,2).map((item)=><section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}
-    </section>
-    <section><SectionTitle>People to move with</SectionTitle><div className={styles.stack}>
+    </TabsContent>
+    <TabsContent value="people"><SectionTitle>People to move with</SectionTitle><div className={styles.stack}>
       {[{name:"Erin Clyne", title:"Yoga Teacher + Clinical Sports Massage", initials:"EC", color:"#D8C6B4"},{name:"Freddie Morgan",title:"Strength & mobility coach",initials:"FM",color:"#AFCFEC"},{name:"Matt LeGrice",title:"Strength & mobility coach",initials:"ML",color:"#C8C3DB"}].map(person=><Card key={person.name} className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>)}
-    </div></section>
-    <section><SectionTitle>Places nearby</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>Ironbound Performance Athletics</strong><span>Strength training · Jersey City</span></div><ChevronRight size={18}/></CardContent></Card></section>
+    </div></TabsContent>
+    <TabsContent value="places"><SectionTitle>Places nearby</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>Ironbound Performance Athletics</strong><span>Strength training · Jersey City</span></div><ChevronRight size={18}/></CardContent></Card></TabsContent>
+    </Tabs>
   </>;
 }
 
@@ -130,7 +137,7 @@ function YouScreen() {
 export default function UiPreview() {
   const [screen,setScreen]=useState<Screen>("calendar");
   return <div className={styles.preview}><div className={styles.notice}>shadcn/ui mobile concept · sample content</div><div className={styles.phone}>
-    <main key={screen} className={styles.content}><h1 className={styles.pageTitle}>{screens.find(({ id }) => id === screen)?.label}</h1>{screen==="calendar"?<CalendarScreen onExplore={() => setScreen("explore")}/>:screen==="explore"?<ExploreScreen/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
+    <main key={screen} className={styles.content} aria-label={screens.find(({ id }) => id === screen)?.label}>{screen==="calendar"?<CalendarScreen onExplore={() => setScreen("explore")}/>:screen==="explore"?<ExploreScreen/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
     <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>setScreen(id)}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
 }
