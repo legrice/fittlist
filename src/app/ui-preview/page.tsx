@@ -85,9 +85,11 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   const shownPlaces = explorePlaces.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.type === filter));
   const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
-    <section><SectionTitle aside={more("classes")}>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>{classes.slice(0,2).map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</section>
-    <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.stack}>{explorePeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
-    <section><SectionTitle aside={more("places")}>Places nearby</SectionTitle><div className={styles.stack}>{explorePlaces.slice(0,2).map(place => <ExplorePlace key={place.name} place={place}/>)}</div></section>
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People, places, classes" aria-label="Search Explore"/></label></div>
+    {shownClasses.length + shownPeople.length + shownPlaces.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
+    <section><SectionTitle aside={more("classes")}>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>{shownClasses.slice(0,2).map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</section>
+    <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.stack}>{shownPeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
+    <section><SectionTitle aside={more("places")}>Places nearby</SectionTitle><div className={styles.stack}>{shownPlaces.slice(0,2).map(place => <ExplorePlace key={place.name} place={place}/>)}</div></section>
   </>;
   const title = page.charAt(0).toUpperCase() + page.slice(1);
   const options = page === "classes" ? ["50 min", "60 min"] : page === "people" ? ["Yoga", "Strength"] : ["Yoga", "Sculpt", "Strength"];
