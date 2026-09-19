@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bell, CalendarDays, ChevronRight, Compass, Mail, MapPin, Plus, Search, Settings2, UserRound, Users } from "lucide-react";
+import { Bell, CalendarDays, ChevronRight, Compass, MapPin, Plus, Search, Settings2, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
 import styles from "./preview.module.css";
 
-type Screen = "calendar" | "discover" | "groups" | "inbox" | "you";
+type Screen = "calendar" | "discover" | "groups" | "updates" | "you";
 
 const screens: { id: Screen; label: string; icon: typeof CalendarDays }[] = [
   { id: "calendar", label: "Calendar", icon: CalendarDays },
   { id: "discover", label: "Discover", icon: Compass },
   { id: "groups", label: "Groups", icon: Users },
-  { id: "inbox", label: "Inbox", icon: Mail },
+  { id: "updates", label: "Updates", icon: Bell },
   { id: "you", label: "You", icon: UserRound },
 ];
 
@@ -91,7 +91,7 @@ function GroupsScreen() {
   </>;
 }
 
-function InboxScreen() {
+function UpdatesScreen() {
   return <>
     <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList><Button variant="outline" size="icon-lg" aria-label="New message"><Plus size={20}/></Button></div>
       <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></div></TabsContent>
@@ -111,7 +111,7 @@ function YouScreen() {
 export default function UiPreview() {
   const [screen,setScreen]=useState<Screen>("calendar");
   return <div className={styles.preview}><div className={styles.notice}>shadcn/ui mobile concept · sample content</div><div className={styles.phone}>
-    <main className={styles.content}>{screen==="calendar"?<CalendarScreen onDiscover={() => setScreen("discover")}/>:screen==="discover"?<DiscoverScreen/>:screen==="groups"?<GroupsScreen/>:screen==="inbox"?<InboxScreen/>:<YouScreen/>}</main>
+    <main className={styles.content}>{screen==="calendar"?<CalendarScreen onDiscover={() => setScreen("discover")}/>:screen==="discover"?<DiscoverScreen/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
     <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>setScreen(id)}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
 }
