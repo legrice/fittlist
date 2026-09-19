@@ -10,10 +10,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Item, ItemContent, ItemTitle, ItemDescription, ItemMedia, ItemActions } from "@/components/ui/item";
-import "./stock.css";
 import styles from "./preview.module.css";
 
 type Screen = "calendar" | "explore" | "groups" | "updates" | "you";
@@ -32,16 +28,16 @@ const classes = [
   { day: "Mon · Sep 21", time: "6:00 PM", name: "Guns, Buns, and Lungs", place: "Ironbound Performance Athletics", coach: "Matt LeGrice", duration: "60 min", color: "#C8C3DB" },
 ];
 
-function Face({ initials, size = 36 }: { initials: string; color?: string; size?: number }) {
-  return <Avatar size={size > 36 ? "lg" : size < 30 ? "sm" : "default"}><AvatarFallback>{initials}</AvatarFallback></Avatar>;
+function Face({ initials, color, size = 36 }: { initials: string; color: string; size?: number }) {
+  return <Avatar style={{ width: size, height: size, background: color }}><AvatarFallback style={{ background: color, color: "#192126", fontWeight: 700 }}>{initials}</AvatarFallback></Avatar>;
 }
 
 function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
-  return <div className={styles.sectionTitle}><h2 className="text-lg font-semibold">{children}</h2>{aside}</div>;
+  return <div className={styles.sectionTitle}><h2>{children}</h2>{aside}</div>;
 }
 
 function ClassCard({ item }: { item: typeof classes[number] }) {
-  return <Card>
+  return <Card className={styles.classCard}>
     <CardContent className={styles.classCardBody}>
       <div className={styles.classAttribution}><Face initials={item.coach.split(" ").map((part) => part[0]).join("")} color={item.color} size={28}/><span>{item.coach}</span></div>
       <div className={styles.classDetails}>
@@ -56,9 +52,9 @@ function CalendarScreen() {
   const [selectedPerson, setSelectedPerson] = useState("All");
   const people = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
   return <>
-    <Tabs defaultValue="you"><div className={styles.topControls}><TabsList className={styles.fullTabs} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList></div>
-      <TabsContent value="you" className={styles.calendarYouPanel}><Card><CardContent className="flex flex-col gap-4"><strong>{calendarActivitySummary({ teaching: 1, attending: 2, personal: 0 })}</strong><div className={styles.heroActions}><Button render={<Link href="/share"/>} aria-label="Share your week">Share</Button><Button variant="outline" render={<Link href="/calendar?add=1"/>} aria-label="Add to your week">Add</Button></div></CardContent></Card>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<Button size="icon-lg" render={<Link href="/calendar?add=1"/>} className={styles.addFab} aria-label="Add a class"><Plus/></Button></TabsContent>
-      <TabsContent value="following"><div className={styles.peopleRail} aria-label="Filter by person"><Button variant={selectedPerson === "All" ? "secondary" : "ghost"} type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><Avatar size="lg"><AvatarFallback><Users/></AvatarFallback></Avatar><small>All</small></Button>{people.map((person) => <Button variant={selectedPerson === person.name ? "secondary" : "ghost"} key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></Button>)}</div><SectionTitle aside={<Badge variant="secondary">{selectedPerson === "All" ? "3 classes" : "1 class"}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{classes.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+    <Tabs defaultValue="you"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList></div>
+      <TabsContent value="you" className={styles.calendarYouPanel}><div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: 1, attending: 2, personal: 0 })}</strong><div className={styles.heroActions}><Link href="/share" className={styles.shareWeekButton} aria-label="Share your week">Share</Link><Link href="/calendar?add=1" className={`${styles.shareWeekButton} ${styles.secondaryHeroButton}`} aria-label="Add to your week">Add</Link></div></div>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<Link href="/calendar?add=1" className={styles.addFab} aria-label="Add a class"><Plus size={28}/></Link></TabsContent>
+      <TabsContent value="following"><div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div><SectionTitle aside={<Badge variant="secondary">{selectedPerson === "All" ? "3 classes" : "1 class"}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{classes.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
     </Tabs>
   </>;
 }
@@ -75,10 +71,10 @@ const explorePlaces = [
   { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ" },
 ];
 function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
-  return <Card><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>;
+  return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>;
 }
 function ExplorePlace({ place }: { place: typeof explorePlaces[number] }) {
-  return <Card><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card>;
+  return <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card>;
 }
 function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void }) {
   const [query, setQuery] = useState("");
@@ -87,9 +83,9 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   const shownClasses = classes.filter(item => matches(`${item.name} ${item.place} ${item.coach}`) && (!filter || item.duration === filter));
   const shownPeople = explorePeople.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
   const shownPlaces = explorePlaces.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.type === filter));
-  const more = (target: ExplorePage) => <Button variant="ghost" onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></Button>;
+  const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
-    <div className={styles.topControls}><label><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People, places, classes" aria-label="Search Explore"/></label></div>
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People, places, classes" aria-label="Search Explore"/></label></div>
     {shownClasses.length + shownPeople.length + shownPlaces.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
     <section><SectionTitle aside={more("classes")}>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>{shownClasses.slice(0,2).map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</section>
     <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.stack}>{shownPeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
@@ -99,9 +95,9 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   const options = page === "classes" ? ["50 min", "60 min"] : page === "people" ? ["Yoga", "Strength"] : ["Yoga", "Sculpt", "Strength"];
   const count = page === "classes" ? shownClasses.length : page === "people" ? shownPeople.length : shownPlaces.length;
   return <>
-    <Button variant="ghost" className={styles.backButton} onClick={() => onNavigate(null)}><ArrowLeft size={19}/>Back to Explore</Button>
-    <div className={styles.topControls}><label><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
-    <label className={styles.categoryFilter}>{page === "classes" ? "Duration" : page === "people" ? "Specialty" : "Place type"}<NativeSelect value={filter} onChange={event => setFilter(event.target.value)}><NativeSelectOption value="">All {page === "classes" ? "durations" : page === "people" ? "specialties" : "types"}</NativeSelectOption>{options.map(option => <NativeSelectOption key={option}>{option}</NativeSelectOption>)}</NativeSelect></label>
+    <button className={styles.backButton} onClick={() => onNavigate(null)}><ArrowLeft size={19}/>Back to Explore</button>
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
+    <label className={styles.categoryFilter}>{page === "classes" ? "Duration" : page === "people" ? "Specialty" : "Place type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "classes" ? "durations" : page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
     {page === "classes" ? shownClasses.map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>) : <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownPlaces.map(place => <ExplorePlace key={place.name} place={place}/>)}</div>}
@@ -122,7 +118,7 @@ function GroupsScreen() {
   const top = useRef<HTMLDivElement>(null);
   useEffect(() => { top.current?.closest("main")?.scrollTo({ top: 0 }); }, [selected]);
   const group = groups.find(item => item.id === selected);
-  const back = <Button variant="ghost" className={styles.backButton} onClick={() => setSelected(null)}><ArrowLeft size={19}/>Back to Groups</Button>;
+  const back = <button className={styles.backButton} onClick={() => setSelected(null)}><ArrowLeft size={19}/>Back to Groups</button>;
   const ownGroups = groups.filter(item => joined.includes(item.id));
   return <div ref={top}>
     {selected === "create" ? <>
@@ -143,22 +139,23 @@ function GroupsScreen() {
       {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{classes[index].day}</h3><ClassCard item={classes[index]}/></section>) : <p className={styles.sectionIntro}>No classes planned yet. Check back for the next group plan.</p>}
     </> : <>
       <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
-      <div className={styles.stack}>{ownGroups.map(item => <Item key={item.id} variant="outline" render={<button type="button"/>} onClick={() => setSelected(item.id)}>
-        {item.image ? <ItemMedia variant="image"><img src={item.image} alt=""/></ItemMedia> : <ItemMedia variant="icon"><Users/></ItemMedia>}<ItemContent><ItemTitle>{item.name}</ItemTitle><ItemDescription>{item.members.length} members</ItemDescription></ItemContent><ItemActions><ChevronRight/></ItemActions>
-      </Item>)}</div>
-      <Item variant="muted" className="my-4" render={<button type="button"/>} onClick={() => setSelected("create")}><ItemMedia variant="icon"><Plus/></ItemMedia><ItemContent><ItemTitle>Start a new group</ItemTitle><ItemDescription>Bring your people together</ItemDescription></ItemContent><ItemActions><ChevronRight/></ItemActions></Item>
+      <div className={styles.stack}>{ownGroups.map(item => <button key={item.id} className={styles.ownedGroup} onClick={() => setSelected(item.id)}>
+        {item.image ? <img src={item.image} alt=""/> : <span className={styles.groupPlaceholder}><Users size={28}/></span>}<span><strong>{item.name}</strong><small>{item.members.length} members</small></span><ChevronRight size={18}/>
+      </button>)}</div>
+      <button className={styles.startGroup} onClick={() => setSelected("create")}><span className={styles.groupPlaceholder}><Plus size={26}/></span><span><strong>Start a new group</strong><small>Bring your people together</small></span><ChevronRight size={20}/></button>
       <SectionTitle>Groups to explore</SectionTitle><p className={styles.sectionIntro}>Find your people around Jersey City.</p>
-      <div className={styles.exploreGroupList}>{groups.filter(item => !joined.includes(item.id)).map(item => <Card key={item.id}><button type="button" className="text-left" onClick={() => setSelected(item.id)}>
-        <img className="aspect-video w-full object-cover" src={item.image} alt="" loading="lazy"/><CardContent className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category} · Jersey City</span><span>{item.description}</span><small><Users size={15}/>{item.members.length} members<ChevronRight size={17}/></small></CardContent></button></Card>)}</div>
+      <div className={styles.exploreGroupList}>{groups.filter(item => !joined.includes(item.id)).map(item => <button key={item.id} className={styles.exploreGroupCard} onClick={() => setSelected(item.id)}>
+        <img src={item.image} alt="" loading="lazy"/><span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category} · Jersey City</span><span>{item.description}</span><small><Users size={15}/>{item.members.length} members<ChevronRight size={17}/></small></span>
+      </button>)}</div>
     </>}
   </div>;
 }
 
 function UpdatesScreen() {
   return <>
-    <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={styles.fullTabs}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList></div>
-      <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><Card><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><Badge variant="secondary">New</Badge></CardContent></Card><Card><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><Badge variant="secondary">New</Badge></CardContent></Card></div></TabsContent>
-      <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><Card><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></TabsContent>
+    <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList></div>
+      <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></div></TabsContent>
+      <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></TabsContent>
     </Tabs>
   </>;
 }
@@ -166,8 +163,8 @@ function UpdatesScreen() {
 function YouScreen() {
   return <>
     <Card className={styles.profileCard}><CardContent><Face initials="ML" color="#C8C3DB" size={68}/><div><h2>Matt LeGrice</h2><span>@mattlegrice</span><p>Strength & mobility coach · Jersey City, NJ</p></div><Button variant="outline">Edit profile</Button></CardContent></Card>
-    <SectionTitle>Your calendars</SectionTitle><div className={styles.stack}><Card><CardContent className={styles.menuRow}><CalendarDays size={20}/><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card><Card><CardContent className={styles.menuRow}><Users size={20}/><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card></div>
-    <SectionTitle>Notifications</SectionTitle><Card><CardContent className={styles.menuRow}><Bell size={20}/><div><strong>Notifications</strong><span>Follows, saves, and account activity</span></div><ChevronRight size={18}/></CardContent></Card>
+    <SectionTitle>Your calendars</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><CalendarDays size={20}/><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Users size={20}/><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card></div>
+    <SectionTitle>Notifications</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Bell size={20}/><div><strong>Notifications</strong><span>Follows, saves, and account activity</span></div><ChevronRight size={18}/></CardContent></Card>
     {[
       { title: "Tools", rows: [
         { icon: Activity, title: "Insights", detail: "Your teaching, classes, and sharing" },
@@ -184,7 +181,7 @@ function YouScreen() {
     ].map((section) => <section key={section.title}>
       <SectionTitle>{section.title}</SectionTitle>
       <div className={styles.stack}>{section.rows.map(({ icon: Icon, title, detail }) =>
-        <Card key={title}><CardContent className={styles.settingsRow}>
+        <Card key={title} className={styles.simpleCard}><CardContent className={styles.settingsRow}>
           <span className={styles.settingsIcon}><Icon size={22}/></span>
           <div><strong>{title}</strong><span>{detail}</span></div>
           <ChevronRight size={18}/>
@@ -197,8 +194,8 @@ function YouScreen() {
 export default function UiPreview() {
   const [screen,setScreen]=useState<Screen>("calendar");
   const [explorePage,setExplorePage]=useState<ExplorePage | null>(null);
-  return <div data-shadcn-preview className={styles.preview}><div className={styles.notice}>shadcn/ui Base Nova · sample content</div><div className={styles.phone}>
+  return <div className={styles.preview}><div className={styles.notice}>shadcn/ui mobile concept · sample content</div><div className={styles.phone}>
     <main key={`${screen}-${explorePage ?? "home"}`} className={styles.content} aria-label={screens.find(({ id }) => id === screen)?.label}>{screen==="calendar"?<CalendarScreen/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
-    <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><Button variant={screen===id?"secondary":"ghost"} key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></Button>)}</nav>
+    <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
 }
