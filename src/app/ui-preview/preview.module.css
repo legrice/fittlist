@@ -284,3 +284,27 @@
 
 .logoutForm { margin-top:28px; padding-top:24px; border-top:1px solid var(--preview-line); }
 .apple .logoutForm button { width:100%; min-height:48px; gap:8px; }
+
+.appearanceRow { display:flex; align-items:center; gap:16px; padding:16px 0; }
+.appearanceRow > span { flex:1; font-size:16px; font-weight:500; }
+.themeSwitch { width:52px; height:32px; padding:3px; border:0; border-radius:999px; background:var(--preview-line); cursor:pointer; }
+.themeSwitch span { display:block; width:26px; height:26px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0003; }
+.themeSwitch[aria-checked="true"] { background:var(--preview-highlight); }
+.themeSwitch[aria-checked="true"] span { transform:translateX(20px); }
+.apple.dark { --preview-accent:#f5f7f8; --preview-soft:#2b3439; --preview-on-soft:#f5f7f8; --preview-ground:#11191d; --preview-text:#f5f7f8; --preview-muted:#b4bfc5; --preview-line:#445158; --preview-field:#273136; --preview-surface:#202a30; --preview-on-accent:#192126; color-scheme:dark; background:#0b1114; }
+.dark .dock { background:#202a30f2; }
+.dark .fullTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-surface); color:var(--preview-text); }
+.dark .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:#f5f7f8; color:#192126; }
+.dark .addFab { color:#192126; }
+.dark :is(.profileSheet,.mapStudioCard) { background:var(--preview-surface); color:var(--preview-text); }
+.dark :is(.sheetBody p,.sheetBody input,.mapStudioCard span,.mapStudioCard small) { color:var(--preview-muted); }
+.dark .sheetClose { color:var(--preview-text); }
+.dark .copyProfile { background:var(--preview-soft); color:var(--preview-text); }
+.dark :is(.personRing [data-slot="avatar-fallback"],.classAttribution [data-slot="avatar-fallback"]) { color:#192126!important; }
+.dark .profileHeader [data-slot="avatar-fallback"],.dark .personCard [data-slot="avatar-fallback"],.dark .notification [data-slot="avatar-fallback"],.dark .memberGrid [data-slot="avatar-fallback"] { color:#192126!important; }
+
+.shareCanvas { display:block; width:100%; max-width:270px; height:auto; margin:0 auto 24px; border-radius:16px; box-shadow:0 6px 24px #0002; }
+.shareControls { display:grid; gap:16px; }
+.shareControls label { display:grid; gap:8px; font-size:14px; }
+.shareControls :is(input,select) { background:var(--preview-surface); color:var(--preview-text); padding:12px; border:1px solid var(--preview-line); border-radius:12px; font:inherit; }
+.shareControls .copyProfile { background:var(--preview-soft); color:var(--preview-text); }
