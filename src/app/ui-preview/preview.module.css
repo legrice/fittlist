@@ -422,3 +422,5 @@
 .mainShareEditor:has(:global(.has-inspector)) :global(.sheditor-share-action) { visibility:hidden; }
 
 .apple .content.profileTakeover { position:fixed; inset:0; z-index:40; width:min(100%,430px); margin:0 auto; padding:calc(var(--preview-top-padding) + env(safe-area-inset-top)) 20px calc(110px + env(safe-area-inset-bottom)); background:var(--preview-ground); overscroll-behavior:contain; }
+
+.profileTakeover .classPageFooter { position:fixed; left:50%; right:auto; transform:translateX(-50%); width:min(100%,430px); }

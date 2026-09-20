@@ -136,13 +136,12 @@ const sampleGroups = [
   { id: "run", name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
   { id: "sweat", name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
 ];
-function GroupsScreen() {
+function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(value:string|null)=>void}) {
   const p=usePrototype();
   const groupClasses=p.schedule.map(c=>({id:c.id,name:c.name,place:c.place,coach:c.coach,day:dateLabel(c.date),time:timeLabel(c.time),duration:`${c.duration} min`,color:"#C8C3DB"}));
   const [groups, setGroups] = useState(sampleGroups);
   const [joined, setJoined] = useState(["gals"]);
   useEffect(()=>{if(p.live){setGroups(p.live.groups);setJoined(p.live.joined);}},[p.live]);
-  const [selected, setSelected] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const top = useRef<HTMLDivElement>(null);
@@ -276,11 +275,13 @@ function PreviewShell() {
   const changeDark = (value: boolean) => { setDark(value); try { localStorage.setItem("fittlist-preview-dark", String(value)); } catch {} };
 
   const [explorePage,setExplorePage]=useState<ExplorePage | null>(null);
-  useEffect(()=>{mainRef.current?.scrollTo({top:0});},[detail,screen,explorePage,sharing]);
+  const [selectedGroup,setSelectedGroup]=useState<string|null>(null);
+  const takeover=!!detail || sharing || !!explorePage || !!selectedGroup;
+  useEffect(()=>{mainRef.current?.scrollTo({top:0});},[detail,screen,explorePage,sharing,selectedGroup]);
   return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>
     <div className={styles.dataBanner} role="status">{p.dataStatus==="loading"?"Loading your account…":p.live?"Live data · changes stay in this preview":p.dataStatus==="error"?"Couldn’t load account data. Showing samples.":<>Sample data · <a href="/" target="_blank" rel="noopener noreferrer">Sign in</a> to load your account.</>}{p.dataStatus!=="loading" && <button onClick={()=>void p.reloadData()}>{p.live?"Refresh":"Retry"}</button>}</div>
-    <main ref={mainRef} className={`${styles.content} ${p.stack.some(route=>route.kind==="person") ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
-    {!sharing && !p.stack.some(route=>route.kind==="class" || route.kind==="person") && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>}
+    <main ref={mainRef} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
+    {!takeover && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>}
   </div></div>;
 }
 
