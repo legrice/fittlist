@@ -169,13 +169,13 @@
 .apple .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-accent); }
 .apple .personFilter[aria-pressed="true"] small { color:var(--preview-accent); }
 .apple .personFilter { color:var(--preview-muted); }
-.apple .startGroup { background:var(--preview-soft); color:var(--preview-on-soft); }
+.apple .startGroup { background:transparent; color:var(--preview-text); border:1px solid var(--preview-text); }
 .apple .startGroup .groupPlaceholder { background:transparent; }
 .apple .search { border:0; color:var(--preview-muted); }
 .apple .search input { color:var(--preview-text); font-size:16px; }
 .apple .categoryFilter select { background:var(--preview-surface); color:var(--preview-text); border-color:var(--preview-line); font-size:16px; }
 .apple [data-slot="button"] { min-height:40px; border-radius:999px; color:var(--preview-on-accent); background:var(--preview-accent); font-weight:500; }
-.apple [data-slot="button"][data-variant="outline"] { border:1px solid var(--preview-line); background:var(--preview-surface); color:var(--preview-accent); }
+.apple [data-slot="button"][data-variant="outline"] { border:1px solid var(--preview-text); background:transparent; color:var(--preview-accent); }
 .apple .groupForm input { min-height:44px; border:1px solid var(--preview-line); border-radius:12px; background:var(--preview-surface); color:var(--preview-text); padding:10px 12px; }
 .apple .shareWeekButton { background:var(--preview-accent); color:var(--preview-on-accent); font-size:15px; font-weight:600; }
 .apple .secondaryHeroButton { background:var(--preview-soft); color:var(--preview-on-soft); border:0; }
@@ -227,8 +227,8 @@
 .apple .calendarHero .calendarSummary { margin:0; padding:28px 0 4px; border-radius:0; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
 .apple .calendarHero .calendarSummary strong { max-width:none; font-size:var(--preview-title-size); line-height:1.08; letter-spacing:-.035em; }
 .apple .calendarHero .heroActions { justify-content:flex-start; }
-.apple .calendarHero .shareWeekButton { gap:8px; padding:0 20px; border-radius:12px; background:var(--preview-soft); color:var(--preview-text); border:0; }
-.apple .calendarHero .shareWeekButton:hover { background:var(--preview-line); }
+.apple .calendarHero .shareWeekButton { gap:8px; padding:0 20px; border-radius:12px; background:transparent; color:var(--preview-text); border:1px solid var(--preview-text); }
+.apple .calendarHero .shareWeekButton:hover,.apple .startGroup:hover,.apple [data-slot="button"][data-variant="outline"]:hover { background:var(--preview-soft); }
 .apple .calendarHero .peopleRail { margin:24px -20px -8px; }
 .apple .calendarHero .personFilter { color:var(--preview-muted); }
 .apple .calendarHero .personFilter[aria-pressed="true"] small { color:var(--preview-text); }
