@@ -64,13 +64,13 @@ function CalendarScreen() {
   </>;
 }
 
-type ExplorePage = "classes" | "people" | "places";
+type ExplorePage = "people" | "studios";
 const explorePeople = [
   { name: "Erin Clyne", title: "Yoga Teacher + Clinical Sports Massage", initials: "EC", color: "#D8C6B4", specialty: "Yoga" },
   { name: "Freddie Morgan", title: "Strength & mobility coach", initials: "FM", color: "#AFCFEC", specialty: "Strength" },
   { name: "Matt LeGrice", title: "Strength & mobility coach", initials: "ML", color: "#C8C3DB", specialty: "Strength" },
 ];
-const explorePlaces = [
+const exploreStudios = [
   { name: "Asana Soul Practice", type: "Yoga", location: "Jersey City, NJ" },
   { name: "Jane DO Jersey City", type: "Sculpt", location: "Jersey City, NJ" },
   { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ" },
@@ -78,36 +78,34 @@ const explorePlaces = [
 function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
   return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button data-variant="outline" variant="outline" size="sm">Follow</Button></CardContent></Card>;
 }
-function ExplorePlace({ place }: { place: typeof explorePlaces[number] }) {
+function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
   return <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card>;
 }
 function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("");
   const matches = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
-  const shownClasses = classes.filter(item => matches(`${item.name} ${item.place} ${item.coach}`) && (!filter || item.duration === filter));
   const shownPeople = explorePeople.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
-  const shownPlaces = explorePlaces.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.type === filter));
+  const shownStudios = exploreStudios.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.type === filter));
   const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
     <h1 className={styles.pageTitle}>Explore</h1>
-    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People, places, classes" aria-label="Search Explore"/></label></div>
-    {shownClasses.length + shownPeople.length + shownPlaces.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
-    <section><SectionTitle aside={more("classes")}>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>{shownClasses.slice(0,2).map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</section>
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People and studios" aria-label="Search Explore"/></label></div>
+    {shownPeople.length + shownStudios.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
     <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.stack}>{shownPeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
-    <section><SectionTitle aside={more("places")}>Places nearby</SectionTitle><div className={styles.stack}>{shownPlaces.slice(0,2).map(place => <ExplorePlace key={place.name} place={place}/>)}</div></section>
+    <section><SectionTitle aside={more("studios")}>Studios nearby</SectionTitle><div className={styles.stack}>{shownStudios.slice(0,2).map(place => <ExploreStudio key={place.name} place={place}/>)}</div></section>
   </>;
   const title = page.charAt(0).toUpperCase() + page.slice(1);
-  const options = page === "classes" ? ["50 min", "60 min"] : page === "people" ? ["Yoga", "Strength"] : ["Yoga", "Sculpt", "Strength"];
-  const count = page === "classes" ? shownClasses.length : page === "people" ? shownPeople.length : shownPlaces.length;
+  const options = page === "people" ? ["Yoga", "Strength"] : ["Yoga", "Sculpt", "Strength"];
+  const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
     <button className={styles.backButton} onClick={() => onNavigate(null)}><ArrowLeft size={19}/>Back to Explore</button>
     <h1 className={styles.pageTitle}>{title}</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
-    <label className={styles.categoryFilter}>{page === "classes" ? "Duration" : page === "people" ? "Specialty" : "Place type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "classes" ? "durations" : page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
+    <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    {page === "classes" ? shownClasses.map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>) : <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownPlaces.map(place => <ExplorePlace key={place.name} place={place}/>)}</div>}
+    <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>
   </>;
 }
 
