@@ -220,7 +220,7 @@
 /* One edge-to-edge Calendar hero contains the view control and its context. */
 .apple .calendarContent { padding-top:0; }
 .calendarHero { margin:0 -20px 12px; padding:calc(20px + env(safe-area-inset-top)) 20px 24px; background:var(--preview-ground); color:var(--preview-text); }
-.apple .calendarModeTabs { height:44px; max-width:320px; margin:0 auto; padding:4px; background:var(--preview-field); }
+.apple .calendarModeTabs { height:44px; margin:0; padding:4px; background:var(--preview-field); }
 .apple .calendarModeTabs [data-slot="tabs-trigger"] { color:var(--preview-text); font-size:14px; }
 .apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-text); color:#fff; box-shadow:none; }
 .apple .calendarHero .calendarSummary { margin:0; padding:28px 0 4px; border-radius:0; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
