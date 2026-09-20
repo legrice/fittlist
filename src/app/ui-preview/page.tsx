@@ -10,7 +10,7 @@ import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
 import { clearClientMemory } from "@/lib/client-memory";
-import { Activity, ArrowLeft, ArrowUpRight, Bell, CalendarDays, ChevronLeft, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
+import { Activity, ArrowLeft, ArrowUpRight, Bell, House, MessageCircle, CalendarDays, ChevronLeft, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,14 +22,13 @@ import SharePreview from "./share-preview";
 import StudioMap, { type MapStudio } from "./studio-map";
 import styles from "./preview.module.css";
 
-type Screen = "calendar" | "explore" | "groups" | "updates" | "you";
+type Screen = "calendar" | "explore" | "groups" | "you";
 
 const screens: { id: Screen; label: string; icon: typeof CalendarDays }[] = [
-  { id: "calendar", label: "Calendar", icon: CalendarDays },
+  { id: "calendar", label: "Home", icon: House },
   { id: "explore", label: "Explore", icon: Search },
   { id: "groups", label: "Groups", icon: Users },
-  { id: "updates", label: "Updates", icon: Bell },
-  { id: "you", label: "You", icon: UserRound },
+  { id: "you", label: "Profile", icon: UserRound },
 ];
 
 const classes = [
@@ -66,7 +65,7 @@ function CalendarScreen({ onShare }: { onShare: () => void }) {
   return <div ref={swipe.root} {...swipe.handlers} className={styles.swipeCalendar}>
     <Tabs value={view} onValueChange={value => setView(String(value))}>
       <div className={styles.calendarHero}>
-        <TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger><span aria-hidden="true" className={styles.calendarIndicator} style={swipe.indicator}/></TabsList>
+        <div className={styles.homeTopRow}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger><span aria-hidden="true" className={styles.calendarIndicator} style={swipe.indicator}/></TabsList><div className={styles.homeUtilities}><button aria-label="Notifications" onClick={()=>{p.setSampleNotificationsSeen(true);p.open({kind:"notifications"});}}><Bell size={21}/>{!p.live&&!p.sampleNotificationsSeen&&<span aria-label="2 unread notifications">2</span>}</button><button aria-label="Messages" onClick={()=>{p.setSampleMessagesSeen(true);p.open({kind:"messages"});}}><MessageCircle size={21}/>{!p.live&&!p.sampleMessagesSeen&&<span aria-label="1 unread message">1</span>}</button></div></div>
         {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: p.schedule.filter(c=>c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")).length, attending: personalClasses.filter(c=>!(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice"))).length, personal: 0 })}</strong><div className={styles.heroActions}><button type="button" onClick={onShare} className={styles.shareWeekButton} aria-label="Share your week">Share your week<ArrowUpRight size={16} aria-hidden="true"/></button></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} photo={person.photo} size={80}/></span><small>{person.name}</small></button>)}</div>}
       </div>
       <TabsContent value="you" className={styles.calendarYouPanel}>{personalClasses.length===0 && <p className={styles.sectionIntro}>No upcoming classes on your calendar.</p>}{personalClasses.map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<button onClick={() => p.open({kind:"add-class"})} className={styles.addFab} aria-label="Add a class"><Plus size={28}/></button></TabsContent>
@@ -199,18 +198,6 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   </div>;
 }
 
-function UpdatesScreen() {
-  const p=usePrototype();
-  if(p.live) return <><h1 className={styles.pageTitle}>Updates</h1><p className={styles.sectionIntro}>Messages and notifications aren’t connected in this read-only preview yet.</p><Link href="/updates" className={styles.backButton}>Open app updates</Link></>;
-  return <>
-    <h1 className={styles.pageTitle}>Updates</h1>
-    <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList></div>
-      <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><button className={styles.cardLink} onClick={()=>p.open({kind:"person",name:"Erin Clyne"})}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card></button><button className={styles.cardLink} onClick={()=>p.open({kind:"class",name:"sculpt"})}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></button></div></TabsContent>
-      <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><button className={styles.cardLink} onClick={()=>p.open({kind:"conversation",name:"Erin Clyne"})}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></button></TabsContent>
-    </Tabs>
-  </>;
-}
-
 function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value: boolean) => void }) {
   const p=usePrototype();
   const sheet = useRef<HTMLDialogElement>(null);
@@ -316,7 +303,7 @@ function PreviewShell() {
   useEffect(()=>{const enter=()=>animateEntry();window.addEventListener("preview-subpage",enter);return()=>window.removeEventListener("preview-subpage",enter);},[]);
   return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>{p.saveNotice && <div className={styles.saveNotice} role="status"><span>{p.saveNotice}</span><button aria-label="Dismiss schedule notice" onClick={()=>p.setSaveNotice("")}><X size={18}/></button></div>}
     <div className={styles.dataBanner} role="status">{p.dataStatus==="loading"?"Loading your account…":p.live?"Live data · changes stay in this preview":p.dataStatus==="error"?"Couldn’t load account data. Showing samples.":<>Sample data · <Link href="/?join=login&next=/ui-preview">Sign in</Link> to load your account.</>}{p.dataStatus!=="loading" && <button onClick={()=>void p.reloadData()}>{p.live?"Refresh":"Retry"}</button>}</div>
-    <main ref={mainRef} onClickCapture={captureBack} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage} onGroups={id=>{setSelectedGroup(id || null);setScreen("groups");}}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
+    <main ref={mainRef} onClickCapture={captureBack} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage} onGroups={id=>{setSelectedGroup(id || null);setScreen("groups");}}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
     {!takeover && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>}
   </div></div>;
 }

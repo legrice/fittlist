@@ -59,7 +59,7 @@ import ProfileHero from "./profile-hero";
 export default function DetailScreens({route}:{route:Destination}) {
   const p=usePrototype(); const [message,setMessage]=useState("");
   const item=p.schedule.find(c=>c.id===route.name);
-  const title=route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
+  const title=route.kind==="notifications"?"Notifications":route.kind==="messages"?"Messages":route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
   const personAbout=p.live?.people.find(person=>person.name===route.name);
   const studioAbout=p.live?.studios.find(studio=>studio.name===route.name);
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
@@ -67,6 +67,9 @@ export default function DetailScreens({route}:{route:Destination}) {
   return <>
     {route.kind==="person"||route.kind==="studio" ? <ProfileHero type={route.kind==="person"?"Person":"Studio"} name={title} id={route.name} banner={route.kind==="person"?personAbout?.banner:studioAbout?.banner} photo={route.kind==="person"?personAbout?.photo:studioAbout?.photo} onBack={p.back}/> : route.kind==="class" ? <DetailHeader type="Class" name={title} id={route.name} onBack={p.back}/> : <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>}
     <h1 className={styles.pageTitle}>{title}</h1>
+    {(route.kind==="notifications"||route.kind==="messages")&&<>
+      {p.live ? <><p className={styles.sectionIntro}>{title} aren’t connected to this preview yet.</p><a className={styles.backButton} href={route.kind==="notifications"?"/notifications":"/inbox"}>Open {title.toLowerCase()} in the app</a></> : route.kind==="notifications" ? <div className={styles.stack}><Row title="Erin Clyne followed you" detail="Today" onClick={()=>p.open({kind:"person",name:"Erin Clyne"})}/><Row title="Freddie added a class" detail="Gals who like to move · Yesterday" onClick={()=>p.open({kind:"class",name:"sculpt"})}/></div> : <div className={styles.stack}><Row title="Erin Clyne" detail="See you at Asana Lab!" onClick={()=>p.open({kind:"conversation",name:"Erin Clyne"})}/></div>}
+    </>}
     {route.kind==="membership" && <Membership reason={route.name}/>}
     {route.kind==="edit-profile" && <EditProfile/>}
     {(route.kind==="add-class"||route.kind==="edit-class") && <ClassEditor route={route}/>}

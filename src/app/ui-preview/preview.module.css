@@ -673,3 +673,9 @@
 .apple .calendarHero:has(.shareWeekButton) { padding-bottom:28px; }
 .apple .calendarHero .calendarSummary { gap:16px; }
 .apple .calendarHero:has(.shareWeekButton) { padding-bottom:36px; }
+
+.apple .dock { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.homeTopRow { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.homeUtilities { display:flex; gap:8px; }
+.homeUtilities button { position:relative; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--preview-text); }
+.homeUtilities button > span { position:absolute; top:0; right:0; display:grid; place-items:center; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 10px/1 var(--preview-font); }
