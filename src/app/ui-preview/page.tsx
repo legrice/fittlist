@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowLeft, Bell, CalendarDays, ChevronRight, Clock, GlobeLock, LockKeyhole, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
+import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -168,9 +168,43 @@ function UpdatesScreen() {
 }
 
 function YouScreen() {
-  return <>
-    <h1 className={styles.pageTitle}>You</h1>
-    <Card className={styles.profileCard}><CardContent><Face initials="ML" color="#C8C3DB" size={68}/><div><h2>Matt LeGrice</h2><span>@mattlegrice</span><p>Strength & mobility coach · Jersey City, NJ</p></div><Button data-variant="outline" variant="outline">Edit profile</Button></CardContent></Card>
+  const sheet = useRef<HTMLDialogElement>(null);
+  const [qr, setQr] = useState("");
+  const [copyStatus, setCopyStatus] = useState("");
+  const profileUrl = "https://fittlist.co/mattlegrice";
+  const openShare = async () => {
+    setCopyStatus("");
+    sheet.current?.showModal();
+    try {
+      const QRCode = (await import("qrcode")).default;
+      setQr(await QRCode.toDataURL(profileUrl, { width: 640, margin: 4, errorCorrectionLevel: "M" }));
+    } catch { setCopyStatus("QR code unavailable. You can still copy your link below."); }
+  };
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(profileUrl); setCopyStatus("Profile link copied."); }
+    catch { setCopyStatus("Select the link below to copy it manually."); }
+  };
+  return <div className={styles.youPage}>
+    <header className={styles.profileHeader}>
+      <Face initials="ML" color="#C8C3DB" size={80}/>
+      <h1 className={styles.pageTitle}>Matt LeGrice</h1>
+      <div className={styles.profileActions}>
+        <Button data-variant="outline" variant="outline" onClick={openShare} aria-haspopup="dialog">@mattlegrice<ChevronDown size={16}/></Button>
+        <Button data-variant="outline" variant="outline">Edit profile</Button>
+      </div>
+      <p>Strength & mobility coach · Jersey City, NJ</p>
+    </header>
+    <dialog ref={sheet} className={styles.profileSheet} aria-labelledby="profile-share-title" onClick={event => { if (event.target === event.currentTarget) sheet.current?.close(); }}>
+      <div className={styles.sheetBody}>
+        <button className={styles.sheetClose} aria-label="Close profile sharing" onClick={() => sheet.current?.close()}><X size={22}/></button>
+        <h2 id="profile-share-title">Share your profile</h2>
+        <p>Scan to find @mattlegrice on FittList.</p>
+        {qr ? <img className={styles.profileQr} src={qr} alt="QR code linking to Matt LeGrice’s FittList profile"/> : <p>Preparing your QR code…</p>}
+        <button className={styles.copyProfile} onClick={copyLink}><Copy size={18}/>Copy profile link</button>
+        <input aria-label="Profile link" value={profileUrl} readOnly onFocus={event => event.target.select()}/>
+        <p className={styles.copyStatus} role="status">{copyStatus}</p>
+      </div>
+    </dialog>
     <SectionTitle>Your calendars</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><CalendarDays size={20}/><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Users size={20}/><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card></div>
     <SectionTitle>Notifications</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Bell size={20}/><div><strong>Notifications</strong><span>Follows, saves, and account activity</span></div><ChevronRight size={18}/></CardContent></Card>
     {[
@@ -196,7 +230,7 @@ function YouScreen() {
         </CardContent></Card>
       )}</div>
     </section>)}
-  </>;
+  </div>;
 }
 
 export default function UiPreview() {
