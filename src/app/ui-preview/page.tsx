@@ -219,7 +219,6 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
         <Button data-variant="outline" variant="outline" onClick={()=>p.open({kind:"edit-profile"})}>Edit profile</Button>
       </div>
       <p>{p.profile.bio} · {p.profile.location}</p>
-      <button className={styles.profileProLink} onClick={()=>p.open({kind:"membership"})}>{p.pro ? (p.membershipPlan==="studio"?"Studio":"Pro membership") : "Go Pro"}<ChevronRight size={15}/></button>
     </header>
     <dialog ref={sheet} className={styles.profileSheet} aria-labelledby="profile-share-title" onClick={event => { if (event.target === event.currentTarget) sheet.current?.close(); }}>
       <div className={styles.sheetBody}>
