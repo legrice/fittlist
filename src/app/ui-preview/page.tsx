@@ -150,6 +150,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const [seenUpdates,setSeenUpdates]=useState<string[]>([]);
   const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("schedule");
   useEffect(()=>{setGroupView("schedule");},[selected]);
+  useEffect(()=>{window.dispatchEvent(new Event("preview-subpage"));},[groupView]);
   const categories=["All groups","New groups","Your groups","Fitness","Wellness","Run club"];
   const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
   const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All groups"||(groupCategory==="New groups"?!joined.includes(g.id):groupCategory==="Your groups"?joined.includes(g.id):categoryOf(g.category)===groupCategory)));
@@ -285,6 +286,20 @@ function PreviewShell() {
   const p=usePrototype();
   const detail=p.stack.at(-1);
   const mainRef=useRef<HTMLElement>(null);
+  const replayBack=useRef(false);
+  const goingBack=useRef(false);
+  const motionBusy=useRef(false);
+  const animateEntry=()=>{if(goingBack.current){goingBack.current=false;return;}if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;mainRef.current?.animate([{transform:"translateX(100%)"},{transform:"translateX(0)"}],{duration:240,easing:"cubic-bezier(.2,.8,.2,1)"});};
+  const captureBack=(event:React.MouseEvent<HTMLElement>)=>{
+    const button=(event.target as HTMLElement).closest("button");
+    if(!button||!/^back(?:\s|$)/i.test(button.getAttribute("aria-label")||button.textContent?.trim()||""))return;
+    if(replayBack.current){replayBack.current=false;return;}
+    if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+    event.preventDefault();event.stopPropagation();if(motionBusy.current)return;
+    motionBusy.current=true;goingBack.current=true;
+    const animation=mainRef.current?.animate([{transform:"translateX(0)"},{transform:"translateX(100%)"}],{duration:200,easing:"ease-in",fill:"forwards"});
+    void (animation?.finished||Promise.resolve()).then(()=>{replayBack.current=true;button.click();requestAnimationFrame(()=>{animation?.cancel();motionBusy.current=false;});}).catch(()=>{motionBusy.current=false;});
+  };
 
   const [screen,setScreen]=useState<Screen>("calendar");
   const [sharing, setSharing] = useState(false);
@@ -296,10 +311,11 @@ function PreviewShell() {
   const [selectedGroup,setSelectedGroup]=useState<string|null>(null);
   useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("detail")==="group"&&params.get("name")){setScreen("groups");setSelectedGroup(params.get("name"));}},[]);
   const takeover=!!detail || sharing || !!explorePage || !!selectedGroup;
-  useEffect(()=>{mainRef.current?.scrollTo({top:0});},[detail,screen,explorePage,sharing,selectedGroup]);
+  useEffect(()=>{mainRef.current?.scrollTo({top:0});if(takeover)animateEntry();else goingBack.current=false;},[detail,screen,explorePage,sharing,selectedGroup]);
+  useEffect(()=>{const enter=()=>animateEntry();window.addEventListener("preview-subpage",enter);return()=>window.removeEventListener("preview-subpage",enter);},[]);
   return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>{p.saveNotice && <div className={styles.saveNotice} role="status"><span>{p.saveNotice}</span><button aria-label="Dismiss schedule notice" onClick={()=>p.setSaveNotice("")}><X size={18}/></button></div>}
     <div className={styles.dataBanner} role="status">{p.dataStatus==="loading"?"Loading your account…":p.live?"Live data · changes stay in this preview":p.dataStatus==="error"?"Couldn’t load account data. Showing samples.":<>Sample data · <Link href="/?join=login&next=/ui-preview">Sign in</Link> to load your account.</>}{p.dataStatus!=="loading" && <button onClick={()=>void p.reloadData()}>{p.live?"Refresh":"Retry"}</button>}</div>
-    <main ref={mainRef} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage} onGroups={id=>{setSelectedGroup(id || null);setScreen("groups");}}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
+    <main ref={mainRef} onClickCapture={captureBack} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage} onGroups={id=>{setSelectedGroup(id || null);setScreen("groups");}}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
     {!takeover && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>}
   </div></div>;
 }

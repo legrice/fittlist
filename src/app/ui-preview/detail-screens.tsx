@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowLeft, ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Share2, Clock, Bookmark, Check } from "lucide-react";
+import { ArrowLeft, ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Clock, Bookmark, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePrototype, dateLabel, type Destination, type PreviewClass } from "./prototype-state";
 import StudioWorkspace from "./studio-workspace";
@@ -57,7 +57,6 @@ function Settings({name}:{name:string}) {
 import DetailHeader from "./detail-header";
 export default function DetailScreens({route}:{route:Destination}) {
   const p=usePrototype(); const [message,setMessage]=useState("");
-  const [shareStatus,setShareStatus]=useState("");
   const item=p.schedule.find(c=>c.id===route.name);
   const title=route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
   const personAbout=p.live?.people.find(person=>person.name===route.name);
@@ -82,11 +81,8 @@ export default function DetailScreens({route}:{route:Destination}) {
     </>}
     {route.kind==="class" && item && <>
       <div className={styles.classPageMeta}><span><CalendarDays size={21}/>{dateLabel(item.date)}</span><span><Clock size={21}/>{classTimeRange(item)}</span></div>
-      <button className={styles.classShareLink} onClick={async()=>{const url=new URL(window.location.href);url.searchParams.set("class",item.id);try{await navigator.clipboard.writeText(url.href);setShareStatus("Class link copied.");}catch{setShareStatus(url.href);}}}><Share2 size={18}/>Copy class link</button>
-      <p role="status" className={styles.sectionIntro}>{shareStatus}</p>
+      <div className={styles.classIdentityRows}>{[{kind:"person" as const,name:item.coach,photo:item.photo,label:"Coach"},{kind:"studio" as const,name:item.place,photo:p.live?.studios.find(studio=>studio.name===item.place)?.photo,label:"Studio"}].map(entity=><button key={entity.kind} onClick={()=>p.open({kind:entity.kind,name:entity.name})}>{entity.photo?<img src={entity.photo} alt=""/>:<span className={styles.classIdentityAvatar}>{entity.name.split(" ").map(word=>word[0]).slice(0,2).join("")}</span>}<span><small>{entity.label}</small><strong>{entity.name}</strong></span><ChevronRight size={18}/></button>)}</div>
       <section className={styles.classPageSection}><Heading>About this class</Heading><p>{p.live ? item.description || "No description added." : "Move together in a welcoming, instructor-led session. Bring water and arrive a few minutes early."}</p></section>
-      <section className={styles.classPageSection}><Heading>Where</Heading><Row title={item.place} detail="View studio and upcoming classes" onClick={()=>p.open({kind:"studio",name:item.place})}/></section>
-      <section className={styles.classPageSection}><Heading>Instructor</Heading><Row title={item.coach} detail={(item.own ?? (item.coach===p.profile.name||item.coach==="Matt LeGrice"))?"You’re teaching this class":"View coach profile"} onClick={()=>p.open({kind:"person",name:item.coach})}/></section>
       <div className={styles.classPageFooter}>{(item.own ?? (item.coach===p.profile.name||item.coach==="Matt LeGrice")) ? <button onClick={()=>p.open({kind:"edit-class",name:item.id})}>Edit class</button> : <button aria-pressed={p.saved.includes(item.id)} onClick={()=>p.toggleSaved(item)}>{p.saved.includes(item.id)?<Check size={20}/>:<Bookmark size={20}/>} {p.saved.includes(item.id)?"Saved to your calendar":"Save to your calendar"}</button>}</div>
     </>}
     {route.kind==="class" && !item && <p className={styles.sectionIntro}>This class is not available in the loaded calendar. Go back to explore the calendar.</p>}
