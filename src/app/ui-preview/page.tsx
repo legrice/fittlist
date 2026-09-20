@@ -147,6 +147,8 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const [groupQuery,setGroupQuery]=useState("");
   const [groupCategory,setGroupCategory]=useState("All groups");
   const [browsing,setBrowsing]=useState(false);
+  const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("schedule");
+  useEffect(()=>{setGroupView("schedule");},[selected]);
   const categories=["All groups","New groups","Your groups","Fitness","Wellness","Run club"];
   const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
   const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All groups"||(groupCategory==="New groups"?!joined.includes(g.id):groupCategory==="Your groups"?joined.includes(g.id):categoryOf(g.category)===groupCategory)));
@@ -175,15 +177,20 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
         <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
         <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only. Changes last while you’re on this page.</p>
       </form>
+    </> : group && groupView!=="schedule" ? <>
+      <button className={styles.backButton} onClick={()=>setGroupView("schedule")}><ArrowLeft size={19}/>Back to {group.name}</button>
+      <h1 className={styles.pageTitle}>{groupView==="members"?"Members":"Updates"}</h1>
+      <p className={styles.sectionIntro}>{group.name}</p>
+      {groupView==="members" ? <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div> : <p className={styles.sectionIntro}>{p.live?"Group updates aren’t connected in this preview yet.":"No updates yet."}</p>}
     </> : group ? <>
       {browsing ? <button className={styles.backButton} onClick={()=>setSelected("browse")}><ArrowLeft size={19}/>Back to Explore groups</button> : back}
       {group.image && <img className={styles.groupDetailPhoto} src={group.image} alt=""/>}
       <h1 className={styles.pageTitle}>{group.name}</h1><p className={styles.sectionIntro}>{group.description}</p>
       <div className={styles.groupDetailMeta}><span>{group.category}</span>{joined.includes(group.id) ? <Badge variant="secondary">Joined</Badge> : <Button onClick={() => { setJoined(ids => [...ids, group.id]); setGroups(items => items.map(item => item.id === group.id ? { ...item, members: [...item.members, p.profile.name] } : item)); }}>Join group</Button>}</div>
-      <SectionTitle aside={<Badge variant="secondary">{group.members.length}</Badge>}>Who’s in the group</SectionTitle>
-      <div className={styles.memberGrid}>{group.members.map((member,index) => <div key={member}><Face initials={member.split(" ").map(part => part[0]).join("")} color={["#D8C6B4", "#AFCFEC", "#C8C3DB"][index % 3]} size={44}/><span>{member}</span></div>)}</div>
+      <button className={styles.groupMembersSummary} onClick={()=>setGroupView("members")} aria-label={`View ${group.members.length} group members`}><span className={styles.groupAvatarStack}>{group.members.slice(0,4).map((member,index)=><Face key={member} initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={36}/>)}</span><strong>{group.members.length} members</strong><ChevronRight size={18}/></button>
+      <button className={styles.groupUpdatesLink} onClick={()=>setGroupView("updates")}><strong>Updates</strong><ChevronRight size={18}/></button>
       <SectionTitle>Upcoming classes</SectionTitle>
-      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "Group class plans aren’t connected in this preview yet." : "No classes planned yet. Check back for the next group plan."}</p>}
+      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3 className={styles.groupDateTitle}>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "Group class plans aren’t connected in this preview yet." : "No classes planned yet. Check back for the next group plan."}</p>}
     </> : <>
       <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={() => setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
       <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
