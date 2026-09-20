@@ -151,6 +151,7 @@
   --preview-surface:#fff;
   --preview-on-accent:#fff;
   --preview-radius:16px;
+  --preview-title-size:36px;
   --primary:var(--preview-accent); --primary-foreground:var(--preview-on-accent); --secondary:var(--preview-soft); --secondary-foreground:var(--preview-on-soft);
 }
 .apple .phone { background:var(--preview-ground); color:var(--preview-text); }
@@ -224,7 +225,7 @@
 .apple .calendarModeTabs [data-slot="tabs-trigger"] { color:var(--preview-text); font-size:14px; }
 .apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-text); color:#fff; box-shadow:none; }
 .apple .calendarHero .calendarSummary { margin:0; padding:28px 0 4px; border-radius:0; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
-.apple .calendarHero .calendarSummary strong { max-width:none; font-size:36px; line-height:1.08; letter-spacing:-.035em; }
+.apple .calendarHero .calendarSummary strong { max-width:none; font-size:var(--preview-title-size); line-height:1.08; letter-spacing:-.035em; }
 .apple .calendarHero .heroActions { justify-content:flex-start; }
 .apple .calendarHero .shareWeekButton { gap:8px; padding:0 20px; border-radius:12px; background:var(--preview-soft); color:var(--preview-text); border:0; }
 .apple .calendarHero .shareWeekButton:hover { background:var(--preview-line); }
@@ -234,3 +235,5 @@
 .apple .calendarHero .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-highlight); }
 .apple .calendarHero :is(button,a):focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; }
 .apple .addFab { background:var(--preview-highlight); color:var(--preview-text); }
+
+.apple .pageTitle { margin:0 0 24px; font-family:var(--preview-font); font-size:var(--preview-title-size); font-weight:600; line-height:1.08; letter-spacing:-.035em; color:var(--preview-text); }

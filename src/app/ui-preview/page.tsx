@@ -56,7 +56,7 @@ function CalendarScreen() {
     <Tabs value={view} onValueChange={value => setView(String(value))}>
       <div className={styles.calendarHero}>
         <TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList>
-        {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: 1, attending: 2, personal: 0 })}</strong><div className={styles.heroActions}><Link href="/share" className={styles.shareWeekButton} aria-label="Share your week"><Share2 size={18} aria-hidden="true"/>Share</Link><Link href="/calendar?add=1" className={styles.shareWeekButton} aria-label="Add to your week"><Plus size={18} aria-hidden="true"/>Add</Link></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div>}
+        {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: 1, attending: 2, personal: 0 })}</strong><div className={styles.heroActions}><Link href="/share" className={styles.shareWeekButton} aria-label="Share your week"><Share2 size={18} aria-hidden="true"/>Share</Link></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div>}
       </div>
       <TabsContent value="you" className={styles.calendarYouPanel}>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<Link href="/calendar?add=1" className={styles.addFab} aria-label="Add a class"><Plus size={28}/></Link></TabsContent>
       <TabsContent value="following"><SectionTitle aside={<Badge variant="secondary">{selectedPerson === "All" ? "3 classes" : "1 class"}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{classes.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
@@ -90,6 +90,7 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   const shownPlaces = explorePlaces.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.type === filter));
   const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
+    <h1 className={styles.pageTitle}>Explore</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People, places, classes" aria-label="Search Explore"/></label></div>
     {shownClasses.length + shownPeople.length + shownPlaces.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
     <section><SectionTitle aside={more("classes")}>Find your next class</SectionTitle><p className={styles.sectionIntro}>A few ways to move near Jersey City.</p>{shownClasses.slice(0,2).map(item => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</section>
@@ -101,6 +102,7 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   const count = page === "classes" ? shownClasses.length : page === "people" ? shownPeople.length : shownPlaces.length;
   return <>
     <button className={styles.backButton} onClick={() => onNavigate(null)}><ArrowLeft size={19}/>Back to Explore</button>
+    <h1 className={styles.pageTitle}>{title}</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <label className={styles.categoryFilter}>{page === "classes" ? "Duration" : page === "people" ? "Specialty" : "Place type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "classes" ? "durations" : page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
@@ -127,7 +129,7 @@ function GroupsScreen() {
   const ownGroups = groups.filter(item => joined.includes(item.id));
   return <div ref={top}>
     {selected === "create" ? <>
-      {back}<SectionTitle>Start a group</SectionTitle><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
+      {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
       <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: ["Matt LeGrice"], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
         <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
         <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
@@ -136,13 +138,14 @@ function GroupsScreen() {
     </> : group ? <>
       {back}
       {group.image && <img className={styles.groupDetailPhoto} src={group.image} alt=""/>}
-      <SectionTitle>{group.name}</SectionTitle><p className={styles.sectionIntro}>{group.description}</p>
+      <h1 className={styles.pageTitle}>{group.name}</h1><p className={styles.sectionIntro}>{group.description}</p>
       <div className={styles.groupDetailMeta}><span>{group.category} · Jersey City</span>{joined.includes(group.id) ? <Badge variant="secondary">Joined</Badge> : <Button onClick={() => { setJoined(ids => [...ids, group.id]); setGroups(items => items.map(item => item.id === group.id ? { ...item, members: [...item.members, "Matt LeGrice"] } : item)); }}>Join group</Button>}</div>
       <SectionTitle aside={<Badge variant="secondary">{group.members.length}</Badge>}>Who’s in the group</SectionTitle>
       <div className={styles.memberGrid}>{group.members.map((member,index) => <div key={member}><Face initials={member.split(" ").map(part => part[0]).join("")} color={["#D8C6B4", "#AFCFEC", "#C8C3DB"][index % 3]} size={44}/><span>{member}</span></div>)}</div>
       <SectionTitle>Upcoming classes</SectionTitle>
       {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{classes[index].day}</h3><ClassCard item={classes[index]}/></section>) : <p className={styles.sectionIntro}>No classes planned yet. Check back for the next group plan.</p>}
     </> : <>
+      <h1 className={styles.pageTitle}>Groups</h1>
       <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
       <div className={styles.stack}>{ownGroups.map(item => <button key={item.id} className={styles.ownedGroup} onClick={() => setSelected(item.id)}>
         {item.image ? <img src={item.image} alt=""/> : <span className={styles.groupPlaceholder}><Users size={28}/></span>}<span><strong>{item.name}</strong><small>{item.members.length} members</small></span><ChevronRight size={18}/>
@@ -158,6 +161,7 @@ function GroupsScreen() {
 
 function UpdatesScreen() {
   return <>
+    <h1 className={styles.pageTitle}>Updates</h1>
     <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList></div>
       <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></div></TabsContent>
       <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></TabsContent>
@@ -167,6 +171,7 @@ function UpdatesScreen() {
 
 function YouScreen() {
   return <>
+    <h1 className={styles.pageTitle}>You</h1>
     <Card className={styles.profileCard}><CardContent><Face initials="ML" color="#C8C3DB" size={68}/><div><h2>Matt LeGrice</h2><span>@mattlegrice</span><p>Strength & mobility coach · Jersey City, NJ</p></div><Button data-variant="outline" variant="outline">Edit profile</Button></CardContent></Card>
     <SectionTitle>Your calendars</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><CalendarDays size={20}/><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Users size={20}/><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card></div>
     <SectionTitle>Notifications</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Bell size={20}/><div><strong>Notifications</strong><span>Follows, saves, and account activity</span></div><ChevronRight size={18}/></CardContent></Card>
