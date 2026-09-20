@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "@/components/PhosphorIcons";
 import { usePrototype } from "./prototype-state";
 import styles from "./preview.module.css";
 const money=(cents:number)=>`$${(cents/100).toFixed(2)}`;

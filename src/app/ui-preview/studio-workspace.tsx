@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
+import { ArrowLeft, ChevronRight, Plus } from "@/components/PhosphorIcons";
 import { usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { loadPreviewStudio } from "./studio-data";
 import styles from "./preview.module.css";

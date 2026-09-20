@@ -1,68 +1,22 @@
-// The icon map, checked against the package, without a browser.
-//
-// `Icon.tsx` maps ~65 Material-era names onto Lucide components. Two things
-// can rot here and neither is visible in a diff: a name pointing at a
-// component that was renamed out of the package, and two names claiming the
-// same key. Both fail silently, because an unknown name renders a plain
-// circle by design.
-//
-//   node scripts/icon-check.mjs
+// Validate the shared Phosphor Fill registry and every literal icon call site.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-
-const src = readFileSync("src/components/Icon.tsx", "utf8");
 const fail = (m) => { throw new Error("ICON FAIL: " + m); };
-
-const grab = (start) => {
-  const i = src.indexOf(start);
-  if (i < 0) fail("could not find " + start);
-  return src.slice(i, src.indexOf("\n};", i));
-};
-
-// What the file imports from lucide-react, and what it draws by hand. A map
-// entry has to point at one or the other; a component that is neither is a
-// typo that ships as a blank circle.
-const importBlock = src.match(/import \{([\s\S]*?)\} from "lucide-react";/);
-if (!importBlock) fail("could not find the lucide-react import");
-const imported = new Set(importBlock[1].split(",").map((s) => s.trim()).filter(Boolean));
-const handDrawn = new Set([...src.matchAll(/^function ([A-Za-z]+)\(/gm)].map(([, n]) => n));
-// The Material Symbols come in as `const MatX = mat("...")`: drawn here too,
-// just through the factory rather than a function declaration.
-for (const [, n] of src.matchAll(/^const ([A-Za-z]+) = mat\(/gm)) handDrawn.add(n);
-
-// And the imports have to be real: lucide-react re-exports every icon from
-// its ESM index, so a component missing from there was renamed out of the
-// package and would fail the build anyway, but this says which name did it.
-const lucideIndex = readFileSync("node_modules/lucide-react/dist/lucide-react.d.ts", "utf8");
-for (const comp of imported)
-  if (!new RegExp(`\\b${comp}\\b`).test(lucideIndex))
-    fail(`${comp} is imported but not in lucide-react`);
-
-// The Material sweep split the file in two: MAT holds a path string per
-// name (the whole set), and ICONS is the escape hatch for the survivors
-// (search, by Matt's call, plus anything hand-drawn that returns).
-const icons = [
-  ...grab("const ICONS: Record<string,").matchAll(/^\s{2}([a-z_0-9]+):\s*([A-Za-z][A-Za-z0-9]*),/gm),
-].map(([, name, comp]) => ({ name, comp }));
-const matNames = [...grab("const MAT: Record<string, string>").matchAll(/^\s{2}([a-z_0-9]+):$/gm)].map(
-  ([, n]) => n,
-);
-
-if (matNames.length + icons.length < 60)
-  fail("expected the whole map, parsed " + (matNames.length + icons.length));
-
+const src = readFileSync("src/components/Icon.tsx", "utf8");
+const adapter = readFileSync("src/components/PhosphorIcons.tsx", "utf8");
+const exports = new Set([...adapter.matchAll(/export const (\w+) = filled\(/g)].map(([, n]) => n));
+const entries = [...src.matchAll(/^  (\w+): (\w+),/gm)];
 const seen = new Set();
-for (const name of matNames) {
-  if (seen.has(name)) fail("two entries claim the name " + name);
+if (entries.length < 60) fail("incomplete semantic icon registry");
+for (const [, name, component] of entries) {
+  if (seen.has(name)) fail("duplicate icon " + name);
+  if (!exports.has(component)) fail("missing Phosphor component " + component);
   seen.add(name);
 }
-for (const { name, comp } of icons) {
-  if (seen.has(name)) fail("two entries claim the name " + name);
-  seen.add(name);
-  if (!imported.has(comp) && !handDrawn.has(comp))
-    fail(`${name} maps to ${comp}, which is neither imported nor drawn here`);
+for (const [, name] of adapter.matchAll(/from "@phosphor-icons\/react\/dist\/ssr\/(\w+)"/g)) {
+  readFileSync("node_modules/@phosphor-icons/react/dist/ssr/" + name + ".d.ts");
 }
-
+if (!adapter.includes('weight="fill"')) fail("shared icons must use Fill");
 // Every call site that names a glyph as a literal, so an `<Icon name="..." />`
 // that was never mapped is caught here rather than shipping as a blank circle.
 // An unknown name falls back to a plain circle on purpose (a typo should not
@@ -79,10 +33,10 @@ const walk = (dir) =>
 const missing = new Set();
 for (const f of walk("src").filter((f) => /\.tsx?$/.test(f))) {
   const body = readFileSync(f, "utf8");
+  if (/from ["']lucide-react["']/.test(body)) fail("legacy icon import in " + f);
   for (const [, n] of body.matchAll(/<Icon\s[^>]*?name="([a-z_0-9]+)"/g))
     if (!seen.has(n)) missing.add(`${n} (${f})`);
 }
 if (missing.size) fail("these names render a blank circle: " + [...missing].join(", "));
 
-console.log(`${matNames.length} Material paths + ${icons.length} exceptions, all present`);
-console.log("ICONS OK");
+console.log(`ICONS OK: ${seen.size} semantic icons use Phosphor Fill`);

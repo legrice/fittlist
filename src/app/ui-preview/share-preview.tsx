@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/PhosphorIcons";
 import { ShareHubScreen, type HubItem } from "@/components/ShareHubScreen";
 import { usePrototype, timeLabel } from "./prototype-state";
 import styles from "./preview.module.css";

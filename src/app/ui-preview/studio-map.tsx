@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { List } from "lucide-react";
+import { List } from "@/components/PhosphorIcons";
 import { usePrototype } from "./prototype-state";
 import styles from "./preview.module.css";
 

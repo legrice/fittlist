@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowLeft, ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Clock, Bookmark, Check } from "lucide-react";
+import { ArrowLeft, ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Clock, Bookmark, Check } from "@/components/PhosphorIcons";
 import { Button } from "@/components/ui/button";
 import { usePrototype, dateLabel, type Destination, type PreviewClass } from "./prototype-state";
 import StudioWorkspace from "./studio-workspace";
