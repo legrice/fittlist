@@ -263,6 +263,9 @@ function prepareExportFile(url: string, fileName: string, signal?: AbortSignal):
 
 export function ShareHubScreen({
   previewMode = false,
+  onPreviewCanExport,
+  onPreviewExported,
+  onPreviewCanSaveLook,
   onPreviewAdd,
   onPreviewEdit,
   embedded = false,
@@ -286,6 +289,9 @@ export function ShareHubScreen({
   onRefreshWeek,
 }: {
   previewMode?: boolean;
+  onPreviewCanExport?: (style:string) => boolean;
+  onPreviewExported?: () => void;
+  onPreviewCanSaveLook?: (count:number) => boolean;
   onPreviewAdd?: () => void;
   onPreviewEdit?: (key:string) => void;
   /** Render inside another surface (the calendar's share sheet). The sheet
@@ -1174,6 +1180,7 @@ export function ShareHubScreen({
   const shareImage = async () => {
     if (previewMode) {
       if (sharingRef.current || backgroundBusy) return;
+      if(onPreviewCanExport && !onPreviewCanExport(styleId)) return;
       sharingRef.current=true; setSharing(true);
       try {
         const canvas=document.querySelector<HTMLElement>(".preview-share-editor .shlive-canvas > div");
@@ -1185,6 +1192,7 @@ export function ShareHubScreen({
         const file=new File([blob],fileName,{type:"image/png"});
         if(navigator.canShare?.({files:[file]})) await navigator.share({files:[file],title:"My FittList week"});
         else downloadFile(blob,fileName);
+        onPreviewExported?.();
       } catch(error) { if((error as Error).name!=="AbortError") toast("Couldn't export the image. Try again."); }
       finally {sharingRef.current=false;setSharing(false);}
       return;
@@ -1305,6 +1313,7 @@ export function ShareHubScreen({
 
   const saveNamedLook = async () => {
     if (designSaving || backgroundBusy || !lookName.trim()) return;
+    if(previewMode && onPreviewCanSaveLook && !onPreviewCanSaveLook(savedLooks.length)) { setPick(null); return; }
     setDesignSaving(true);
     try {
       const look={id:`preview-${Date.now()}`,name:lookName,design:currentDesign};
@@ -1805,7 +1814,7 @@ export function ShareHubScreen({
                         <span />
                       </span>
                       <span className="setrow-txt">
-                        <span className="t">{style.label}</span>
+                        <span className="t">{style.label}{previewMode && id !== "plain" ? " · Pro" : ""}</span>
                         <span className="s">{style.description}</span>
                       </span>
                       {on && (

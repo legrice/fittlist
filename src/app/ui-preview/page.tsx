@@ -235,6 +235,9 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
       {[{name:"Personal calendar",initials:"ML",detail:"Classes, shifts, and saved plans",photo:p.profile.photo},...(p.live ? p.live.managed : [{name:"Ironbound Performance Athletics",initials:"IP",detail:"Studio calendar · You’re an admin",photo:null},{name:"Gals who like to move",initials:"GM",detail:"Group calendar · 4 members",photo:null}])].map(calendar=><button key={calendar.name} className={styles.cardLink} onClick={()=>p.open({kind:"manage",name:calendar.name})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials={calendar.initials} photo={calendar.photo} color="#C8C3DB" size={40}/></span><div><strong>{calendar.name}</strong><span>{calendar.detail}</span></div><ChevronRight size={18}/></CardContent></Card></button>)}
     </div></section>
     {[
+      { title: "Membership", rows: [
+        { icon: Activity, title: "FittList Pro", detail: p.pro ? "Pro preview · Unlimited exports" : `Free · ${Math.max(0,10-p.exportsUsed)} of 10 image exports left` },
+      ] },
       { title: "Tools", rows: [
         { icon: Activity, title: "Insights", detail: "Your teaching, classes, and sharing" },
         { icon: CalendarDays, title: "Calendar & sync", detail: "Connect Google, Apple, or Outlook" },
@@ -251,7 +254,7 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
     ].map((section) => <section key={section.title}>
       <SectionTitle>{section.title}</SectionTitle>
       <div className={styles.stack}>{section.rows.map(({ icon: Icon, title, detail }) =>
-        <button key={title} className={styles.cardLink} onClick={()=>p.open({kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
+        <button key={title} className={styles.cardLink} onClick={()=>p.open(title==="FittList Pro"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
           <span className={styles.settingsIcon}><Icon size={22}/></span>
           <div><strong>{title}</strong><span>{detail}</span></div>
           <ChevronRight size={18}/>

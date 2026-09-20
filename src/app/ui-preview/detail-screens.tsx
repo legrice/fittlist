@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Share2, Clock, Bookmark, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePrototype, dateLabel, type Destination, type PreviewClass } from "./prototype-state";
+import Membership from "./membership";
 import PreviewClassCard, { classTimeRange } from "./class-card";
 import styles from "./preview.module.css";
 
@@ -44,6 +45,7 @@ function Settings({name}:{name:string}) {
   if(name==="Set yourself as away") return <form className={styles.detailForm} onSubmit={e=>{e.preventDefault();p.setAway(away);setStatus("Away settings saved for this preview.");}}><div className={styles.formColumns}><label>From<input type="date" required value={away.start} onChange={e=>setAway({...away,start:e.target.value})}/></label><label>Until<input type="date" required min={away.start} value={away.end} onChange={e=>setAway({...away,end:e.target.value})}/></label></div><label>Profile note<input value={away.note} onChange={e=>setAway({...away,note:e.target.value})}/></label><label>Automatic reply<textarea aria-label="Automatic reply" value={away.reply} onChange={e=>setAway({...away,reply:e.target.value})}/></label><Button type="submit">Save away dates</Button><p role="status">{status}</p></form>;
   if(name==="Account & preferences") return <form className={styles.detailForm} onSubmit={e=>{e.preventDefault();p.setProfile(v=>({...v,email}));setStatus("Account preferences saved for this preview.");}}><label>Email<input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Time zone<select value={p.timezone} onChange={e=>p.setTimezone(e.target.value)}><option>America/New_York</option><option>America/Chicago</option><option>America/Los_Angeles</option></select></label><Button type="submit">Save preferences</Button><p role="status">{status}</p></form>;
   if(name==="Calendar & sync") return <><p className={styles.sectionIntro}>Try connecting a calendar. No external account is linked in this preview.</p>{["Google Calendar","Apple Calendar","Outlook"].map(provider=><div className={styles.preferenceRow} key={provider}><span>{provider}</span><Button {...secondary} onClick={()=>p.setConnections(v=>v.includes(provider)?v.filter(x=>x!==provider):[...v,provider])}>{p.connections.includes(provider)?"Disconnect":"Connect"}</Button></div>)}</>;
+  if(name==="Insights" && !p.pro) return <><Heading>Your activity</Heading><p className={styles.sectionIntro}>{p.schedule.filter(c=>c.own).length} upcoming teaching classes.</p><Row title="Go deeper with Pro" detail="Explore trends, popular classes, and profile engagement. Preview the proposed plan." onClick={()=>p.open({kind:"membership",name:"See what’s connecting with your community."})}/></>;
   if(p.live && ["Insights","People & access","Admin dashboard"].includes(name)) return <p className={styles.sectionIntro}>These tools aren’t connected to live data in this preview yet.</p>;
   if(name==="Insights") return <><p className={styles.sectionIntro}>This week · sample activity</p><div className={styles.metricGrid}>{[["Classes",p.schedule.length],["Profile views",128],["Shares",24],["New followers",8]].map(([label,value])=><div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div><Heading>Your calendar activity</Heading><Schedule items={p.schedule}/></>;
   if(name==="Admin dashboard") return <><p className={styles.sectionIntro}>Preview management tools</p><Row title="Studios" detail="Ironbound Performance Athletics" onClick={()=>p.open({kind:"manage",name:"Ironbound Performance Athletics"})}/><Row title="People & access" detail="Review your calendar team" onClick={()=>p.open({kind:"settings",name:"People & access"})}/><Row title="Event registration" detail="Manage class attendance" onClick={()=>p.open({kind:"settings",name:"Event registration"})}/></>;
@@ -55,11 +57,12 @@ export default function DetailScreens({route}:{route:Destination}) {
   const p=usePrototype(); const [message,setMessage]=useState("");
   const [shareStatus,setShareStatus]=useState("");
   const item=p.schedule.find(c=>c.id===route.name);
-  const title=route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
+  const title=route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:route.name==="Personal calendar"?(!!c.own || p.saved.includes(c.id) || !p.live):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
   return <>
     <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>
     <h1 className={styles.pageTitle}>{title}</h1>
+    {route.kind==="membership" && <Membership reason={route.name}/>}
     {route.kind==="edit-profile" && <EditProfile/>}
     {(route.kind==="add-class"||route.kind==="edit-class") && <ClassEditor route={route}/>}
     {route.kind==="settings" && <Settings name={title}/>}
