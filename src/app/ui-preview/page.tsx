@@ -55,10 +55,10 @@ function CalendarScreen({ onShare }: { onShare: () => void }) {
   const calendarClasses = p.schedule.map(c => ({ id:c.id,name:c.name, place:c.place, coach:c.coach, day:dateLabel(c.date), time:timeLabel(c.time), duration:`${c.duration} min`, color:"#C8C3DB" }));
   const [view, setView] = useState("you");
   const [selectedPerson, setSelectedPerson] = useState("All");
-  const samplePeople: {name:string;initials:string;color:string;photo?:string|null}[] = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
-  const people=p.live ? p.live.people.filter(person=>p.following.includes(person.name)) : samplePeople;
+  const samplePeople: {name:string;initials:string;color:string;photo?:string|null}[] = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }];
+  const people=p.live ? p.live.people.filter(person=>person.name!==p.profile.name && p.following.includes(person.name)) : samplePeople;
   const personalClasses=calendarClasses.filter(c=>(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id));
-  const followingClasses=calendarClasses.filter(c=>!p.live || p.following.includes(c.coach));
+  const followingClasses=calendarClasses.filter(c=>!(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) && (!p.live || p.following.includes(c.coach)));
   return <>
     <Tabs value={view} onValueChange={value => setView(String(value))}>
       <div className={styles.calendarHero}>
@@ -281,7 +281,7 @@ function PreviewShell() {
   const [selectedGroup,setSelectedGroup]=useState<string|null>(null);
   const takeover=!!detail || sharing || !!explorePage || !!selectedGroup;
   useEffect(()=>{mainRef.current?.scrollTo({top:0});},[detail,screen,explorePage,sharing,selectedGroup]);
-  return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>
+  return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>{p.saveNotice && <div className={styles.saveNotice} role="status"><span>{p.saveNotice}</span><button aria-label="Dismiss schedule notice" onClick={()=>p.setSaveNotice("")}><X size={18}/></button></div>}
     <div className={styles.dataBanner} role="status">{p.dataStatus==="loading"?"Loading your account…":p.live?"Live data · changes stay in this preview":p.dataStatus==="error"?"Couldn’t load account data. Showing samples.":<>Sample data · <Link href="/?join=login&next=/ui-preview">Sign in</Link> to load your account.</>}{p.dataStatus!=="loading" && <button onClick={()=>void p.reloadData()}>{p.live?"Refresh":"Retry"}</button>}</div>
     <main ref={mainRef} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
     {!takeover && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>}

@@ -521,3 +521,6 @@
 .apple .sectionTitle { margin-top:var(--preview-section-gap); margin-bottom:16px; }
 .apple .calendarPersonContext .sectionTitle { margin:14px 0 24px; }
 .apple .directoryFollow { flex-shrink:0; }
+
+.saveNotice { position:fixed; top:calc(12px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:100; width:min(calc(100% - 32px),398px); display:flex; gap:12px; align-items:center; padding:16px; background:var(--preview-text); color:var(--preview-ground); border-radius:16px; font-size:14px; line-height:1.4; }
+.saveNotice button { flex:none; width:44px; height:44px; display:grid; place-items:center; color:inherit; }

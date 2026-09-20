@@ -21,6 +21,6 @@ export default function PreviewClassCard({item}:{item:PreviewClass}) {
       <span className="explore-class-time">{hm}<small>{ap}</small></span><strong className="explore-class-name">{item.name}</strong>
       <span className="explore-class-duration">{item.duration} min</span><span className="explore-class-studio">{item.place}</span>
     </button>
-    <div className="explore-save-row"><button type="button" className={`explore-save-button${saved?" on":""}`} aria-label={`${saved?"Unsave":"Save"} ${item.name}`} aria-pressed={saved} onClick={()=>p.setSaved(v=>saved?v.filter(id=>id!==item.id):[...v,item.id])}>{saved?"Saved":"Save"}</button></div>
+    <div className="explore-save-row"><button type="button" className={`explore-save-button${saved?" on":""}`} aria-label={`${saved?"Unsave":"Save"} ${item.name}`} aria-pressed={saved} onClick={()=>p.toggleSaved(item)}>{saved?"Saved":"Save"}</button></div>
   </article>;
 }

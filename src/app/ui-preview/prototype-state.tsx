@@ -31,6 +31,19 @@ function useStateStore() {
   const [connections,setConnections] = useState<string[]>([]);
   const [roles,setRoles] = useState<Record<string,string>>({"Freddie Morgan":"Editor","Erin Clyne":"Editor"});
   const [timezone,setTimezone] = useState("America/New_York");
+  const [saveNotice,setSaveNotice]=useState("");
+  const toggleSaved=(item:PreviewClass)=>{
+    if(saved.includes(item.id)){setSaved(v=>v.filter(id=>id!==item.id));setSaveNotice("");return;}
+    const start=new Date(`${item.date}T${item.time}:00`).getTime();
+    const end=start+Number(item.duration)*60000;
+    const conflict=schedule.find(c=>{
+      if(!(c.own ?? (c.coach===profile.name || c.coach==="Matt LeGrice")))return false;
+      const otherStart=new Date(`${c.date}T${c.time}:00`).getTime();
+      return start<otherStart+Number(c.duration)*60000 && otherStart<end;
+    });
+    setSaved(v=>[...v,item.id]);
+    setSaveNotice(conflict?`Saved. Just so you know, you’re coaching ${conflict.name} at ${timeLabel(conflict.time)} and the times overlap.`:"");
+  };
   const [messages,setMessages] = useState(["See you at Asana Lab!"]);
   const [stack,setStack] = useState<Destination[]>([]);
   useEffect(()=>{
@@ -50,7 +63,7 @@ function useStateStore() {
     window.history[push?"pushState":"replaceState"](state,"",url);
     setStack(routes);
   };
-  return { billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
+  return { saveNotice,setSaveNotice,toggleSaved,billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
     open:(route:Destination)=>navigate([...stack,route],true),
     back:()=>{if(window.history.state?.previewDepth>0) window.history.back(); else navigate(stack.slice(0,-1),false);},
     reset:()=>navigate([],false) };
