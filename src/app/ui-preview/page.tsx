@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PreviewClassCard from "./class-card";
 import GroupSampleUpdates from "./group-sample-updates";
+import { useCalendarSwipe } from "./use-calendar-swipe";
 import ProfileHero from "./profile-hero";
 import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
@@ -56,21 +57,22 @@ function CalendarScreen({ onShare }: { onShare: () => void }) {
   const p = usePrototype();
   const calendarClasses = p.schedule.map(c => ({ id:c.id,name:c.name, place:c.place, coach:c.coach, day:dateLabel(c.date), time:timeLabel(c.time), duration:`${c.duration} min`, color:"#C8C3DB" }));
   const [view, setView] = useState("you");
+  const swipe=useCalendarSwipe(view,setView);
   const [selectedPerson, setSelectedPerson] = useState("All");
   const samplePeople: {name:string;initials:string;color:string;photo?:string|null}[] = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }];
   const people=p.live ? p.live.people.filter(person=>person.name!==p.profile.name && p.following.includes(person.name)) : samplePeople;
   const personalClasses=calendarClasses.filter(c=>(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id));
   const followingClasses=calendarClasses.filter(c=>!(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) && (!p.live || p.following.includes(c.coach)));
-  return <>
+  return <div ref={swipe.root} {...swipe.handlers} className={styles.swipeCalendar}>
     <Tabs value={view} onValueChange={value => setView(String(value))}>
       <div className={styles.calendarHero}>
-        <TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList>
+        <TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger><span aria-hidden="true" className={styles.calendarIndicator} style={swipe.indicator}/></TabsList>
         {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: p.schedule.filter(c=>c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")).length, attending: personalClasses.filter(c=>!(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice"))).length, personal: 0 })}</strong><div className={styles.heroActions}><button type="button" onClick={onShare} className={styles.shareWeekButton} aria-label="Share your week">Share your week<ArrowUpRight size={16} aria-hidden="true"/></button></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} photo={person.photo} size={80}/></span><small>{person.name}</small></button>)}</div>}
       </div>
       <TabsContent value="you" className={styles.calendarYouPanel}>{personalClasses.length===0 && <p className={styles.sectionIntro}>No upcoming classes on your calendar.</p>}{personalClasses.map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<button onClick={() => p.open({kind:"add-class"})} className={styles.addFab} aria-label="Add a class"><Plus size={28}/></button></TabsContent>
       <TabsContent value="following">{selectedPerson !== "All" && <div className={styles.calendarPersonContext}><SectionTitle aside={<button className={styles.calendarProfileButton} onClick={()=>p.open({kind:"person",name:p.live ? selectedPerson : followingClasses.find(item=>item.coach.startsWith(selectedPerson))?.coach || selectedPerson})}>View Profile<ChevronRight size={16}/></button>}>{`${selectedPerson}’s calendar`}</SectionTitle></div>}{followingClasses.length===0 && <p className={styles.sectionIntro}>Follow people in Explore to see their upcoming classes.</p>}{followingClasses.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
     </Tabs>
-  </>;
+  </div>;
 }
 
 type ExplorePage = "people" | "studios";

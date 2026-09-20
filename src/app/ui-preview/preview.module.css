@@ -662,3 +662,9 @@
 .apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"]::after { display:block; left:0; width:100%; bottom:0; }
 .apple .calendarHero .shareWeekButton { padding:0 20px; min-height:44px; border-radius:999px; text-decoration:none; background:color-mix(in srgb,var(--preview-surface) 65%,transparent); border:1px solid color-mix(in srgb,var(--preview-surface) 80%,transparent); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 2px 8px #00000008; }
 .apple .calendarHero .shareWeekButton:hover { background:color-mix(in srgb,var(--preview-surface) 85%,transparent); }
+
+.apple .calendarHero .calendarModeTabs { position:relative; }
+.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"]::after { display:none; }
+.calendarIndicator { position:absolute; bottom:3px; height:2px; background:var(--preview-text); pointer-events:none; transition:left .24s cubic-bezier(.2,.8,.2,1),width .24s cubic-bezier(.2,.8,.2,1); }
+.swipeCalendar [data-slot="tabs-content"],.swipeCalendar .calendarSummary { touch-action:pan-y; }
+@media(prefers-reduced-motion:reduce) { .calendarIndicator { transition:none; } }
