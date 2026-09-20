@@ -43,7 +43,7 @@ export async function loadLivePreview() {
     if(!schedule.some(item=>item.id===id)) schedule.push({id,name:c.name,place:view.studioName,coach:c.onName || "Instructor to be confirmed",date:c.iso,time:clock(c.timeLabel),duration:String(c.durationMin),own:c.mine,inCalendar:c.mine});
   }));
   const db=await getDb();
-  const memberships=await db.select({id:schema.groups.id,name:schema.groups.name,photo:schema.groups.photo,description:schema.groups.description,purpose:schema.groups.purpose}).from(schema.groupMembers).innerJoin(schema.groups,eq(schema.groups.id,schema.groupMembers.groupId)).where(eq(schema.groupMembers.userId,me.id));
+  const memberships=await db.select({id:schema.groups.id,name:schema.groups.name,photo:schema.groups.photo,description:schema.groups.description,purpose:schema.groups.purpose,location:schema.users.location}).from(schema.groupMembers).innerJoin(schema.groups,eq(schema.groups.id,schema.groupMembers.groupId)).innerJoin(schema.users,eq(schema.users.id,schema.groups.ownerUserId)).where(eq(schema.groupMembers.userId,me.id));
   const memberLists=await Promise.all(memberships.map(g=>db.select({name:schema.users.name}).from(schema.groupMembers).innerJoin(schema.users,eq(schema.users.id,schema.groupMembers.userId)).where(and(eq(schema.groupMembers.groupId,g.id)))));
   return {
     profile:{name:me.name,handle:me.handle || "",bio:me.title || "",location:me.location || "",email:me.email,photo:me.photo},
@@ -51,7 +51,7 @@ export async function loadLivePreview() {
     people:people.people.map(person=>({name:person.name,title:person.title,initials:person.name.split(" ").map(s=>s[0]).join("").slice(0,2),color:person.color,specialty:person.disciplines[0] || "Other",photo:person.photo,location:person.location,following:person.following})),
     studios:studios.map(s=>({name:s.name,type:s.types.join(" · ") || "Studio",location:s.address,photo:s.photo,coordinates:s.lat!=null&&s.lng!=null?[s.lat,s.lng] as [number,number]:null})),
     managed:managed.map(s=>({name:s.name,photo:s.photo,initials:s.name.split(" ").map(v=>v[0]).join("").slice(0,2),detail:"Studio calendar · You’re an admin"})),
-    groups:[...memberships.map((g,index)=>({id:g.id,name:g.name,image:g.photo || "",description:g.description || "",category:g.purpose,members:memberLists[index].map(m=>m.name),classIndexes:[] as number[]})),...groups.filter(g=>!memberships.some(m=>m.id===g.id)).map(g=>({id:g.id,name:g.name,image:g.photo || "",description:g.description || "",category:g.purpose,members:[] as string[],classIndexes:[] as number[]}))],
+    groups:[...memberships.map((g,index)=>({id:g.id,name:g.name,image:g.photo || "",description:g.description || "",category:g.purpose,location:g.location || "",members:memberLists[index].map(m=>m.name),classIndexes:[] as number[]})),...groups.filter(g=>!memberships.some(m=>m.id===g.id)).map(g=>({id:g.id,name:g.name,image:g.photo || "",description:g.description || "",category:g.purpose,location:g.location || "",members:[] as string[],classIndexes:[] as number[]}))],
     joined:memberships.map(g=>g.id),
   };
 }

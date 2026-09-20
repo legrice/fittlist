@@ -136,9 +136,9 @@ function ExploreScreen({ page, onNavigate, onGroups }: { page: ExplorePage | nul
 }
 
 const sampleGroups = [
-  { id: "gals", name: "Gals who like to move", category: "Group fitness", description: "Find a class, make a plan, and bring your people.", image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85", members: ["Erin Clyne", "Freddie Morgan", "Alex Lee", "Matt LeGrice"], classIndexes: [1, 2] },
-  { id: "run", name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
-  { id: "sweat", name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
+  { id: "gals", location:"Jersey City, NJ", name: "Gals who like to move", category: "Group fitness", description: "Find a class, make a plan, and bring your people.", image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85", members: ["Erin Clyne", "Freddie Morgan", "Alex Lee", "Matt LeGrice"], classIndexes: [1, 2] },
+  { id: "run", location:"Jersey City, NJ", name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
+  { id: "sweat", location:"Jersey City, NJ", name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
 ];
 function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(value:string|null)=>void}) {
   const p=usePrototype();
@@ -156,6 +156,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   useEffect(()=>{if(p.live){setGroups(p.live.groups);setJoined(p.live.joined);}},[p.live]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [groupLocation,setGroupLocation]=useState(p.profile.location || "");
   const top = useRef<HTMLDivElement>(null);
   useEffect(() => { top.current?.closest("main")?.scrollTo({ top: 0 }); }, [selected]);
   const group = groups.find(item => item.id === selected);
@@ -165,14 +166,13 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={()=>setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
       <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label></div>
       <div className={styles.groupCategories} role="group" aria-label="Group categories">{categories.map(c=><button key={c} aria-pressed={groupCategory===c} onClick={()=>setGroupCategory(c)}>{c}</button>)}</div>
-      <p className={styles.sectionIntro}>Distance filtering is coming when group locations are available.</p>
-      <SectionTitle aside={<Badge variant="secondary">{results.length}</Badge>}>Groups</SectionTitle>
       {results.length===0&&<p className={styles.sectionIntro}>No matching groups. Try another category or search.</p>}
-      <div className={styles.exploreGroupList}>{results.map(item=><button key={item.id} className={styles.exploreGroupCard} onClick={()=>openGroup(item.id)}>{item.image&&<img src={item.image} alt="" loading="lazy"/>}<span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category}</span><span>{p.live ? "Location unavailable in preview" : "Jersey City, NJ · Sample location"}</span><span>{item.description}</span>{joined.includes(item.id)&&<small>Joined</small>}</span></button>)}</div>
+      <div className={styles.exploreGroupList}>{results.map(item=><button key={item.id} className={styles.exploreGroupCard} onClick={()=>openGroup(item.id)}>{item.image&&<img src={item.image} alt="" loading="lazy"/>}<span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category}</span><span>{item.location || "Location not added"}</span><span>{item.description}</span>{joined.includes(item.id)&&<small>Joined</small>}</span></button>)}</div>
     </> : selected === "create" ? <>
       {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
-      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
+      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, location:groupLocation.trim(), name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
         <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
+        <label>Location<Input required value={groupLocation} onChange={event=>setGroupLocation(event.target.value)} placeholder="City or neighborhood"/></label>
         <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
         <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only. Changes last while you’re on this page.</p>
       </form>
