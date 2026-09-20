@@ -58,7 +58,7 @@ export default function DetailScreens({route}:{route:Destination}) {
   const [shareStatus,setShareStatus]=useState("");
   const item=p.schedule.find(c=>c.id===route.name);
   const title=route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
-  const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?(!!c.own || p.saved.includes(c.id) || !p.live):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
+  const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
   return <>
     <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>
     <h1 className={styles.pageTitle}>{title}</h1>

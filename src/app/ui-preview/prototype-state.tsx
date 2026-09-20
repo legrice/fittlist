@@ -21,13 +21,13 @@ function useStateStore() {
   const [exportsUsed,setExportsUsed]=useState(0);
   const [live,setLive]=useState<Awaited<ReturnType<typeof loadLivePreview>>>(null);
   const [dataStatus,setDataStatus]=useState("loading");
-  const reloadData=async()=>{setDataStatus("loading");try{const data=await loadLivePreview();if(!data){setLive(null);setSchedule(initialClasses);setSaved([]);setFollowing([]);setProfile({name:"Matt LeGrice",handle:"mattlegrice",bio:"Strength & mobility coach",location:"Jersey City, NJ",email:"matt@example.com",photo:null});setDataStatus("signed-out");return;}setLive(data);setProfile(data.profile);setSchedule(data.schedule);setSaved(data.saved);setFollowing(data.people.filter(p=>p.following).map(p=>p.name));setMessages([]);setDataStatus("live");}catch{setDataStatus("error");}};
+  const reloadData=async()=>{setDataStatus("loading");try{const data=await loadLivePreview();if(!data){setLive(null);setSchedule(initialClasses);setSaved(["asana","sculpt"]);setFollowing([]);setProfile({name:"Matt LeGrice",handle:"mattlegrice",bio:"Strength & mobility coach",location:"Jersey City, NJ",email:"matt@example.com",photo:null});setDataStatus("signed-out");return;}setLive(data);setProfile(data.profile);setSchedule(data.schedule);setSaved(data.saved);setFollowing(data.people.filter(p=>p.following).map(p=>p.name));setMessages([]);setDataStatus("live");}catch{setDataStatus("error");}};
   useEffect(()=>{void reloadData();},[]);
   const [schedule,setSchedule] = useState(initialClasses);
   const [preferences,setPreferences] = useState<Record<string,boolean>>({ "Class reminders":true,"New followers":true,"Group activity":true,"Messages":true,"Email updates":false,"Public profile":true,"Allow messages":true,"Approve followers":false });
   const [away,setAway] = useState({ start:"",end:"",note:"",reply:"" });
   const [following,setFollowing] = useState<string[]>([]);
-  const [saved,setSaved] = useState<string[]>([]);
+  const [saved,setSaved] = useState<string[]>(["asana","sculpt"]);
   const [connections,setConnections] = useState<string[]>([]);
   const [roles,setRoles] = useState<Record<string,string>>({"Freddie Morgan":"Editor","Erin Clyne":"Editor"});
   const [timezone,setTimezone] = useState("America/New_York");

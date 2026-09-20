@@ -57,7 +57,7 @@ function CalendarScreen({ onShare }: { onShare: () => void }) {
   const [selectedPerson, setSelectedPerson] = useState("All");
   const samplePeople: {name:string;initials:string;color:string;photo?:string|null}[] = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
   const people=p.live ? p.live.people.filter(person=>p.following.includes(person.name)) : samplePeople;
-  const personalClasses=calendarClasses.filter(c=>!p.live || p.schedule.find(item=>item.id===c.id)?.own || p.saved.includes(c.id));
+  const personalClasses=calendarClasses.filter(c=>(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id));
   const followingClasses=calendarClasses.filter(c=>!p.live || p.following.includes(c.coach));
   return <>
     <Tabs value={view} onValueChange={value => setView(String(value))}>
