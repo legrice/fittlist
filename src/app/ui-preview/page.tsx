@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import PreviewClassCard from "./class-card";
+import GroupSampleUpdates from "./group-sample-updates";
 import DetailHeader from "./detail-header";
 import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
@@ -147,6 +148,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const [joined, setJoined] = useState(["gals"]);
   const [groupQuery,setGroupQuery]=useState("");
   const [groupCategory,setGroupCategory]=useState("All groups");
+  const [seenUpdates,setSeenUpdates]=useState<string[]>([]);
   const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("schedule");
   useEffect(()=>{setGroupView("schedule");},[selected]);
   const categories=["All groups","New groups","Your groups","Fitness","Wellness","Run club"];
@@ -167,7 +169,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label></div>
       <div className={styles.groupCategories} role="group" aria-label="Group categories">{categories.map(c=><button key={c} aria-pressed={groupCategory===c} onClick={()=>setGroupCategory(c)}>{c}</button>)}</div>
       {results.length===0&&<p className={styles.sectionIntro}>No matching groups. Try another category or search.</p>}
-      <div className={styles.exploreGroupList}>{results.map(item=><button key={item.id} className={styles.exploreGroupCard} onClick={()=>openGroup(item.id)}>{item.image&&<img src={item.image} alt="" loading="lazy"/>}<span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category}</span><span>{item.location || "Location not added"}</span><span>{item.description}</span>{joined.includes(item.id)&&<small>Joined</small>}</span></button>)}</div>
+      <div className={styles.exploreGroupList}>{results.map(item=><button key={item.id} className={styles.exploreGroupCard} onClick={()=>openGroup(item.id)}>{item.image&&<img src={item.image} alt="" loading="lazy"/>}<span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{categoryOf(item.category)}</span><span>{item.location || "Location not added"}</span><span>{item.description}</span>{joined.includes(item.id)&&<small>Joined</small>}</span></button>)}</div>
     </> : selected === "create" ? <>
       {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
       <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, location:groupLocation.trim(), name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
@@ -180,17 +182,15 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <button className={styles.backButton} onClick={()=>setGroupView("schedule")}><ArrowLeft size={19}/>Back to {group.name}</button>
       <h1 className={styles.pageTitle}>{groupView==="members"?"Members":"Updates"}</h1>
       <p className={styles.sectionIntro}>{group.name}</p>
-      {groupView==="members" ? <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div> : <p className={styles.sectionIntro}>{p.live?"Group updates aren’t connected in this preview yet.":"No updates yet."}</p>}
+      {groupView==="members" ? <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div> : <GroupSampleUpdates live={!!p.live} running={categoryOf(group.category)==="Run club"}/>}
     </> : group ? <>
       <DetailHeader type="Group" name={group.name} id={group.id} onBack={()=>setSelected(null)}/>
-      {group.image && <img className={styles.groupDetailPhoto} src={group.image} alt=""/>}
+      <div className={styles.groupHeroImage}>{group.image&&<img className={styles.groupDetailPhoto} src={group.image} alt=""/>}<span className={styles.groupTypePill}>{categoryOf(group.category)}</span></div>
       <h1 className={styles.pageTitle}>{group.name}</h1><p className={styles.sectionIntro}>{group.description}</p>
-      <div className={styles.groupDetailMeta}><span>{group.category}</span></div>
-      <div className={styles.groupJoinFooter}><button className={styles.groupMemberCount} onClick={()=>setGroupView("members")}><strong>{group.members.length}</strong><span>members</span></button><button className={styles.groupJoinButton} disabled={joined.includes(group.id)} onClick={()=>{setJoined(ids=>[...ids,group.id]);setGroups(items=>items.map(item=>item.id===group.id?{...item,members:[...item.members,p.profile.name]}:item));}}>{joined.includes(group.id)?"Joined":"Join group"}</button></div>
+      <div className={styles.groupJoinFooter}><button className={styles.groupMemberCount} onClick={()=>setGroupView("members")}><span className={styles.groupAvatarStack}>{group.members.slice(0,3).map((member,index)=><Face key={member} initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={24}/>)}</span><strong>{group.members.length} members</strong><ChevronRight size={14}/></button><button className={styles.groupJoinButton} disabled={joined.includes(group.id)} onClick={()=>{setJoined(ids=>[...ids,group.id]);setGroups(items=>items.map(item=>item.id===group.id?{...item,members:[...item.members,p.profile.name]}:item));}}>{joined.includes(group.id)?"Joined":"Join"}</button></div>
       <div className={styles.groupFooterSpace}>
 
-      <button className={styles.groupMembersSummary} onClick={()=>setGroupView("members")} aria-label={`View ${group.members.length} group members`}><span className={styles.groupAvatarStack}>{group.members.slice(0,4).map((member,index)=><Face key={member} initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={36}/>)}</span><strong>{group.members.length} members</strong><ChevronRight size={18}/></button>
-      <button className={styles.groupUpdatesLink} onClick={()=>setGroupView("updates")}><strong>Updates</strong><ChevronRight size={18}/></button>
+      <button className={styles.groupUpdatesLink} onClick={()=>{setGroupView("updates");setSeenUpdates(ids=>[...ids,group.id]);}}><strong>Updates</strong>{!p.live&&!seenUpdates.includes(group.id)&&<Badge aria-label="2 new updates">2</Badge>}<ChevronRight size={18}/></button>
       <SectionTitle>Upcoming classes</SectionTitle>
       {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3 className={styles.groupDateTitle}>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "Group class plans aren’t connected in this preview yet." : "No classes planned yet. Check back for the next group plan."}</p>}
       </div>

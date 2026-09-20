@@ -585,3 +585,18 @@
 .profileAboutPanel p { white-space:pre-line; line-height:1.5; }
 .profileAboutPanel h3 { font-size:18px; margin:24px 0 8px; }
 .profileAboutPanel ul { padding-left:20px; line-height:1.5; }
+
+.groupHeroImage { position:relative; min-height:64px; margin-bottom:24px; }
+.groupTypePill { position:absolute; top:12px; left:12px; border-radius:999px; background:var(--preview-surface); color:var(--preview-text); padding:8px 14px; font-size:13px; font-weight:600; }
+.groupMemberCount { display:flex; align-items:center; gap:8px; font-size:13px; }
+.groupJoinFooter { padding-left:16px; gap:12px; }
+.groupJoinButton { flex:none; min-height:44px; min-width:88px; padding:12px 20px; background:var(--preview-soft); color:var(--preview-text); }
+.sampleUpdate { padding:20px; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); }
+.sampleUpdate header { display:flex; gap:12px; align-items:center; }
+.sampleUpdate header > span { display:grid; place-items:center; width:40px; height:40px; background:var(--preview-soft); border-radius:50%; }
+.sampleUpdate header div { display:grid; gap:4px; }
+.sampleUpdate small { color:var(--preview-muted); }
+.sampleUpdate p { line-height:1.5; }
+.sampleUpdate button { border:0; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); padding:10px 16px; }
+.sampleUpdate form { display:flex; gap:8px; }
+.sampleUpdate input { min-width:0; flex:1; border:1px solid var(--preview-soft); border-radius:12px; padding:10px; color:var(--preview-text); background:var(--preview-ground); }
