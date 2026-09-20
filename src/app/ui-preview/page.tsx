@@ -152,7 +152,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const categories=["All groups","New groups","Your groups","Fitness","Wellness","Run club"];
   const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
   const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All groups"||(groupCategory==="New groups"?!joined.includes(g.id):groupCategory==="Your groups"?joined.includes(g.id):categoryOf(g.category)===groupCategory)));
-  const openGroup=(id:string)=>{setBrowsing(selected==="browse");setSelected(id);};
+  const openGroup=(id:string)=>{setBrowsing(false);setSelected(id);};
   useEffect(()=>{if(p.live){setGroups(p.live.groups);setJoined(p.live.joined);}},[p.live]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -160,10 +160,9 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   useEffect(() => { top.current?.closest("main")?.scrollTo({ top: 0 }); }, [selected]);
   const group = groups.find(item => item.id === selected);
   const back = <button className={styles.backButton} onClick={() => setSelected(null)}><ArrowLeft size={19}/>Back to Groups</button>;
-  const ownGroups = groups.filter(item => joined.includes(item.id));
   return <div ref={top}>
-    {selected === "browse" ? <>
-      {back}<h1 className={styles.pageTitle}>Explore groups</h1>
+    {!selected || selected === "browse" ? <>
+      <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={()=>setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
       <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label></div>
       <div className={styles.groupCategories} role="group" aria-label="Group categories">{categories.map(c=><button key={c} aria-pressed={groupCategory===c} onClick={()=>setGroupCategory(c)}>{c}</button>)}</div>
       <p className={styles.sectionIntro}>Distance filtering is coming when group locations are available.</p>
@@ -191,17 +190,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <button className={styles.groupUpdatesLink} onClick={()=>setGroupView("updates")}><strong>Updates</strong><ChevronRight size={18}/></button>
       <SectionTitle>Upcoming classes</SectionTitle>
       {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3 className={styles.groupDateTitle}>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "Group class plans aren’t connected in this preview yet." : "No classes planned yet. Check back for the next group plan."}</p>}
-    </> : <>
-      <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={() => setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
-      <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
-      <div className={styles.stack}>{ownGroups.map(item => <button key={item.id} className={styles.ownedGroup} onClick={() => openGroup(item.id)}>
-        {item.image ? <img src={item.image} alt=""/> : <span className={styles.groupPlaceholder}><Users size={28}/></span>}<span><strong>{item.name}</strong><small>{item.members.length} members</small></span><ChevronRight size={18}/>
-      </button>)}</div>
-      <SectionTitle aside={<button className={styles.seeAll} onClick={()=>setSelected("browse")}>Explore all groups<ChevronRight size={15}/></button>}>Groups to explore</SectionTitle>
-      <div className={styles.exploreGroupList}>{groups.filter(item => !joined.includes(item.id)).slice(0,3).map(item => <button key={item.id} className={styles.exploreGroupCard} onClick={() => openGroup(item.id)}>
-        <img src={item.image} alt="" loading="lazy"/><span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category}{!p.live && " · Jersey City"}</span><span>{item.description}</span><small><Users size={15}/>{item.members.length} members<ChevronRight size={17}/></small></span>
-      </button>)}</div>
-    </>}
+    </> : <>{back}<p className={styles.sectionIntro}>Group unavailable.</p>    </>}
   </div>;
 }
 
