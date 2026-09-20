@@ -472,3 +472,43 @@
 
 .apple .youPage { background:var(--preview-ground); }
 .apple .youPage section > .settingsRow { background:var(--preview-surface); border-radius:20px; }
+
+/* Shared prototype type and action scale. See docs/DESIGN_SYSTEM.md. */
+.apple {
+  --preview-cta-height:60px;
+  --preview-button-size:16px;
+  --preview-section-size:21px;
+  --preview-subheading-size:18px;
+  --preview-body-size:16px;
+  --preview-caption-size:13px;
+}
+.apple :is(.membershipCta,.classPageFooter button,.detailForm > [data-slot="button"],.groupForm > [data-slot="button"]),
+.apple .mainShareEditor :global(.sheditor-share-action .shheader-share),
+.apple .mainShareEditor :global(.share-inspector-scrim .btn.si) {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  min-height:var(--preview-cta-height); height:auto; padding:16px 24px;
+  border:0; border-radius:var(--radius-pill,999px);
+  background:var(--preview-highlight); color:#192126;
+  font-family:var(--preview-font); font-size:var(--preview-button-size); font-weight:600; line-height:1.25;
+}
+.apple :is(.membershipCta,.classPageFooter button):disabled { opacity:.5; cursor:not-allowed; }
+.apple :is(.membershipCta,.classPageFooter button):focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; }
+.apple :is(.shareWeekButton,.copyProfile,.logoutForm button,.profileActions [data-slot="button"]) { font-family:var(--preview-font); font-size:var(--preview-button-size); font-weight:600; line-height:1.25; min-height:44px; }
+.apple :is(.sectionTitle h2,.daySection h3,.planHeading,.sheetBody h2) { font-family:var(--preview-font); font-size:var(--preview-section-size); font-weight:600; line-height:1.2; letter-spacing:-.035em; }
+.apple .calendarPersonContext .sectionTitle h2 { font-size:14px; letter-spacing:normal; }
+.apple .membership h2 { font-size:var(--preview-title-size); line-height:1.08; font-weight:600; }
+.apple :is(.tierOptions strong,.freePlan > strong) { font-size:var(--preview-subheading-size); line-height:1.25; font-weight:600; }
+.apple :is(.sectionIntro,.membership > p,.detailForm label) { font-size:var(--preview-body-size); line-height:1.5; }
+.apple .prototypeNote { font-size:var(--preview-caption-size); }
+.apple .mainShareEditor { padding-bottom:calc(260px + env(safe-area-inset-bottom)); }
+.apple .mainShareEditor :global(.sheditor-dock) {
+  position:fixed; inset:auto 0 0; z-index:45; width:min(100%,430px); margin:0 auto;
+  padding:12px 20px calc(16px + env(safe-area-inset-bottom));
+  border:0; border-top:1px solid var(--preview-line); border-radius:0;
+  background:var(--preview-ground); box-shadow:none;
+}
+.apple .mainShareEditor :global(.sheditor-dock-heading) { display:none; }
+.apple .mainShareEditor :global(.sheditor-tools) { display:flex; flex-wrap:nowrap; overflow-x:auto; gap:8px; padding-bottom:12px; }
+.apple .mainShareEditor :global(.sheditor-tool) { flex:0 0 64px; min-width:64px; }
+.apple .mainShareEditor :global(.sheditor-share-action) { position:static; inset:auto; transform:none; width:100%; margin:0; padding:0; border:0; background:transparent; }
+.apple .mainShareEditor:has(:global(.has-inspector)) :global(.sheditor-dock) { visibility:hidden; }

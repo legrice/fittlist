@@ -92,3 +92,28 @@ Before introducing a new visual rule, verify:
 5. Is the target at least 44px?
 6. Could a divider replace this container?
 7. Does changing the shared primitive intentionally update all consumers?
+
+## `/ui-preview` action and typography contract
+
+The prototype intentionally uses rounded cards and pill-shaped actions per the
+current design direction; it does not change production's flat-list contract.
+Its shared rules live at the end of `src/app/ui-preview/preview.module.css`.
+
+- Primary bottom actions: minimum 60px height, 24px horizontal padding, pill
+  radius, Delight 16px/1.25 at weight 600, lime fill and charcoal text.
+  Share, class Save/Edit, membership checkout, and primary form actions consume
+  this same rule. Long labels may grow vertically rather than clip.
+- Secondary actions: gray pills, minimum 44px height, the same 16px/600 label.
+  Compact calendar Save and View Profile controls retain the main-branch sizing.
+- Page/display headings: 36px/1.08, weight 600. Section and date headings:
+  21px/1.2, weight 600. Subheadings: 18px/1.25, weight 600. Body: 16px/1.5;
+  supporting notes: 13px. Use semantic heading levels independently of size.
+- Bottom actions clear the safe area. Share's horizontally scrolling tools and
+  primary action form one fixed dock; content reserves room beneath it. Action
+  sheets take precedence over the dock. Detail views hide root navigation.
+- Keep action labels sentence case and verb-led. Use Save/Saved consistently;
+  use Back for navigation, Close for dismissing an action sheet. Demo billing
+  actions must remain explicitly labeled as simulated.
+
+Add new primary actions to the shared rule (or extract a shared component),
+never duplicate the dimensions in a feature-specific override.
