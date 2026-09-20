@@ -66,3 +66,11 @@ For each migrated flow: successful write survives reload and another session; un
 ## Scope and limitations
 
 This audit compares production route/action/component inventory with prototype implementation. It is not a claim of exhaustive runtime verification, and signed-in production mutations were not tested. The production action layer is largely unchanged from main (auth differs for preview return), so migration should reuse it instead of building a second backend. Keep this checklist current as each workflow passes its acceptance checks.
+
+## Discovery at scale
+
+Explore now uses a compact people rail (up to 10 previews) and a studio photo rail (up to 8), with full searchable lists reached through See all. Use objective category labels, not motivational phrases. Do not infer proximity from a list being present: the production migration must resolve a chosen location before saying “near you”, and use “People” / “Studios” when location is unavailable.
+
+Planned discovery requirements: explicit city/neighborhood or optional current location, adjustable radius, people specialty and studio activity filters, server-side pagination and distance sorting. Preserve filters when returning from a profile; reset filters deliberately when switching directories. Never depend on loading the whole directory into the browser.
+
+Groups: keep Your groups separate from discovery. Add search, chosen location/radius, activity/category and public joinability filters, with clear empty states and reset controls. Private/unlisted groups must retain existing visibility/invitation rules, not leak into results through filters. Membership alone is not a discovery taxonomy. These richer filters are planned, not implemented by the rail layout change.

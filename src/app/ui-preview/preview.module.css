@@ -537,3 +537,16 @@
 .studioLink svg { flex-shrink:0; }
 .studioPrimary { display:flex; justify-content:center; align-items:center; min-height:var(--preview-cta-height); width:100%; margin-top:16px; padding:16px 24px; border:0; border-radius:999px; background:var(--preview-highlight); color:#192126; font:600 var(--preview-button-size)/1.25 var(--preview-font); }
 .studioWorkspace input[type="checkbox"] { width:20px; min-height:20px; }
+
+/* Explore previews stay compact; full directories retain their list layouts. */
+.peopleRail,.studiosRail { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x proximity; padding:2px 0 12px; overscroll-behavior-x:contain; }
+.personRailCard,.studioRailCard { flex:none; scroll-snap-align:start; border:0; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); font:inherit; text-align:left; overflow:hidden; }
+.personRailCard { width:108px; padding:14px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; }
+.personRailCard strong { font-size:14px; line-height:1.25; min-height:35px; }
+.personRailCard small,.studioRailCard small { font-size:13px; line-height:1.3; color:var(--preview-muted); }
+.studioRailCard { width:244px; }
+.studioRailCard > img,.studioRailPlaceholder { width:100%; aspect-ratio:16 / 9; object-fit:cover; display:block; }
+.studioRailPlaceholder { display:grid; place-items:center; background:var(--preview-soft); color:var(--preview-muted); }
+.studioRailCard > span { display:grid; gap:6px; padding:16px; }
+.studioRailCard strong { font-size:18px; line-height:1.2; }
+.peopleRail:focus-visible,.studiosRail:focus-visible,.personRailCard:focus-visible,.studioRailCard:focus-visible { outline:2px solid var(--preview-text); outline-offset:2px; }

@@ -75,7 +75,9 @@ type ExplorePage = "people" | "studios";
 const explorePeople = [
   { name: "Erin Clyne", title: "Yoga Teacher + Clinical Sports Massage", initials: "EC", color: "#D8C6B4", specialty: "Yoga" },
   { name: "Freddie Morgan", title: "Strength & mobility coach", initials: "FM", color: "#AFCFEC", specialty: "Strength" },
-  { name: "Matt LeGrice", title: "Strength & mobility coach", initials: "ML", color: "#C8C3DB", specialty: "Strength" },
+  { name: "Alex Lee", title: "Pilates instructor", initials: "AL", color: "#C8C3DB", specialty: "Pilates" },
+  { name: "Jordan Rivera", title: "Running coach", initials: "JR", color: "#BBD4C5", specialty: "Running" },
+  { name: "Sam Chen", title: "Strength coach", initials: "SC", color: "#E3CEAE", specialty: "Strength" },
 ];
 const exploreStudios: MapStudio[] = [
   { name: "Asana Soul Practice", type: "Yoga", location: "Jersey City, NJ", coordinates: [40.722, -74.044] },
@@ -108,19 +110,19 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   const matches = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
   const shownPeople = peopleSource.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
   const shownStudios = useMemo(() => studiosSource.filter(place => `${place.name} ${place.type} ${place.location}`.toLowerCase().includes(query.trim().toLowerCase()) && (!filter || place.type === filter)), [query, filter, studiosSource]);
-  const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
+  const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => { setFilter(""); onNavigate(target); }} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
     <h1 className={styles.pageTitle}>Explore</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People and studios" aria-label="Search Explore"/></label></div>
     {shownPeople.length + shownStudios.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
-    <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.peopleList}>{shownPeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
-    <section><SectionTitle aside={more("studios")}>Studios nearby</SectionTitle><div className={styles.stack}>{shownStudios.slice(0,2).map(place => <ExploreStudio key={place.name} place={place}/>)}</div></section>
+    <section><SectionTitle aside={more("people")}>{p.live ? "People" : "People near you"}</SectionTitle><div className={styles.peopleRail} role="region" aria-label="People near you" tabIndex={0}>{shownPeople.slice(0,10).map(person => <button key={person.name} className={styles.personRailCard} onClick={()=>p.open({kind:"person",name:person.name})}><Face initials={person.initials} color={person.color} photo={"photo" in person && typeof person.photo === "string" ? person.photo : null} size={64}/><strong>{person.name}</strong><small>{person.specialty}</small></button>)}</div></section>
+    <section><SectionTitle aside={more("studios")}>{p.live ? "Studios" : "Studios near you"}</SectionTitle><div className={styles.studiosRail} role="region" aria-label="Studios near you" tabIndex={0}>{shownStudios.slice(0,8).map(place => <button key={place.name} className={styles.studioRailCard} onClick={()=>p.open({kind:"studio",name:place.name})}>{place.photo ? <img src={place.photo} alt=""/> : <div className={styles.studioRailPlaceholder}><MapPin size={32}/></div>}<span><strong>{place.name}</strong><small>{place.type}</small><small>{place.location}</small></span></button>)}</div></section>
   </>;
   const title = page.charAt(0).toUpperCase() + page.slice(1);
   const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
-    <button className={styles.backButton} onClick={() => onNavigate(null)}><ArrowLeft size={19}/>Back to Explore</button>
+    <button className={styles.backButton} onClick={() => { setFilter(""); onNavigate(null); }}><ArrowLeft size={19}/>Back to Explore</button>
     <h1 className={styles.pageTitle}>{title}</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
