@@ -8,16 +8,26 @@ shadcn/ui is installed with the Base UI Nova preset, Tailwind 4, and the existin
 
 Do not merge this branch as a complete app migration. The functional screens still contain their existing components and CSS.
 
-## Three-way visual comparison
+## Apple-inspired palette exploration
 
-The top control on `/ui-preview` switches between Original, Apple-inspired, and
-Material-inspired treatments. The same components, content, and interaction
-state remain mounted when switching. Original is the default; `?look=apple`
-and `?look=material` provide shareable selections that survive reloads.
+Apple is the selected layout direction. `/ui-preview` now compares four restrained
+palettes using the same layout and mounted interaction state:
 
-The alternatives are CSS-based web interpretations of Apple's grouped surfaces,
-system typography and blue actions, and Material 3's tonal colors, shape scale,
-segmented controls and navigation indicators. They are not native controls or
-implementations of a new component library. All five screens and their detail
-views share the selected treatment. The comparison control remains visually
-neutral and supports radio-group keyboard navigation.
+- Tide: deep teal with cool mist, the default.
+- Moss: muted olive with warm chalk.
+- Clay: terracotta with pale stone.
+- Dusk: smoky violet with soft gray.
+
+The top radio control switches palettes. `?palette=tide`, `?palette=moss`,
+`?palette=clay`, and `?palette=dusk` are shareable selections that survive reloads.
+Cards remain white, with strong color concentrated in actions and selected states.
+Avatars, icons, and utility surfaces use related soft tones. The four palettes were
+checked for at least 4.5:1 contrast on the principal text/background pairs.
+
+Schibsted Grotesk (400, 500, 600, 700) is self-hosted from the official project's
+webfont releases in `public/fonts/`, with its SIL Open Font License alongside.
+It is scoped to this prototype; production typography is unchanged.
+
+Sources: https://github.com/schibsted/schibsted-grotesk and its `fonts/webfonts`
+directory. The Apple-inspired treatment remains a web interpretation, not native
+Apple controls. Previous visual comparisons remain available in git history.

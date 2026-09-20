@@ -134,72 +134,72 @@
 .addFab:hover { background:#b0ed35; }
 .addFab:focus-visible { outline:3px solid #192126; outline-offset:3px; }
 
-/* The comparison control is deliberately identical in all three treatments. */
-.comparisonBar { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; flex:none; margin:0; padding:12px 16px; border:0; border-bottom:1px solid #e1e6e9; background:#fff; font-family:ui-sans-serif,system-ui,sans-serif; }
-.comparisonBar label { position:relative; min-width:0; cursor:pointer; }
-.comparisonBar input { position:absolute; opacity:0; width:1px; height:1px; }
-.comparisonBar span { display:flex; align-items:center; justify-content:center; min-height:40px; border:1px solid transparent; border-radius:8px; color:#536067; font-size:13px; font-weight:600; }
-.comparisonBar input:checked + span { border-color:#192126; background:#192126; color:#fff; }
-.comparisonBar input:focus-visible + span { outline:2px solid #007aff; outline-offset:2px; }
-@media(max-width:520px) { .comparisonBar { padding-top:calc(12px + env(safe-area-inset-top)); } .comparisonBar + .content { padding-top:24px; } }
+/* Color exploration uses the selected Apple-inspired layout throughout. */
+@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-regular.woff2") format("woff2"); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-medium.woff2") format("woff2"); font-weight:500; font-style:normal; font-display:swap; }
+@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-semibold.woff2") format("woff2"); font-weight:600; font-style:normal; font-display:swap; }
+@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-bold.woff2") format("woff2"); font-weight:700; font-style:normal; font-display:swap; }
+.paletteBar { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; flex:none; margin:0; padding:12px 16px; border:0; border-bottom:1px solid var(--preview-line); background:var(--preview-surface); font-family:var(--preview-font); }
+.paletteChoice { position:relative; min-width:0; cursor:pointer; }
+.paletteChoice input { position:absolute; opacity:0; width:1px; height:1px; }
+.paletteOption { display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; min-height:64px; border:1px solid transparent; border-radius:12px; color:var(--preview-muted); font-size:12px; font-weight:500; }
+.paletteChoice input:checked + .paletteOption { border-color:var(--preview-accent); background:var(--preview-soft); color:var(--preview-on-soft); font-weight:600; }
+.paletteChoice input:focus-visible + .paletteOption { outline:2px solid var(--preview-accent); outline-offset:2px; }
+.paletteSwatches { display:flex; align-items:center; padding-left:4px; }
+.paletteSwatches i { width:16px; height:16px; border-radius:50%; background:var(--swatch-accent); }
+.paletteSwatches i + i { margin-left:-4px; background:var(--swatch-soft); border:1px solid color-mix(in srgb,var(--swatch-accent) 20%,transparent); }
+@media(max-width:520px) { .paletteBar { padding-top:calc(12px + env(safe-area-inset-top)); } .paletteBar + .content { padding-top:24px; } }
 
-/* Apple-inspired and Material-inspired web treatments, not native components. */
-.apple,.material { color:var(--preview-text); font-family:var(--preview-font); }
+/* Shared Apple layout with semantic palette tokens. */
+.apple { color:var(--preview-text); font-family:var(--preview-font); }
 .apple {
-  --preview-font:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
-  --preview-ground:#f2f2f7; --preview-surface:#fff; --preview-text:#1c1c1e; --preview-muted:#636366;
-  --preview-accent:#007aff; --preview-on-accent:#fff; --preview-soft:#e8f2ff; --preview-on-soft:#004a99;
-  --preview-line:#d1d1d6; --preview-radius:16px;
-  --primary:#007aff; --primary-foreground:#fff; --secondary:#e8f2ff; --secondary-foreground:#007aff;
+  --preview-font:"Schibsted Grotesk",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  --preview-surface:#fff;
+  --preview-on-accent:#fff;
+  --preview-radius:16px;
+  --primary:var(--preview-accent); --primary-foreground:var(--preview-on-accent); --secondary:var(--preview-soft); --secondary-foreground:var(--preview-on-soft);
 }
-.material {
-  --preview-font:Roboto,"Noto Sans",Arial,sans-serif;
-  --preview-ground:#fef7ff; --preview-surface:#fffbfe; --preview-text:#1d1b20; --preview-muted:#49454f;
-  --preview-accent:#6750a4; --preview-on-accent:#fff; --preview-soft:#eaddff; --preview-on-soft:#21005d;
-  --preview-line:#cac4d0; --preview-radius:24px;
-  --primary:#6750a4; --primary-foreground:#fff; --secondary:#eaddff; --secondary-foreground:#21005d;
-}
-:is(.apple,.material) .phone { background:var(--preview-ground); color:var(--preview-text); }
-:is(.apple,.material) :is(button,input,select,[data-slot="tabs-trigger"]) { font-family:var(--preview-font); }
-:is(.apple,.material) :is(.classCard,.personCard,.simpleCard,.ownedGroup,.exploreGroupCard) { background:var(--preview-surface); border-radius:var(--preview-radius); border:0; box-shadow:none; color:var(--preview-text); }
-:is(.apple,.material) :is(.classMeta span,.classCopy span,.personCardBody span,.personCardBody small,.notification span,.menuRow span,.settingsRow > div > span,.sectionIntro,.ownedGroup small,.startGroup small,.exploreGroupCopy > span,.groupDetailMeta,.categoryFilter,.simpleCard p) { color:var(--preview-muted); }
-:is(.apple,.material) :is(.seeAll,.backButton) { color:var(--preview-accent); font-weight:500; }
-:is(.apple,.material) :is(.classMeta strong,.classCopy strong) { font-size:17px; font-weight:600; }
-:is(.apple,.material) .classAttribution { font-size:14px; font-weight:500; }
-:is(.apple,.material) .sectionTitle h2 { color:var(--preview-text); }
-:is(.apple,.material) .daySection h3 { color:var(--preview-muted); font-weight:500; }
-:is(.apple,.material) :is(.sectionTitle [data-slot="badge"],.notification [data-slot="badge"]) { background:var(--preview-soft); color:var(--preview-on-soft); }
-:is(.apple,.material) .unreadDot { background:var(--preview-accent); }
-:is(.apple,.material) :is(.settingsIcon,.menuRow > .discoverGroupIcon,.allFace) { background:var(--preview-soft); color:var(--preview-accent); }
-:is(.apple,.material) .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-accent); }
-:is(.apple,.material) .personFilter[aria-pressed="true"] small { color:var(--preview-accent); }
-:is(.apple,.material) .personFilter { color:var(--preview-muted); }
-:is(.apple,.material) .startGroup { background:var(--preview-soft); color:var(--preview-on-soft); }
-:is(.apple,.material) .startGroup .groupPlaceholder { background:transparent; }
-:is(.apple,.material) .search { border:0; color:var(--preview-muted); }
-:is(.apple,.material) .search input { color:var(--preview-text); font-size:16px; }
-:is(.apple,.material) .categoryFilter select { background:var(--preview-surface); color:var(--preview-text); border-color:var(--preview-line); font-size:16px; }
-:is(.apple,.material) [data-slot="button"] { min-height:40px; border-radius:999px; color:var(--preview-on-accent); background:var(--preview-accent); font-weight:500; }
-:is(.apple,.material) [data-slot="button"][data-variant="outline"] { border:1px solid var(--preview-line); background:var(--preview-surface); color:var(--preview-accent); }
-:is(.apple,.material) .groupForm input { min-height:44px; border:1px solid var(--preview-line); border-radius:12px; background:var(--preview-surface); color:var(--preview-text); padding:10px 12px; }
-:is(.apple,.material) .shareWeekButton { background:var(--preview-accent); color:var(--preview-on-accent); font-size:15px; font-weight:600; }
-:is(.apple,.material) .secondaryHeroButton { background:var(--preview-soft); color:var(--preview-on-soft); border:0; }
-:is(.apple,.material) .addFab { background:var(--preview-accent); color:var(--preview-on-accent); }
-:is(.apple,.material) .addFab:hover { filter:brightness(.95); }
-:is(.apple,.material) .profileCard { border-radius:var(--preview-radius); }
-:is(.apple,.material) .profileCard h2 { color:var(--preview-text); font-size:24px; font-weight:600; }
-:is(.apple,.material) .profileCard :is(span,p) { color:var(--preview-muted); }
-:is(.apple,.material) .dock button { color:var(--preview-muted); font-weight:500; }
-:is(.apple,.material) .dock button[aria-current="page"],:is(.apple,.material) .dock button[aria-current="page"] svg { color:var(--preview-accent); }
+.apple .phone { background:var(--preview-ground); color:var(--preview-text); }
+.apple :is(button,input,select,[data-slot="tabs-trigger"]) { font-family:var(--preview-font); }
+.apple :is(.classCard,.personCard,.simpleCard,.ownedGroup,.exploreGroupCard) { background:var(--preview-surface); border-radius:var(--preview-radius); border:0; box-shadow:none; color:var(--preview-text); }
+.apple :is(.classMeta span,.classCopy span,.personCardBody span,.personCardBody small,.notification span,.menuRow span,.settingsRow > div > span,.sectionIntro,.ownedGroup small,.startGroup small,.exploreGroupCopy > span,.groupDetailMeta,.categoryFilter,.simpleCard p) { color:var(--preview-muted); }
+.apple :is(.seeAll,.backButton) { color:var(--preview-accent); font-weight:500; }
+.apple :is(.classMeta strong,.classCopy strong) { font-size:17px; font-weight:600; }
+.apple .classAttribution { font-size:14px; font-weight:500; }
+.apple .sectionTitle h2 { color:var(--preview-text); }
+.apple .daySection h3 { color:var(--preview-muted); font-weight:500; }
+.apple :is(.sectionTitle [data-slot="badge"],.notification [data-slot="badge"]) { background:var(--preview-soft); color:var(--preview-on-soft); }
+.apple .unreadDot { background:var(--preview-accent); }
+.apple :is(.settingsIcon,.menuRow > .discoverGroupIcon,.allFace) { background:var(--preview-soft); color:var(--preview-accent); }
+.apple .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-accent); }
+.apple .personFilter[aria-pressed="true"] small { color:var(--preview-accent); }
+.apple .personFilter { color:var(--preview-muted); }
+.apple .startGroup { background:var(--preview-soft); color:var(--preview-on-soft); }
+.apple .startGroup .groupPlaceholder { background:transparent; }
+.apple .search { border:0; color:var(--preview-muted); }
+.apple .search input { color:var(--preview-text); font-size:16px; }
+.apple .categoryFilter select { background:var(--preview-surface); color:var(--preview-text); border-color:var(--preview-line); font-size:16px; }
+.apple [data-slot="button"] { min-height:40px; border-radius:999px; color:var(--preview-on-accent); background:var(--preview-accent); font-weight:500; }
+.apple [data-slot="button"][data-variant="outline"] { border:1px solid var(--preview-line); background:var(--preview-surface); color:var(--preview-accent); }
+.apple .groupForm input { min-height:44px; border:1px solid var(--preview-line); border-radius:12px; background:var(--preview-surface); color:var(--preview-text); padding:10px 12px; }
+.apple .shareWeekButton { background:var(--preview-accent); color:var(--preview-on-accent); font-size:15px; font-weight:600; }
+.apple .secondaryHeroButton { background:var(--preview-soft); color:var(--preview-on-soft); border:0; }
+.apple .addFab { background:var(--preview-accent); color:var(--preview-on-accent); }
+.apple .addFab:hover { filter:brightness(.95); }
+.apple .profileCard { border-radius:var(--preview-radius); }
+.apple .profileCard h2 { color:var(--preview-text); font-size:24px; font-weight:600; }
+.apple .profileCard :is(span,p) { color:var(--preview-muted); }
+.apple .dock button { color:var(--preview-muted); font-weight:500; }
+.apple .dock button[aria-current="page"],.apple .dock button[aria-current="page"] svg { color:var(--preview-accent); }
 
-/* Apple: grouped white surfaces, blue actions, translucent navigation. */
+/* Grouped white surfaces, restrained actions, translucent navigation. */
 .apple .calendarSummary { background:var(--preview-surface); color:var(--preview-text); border-radius:20px; padding:28px 20px; }
-.apple .calendarSummary strong { font-size:28px; font-weight:700; letter-spacing:-.035em; }
+.apple .calendarSummary strong { font-size:28px; font-weight:600; letter-spacing:-.04em; line-height:1.16; }
 .apple .classCardBody { gap:12px; padding:18px 16px; }
 .apple .classCopy span { font-size:14px; }
-.apple .sectionTitle h2 { font-size:22px; font-weight:700; letter-spacing:-.025em; }
-.apple .search { height:44px; background:#e3e3e8; border-radius:12px; }
-.apple .fullTabs { height:36px; padding:2px; background:#e3e3e8; border-radius:9px; }
+.apple .sectionTitle h2 { font-size:21px; font-weight:600; letter-spacing:-.035em; }
+.apple .search { height:44px; background:var(--preview-field); border-radius:12px; }
+.apple .fullTabs { height:36px; padding:2px; background:var(--preview-field); border-radius:9px; }
 .apple .fullTabs [data-slot="tabs-trigger"] { border-radius:7px; color:var(--preview-text); font-weight:500; }
 .apple .fullTabs [data-slot="tabs-trigger"][data-active] { background:#fff; box-shadow:0 2px 5px #0000001a; font-weight:600; }
 .apple .settingsIcon { width:34px; height:34px; border-radius:8px; background:var(--preview-accent); color:#fff; }
@@ -209,40 +209,16 @@
 .apple .profileCard { background:var(--preview-surface); color:var(--preview-text); }
 .apple .profileCard > [data-slot="card-content"] { align-items:center; text-align:center; }
 .apple .groupDetailPhoto { border-radius:16px; }
-.apple .dock { border-top:1px solid #d1d1d680; background:#fffffff0; backdrop-filter:blur(20px) saturate(160%); }
+.apple .dock { border-top:1px solid var(--preview-line); background:#fffffff0; backdrop-filter:blur(20px) saturate(160%); }
 .apple .dock button { font-size:10px; gap:5px; }
 .apple .dock button[aria-current="page"] { background:var(--preview-soft); border-radius:18px; }
-.apple .addFab { width:54px; height:54px; box-shadow:0 5px 16px #007aff33; }
+.apple .addFab { width:54px; height:54px; box-shadow:0 5px 16px color-mix(in srgb,var(--preview-accent) 22%,transparent); }
 
-/* Material: tonal containers, prominent shapes, and navigation indicators. */
-.material .calendarSummary { background:var(--preview-soft); color:var(--preview-on-soft); border-radius:28px; text-align:left; align-items:flex-start; padding:28px 24px; }
-.material .calendarSummary strong { font-size:30px; line-height:1.2; font-weight:500; letter-spacing:0; }
-.material .heroActions { justify-content:flex-start; }
-.material .secondaryHeroButton { background:#d0bcff; }
-.material .classCard { background:#f3edf7; border:1px solid #e7e0ec; border-radius:16px; }
-.material .classCardBody { padding:20px 16px; gap:12px; }
-.material .classAttribution { color:var(--preview-muted); }
-.material .sectionTitle h2 { font-size:22px; font-weight:500; letter-spacing:0; }
-.material .search { height:56px; border-radius:28px; background:#ece6f0; padding:0 20px; }
-.material .fullTabs { height:48px; padding:0; border:1px solid #79747e; background:transparent; border-radius:24px; overflow:hidden; }
-.material .fullTabs [data-slot="tabs-trigger"] { height:100%; border-radius:0; font-size:14px; font-weight:500; color:var(--preview-muted); }
-.material .fullTabs [data-slot="tabs-trigger"] + [data-slot="tabs-trigger"] { border-left:1px solid #79747e; }
-.material .fullTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-soft); color:var(--preview-on-soft); box-shadow:none; }
-.material .fullTabs [data-slot="tabs-trigger"][data-active]::before { content:"✓"; margin-right:6px; }
-.material .personCard,.material .simpleCard { border:1px solid var(--preview-line); border-radius:16px; }
-.material .settingsIcon { border-radius:50%; }
-.material .startGroup { border-radius:28px; padding:24px 16px; }
-.material .profileCard { background:var(--preview-soft); color:var(--preview-on-soft); border-radius:28px; }
-.material .profileCard h2 { color:var(--preview-on-soft); font-weight:500; }
-.material .ownedGroup { background:#f3edf7; border-radius:16px; }
-.material .exploreGroupCard { border-radius:28px; border:1px solid var(--preview-line); }
-.material .groupDetailPhoto { border-radius:28px; }
-.material .categoryFilter select { border-radius:4px; border-color:#79747e; min-height:48px; }
-.material .dock { background:#f3edf7; border:0; padding-top:12px; }
-.material .dock button { position:relative; gap:8px; border-radius:0; font-size:11px; }
-.material .dock button svg { position:relative; z-index:1; }
-.material .dock button[aria-current="page"]::before { content:""; position:absolute; top:0; width:56px; height:32px; border-radius:16px; background:var(--preview-soft); }
-.material .dock button[aria-current="page"] { color:var(--preview-on-soft); font-weight:600; }
-.material .dock button[aria-current="page"] svg { color:var(--preview-on-soft); }
-.material .addFab { width:56px; height:56px; border-radius:16px; background:var(--preview-soft); color:var(--preview-on-soft); box-shadow:0 3px 8px #1d1b2033; }
-@media(prefers-reduced-motion:no-preference) { :is(.apple,.material) :is(button,a,[data-slot="tabs-trigger"]) { transition:background-color .15s ease,color .15s ease,box-shadow .15s ease; } }
+@media(prefers-reduced-motion:no-preference) { .apple :is(button,a,[data-slot="tabs-trigger"]) { transition:background-color .15s ease,color .15s ease,box-shadow .15s ease; } }
+
+.apple .preview,.apple .phone { font-family:var(--preview-font); }
+.apple .settingsIcon { background:var(--preview-soft); color:var(--preview-accent); }
+.apple .groupPlaceholder { background:var(--preview-soft); color:var(--preview-on-soft); }
+.apple .classMeta strong { font-variant-numeric:tabular-nums; }
+.apple .shareWeekButton:hover { background:color-mix(in srgb,var(--preview-accent) 90%,var(--preview-text)); }
+.apple .secondaryHeroButton:hover { background:color-mix(in srgb,var(--preview-soft) 90%,var(--preview-accent)); }
