@@ -54,6 +54,7 @@ function Settings({name}:{name:string}) {
   if(name==="Event registration") return <><p className={styles.sectionIntro}>Select a class to view its details.</p><Schedule items={p.schedule}/></>;
   return null;
 }
+import DetailHeader from "./detail-header";
 export default function DetailScreens({route}:{route:Destination}) {
   const p=usePrototype(); const [message,setMessage]=useState("");
   const [shareStatus,setShareStatus]=useState("");
@@ -62,7 +63,7 @@ export default function DetailScreens({route}:{route:Destination}) {
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
   if(route.kind==="manage" && (p.live?p.live.managed.some(s=>s.name===route.name):route.name==="Ironbound Performance Athletics")) return <StudioWorkspace name={route.name!} view={route.view || "Dashboard"}/>;
   return <>
-    <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>
+    {route.kind==="person"||route.kind==="studio"||route.kind==="class" ? <DetailHeader type={route.kind==="person"?"Person":route.kind==="studio"?"Studio":"Class"} name={title} id={route.name} onBack={p.back}/> : <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>}
     <h1 className={styles.pageTitle}>{title}</h1>
     {route.kind==="membership" && <Membership reason={route.name}/>}
     {route.kind==="edit-profile" && <EditProfile/>}

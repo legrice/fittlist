@@ -45,12 +45,15 @@ function useStateStore() {
     setSaved(v=>[...v,item.id]);
     setSaveNotice(conflict?`Saved. Just so you know, you’re coaching ${conflict.name} at ${timeLabel(conflict.time)} and the times overlap.`:"");
   };
+  const [favorites,setFavorites]=useState<string[]>([]);
   const [messages,setMessages] = useState(["See you at Asana Lab!"]);
   const [stack,setStack] = useState<Destination[]>([]);
   useEffect(()=>{
     const load=()=>{
       const id=new URLSearchParams(window.location.search).get("class");
-      const routes=window.history.state?.previewRoutes;
+      const params=new URLSearchParams(window.location.search);
+      const kind=params.get("detail");const name=params.get("name");
+      const routes=window.history.state?.previewRoutes || ((kind==="person"||kind==="studio")&&name?[{kind,name}]:null);
       setStack(Array.isArray(routes) ? routes : id ? [{kind:"class",name:id}] : []);
     };
     load(); window.addEventListener("popstate",load);
@@ -59,12 +62,13 @@ function useStateStore() {
   const navigate=(routes:Destination[],push:boolean)=>{
     const url=new URL(window.location.href);
     const current=routes.at(-1);
+    url.searchParams.delete("detail");url.searchParams.delete("name");
     if(current?.kind==="class") url.searchParams.set("class",current.name || ""); else url.searchParams.delete("class");
     const state={...window.history.state,previewRoutes:routes,previewDepth:push?(window.history.state?.previewDepth || 0)+1:0};
     window.history[push?"pushState":"replaceState"](state,"",url);
     setStack(routes);
   };
-  return { studioDrafts,setStudioDrafts,saveNotice,setSaveNotice,toggleSaved,billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
+  return { favorites,setFavorites,studioDrafts,setStudioDrafts,saveNotice,setSaveNotice,toggleSaved,billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
     open:(route:Destination)=>navigate([...stack,route],true),
     back:()=>{if(window.history.state?.previewDepth>0) window.history.back(); else navigate(stack.slice(0,-1),false);},
     reset:()=>navigate([],false) };
