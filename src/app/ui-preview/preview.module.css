@@ -671,3 +671,5 @@
 .apple .calendarHero .calendarModeTabs { gap:20px; }
 .calendarIndicator { bottom:7px; }
 .apple .calendarHero:has(.shareWeekButton) { padding-bottom:28px; }
+.apple .calendarHero .calendarSummary { gap:16px; }
+.apple .calendarHero:has(.shareWeekButton) { padding-bottom:36px; }
