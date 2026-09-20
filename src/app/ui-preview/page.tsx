@@ -9,7 +9,7 @@ import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
 import { clearClientMemory } from "@/lib/client-memory";
-import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
+import { Activity, ArrowLeft, Bell, CalendarDays, ChevronLeft, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,8 +125,7 @@ function ExploreScreen({ page, onNavigate, onGroups }: { page: ExplorePage | nul
   const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
-    <button className={styles.backButton} onClick={() => { setFilter(""); onNavigate(null); }}><ArrowLeft size={19}/>Back to Explore</button>
-    <h1 className={styles.pageTitle}>{title}</h1>
+    <header className={styles.detailNav}><button aria-label="Back to Explore" onClick={()=>{setFilter("");onNavigate(null);}}><ChevronLeft size={22}/></button><h1 className={styles.directoryNavTitle}>{title}</h1><span aria-hidden="true"/></header>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>

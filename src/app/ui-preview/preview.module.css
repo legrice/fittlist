@@ -600,3 +600,5 @@
 .sampleUpdate button { border:0; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); padding:10px 16px; }
 .sampleUpdate form { display:flex; gap:8px; }
 .sampleUpdate input { min-width:0; flex:1; border:1px solid var(--preview-soft); border-radius:12px; padding:10px; color:var(--preview-text); background:var(--preview-ground); }
+
+.directoryNavTitle { margin:0; text-align:center; font:600 16px/1.25 var(--preview-font); color:var(--preview-text); }
