@@ -80,10 +80,10 @@ import { X as XGlyph } from "@phosphor-icons/react/dist/ssr/X";
 import type { Icon as PhosphorIcon, IconProps } from "@phosphor-icons/react";
 import { forwardRef } from "react";
 
-// Outline by default; selected controls can explicitly request Fill.
+// Bold outlines by default; selected controls can explicitly request Fill.
 function appIcon(Glyph: PhosphorIcon) {
   return forwardRef<SVGSVGElement, IconProps>(function AppIcon(
-    { strokeWidth: _strokeWidth, fill: _fill, weight = "regular", ...props }, ref
+    { strokeWidth: _strokeWidth, fill: _fill, weight = "bold", ...props }, ref
   ) {
     return <Glyph ref={ref} {...props} weight={weight} />;
   });

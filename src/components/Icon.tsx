@@ -101,5 +101,5 @@ export function Icon({ name, size = 24, className = "" }: {
   strokeWidth?: number;
 }) {
   const Glyph = ICONS[name] ?? Circle;
-  return <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true"><Glyph size={size} weight={name.endsWith("_filled") || name === "bookmark_added" ? "fill" : "regular"} /></span>;
+  return <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true"><Glyph size={size} weight={name.endsWith("_filled") || name === "bookmark_added" ? "fill" : "bold"} /></span>;
 }

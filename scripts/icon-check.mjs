@@ -16,7 +16,7 @@ for (const [, name, component] of entries) {
 for (const [, name] of adapter.matchAll(/from "@phosphor-icons\/react\/dist\/ssr\/(\w+)"/g)) {
   readFileSync("node_modules/@phosphor-icons/react/dist/ssr/" + name + ".d.ts");
 }
-if (!adapter.includes('weight = "regular"')) fail("shared icons must default to outlines");
+if (!adapter.includes('weight = "bold"')) fail("shared icons must default to bold outlines");
 // Every call site that names a glyph as a literal, so an `<Icon name="..." />`
 // that was never mapped is caught here rather than shipping as a blank circle.
 // An unknown name falls back to a plain circle on purpose (a typo should not
