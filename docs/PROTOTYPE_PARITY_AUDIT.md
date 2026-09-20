@@ -74,3 +74,7 @@ Explore now uses a compact people rail (up to 10 previews) and a studio photo ra
 Planned discovery requirements: explicit city/neighborhood or optional current location, adjustable radius, people specialty and studio activity filters, server-side pagination and distance sorting. Preserve filters when returning from a profile; reset filters deliberately when switching directories. Never depend on loading the whole directory into the browser.
 
 Groups: keep Your groups separate from discovery. Add search, chosen location/radius, activity/category and public joinability filters, with clear empty states and reset controls. Private/unlisted groups must retain existing visibility/invitation rules, not leak into results through filters. Membership alone is not a discovery taxonomy. These richer filters are planned, not implemented by the rail layout change.
+
+### Group discovery preview update
+
+Explore includes a Groups rail after Studios; See all opens the Groups root tab. Groups → Explore all groups opens a full-screen directory with local text search, category pills and membership filtering; returning from a group preserves directory selection. Category grouping is a prototype mapping of existing category text, not a persisted taxonomy. Location/radius, accurate distance, authoritative categories and paginated server search remain required. Sample locations are marked; live distances are not invented.

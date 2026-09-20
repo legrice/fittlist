@@ -100,7 +100,7 @@ function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
   const p=usePrototype();
   return <button className={styles.cardLink} onClick={()=>p.open({kind:"studio",name:place.name})}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card></button>;
 }
-function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void }) {
+function ExploreScreen({ page, onNavigate, onGroups }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void; onGroups: (id?:string) => void }) {
   const p=usePrototype();
   const peopleSource=p.live?.people || explorePeople;
   const studiosSource=p.live?.studios || exploreStudios;
@@ -113,10 +113,11 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
   const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => { setFilter(""); onNavigate(target); }} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
     <h1 className={styles.pageTitle}>Explore</h1>
-    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People and studios" aria-label="Search Explore"/></label></div>
-    {shownPeople.length + shownStudios.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People, studios, and groups" aria-label="Search Explore"/></label></div>
+    {shownPeople.length + shownStudios.length + (p.live?.groups || sampleGroups).filter(g=>matches(`${g.name} ${g.description} ${g.category}`)).length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
     <section><SectionTitle aside={more("people")}>{p.live ? "People" : "People near you"}</SectionTitle><div className={styles.peopleRail} role="region" aria-label="People near you" tabIndex={0}>{shownPeople.slice(0,10).map(person => <button key={person.name} className={styles.personRailCard} onClick={()=>p.open({kind:"person",name:person.name})}><Face initials={person.initials} color={person.color} photo={"photo" in person && typeof person.photo === "string" ? person.photo : null} size={64}/><strong>{person.name}</strong><small>{person.specialty}</small></button>)}</div></section>
     <section><SectionTitle aside={more("studios")}>{p.live ? "Studios" : "Studios near you"}</SectionTitle><div className={styles.studiosRail} role="region" aria-label="Studios near you" tabIndex={0}>{shownStudios.slice(0,8).map(place => <button key={place.name} className={styles.studioRailCard} onClick={()=>p.open({kind:"studio",name:place.name})}>{place.photo ? <img src={place.photo} alt=""/> : <div className={styles.studioRailPlaceholder}><MapPin size={32}/></div>}<span><strong>{place.name}</strong><small>{place.type}</small><small>{place.location}</small></span></button>)}</div></section>
+    <section><SectionTitle aside={<button className={styles.seeAll} onClick={()=>onGroups()} aria-label="See all groups">See all<ChevronRight size={15}/></button>}>Groups</SectionTitle><div className={styles.studiosRail} role="region" aria-label="Explore groups" tabIndex={0}>{(p.live?.groups || sampleGroups).filter(g=>matches(`${g.name} ${g.description} ${g.category}`)).slice(0,8).map(g=><button key={g.id} className={styles.studioRailCard} onClick={()=>onGroups(g.id)}>{g.image ? <img src={g.image} alt="" loading="lazy"/> : <div className={styles.studioRailPlaceholder}><Users size={32}/></div>}<span><strong>{g.name}</strong><small>{g.category}</small></span></button>)}</div></section>
   </>;
   const title = page.charAt(0).toUpperCase() + page.slice(1);
   const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
@@ -143,6 +144,14 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const groupClasses=p.schedule.map(c=>({id:c.id,name:c.name,place:c.place,coach:c.coach,day:dateLabel(c.date),time:timeLabel(c.time),duration:`${c.duration} min`,color:"#C8C3DB"}));
   const [groups, setGroups] = useState(sampleGroups);
   const [joined, setJoined] = useState(["gals"]);
+  const [groupQuery,setGroupQuery]=useState("");
+  const [groupCategory,setGroupCategory]=useState("All");
+  const [groupMembership,setGroupMembership]=useState("all");
+  const [browsing,setBrowsing]=useState(false);
+  const categories=["All","Fitness groups","Wellness groups","Running clubs"];
+  const categoryOf=(value:string)=>/run/i.test(value)?"Running clubs":/wellness|yoga|mindful/i.test(value)?"Wellness groups":"Fitness groups";
+  const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All"||categoryOf(g.category)===groupCategory)&&(groupMembership==="all"||!joined.includes(g.id)));
+  const openGroup=(id:string)=>{setBrowsing(selected==="browse");setSelected(id);};
   useEffect(()=>{if(p.live){setGroups(p.live.groups);setJoined(p.live.joined);}},[p.live]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -152,7 +161,16 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const back = <button className={styles.backButton} onClick={() => setSelected(null)}><ArrowLeft size={19}/>Back to Groups</button>;
   const ownGroups = groups.filter(item => joined.includes(item.id));
   return <div ref={top}>
-    {selected === "create" ? <>
+    {selected === "browse" ? <>
+      {back}<h1 className={styles.pageTitle}>Explore groups</h1>
+      <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label></div>
+      <div className={styles.groupCategories} role="group" aria-label="Group categories">{categories.map(c=><button key={c} aria-pressed={groupCategory===c} onClick={()=>setGroupCategory(c)}>{c}</button>)}</div>
+      <label className={styles.categoryFilter}>Membership<select aria-label="Group membership filter" value={groupMembership} onChange={e=>setGroupMembership(e.target.value)}><option value="all">All groups</option><option value="new">Groups you haven’t joined</option></select></label>
+      <p className={styles.sectionIntro}>Distance filtering is coming when group locations are available.</p>
+      <SectionTitle aside={<Badge variant="secondary">{results.length}</Badge>}>Groups</SectionTitle>
+      {results.length===0&&<p className={styles.sectionIntro}>No matching groups. Try another category or search.</p>}
+      <div className={styles.exploreGroupList}>{results.map(item=><button key={item.id} className={styles.exploreGroupCard} onClick={()=>openGroup(item.id)}>{item.image&&<img src={item.image} alt="" loading="lazy"/>}<span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category}</span><span>{p.live ? "Location unavailable in preview" : "Jersey City, NJ · Sample location"}</span><span>{item.description}</span>{joined.includes(item.id)&&<small>Joined</small>}</span></button>)}</div>
+    </> : selected === "create" ? <>
       {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
       <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
         <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
@@ -160,7 +178,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
         <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only. Changes last while you’re on this page.</p>
       </form>
     </> : group ? <>
-      {back}
+      {browsing ? <button className={styles.backButton} onClick={()=>setSelected("browse")}><ArrowLeft size={19}/>Back to Explore groups</button> : back}
       {group.image && <img className={styles.groupDetailPhoto} src={group.image} alt=""/>}
       <h1 className={styles.pageTitle}>{group.name}</h1><p className={styles.sectionIntro}>{group.description}</p>
       <div className={styles.groupDetailMeta}><span>{group.category}</span>{joined.includes(group.id) ? <Badge variant="secondary">Joined</Badge> : <Button onClick={() => { setJoined(ids => [...ids, group.id]); setGroups(items => items.map(item => item.id === group.id ? { ...item, members: [...item.members, p.profile.name] } : item)); }}>Join group</Button>}</div>
@@ -171,12 +189,12 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
     </> : <>
       <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={() => setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
       <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
-      <div className={styles.stack}>{ownGroups.map(item => <button key={item.id} className={styles.ownedGroup} onClick={() => setSelected(item.id)}>
+      <div className={styles.stack}>{ownGroups.map(item => <button key={item.id} className={styles.ownedGroup} onClick={() => openGroup(item.id)}>
         {item.image ? <img src={item.image} alt=""/> : <span className={styles.groupPlaceholder}><Users size={28}/></span>}<span><strong>{item.name}</strong><small>{item.members.length} members</small></span><ChevronRight size={18}/>
       </button>)}</div>
-      <SectionTitle>Groups to explore</SectionTitle>
-      <div className={styles.exploreGroupList}>{groups.filter(item => !joined.includes(item.id)).map(item => <button key={item.id} className={styles.exploreGroupCard} onClick={() => setSelected(item.id)}>
-        <img src={item.image} alt="" loading="lazy"/><span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category} · Jersey City</span><span>{item.description}</span><small><Users size={15}/>{item.members.length} members<ChevronRight size={17}/></small></span>
+      <SectionTitle aside={<button className={styles.seeAll} onClick={()=>setSelected("browse")}>Explore all groups<ChevronRight size={15}/></button>}>Groups to explore</SectionTitle>
+      <div className={styles.exploreGroupList}>{groups.filter(item => !joined.includes(item.id)).slice(0,3).map(item => <button key={item.id} className={styles.exploreGroupCard} onClick={() => openGroup(item.id)}>
+        <img src={item.image} alt="" loading="lazy"/><span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category}{!p.live && " · Jersey City"}</span><span>{item.description}</span><small><Users size={15}/>{item.members.length} members<ChevronRight size={17}/></small></span>
       </button>)}</div>
     </>}
   </div>;
@@ -285,7 +303,7 @@ function PreviewShell() {
   useEffect(()=>{mainRef.current?.scrollTo({top:0});},[detail,screen,explorePage,sharing,selectedGroup]);
   return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>{p.saveNotice && <div className={styles.saveNotice} role="status"><span>{p.saveNotice}</span><button aria-label="Dismiss schedule notice" onClick={()=>p.setSaveNotice("")}><X size={18}/></button></div>}
     <div className={styles.dataBanner} role="status">{p.dataStatus==="loading"?"Loading your account…":p.live?"Live data · changes stay in this preview":p.dataStatus==="error"?"Couldn’t load account data. Showing samples.":<>Sample data · <Link href="/?join=login&next=/ui-preview">Sign in</Link> to load your account.</>}{p.dataStatus!=="loading" && <button onClick={()=>void p.reloadData()}>{p.live?"Refresh":"Retry"}</button>}</div>
-    <main ref={mainRef} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
+    <main ref={mainRef} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage} onGroups={id=>{setSelectedGroup(id || null);setScreen("groups");}}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
     {!takeover && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>}
   </div></div>;
 }
