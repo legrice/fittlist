@@ -236,7 +236,7 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
     </div></section>
     {[
       { title: "Membership", rows: [
-        { icon: Activity, title: "FittList Pro", detail: p.pro ? `${p.membershipPlan==="studio"?"Studio":"Pro"} preview · Manage membership` : `Free · Explore Pro and Studio` },
+        { icon: null, title: p.pro ? "Pro" : "Free", detail: p.pro ? "Manage membership" : "Explore Pro and Studio" },
       ] },
       { title: "Tools", rows: [
         { icon: Activity, title: "Insights", detail: "Your teaching, classes, and sharing" },
@@ -254,8 +254,8 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
     ].map((section) => <section key={section.title}>
       <SectionTitle>{section.title}</SectionTitle>
       <div className={styles.stack}>{section.rows.map(({ icon: Icon, title, detail }) =>
-        <button key={title} className={styles.cardLink} onClick={()=>p.open(title==="FittList Pro"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
-          <span className={styles.settingsIcon}><Icon size={22}/></span>
+        <button key={title} className={styles.cardLink} onClick={()=>p.open(section.title==="Membership"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
+          {Icon && <span className={styles.settingsIcon}><Icon size={22}/></span>}
           <div><strong>{title}</strong><span>{detail}</span></div>
           <ChevronRight size={18}/>
         </CardContent></Card></button>
