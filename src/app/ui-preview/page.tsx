@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Activity, ArrowLeft, Bell, CalendarDays, ChevronRight, Clock, GlobeLock, LockKeyhole, MapPin, Plus, Search, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -11,14 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
 import styles from "./preview.module.css";
-
-const palettes = [
-  { id: "tide", name: "Tide", mood: "Cool & precise", accent: "#285E64", soft: "#DDECEE", onSoft: "#244E53", ground: "#F0F4F4", text: "#1D2C30", muted: "#59696C", line: "#D3DFE0", field: "#E3EBEC" },
-  { id: "moss", name: "Moss", mood: "Grounded & warm", accent: "#52643E", soft: "#E8EDDB", onSoft: "#3D4B2D", ground: "#F4F4EE", text: "#282D23", muted: "#626858", line: "#DCDDCF", field: "#E9EADF" },
-  { id: "clay", name: "Clay", mood: "Warm & assured", accent: "#8D4C3C", soft: "#F4E4DC", onSoft: "#6A3C30", ground: "#F7F2EF", text: "#332B28", muted: "#72625B", line: "#E6DAD3", field: "#EEE5DF" },
-  { id: "dusk", name: "Dusk", mood: "Quiet & technical", accent: "#63547E", soft: "#EAE4F1", onSoft: "#4B3D62", ground: "#F3F1F6", text: "#2B2732", muted: "#6C6376", line: "#DFD9E6", field: "#E9E5EF" },
-] as const;
-type PaletteId = typeof palettes[number]["id"];
 
 type Screen = "calendar" | "explore" | "groups" | "updates" | "you";
 
@@ -36,8 +28,8 @@ const classes = [
   { day: "Mon · Sep 21", time: "6:00 PM", name: "Guns, Buns, and Lungs", place: "Ironbound Performance Athletics", coach: "Matt LeGrice", duration: "60 min", color: "#C8C3DB" },
 ];
 
-function Face({ initials, size = 36 }: { initials: string; color: string; size?: number }) {
-  return <Avatar style={{ width: size, height: size, background: "var(--preview-avatar)" }}><AvatarFallback style={{ background: "var(--preview-avatar)", color: "var(--preview-on-soft)", fontWeight: 600 }}>{initials}</AvatarFallback></Avatar>;
+function Face({ initials, color, size = 36 }: { initials: string; color: string; size?: number }) {
+  return <Avatar style={{ width: size, height: size, background: color }}><AvatarFallback style={{ background: color, color: "var(--preview-on-soft)", fontWeight: 600 }}>{initials}</AvatarFallback></Avatar>;
 }
 
 function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
@@ -57,12 +49,17 @@ function ClassCard({ item }: { item: typeof classes[number] }) {
 }
 
 function CalendarScreen() {
+  const [view, setView] = useState("you");
   const [selectedPerson, setSelectedPerson] = useState("All");
   const people = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
   return <>
-    <Tabs defaultValue="you"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList></div>
-      <TabsContent value="you" className={styles.calendarYouPanel}><div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: 1, attending: 2, personal: 0 })}</strong><div className={styles.heroActions}><Link href="/share" className={styles.shareWeekButton} aria-label="Share your week">Share</Link><Link href="/calendar?add=1" className={`${styles.shareWeekButton} ${styles.secondaryHeroButton}`} aria-label="Add to your week">Add</Link></div></div>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<Link href="/calendar?add=1" className={styles.addFab} aria-label="Add a class"><Plus size={28}/></Link></TabsContent>
-      <TabsContent value="following"><div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div><SectionTitle aside={<Badge variant="secondary">{selectedPerson === "All" ? "3 classes" : "1 class"}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{classes.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+    <Tabs value={view} onValueChange={value => setView(String(value))}>
+      <div className={styles.calendarHero}>
+        <TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList>
+        {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: 1, attending: 2, personal: 0 })}</strong><div className={styles.heroActions}><Link href="/share" className={styles.shareWeekButton} aria-label="Share your week">Share</Link><Link href="/calendar?add=1" className={`${styles.shareWeekButton} ${styles.secondaryHeroButton}`} aria-label="Add to your week">Add</Link></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div>}
+      </div>
+      <TabsContent value="you" className={styles.calendarYouPanel}>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<Link href="/calendar?add=1" className={styles.addFab} aria-label="Add a class"><Plus size={28}/></Link></TabsContent>
+      <TabsContent value="following"><SectionTitle aside={<Badge variant="secondary">{selectedPerson === "All" ? "3 classes" : "1 class"}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{classes.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
     </Tabs>
   </>;
 }
@@ -201,32 +198,9 @@ function YouScreen() {
 
 export default function UiPreview() {
   const [screen,setScreen]=useState<Screen>("calendar");
-  const [paletteId, setPaletteId] = useState<PaletteId>("tide");
-  useEffect(() => {
-    const value = new URLSearchParams(window.location.search).get("palette");
-    if (palettes.some(item => item.id === value)) setPaletteId(value as PaletteId);
-  }, []);
-  const changePalette = (value: PaletteId) => {
-    setPaletteId(value);
-    const url = new URL(window.location.href);
-    url.searchParams.delete("look");
-    url.searchParams.set("palette", value);
-    window.history.replaceState(window.history.state, "", url);
-  };
-  const palette = palettes.find(item => item.id === paletteId)!;
-  const theme = {
-    "--preview-accent": palette.accent, "--preview-soft": palette.soft,
-    "--preview-on-soft": palette.onSoft, "--preview-ground": palette.ground,
-    "--preview-text": palette.text, "--preview-muted": palette.muted,
-    "--preview-line": palette.line, "--preview-field": palette.field,
-    "--preview-avatar": palette.soft,
-  } as CSSProperties;
   const [explorePage,setExplorePage]=useState<ExplorePage | null>(null);
-  return <div className={`${styles.preview} ${styles.apple}`} data-palette={paletteId} style={theme}><div className={styles.notice}>Apple-inspired · Schibsted Grotesk · sample content</div><div className={styles.phone}>
-    <fieldset className={styles.paletteBar} aria-label="Color palette">
-      {palettes.map(item => <label key={item.id} className={styles.paletteChoice} title={item.mood} style={{ "--swatch-accent": item.accent, "--swatch-soft": item.soft } as CSSProperties}><input type="radio" name="palette" value={item.id} checked={paletteId === item.id} onChange={() => changePalette(item.id)} aria-label={item.name}/><span className={styles.paletteOption}><span className={styles.paletteSwatches} aria-hidden="true"><i/><i/></span><span>{item.name}</span></span></label>)}
-    </fieldset>
-    <main key={`${screen}-${explorePage ?? "home"}`} className={styles.content} aria-label={screens.find(({ id }) => id === screen)?.label}>{screen==="calendar"?<CalendarScreen/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
+  return <div className={`${styles.preview} ${styles.apple}`}><div className={styles.notice}>Apple-inspired · Schibsted Grotesk · sample content</div><div className={styles.phone}>
+    <main key={`${screen}-${explorePage ?? "home"}`} className={`${styles.content} ${screen === "calendar" ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{screen==="calendar"?<CalendarScreen/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
     <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
 }

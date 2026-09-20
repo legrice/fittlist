@@ -8,21 +8,13 @@ shadcn/ui is installed with the Base UI Nova preset, Tailwind 4, and the existin
 
 Do not merge this branch as a complete app migration. The functional screens still contain their existing components and CSS.
 
-## Apple-inspired palette exploration
+## Apple-inspired direction
 
-Apple is the selected layout direction. `/ui-preview` now compares four restrained
-palettes using the same layout and mounted interaction state:
-
-- Tide: deep teal with cool mist, the default.
-- Moss: muted olive with warm chalk.
-- Clay: terracotta with pale stone.
-- Dusk: smoky violet with soft gray.
-
-The top radio control switches palettes. `?palette=tide`, `?palette=moss`,
-`?palette=clay`, and `?palette=dusk` are shareable selections that survive reloads.
-Cards remain white, with strong color concentrated in actions and selected states.
-Avatars, icons, and utility surfaces use related soft tones. The four palettes were
-checked for at least 4.5:1 contrast on the principal text/background pairs.
+Apple is the selected layout direction, with the original ink, white, and lime
+colors restored. The palette comparison control has been removed.
+Calendar now has one full-width dark hero containing a pill-shaped You/Following
+control and either the personal summary or the people filter circles. The class
+list sits directly beneath it. Updates also uses pill-shaped tabs.
 
 Schibsted Grotesk (400, 500, 600, 700) is self-hosted from the official project's
 webfont releases in `public/fonts/`, with its SIL Open Font License alongside.
