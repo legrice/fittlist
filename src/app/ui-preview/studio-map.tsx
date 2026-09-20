@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { List } from "lucide-react";
+import { usePrototype } from "./prototype-state";
 import styles from "./preview.module.css";
 
 export type MapStudio = { name: string; type: string; location: string; coordinates: [number, number] };
 
 export default function StudioMap({ studios, onClose }: { studios: MapStudio[]; onClose: () => void }) {
+  const p=usePrototype();
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { dialog.current?.showModal(); }, []);
   const container = useRef<HTMLDivElement>(null);
@@ -38,7 +40,7 @@ export default function StudioMap({ studios, onClose }: { studios: MapStudio[]; 
     <div ref={container} className={styles.studioMap} aria-label="Studio map"/>
     <p className={styles.mapNote}>Sample studio locations{failed ? " · Map tiles unavailable" : ""}</p>
     {!active && <div className={styles.mapStudioCard}>No studios match your filters. Go back to adjust your search.</div>}
-    {active && <div className={styles.mapStudioCard} aria-live="polite"><strong>{active.name}</strong><span>{active.type} · {active.location}</span><small>Tap a numbered pin to explore a studio.</small></div>}
+    {active && <div className={styles.mapStudioCard} aria-live="polite"><strong>{active.name}</strong><span>{active.type} · {active.location}</span><button className={styles.mapDetailLink} onClick={()=>{dialog.current?.close();p.open({kind:"studio",name:active.name});}}>View studio</button></div>}
     <button autoFocus className={styles.mapToggle} onClick={() => dialog.current?.close()}><List size={19}/>Back to list</button>
   </div></dialog>;
 }

@@ -333,3 +333,35 @@
 .apple.dark .dock button[aria-current="page"] { background:#ffffff18; color:#f5f7f8; box-shadow:inset 0 1px 0 #ffffff17; }
 .apple.dark .dock button[aria-current="page"] svg { color:#f5f7f8; }
 @media(prefers-reduced-transparency:reduce) { .apple .dock { background:#f5f7f8; backdrop-filter:none; -webkit-backdrop-filter:none; } .apple.dark .dock { background:#202a30; } }
+
+.cardLink { display:block; width:100%; border:0; padding:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.personLink { display:flex; flex:1; flex-direction:column; gap:4px; min-width:0; border:0; padding:0; text-align:left; background:transparent; color:inherit; font:inherit; cursor:pointer; }
+.detailForm { display:grid; gap:20px; }
+.detailForm label { display:grid; gap:8px; font-size:14px; font-weight:500; min-width:0; }
+.detailForm :is(input,textarea,select),.preferenceRow select { width:100%; min-width:0; min-height:46px; padding:12px; border:1px solid var(--preview-line); border-radius:12px; background:var(--preview-surface); color:var(--preview-text); font:inherit; font-size:16px; }
+.detailForm textarea { min-height:100px; resize:vertical; }
+.formColumns { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.detailAvatar { display:grid; place-items:center; width:80px; height:80px; border-radius:50%; background:#c8c3db; color:#192126; font-size:24px; font-weight:600; margin-bottom:16px; }
+.detailRow { display:flex; align-items:center; gap:12px; width:100%; padding:20px 0; border:0; border-bottom:1px solid var(--preview-line); background:transparent; color:var(--preview-text); font:inherit; text-align:left; cursor:pointer; }
+.detailRow > span { flex:1; display:grid; gap:5px; }
+.detailRow small,.detailClass small,.detailIdentity > span { color:var(--preview-muted); font-size:13px; }
+.detailClass { display:grid; gap:14px; padding:20px; border:0; border-radius:16px; background:var(--preview-surface); color:var(--preview-text); width:100%; font:inherit; text-align:left; cursor:pointer; }
+.detailClass > div { display:grid; grid-template-columns:90px 1fr; gap:12px; }
+.detailClass > div > span { display:grid; gap:6px; }
+.detailIdentity { margin-bottom:20px; }
+.detailIdentity > span { display:flex; gap:6px; align-items:center; }
+.preferenceRow { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 0; border-bottom:1px solid var(--preview-line); }
+.preferenceRow select { width:110px; }
+.metricGrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.metricGrid > div { display:grid; gap:8px; background:var(--preview-surface); padding:24px; border-radius:16px; }
+.metricGrid strong { font-size:32px; }
+.metricGrid span { color:var(--preview-muted); font-size:13px; }
+.classDetailFacts { display:grid; gap:12px; }
+.messageList { display:grid; gap:12px; margin:24px 0; }
+.messageBubble { background:var(--preview-surface); padding:16px; border-radius:18px; max-width:85%; }
+.sentMessage { margin-left:auto; background:var(--preview-soft); }
+.prototypeNote { display:flex; align-items:center; gap:6px; margin:32px 0 0; font-size:12px; color:var(--preview-muted); }
+.cardLink:focus-visible,.detailRow:focus-visible,.detailClass:focus-visible,.personLink:focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; border-radius:12px; }
+
+.mapDetailLink { border:0; border-radius:999px; padding:10px 16px; background:var(--preview-soft); color:var(--preview-text); font:inherit; cursor:pointer; }
+.apple .addFab { border:0; cursor:pointer; }

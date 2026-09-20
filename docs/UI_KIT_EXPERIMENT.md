@@ -21,3 +21,18 @@ list sits directly beneath it. Updates also uses pill-shaped tabs.
 The prototype uses the self-hosted Delight brand font throughout. The Apple-inspired
 treatment remains a web interpretation, not native Apple controls. Previous visual
 comparisons remain available in git history.
+
+## Connected preview screens
+
+The prototype now includes managed calendars (including Ironbound Performance
+Athletics), profile editing, adding/editing class details, people/studio detail
+pages, follow/save states, conversation composition, insights, sync settings,
+away dates, notification/privacy settings, account preferences, and admin/team
+access screens. The map opens studio details; group classes open class details.
+Back navigation preserves the underlying discovery filters and group selection.
+
+These flows use shared in-memory sample data, retained across navigation for the
+current preview session. Reloading resets it. Calendar connections, messages,
+team access, and account edits do not call production services. The existing
+logout action remains connected to the real sign-out flow. Dark appearance is
+still stored locally.

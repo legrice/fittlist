@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import DetailScreens from "./detail-screens";
+import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
 import { clearClientMemory } from "@/lib/client-memory";
 import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
@@ -41,7 +42,8 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
 }
 
 function ClassCard({ item }: { item: typeof classes[number] }) {
-  return <Card className={styles.classCard}>
+  const p = usePrototype();
+  return <button className={styles.cardLink} onClick={() => { const found = p.schedule.find(c => c.name === item.name); if(found) p.open({kind:"class",name:found.id}); }}><Card className={styles.classCard}>
     <CardContent className={styles.classCardBody}>
       <div className={styles.classAttribution}><Face initials={item.coach.split(" ").map((part) => part[0]).join("")} color={item.color} size={28}/><span>{item.coach}</span></div>
       <div className={styles.classDetails}>
@@ -49,10 +51,12 @@ function ClassCard({ item }: { item: typeof classes[number] }) {
         <div className={styles.classCopy}><strong>{item.name}</strong><span>{item.place}</span></div>
       </div>
     </CardContent>
-  </Card>;
+  </Card></button>;
 }
 
 function CalendarScreen({ onShare }: { onShare: () => void }) {
+  const p = usePrototype();
+  const calendarClasses = p.schedule.map(c => ({ name:c.name, place:c.place, coach:c.coach, day:dateLabel(c.date), time:timeLabel(c.time), duration:`${c.duration} min`, color:"#C8C3DB" }));
   const [view, setView] = useState("you");
   const [selectedPerson, setSelectedPerson] = useState("All");
   const people = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
@@ -60,10 +64,10 @@ function CalendarScreen({ onShare }: { onShare: () => void }) {
     <Tabs value={view} onValueChange={value => setView(String(value))}>
       <div className={styles.calendarHero}>
         <TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList>
-        {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: 1, attending: 2, personal: 0 })}</strong><div className={styles.heroActions}><button type="button" onClick={onShare} className={styles.shareWeekButton} aria-label="Share your week"><Share2 size={18} aria-hidden="true"/>Share</button></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div>}
+        {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: p.schedule.filter(c=>c.coach===p.profile.name || c.coach==="Matt LeGrice").length, attending: p.schedule.filter(c=>c.coach!==p.profile.name && c.coach!=="Matt LeGrice").length, personal: 0 })}</strong><div className={styles.heroActions}><button type="button" onClick={onShare} className={styles.shareWeekButton} aria-label="Share your week"><Share2 size={18} aria-hidden="true"/>Share</button></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div>}
       </div>
-      <TabsContent value="you" className={styles.calendarYouPanel}>{classes.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<Link href="/calendar?add=1" className={styles.addFab} aria-label="Add a class"><Plus size={28}/></Link></TabsContent>
-      <TabsContent value="following"><SectionTitle aside={<Badge variant="secondary">{selectedPerson === "All" ? "3 classes" : "1 class"}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{classes.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+      <TabsContent value="you" className={styles.calendarYouPanel}>{calendarClasses.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<button onClick={() => p.open({kind:"add-class"})} className={styles.addFab} aria-label="Add a class"><Plus size={28}/></button></TabsContent>
+      <TabsContent value="following"><SectionTitle aside={<Badge variant="secondary">{`${calendarClasses.filter(c=>selectedPerson === "All" || c.coach.startsWith(selectedPerson)).length} classes`}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{calendarClasses.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
     </Tabs>
   </>;
 }
@@ -80,10 +84,12 @@ const exploreStudios: MapStudio[] = [
   { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ", coordinates: [40.731, -74.057] },
 ];
 function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
-  return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button data-variant="outline" variant="outline" size="sm">Follow</Button></CardContent></Card>;
+  const p = usePrototype();
+  return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><button className={styles.personLink} onClick={() => p.open({kind:"person",name:person.name})}><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></button><Button data-variant="outline" variant="outline" size="sm" onClick={() => p.setFollowing(v=>v.includes(person.name)?v.filter(x=>x!==person.name):[...v,person.name])}>{p.following.includes(person.name)?"Following":"Follow"}</Button></CardContent></Card>;
 }
 function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
-  return <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card>;
+  const p=usePrototype();
+  return <button className={styles.cardLink} onClick={()=>p.open({kind:"studio",name:place.name})}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card></button>;
 }
 function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void }) {
   const [query, setQuery] = useState("");
@@ -121,6 +127,8 @@ const sampleGroups = [
   { id: "sweat", name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
 ];
 function GroupsScreen() {
+  const p=usePrototype();
+  const groupClasses=p.schedule.map(c=>({name:c.name,place:c.place,coach:c.coach,day:dateLabel(c.date),time:timeLabel(c.time),duration:`${c.duration} min`,color:"#C8C3DB"}));
   const [groups, setGroups] = useState(sampleGroups);
   const [joined, setJoined] = useState(["gals"]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -147,7 +155,7 @@ function GroupsScreen() {
       <SectionTitle aside={<Badge variant="secondary">{group.members.length}</Badge>}>Who’s in the group</SectionTitle>
       <div className={styles.memberGrid}>{group.members.map((member,index) => <div key={member}><Face initials={member.split(" ").map(part => part[0]).join("")} color={["#D8C6B4", "#AFCFEC", "#C8C3DB"][index % 3]} size={44}/><span>{member}</span></div>)}</div>
       <SectionTitle>Upcoming classes</SectionTitle>
-      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{classes[index].day}</h3><ClassCard item={classes[index]}/></section>) : <p className={styles.sectionIntro}>No classes planned yet. Check back for the next group plan.</p>}
+      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>No classes planned yet. Check back for the next group plan.</p>}
     </> : <>
       <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={() => setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
       <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
@@ -163,20 +171,22 @@ function GroupsScreen() {
 }
 
 function UpdatesScreen() {
+  const p=usePrototype();
   return <>
     <h1 className={styles.pageTitle}>Updates</h1>
     <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList></div>
-      <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></div></TabsContent>
-      <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></TabsContent>
+      <TabsContent value="notifications"><SectionTitle>Today</SectionTitle><div className={styles.stack}><button className={styles.cardLink} onClick={()=>p.open({kind:"person",name:"Erin Clyne"})}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne followed you</strong><span>2 hours ago</span></div><span className={styles.unreadDot}/></CardContent></Card></button><button className={styles.cardLink} onClick={()=>p.open({kind:"class",name:"sculpt"})}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="FM" color="#AFCFEC"/><div><strong>Freddie added a class</strong><span>Gals who like to move · Yesterday</span></div><span className={styles.unreadDot}/></CardContent></Card></button></div></TabsContent>
+      <TabsContent value="messages"><SectionTitle>Conversations</SectionTitle><button className={styles.cardLink} onClick={()=>p.open({kind:"conversation",name:"Erin Clyne"})}><Card className={styles.simpleCard}><CardContent className={styles.notification}><Face initials="EC" color="#D8C6B4"/><div><strong>Erin Clyne</strong><span>See you at Asana Lab!</span></div><Badge>1</Badge></CardContent></Card></button></TabsContent>
     </Tabs>
   </>;
 }
 
 function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value: boolean) => void }) {
+  const p=usePrototype();
   const sheet = useRef<HTMLDialogElement>(null);
   const [qr, setQr] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
-  const profileUrl = "https://fittlist.co/mattlegrice";
+  const profileUrl = `https://fittlist.co/${p.profile.handle}`;
   const openShare = async () => {
     setCopyStatus("");
     sheet.current?.showModal();
@@ -191,28 +201,27 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
   };
   return <div className={styles.youPage}>
     <header className={styles.profileHeader}>
-      <Face initials="ML" color="#C8C3DB" size={80}/>
-      <h1 className={styles.pageTitle}>Matt LeGrice</h1>
+      <Face initials={p.profile.name.split(" ").map(part=>part[0]).join("").slice(0,2)} color="#C8C3DB" size={80}/>
+      <h1 className={styles.pageTitle}>{p.profile.name}</h1>
       <div className={styles.profileActions}>
-        <Button data-variant="outline" variant="outline" onClick={openShare} aria-haspopup="dialog">@mattlegrice<ChevronDown size={16}/></Button>
-        <Button data-variant="outline" variant="outline">Edit profile</Button>
+        <Button data-variant="outline" variant="outline" onClick={openShare} aria-haspopup="dialog">@{p.profile.handle}<ChevronDown size={16}/></Button>
+        <Button data-variant="outline" variant="outline" onClick={()=>p.open({kind:"edit-profile"})}>Edit profile</Button>
       </div>
-      <p>Strength & mobility coach · Jersey City, NJ</p>
+      <p>{p.profile.bio} · {p.profile.location}</p>
     </header>
     <dialog ref={sheet} className={styles.profileSheet} aria-labelledby="profile-share-title" onClick={event => { if (event.target === event.currentTarget) sheet.current?.close(); }}>
       <div className={styles.sheetBody}>
         <button className={styles.sheetClose} aria-label="Close profile sharing" onClick={() => sheet.current?.close()}><X size={22}/></button>
         <h2 id="profile-share-title">Share your profile</h2>
-        <p>Scan to find @mattlegrice on FittList.</p>
-        {qr ? <img className={styles.profileQr} src={qr} alt="QR code linking to Matt LeGrice’s FittList profile"/> : <p>Preparing your QR code…</p>}
+        <p>Scan to find @{p.profile.handle} on FittList.</p>
+        {qr ? <img className={styles.profileQr} src={qr} alt={`QR code linking to ${p.profile.name}’s FittList profile`}/> : <p>Preparing your QR code…</p>}
         <button className={styles.copyProfile} onClick={copyLink}><Copy size={18}/>Copy profile link</button>
         <input aria-label="Profile link" value={profileUrl} readOnly onFocus={event => event.target.select()}/>
         <p className={styles.copyStatus} role="status">{copyStatus}</p>
       </div>
     </dialog>
     <section><SectionTitle>Calendars you manage</SectionTitle><div className={styles.stack}>
-      <Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials="ML" color="#C8C3DB" size={40}/></span><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card>
-      <Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><img className={styles.calendarAvatar} src={sampleGroups[0].image} alt="Gals who like to move"/></span><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card>
+      {[{name:"Personal calendar",initials:"ML",detail:"Classes, shifts, and saved plans"},{name:"Ironbound Performance Athletics",initials:"IP",detail:"Studio calendar · You’re an admin"},{name:"Gals who like to move",initials:"GM",detail:"Group calendar · 4 members"}].map(calendar=><button key={calendar.name} className={styles.cardLink} onClick={()=>p.open({kind:"manage",name:calendar.name})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials={calendar.initials} color="#C8C3DB" size={40}/></span><div><strong>{calendar.name}</strong><span>{calendar.detail}</span></div><ChevronRight size={18}/></CardContent></Card></button>)}
     </div></section>
     {[
       { title: "Tools", rows: [
@@ -231,11 +240,11 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
     ].map((section) => <section key={section.title}>
       <SectionTitle>{section.title}</SectionTitle>
       <div className={styles.stack}>{section.rows.map(({ icon: Icon, title, detail }) =>
-        <Card key={title} className={styles.simpleCard}><CardContent className={styles.settingsRow}>
+        <button key={title} className={styles.cardLink} onClick={()=>p.open({kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
           <span className={styles.settingsIcon}><Icon size={22}/></span>
           <div><strong>{title}</strong><span>{detail}</span></div>
           <ChevronRight size={18}/>
-        </CardContent></Card>
+        </CardContent></Card></button>
       )}</div>
     </section>)}
     <section><SectionTitle>Appearance</SectionTitle><div className={styles.settingsRow}><span className={styles.settingsIcon}><Moon size={22}/></span><div><strong>Dark mode</strong><span>Use a darker appearance across the app</span></div><button type="button" role="switch" aria-label="Dark mode" aria-checked={dark} className={styles.themeSwitch} onClick={() => onDarkChange(!dark)}><span/></button></div></section>
@@ -243,7 +252,11 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
   </div>;
 }
 
-export default function UiPreview() {
+function PreviewShell() {
+  const p=usePrototype();
+  const detail=p.stack.at(-1);
+  const mainRef=useRef<HTMLElement>(null);
+
   const [screen,setScreen]=useState<Screen>("calendar");
   const [sharing, setSharing] = useState(false);
   const [dark, setDark] = useState(false);
@@ -251,8 +264,11 @@ export default function UiPreview() {
   const changeDark = (value: boolean) => { setDark(value); try { localStorage.setItem("fittlist-preview-dark", String(value)); } catch {} };
 
   const [explorePage,setExplorePage]=useState<ExplorePage | null>(null);
+  useEffect(()=>{mainRef.current?.scrollTo({top:0});},[detail,screen,explorePage,sharing]);
   return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>Apple-inspired · Delight · sample content</div><div className={styles.phone}>
-    <main key={`${screen}-${explorePage ?? "home"}-${sharing}`} className={`${styles.content} ${screen === "calendar" && !sharing ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</main>
-    <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
+    <main ref={mainRef} className={`${styles.content} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
+    <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
 }
+
+export default function UiPreview() { return <PrototypeProvider><PreviewShell/></PrototypeProvider>; }
