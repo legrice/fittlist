@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, Map as MapIcon, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
+import { logout } from "@/app/actions/auth";
+import { clearClientMemory } from "@/lib/client-memory";
+import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -232,6 +234,7 @@ function YouScreen() {
         </CardContent></Card>
       )}</div>
     </section>)}
+    <form action={logout} onSubmit={clearClientMemory} className={styles.logoutForm}><Button type="submit" data-variant="outline" variant="outline"><LogOut size={19}/>Log out</Button></form>
   </div>;
 }
 

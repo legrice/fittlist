@@ -281,3 +281,6 @@
 .mapTakeover .mapNote { position:absolute; top:calc(16px + env(safe-area-inset-top)); right:12px; z-index:2; padding:8px 12px; border-radius:999px; background:#fffffff2; margin:0; }
 .mapTakeover :global(.leaflet-top) { top:env(safe-area-inset-top); }
 .mapTakeover :global(.leaflet-bottom) { bottom:env(safe-area-inset-bottom); }
+
+.logoutForm { margin-top:28px; padding-top:24px; border-top:1px solid var(--preview-line); }
+.apple .logoutForm button { width:100%; min-height:48px; gap:8px; }
