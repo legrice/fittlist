@@ -1,10 +1,10 @@
-// Validate the shared Phosphor Fill registry and every literal icon call site.
+// Validate the shared Phosphor registry and every literal icon call site.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 const fail = (m) => { throw new Error("ICON FAIL: " + m); };
 const src = readFileSync("src/components/Icon.tsx", "utf8");
 const adapter = readFileSync("src/components/PhosphorIcons.tsx", "utf8");
-const exports = new Set([...adapter.matchAll(/export const (\w+) = filled\(/g)].map(([, n]) => n));
+const exports = new Set([...adapter.matchAll(/export const (\w+) = appIcon\(/g)].map(([, n]) => n));
 const entries = [...src.matchAll(/^  (\w+): (\w+),/gm)];
 const seen = new Set();
 if (entries.length < 60) fail("incomplete semantic icon registry");
@@ -16,7 +16,7 @@ for (const [, name, component] of entries) {
 for (const [, name] of adapter.matchAll(/from "@phosphor-icons\/react\/dist\/ssr\/(\w+)"/g)) {
   readFileSync("node_modules/@phosphor-icons/react/dist/ssr/" + name + ".d.ts");
 }
-if (!adapter.includes('weight="fill"')) fail("shared icons must use Fill");
+if (!adapter.includes('weight = "regular"')) fail("shared icons must default to outlines");
 // Every call site that names a glyph as a literal, so an `<Icon name="..." />`
 // that was never mapped is caught here rather than shipping as a blank circle.
 // An unknown name falls back to a plain circle on purpose (a typo should not
@@ -39,4 +39,4 @@ for (const f of walk("src").filter((f) => /\.tsx?$/.test(f))) {
 }
 if (missing.size) fail("these names render a blank circle: " + [...missing].join(", "));
 
-console.log(`ICONS OK: ${seen.size} semantic icons use Phosphor Fill`);
+console.log(`ICONS OK: ${seen.size} semantic icons use Phosphor`);

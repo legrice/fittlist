@@ -1,7 +1,8 @@
+import type { IconProps } from "@phosphor-icons/react";
 import type { ComponentType } from "react";
 import { ArrowBendUpLeft, ArrowLeft, ArrowRight, ArrowSquareOut, ArrowUpRight, At, BatteryFull, Bell, BookmarkSimple, Calendar, CalendarCheck, CalendarDot, CalendarDots, CaretDown, CaretLeft, CaretRight, CaretUp, CellSignalFull, ChatCircle, ChatCircleText, Chats, Check, CheckCircle, Circle, Clock, Compass, Copy, DeviceMobile, DiceFive, DotsThree, Envelope, Export, Eye, Fingerprint, Flag, GearSix, Globe, GlobeHemisphereWest, GridNine, Heart, House, Image, Info, Lightning, Link, List, LockKey, MagnifyingGlass, MapPin, Megaphone, Moon, Palette, PaperPlaneTilt, PencilSimple, Phone, Plus, PlusCircle, Pulse, QrCode, Rows, SealCheck, ShieldCheck, SignOut, SlidersHorizontal, Sparkle, Star, Storefront, Sun, TextT, Trash, User, UserCircle, UserPlus, Users, UsersThree, WifiHigh, X } from "./PhosphorIcons";
 
-const ICONS: Record<string, ComponentType<{ size?: number }>> = {
+const ICONS: Record<string, ComponentType<IconProps>> = {
   add_circle: PlusCircle,
   forum: Chats,
   check_circle: CheckCircle,
@@ -96,9 +97,9 @@ export function Icon({ name, size = 24, className = "" }: {
   name: string;
   size?: number;
   className?: string;
-  /** Retained for older callers; all glyphs now use Phosphor Fill. */
+  /** Retained for older callers; Phosphor controls its own stroke weight. */
   strokeWidth?: number;
 }) {
   const Glyph = ICONS[name] ?? Circle;
-  return <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true"><Glyph size={size} /></span>;
+  return <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true"><Glyph size={size} weight={name.endsWith("_filled") || name === "bookmark_added" ? "fill" : "regular"} /></span>;
 }
