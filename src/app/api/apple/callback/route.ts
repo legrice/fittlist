@@ -1,3 +1,4 @@
+import { consumePreviewReturn } from "@/lib/auth-preview-return";
 import { jwtVerify } from "jose";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
@@ -94,5 +95,5 @@ export async function POST(req: Request) {
     });
   await createSession(user.id);
   if (!user.handle) return toLogin(via ? `via=${encodeURIComponent(via)}` : "");
-  return Response.redirect(`${siteOrigin()}${await landingHref()}`, 302);
+  return Response.redirect(`${siteOrigin()}${(await consumePreviewReturn()) ?? (await landingHref())}`, 302);
 }

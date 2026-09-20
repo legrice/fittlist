@@ -1,5 +1,6 @@
 "use server";
 
+import { consumePreviewReturn } from "@/lib/auth-preview-return";
 import { validateRegistrationIntent, writeAttendance, type RegistrationIntent } from "@/lib/event-registration";
 import { createHash, randomBytes } from "crypto";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
@@ -445,7 +446,7 @@ export async function confirmMagicLink(formData: FormData): Promise<void> {
   if (result.needsProfile) {
     redirect(result.via ? `/?via=${encodeURIComponent(result.via)}` : "/");
   }
-  redirect(await landingHref());
+  redirect((await consumePreviewReturn()) ?? (await landingHref()));
 }
 
 // ---- passkeys (WebAuthn): enroll while logged in, then sign in with biometrics

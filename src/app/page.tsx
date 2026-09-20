@@ -12,9 +12,10 @@ import { AuthFlow } from "@/components/AuthFlow";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ via?: string; invited?: string; join?: string; city?: string }>;
+  searchParams: Promise<{ via?: string; invited?: string; join?: string; city?: string; next?: string }>;
 }) {
-  const { via, invited, join } = await searchParams;
+  const { via, invited, join, next } = await searchParams;
+  const landing = next === "/ui-preview" || (await cookies()).get("fl_preview_auth_return")?.value === "1" ? "/ui-preview" : await landingHref();
   const viaHandle = via?.trim() || null;
   // Arrived from a beta invite email rather than stumbling on the site.
   const wasInvited = invited === "1";
@@ -44,7 +45,7 @@ export default async function Home({
     // sessions and brand-new sessions ended up on different first screens.
     const pendingGroupToken=(await cookies()).get("fl_group_join")?.value;
     if(user?.handle&&pendingGroupToken&&/^[a-f0-9]{32,64}$/.test(pendingGroupToken))redirect(`/g/join/${pendingGroupToken}`);
-    if (user?.handle) redirect(await landingHref());
+    if (user?.handle) redirect(landing);
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
     // ask which they are before demanding a URL. Someone who already answered
@@ -60,7 +61,7 @@ export default async function Home({
           invitedByLink={viaAdmin && !wasInvited}
           inviter={inviter}
           fans={fansEnabled()}
-          landing={await landingHref()}
+          landing={landing}
         />
       );
   }
@@ -74,7 +75,7 @@ export default async function Home({
         startStage="email"
         inviteOnly={false}
         fans={fansEnabled()}
-        landing={await landingHref()}
+        landing={landing}
       />
     );
   }
@@ -87,7 +88,7 @@ export default async function Home({
       invitedByLink={viaAdmin && !wasInvited}
       inviter={inviter}
       fans={fansEnabled()}
-      landing={await landingHref()}
+      landing={landing}
     />
   );
 }

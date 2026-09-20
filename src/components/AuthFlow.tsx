@@ -297,6 +297,7 @@ export function AuthFlow({
     // storage now because the flow from here is a sheet, a passkey prompt and
     // sometimes a three-step wizard, and none of those carry a query string.
     rememberAfterAuth(search.get("next"));
+    if (search.get("next") === "/ui-preview") document.cookie = "fl_preview_auth_return=1; Path=/; Max-Age=1800; SameSite=Lax";
     // Read once on arrival; changing the sheet afterwards is the user's job.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -350,7 +351,10 @@ export function AuthFlow({
     // Somebody who tapped Follow on a coach's page came here to do that, not
     // to read their own feed. The wizard consumes it instead when there's one
     // still to come, so this only reads it when the flow ends here.
-    else router.push(takeAfterAuth() ?? landing);
+    else {
+      document.cookie = "fl_preview_auth_return=; Path=/; Max-Age=0; SameSite=Lax";
+      router.push(takeAfterAuth() ?? landing);
+    }
   };
 
   // The same one-tap link, framed two ways. As "magic link" it's a way to skip
