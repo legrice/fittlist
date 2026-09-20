@@ -256,3 +256,13 @@
 .copyProfile { display:flex; align-items:center; justify-content:center; gap:8px; min-height:48px; width:100%; border:1px solid #192126; background:transparent; border-radius:12px; color:#192126; font:inherit; font-weight:600; cursor:pointer; }
 .sheetBody input { width:100%; margin-top:16px; background:transparent; border:0; text-align:center; color:#536067; font:inherit; font-size:14px; }
 .copyStatus { min-height:20px; }
+
+.mapToggle { position:absolute; bottom:calc(88px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:20; display:flex; align-items:center; gap:8px; padding:12px 22px; border:0; border-radius:999px; background:#192126; color:#fff; font-size:15px; font-weight:600; box-shadow:0 4px 16px #19212633; cursor:pointer; white-space:nowrap; }
+.studioMapWrap { position:relative; padding-bottom:90px; }
+.studioMap { height:clamp(220px,28dvh,320px); width:100%; border-radius:20px; z-index:0; background:#e6ecef; }
+.studioMarker { display:grid; place-items:center; background:#192126; color:white; border:3px solid white; border-radius:50% 50% 50% 4px; box-shadow:0 3px 10px #19212640; font:600 16px Delight,Arial,sans-serif; }
+.studioMarker:focus { outline:3px solid #a1e510; }
+.mapNote { margin:8px 0; color:#536067; font-size:12px; }
+.mapStudioCard { display:flex; flex-direction:column; gap:8px; padding:20px; border-radius:16px; background:#fff; }
+.mapStudioCard strong { font-size:18px; }
+.mapStudioCard span,.mapStudioCard small { color:#536067; }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
+import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, Map as MapIcon, List, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
+import StudioMap, { type MapStudio } from "./studio-map";
 import styles from "./preview.module.css";
 
 type Screen = "calendar" | "explore" | "groups" | "updates" | "you";
@@ -70,10 +71,10 @@ const explorePeople = [
   { name: "Freddie Morgan", title: "Strength & mobility coach", initials: "FM", color: "#AFCFEC", specialty: "Strength" },
   { name: "Matt LeGrice", title: "Strength & mobility coach", initials: "ML", color: "#C8C3DB", specialty: "Strength" },
 ];
-const exploreStudios = [
-  { name: "Asana Soul Practice", type: "Yoga", location: "Jersey City, NJ" },
-  { name: "Jane DO Jersey City", type: "Sculpt", location: "Jersey City, NJ" },
-  { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ" },
+const exploreStudios: MapStudio[] = [
+  { name: "Asana Soul Practice", type: "Yoga", location: "Jersey City, NJ", coordinates: [40.722, -74.044] },
+  { name: "Jane DO Jersey City", type: "Sculpt", location: "Jersey City, NJ", coordinates: [40.725, -74.047] },
+  { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ", coordinates: [40.731, -74.057] },
 ];
 function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
   return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button data-variant="outline" variant="outline" size="sm">Follow</Button></CardContent></Card>;
@@ -84,9 +85,10 @@ function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
 function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("");
+  const [mapView, setMapView] = useState(false);
   const matches = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
   const shownPeople = explorePeople.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
-  const shownStudios = exploreStudios.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.type === filter));
+  const shownStudios = useMemo(() => exploreStudios.filter(place => `${place.name} ${place.type} ${place.location}`.toLowerCase().includes(query.trim().toLowerCase()) && (!filter || place.type === filter)), [query, filter]);
   const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
     <h1 className={styles.pageTitle}>Explore</h1>
@@ -105,7 +107,8 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>
+    {page === "studios" && mapView ? <StudioMap studios={shownStudios}/> : <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
+    {page === "studios" && <button className={styles.mapToggle} onClick={() => setMapView(value => !value)}>{mapView ? <List size={19}/> : <MapIcon size={19}/>} {mapView ? "Back to list" : "Map"}</button>}
   </>;
 }
 
