@@ -602,3 +602,11 @@
 .sampleUpdate input { min-width:0; flex:1; border:1px solid var(--preview-soft); border-radius:12px; padding:10px; color:var(--preview-text); background:var(--preview-ground); }
 
 .directoryNavTitle { margin:0; text-align:center; font:600 16px/1.25 var(--preview-font); color:var(--preview-text); }
+
+.groupListImage { position:relative; aspect-ratio:16 / 9; background:var(--preview-soft); }
+.groupImageOpen { display:grid; place-items:center; width:100%; height:100%; padding:0; border:0; color:var(--preview-text); background:none; }
+.groupImageOpen img { width:100%; height:100%; object-fit:cover; }
+.groupListImage .groupTypePill { max-width:calc(100% - 120px); pointer-events:none; }
+.groupImageJoin { position:absolute; right:12px; top:12px; min-height:36px; padding:8px 16px; border:0; border-radius:999px; background:var(--preview-surface); color:var(--preview-text); font:600 13px/1.25 var(--preview-font); }
+.groupImageJoin:disabled { opacity:1; background:var(--preview-soft); }
+.groupListCopyButton { display:block; width:100%; padding:0; border:0; background:none; color:inherit; font:inherit; text-align:left; }
