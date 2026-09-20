@@ -146,13 +146,12 @@ function GroupsScreen() {
       <SectionTitle>Upcoming classes</SectionTitle>
       {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{classes[index].day}</h3><ClassCard item={classes[index]}/></section>) : <p className={styles.sectionIntro}>No classes planned yet. Check back for the next group plan.</p>}
     </> : <>
-      <h1 className={styles.pageTitle}>Groups</h1>
+      <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={() => setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
       <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
       <div className={styles.stack}>{ownGroups.map(item => <button key={item.id} className={styles.ownedGroup} onClick={() => setSelected(item.id)}>
         {item.image ? <img src={item.image} alt=""/> : <span className={styles.groupPlaceholder}><Users size={28}/></span>}<span><strong>{item.name}</strong><small>{item.members.length} members</small></span><ChevronRight size={18}/>
       </button>)}</div>
-      <button className={styles.startGroup} onClick={() => setSelected("create")}><span className={styles.groupPlaceholder}><Plus size={26}/></span><span><strong>Start a new group</strong><small>Bring your people together</small></span><ChevronRight size={20}/></button>
-      <SectionTitle>Groups to explore</SectionTitle><p className={styles.sectionIntro}>Find your people around Jersey City.</p>
+      <SectionTitle>Groups to explore</SectionTitle>
       <div className={styles.exploreGroupList}>{groups.filter(item => !joined.includes(item.id)).map(item => <button key={item.id} className={styles.exploreGroupCard} onClick={() => setSelected(item.id)}>
         <img src={item.image} alt="" loading="lazy"/><span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.category} · Jersey City</span><span>{item.description}</span><small><Users size={15}/>{item.members.length} members<ChevronRight size={17}/></small></span>
       </button>)}</div>
