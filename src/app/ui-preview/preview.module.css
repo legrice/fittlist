@@ -668,3 +668,6 @@
 .calendarIndicator { position:absolute; bottom:3px; height:2px; background:var(--preview-text); pointer-events:none; transition:left .24s cubic-bezier(.2,.8,.2,1),width .24s cubic-bezier(.2,.8,.2,1); }
 .swipeCalendar [data-slot="tabs-content"],.swipeCalendar .calendarSummary { touch-action:pan-y; }
 @media(prefers-reduced-motion:reduce) { .calendarIndicator { transition:none; } }
+.apple .calendarHero .calendarModeTabs { gap:20px; }
+.calendarIndicator { bottom:7px; }
+.apple .calendarHero:has(.shareWeekButton) { padding-bottom:28px; }
