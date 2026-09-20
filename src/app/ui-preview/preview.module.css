@@ -630,3 +630,9 @@
 .apple .calendarHero .calendarSummary strong { font-size:28px; font-weight:500; line-height:1.2; letter-spacing:-.025em; }
 .apple .calendarHero .shareWeekButton { min-height:44px; padding:0; border-radius:0; background:transparent; font-size:15px; font-weight:500; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--preview-muted); }
 .apple .calendarHero .shareWeekButton:hover { background:transparent; text-decoration-color:var(--preview-text); }
+
+/* Independent calendar pills, without a surrounding segmented track. */
+.apple .calendarHero .calendarModeTabs { gap:12px; border-bottom:0; }
+.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"] { border-radius:999px; background:var(--preview-soft); color:var(--preview-text); min-height:44px; height:44px; }
+.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-text); color:var(--preview-ground); }
+.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"]::after { display:none; }
