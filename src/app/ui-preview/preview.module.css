@@ -13,7 +13,7 @@
 .heroActions { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; width:100%; }
 .shareWeekButton { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 26px; border-radius:999px; background:#fff; color:#192126; font-size:14px; font-weight:700; text-decoration:none; }
 .shareWeekButton:hover { background:#e8edef; }
-.secondaryHeroButton { border:1px solid #cbd6da; background:transparent; color:#fff; }
+.secondaryHeroButton { border:1px solid #cbd6da; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
 .secondaryHeroButton:hover { background:#344148; }
 .peopleRail { display:flex; gap:12px; overflow-x:auto; margin:0 -20px 18px; padding:2px 20px 8px; scrollbar-width:none; }
 .peopleRail::-webkit-scrollbar { display:none; }
@@ -135,14 +135,10 @@
 .addFab:focus-visible { outline:3px solid #192126; outline-offset:3px; }
 
 /* Apple-inspired layout with the original FittList colors. */
-@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-regular.woff2") format("woff2"); font-weight:400; font-style:normal; font-display:swap; }
-@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-medium.woff2") format("woff2"); font-weight:500; font-style:normal; font-display:swap; }
-@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-semibold.woff2") format("woff2"); font-weight:600; font-style:normal; font-display:swap; }
-@font-face { font-family:"Schibsted Grotesk"; src:url("/fonts/schibsted-grotesk-bold.woff2") format("woff2"); font-weight:700; font-style:normal; font-display:swap; }
 /* Shared Apple layout with semantic palette tokens. */
 .apple { color:var(--preview-text); font-family:var(--preview-font); }
 .apple {
-  --preview-font:"Schibsted Grotesk",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  --preview-font:"Delight","Helvetica Neue",Arial,sans-serif;
   --preview-accent:#192126;
   --preview-highlight:#a1e510;
   --preview-soft:#e8edef;
@@ -223,18 +219,18 @@
 
 /* One edge-to-edge Calendar hero contains the view control and its context. */
 .apple .calendarContent { padding-top:0; }
-.calendarHero { margin:0 -20px 12px; padding:calc(20px + env(safe-area-inset-top)) 20px 24px; background:var(--preview-text); color:#fff; }
-.apple .calendarModeTabs { height:44px; max-width:320px; margin:0 auto; padding:4px; background:#ffffff1a; }
-.apple .calendarModeTabs [data-slot="tabs-trigger"] { color:#fff; font-size:14px; }
-.apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-highlight); color:var(--preview-text); box-shadow:none; }
-.apple .calendarHero .calendarSummary { margin:0; padding:28px 0 4px; border-radius:0; background:transparent; color:#fff; }
-.apple .calendarHero .shareWeekButton { background:#fff; color:var(--preview-text); }
-.apple .calendarHero .secondaryHeroButton { background:#ffffff14; color:#fff; border:1px solid #ffffff55; }
-.apple .calendarHero .shareWeekButton:hover { background:#e8edef; }
-.apple .calendarHero .secondaryHeroButton:hover { background:#ffffff26; }
+.calendarHero { margin:0 -20px 12px; padding:calc(20px + env(safe-area-inset-top)) 20px 24px; background:var(--preview-ground); color:var(--preview-text); }
+.apple .calendarModeTabs { height:44px; max-width:320px; margin:0 auto; padding:4px; background:var(--preview-field); }
+.apple .calendarModeTabs [data-slot="tabs-trigger"] { color:var(--preview-text); font-size:14px; }
+.apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-text); color:#fff; box-shadow:none; }
+.apple .calendarHero .calendarSummary { margin:0; padding:28px 0 4px; border-radius:0; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
+.apple .calendarHero .calendarSummary strong { max-width:none; font-size:36px; line-height:1.08; letter-spacing:-.035em; }
+.apple .calendarHero .heroActions { justify-content:flex-start; }
+.apple .calendarHero .shareWeekButton { gap:8px; padding:0 20px; border-radius:12px; background:var(--preview-soft); color:var(--preview-text); border:0; }
+.apple .calendarHero .shareWeekButton:hover { background:var(--preview-line); }
 .apple .calendarHero .peopleRail { margin:24px -20px -8px; }
-.apple .calendarHero .personFilter { color:#d5dce0; }
-.apple .calendarHero .personFilter[aria-pressed="true"] small { color:#fff; }
+.apple .calendarHero .personFilter { color:var(--preview-muted); }
+.apple .calendarHero .personFilter[aria-pressed="true"] small { color:var(--preview-text); }
 .apple .calendarHero .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-highlight); }
-.apple .calendarHero :is(button,a):focus-visible { outline:2px solid #fff; outline-offset:3px; }
+.apple .calendarHero :is(button,a):focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; }
 .apple .addFab { background:var(--preview-highlight); color:var(--preview-text); }

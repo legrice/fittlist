@@ -12,14 +12,12 @@ Do not merge this branch as a complete app migration. The functional screens sti
 
 Apple is the selected layout direction, with the original ink, white, and lime
 colors restored. The palette comparison control has been removed.
-Calendar now has one full-width dark hero containing a pill-shaped You/Following
-control and either the personal summary or the people filter circles. The class
+Calendar now has one full-width hero matching the page background containing a pill-shaped You/Following
+control (dark active, light gray inactive) and either the larger, left-aligned personal
+summary or the people filter circles. Share and Add use matching secondary
+rounded-rectangle actions with icons. The class
 list sits directly beneath it. Updates also uses pill-shaped tabs.
 
-Schibsted Grotesk (400, 500, 600, 700) is self-hosted from the official project's
-webfont releases in `public/fonts/`, with its SIL Open Font License alongside.
-It is scoped to this prototype; production typography is unchanged.
-
-Sources: https://github.com/schibsted/schibsted-grotesk and its `fonts/webfonts`
-directory. The Apple-inspired treatment remains a web interpretation, not native
-Apple controls. Previous visual comparisons remain available in git history.
+The prototype uses the self-hosted Delight brand font throughout. The Apple-inspired
+treatment remains a web interpretation, not native Apple controls. Previous visual
+comparisons remain available in git history.
