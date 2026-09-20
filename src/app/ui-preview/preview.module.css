@@ -636,6 +636,6 @@
 .apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"] { border-radius:999px; background:var(--preview-soft); color:var(--preview-text); min-height:44px; height:44px; }
 .apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-text); color:var(--preview-ground); }
 .apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"]::after { display:none; }
-.apple .calendarHero .calendarModeTabs { justify-content:flex-start; }
+.apple .calendarHero .calendarModeTabs { display:flex; width:fit-content; justify-content:flex-start; grid-template-columns:none; }
 .apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"] { flex:0 0 auto; width:auto; padding:0 22px; }
 .apple .calendarHero .peopleRail { padding-left:20px; padding-right:20px; scroll-padding-inline:20px; }
