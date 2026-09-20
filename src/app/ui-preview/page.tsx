@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, Map as MapIcon, List, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
+import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, Map as MapIcon, MapPin, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -107,8 +107,8 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    {page === "studios" && mapView ? <StudioMap studios={shownStudios}/> : <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
-    {page === "studios" && <button className={styles.mapToggle} onClick={() => setMapView(value => !value)}>{mapView ? <List size={19}/> : <MapIcon size={19}/>} {mapView ? "Back to list" : "Map"}</button>}
+    {page === "studios" && mapView ? <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/> : <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
+    {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={() => setMapView(true)}><MapIcon size={19}/>Map</button>}
   </>;
 }
 

@@ -2,11 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
+import { List } from "lucide-react";
 import styles from "./preview.module.css";
 
 export type MapStudio = { name: string; type: string; location: string; coordinates: [number, number] };
 
-export default function StudioMap({ studios }: { studios: MapStudio[] }) {
+export default function StudioMap({ studios, onClose }: { studios: MapStudio[]; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => { dialog.current?.showModal(); }, []);
   const container = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<MapStudio | null>(null);
   const [failed, setFailed] = useState(false);
@@ -26,13 +29,16 @@ export default function StudioMap({ studios }: { studios: MapStudio[] }) {
           icon: L.divIcon({ className: styles.studioMarker, html: `<span>${index + 1}</span>`, iconSize: [44, 44], iconAnchor: [22, 44] }),
         }).addTo(map!).on("click", () => { setSelected(studio); map?.panTo(studio.coordinates); });
       });
-      if (studios.length) map.fitBounds(L.latLngBounds(studios.map(studio => studio.coordinates)), { padding: [50, 60], maxZoom: 14 });
+      if (studios.length) map.fitBounds(L.latLngBounds(studios.map(studio => studio.coordinates)), { paddingTopLeft: [50, 90], paddingBottomRight: [50, 280], maxZoom: 14 });
     }).catch(() => setFailed(true));
     return () => { disposed = true; map?.remove(); };
   }, [studios]);
-  return <div className={styles.studioMapWrap}>
+  return <dialog ref={dialog} className={styles.mapTakeover} aria-label="Studios map view" onClose={onClose}>
+    <div className={styles.studioMapWrap}>
     <div ref={container} className={styles.studioMap} aria-label="Studio map"/>
     <p className={styles.mapNote}>Sample studio locations{failed ? " · Map tiles unavailable" : ""}</p>
+    {!active && <div className={styles.mapStudioCard}>No studios match your filters. Go back to adjust your search.</div>}
     {active && <div className={styles.mapStudioCard} aria-live="polite"><strong>{active.name}</strong><span>{active.type} · {active.location}</span><small>Tap a numbered pin to explore a studio.</small></div>}
-  </div>;
+    <button autoFocus className={styles.mapToggle} onClick={() => dialog.current?.close()}><List size={19}/>Back to list</button>
+  </div></dialog>;
 }
