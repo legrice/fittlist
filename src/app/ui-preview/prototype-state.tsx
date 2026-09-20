@@ -8,8 +8,9 @@ export const initialClasses: PreviewClass[] = [
   { id:"sculpt", name:"Sculpt", place:"Jane DO Jersey City", coach:"Freddie Morgan", date:"2026-09-20", time:"10:30", duration:"50" },
   { id:"ironbound", name:"Guns, Buns, and Lungs", place:"Ironbound Performance Athletics", coach:"Matt LeGrice", date:"2026-09-21", time:"18:00", duration:"60" },
 ];
-export type Destination = { kind:"membership"|"settings"|"manage"|"edit-profile"|"person"|"studio"|"class"|"edit-class"|"add-class"|"conversation"; name?:string };
+export type Destination = { kind:"membership"|"settings"|"manage"|"edit-profile"|"person"|"studio"|"class"|"edit-class"|"add-class"|"conversation"; name?:string; view?:string };
 function useStateStore() {
+  const [studioDrafts,setStudioDrafts]=useState<Record<string,import("./studio-workspace").StudioDraft>>({});
   const [profile,setProfile] = useState({ name:"Matt LeGrice", handle:"mattlegrice", bio:"Strength & mobility coach", location:"Jersey City, NJ", email:"matt@example.com",photo:null as string|null });
   const [membershipPlan,setMembershipPlan]=useState<"free"|"pro"|"studio">("free");
   const pro=membershipPlan==="pro";
@@ -63,7 +64,7 @@ function useStateStore() {
     window.history[push?"pushState":"replaceState"](state,"",url);
     setStack(routes);
   };
-  return { saveNotice,setSaveNotice,toggleSaved,billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
+  return { studioDrafts,setStudioDrafts,saveNotice,setSaveNotice,toggleSaved,billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
     open:(route:Destination)=>navigate([...stack,route],true),
     back:()=>{if(window.history.state?.previewDepth>0) window.history.back(); else navigate(stack.slice(0,-1),false);},
     reset:()=>navigate([],false) };

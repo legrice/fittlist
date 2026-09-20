@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Share2, Clock, Bookmark, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePrototype, dateLabel, type Destination, type PreviewClass } from "./prototype-state";
+import StudioWorkspace from "./studio-workspace";
 import Membership from "./membership";
 import PreviewClassCard, { classTimeRange } from "./class-card";
 import styles from "./preview.module.css";
@@ -59,6 +60,7 @@ export default function DetailScreens({route}:{route:Destination}) {
   const item=p.schedule.find(c=>c.id===route.name);
   const title=route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
+  if(route.kind==="manage" && (p.live?p.live.managed.some(s=>s.name===route.name):route.name==="Ironbound Performance Athletics")) return <StudioWorkspace name={route.name!} view={route.view || "Dashboard"}/>;
   return <>
     <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>
     <h1 className={styles.pageTitle}>{title}</h1>
