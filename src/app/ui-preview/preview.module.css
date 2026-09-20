@@ -651,3 +651,14 @@
 .profileHeroAvatar { position:relative; width:96px; height:96px; margin:-48px 0 0 20px; border:4px solid var(--preview-ground); border-radius:50%; overflow:hidden; background:var(--preview-soft); color:var(--preview-text); }
 .profileHeroAvatar img { width:100%; height:100%; object-fit:cover; }
 .profileHeroAvatar > span { display:grid; place-items:center; height:100%; font-size:28px; font-weight:600; }
+
+/* A quiet profile introduction and a softly tinted calendar hero. */
+.profileAboutPanel { padding:0; margin:12px 0 20px; border-radius:0; background:transparent; }
+.profileAboutPanel > p:first-child { margin-top:0; }
+.apple .calendarHero { margin-top:calc(-1 * var(--preview-top-padding)); padding-top:var(--preview-top-padding); padding-bottom:20px; margin-bottom:16px; background:radial-gradient(ellipse at 90% 0%,color-mix(in srgb,var(--preview-highlight) 14%,transparent),transparent 70%),linear-gradient(140deg,var(--preview-soft),var(--preview-ground)); }
+.apple .calendarHero .calendarModeTabs { gap:28px; width:fit-content; border:0; background:transparent; }
+.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"],.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"][data-active] { padding:0 2px; border-radius:0; background:transparent; color:var(--preview-muted); box-shadow:none; }
+.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"][data-active] { color:var(--preview-text); }
+.apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"]::after { display:block; left:0; width:100%; bottom:0; }
+.apple .calendarHero .shareWeekButton { padding:0 20px; min-height:44px; border-radius:999px; text-decoration:none; background:color-mix(in srgb,var(--preview-surface) 65%,transparent); border:1px solid color-mix(in srgb,var(--preview-surface) 80%,transparent); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 2px 8px #00000008; }
+.apple .calendarHero .shareWeekButton:hover { background:color-mix(in srgb,var(--preview-surface) 85%,transparent); }
