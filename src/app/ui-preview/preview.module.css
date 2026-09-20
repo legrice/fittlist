@@ -308,3 +308,9 @@
 .shareControls label { display:grid; gap:8px; font-size:14px; }
 .shareControls :is(input,select) { background:var(--preview-surface); color:var(--preview-text); padding:12px; border:1px solid var(--preview-line); border-radius:12px; font:inherit; }
 .shareControls .copyProfile { background:var(--preview-soft); color:var(--preview-text); }
+
+.apple .youPage .settingsRow { gap:14px; min-height:76px; }
+.apple .youPage .settingsIcon { width:40px; height:40px; }
+.calendarAvatar { width:40px; height:40px; border-radius:50%; object-fit:cover; }
+.apple .youPage .settingsRow [data-slot="avatar-fallback"] { color:#192126; }
+.apple .youPage .themeSwitch { flex:none; }

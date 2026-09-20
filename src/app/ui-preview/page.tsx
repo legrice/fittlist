@@ -210,8 +210,10 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
         <p className={styles.copyStatus} role="status">{copyStatus}</p>
       </div>
     </dialog>
-    <SectionTitle>Your calendars</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><CalendarDays size={20}/><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Users size={20}/><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card></div>
-    <SectionTitle>Notifications</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Bell size={20}/><div><strong>Notifications</strong><span>Follows, saves, and account activity</span></div><ChevronRight size={18}/></CardContent></Card>
+    <section><SectionTitle>Calendars you manage</SectionTitle><div className={styles.stack}>
+      <Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials="ML" color="#C8C3DB" size={40}/></span><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card>
+      <Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><img className={styles.calendarAvatar} src={sampleGroups[0].image} alt="Gals who like to move"/></span><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card>
+    </div></section>
     {[
       { title: "Tools", rows: [
         { icon: Activity, title: "Insights", detail: "Your teaching, classes, and sharing" },
@@ -220,7 +222,8 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
       { title: "Settings", rows: [
         { icon: Clock, title: "Set yourself as away", detail: "Add away dates, a profile note, and an automatic reply" },
         { icon: GlobeLock, title: "Privacy & communication", detail: "Messages, visibility, and follower approvals" },
-        { icon: LockKeyhole, title: "Account & preferences", detail: "Login, notifications, and appearance" },
+        { icon: Bell, title: "Notification settings", detail: "Choose which alerts you receive" },
+        { icon: LockKeyhole, title: "Account & preferences", detail: "Login and account details" },
       ] },
       { title: "Admin", rows: [
         { icon: ShieldUser, title: "Admin dashboard", detail: "Manage people, studios, and event registration access" },
@@ -235,7 +238,7 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
         </CardContent></Card>
       )}</div>
     </section>)}
-    <section><SectionTitle>Appearance</SectionTitle><div className={styles.appearanceRow}><Moon size={22}/><span>Dark mode</span><button type="button" role="switch" aria-label="Dark mode" aria-checked={dark} className={styles.themeSwitch} onClick={() => onDarkChange(!dark)}><span/></button></div></section>
+    <section><SectionTitle>Appearance</SectionTitle><div className={styles.settingsRow}><span className={styles.settingsIcon}><Moon size={22}/></span><div><strong>Dark mode</strong><span>Use a darker appearance across the app</span></div><button type="button" role="switch" aria-label="Dark mode" aria-checked={dark} className={styles.themeSwitch} onClick={() => onDarkChange(!dark)}><span/></button></div></section>
     <form action={logout} onSubmit={clearClientMemory} className={styles.logoutForm}><Button type="submit" data-variant="outline" variant="outline"><LogOut size={19}/>Log out</Button></form>
   </div>;
 }
