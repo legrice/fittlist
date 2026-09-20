@@ -1,6 +1,8 @@
 "use client";
+import Link from "next/link";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import PreviewClassCard from "./class-card";
 import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
@@ -33,7 +35,8 @@ const classes = [
   { day: "Mon · Sep 21", time: "6:00 PM", name: "Guns, Buns, and Lungs", place: "Ironbound Performance Athletics", coach: "Matt LeGrice", duration: "60 min", color: "#C8C3DB" },
 ];
 
-function Face({ initials, color, size = 36 }: { initials: string; color: string; size?: number }) {
+function Face({ initials, color, photo, size = 36 }: { initials: string; color: string; photo?:string|null; size?: number }) {
+  if(photo) return <img src={photo} alt="" style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>;
   return <Avatar style={{ width: size, height: size, background: color }}><AvatarFallback style={{ background: color, color: "var(--preview-on-soft)", fontWeight: 600 }}>{initials}</AvatarFallback></Avatar>;
 }
 
@@ -41,33 +44,29 @@ function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: 
   return <div className={styles.sectionTitle}><h2>{children}</h2>{aside}</div>;
 }
 
-function ClassCard({ item }: { item: typeof classes[number] }) {
+function ClassCard({ item }: { item: typeof classes[number] & {id?:string} }) {
   const p = usePrototype();
-  return <button className={styles.cardLink} onClick={() => { const found = p.schedule.find(c => c.name === item.name); if(found) p.open({kind:"class",name:found.id}); }}><Card className={styles.classCard}>
-    <CardContent className={styles.classCardBody}>
-      <div className={styles.classAttribution}><Face initials={item.coach.split(" ").map((part) => part[0]).join("")} color={item.color} size={28}/><span>{item.coach}</span></div>
-      <div className={styles.classDetails}>
-        <div className={styles.classMeta}><strong>{item.time}</strong><span>{item.duration}</span></div>
-        <div className={styles.classCopy}><strong>{item.name}</strong><span>{item.place}</span></div>
-      </div>
-    </CardContent>
-  </Card></button>;
+  const found=p.schedule.find(c=>item.id ? c.id===item.id : c.name===item.name && c.place===item.place);
+  return found ? <PreviewClassCard item={found}/> : null;
 }
 
 function CalendarScreen({ onShare }: { onShare: () => void }) {
   const p = usePrototype();
-  const calendarClasses = p.schedule.map(c => ({ name:c.name, place:c.place, coach:c.coach, day:dateLabel(c.date), time:timeLabel(c.time), duration:`${c.duration} min`, color:"#C8C3DB" }));
+  const calendarClasses = p.schedule.map(c => ({ id:c.id,name:c.name, place:c.place, coach:c.coach, day:dateLabel(c.date), time:timeLabel(c.time), duration:`${c.duration} min`, color:"#C8C3DB" }));
   const [view, setView] = useState("you");
   const [selectedPerson, setSelectedPerson] = useState("All");
-  const people = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
+  const samplePeople: {name:string;initials:string;color:string;photo?:string|null}[] = [{ name: "Erin", initials: "EC", color: "#D8C6B4" }, { name: "Freddie", initials: "FM", color: "#AFCFEC" }, { name: "Matt", initials: "ML", color: "#C8C3DB" }];
+  const people=p.live ? p.live.people.filter(person=>p.following.includes(person.name)) : samplePeople;
+  const personalClasses=calendarClasses.filter(c=>!p.live || p.schedule.find(item=>item.id===c.id)?.own || p.saved.includes(c.id));
+  const followingClasses=calendarClasses.filter(c=>!p.live || p.following.includes(c.coach));
   return <>
     <Tabs value={view} onValueChange={value => setView(String(value))}>
       <div className={styles.calendarHero}>
         <TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`} aria-label="Calendar view"><TabsTrigger value="you">You</TabsTrigger><TabsTrigger value="following">Following</TabsTrigger></TabsList>
-        {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: p.schedule.filter(c=>c.coach===p.profile.name || c.coach==="Matt LeGrice").length, attending: p.schedule.filter(c=>c.coach!==p.profile.name && c.coach!=="Matt LeGrice").length, personal: 0 })}</strong><div className={styles.heroActions}><button type="button" onClick={onShare} className={styles.shareWeekButton} aria-label="Share your week"><Share2 size={18} aria-hidden="true"/>Share</button></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} size={56}/></span><small>{person.name}</small></button>)}</div>}
+        {view === "you" ? <div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: p.schedule.filter(c=>c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")).length, attending: personalClasses.filter(c=>!(p.schedule.find(item=>item.id===c.id)?.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice"))).length, personal: 0 })}</strong><div className={styles.heroActions}><button type="button" onClick={onShare} className={styles.shareWeekButton} aria-label="Share your week"><Share2 size={18} aria-hidden="true"/>Share</button></div></div> : <div className={styles.peopleRail} aria-label="Filter by person"><button type="button" className={styles.personFilter} aria-pressed={selectedPerson === "All"} onClick={() => setSelectedPerson("All")}><span className={styles.personRing}><span className={styles.allFace}><Users size={22}/></span></span><small>All</small></button>{people.map((person) => <button key={person.name} type="button" className={styles.personFilter} aria-pressed={selectedPerson === person.name} onClick={() => setSelectedPerson(person.name)}><span className={styles.personRing}><Face initials={person.initials} color={person.color} photo={person.photo} size={56}/></span><small>{person.name}</small></button>)}</div>}
       </div>
-      <TabsContent value="you" className={styles.calendarYouPanel}>{calendarClasses.map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<button onClick={() => p.open({kind:"add-class"})} className={styles.addFab} aria-label="Add a class"><Plus size={28}/></button></TabsContent>
-      <TabsContent value="following"><SectionTitle aside={<Badge variant="secondary">{`${calendarClasses.filter(c=>selectedPerson === "All" || c.coach.startsWith(selectedPerson)).length} classes`}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{calendarClasses.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.name}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+      <TabsContent value="you" className={styles.calendarYouPanel}>{personalClasses.length===0 && <p className={styles.sectionIntro}>No upcoming classes on your calendar.</p>}{personalClasses.map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<button onClick={() => p.open({kind:"add-class"})} className={styles.addFab} aria-label="Add a class"><Plus size={28}/></button></TabsContent>
+      <TabsContent value="following"><SectionTitle aside={<Badge variant="secondary">{`${followingClasses.filter(c=>selectedPerson === "All" || c.coach.startsWith(selectedPerson)).length} classes`}</Badge>}>{selectedPerson === "All" ? "From people you follow" : `From ${selectedPerson}`}</SectionTitle>{followingClasses.length===0 && <p className={styles.sectionIntro}>Follow people in Explore to see their upcoming classes.</p>}{followingClasses.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
     </Tabs>
   </>;
 }
@@ -83,14 +82,14 @@ const exploreStudios: MapStudio[] = [
   { name: "Jane DO Jersey City", type: "Sculpt", location: "Jersey City, NJ", coordinates: [40.725, -74.047] },
   { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ", coordinates: [40.731, -74.057] },
 ];
-function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
+function ExplorePerson({ person }: { person: typeof explorePeople[number] & {photo?:string|null;location?:string} }) {
   const p = usePrototype();
   const following=p.following.includes(person.name);
   const activity=p.schedule.filter(item=>item.coach===person.name).length;
   return <div className={styles.directoryPerson}>
     <button className={styles.directoryPersonMain} onClick={()=>p.open({kind:"person",name:person.name})}>
-      <Face initials={person.initials} color={person.color} size={46}/>
-      <span className={styles.directoryPersonCopy}><strong>{person.name}</strong><small>{activity ? `${activity} this week` : person.title} · Jersey City, NJ</small></span>
+      <Face initials={person.initials} color={person.color} photo={person.photo} size={46}/>
+      <span className={styles.directoryPersonCopy}><strong>{person.name}</strong><small>{activity ? `${activity} this week` : person.title} · {person.location || (p.live ? "Location not added" : "Jersey City, NJ")}</small></span>
     </button>
     <button className={styles.directoryFollow} aria-label={`${following?"Following":"Follow"}: ${person.name}`} aria-pressed={following} onClick={()=>p.setFollowing(v=>following?v.filter(x=>x!==person.name):[...v,person.name])}>{following?"Following":"Follow"}</button>
   </div>;
@@ -100,12 +99,15 @@ function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
   return <button className={styles.cardLink} onClick={()=>p.open({kind:"studio",name:place.name})}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card></button>;
 }
 function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavigate: (page: ExplorePage | null) => void }) {
+  const p=usePrototype();
+  const peopleSource=p.live?.people || explorePeople;
+  const studiosSource=p.live?.studios || exploreStudios;
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("");
   const [mapView, setMapView] = useState(false);
   const matches = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
-  const shownPeople = explorePeople.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
-  const shownStudios = useMemo(() => exploreStudios.filter(place => `${place.name} ${place.type} ${place.location}`.toLowerCase().includes(query.trim().toLowerCase()) && (!filter || place.type === filter)), [query, filter]);
+  const shownPeople = peopleSource.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
+  const shownStudios = useMemo(() => studiosSource.filter(place => `${place.name} ${place.type} ${place.location}`.toLowerCase().includes(query.trim().toLowerCase()) && (!filter || place.type === filter)), [query, filter, studiosSource]);
   const more = (target: ExplorePage) => <button className={styles.seeAll} onClick={() => onNavigate(target)} aria-label={`See all ${target}`}>See all<ChevronRight size={15}/></button>;
   if (!page) return <>
     <h1 className={styles.pageTitle}>Explore</h1>
@@ -115,7 +117,7 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
     <section><SectionTitle aside={more("studios")}>Studios nearby</SectionTitle><div className={styles.stack}>{shownStudios.slice(0,2).map(place => <ExploreStudio key={place.name} place={place}/>)}</div></section>
   </>;
   const title = page.charAt(0).toUpperCase() + page.slice(1);
-  const options = page === "people" ? ["Yoga", "Strength"] : ["Yoga", "Sculpt", "Strength"];
+  const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
     <button className={styles.backButton} onClick={() => onNavigate(null)}><ArrowLeft size={19}/>Back to Explore</button>
@@ -136,9 +138,10 @@ const sampleGroups = [
 ];
 function GroupsScreen() {
   const p=usePrototype();
-  const groupClasses=p.schedule.map(c=>({name:c.name,place:c.place,coach:c.coach,day:dateLabel(c.date),time:timeLabel(c.time),duration:`${c.duration} min`,color:"#C8C3DB"}));
+  const groupClasses=p.schedule.map(c=>({id:c.id,name:c.name,place:c.place,coach:c.coach,day:dateLabel(c.date),time:timeLabel(c.time),duration:`${c.duration} min`,color:"#C8C3DB"}));
   const [groups, setGroups] = useState(sampleGroups);
   const [joined, setJoined] = useState(["gals"]);
+  useEffect(()=>{if(p.live){setGroups(p.live.groups);setJoined(p.live.joined);}},[p.live]);
   const [selected, setSelected] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -150,7 +153,7 @@ function GroupsScreen() {
   return <div ref={top}>
     {selected === "create" ? <>
       {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
-      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: ["Matt LeGrice"], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
+      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
         <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
         <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
         <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only. Changes last while you’re on this page.</p>
@@ -159,11 +162,11 @@ function GroupsScreen() {
       {back}
       {group.image && <img className={styles.groupDetailPhoto} src={group.image} alt=""/>}
       <h1 className={styles.pageTitle}>{group.name}</h1><p className={styles.sectionIntro}>{group.description}</p>
-      <div className={styles.groupDetailMeta}><span>{group.category} · Jersey City</span>{joined.includes(group.id) ? <Badge variant="secondary">Joined</Badge> : <Button onClick={() => { setJoined(ids => [...ids, group.id]); setGroups(items => items.map(item => item.id === group.id ? { ...item, members: [...item.members, "Matt LeGrice"] } : item)); }}>Join group</Button>}</div>
+      <div className={styles.groupDetailMeta}><span>{group.category}</span>{joined.includes(group.id) ? <Badge variant="secondary">Joined</Badge> : <Button onClick={() => { setJoined(ids => [...ids, group.id]); setGroups(items => items.map(item => item.id === group.id ? { ...item, members: [...item.members, p.profile.name] } : item)); }}>Join group</Button>}</div>
       <SectionTitle aside={<Badge variant="secondary">{group.members.length}</Badge>}>Who’s in the group</SectionTitle>
       <div className={styles.memberGrid}>{group.members.map((member,index) => <div key={member}><Face initials={member.split(" ").map(part => part[0]).join("")} color={["#D8C6B4", "#AFCFEC", "#C8C3DB"][index % 3]} size={44}/><span>{member}</span></div>)}</div>
       <SectionTitle>Upcoming classes</SectionTitle>
-      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>No classes planned yet. Check back for the next group plan.</p>}
+      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "Group class plans aren’t connected in this preview yet." : "No classes planned yet. Check back for the next group plan."}</p>}
     </> : <>
       <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={() => setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
       <SectionTitle aside={<Badge variant="secondary">{ownGroups.length}</Badge>}>Your groups</SectionTitle>
@@ -180,6 +183,7 @@ function GroupsScreen() {
 
 function UpdatesScreen() {
   const p=usePrototype();
+  if(p.live) return <><h1 className={styles.pageTitle}>Updates</h1><p className={styles.sectionIntro}>Messages and notifications aren’t connected in this read-only preview yet.</p><Link href="/updates" className={styles.backButton}>Open app updates</Link></>;
   return <>
     <h1 className={styles.pageTitle}>Updates</h1>
     <Tabs defaultValue="notifications"><div className={styles.topControls}><TabsList className={`${styles.fullTabs} ${styles.calendarModeTabs}`}><TabsTrigger value="notifications">Notifications <Badge>2</Badge></TabsTrigger><TabsTrigger value="messages">Messages</TabsTrigger></TabsList></div>
@@ -209,7 +213,7 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
   };
   return <div className={styles.youPage}>
     <header className={styles.profileHeader}>
-      <Face initials={p.profile.name.split(" ").map(part=>part[0]).join("").slice(0,2)} color="#C8C3DB" size={80}/>
+      <Face initials={p.profile.name.split(" ").map(part=>part[0]).join("").slice(0,2)} color="#C8C3DB" photo={p.profile.photo} size={80}/>
       <h1 className={styles.pageTitle}>{p.profile.name}</h1>
       <div className={styles.profileActions}>
         <Button data-variant="outline" variant="outline" onClick={openShare} aria-haspopup="dialog">@{p.profile.handle}<ChevronDown size={16}/></Button>
@@ -229,7 +233,7 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
       </div>
     </dialog>
     <section><SectionTitle>Calendars you manage</SectionTitle><div className={styles.stack}>
-      {[{name:"Personal calendar",initials:"ML",detail:"Classes, shifts, and saved plans"},{name:"Ironbound Performance Athletics",initials:"IP",detail:"Studio calendar · You’re an admin"},{name:"Gals who like to move",initials:"GM",detail:"Group calendar · 4 members"}].map(calendar=><button key={calendar.name} className={styles.cardLink} onClick={()=>p.open({kind:"manage",name:calendar.name})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials={calendar.initials} color="#C8C3DB" size={40}/></span><div><strong>{calendar.name}</strong><span>{calendar.detail}</span></div><ChevronRight size={18}/></CardContent></Card></button>)}
+      {[{name:"Personal calendar",initials:"ML",detail:"Classes, shifts, and saved plans",photo:p.profile.photo},...(p.live ? p.live.managed : [{name:"Ironbound Performance Athletics",initials:"IP",detail:"Studio calendar · You’re an admin",photo:null},{name:"Gals who like to move",initials:"GM",detail:"Group calendar · 4 members",photo:null}])].map(calendar=><button key={calendar.name} className={styles.cardLink} onClick={()=>p.open({kind:"manage",name:calendar.name})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials={calendar.initials} photo={calendar.photo} color="#C8C3DB" size={40}/></span><div><strong>{calendar.name}</strong><span>{calendar.detail}</span></div><ChevronRight size={18}/></CardContent></Card></button>)}
     </div></section>
     {[
       { title: "Tools", rows: [
@@ -273,9 +277,10 @@ function PreviewShell() {
 
   const [explorePage,setExplorePage]=useState<ExplorePage | null>(null);
   useEffect(()=>{mainRef.current?.scrollTo({top:0});},[detail,screen,explorePage,sharing]);
-  return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>Apple-inspired · Delight · sample content</div><div className={styles.phone}>
+  return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>
+    <div className={styles.dataBanner} role="status">{p.dataStatus==="loading"?"Loading your account…":p.live?"Live data · changes stay in this preview":p.dataStatus==="error"?"Couldn’t load account data. Showing samples.":<>Sample data · <a href="/" target="_blank" rel="noopener noreferrer">Sign in</a> to load your account.</>}{p.dataStatus!=="loading" && <button onClick={()=>void p.reloadData()}>{p.live?"Refresh":"Retry"}</button>}</div>
     <main ref={mainRef} className={`${styles.content} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)}/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
-    <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
+    {!p.stack.some(route=>route.kind==="class") && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);setSharing(false);p.reset();}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>}
   </div></div>;
 }
 

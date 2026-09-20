@@ -262,6 +262,9 @@ function prepareExportFile(url: string, fileName: string, signal?: AbortSignal):
 }
 
 export function ShareHubScreen({
+  previewMode = false,
+  onPreviewAdd,
+  onPreviewEdit,
   embedded = false,
   tabbed = false,
   coach,
@@ -282,6 +285,9 @@ export function ShareHubScreen({
   deferAdderData = false,
   onRefreshWeek,
 }: {
+  previewMode?: boolean;
+  onPreviewAdd?: () => void;
+  onPreviewEdit?: (key:string) => void;
   /** Render inside another surface (the calendar's share sheet). The sheet
    *  owns dismissal, so the editor does not add a second back control. */
   embedded?: boolean;
@@ -328,7 +334,7 @@ export function ShareHubScreen({
 }) {
   const router = useRouter();
   const rememberedDesign = useRef(
-    readClientMemory<ShareDesign>(`share-design-draft:${handle}`),
+    readClientMemory<ShareDesign>(`${previewMode ? "preview-" : ""}share-design-draft:${handle}`),
   ).current;
   const startingDesign = useRef(
     sanitizeShareDesign(
@@ -488,8 +494,8 @@ export function ShareHubScreen({
   }, []);
 
   useEffect(() => {
-    if (adderData) writeClientMemory("calendar-composer", adderData);
-  }, [adderData]);
+    if (!previewMode && adderData) writeClientMemory("calendar-composer", adderData);
+  }, [adderData, previewMode]);
 
   const ensureAdderData = async () => {
     if (adderData) return adderData;
@@ -506,6 +512,7 @@ export function ShareHubScreen({
     }
   };
   const openAdder = async () => {
+    if (previewMode) { onPreviewAdd?.(); return; }
     if (adderBusy) return;
     if (adderData) {
       setAddOpen(true);
@@ -524,6 +531,7 @@ export function ShareHubScreen({
   };
 
   const openEdit = async (it: HubItem) => {
+    if (previewMode) { onPreviewEdit?.(it.key); return; }
     if (editBusy) return;
     setEditBusy(true);
     const id = it.key.split(".")[0];
@@ -607,7 +615,7 @@ export function ShareHubScreen({
         setDraftPhotoZoom(100);
         setDraftPhotoOverlay(24);
         try {
-          const result = await setStoryBackground(dataUrl);
+          const result = previewMode ? {ok:true,background:dataUrl,error:undefined} : await setStoryBackground(dataUrl);
           if (!result.ok || !result.background) {
             setLocalBackgroundUrl(previousLocalUrl);
             setPhotoAvailable(previousAvailable);
@@ -625,7 +633,7 @@ export function ShareHubScreen({
             return;
           }
           setBust(Date.now());
-          invalidateClientMemory("share-takeover");
+          if (!previewMode) invalidateClientMemory("share-takeover");
           toast("Photo added. Position it below.");
         } catch {
           setLocalBackgroundUrl(previousLocalUrl);
@@ -665,9 +673,9 @@ export function ShareHubScreen({
     setPick(null);
     setBackgroundBusy(true);
     try {
-      const result = await setStoryBackground(null);
+      const result = previewMode ? {ok:true,error:undefined} : await setStoryBackground(null);
       if (result.ok) {
-        invalidateClientMemory("share-takeover");
+        if (!previewMode) invalidateClientMemory("share-takeover");
         toast("Photo deleted");
         return;
       }
@@ -765,7 +773,7 @@ export function ShareHubScreen({
         nativeExportRequestId.current = null;
         sharingRef.current = false;
         setSharing(false);
-        void recordShareImageExport();
+        if (!previewMode) void recordShareImageExport();
         setInstagramPromptOpen(true);
       } else if (
         requestMatches
@@ -898,8 +906,8 @@ export function ShareHubScreen({
   // look below is the deliberate cross-session/account action; this short
   // memory is what makes an accidental tab switch harmless.
   useEffect(() => {
-    writeClientMemory(`share-design-draft:${handle}`, currentDesign);
-  }, [currentDesign, handle]);
+    writeClientMemory(`${previewMode ? "preview-" : ""}share-design-draft:${handle}`, currentDesign);
+  }, [currentDesign, handle, previewMode]);
 
   useEffect(() => {
     if (featuredKey && !items.some((item) => item.key === featuredKey)) setFeaturedKey(null);
@@ -1111,7 +1119,7 @@ export function ShareHubScreen({
   // still generated only once, stale designs are cancelled, and the Share tap
   // joins an in-flight request rather than starting over.
   useEffect(() => {
-    if (backgroundBusy || !browserCanShareFiles() || exportFileCache.has(exportUrl)) return;
+    if (previewMode || backgroundBusy || !browserCanShareFiles() || exportFileCache.has(exportUrl)) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       void prepareExportFile(exportUrl, fileName, controller.signal).catch(() => undefined);
@@ -1120,7 +1128,7 @@ export function ShareHubScreen({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [backgroundBusy, exportUrl, fileName]);
+  }, [backgroundBusy, exportUrl, fileName, previewMode]);
 
   const rangeLabel = useMemo(
     () => days === 1
@@ -1164,6 +1172,23 @@ export function ShareHubScreen({
   };
 
   const shareImage = async () => {
+    if (previewMode) {
+      if (sharingRef.current || backgroundBusy) return;
+      sharingRef.current=true; setSharing(true);
+      try {
+        const canvas=document.querySelector<HTMLElement>(".preview-share-editor .shlive-canvas > div");
+        if(!canvas) throw new Error("Preview unavailable");
+        await document.fonts.ready;
+        const {toBlob}=await import("html-to-image");
+        const blob=await toBlob(canvas,{width:1080,height:1920,pixelRatio:1,style:{transform:"none",position:"relative",left:"0",top:"0",margin:"0",translate:"none",scale:"none",visibility:"visible"},filter:node=>!(node instanceof HTMLElement && node.classList.contains("shlive-edit-hit"))});
+        if(!blob) throw new Error("Export unavailable");
+        const file=new File([blob],fileName,{type:"image/png"});
+        if(navigator.canShare?.({files:[file]})) await navigator.share({files:[file],title:"My FittList week"});
+        else downloadFile(blob,fileName);
+      } catch(error) { if((error as Error).name!=="AbortError") toast("Couldn't export the image. Try again."); }
+      finally {sharingRef.current=false;setSharing(false);}
+      return;
+    }
     if (sharingRef.current || backgroundBusy) return;
     // Freeze the exact URL and name before yielding. Edits made while a native
     // share sheet is being prepared can never change the image in that job.
@@ -1176,7 +1201,7 @@ export function ShareHubScreen({
     const controller = new AbortController();
     exportAbort.current = controller;
     const shared = () => {
-      void recordShareImageExport();
+      if (!previewMode) void recordShareImageExport();
       setInstagramPromptOpen(true);
     };
     let handedToNative = false;
@@ -1282,7 +1307,8 @@ export function ShareHubScreen({
     if (designSaving || backgroundBusy || !lookName.trim()) return;
     setDesignSaving(true);
     try {
-      const result = await saveNamedStoryLook({ name:lookName, design:currentDesign });
+      const look={id:`preview-${Date.now()}`,name:lookName,design:currentDesign};
+      const result = previewMode ? {ok:true as const,look,savedLooks:[...savedLooks,look]} : await saveNamedStoryLook({ name:lookName, design:currentDesign });
       if (!result.ok) {
         toast(result.error);
         return;
@@ -1302,7 +1328,7 @@ export function ShareHubScreen({
     if (designSaving || backgroundBusy) return;
     setDesignSaving(true);
     try {
-      const result = await deleteSavedStoryLook(id);
+      const result = previewMode ? {ok:true as const,savedLooks:savedLooks.filter(look=>look.id!==id)} : await deleteSavedStoryLook(id);
       if (!result.ok) {
         toast(result.error);
         return;

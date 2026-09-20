@@ -75,6 +75,7 @@
     "cn": "^0.3.0",
     "drizzle-orm": "^0.45.2",
     "google-auth-library": "^11.1.0",
+    "html-to-image": "^1.11.13",
     "jose": "^5.9.6",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.27.0",

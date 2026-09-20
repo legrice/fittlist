@@ -1,7 +1,8 @@
 "use client";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
-export type PreviewClass = { id: string; name: string; place: string; coach: string; date: string; time: string; duration: string };
+import { loadLivePreview } from "./live-data";
+export type PreviewClass = { description?:string|null; own?:boolean; inCalendar?:boolean; photo?:string|null; id: string; name: string; place: string; coach: string; date: string; time: string; duration: string };
 export const initialClasses: PreviewClass[] = [
   { id:"asana", name:"Asana Lab", place:"Asana Soul Practice", coach:"Erin Clyne", date:"2026-09-19", time:"08:00", duration:"60" },
   { id:"sculpt", name:"Sculpt", place:"Jane DO Jersey City", coach:"Freddie Morgan", date:"2026-09-20", time:"10:30", duration:"50" },
@@ -9,7 +10,11 @@ export const initialClasses: PreviewClass[] = [
 ];
 export type Destination = { kind:"settings"|"manage"|"edit-profile"|"person"|"studio"|"class"|"edit-class"|"add-class"|"conversation"; name?:string };
 function useStateStore() {
-  const [profile,setProfile] = useState({ name:"Matt LeGrice", handle:"mattlegrice", bio:"Strength & mobility coach", location:"Jersey City, NJ", email:"matt@example.com" });
+  const [profile,setProfile] = useState({ name:"Matt LeGrice", handle:"mattlegrice", bio:"Strength & mobility coach", location:"Jersey City, NJ", email:"matt@example.com",photo:null as string|null });
+  const [live,setLive]=useState<Awaited<ReturnType<typeof loadLivePreview>>>(null);
+  const [dataStatus,setDataStatus]=useState("loading");
+  const reloadData=async()=>{setDataStatus("loading");try{const data=await loadLivePreview();if(!data){setLive(null);setSchedule(initialClasses);setSaved([]);setFollowing([]);setProfile({name:"Matt LeGrice",handle:"mattlegrice",bio:"Strength & mobility coach",location:"Jersey City, NJ",email:"matt@example.com",photo:null});setDataStatus("signed-out");return;}setLive(data);setProfile(data.profile);setSchedule(data.schedule);setSaved(data.saved);setFollowing(data.people.filter(p=>p.following).map(p=>p.name));setMessages([]);setDataStatus("live");}catch{setDataStatus("error");}};
+  useEffect(()=>{void reloadData();},[]);
   const [schedule,setSchedule] = useState(initialClasses);
   const [preferences,setPreferences] = useState<Record<string,boolean>>({ "Class reminders":true,"New followers":true,"Group activity":true,"Messages":true,"Email updates":false,"Public profile":true,"Allow messages":true,"Approve followers":false });
   const [away,setAway] = useState({ start:"",end:"",note:"",reply:"" });
@@ -20,7 +25,28 @@ function useStateStore() {
   const [timezone,setTimezone] = useState("America/New_York");
   const [messages,setMessages] = useState(["See you at Asana Lab!"]);
   const [stack,setStack] = useState<Destination[]>([]);
-  return { profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,open:(route:Destination)=>setStack(s=>[...s,route]),back:()=>setStack(s=>s.slice(0,-1)),reset:()=>setStack([]) };
+  useEffect(()=>{
+    const load=()=>{
+      const id=new URLSearchParams(window.location.search).get("class");
+      const routes=window.history.state?.previewRoutes;
+      setStack(Array.isArray(routes) ? routes : id ? [{kind:"class",name:id}] : []);
+    };
+    load(); window.addEventListener("popstate",load);
+    return ()=>window.removeEventListener("popstate",load);
+  },[]);
+  const navigate=(routes:Destination[],push:boolean)=>{
+    const url=new URL(window.location.href);
+    const current=routes.at(-1);
+    if(current?.kind==="class") url.searchParams.set("class",current.name || ""); else url.searchParams.delete("class");
+    const state={...window.history.state,previewRoutes:routes,previewDepth:push?(window.history.state?.previewDepth || 0)+1:0};
+    window.history[push?"pushState":"replaceState"](state,"",url);
+    setStack(routes);
+  };
+  return { live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
+    open:(route:Destination)=>navigate([...stack,route],true),
+    back:()=>{if(window.history.state?.previewDepth>0) window.history.back(); else navigate(stack.slice(0,-1),false);},
+    reset:()=>navigate([],false) };
+
 }
 type Store = ReturnType<typeof useStateStore>;
 const Context = createContext<Store|null>(null);

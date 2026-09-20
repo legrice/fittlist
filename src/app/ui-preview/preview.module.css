@@ -378,3 +378,38 @@
 .directoryFollow { flex:none; min-height:38px; padding:8px 13px; border:1px solid var(--preview-line); border-radius:999px; background:var(--preview-surface); color:var(--preview-text); font:inherit; font-size:12px; font-weight:700; line-height:1; cursor:pointer; }
 .directoryFollow[aria-pressed="true"] { background:var(--preview-accent); color:var(--preview-on-accent); border-color:var(--preview-accent); }
 .directoryPersonMain:focus-visible,.directoryFollow:focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; }
+
+.mainShareEditor { --color-background:var(--preview-ground); --color-surface:var(--preview-surface); --color-text-primary:var(--preview-text); --color-text-secondary:var(--preview-muted); --color-border:var(--preview-line); --color-surface-muted:var(--preview-soft); --color-surface-hover:var(--preview-field); --ink:var(--preview-text); --muted:var(--preview-muted); --line:var(--preview-line); }
+.mainShareEditor :global(.share-editor-root) { --sheditor-bg:var(--preview-ground); --sheditor-panel:var(--preview-surface); --sheditor-text:var(--preview-text); --sheditor-muted:var(--preview-muted); --sheditor-border:var(--preview-line); --sheditor-soft:var(--preview-soft); }
+.mainShareEditor :global(.share-inspector-scrim .sheet) { background:var(--preview-surface); color:var(--preview-text); }
+.mainShareEditor :global(.share-inspector-scrim input:not([type="range"])),.mainShareEditor :global(.share-inspector-scrim textarea) { background:var(--preview-ground); color:var(--preview-text); }
+.mainShareEditor :global(.shtop-controls) { position:relative; z-index:2; }
+
+.scheduleCard { background:var(--preview-surface); border:1px solid var(--preview-line); border-radius:16px; padding:18px; color:var(--preview-text); }
+.scheduleCardTop { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:36px; }
+.classTimeLink { border:0; padding:0; background:transparent; color:inherit; font:inherit; font-size:15px; font-weight:600; text-align:left; font-variant-numeric:tabular-nums; cursor:pointer; }
+.classSave { display:flex; align-items:center; gap:5px; flex:none; min-height:36px; border:0; border-radius:999px; padding:8px 10px; background:var(--preview-soft); color:var(--preview-text); font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+.classSave[aria-pressed="true"] { background:var(--preview-accent); color:var(--preview-on-accent); }
+.scheduleCardMain { display:grid; gap:8px; width:100%; margin-top:20px; padding:0; border:0; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
+.scheduleCardMain strong { font-size:21px; line-height:1.18; font-weight:600; letter-spacing:-.025em; }
+.scheduleCardMain > span { font-size:14px; line-height:1.4; color:var(--preview-muted); }
+.scheduleCoach { display:flex; align-items:center; gap:10px; margin-top:24px; padding:0; border:0; background:transparent; color:inherit; font:inherit; font-size:14px; font-weight:500; text-align:left; cursor:pointer; }
+.scheduleCoachAvatar { display:grid; place-items:center; flex:none; width:32px; height:32px; border-radius:50%; background:#c8c3db; color:#192126; font-size:11px; font-weight:600; }
+.teachingBadge { padding:7px 10px; border-radius:999px; background:#e7eedb; color:#3c5122; font-size:11px; font-weight:600; }
+.dark .teachingBadge { background:#35432a; color:#d5ecc0; }
+.teachingCard { border-left:3px solid #a1e510; }
+.scheduleCard button:focus-visible { outline:2px solid var(--preview-text); outline-offset:4px; border-radius:8px; }
+@media(max-width:360px) { .scheduleCard { padding:14px; } .classTimeLink { font-size:13px; } .classSave { padding:8px; } }
+
+.classPageMeta { display:grid; gap:16px; margin:24px 0; }
+.classPageMeta span { display:flex; align-items:center; gap:12px; font-size:16px; font-weight:500; }
+.classShareLink { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:10px 16px; border:0; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); font:inherit; font-size:14px; cursor:pointer; }
+.classPageSection { border-top:1px solid var(--preview-line); padding:0 0 24px; }
+.classPageSection > p { color:var(--preview-muted); font-size:16px; line-height:1.5; }
+.classPageSection .detailRow { border:0; padding:0; }
+.classPageFooter { position:absolute; bottom:0; left:0; right:0; z-index:35; padding:16px 20px calc(20px + env(safe-area-inset-bottom)); background:var(--preview-ground); border-top:1px solid var(--preview-line); }
+.classPageFooter button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:52px; padding:12px; border:0; border-radius:999px; background:var(--preview-highlight); color:#192126; font:inherit; font-weight:600; cursor:pointer; }
+
+.dataBanner { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 24px; font-size:12px; color:var(--muted-foreground); border-bottom:1px solid color-mix(in srgb,currentColor 12%,transparent); }
+.dataBanner a { text-decoration:underline; }
+.dataBanner button { font-weight:600; padding:6px 10px; border-radius:20px; background:color-mix(in srgb,currentColor 8%,transparent); }
