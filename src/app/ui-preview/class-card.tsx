@@ -1,5 +1,5 @@
 "use client";
-import { Bookmark, Check } from "lucide-react";
+import { ClassLine } from "@/components/WeekView";
 import { usePrototype, timeLabel, type PreviewClass } from "./prototype-state";
 import styles from "./preview.module.css";
 
@@ -13,12 +13,14 @@ export default function PreviewClassCard({item}:{item:PreviewClass}) {
   const p=usePrototype();
   const own=item.own ?? (item.coach===p.profile.name || item.coach==="Matt LeGrice");
   const saved=p.saved.includes(item.id);
-  return <article className={`${styles.scheduleCard} ${own ? styles.teachingCard : ""}`} aria-label={`${item.name}${own?", teaching":""}`}>
-    <div className={styles.scheduleCardTop}>
-      <button className={styles.classTimeLink} onClick={()=>p.open({kind:"class",name:item.id})}>{classTimeRange(item)}</button>
-      {own ? <span className={styles.teachingBadge}>Teaching</span> : <button type="button" className={styles.classSave} aria-label={`${saved?"Unsave":"Save"} ${item.name}`} aria-pressed={saved} onClick={()=>p.setSaved(v=>saved?v.filter(id=>id!==item.id):[...v,item.id])}>{saved?<Check size={17}/>:<Bookmark size={17}/>}<span>{saved?"Saved":"Save"}</span></button>}
-    </div>
-    <button className={styles.scheduleCardMain} onClick={()=>p.open({kind:"class",name:item.id})}><strong>{item.name}</strong><span>{item.place}</span></button>
-    {!own && <button className={styles.scheduleCoach} onClick={()=>p.open({kind:"person",name:item.coach})}>{item.photo ? <img src={item.photo} alt="" className={styles.scheduleCoachAvatar}/> : <span className={styles.scheduleCoachAvatar}>{item.coach.split(" ").map(part=>part[0]).join("").slice(0,2)}</span>}<span>{item.coach}</span></button>}
+  const [hm,ap]=timeLabel(item.time).split(" ");
+  if(own) return <div className={`personal-calendar-list calendar-cardlist ${styles.mainBranchClasses}`}><div className="clrow"><ClassLine row={{key:item.id,name:item.name,where:item.place,hm,ap,dur:`${item.duration} min`,onTap:()=>p.open({kind:"class",name:item.id})}}/></div></div>;
+  return <article className={`activity-card calendar-following-card ${styles.mainBranchClasses}`} aria-label={item.name}>
+    <button type="button" className="activity-card-main" onClick={()=>p.open({kind:"class",name:item.id})}>
+      <span className="explore-class-coach"><span className="clline-coach-face">{item.photo ? <img src={item.photo} alt=""/> : <span>{item.coach.charAt(0)}</span>}</span><span>{item.coach}</span></span>
+      <span className="explore-class-time">{hm}<small>{ap}</small></span><strong className="explore-class-name">{item.name}</strong>
+      <span className="explore-class-duration">{item.duration} min</span><span className="explore-class-studio">{item.place}</span>
+    </button>
+    <div className="explore-save-row"><button type="button" className={`explore-save-button${saved?" on":""}`} aria-label={`${saved?"Unsave":"Save"} ${item.name}`} aria-pressed={saved} onClick={()=>p.setSaved(v=>saved?v.filter(id=>id!==item.id):[...v,item.id])}>{saved?"Saved":"Save"}</button></div>
   </article>;
 }

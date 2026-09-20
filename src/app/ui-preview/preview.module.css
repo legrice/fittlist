@@ -424,3 +424,18 @@
 .apple .content.profileTakeover { position:fixed; inset:0; z-index:40; width:min(100%,430px); margin:0 auto; padding:calc(var(--preview-top-padding) + env(safe-area-inset-top)) 20px calc(110px + env(safe-area-inset-bottom)); background:var(--preview-ground); overscroll-behavior:contain; }
 
 .profileTakeover .classPageFooter { position:fixed; left:50%; right:auto; transform:translateX(-50%); width:min(100%,430px); }
+
+.mainBranchClasses { --ink:var(--preview-text); --ol:var(--preview-muted); --color-text-primary:var(--preview-text); --color-text-secondary:var(--preview-muted); --color-surface:var(--preview-surface); --color-surface-muted:var(--preview-soft); --kinetic-text:var(--preview-text); --kinetic-surface:var(--preview-surface); }
+.mainBranchClasses :global(.clline-coach-face) { background:var(--preview-soft); }
+.apple .calendarHero .peopleRail { gap:7px; padding-top:5px; padding-bottom:7px; }
+.apple .personFilter { width:86px; gap:6px; }
+.apple .personRing { width:80px; height:80px; padding:0; border:0; position:relative; }
+.apple .personRing::after { content:""; position:absolute; inset:0; border:3px solid var(--preview-soft); border-radius:50%; pointer-events:none; }
+.apple .personFilter[aria-pressed="true"] .personRing::after { border-color:var(--preview-highlight); }
+.apple .personRing > div,.apple .allFace { width:80px; height:80px; }
+.apple .personFilter small { max-width:86px; width:100%; white-space:nowrap; line-height:1.1; }
+.calendarPersonContext .sectionTitle { min-height:36px; margin:14px 0 24px; }
+.apple .calendarPersonContext .sectionTitle h2 { font-size:14px; font-weight:600; letter-spacing:normal; }
+.calendarProfileButton { min-height:30px; padding:6px 12px; gap:3px; font-size:12px; font-weight:700; line-height:1; border:1px solid var(--preview-line); }
+.apple .personFilter:hover { background:transparent; }
+.mainBranchClasses :global(.explore-save-button.on) { background:var(--preview-text); color:var(--preview-ground); }
