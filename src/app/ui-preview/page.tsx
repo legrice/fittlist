@@ -145,12 +145,11 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const [groups, setGroups] = useState(sampleGroups);
   const [joined, setJoined] = useState(["gals"]);
   const [groupQuery,setGroupQuery]=useState("");
-  const [groupCategory,setGroupCategory]=useState("All");
-  const [groupMembership,setGroupMembership]=useState("all");
+  const [groupCategory,setGroupCategory]=useState("All groups");
   const [browsing,setBrowsing]=useState(false);
-  const categories=["All","Fitness groups","Wellness groups","Running clubs"];
-  const categoryOf=(value:string)=>/run/i.test(value)?"Running clubs":/wellness|yoga|mindful/i.test(value)?"Wellness groups":"Fitness groups";
-  const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All"||categoryOf(g.category)===groupCategory)&&(groupMembership==="all"||!joined.includes(g.id)));
+  const categories=["All groups","New groups","Your groups","Fitness","Wellness","Run club"];
+  const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
+  const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All groups"||(groupCategory==="New groups"?!joined.includes(g.id):groupCategory==="Your groups"?joined.includes(g.id):categoryOf(g.category)===groupCategory)));
   const openGroup=(id:string)=>{setBrowsing(selected==="browse");setSelected(id);};
   useEffect(()=>{if(p.live){setGroups(p.live.groups);setJoined(p.live.joined);}},[p.live]);
   const [name, setName] = useState("");
@@ -165,7 +164,6 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       {back}<h1 className={styles.pageTitle}>Explore groups</h1>
       <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label></div>
       <div className={styles.groupCategories} role="group" aria-label="Group categories">{categories.map(c=><button key={c} aria-pressed={groupCategory===c} onClick={()=>setGroupCategory(c)}>{c}</button>)}</div>
-      <label className={styles.categoryFilter}>Membership<select aria-label="Group membership filter" value={groupMembership} onChange={e=>setGroupMembership(e.target.value)}><option value="all">All groups</option><option value="new">Groups you haven’t joined</option></select></label>
       <p className={styles.sectionIntro}>Distance filtering is coming when group locations are available.</p>
       <SectionTitle aside={<Badge variant="secondary">{results.length}</Badge>}>Groups</SectionTitle>
       {results.length===0&&<p className={styles.sectionIntro}>No matching groups. Try another category or search.</p>}
