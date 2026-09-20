@@ -12,7 +12,11 @@ export type Destination = { kind:"membership"|"settings"|"manage"|"edit-profile"
 function useStateStore() {
   const [profile,setProfile] = useState({ name:"Matt LeGrice", handle:"mattlegrice", bio:"Strength & mobility coach", location:"Jersey City, NJ", email:"matt@example.com",photo:null as string|null });
   const [membershipPlan,setMembershipPlan]=useState<"free"|"pro"|"studio">("free");
-  const pro=membershipPlan!=="free";
+  const pro=membershipPlan==="pro";
+  const [studioSubscriptions,setStudioSubscriptions]=useState<Record<string,"active"|"ending"|"grace"|"readonly">>({});
+  const [personalEnding,setPersonalEnding]=useState(false);
+  const [billingProvider,setBillingProvider]=useState<"web"|"apple"|null>(null);
+  const [billingReceipts,setBillingReceipts]=useState<{scope:string;amount:string;date:string}[]>([]);
   const setPro=(value:boolean)=>setMembershipPlan(value?"pro":"free");
   const [exportsUsed,setExportsUsed]=useState(0);
   const [live,setLive]=useState<Awaited<ReturnType<typeof loadLivePreview>>>(null);
@@ -46,7 +50,7 @@ function useStateStore() {
     window.history[push?"pushState":"replaceState"](state,"",url);
     setStack(routes);
   };
-  return { membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
+  return { billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
     open:(route:Destination)=>navigate([...stack,route],true),
     back:()=>{if(window.history.state?.previewDepth>0) window.history.back(); else navigate(stack.slice(0,-1),false);},
     reset:()=>navigate([],false) };
