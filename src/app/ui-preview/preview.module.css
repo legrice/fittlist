@@ -221,16 +221,16 @@
 
 /* One edge-to-edge Calendar hero contains the view control and its context. */
 .apple .calendarContent { padding-top:var(--preview-top-padding); }
-.calendarHero { margin:0 -20px 12px; padding:0 20px 24px; background:var(--preview-ground); color:var(--preview-text); }
+.calendarHero { margin:0 -20px; padding:0 20px 16px; background:var(--preview-ground); color:var(--preview-text); }
 .apple .calendarModeTabs { height:44px; margin:0; padding:4px; background:var(--preview-field); }
 .apple .calendarModeTabs [data-slot="tabs-trigger"] { color:var(--preview-text); font-size:14px; }
 .apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-text); color:#fff; box-shadow:none; }
-.apple .calendarHero .calendarSummary { margin:0; padding:28px 0 4px; border-radius:0; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
+.apple .calendarHero .calendarSummary { margin:0; padding:28px 0 0; border-radius:0; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
 .apple .calendarHero .calendarSummary strong { max-width:none; font-size:var(--preview-title-size); line-height:1.08; letter-spacing:-.035em; }
 .apple .calendarHero .heroActions { justify-content:flex-start; }
 .apple .calendarHero .shareWeekButton { gap:8px; padding:0 20px; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); border:0; }
 .apple .calendarHero .shareWeekButton:hover,.apple .startGroup:hover,.apple [data-slot="button"][data-variant="outline"]:hover { background:var(--preview-soft); }
-.apple .calendarHero .peopleRail { margin:24px -20px -8px; }
+.apple .calendarHero .peopleRail { margin:24px -20px 0; padding-bottom:0; }
 .apple .calendarHero .personFilter { color:var(--preview-muted); }
 .apple .calendarHero .personFilter[aria-pressed="true"] small { color:var(--preview-text); }
 .apple .calendarHero .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-highlight); }
@@ -315,3 +315,6 @@
 .calendarAvatar { width:40px; height:40px; border-radius:50%; object-fit:cover; }
 .apple .youPage .settingsRow [data-slot="avatar-fallback"] { color:#192126; }
 .apple .youPage .themeSwitch { flex:none; }
+
+.apple .calendarContent .daySection h3 { font-size:21px; font-weight:600; letter-spacing:-.035em; color:var(--preview-text); }
+.apple .calendarContent [data-slot="tabs-content"] > :first-child { margin-top:0; }
