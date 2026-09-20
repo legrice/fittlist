@@ -246,7 +246,7 @@
 .apple .youPage .simpleCard { background:var(--preview-surface); border-radius:20px; }
 .apple .youPage :is(.settingsRow,.menuRow) { padding:16px; }
 .apple .youPage .settingsIcon { background:transparent; }
-.apple .youPage .stack { gap:0; }
+.apple .youPage .stack { gap:var(--preview-card-gap); }
 .profileSheet { position:fixed; inset:auto 0 0; margin:0 auto; width:min(100%,430px); max-width:100%; max-height:90dvh; padding:0; border:0; border-radius:28px 28px 0 0; background:#f5f7f8; color:#192126; font-family:'Delight','Helvetica Neue',Arial,sans-serif; overflow:auto; }
 .profileSheet::backdrop { background:#19212680; }
 .sheetBody { position:relative; padding:32px 24px calc(24px + env(safe-area-inset-bottom)); text-align:center; }
@@ -512,3 +512,12 @@
 .apple .mainShareEditor :global(.sheditor-tool) { flex:0 0 64px; min-width:64px; }
 .apple .mainShareEditor :global(.sheditor-share-action) { position:static; inset:auto; transform:none; width:100%; margin:0; padding:0; border:0; background:transparent; }
 .apple .mainShareEditor:has(:global(.has-inspector)) :global(.sheditor-dock) { visibility:hidden; }
+
+/* Shared spacing for tappable surface lists. */
+.apple { --preview-card-gap:16px; --preview-card-padding:16px; --preview-section-gap:32px; }
+.apple :is(.stack,.peopleList,.exploreGroupList) { display:flex; flex-direction:column; gap:var(--preview-card-gap); }
+.apple .directoryPerson { padding:var(--preview-card-padding); border:0; border-radius:20px; background:var(--preview-surface); }
+.apple .youPage :is(.settingsRow,.menuRow),.apple .menuRow { padding:var(--preview-card-padding); }
+.apple .sectionTitle { margin-top:var(--preview-section-gap); margin-bottom:16px; }
+.apple .calendarPersonContext .sectionTitle { margin:14px 0 24px; }
+.apple .directoryFollow { flex-shrink:0; }

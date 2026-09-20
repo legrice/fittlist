@@ -117,3 +117,12 @@ Its shared rules live at the end of `src/app/ui-preview/preview.module.css`.
 
 Add new primary actions to the shared rule (or extract a shared component),
 never duplicate the dimensions in a feature-specific override.
+
+### Prototype surface-list spacing
+
+White tappable cards (settings, managed calendars, people, studios, and group
+recommendations) use a shared 16px gap and 16px inner padding. Sections use
+32px before the heading and 16px between heading and list. People cards use
+the same surface as studios, with no inset divider between separate cards.
+Use `--preview-card-gap`, `--preview-card-padding`, and
+`--preview-section-gap`; do not zero out gaps for individual pages.
