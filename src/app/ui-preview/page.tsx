@@ -8,7 +8,7 @@ import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
 import { clearClientMemory } from "@/lib/client-memory";
-import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
+import { Activity, ArrowLeft, Bell, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -253,14 +253,12 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
       {[{name:"My classes",initials:"ML",detail:"Classes, shifts, and saved plans",photo:p.profile.photo},...(p.live ? p.live.managed : [{name:"Ironbound Performance Athletics",initials:"IP",detail:"Studio calendar · You’re an admin",photo:null},{name:"Gals who like to move",initials:"GM",detail:"Group calendar · 4 members",photo:null}])].map(calendar=><button key={calendar.name} className={styles.cardLink} onClick={()=>p.open({kind:"manage",name:calendar.name})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials={calendar.initials} photo={calendar.photo} color="#C8C3DB" size={40}/></span><div><strong>{calendar.name}</strong><span>{calendar.detail}</span></div><ChevronRight size={18}/></CardContent></Card></button>)}
     </div></section>
     {[
-      { title: "Membership", rows: [
-        { icon: null, title: p.pro ? "Pro" : "Free", detail: p.pro ? "Manage membership" : "Explore Pro and Studio" },
-      ] },
       { title: "Tools", rows: [
         { icon: Activity, title: "Insights", detail: "Your teaching, classes, and sharing" },
         { icon: CalendarDays, title: "Calendar & sync", detail: "Connect Google, Apple, or Outlook" },
       ] },
       { title: "Settings", rows: [
+        { icon: CreditCard, title: "Membership", detail: p.membershipPlan === "studio" ? "Studio" : p.pro ? "Pro" : "Free" },
         { icon: Clock, title: "Set yourself as away", detail: "Add away dates, a profile note, and an automatic reply" },
         { icon: GlobeLock, title: "Privacy & communication", detail: "Messages, visibility, and follower approvals" },
         { icon: Bell, title: "Notification settings", detail: "Choose which alerts you receive" },
@@ -272,7 +270,7 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
     ].map((section) => <section key={section.title}>
       <SectionTitle>{section.title}</SectionTitle>
       <div className={styles.stack}>{section.rows.map(({ icon: Icon, title, detail }) =>
-        <button key={title} className={styles.cardLink} onClick={()=>p.open(section.title==="Membership"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
+        <button key={title} className={styles.cardLink} onClick={()=>p.open(title==="Membership"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
           {Icon && <span className={styles.settingsIcon}><Icon size={22}/></span>}
           <div><strong>{title}</strong><span>{detail}</span></div>
           <ChevronRight size={18}/>

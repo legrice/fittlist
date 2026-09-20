@@ -60,6 +60,8 @@ export default function DetailScreens({route}:{route:Destination}) {
   const [shareStatus,setShareStatus]=useState("");
   const item=p.schedule.find(c=>c.id===route.name);
   const title=route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
+  const personAbout=p.live?.people.find(person=>person.name===route.name);
+  const studioAbout=p.live?.studios.find(studio=>studio.name===route.name);
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
   if(route.kind==="manage" && (p.live?p.live.managed.some(s=>s.name===route.name):route.name==="Ironbound Performance Athletics")) return <StudioWorkspace name={route.name!} view={route.view || "Dashboard"}/>;
   return <>
@@ -72,6 +74,10 @@ export default function DetailScreens({route}:{route:Destination}) {
     {(route.kind==="manage"||route.kind==="studio"||route.kind==="person") && <>
       <div className={styles.detailIdentity}><div className={styles.detailAvatar}>{route.kind==="person"?<Users size={30}/>:<CalendarDays size={30}/>}</div><span><MapPin size={15}/> {p.live ? (route.kind==="person"?p.live.people.find(person=>person.name===route.name)?.location:p.live.studios.find(studio=>studio.name===route.name)?.location) || "Location not added" : "Jersey City, NJ"}</span></div>
       {route.kind==="manage" ? <><p className={styles.sectionIntro}>You manage this calendar.</p><div className={styles.profileActions}><Button {...secondary} onClick={()=>p.open({kind:"add-class",name:route.name})}><Plus size={18}/>Add class</Button><Button {...secondary} onClick={()=>p.open({kind:"settings",name:"People & access"})}>Manage access</Button></div></> : <Button {...secondary} onClick={()=>p.setFollowing(v=>v.includes(title)?v.filter(x=>x!==title):[...v,title])}>{p.following.includes(title)?"Following":"Follow"}</Button>}
+      {(route.kind==="person"||route.kind==="studio")&&<section className={styles.profileAboutPanel}><Heading>About</Heading><p>{(route.kind==="person"?personAbout?.about:studioAbout?.about)|| (p.live?"No about information added.":route.kind==="person"?"A local instructor focused on approachable classes and helping people build confidence through movement.":"A neighborhood studio offering instructor-led classes for a range of experience levels.")}</p>
+      {route.kind==="person"&&<>{personAbout?.disciplines?.length ? <><h3>Specialties</h3><p>{personAbout.disciplines.join(" · ")}</p></>:null}{personAbout?.highlights?.length ? <><h3>Teaching focus</h3><ul>{personAbout.highlights.map((text,index)=><li key={index}>{text}</li>)}</ul></>:null}{personAbout?.certifications?.length ? <><h3>Certifications</h3><ul>{personAbout.certifications.map((text,index)=><li key={index}>{text}</li>)}</ul></>:null}</>}
+      {route.kind==="studio"&&studioAbout&&<><h3>Class types</h3><p>{studioAbout.type}</p><h3>Location</h3><p>{studioAbout.location}</p></>}
+      </section>}
       <Heading>Upcoming classes</Heading><Schedule items={matching}/>
     </>}
     {route.kind==="class" && item && <>
