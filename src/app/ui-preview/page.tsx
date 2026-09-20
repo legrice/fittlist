@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calendarActivitySummary } from "@/lib/calendar-summary";
 import styles from "./preview.module.css";
 
+type VisualStyle = "original" | "apple" | "material";
+
 type Screen = "calendar" | "explore" | "groups" | "updates" | "you";
 
 const screens: { id: Screen; label: string; icon: typeof CalendarDays }[] = [
@@ -71,7 +73,7 @@ const explorePlaces = [
   { name: "Ironbound Performance Athletics", type: "Strength", location: "Jersey City, NJ" },
 ];
 function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
-  return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button variant="outline" size="sm">Follow</Button></CardContent></Card>;
+  return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><div><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></div><Button data-variant="outline" variant="outline" size="sm">Follow</Button></CardContent></Card>;
 }
 function ExplorePlace({ place }: { place: typeof explorePlaces[number] }) {
   return <Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card>;
@@ -162,7 +164,7 @@ function UpdatesScreen() {
 
 function YouScreen() {
   return <>
-    <Card className={styles.profileCard}><CardContent><Face initials="ML" color="#C8C3DB" size={68}/><div><h2>Matt LeGrice</h2><span>@mattlegrice</span><p>Strength & mobility coach · Jersey City, NJ</p></div><Button variant="outline">Edit profile</Button></CardContent></Card>
+    <Card className={styles.profileCard}><CardContent><Face initials="ML" color="#C8C3DB" size={68}/><div><h2>Matt LeGrice</h2><span>@mattlegrice</span><p>Strength & mobility coach · Jersey City, NJ</p></div><Button data-variant="outline" variant="outline">Edit profile</Button></CardContent></Card>
     <SectionTitle>Your calendars</SectionTitle><div className={styles.stack}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><CalendarDays size={20}/><div><strong>Personal calendar</strong><span>Classes, shifts, and saved plans</span></div><ChevronRight size={18}/></CardContent></Card><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Users size={20}/><div><strong>Gals who like to move</strong><span>4 members</span></div><ChevronRight size={18}/></CardContent></Card></div>
     <SectionTitle>Notifications</SectionTitle><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><Bell size={20}/><div><strong>Notifications</strong><span>Follows, saves, and account activity</span></div><ChevronRight size={18}/></CardContent></Card>
     {[
@@ -193,8 +195,23 @@ function YouScreen() {
 
 export default function UiPreview() {
   const [screen,setScreen]=useState<Screen>("calendar");
+  const [visualStyle, setVisualStyle] = useState<VisualStyle>("original");
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get("look");
+    if (value === "apple" || value === "material") setVisualStyle(value);
+  }, []);
+  const changeStyle = (value: VisualStyle) => {
+    setVisualStyle(value);
+    const url = new URL(window.location.href);
+    if (value === "original") url.searchParams.delete("look");
+    else url.searchParams.set("look", value);
+    window.history.replaceState(window.history.state, "", url);
+  };
   const [explorePage,setExplorePage]=useState<ExplorePage | null>(null);
-  return <div className={styles.preview}><div className={styles.notice}>shadcn/ui mobile concept · sample content</div><div className={styles.phone}>
+  return <div className={`${styles.preview} ${visualStyle === "apple" ? styles.apple : visualStyle === "material" ? styles.material : ""}`} data-visual-style={visualStyle}><div className={styles.notice}>Mobile design comparison · sample content</div><div className={styles.phone}>
+    <fieldset className={styles.comparisonBar} aria-label="Visual style">
+      {([{ id: "original", label: "Original" }, { id: "apple", label: "Apple" }, { id: "material", label: "Material" }] as const).map(({ id, label }) => <label key={id}><input type="radio" name="visual-style" value={id} checked={visualStyle === id} onChange={() => changeStyle(id)} aria-label={id === "original" ? "Original" : `${label}-inspired`}/><span>{label}</span></label>)}
+    </fieldset>
     <main key={`${screen}-${explorePage ?? "home"}`} className={styles.content} aria-label={screens.find(({ id }) => id === screen)?.label}>{screen==="calendar"?<CalendarScreen/>:screen==="explore"?<ExploreScreen key={explorePage ?? "home"} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen/>:screen==="updates"?<UpdatesScreen/>:<YouScreen/>}</main>
     <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage(null);}}><Icon size={21} strokeWidth={screen===id?2.4:1.9}/><span>{label}</span></button>)}</nav>
   </div></div>;
