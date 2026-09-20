@@ -365,3 +365,16 @@
 
 .mapDetailLink { border:0; border-radius:999px; padding:10px 16px; background:var(--preview-soft); color:var(--preview-text); font:inherit; cursor:pointer; }
 .apple .addFab { border:0; cursor:pointer; }
+
+/* Main's directory row layout, using the preview's light/dark tokens. */
+.peopleList { display:flex; flex-direction:column; gap:0; margin-top:4px; }
+.directoryPerson { display:flex; align-items:center; min-width:0; gap:12px; padding:12px 0; border-bottom:1px solid var(--preview-line); }
+.directoryPersonMain { display:flex; align-items:center; gap:12px; min-width:0; flex:1; padding:0; border:0; background:transparent; color:var(--preview-text); font:inherit; text-align:left; cursor:pointer; }
+.directoryPersonMain [data-slot="avatar"] { flex:none; }
+.directoryPersonMain [data-slot="avatar-fallback"] { color:#192126!important; }
+.directoryPersonCopy { min-width:0; flex:1; }
+.directoryPersonCopy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:16px; font-weight:600; }
+.directoryPersonCopy small { display:block; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--preview-muted); font-size:13.5px; line-height:1.3; }
+.directoryFollow { flex:none; min-height:38px; padding:8px 13px; border:1px solid var(--preview-line); border-radius:999px; background:var(--preview-surface); color:var(--preview-text); font:inherit; font-size:12px; font-weight:700; line-height:1; cursor:pointer; }
+.directoryFollow[aria-pressed="true"] { background:var(--preview-accent); color:var(--preview-on-accent); border-color:var(--preview-accent); }
+.directoryPersonMain:focus-visible,.directoryFollow:focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; }

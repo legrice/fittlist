@@ -85,7 +85,15 @@ const exploreStudios: MapStudio[] = [
 ];
 function ExplorePerson({ person }: { person: typeof explorePeople[number] }) {
   const p = usePrototype();
-  return <Card className={styles.personCard}><CardContent className={styles.personCardBody}><Face initials={person.initials} color={person.color} size={48}/><button className={styles.personLink} onClick={() => p.open({kind:"person",name:person.name})}><strong>{person.name}</strong><span>{person.title}</span><small><MapPin size={13}/> Jersey City, NJ</small></button><Button data-variant="outline" variant="outline" size="sm" onClick={() => p.setFollowing(v=>v.includes(person.name)?v.filter(x=>x!==person.name):[...v,person.name])}>{p.following.includes(person.name)?"Following":"Follow"}</Button></CardContent></Card>;
+  const following=p.following.includes(person.name);
+  const activity=p.schedule.filter(item=>item.coach===person.name).length;
+  return <div className={styles.directoryPerson}>
+    <button className={styles.directoryPersonMain} onClick={()=>p.open({kind:"person",name:person.name})}>
+      <Face initials={person.initials} color={person.color} size={46}/>
+      <span className={styles.directoryPersonCopy}><strong>{person.name}</strong><small>{activity ? `${activity} this week` : person.title} · Jersey City, NJ</small></span>
+    </button>
+    <button className={styles.directoryFollow} aria-label={`${following?"Following":"Follow"}: ${person.name}`} aria-pressed={following} onClick={()=>p.setFollowing(v=>following?v.filter(x=>x!==person.name):[...v,person.name])}>{following?"Following":"Follow"}</button>
+  </div>;
 }
 function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
   const p=usePrototype();
@@ -103,7 +111,7 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
     <h1 className={styles.pageTitle}>Explore</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="People and studios" aria-label="Search Explore"/></label></div>
     {shownPeople.length + shownStudios.length === 0 && <p className={styles.sectionIntro}>No matches. Try another search.</p>}
-    <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.stack}>{shownPeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
+    <section><SectionTitle aside={more("people")}>People to move with</SectionTitle><div className={styles.peopleList}>{shownPeople.slice(0,2).map(person => <ExplorePerson key={person.name} person={person}/>)}</div></section>
     <section><SectionTitle aside={more("studios")}>Studios nearby</SectionTitle><div className={styles.stack}>{shownStudios.slice(0,2).map(place => <ExploreStudio key={place.name} place={place}/>)}</div></section>
   </>;
   const title = page.charAt(0).toUpperCase() + page.slice(1);
@@ -116,7 +124,7 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage | null; onNavig
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    {page === "studios" && mapView ? <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/> : <div className={styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
+    {page === "studios" && mapView ? <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/> : <div className={page === "people" ? styles.peopleList : styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
     {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={() => setMapView(true)}><MapIcon size={19}/>Map</button>}
   </>;
 }
