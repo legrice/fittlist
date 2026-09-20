@@ -639,3 +639,15 @@
 .apple .calendarHero .calendarModeTabs { display:flex; width:fit-content; height:44px; align-items:center; justify-content:flex-start; grid-template-columns:none; }
 .apple .calendarHero .calendarModeTabs [data-slot="tabs-trigger"] { flex:0 0 auto; width:auto; padding:0 22px; }
 .apple .calendarHero .peopleRail { padding-left:20px; padding-right:20px; scroll-padding-inline:20px; }
+
+.profileHero { margin:calc(-1 * (var(--preview-top-padding) + env(safe-area-inset-top))) -20px 20px; }
+.profileBanner { position:relative; height:240px; padding-top:env(safe-area-inset-top); background:linear-gradient(135deg,var(--preview-soft),var(--preview-muted)); }
+.profileBanner > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.profileOverlayNav { position:absolute; left:20px; right:20px; top:calc(12px + env(safe-area-inset-top)); }
+.profileOverlayNav .detailNav { background:transparent; margin:0; padding:0; }
+.profileOverlayNav .detailNav > strong { justify-self:center; padding:8px 12px; border-radius:999px; background:color-mix(in srgb,var(--preview-surface) 85%,transparent); color:var(--preview-text); backdrop-filter:blur(16px); }
+.profileOverlayNav .detailNav button,.profileOverlayNav .detailNav > div { background:color-mix(in srgb,var(--preview-surface) 85%,transparent); backdrop-filter:blur(16px); }
+.profileBannerCategory { position:absolute; bottom:16px; right:20px; padding:8px 14px; border-radius:999px; background:var(--preview-surface); color:var(--preview-text); font-size:13px; }
+.profileHeroAvatar { position:relative; width:96px; height:96px; margin:-48px 0 0 20px; border:4px solid var(--preview-ground); border-radius:50%; overflow:hidden; background:var(--preview-soft); color:var(--preview-text); }
+.profileHeroAvatar img { width:100%; height:100%; object-fit:cover; }
+.profileHeroAvatar > span { display:grid; place-items:center; height:100%; font-size:28px; font-weight:600; }

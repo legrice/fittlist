@@ -240,6 +240,7 @@ export async function discoverGroups(distanceMiles?: number, center?: { lat:numb
       ownerUserId:schema.groups.ownerUserId,
       name:schema.groups.name,
       photo:schema.groups.photo,
+      banner:schema.groups.bannerPhoto,
       slug:schema.groups.slug,
       description:schema.groups.description,
       purpose:schema.groups.purpose,

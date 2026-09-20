@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PreviewClassCard from "./class-card";
 import GroupSampleUpdates from "./group-sample-updates";
-import DetailHeader from "./detail-header";
+import ProfileHero from "./profile-hero";
 import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
@@ -136,9 +136,9 @@ function ExploreScreen({ page, onNavigate, onGroups }: { page: ExplorePage | nul
 }
 
 const sampleGroups = [
-  { id: "gals", location:"Jersey City, NJ", name: "Gals who like to move", category: "Group fitness", description: "Find a class, make a plan, and bring your people.", image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85", members: ["Erin Clyne", "Freddie Morgan", "Alex Lee", "Matt LeGrice"], classIndexes: [1, 2] },
-  { id: "run", location:"Jersey City, NJ", name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
-  { id: "sweat", location:"Jersey City, NJ", name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
+  { id: "gals", location:"Jersey City, NJ", banner:null as string|null, name: "Gals who like to move", category: "Group fitness", description: "Find a class, make a plan, and bring your people.", image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85", members: ["Erin Clyne", "Freddie Morgan", "Alex Lee", "Matt LeGrice"], classIndexes: [1, 2] },
+  { id: "run", location:"Jersey City, NJ", banner:null as string|null, name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
+  { id: "sweat", location:"Jersey City, NJ", banner:null as string|null, name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
 ];
 function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(value:string|null)=>void}) {
   const p=usePrototype();
@@ -172,7 +172,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <div className={styles.exploreGroupList}>{results.map(item=><article key={item.id} className={styles.exploreGroupCard}><div className={styles.groupListImage}><button className={styles.groupImageOpen} onClick={()=>openGroup(item.id)} aria-label={`View ${item.name}`}>{item.image?<img src={item.image} alt="" loading="lazy"/>:<Users size={40}/>}</button><span className={styles.groupTypePill}>{categoryOf(item.category)}</span><button className={styles.groupImageJoin} disabled={joined.includes(item.id)} aria-label={`${joined.includes(item.id)?"Joined":"Join"} ${item.name}`} onClick={()=>{setJoined(ids=>[...ids,item.id]);setGroups(items=>items.map(g=>g.id===item.id?{...g,members:[...g.members,p.profile.name]}:g));}}>{joined.includes(item.id)?"Joined":"Join"}</button></div><button className={styles.groupListCopyButton} onClick={()=>openGroup(item.id)}><span className={styles.exploreGroupCopy}><strong>{item.name}</strong><span>{item.location || "Location not added"}</span><span>{item.description}</span></span></button></article>)}</div>
     </> : selected === "create" ? <>
       {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
-      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, location:groupLocation.trim(), name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
+      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, banner:null, location:groupLocation.trim(), name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
         <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
         <label>Location<Input required value={groupLocation} onChange={event=>setGroupLocation(event.target.value)} placeholder="City or neighborhood"/></label>
         <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
@@ -184,8 +184,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <p className={styles.sectionIntro}>{group.name}</p>
       {groupView==="members" ? <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div> : <GroupSampleUpdates live={!!p.live} running={categoryOf(group.category)==="Run club"}/>}
     </> : group ? <>
-      <DetailHeader type="Group" name={group.name} id={group.id} onBack={()=>setSelected(null)}/>
-      <div className={styles.groupHeroImage}>{group.image&&<img className={styles.groupDetailPhoto} src={group.image} alt=""/>}<span className={styles.groupTypePill}>{categoryOf(group.category)}</span></div>
+      <ProfileHero type="Group" name={group.name} id={group.id} banner={group.banner || (!p.live?group.image:null)} photo={group.image} category={categoryOf(group.category)} onBack={()=>setSelected(null)}/>
       <h1 className={styles.pageTitle}>{group.name}</h1><p className={styles.sectionIntro}>{group.description}</p>
       <div className={styles.groupJoinFooter}><button className={styles.groupMemberCount} onClick={()=>setGroupView("members")}><span className={styles.groupAvatarStack}>{group.members.slice(0,3).map((member,index)=><Face key={member} initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={24}/>)}</span><strong>{group.members.length} members</strong><ChevronRight size={14}/></button><button className={styles.groupJoinButton} disabled={joined.includes(group.id)} onClick={()=>{setJoined(ids=>[...ids,group.id]);setGroups(items=>items.map(item=>item.id===group.id?{...item,members:[...item.members,p.profile.name]}:item));}}>{joined.includes(group.id)?"Joined":"Join"}</button></div>
       <div className={styles.groupFooterSpace}>

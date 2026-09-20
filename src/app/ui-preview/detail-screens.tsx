@@ -55,6 +55,7 @@ function Settings({name}:{name:string}) {
   return null;
 }
 import DetailHeader from "./detail-header";
+import ProfileHero from "./profile-hero";
 export default function DetailScreens({route}:{route:Destination}) {
   const p=usePrototype(); const [message,setMessage]=useState("");
   const item=p.schedule.find(c=>c.id===route.name);
@@ -64,14 +65,14 @@ export default function DetailScreens({route}:{route:Destination}) {
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
   if(route.kind==="manage" && (p.live?p.live.managed.some(s=>s.name===route.name):route.name==="Ironbound Performance Athletics")) return <StudioWorkspace name={route.name!} view={route.view || "Dashboard"}/>;
   return <>
-    {route.kind==="person"||route.kind==="studio"||route.kind==="class" ? <DetailHeader type={route.kind==="person"?"Person":route.kind==="studio"?"Studio":"Class"} name={title} id={route.name} onBack={p.back}/> : <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>}
+    {route.kind==="person"||route.kind==="studio" ? <ProfileHero type={route.kind==="person"?"Person":"Studio"} name={title} id={route.name} banner={route.kind==="person"?personAbout?.banner:studioAbout?.banner} photo={route.kind==="person"?personAbout?.photo:studioAbout?.photo} onBack={p.back}/> : route.kind==="class" ? <DetailHeader type="Class" name={title} id={route.name} onBack={p.back}/> : <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>}
     <h1 className={styles.pageTitle}>{title}</h1>
     {route.kind==="membership" && <Membership reason={route.name}/>}
     {route.kind==="edit-profile" && <EditProfile/>}
     {(route.kind==="add-class"||route.kind==="edit-class") && <ClassEditor route={route}/>}
     {route.kind==="settings" && <Settings name={title}/>}
     {(route.kind==="manage"||route.kind==="studio"||route.kind==="person") && <>
-      <div className={styles.detailIdentity}><div className={styles.detailAvatar}>{route.kind==="person"?<Users size={30}/>:<CalendarDays size={30}/>}</div><span><MapPin size={15}/> {p.live ? (route.kind==="person"?p.live.people.find(person=>person.name===route.name)?.location:p.live.studios.find(studio=>studio.name===route.name)?.location) || "Location not added" : "Jersey City, NJ"}</span></div>
+      <div className={styles.detailIdentity}>{route.kind==="manage"&&<div className={styles.detailAvatar}><CalendarDays size={30}/></div>}<span><MapPin size={15}/> {p.live ? (route.kind==="person"?p.live.people.find(person=>person.name===route.name)?.location:p.live.studios.find(studio=>studio.name===route.name)?.location) || "Location not added" : "Jersey City, NJ"}</span></div>
       {route.kind==="manage" ? <><p className={styles.sectionIntro}>You manage this calendar.</p><div className={styles.profileActions}><Button {...secondary} onClick={()=>p.open({kind:"add-class",name:route.name})}><Plus size={18}/>Add class</Button><Button {...secondary} onClick={()=>p.open({kind:"settings",name:"People & access"})}>Manage access</Button></div></> : <Button {...secondary} onClick={()=>p.setFollowing(v=>v.includes(title)?v.filter(x=>x!==title):[...v,title])}>{p.following.includes(title)?"Following":"Follow"}</Button>}
       {(route.kind==="person"||route.kind==="studio")&&<section className={styles.profileAboutPanel}><Heading>About</Heading><p>{(route.kind==="person"?personAbout?.about:studioAbout?.about)|| (p.live?"No about information added.":route.kind==="person"?"A local instructor focused on approachable classes and helping people build confidence through movement.":"A neighborhood studio offering instructor-led classes for a range of experience levels.")}</p>
       {route.kind==="person"&&<>{personAbout?.disciplines?.length ? <><h3>Specialties</h3><p>{personAbout.disciplines.join(" · ")}</p></>:null}{personAbout?.highlights?.length ? <><h3>Teaching focus</h3><ul>{personAbout.highlights.map((text,index)=><li key={index}>{text}</li>)}</ul></>:null}{personAbout?.certifications?.length ? <><h3>Certifications</h3><ul>{personAbout.certifications.map((text,index)=><li key={index}>{text}</li>)}</ul></>:null}</>}

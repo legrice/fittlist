@@ -44,18 +44,18 @@ export async function loadLivePreview() {
   }));
   const db=await getDb();
   const [personAbout,studioAbout]=await Promise.all([
-    people.people.length?db.select({id:schema.users.id,about:schema.users.about,disciplines:schema.users.disciplines,highlights:schema.users.highlights,certifications:schema.users.certifications}).from(schema.users).where(inArray(schema.users.id,people.people.map(p=>p.id))):[],
-    studios.length?db.select({id:schema.studios.id,about:schema.studios.about}).from(schema.studios).where(inArray(schema.studios.id,studios.map(s=>s.id))):[],
+    people.people.length?db.select({id:schema.users.id,banner:schema.users.bannerPhoto,about:schema.users.about,disciplines:schema.users.disciplines,highlights:schema.users.highlights,certifications:schema.users.certifications}).from(schema.users).where(inArray(schema.users.id,people.people.map(p=>p.id))):[],
+    studios.length?db.select({id:schema.studios.id,banner:schema.studios.bannerPhoto,about:schema.studios.about}).from(schema.studios).where(inArray(schema.studios.id,studios.map(s=>s.id))):[],
   ]);
-  const memberships=await db.select({id:schema.groups.id,name:schema.groups.name,photo:schema.groups.photo,description:schema.groups.description,purpose:schema.groups.purpose,location:schema.users.location}).from(schema.groupMembers).innerJoin(schema.groups,eq(schema.groups.id,schema.groupMembers.groupId)).innerJoin(schema.users,eq(schema.users.id,schema.groups.ownerUserId)).where(eq(schema.groupMembers.userId,me.id));
+  const memberships=await db.select({id:schema.groups.id,name:schema.groups.name,photo:schema.groups.photo,banner:schema.groups.bannerPhoto,description:schema.groups.description,purpose:schema.groups.purpose,location:schema.users.location}).from(schema.groupMembers).innerJoin(schema.groups,eq(schema.groups.id,schema.groupMembers.groupId)).innerJoin(schema.users,eq(schema.users.id,schema.groups.ownerUserId)).where(eq(schema.groupMembers.userId,me.id));
   const memberLists=await Promise.all(memberships.map(g=>db.select({name:schema.users.name}).from(schema.groupMembers).innerJoin(schema.users,eq(schema.users.id,schema.groupMembers.userId)).where(and(eq(schema.groupMembers.groupId,g.id)))));
   return {
     profile:{name:me.name,handle:me.handle || "",bio:me.title || "",location:me.location || "",email:me.email,photo:me.photo},
     schedule:schedule.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)),saved,
     people:people.people.map(person=>({...personAbout.find(p=>p.id===person.id),name:person.name,title:person.title,initials:person.name.split(" ").map(s=>s[0]).join("").slice(0,2),color:person.color,specialty:person.disciplines[0] || "Other",photo:person.photo,location:person.location,following:person.following})),
-    studios:studios.map(s=>({about:studioAbout.find(p=>p.id===s.id)?.about || "",name:s.name,type:s.types.join(" · ") || "Studio",location:s.address,photo:s.photo,coordinates:s.lat!=null&&s.lng!=null?[s.lat,s.lng] as [number,number]:null})),
+    studios:studios.map(s=>({banner:studioAbout.find(p=>p.id===s.id)?.banner || null,about:studioAbout.find(p=>p.id===s.id)?.about || "",name:s.name,type:s.types.join(" · ") || "Studio",location:s.address,photo:s.photo,coordinates:s.lat!=null&&s.lng!=null?[s.lat,s.lng] as [number,number]:null})),
     managed:managed.map(s=>({name:s.name,photo:s.photo,initials:s.name.split(" ").map(v=>v[0]).join("").slice(0,2),detail:"Studio calendar · You’re an admin"})),
-    groups:[...memberships.map((g,index)=>({id:g.id,name:g.name,image:g.photo || "",description:g.description || "",category:g.purpose,location:g.location || "",members:memberLists[index].map(m=>m.name),classIndexes:[] as number[]})),...groups.filter(g=>!memberships.some(m=>m.id===g.id)).map(g=>({id:g.id,name:g.name,image:g.photo || "",description:g.description || "",category:g.purpose,location:g.location || "",members:[] as string[],classIndexes:[] as number[]}))],
+    groups:[...memberships.map((g,index)=>({id:g.id,name:g.name,image:g.photo || "",banner:g.banner || null,description:g.description || "",category:g.purpose,location:g.location || "",members:memberLists[index].map(m=>m.name),classIndexes:[] as number[]})),...groups.filter(g=>!memberships.some(m=>m.id===g.id)).map(g=>({id:g.id,name:g.name,image:g.photo || "",banner:g.banner || null,description:g.description || "",category:g.purpose,location:g.location || "",members:[] as string[],classIndexes:[] as number[]}))],
     joined:memberships.map(g=>g.id),
   };
 }
