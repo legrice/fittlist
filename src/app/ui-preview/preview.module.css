@@ -461,3 +461,11 @@
 
 .apple .planSwitch button[aria-pressed="false"] { background:transparent; color:var(--preview-text); }
 .apple .planSwitch button[aria-pressed="true"] { background:var(--preview-text); color:var(--preview-ground); }
+
+.profileProLink { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); font-size:13px; font-weight:600; }
+.tierOptions { display:grid; gap:10px; margin:24px 0 28px; }
+.tierOptions button { display:grid; gap:5px; text-align:left; padding:16px; border:1px solid var(--preview-line); border-radius:18px; background:var(--preview-surface); color:var(--preview-text); }
+.tierOptions button[aria-pressed="true"] { border:2px solid var(--preview-text); padding:15px; }
+.tierOptions strong { font-size:18px; }
+.tierOptions span,.tierOptions small { font-size:13px; color:var(--preview-muted); line-height:1.4; }
+.planHeading { font-size:24px; font-weight:600; }

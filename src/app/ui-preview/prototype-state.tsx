@@ -11,7 +11,9 @@ export const initialClasses: PreviewClass[] = [
 export type Destination = { kind:"membership"|"settings"|"manage"|"edit-profile"|"person"|"studio"|"class"|"edit-class"|"add-class"|"conversation"; name?:string };
 function useStateStore() {
   const [profile,setProfile] = useState({ name:"Matt LeGrice", handle:"mattlegrice", bio:"Strength & mobility coach", location:"Jersey City, NJ", email:"matt@example.com",photo:null as string|null });
-  const [pro,setPro]=useState(false);
+  const [membershipPlan,setMembershipPlan]=useState<"free"|"pro"|"studio">("free");
+  const pro=membershipPlan!=="free";
+  const setPro=(value:boolean)=>setMembershipPlan(value?"pro":"free");
   const [exportsUsed,setExportsUsed]=useState(0);
   const [live,setLive]=useState<Awaited<ReturnType<typeof loadLivePreview>>>(null);
   const [dataStatus,setDataStatus]=useState("loading");
@@ -44,7 +46,7 @@ function useStateStore() {
     window.history[push?"pushState":"replaceState"](state,"",url);
     setStack(routes);
   };
-  return { pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
+  return { membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
     open:(route:Destination)=>navigate([...stack,route],true),
     back:()=>{if(window.history.state?.previewDepth>0) window.history.back(); else navigate(stack.slice(0,-1),false);},
     reset:()=>navigate([],false) };
