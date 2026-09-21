@@ -119,6 +119,7 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage; onNavigate: (p
   const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
+    <h1 className={styles.pageTitle}>Explore</h1>
     <Tabs value={page} onValueChange={value=>onNavigate(value as ExplorePage)}><TabsList className={styles.fullTabs} aria-label="Explore category"><TabsTrigger value="people">People</TabsTrigger><TabsTrigger value="studios">Studios</TabsTrigger></TabsList></Tabs>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
