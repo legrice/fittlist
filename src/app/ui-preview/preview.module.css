@@ -811,3 +811,11 @@
 .apple .directoryList { gap:8px; margin-top:0; }
 .menuRow > .studioListAvatar { display:flex; flex:none; width:46px; height:46px; overflow:hidden; border-radius:50%; }
 .apple .youPage .settingsIcon:has(> svg) { background:var(--preview-soft); border-radius:10px; }
+.groupListTitleRow { display:flex; align-items:center; gap:12px; }
+.groupListName { flex:1; min-width:0; text-align:left; font:600 20px/1.2 var(--preview-font); color:var(--preview-text); }
+.groupListJoin { display:inline-flex; align-items:center; justify-content:center; flex:none; gap:4px; min-height:32px; padding:0 14px; border:0; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); font:600 13px/1.25 var(--preview-font); }
+.groupListCopyButton > span { display:block; color:var(--preview-muted); font-size:13px; line-height:1.4; }
+.groupListCopyButton > span + span { margin-top:8px; }
+.groupListImage .groupTypePill { max-width:calc(100% - 24px); background:#f5f7f8b8; color:#192126; border:1px solid #ffffffb3; backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); box-shadow:inset 0 1px 0 #ffffffcc; }
+.dark .groupListImage .groupTypePill { background:#202a30bd; color:#f5f7f8; border-color:#ffffff24; box-shadow:inset 0 1px 0 #ffffff1f; }
+@media(prefers-reduced-transparency:reduce) { .groupListImage .groupTypePill { background:#f5f7f8; backdrop-filter:none; } .dark .groupListImage .groupTypePill { background:#202a30; } }
