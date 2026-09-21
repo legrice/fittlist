@@ -129,7 +129,7 @@ export function Adder({
   firstPublish,
   gym,
   personal,
-  onClose,
+  onClose: closeComposer,
   onToast,
   onPublished,
   onDeleted,
@@ -169,6 +169,10 @@ export function Adder({
    *  answer doesn't cost them everything they typed. */
   onMatch?: (m: PersonalMatch, again: () => void) => void;
 }) {
+  const onClose = () => {
+    if (onPreviewPublish && !window.confirm("Are you sure you want to close? Your progress will be lost.")) return;
+    closeComposer();
+  };
   const isEdit = Boolean(prefill?.classId);
   // Yours alone, and already saved. Kept apart from isEdit because that one
   // carries a coach's class with it: a delete that walks a series, a rota, a
@@ -921,7 +925,7 @@ export function Adder({
           heavier decision than it is. */}
       <div className={`sheet adder${stage !== "form" ? " adder-step" : ""}`}>
         {onPreviewPublish && stepped && <div className="adder-progress" role="progressbar" aria-label="Class setup progress" aria-valuemin={1} aria-valuemax={3} aria-valuenow={stage==="form"?3:stage==="class"?2:1}>{[1,2,3].map(step=><span key={step} data-complete={step<=(stage==="form"?3:stage==="class"?2:1)}/>)}</div>}
-        {stage !== "form" && !onPreviewPublish && (
+        {stage !== "form" && (
           <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={20} />
           </button>
@@ -938,13 +942,14 @@ export function Adder({
                 <button
                   className="iconbtn adderback"
                   aria-label="Back"
+                  data-local-back={onPreviewPublish ? true : undefined}
                   onClick={() => stepped ? setStage("class") : onClose()}
                 >
                   <Icon name="arrow_back" size={20} />
                 </button>
               )}
               <h2>{stepped ? "Add a class" : heading.title}</h2>
-              {!onPreviewPublish && <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>}
+              <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
             </div>
             {stepped && <p className="stepline">Step 3 of 3 &middot; The details</p>}
 
@@ -1370,7 +1375,8 @@ export function Adder({
                 <button
                   className="iconbtn sheetclose stepback"
                   aria-label="Back"
-                  onClick={() => onPreviewPublish && !name.trim() && !selectedStudio ? onClose() : setStage(stepped && !name.trim() ? "class" : "form")}
+                  data-local-back={onPreviewPublish ? true : undefined}
+                  onClick={() => onPreviewPublish ? onClose() : setStage(stepped && !name.trim() ? "class" : "form")}
                 >
                   <Icon name="arrow_back" size={20} />
                 </button>
@@ -1440,6 +1446,7 @@ export function Adder({
               <button
                 className="iconbtn sheetclose stepback"
                 aria-label="Back"
+                  data-local-back={onPreviewPublish ? true : undefined}
                 onClick={() => setStage("pick")}
               >
                 <Icon name="arrow_back" size={20} />
@@ -1492,6 +1499,7 @@ export function Adder({
               <button
                 className="iconbtn sheetclose stepback"
                 aria-label="Back"
+                  data-local-back={onPreviewPublish ? true : undefined}
                 onClick={() => setStage("pick")}
               >
                 <Icon name="arrow_back" size={20} />
