@@ -1,6 +1,6 @@
 import type { IconProps } from "@phosphor-icons/react";
 import type { ComponentType } from "react";
-import { ArrowBendUpLeft, ArrowLeft, ArrowRight, ArrowSquareOut, ArrowUpRight, At, BatteryFull, Bell, BookmarkSimple, Calendar, CalendarCheck, CalendarDot, CalendarDots, CaretDown, CaretLeft, CaretRight, CaretUp, CellSignalFull, ChatCircle, ChatCircleText, Chats, Check, CheckCircle, Circle, Clock, Compass, Copy, DeviceMobile, DiceFive, DotsThree, Envelope, Export, Eye, Fingerprint, Flag, GearSix, Globe, GlobeHemisphereWest, GridNine, Heart, House, Image, Info, Lightning, Link, List, LockKey, MagnifyingGlass, MapPin, Megaphone, Moon, Palette, PaperPlaneTilt, PencilSimple, Phone, Plus, PlusCircle, Pulse, QrCode, Rows, SealCheck, ShieldCheck, SignOut, SlidersHorizontal, Sparkle, Star, Storefront, Sun, TextT, Trash, User, UserCircle, UserPlus, Users, UsersThree, WifiHigh, X } from "./PhosphorIcons";
+import { ArrowBendUpLeft, ArrowRight, ArrowSquareOut, ArrowUpRight, At, BatteryFull, Bell, BookmarkSimple, Calendar, CalendarCheck, CalendarDot, CalendarDots, CaretDown, CaretLeft, CaretRight, CaretUp, CellSignalFull, ChatCircle, ChatCircleText, Chats, Check, CheckCircle, Circle, Clock, Compass, Copy, DeviceMobile, DiceFive, DotsThree, Envelope, Export, Eye, Fingerprint, Flag, GearSix, Globe, GlobeHemisphereWest, GridNine, Heart, House, Image, Info, Lightning, Link, List, LockKey, MagnifyingGlass, MapPin, Megaphone, Moon, Palette, PaperPlaneTilt, PencilSimple, Phone, Plus, PlusCircle, Pulse, QrCode, Rows, SealCheck, ShieldCheck, SignOut, SlidersHorizontal, Sparkle, Star, Storefront, Sun, TextT, Trash, User, UserCircle, UserPlus, Users, UsersThree, WifiHigh, X } from "./PhosphorIcons";
 
 const ICONS: Record<string, ComponentType<IconProps>> = {
   add_circle: PlusCircle,
@@ -12,7 +12,7 @@ const ICONS: Record<string, ComponentType<IconProps>> = {
   add: Plus,
   admin_panel_settings: ShieldCheck,
   alternate_email: At,
-  arrow_back: ArrowLeft,
+  arrow_back: CaretLeft,
   arrow_forward: ArrowRight,
   arrow_outward: ArrowUpRight,
   auto_awesome: Sparkle,
@@ -101,5 +101,5 @@ export function Icon({ name, size = 24, className = "" }: {
   strokeWidth?: number;
 }) {
   const Glyph = ICONS[name] ?? Circle;
-  return <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true"><Glyph size={size} weight={name.endsWith("_filled") || name === "bookmark_added" ? "fill" : "bold"} /></span>;
+  return <span className={`icon ${className}`} style={{ width: size, height: size }} data-back-chevron={name === "arrow_back" ? "" : undefined} aria-hidden="true"><Glyph size={size} weight={name.endsWith("_filled") || name === "bookmark_added" ? "fill" : "bold"} /></span>;
 }

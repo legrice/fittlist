@@ -1,8 +1,9 @@
 "use client";
+import { BackButton } from "@/components/BackButton";
 
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { List } from "@/components/PhosphorIcons";
+
 import { usePrototype } from "./prototype-state";
 import styles from "./preview.module.css";
 
@@ -42,6 +43,6 @@ export default function StudioMap({ studios, onClose }: { studios: MapStudio[]; 
     <p className={styles.mapNote}>{p.live ? "Studio locations" : "Sample studio locations"}{failed ? " · Map tiles unavailable" : ""}</p>
     {!active && <div className={styles.mapStudioCard}>No mapped studios for this search. Go back to see the full list.</div>}
     {active && <div className={styles.mapStudioCard} aria-live="polite"><strong>{active.name}</strong><span>{active.type} · {active.location}</span><button className={styles.mapDetailLink} onClick={()=>{dialog.current?.close();p.open({kind:"studio",name:active.name});}}>View studio</button></div>}
-    <button autoFocus className={styles.mapToggle} onClick={() => dialog.current?.close()}><List size={19}/>Back to list</button>
+    <BackButton autoFocus className={styles.mapBackButton} label="Back to list" onClick={() => dialog.current?.close()}/>
   </div></dialog>;
 }

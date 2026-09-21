@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/BackButton";
 import Link from "next/link";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -10,7 +11,7 @@ import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
 import { clearClientMemory } from "@/lib/client-memory";
-import { Activity, ArrowLeft, ArrowUpRight, Bell, House, MessageCircle, CalendarDays, ChevronLeft, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "@/components/PhosphorIcons";
+import { Activity, ArrowUpRight, Bell, House, MessageCircle, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "@/components/PhosphorIcons";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -126,7 +127,7 @@ function ExploreScreen({ page, onNavigate, onGroups }: { page: ExplorePage | nul
   const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
-    <header className={styles.detailNav}><button aria-label="Back to Explore" onClick={()=>{setFilter("");onNavigate(null);}}><ChevronLeft size={22}/></button><h1 className={styles.directoryNavTitle}>{title}</h1><span aria-hidden="true"/></header>
+    <header className={styles.detailNav}><BackButton label="Back to Explore" onClick={()=>{setFilter("");onNavigate(null);}}/><h1 className={styles.directoryNavTitle}>{title}</h1><span aria-hidden="true"/></header>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
@@ -163,7 +164,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const top = useRef<HTMLDivElement>(null);
   useEffect(() => { top.current?.closest("main")?.scrollTo({ top: 0 }); }, [selected]);
   const group = groups.find(item => item.id === selected);
-  const back = <button className={styles.backButton} onClick={() => setSelected(null)}><ArrowLeft size={19}/>Back to Groups</button>;
+  const back = <BackButton className={styles.backButton} label="Back to Groups" onClick={() => setSelected(null)}/>;
   return <div ref={top}>
     {!selected || selected === "browse" ? <>
       <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={()=>setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
@@ -180,7 +181,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
         <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only. Changes last while you’re on this page.</p>
       </form>
     </> : group && groupView!=="schedule" ? <>
-      <button className={styles.backButton} onClick={()=>setGroupView("schedule")}><ArrowLeft size={19}/>Back to {group.name}</button>
+      <BackButton className={styles.backButton} label={`Back to ${group.name}`} onClick={()=>setGroupView("schedule")}/>
       <h1 className={styles.pageTitle}>{groupView==="members"?"Members":"Updates"}</h1>
       <p className={styles.sectionIntro}>{group.name}</p>
       {groupView==="members" ? <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div> : <GroupSampleUpdates live={!!p.live} running={categoryOf(group.category)==="Run club"}/>}

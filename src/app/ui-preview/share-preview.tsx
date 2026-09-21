@@ -1,5 +1,6 @@
 "use client";
-import { ArrowLeft } from "@/components/PhosphorIcons";
+import { BackButton } from "@/components/BackButton";
+
 import { ShareHubScreen, type HubItem } from "@/components/ShareHubScreen";
 import { usePrototype, timeLabel } from "./prototype-state";
 import styles from "./preview.module.css";
@@ -9,7 +10,7 @@ export default function SharePreview({onBack}:{onBack:()=>void}) {
   const items:HubItem[]=p.schedule.filter(item=>!p.live || item.own || p.saved.includes(item.id)).map(item=>({key:item.id,iso:item.date,time:timeLabel(item.time),name:item.name,where:item.place,who:item.coach,own:true,coaching:item.own ?? (item.coach===p.profile.name||item.coach==="Matt LeGrice")}));
   const from=[...p.schedule].sort((a,b)=>a.date.localeCompare(b.date))[0]?.date || "2026-09-20";
   return <div className={`${styles.mainShareEditor} preview-share-editor`}>
-    <button className={styles.backButton} onClick={onBack}><ArrowLeft size={19}/>Back to Calendar</button>
+    <BackButton className={styles.backButton} label="Back to Home" onClick={onBack}/>
     <div className={styles.sharePlanBar}><span>{p.pro?"Pro · Unlimited exports":`${Math.max(0,10-p.exportsUsed)} of 10 exports left this month`}</span><button onClick={()=>p.open({kind:"membership"})}>{p.pro?"Manage plan":"Explore Pro"}</button></div>
     {!p.pro && <p className={styles.prototypeNote}>Plain is included. Preview any style; other designs require Pro to export.</p>}
     <details className={styles.planDemo}><summary>Preview membership controls</summary><button onClick={()=>p.setExportsUsed(10)}>Simulate monthly limit</button><button onClick={()=>p.setExportsUsed(0)}>Reset export count</button><button onClick={()=>p.setPro(!p.pro)}>Switch to {p.pro?"Free":"Pro"}</button></details>

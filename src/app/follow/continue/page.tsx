@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { confirmEmailFollow } from "@/app/actions/subscribe";
 import { PublicInfoShell } from "@/components/PublicInfoShell";
 import { pendingEmailFollowToken } from "@/lib/email-follow";
@@ -24,7 +25,7 @@ export default async function EmailFollowContinuePage({
         <p className="about-kicker">Email confirmed</p>
         <h1>You&rsquo;re all set.</h1>
         <p>Your follow request is complete. Schedule updates will arrive when they&rsquo;re available for this address.</p>
-        <Link className="btn si info-page-action" href="/">Back to FittList</Link>
+        <Link className="btn si info-page-action" href="/"><Icon name="arrow_back" size={22}/>Back to FittList</Link>
       </PublicInfoShell>
     );
   }
@@ -51,7 +52,7 @@ export default async function EmailFollowContinuePage({
       ) : (
         <>
           <p>The link may have expired or already been used. Request a fresh one from the coach&rsquo;s page.</p>
-          <Link className="btn si info-page-action" href="/">Back to FittList</Link>
+          <Link className="btn si info-page-action" href="/"><Icon name="arrow_back" size={22}/>Back to FittList</Link>
         </>
       )}
     </PublicInfoShell>

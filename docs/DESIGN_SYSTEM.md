@@ -126,3 +126,9 @@ recommendations) use a shared 16px gap and 16px inner padding. Sections use
 the same surface as studios, with no inset divider between separate cards.
 Use `--preview-card-gap`, `--preview-card-padding`, and
 `--preview-section-gap`; do not zero out gaps for individual pages.
+
+Back navigation uses a bold left chevron in a 44px circle. Use the shared
+`BackButton` for prototype screens; existing semantic `arrow_back` icons inherit
+this same control style. Keep destination-specific accessible labels and existing
+history/slide-back behavior. Previous-date and horizontal-rail arrows are not
+back navigation controls.

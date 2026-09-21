@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { confirmSubscriberUnsubscribe } from "@/app/actions/unsubscribe";
 import { getDb, schema } from "@/db";
 import { verifyUnsubToken } from "@/lib/notifier";
@@ -61,7 +62,7 @@ export default async function UnsubscribePage({
               </p>
               {trainerHandle && (
                 <Link className="btn" href={`/${trainerHandle}`}>
-                  Back to {trainerName}&rsquo;s schedule
+                  <Icon name="arrow_back" size={22}/>Back to {trainerName}&rsquo;s schedule
                 </Link>
               )}
             </>

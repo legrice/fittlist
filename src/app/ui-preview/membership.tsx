@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/BackButton";
 import { useState } from "react";
 import { Check, Sparkles } from "@/components/PhosphorIcons";
 import { usePrototype } from "./prototype-state";
@@ -37,7 +38,7 @@ export default function Membership({reason}:{reason?:string}) {
   {step==="plans"?<>
    <div className={styles.tierOptions} role="group" aria-label="Membership tier">{(["free","pro","studio"] as const).map(tier=><button key={tier} aria-pressed={selected===tier} onClick={()=>{setSelected(tier);setError("");}}><strong>{tier==="free"?"Free":tier==="pro"?"Pro":"Studio"}</strong><span>{tier==="free"?"Your calendar and staff participation":tier==="pro"?"Optional tools for your own promotion":"Management paid for by the studio"}</span><small>{tier==="free"?"$0":tier==="pro"?"$7.99/month or $69/year":"$49.99/month or $432/year"}</small></button>)}</div>
    <ul>{features.map(feature=><li key={feature}><Check size={18}/>{feature}</li>)}</ul>
-  </>:<button className={styles.backButton} onClick={()=>setStep("plans")}>Back to plans</button>}
+  </>:<BackButton className={styles.backButton} label="Back to plans" onClick={()=>setStep("plans")}/>}
   {selected==="studio" && <div className={styles.detailForm}><label>Studio workspace<select value={studio} onChange={e=>setStudio(e.target.value)}>{studios.map(name=><option key={name}>{name}</option>)}</select></label>{!studios.length&&<p>You don’t manage a studio workspace yet.</p>}<div className={styles.freePlan}><strong>{status?`Studio membership: ${status==="readonly"?"Read-only":status}`:"Your studio"}</strong><p>Staff can see assignments, receive updates, and respond to shifts for free.</p><p>After cancellation, schedule visibility and history remain available. A management grace period gives the team time to finish upcoming changes.</p></div></div>}
   {selected!=="free" && <><div className={styles.planSwitch} role="group" aria-label="Billing period"><button aria-pressed={!annual} onClick={()=>setAnnual(false)}>Monthly</button><button aria-pressed={annual} onClick={()=>setAnnual(true)}>Yearly · save 28%</button></div><p className={styles.planPrice}><strong>{money(base)}</strong> / {annual?"year":"month"}</p>{annual&&<p>{money(base/12)}/month, billed annually.</p>}</>}
   {step==="checkout" && selected==="pro" && channel==="web" && <>

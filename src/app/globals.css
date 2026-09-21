@@ -16464,3 +16464,24 @@ html[data-native="ios"] :is(.profile-seam-top,.group-seam-top):has(.profile-bann
   --color-muted: var(--ui-muted);
   --font-sans: 'Delight', 'Helvetica Neue', Arial, sans-serif;
 }
+
+/* One back-navigation control across the prototype and existing app screens. */
+body :is(button,a).app-back-button,
+body :is(button,a):has(> [data-back-chevron]) {
+  display:inline-flex; align-items:center; justify-content:center;
+  flex:0 0 44px; width:44px; min-width:44px; max-width:44px;
+  height:44px; min-height:44px; padding:0; gap:0;
+  border:1px solid var(--preview-soft,var(--line)); border-radius:50%;
+  background:var(--preview-surface,var(--color-white));
+  color:var(--preview-text,var(--color-text-primary));
+  font-size:0; cursor:pointer; vertical-align:middle;
+}
+body :is(button,a):has(> [data-back-chevron]) > [data-back-chevron],
+body :is(button,a):has(> [data-back-chevron]) > [data-back-chevron] svg {
+  width:22px !important; height:22px !important; flex:none;
+}
+body .app-back-button:focus-visible,
+body :is(button,a):has(> [data-back-chevron]):focus-visible {
+  outline:2px solid currentColor; outline-offset:3px;
+}
+body .app-back-button:disabled { opacity:.45; cursor:default; }

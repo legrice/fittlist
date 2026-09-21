@@ -679,3 +679,7 @@
 .homeUtilities { display:flex; gap:8px; }
 .homeUtilities button { position:relative; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--preview-text); }
 .homeUtilities button > span { position:absolute; top:0; right:0; display:grid; place-items:center; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 10px/1 var(--preview-font); }
+
+/* Back controls share their circular shape with all app navigation. */
+.apple .backButton { margin:0 0 16px; }
+.mapBackButton { position:absolute; top:16px; left:16px; z-index:20; }

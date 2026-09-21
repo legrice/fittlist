@@ -1,6 +1,7 @@
 "use client";
+import { BackButton } from "@/components/BackButton";
 import { useState } from "react";
-import { ArrowLeft, ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Clock, Bookmark, Check } from "@/components/PhosphorIcons";
+import { ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Clock, Bookmark, Check } from "@/components/PhosphorIcons";
 import { Button } from "@/components/ui/button";
 import { usePrototype, dateLabel, type Destination, type PreviewClass } from "./prototype-state";
 import StudioWorkspace from "./studio-workspace";
@@ -65,7 +66,7 @@ export default function DetailScreens({route}:{route:Destination}) {
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
   if(route.kind==="manage" && (p.live?p.live.managed.some(s=>s.name===route.name):route.name==="Ironbound Performance Athletics")) return <StudioWorkspace name={route.name!} view={route.view || "Dashboard"}/>;
   return <>
-    {route.kind==="person"||route.kind==="studio" ? <ProfileHero type={route.kind==="person"?"Person":"Studio"} name={title} id={route.name} banner={route.kind==="person"?personAbout?.banner:studioAbout?.banner} photo={route.kind==="person"?personAbout?.photo:studioAbout?.photo} onBack={p.back}/> : route.kind==="class" ? <DetailHeader type="Class" name={title} id={route.name} onBack={p.back}/> : <button className={styles.backButton} onClick={p.back}><ArrowLeft size={19}/>Back</button>}
+    {route.kind==="person"||route.kind==="studio" ? <ProfileHero type={route.kind==="person"?"Person":"Studio"} name={title} id={route.name} banner={route.kind==="person"?personAbout?.banner:studioAbout?.banner} photo={route.kind==="person"?personAbout?.photo:studioAbout?.photo} onBack={p.back}/> : route.kind==="class" ? <DetailHeader type="Class" name={title} id={route.name} onBack={p.back}/> : <BackButton className={styles.backButton} onClick={p.back}/>}
     <h1 className={styles.pageTitle}>{title}</h1>
     {(route.kind==="notifications"||route.kind==="messages")&&<>
       {p.live ? <><p className={styles.sectionIntro}>{title} aren’t connected to this preview yet.</p><a className={styles.backButton} href={route.kind==="notifications"?"/notifications":"/inbox"}>Open {title.toLowerCase()} in the app</a></> : route.kind==="notifications" ? <div className={styles.stack}><Row title="Erin Clyne followed you" detail="Today" onClick={()=>p.open({kind:"person",name:"Erin Clyne"})}/><Row title="Freddie added a class" detail="Gals who like to move · Yesterday" onClick={()=>p.open({kind:"class",name:"sculpt"})}/></div> : <div className={styles.stack}><Row title="Erin Clyne" detail="See you at Asana Lab!" onClick={()=>p.open({kind:"conversation",name:"Erin Clyne"})}/></div>}

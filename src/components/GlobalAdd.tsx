@@ -600,7 +600,7 @@ export function GlobalAdd({
               >
                 Add existing class
               </button>
-              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setMatch(null)}>Go back</button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setMatch(null)}><Icon name="arrow_back" size={22}/>Go back</button>
             </div>
           </div>
         </div>,
