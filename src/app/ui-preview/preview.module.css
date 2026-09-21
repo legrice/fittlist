@@ -268,9 +268,9 @@
 .mapStudioCard strong { font-size:18px; }
 .mapStudioCard span,.mapStudioCard small { color:#536067; }
 
-.pageTitleRow { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.pageTitleRow { position:relative; padding-right:60px; margin-bottom:24px; }
 .apple .pageTitleRow .pageTitle { margin:0; }
-.addGroupButton { display:grid; place-items:center; flex:none; width:44px; height:44px; border:0; border-radius:50%; background:var(--preview-soft); color:var(--preview-text); cursor:pointer; }
+.addGroupButton { position:absolute; right:0; top:50%; transform:translateY(-50%); display:grid; place-items:center; flex:none; width:44px; height:44px; border:0; border-radius:50%; background:var(--preview-soft); color:var(--preview-text); cursor:pointer; }
 .addGroupButton:hover,.apple .calendarHero .shareWeekButton:hover,.apple [data-slot="button"][data-variant="outline"]:hover,.copyProfile:hover { background:#d8dfe2; }
 
 .mapTakeover { position:fixed; inset:0; width:min(100%,430px); max-width:100%; height:100dvh; max-height:100dvh; margin:0 auto; padding:0; border:0; background:#e6ecef; color:#192126; font-family:Delight,Arial,sans-serif; }
