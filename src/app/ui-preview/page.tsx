@@ -5,6 +5,7 @@ import { PLACE_KIND_LABELS, PLACE_KINDS } from "@/lib/studio";
 
 import { useEffect, useRef, useState } from "react";
 import PreviewClassCard from "./class-card";
+import GroupCreator from "./group-creator";
 import GroupSampleUpdates from "./group-sample-updates";
 import { useCalendarSwipe } from "./use-calendar-swipe";
 import ProfileHero from "./profile-hero";
@@ -206,9 +207,6 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
     }:group));
   };
   useEffect(()=>{if(p.live){setGroups(p.live.groups);setJoined(p.live.joined);}},[p.live]);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [groupLocation,setGroupLocation]=useState(p.profile.location || "");
   const top = useRef<HTMLDivElement>(null);
   useEffect(() => { top.current?.closest("main")?.scrollTo({ top: 0 }); }, [selected]);
   const group = groups.find(item => item.id === selected);
@@ -224,15 +222,8 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       {locationError&&<p role="status" className={styles.sectionIntro}>{locationError}</p>}
       {results.length===0&&<p className={styles.sectionIntro}>No matching groups. Try another category or search.</p>}
       <div className={styles.exploreGroupList}>{results.map(item=><article key={item.id} className={styles.exploreGroupCard}><div className={styles.groupListImage}><button className={styles.groupImageOpen} onClick={()=>openGroup(item.id)} aria-label={`View ${item.name}`}>{item.image?<img src={item.image} alt="" loading="lazy"/>:<Users size={40}/>}</button><span className={styles.groupTypePill}>{categoryOf(item.category)}</span></div><div className={styles.exploreGroupCopy}><div className={styles.groupListTitleRow}><button className={styles.groupListName} onClick={()=>openGroup(item.id)}>{item.name}</button><button className={styles.groupListJoin} aria-pressed={joined.includes(item.id)} aria-label={`${joined.includes(item.id)?"Joined":"Join"} ${item.name}`} onClick={()=>toggleMembership(item.id)}>{joined.includes(item.id)?<><Check size={14} aria-hidden="true"/>Joined</>:"Join"}</button></div><button className={styles.groupListCopyButton} onClick={()=>openGroup(item.id)}><span>{item.location || "Location not added"}</span><span>{item.description}</span></button></div></article>)}</div>
-    </> : selected === "create" ? <>
-      {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
-      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, coordinates:null, banner:null, location:groupLocation.trim(), name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
-        <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
-        <label>Location<Input required value={groupLocation} onChange={event=>setGroupLocation(event.target.value)} placeholder="City or neighborhood"/></label>
-        <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
-        <Button type="submit">Create group</Button><p className={styles.sectionIntro}>Preview only. Changes last while you’re on this page.</p>
-      </form>
-    </> : group && groupView!=="schedule" ? <>
+    </> : selected === "create" ? <GroupCreator location={p.profile.location || ""} people={(p.live?.people || explorePeople).filter(person=>person.name!==p.profile.name)} onCancel={()=>setSelected(null)} onCreate={draft=>{const id=`group-${Date.now()}`;setGroups(items=>[...items,{id,coordinates:null,banner:null,location:draft.location,name:draft.name,category:draft.category,description:draft.description,image:draft.image,members:[p.profile.name],classIndexes:[],purpose:draft.purpose,invitees:draft.invitees}]);setJoined(ids=>[...ids,id]);setSelected(id);}}/>
+    : group && groupView!=="schedule" ? <>
       <BackButton className={styles.backButton} label={`Back to ${group.name}`} onClick={()=>setGroupView("schedule")}/>
       <h1 className={styles.pageTitle}>{groupView==="members"?"Members":"Updates"}</h1>
       <p className={styles.sectionIntro}>{group.name}</p>

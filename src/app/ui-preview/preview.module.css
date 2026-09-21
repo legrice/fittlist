@@ -937,3 +937,24 @@
 .mainClassComposer :global(.adder-date-control) { position:relative; display:flex; align-items:center; min-height:48px; min-width:170px; padding:12px 16px; border-radius:14px; background:var(--preview-soft); color:var(--preview-text); }
 .mainClassComposer :global(.adder-date-control input) { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
 .mainClassComposer :global(.adder-date-control:focus-within) { outline:2px solid var(--preview-muted); outline-offset:2px; }
+.groupSetup { padding-bottom:160px; }
+.groupSetupHeader { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; font-weight:600; }
+.groupSetupHeader > button:last-child { display:grid; place-items:center; width:44px; height:44px; border-radius:50%; background:var(--preview-surface); }
+.groupSetupProgress { display:flex; gap:8px; margin-bottom:16px; }
+.groupSetupProgress span { height:4px; flex:1; border-radius:99px; background:var(--preview-soft); }
+.groupSetupProgress [data-active=true] { background:var(--preview-text); }
+.groupPurposeChoices { display:grid; gap:8px; margin:20px 0; }
+.groupPurposeChoices > button { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 16px; text-align:left; border:1px solid transparent; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); }
+.groupPurposeChoices > button[aria-pressed=true] { border-color:var(--preview-text); }
+.groupPurposeChoices strong { display:block; font-size:16px; }
+.groupPurposeChoices strong + span { display:block; margin-top:6px; color:var(--preview-muted); font-size:14px; line-height:1.45; }
+.groupChoiceCheck { display:grid; place-items:center; width:24px; height:24px; flex:none; border:1px solid var(--preview-line); border-radius:50%; }
+[aria-pressed=true] > .groupChoiceCheck { background:var(--preview-text); color:var(--preview-ground); }
+.groupSetupFooter { position:fixed; bottom:0; left:50%; transform:translateX(-50%); z-index:45; width:min(100%,430px); display:grid; gap:8px; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); background:var(--preview-ground); }
+.groupSetupFooter > button { min-height:52px; border-radius:999px; background:var(--preview-highlight); color:#192126; font:600 16px var(--preview-font); }
+.groupSetupFooter > button:disabled { opacity:.45; }
+.groupSetupFooter > .groupSetupSkip { min-height:36px; background:transparent; color:var(--preview-muted); font-size:14px; }
+.groupSetup .groupForm textarea,.groupSetup .groupForm select { width:100%; padding:12px; border-radius:12px; border:1px solid var(--preview-line); background:var(--preview-surface); color:var(--preview-text); font:inherit; }
+.groupSetupPhoto { width:80px; height:80px; border-radius:50%; object-fit:cover; }
+.groupInviteCopy { display:flex; align-items:center; gap:8px; margin:16px 0; padding:12px 16px; border-radius:999px; background:var(--preview-surface); }
+@media(min-width:900px) { .groupSetupFooter { left:calc(50% + 44px); width:min(calc(100% - 120px),800px); } }
