@@ -927,3 +927,13 @@
 
 .apple .search { border:1px solid #dce3e6; }
 .apple.dark .search { border-color:var(--preview-line); }
+
+.mainClassComposer :global(.adder-progress) { display:flex; gap:8px; margin:8px 0 20px; }
+.mainClassComposer :global(.adder-progress span) { flex:1; height:4px; border-radius:999px; background:var(--preview-soft); }
+.mainClassComposer :global(.adder-progress span[data-complete="true"]) { background:var(--preview-text); }
+.mainClassComposer :global(.modetoggle) { display:flex; padding:4px; gap:4px; border-radius:999px; background:var(--preview-soft); margin:12px 0 20px; }
+.mainClassComposer :global(.modetoggle button) { flex:1; min-height:40px; padding:8px 12px; border:0; border-radius:999px; background:transparent; color:var(--preview-muted); font:600 14px var(--preview-font); }
+.mainClassComposer :global(.modetoggle button.sel) { background:var(--preview-text); color:var(--preview-ground); }
+.mainClassComposer :global(.adder-date-control) { position:relative; display:flex; align-items:center; min-height:48px; min-width:170px; padding:12px 16px; border-radius:14px; background:var(--preview-soft); color:var(--preview-text); }
+.mainClassComposer :global(.adder-date-control input) { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.mainClassComposer :global(.adder-date-control:focus-within) { outline:2px solid var(--preview-muted); outline-offset:2px; }

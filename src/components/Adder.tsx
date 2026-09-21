@@ -751,16 +751,16 @@ export function Adder({
             {/* The share week is dated by nature, so the toggle would only
                 offer a wrong answer; everywhere else both are real. */}
             {!personal?.oneOff && (
-              <div className="modetoggle">
+              <div className="modetoggle" role="group" aria-label="Repeat schedule">
                 <button
-                  className={!oneTime ? "sel" : ""}
+                  aria-pressed={!oneTime} className={!oneTime ? "sel" : ""}
                   onClick={() => setMode("weekly")}
                   type="button"
                 >
                   Repeats weekly
                 </button>
                 <button
-                  className={oneTime ? "sel" : ""}
+                  aria-pressed={oneTime} className={oneTime ? "sel" : ""}
                   onClick={() => setMode("date")}
                   type="button"
                 >
@@ -773,13 +773,7 @@ export function Adder({
               <>
                 <label className="flabel">Date</label>
                 <div className="timegrid">
-                  <input
-                    type="date"
-                    className="timeinput"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    aria-label="Class date"
-                  />
+                  {onPreviewPublish ? <label className="adder-date-control"><span>{date ? new Date(`${date}T12:00:00`).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}) : "Select date"}</span><input type="date" value={date} onChange={e=>setDate(e.target.value)} aria-label="Class date"/></label> : <input type="date" className="timeinput" value={date} onChange={e=>setDate(e.target.value)} aria-label="Class date"/>}
                 </div>
               </>
             ) : (
@@ -926,7 +920,8 @@ export function Adder({
           form is the work; a picker that takes over first reads like a
           heavier decision than it is. */}
       <div className={`sheet adder${stage !== "form" ? " adder-step" : ""}`}>
-        {stage !== "form" && (
+        {onPreviewPublish && stepped && <div className="adder-progress" role="progressbar" aria-label="Class setup progress" aria-valuemin={1} aria-valuemax={3} aria-valuenow={stage==="form"?3:stage==="class"?2:1}>{[1,2,3].map(step=><span key={step} data-complete={step<=(stage==="form"?3:stage==="class"?2:1)}/>)}</div>}
+        {stage !== "form" && !onPreviewPublish && (
           <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={20} />
           </button>
@@ -939,19 +934,17 @@ export function Adder({
               {/* The way back up the steps: the studio and the class were
                   answered on the screens behind this one, and changing that
                   answer should not mean starting over. */}
-              {stepped && (
+              {(stepped || onPreviewPublish) && (
                 <button
                   className="iconbtn adderback"
                   aria-label="Back"
-                  onClick={() => setStage("class")}
+                  onClick={() => stepped ? setStage("class") : onClose()}
                 >
                   <Icon name="arrow_back" size={20} />
                 </button>
               )}
               <h2>{stepped ? "Add a class" : heading.title}</h2>
-              <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}>
-                <Icon name="close" size={20} />
-              </button>
+              {!onPreviewPublish && <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>}
             </div>
             {stepped && <p className="stepline">Step 3 of 3 &middot; The details</p>}
 
@@ -1056,7 +1049,7 @@ export function Adder({
             {/* Stepped, the times lead: the studio and the class are already
                 answered, so what is left to fill comes first and the details
                 sit below for anyone who wants to touch them. */}
-            {stepped && whenCard}
+            {stepped && !onPreviewPublish && whenCard}
 
             <div className="adder-card">
             {gym && (
@@ -1221,7 +1214,7 @@ export function Adder({
 
 
 
-            {!stepped && whenCard}
+            {(!stepped || onPreviewPublish) && whenCard}
 
             {/* The class and its time come first. Staffing is the operating
                 layer underneath them: the standard coach repeats forever,
@@ -1281,7 +1274,7 @@ export function Adder({
                 organizer can see. Coaching mode only, and nothing more on
                 purpose: capacity is the line that turns RSVP into a booking
                 system. */}
-            {!gym && !mineOnly && !isEvent && isPublic && (
+            {!onPreviewPublish && !gym && !mineOnly && !isEvent && isPublic && (
               <div className="adder-card">
                 <button className="setrow" onClick={() => setRsvp((v) => !v)} aria-pressed={rsvp} type="button">
                   <span className="setrow-txt">
@@ -1373,11 +1366,11 @@ export function Adder({
                 the first step of a fresh add has nothing behind it, so the X
                 is the way out. Reopened from the form, back returns there. */}
             <div className="stephead">
-              {(!stepped || name.trim() !== "" || Boolean(selectedStudio)) && (
+              {(onPreviewPublish || !stepped || name.trim() !== "" || Boolean(selectedStudio)) && (
                 <button
                   className="iconbtn sheetclose stepback"
                   aria-label="Back"
-                  onClick={() => setStage(stepped && !name.trim() ? "class" : "form")}
+                  onClick={() => onPreviewPublish && !name.trim() && !selectedStudio ? onClose() : setStage(stepped && !name.trim() ? "class" : "form")}
                 >
                   <Icon name="arrow_back" size={20} />
                 </button>
