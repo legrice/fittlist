@@ -773,7 +773,6 @@
 
 .dockAvatar { display:flex; border-radius:50%; }
 .dockAvatar [data-slot="avatar-fallback"] { font-size:9px; }
-.dock button[aria-current="page"] .dockAvatar { outline:2px solid currentColor; outline-offset:2px; }
 
 .directoryFilters { display:flex; gap:8px; overflow-x:auto; padding:4px 0 16px; }
 .directoryFilters label { position:relative; flex:none; }
