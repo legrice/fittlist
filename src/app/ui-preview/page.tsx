@@ -145,8 +145,8 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <div className={styles.directoryFilters} aria-label={`${title} filters`}>
       <label><select aria-label="Distance" value={distance} disabled={locationPending} onChange={event=>chooseDistance(event.target.value)}><option value="">{locationPending?"Locating…":"Distance"}</option>{[1,2,5,10,25].map(miles=><option key={miles} value={miles}>Within {miles} {miles===1?"mile":"miles"}</option>)}</select><ChevronDown size={14}/></label>
-      {page==="studios"&&<label><select aria-label="Studio type" value={placeKind} onChange={event=>setPlaceKind(event.target.value)}><option value="">Type</option>{PLACE_KINDS.map(kind=><option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>)}</select><ChevronDown size={14}/></label>}
       <label><select aria-label={page==="people"?"Specialty":"Category"} value={filter} onChange={event=>setFilter(event.target.value)}><option value="">{page==="people"?"Specialty":"Category"}</option>{options.map(option=><option key={option}>{option}</option>)}</select><ChevronDown size={14}/></label>
+      {page==="studios"&&<label><select aria-label="Studio type" value={placeKind} onChange={event=>setPlaceKind(event.target.value)}><option value="">Type</option>{PLACE_KINDS.map(kind=><option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>)}</select><ChevronDown size={14}/></label>}
     </div>
     {locationError&&<p role="status" className={styles.sectionIntro}>{locationError}</p>}
   </>;
