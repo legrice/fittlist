@@ -919,3 +919,5 @@
 .mapResults { position:relative; display:flex; flex-direction:column; flex:1; min-height:0; }
 .mapResults > .directoryList { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
 .mapListButton { display:flex; align-items:center; justify-content:center; gap:8px; white-space:nowrap; }
+
+.apple .mapToggle,.apple .mapListButton { font-size:13px; min-height:44px; }
