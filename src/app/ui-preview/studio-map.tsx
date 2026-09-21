@@ -7,8 +7,14 @@ import { usePrototype } from "./prototype-state";
 import styles from "./preview.module.css";
 export type MapStudio = { name:string; type:string; location:string; photo?:string|null; coordinates:[number,number]|null };
 const baseStyle:StyleSpecification={version:8,sources:{osm:{type:"raster",tiles:["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],tileSize:256,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}},layers:[{id:"osm",type:"raster",source:"osm"}]};
-// One persistent MapLibre map with direct OSM raster tiles: no external
-// style, glyph, sprite, or API-key dependency. Cards and filters stay local.
+// Authenticate only CARTO resources; never attach the key to other hosts.
+const cartoKey=process.env.NEXT_PUBLIC_CARTO_BASEMAP_API_KEY;
+function mapRequest(url:string) {
+ if(!cartoKey)return {url};
+ const resource=new URL(url);
+ if(resource.protocol==="https:"&&(resource.hostname==="basemaps.cartocdn.com"||resource.hostname.endsWith(".basemaps.cartocdn.com"))){resource.searchParams.set("key",cartoKey);return {url:resource.toString()};}
+ return {url};
+}
 export default function StudioMap({studios,onClose}:{studios:MapStudio[];onClose:()=>void}){
  const p=usePrototype();const panel=useRef<HTMLDivElement>(null),container=useRef<HTMLDivElement>(null),map=useRef<LibreMap|null>(null);
  const markers=useRef(new Map<string,Marker>()),latest=useRef(studios);latest.current=studios;
@@ -20,7 +26,10 @@ export default function StudioMap({studios,onClose}:{studios:MapStudio[];onClose
  const fit=()=>{const rows=latest.current.filter(s=>s.coordinates);if(!rows.length)return;const lngs=rows.map(s=>s.coordinates![1]),lats=rows.map(s=>s.coordinates![0]);map.current?.fitBounds([[Math.min(...lngs),Math.min(...lats)],[Math.max(...lngs),Math.max(...lats)]],{padding:{top:75,bottom:230,left:55,right:55},maxZoom:14,duration:0});};
  useEffect(()=>{let disposed=false;let cleanup=()=>{};setReady(false);setFailed(false);setTilesReady(false);
   void import("maplibre-gl").then(L=>{if(disposed||!container.current)return;try{
-   const m=new L.Map({container:container.current,style:baseStyle,center:[-74.05,40.724],zoom:13,attributionControl:{compact:true}});map.current=m;
+   L.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+   const dark=!!container.current.closest('[class*="dark"]');
+   const style=cartoKey?`https://basemaps.cartocdn.com/gl/${dark?'dark-matter':'voyager'}-gl-style/style.json`:baseStyle;
+   const m=new L.Map({container:container.current,style,transformRequest:mapRequest,center:[-74.05,40.724],zoom:13,attributionControl:{compact:true}});map.current=m;
    // Collapse attribution once it arrives; subsequent user toggles remain untouched.
    const attributionObserver=new MutationObserver(()=>{const el=container.current?.querySelector('.maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-attrib-empty)');if(el){el.classList.remove('maplibregl-compact-show');el.removeAttribute('open');attributionObserver.disconnect();}});
    attributionObserver.observe(container.current,{subtree:true,attributes:true,childList:true});

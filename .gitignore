@@ -21,3 +21,6 @@ nav-*.png
 .release/
 *.jks
 *.keystore
+
+# Generated matching MapLibre worker assets
+/public/maplibre/

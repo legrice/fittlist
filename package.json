@@ -51,7 +51,9 @@
     "android:open": "cap open android",
     "android:run": "cap run android",
     "check:android-release": "node scripts/check-android-release.mjs",
-    "android:bundle": "node scripts/android-release.mjs"
+    "android:bundle": "node scripts/android-release.mjs",
+    "predev": "node scripts/prepare-maplibre.mjs",
+    "prebuild": "node scripts/prepare-maplibre.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
