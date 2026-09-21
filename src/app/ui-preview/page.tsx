@@ -153,7 +153,7 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
   return <div className={styles.directoryWorkspace}>
     <div className={styles.directoryHeader}>{controls}</div>
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    {page === "studios" && mapView ? <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/> : <div className={`${styles.directoryList} ${page === "people" ? styles.peopleList : styles.stack}`}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
+    <div className={page === "studios" && mapView ? styles.mapResults : undefined}><div aria-hidden={page === "studios" && mapView || undefined} inert={page === "studios" && mapView} className={`${styles.directoryList} ${page === "people" ? styles.peopleList : styles.stack}`}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>{page === "studios" && mapView && <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/>}</div>
     {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={event => {event.currentTarget.closest("main")?.scrollTo({top:0});setMapView(true);}}><MapIcon size={19}/>Map</button>}
   </div>;
 }
@@ -308,7 +308,7 @@ function PreviewShell() {
   const animateEntry=()=>{if(goingBack.current){goingBack.current=false;return;}if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;mainRef.current?.animate([{transform:"translateX(100%)"},{transform:"translateX(0)"}],{duration:240,easing:"cubic-bezier(.2,.8,.2,1)"});};
   const captureBack=(event:React.MouseEvent<HTMLElement>)=>{
     const button=(event.target as HTMLElement).closest("button");
-    if(!button||!/^back(?:\s|$)/i.test(button.getAttribute("aria-label")||button.textContent?.trim()||""))return;
+    if(!button||button.hasAttribute("data-local-back")||!/^back(?:\s|$)/i.test(button.getAttribute("aria-label")||button.textContent?.trim()||""))return;
     if(replayBack.current){replayBack.current=false;return;}
     if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
     event.preventDefault();event.stopPropagation();if(motionBusy.current)return;
