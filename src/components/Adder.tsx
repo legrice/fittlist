@@ -134,7 +134,10 @@ export function Adder({
   onPublished,
   onDeleted,
   onMatch,
+  onPreviewPublish,
 }: {
+  /** Prototype adapter: intercept writes while reusing the production editor. */
+  onPreviewPublish?: (input: import("@/app/actions/classes").PublishInput & { times?: string[] }) => void;
   studios: StudioDto[];
   templates: TemplateDto[];
   customTypes: string[];
@@ -307,7 +310,7 @@ export function Adder({
   // gym is handed its own, links and all, because it is the studio.
   const [fetched, setFetched] = useState<CatalogItem[]>([]);
   const [catLoading, setCatLoading] = useState(false);
-  const catalog = gym ? gym.catalog : fetched;
+  const catalog = gym ? gym.catalog : studioId?.startsWith("preview-") ? templates.filter(t=>t.studioId===studioId) : fetched;
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const selectedStudio = studioId ? studioById.get(studioId) : undefined;
 
@@ -339,7 +342,7 @@ export function Adder({
 
   // Load the studio's shared class catalog whenever the studio changes.
   useEffect(() => {
-    if (isGym || !studioId) {
+    if (isGym || !studioId || studioId.startsWith("preview-")) {
       setFetched([]);
       return;
     }
@@ -573,6 +576,7 @@ export function Adder({
         rsvp,
         links,
       };
+      if (onPreviewPublish) { onPreviewPublish(input); return; }
       // Yours to go to: the same class, written to your plans and to the
       // studio's catalog, and never to a page. No branch below this one can
       // reach `classes`, which is what keeps the wall where it is.
@@ -712,6 +716,10 @@ export function Adder({
   };
 
   const addStudio = () => {
+    if (onPreviewPublish) {
+      const studio = { id: `preview-place-${Date.now()}`, seq: studios.length, name: nsName, address: nsAddr };
+      setStudios(prev => [...prev, studio]); setStudioId(studio.id); setLocation(nsName); setStage("form"); return;
+    }
     startTransition(async () => {
       const res = await createStudio(nsName, nsAddr, nsKind);
       if (!res.ok || !res.studio) {

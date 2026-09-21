@@ -762,3 +762,8 @@
 .apple .calendarContent .daySection + .daySection { margin-top:32px; }
 
 .classDetailNav { background:transparent; }
+
+/* Reuse main's composer controls within the prototype takeover. */
+.mainClassComposer :global(.sheet-scrim) { position:fixed; inset:0; z-index:60; }
+.mainClassComposer :global(.sheet) { color:var(--preview-text); background:var(--preview-ground); }
+.mainClassComposer :global(.addweek-options) { margin-bottom:24px; }

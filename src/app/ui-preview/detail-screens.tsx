@@ -1,4 +1,5 @@
 "use client";
+import ClassComposer from "./class-composer";
 import { BackButton } from "@/components/BackButton";
 import { useState } from "react";
 import { ChevronRight, Plus, CalendarDays, Users, MapPin, Bell, Clock, Bookmark, Check } from "@/components/PhosphorIcons";
@@ -73,7 +74,7 @@ export default function DetailScreens({route}:{route:Destination}) {
     </>}
     {route.kind==="membership" && <Membership reason={route.name}/>}
     {route.kind==="edit-profile" && <EditProfile/>}
-    {(route.kind==="add-class"||route.kind==="edit-class") && <ClassEditor route={route}/>}
+    {route.kind==="add-class" && <ClassComposer/>}{route.kind==="edit-class" && <ClassEditor route={route}/>}
     {route.kind==="settings" && <Settings name={title}/>}
     {(route.kind==="manage"||route.kind==="studio"||route.kind==="person") && <>
       <div className={styles.detailIdentity}>{route.kind==="manage"&&<div className={styles.detailAvatar}><CalendarDays size={30}/></div>}<span><MapPin size={15}/> {p.live ? (route.kind==="person"?p.live.people.find(person=>person.name===route.name)?.location:p.live.studios.find(studio=>studio.name===route.name)?.location) || "Location not added" : "Jersey City, NJ"}</span>{(route.kind==="person"||route.kind==="studio")&&<Button {...secondary} onClick={()=>p.setFollowing(v=>v.includes(title)?v.filter(x=>x!==title):[...v,title])}>{p.following.includes(title)?"Following":"Follow"}</Button>}</div>

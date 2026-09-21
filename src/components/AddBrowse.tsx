@@ -42,7 +42,9 @@ export function AddBrowse({
   onEvent,
   onNotice,
   onClose,
+  preview,
 }: {
+  preview?: { data: AddBrowseData; onSave: (id: string, on: boolean) => void };
   /** The class isn't listed: the ordinary adder, with everything typed
    *  landing in the catalog for the next person. */
   onAddNew: () => void;
@@ -52,7 +54,7 @@ export function AddBrowse({
   onClose: () => void;
 }) {
   const [browse, setBrowse] = useState<AddBrowseData | null>(() =>
-    readClientMemory<AddBrowseData>(ADD_BROWSE_MEMORY_KEY),
+    preview?.data ?? readClientMemory<AddBrowseData>(ADD_BROWSE_MEMORY_KEY),
   );
   const [loadFailed, setLoadFailed] = useState(false);
   const [retry, setRetry] = useState(0);
@@ -65,6 +67,7 @@ export function AddBrowse({
   const [, start] = useTransition();
 
   useEffect(() => {
+    if (preview) return;
     let live = true;
     setLoadFailed(false);
     void loadClientMemory(ADD_BROWSE_MEMORY_KEY, addBrowse)
@@ -101,6 +104,10 @@ export function AddBrowse({
   const days = browse?.days ?? null;
 
   const save = (classId: string, iso: string, name: string, on: boolean) => {
+    if (preview) {
+      setMarks(m=>({...m,[`${classId}|${iso}`]:on}));
+      preview.onSave(classId,on); return;
+    }
     const key = `${classId}|${iso}`;
     marksRef.current = { ...marksRef.current, [key]: on };
     setMarks((m) => ({ ...m, [key]: on }));

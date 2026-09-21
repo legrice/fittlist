@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 import { loadLivePreview } from "./live-data";
-export type PreviewClass = { description?:string|null; own?:boolean; inCalendar?:boolean; photo?:string|null; id: string; name: string; place: string; coach: string; date: string; time: string; duration: string };
+export type PreviewClass = { personal?:boolean; description?:string|null; own?:boolean; inCalendar?:boolean; photo?:string|null; id: string; name: string; place: string; coach: string; date: string; time: string; duration: string };
 export const initialClasses: PreviewClass[] = [
   { id:"asana", name:"Asana Lab", place:"Asana Soul Practice", coach:"Erin Clyne", date:"2026-09-19", time:"08:00", duration:"60" },
   { id:"sculpt", name:"Sculpt", place:"Jane DO Jersey City", coach:"Freddie Morgan", date:"2026-09-20", time:"10:30", duration:"50" },
