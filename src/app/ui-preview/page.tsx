@@ -106,7 +106,7 @@ function ExplorePerson({ person }: { person: typeof explorePeople[number] & {pho
 }
 function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
   const p=usePrototype();
-  return <button className={styles.cardLink} onClick={()=>p.open({kind:"studio",name:place.name})}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card></button>;
+  return <button className={styles.cardLink} onClick={()=>p.open({kind:"studio",name:place.name})}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><span className={styles.studioListAvatar}><Face initials={place.name.split(" ").map(word=>word[0]).slice(0,2).join("")} color="#C8C3DB" photo={place.photo} size={46}/></span><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card></button>;
 }
 function ExploreScreen({ page }: { page: ExplorePage }) {
   const p=usePrototype();
@@ -154,7 +154,7 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
     <h1 className={styles.pageTitle}>{title}</h1>
     {!mapView&&controls}
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    {page === "studios" && mapView ? <StudioMap studios={shownStudios} controls={controls} onClose={() => setMapView(false)}/> : <div className={page === "people" ? styles.peopleList : styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
+    {page === "studios" && mapView ? <StudioMap studios={shownStudios} controls={controls} onClose={() => setMapView(false)}/> : <div className={`${styles.directoryList} ${page === "people" ? styles.peopleList : styles.stack}`}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
     {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={() => setMapView(true)}><MapIcon size={19}/>Map</button>}
   </>;
 }
