@@ -684,7 +684,7 @@
 .apple .calendarHero .calendarSummary { gap:16px; }
 .apple .calendarHero:has(.shareWeekButton) { padding-bottom:36px; }
 
-.apple .dock { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.apple .dock { grid-template-columns:repeat(5,minmax(0,1fr)); }
 .homeTopRow { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .homeUtilities { display:flex; gap:8px; }
 .homeUtilities button { position:relative; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--preview-text); }
@@ -770,3 +770,7 @@
 .mainClassComposer :global(.addweek-options) { margin-bottom:24px; }
 
 .apple .calendarHero .calendarPersonContext .sectionTitle { margin:16px 0 0; gap:12px; }
+
+.dockAvatar { display:flex; border-radius:50%; }
+.dockAvatar [data-slot="avatar-fallback"] { font-size:9px; }
+.dock button[aria-current="page"] .dockAvatar { outline:2px solid currentColor; outline-offset:2px; }

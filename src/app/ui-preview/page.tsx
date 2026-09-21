@@ -11,7 +11,7 @@ import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
 import { clearClientMemory } from "@/lib/client-memory";
-import { Activity, Check, ArrowUpRight, Bell, House, MessageCircle, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, UserRound, Users } from "@/components/PhosphorIcons";
+import { Activity, Check, ArrowUpRight, Bell, House, MessageCircle, CalendarDays, ChevronDown, Copy, X, ChevronRight, Clock, CreditCard, GlobeLock, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, Storefront, UserRound, Users } from "@/components/PhosphorIcons";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,12 @@ import SharePreview from "./share-preview";
 import StudioMap, { type MapStudio } from "./studio-map";
 import styles from "./preview.module.css";
 
-type Screen = "calendar" | "explore" | "groups" | "you";
+type Screen = "calendar" | "people" | "studios" | "groups" | "you";
 
 const screens: { id: Screen; label: string; icon: typeof CalendarDays }[] = [
   { id: "calendar", label: "Home", icon: House },
-  { id: "explore", label: "Explore", icon: Search },
+  { id: "people", label: "People", icon: UserRound },
+  { id: "studios", label: "Studios", icon: Storefront },
   { id: "groups", label: "Groups", icon: Users },
   { id: "you", label: "Profile", icon: UserRound },
 ];
@@ -71,7 +72,7 @@ function CalendarScreen({ onShare, onDiscover }: { onShare: () => void; onDiscov
         {view === "following" && <div className={styles.calendarPersonContext}><SectionTitle aside={selectedPerson === "All" ? <button className={styles.calendarProfileButton} onClick={onDiscover}>Add more<Plus size={14}/></button> : <button className={styles.calendarProfileButton} onClick={()=>p.open({kind:"person",name:p.live ? selectedPerson : followingClasses.find(item=>item.coach.startsWith(selectedPerson))?.coach || selectedPerson})}>View Profile<ChevronRight size={16}/></button>}>{selectedPerson === "All" ? `Viewing ${people.length} ${people.length === 1 ? "calendar" : "calendars"}` : `${selectedPerson}’s calendar`}</SectionTitle></div>}
       </div>
       <TabsContent value="you" className={styles.calendarYouPanel}>{personalClasses.length===0 && <p className={styles.sectionIntro}>No upcoming classes on your calendar.</p>}{personalClasses.map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}<button onClick={() => p.open({kind:"add-class"})} className={styles.addFab} aria-label="Add a class"><Plus size={28}/></button></TabsContent>
-      <TabsContent value="following">{followingClasses.length===0 && <p className={styles.sectionIntro}>Follow people in Explore to see their upcoming classes.</p>}{followingClasses.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
+      <TabsContent value="following">{followingClasses.length===0 && <p className={styles.sectionIntro}>Follow people in People to see their upcoming classes.</p>}{followingClasses.filter((item) => selectedPerson === "All" || item.coach.startsWith(selectedPerson)).map((item) => <section className={styles.daySection} key={item.id}><h3>{item.day}</h3><ClassCard item={item}/></section>)}</TabsContent>
     </Tabs>
   </div>;
 }
@@ -105,7 +106,7 @@ function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
   const p=usePrototype();
   return <button className={styles.cardLink} onClick={()=>p.open({kind:"studio",name:place.name})}><Card className={styles.simpleCard}><CardContent className={styles.menuRow}><div className={styles.discoverGroupIcon}><MapPin size={21}/></div><div><strong>{place.name}</strong><span>{place.type} · {place.location}</span></div><ChevronRight size={18}/></CardContent></Card></button>;
 }
-function ExploreScreen({ page, onNavigate }: { page: ExplorePage; onNavigate: (page: ExplorePage) => void }) {
+function ExploreScreen({ page }: { page: ExplorePage }) {
   const p=usePrototype();
   const peopleSource=p.live?.people || explorePeople;
   const studiosSource=p.live?.studios || exploreStudios;
@@ -119,8 +120,7 @@ function ExploreScreen({ page, onNavigate }: { page: ExplorePage; onNavigate: (p
   const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
-    <h1 className={styles.pageTitle}>Explore</h1>
-    <Tabs value={page} onValueChange={value=>onNavigate(value as ExplorePage)}><TabsList className={styles.fullTabs} aria-label="Explore category"><TabsTrigger value="people">People</TabsTrigger><TabsTrigger value="studios">Studios</TabsTrigger></TabsList></Tabs>
+    <h1 className={styles.pageTitle}>{title}</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
     <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
@@ -296,16 +296,15 @@ function PreviewShell() {
   useEffect(() => { try { setDark(localStorage.getItem("fittlist-preview-dark") === "true"); } catch {} }, []);
   const changeDark = (value: boolean) => { setDark(value); try { localStorage.setItem("fittlist-preview-dark", String(value)); } catch {} };
 
-  const [explorePage,setExplorePage]=useState<ExplorePage>("people");
   const [selectedGroup,setSelectedGroup]=useState<string|null>(null);
   useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("detail")==="group"&&params.get("name")){setScreen("groups");setSelectedGroup(params.get("name"));}},[]);
   const takeover=!!detail || sharing || !!selectedGroup;
-  useEffect(()=>{mainRef.current?.scrollTo({top:0});if(takeover)animateEntry();else goingBack.current=false;},[detail,screen,explorePage,sharing,selectedGroup]);
+  useEffect(()=>{mainRef.current?.scrollTo({top:0});if(takeover)animateEntry();else goingBack.current=false;},[detail,screen,sharing,selectedGroup]);
   useEffect(()=>{const enter=()=>animateEntry();window.addEventListener("preview-subpage",enter);return()=>window.removeEventListener("preview-subpage",enter);},[]);
   return <div className={`${styles.preview} ${styles.apple} ${dark ? styles.dark : ""}`}><div className={styles.notice}>{p.live ? "Live account data · edits stay local" : "Apple-inspired · Delight · sample content"}</div><div className={styles.phone}>{p.saveNotice && <div className={styles.saveNotice} role="status"><span>{p.saveNotice}</span><button aria-label="Dismiss schedule notice" onClick={()=>p.setSaveNotice("")}><X size={18}/></button></div>}
     <div className={styles.dataBanner} role="status">{p.dataStatus==="loading"?"Loading your account…":p.live?"Live data · changes stay in this preview":p.dataStatus==="error"?"Couldn’t load account data. Showing samples.":<>Sample data · <Link href="/?join=login&next=/ui-preview">Sign in</Link> to load your account.</>}{p.dataStatus!=="loading" && <button onClick={()=>void p.reloadData()}>{p.live?"Refresh":"Retry"}</button>}</div>
-    <main ref={mainRef} onClickCapture={captureBack} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)} onDiscover={()=>{setExplorePage("people");setScreen("explore");}}/>:screen==="explore"?<ExploreScreen key={explorePage} page={explorePage} onNavigate={setExplorePage}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
-    {!takeover && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setExplorePage("people");setSharing(false);p.reset();}}><Icon size={21} weight={screen===id?"fill":"bold"}/><span>{label}</span></button>)}</nav>}
+    <main ref={mainRef} onClickCapture={captureBack} className={`${styles.content} ${takeover ? styles.profileTakeover : ""} ${screen === "calendar" && !sharing && !detail ? styles.calendarContent : ""}`} aria-label={screens.find(({ id }) => id === screen)?.label}>{detail && <DetailScreens key={`${p.stack.length}-${detail.kind}-${detail.name}`} route={detail}/>}<div hidden={!!detail}>{sharing ? <SharePreview onBack={() => setSharing(false)}/> : screen==="calendar"?<CalendarScreen onShare={() => setSharing(true)} onDiscover={()=>setScreen("people")}/>:(screen==="people"||screen==="studios")?<ExploreScreen key={screen} page={screen}/>:screen==="groups"?<GroupsScreen selected={selectedGroup} setSelected={setSelectedGroup}/>:<YouScreen dark={dark} onDarkChange={changeDark}/>}</div></main>
+    {!takeover && <nav className={styles.dock} aria-label="Preview screens">{screens.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={screen===id?"page":undefined} onClick={()=>{setScreen(id);setSharing(false);p.reset();}}>{id === "you" ? <span className={styles.dockAvatar}><Face initials={p.profile.name.split(/\s+/).filter(Boolean).map(part=>part[0]).slice(0,2).join("")} color="#C8C3DB" photo={p.profile.photo} size={23}/></span> : <Icon size={21} weight={screen===id?"fill":"bold"}/>}<span>{label}</span></button>)}</nav>}
   </div></div>;
 }
 
