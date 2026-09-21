@@ -658,7 +658,7 @@
 /* A quiet profile introduction and a softly tinted calendar hero. */
 .profileAboutPanel { padding:0; margin:12px 0 20px; border-radius:0; background:transparent; }
 .profileAboutPanel > p:first-child { margin-top:0; }
-.apple .calendarHero { margin-top:calc(-1 * var(--preview-top-padding)); padding-top:var(--preview-top-padding); padding-bottom:20px; margin-bottom:16px; background:linear-gradient(180deg,transparent 35%,var(--preview-ground) 90%),radial-gradient(ellipse at 90% 0%,color-mix(in srgb,var(--preview-highlight) 9%,transparent),transparent 65%),var(--preview-ground); }
+.apple .calendarHero { margin-top:calc(-1 * var(--preview-top-padding)); padding-top:var(--preview-top-padding); padding-bottom:20px; margin-bottom:16px; background:radial-gradient(ellipse at 90% 0%,color-mix(in srgb,var(--preview-highlight) 14%,transparent),transparent 70%),linear-gradient(140deg,var(--preview-soft),var(--preview-ground)); }
 /* Keep the dark hero close to the page ground, with a restrained brand glow. */
 .apple.dark .calendarHero {
   background:
