@@ -861,3 +861,18 @@
 .mapCardActions { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .mapCardActions > button { min-height:40px; min-width:40px; }
 .mapQueryChip { font:inherit; font-size:12px; padding:0 0 10px; text-decoration:underline; }
+.directoryWorkspace { display:flex; flex-direction:column; min-height:100%; }
+.directoryHeader { flex:none; position:sticky; top:calc(-1 * var(--preview-top-padding)); z-index:21; background:var(--preview-ground); }
+.content:has(.inlineStudioMap) { overflow:hidden; }
+.content:has(.inlineStudioMap) > div:not([hidden]) { height:100%; }
+.directoryWorkspace:has(.inlineStudioMap) { height:100%; min-height:0; }
+.apple .inlineStudioMap { position:relative; inset:auto; width:100%; max-width:none; height:auto; min-height:300px; flex:1; margin:0; border-radius:20px; overflow:hidden; animation:mapSlideIn .24s ease-out; }
+.inlineStudioMap .studioMapWrap { height:100%; }
+.inlineStudioMap .mapStudioCard { bottom:70px; left:16px; right:16px; width:auto; padding:14px; }
+.inlineStudioMap .mapFit { top:12px; left:12px; right:auto; }
+.inlineStudioMap .mapStatus { top:60px; }
+.inlineStudioMap :global(.maplibregl-ctrl-top-right) { top:12px; right:8px; }
+.mapListButton { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); z-index:20; border-radius:999px; padding:12px 24px; background:var(--preview-text); color:var(--preview-ground); font:600 14px var(--preview-font); }
+.apple .topControls .groupSearchAdd { position:static; width:44px; height:44px; border-radius:50%; background:var(--preview-soft); color:var(--preview-text); display:grid; place-items:center; }
+@keyframes mapSlideIn { from { transform:translateX(100%); } to { transform:translateX(0); } }
+@media(prefers-reduced-motion:reduce) { .apple .inlineStudioMap { animation:none; } }

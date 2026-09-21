@@ -142,8 +142,7 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
   const options = [...new Set(page === "people" ? peopleSource.flatMap(person=>person.disciplines) : studiosSource.flatMap(studio=>studio.types))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   const controls=<>
-    {!mapView&&<div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>}
-    {mapView&&query&&<button className={styles.mapQueryChip} onClick={()=>setQuery("")}>Search: {query} · Clear</button>}
+    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <div className={styles.directoryFilters} aria-label={`${title} filters`}>
       <label><select aria-label="Distance" value={distance} disabled={locationPending} onChange={event=>chooseDistance(event.target.value)}><option value="">{locationPending?"Locating…":"Distance"}</option>{[1,2,5,10,25].map(miles=><option key={miles} value={miles}>Within {miles} {miles===1?"mile":"miles"}</option>)}</select><ChevronDown size={14}/></label>
       <label><select aria-label={page==="people"?"Specialty":"Category"} value={filter} onChange={event=>setFilter(event.target.value)}><option value="">{page==="people"?"Specialty":"Category"}</option>{options.map(option=><option key={option}>{option}</option>)}</select><ChevronDown size={14}/></label>
@@ -151,13 +150,12 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
     </div>
     {locationError&&<p role="status" className={styles.sectionIntro}>{locationError}</p>}
   </>;
-  return <>
-    <h1 className={styles.pageTitle}>{title}</h1>
-    {!mapView&&controls}
+  return <div className={styles.directoryWorkspace}>
+    <div className={styles.directoryHeader}>{controls}</div>
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    {page === "studios" && mapView ? <StudioMap studios={shownStudios} controls={controls} onClose={() => setMapView(false)}/> : <div className={`${styles.directoryList} ${page === "people" ? styles.peopleList : styles.stack}`}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
-    {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={() => setMapView(true)}><MapIcon size={19}/>Map</button>}
-  </>;
+    {page === "studios" && mapView ? <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/> : <div className={`${styles.directoryList} ${page === "people" ? styles.peopleList : styles.stack}`}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
+    {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={event => {event.currentTarget.closest("main")?.scrollTo({top:0});setMapView(true);}}><MapIcon size={19}/>Map</button>}
+  </div>;
 }
 
 const sampleGroups = [
@@ -198,8 +196,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const back = <BackButton className={styles.backButton} label="Back to Groups" onClick={() => setSelected(null)}/>;
   return <div ref={top}>
     {!selected || selected === "browse" ? <>
-      <div className={styles.pageTitleRow}><h1 className={styles.pageTitle}>Groups</h1><button className={styles.addGroupButton} onClick={()=>setSelected("create")} aria-label="Start a new group"><Plus size={24}/></button></div>
-      <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label></div>
+      <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label><button className={styles.groupSearchAdd} onClick={()=>setSelected("create")} aria-label="Start a new group"><Plus size={22}/></button></div>
       <div className={styles.groupCategories} role="group" aria-label="Group categories">{categories.map(c=><button key={c} aria-pressed={groupCategory===c} onClick={()=>setGroupCategory(c)}>{c}</button>)}</div>
       {results.length===0&&<p className={styles.sectionIntro}>No matching groups. Try another category or search.</p>}
       <div className={styles.exploreGroupList}>{results.map(item=><article key={item.id} className={styles.exploreGroupCard}><div className={styles.groupListImage}><button className={styles.groupImageOpen} onClick={()=>openGroup(item.id)} aria-label={`View ${item.name}`}>{item.image?<img src={item.image} alt="" loading="lazy"/>:<Users size={40}/>}</button><span className={styles.groupTypePill}>{categoryOf(item.category)}</span></div><div className={styles.exploreGroupCopy}><div className={styles.groupListTitleRow}><button className={styles.groupListName} onClick={()=>openGroup(item.id)}>{item.name}</button><button className={styles.groupListJoin} aria-pressed={joined.includes(item.id)} aria-label={`${joined.includes(item.id)?"Joined":"Join"} ${item.name}`} onClick={()=>toggleMembership(item.id)}>{joined.includes(item.id)?<><Check size={14} aria-hidden="true"/>Joined</>:"Join"}</button></div><button className={styles.groupListCopyButton} onClick={()=>openGroup(item.id)}><span>{item.location || "Location not added"}</span><span>{item.description}</span></button></div></article>)}</div>
