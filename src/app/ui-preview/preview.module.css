@@ -921,3 +921,6 @@
 .mapListButton { display:flex; align-items:center; justify-content:center; gap:8px; white-space:nowrap; }
 
 .apple .mapToggle,.apple .mapListButton { font-size:13px; min-height:44px; }
+
+.mainShareEditor :global(.shlive-canvas) { box-shadow:0 12px 40px rgb(25 33 38 / 16%); }
+.mainShareEditor :global(.shsingle-preview .shprev-wrap),.mainShareEditor :global(.shsingle-preview .shlive-preview) { overflow:visible; }
