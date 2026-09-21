@@ -757,3 +757,6 @@
   .apple.dark .profileOverlayNav .detailNav > button,
   .apple.dark .profileOverlayNav .detailNav > div { background:#202a30; }
 }
+
+/* Give date sections room to breathe on both calendar tabs. */
+.apple .calendarContent .daySection + .daySection { margin-top:32px; }
