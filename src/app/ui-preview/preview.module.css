@@ -704,3 +704,12 @@
 .apple :global(.clline-coach-face) > span { color:var(--preview-avatar-ink); }
 
 .apple .profileActions [data-slot="button"] { padding-inline:20px; }
+
+/* Profile introductions and a single shared surface for header actions. */
+.apple .profileHero + .pageTitle { margin-bottom:12px; }
+.apple .profileHero + .pageTitle + .sectionIntro { margin-top:0; }
+.detailNav > div button,
+.profileOverlayNav .detailNav > div button {
+  background:transparent; border:0; border-radius:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;
+}
