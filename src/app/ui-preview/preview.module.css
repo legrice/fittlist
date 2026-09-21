@@ -768,3 +768,5 @@
 .mainClassComposer :global(.sheet-scrim) { position:fixed; inset:0; z-index:60; }
 .mainClassComposer :global(.sheet) { color:var(--preview-text); background:var(--preview-ground); }
 .mainClassComposer :global(.addweek-options) { margin-bottom:24px; }
+
+.apple .calendarHero .calendarPersonContext .sectionTitle { margin:16px 0 0; gap:12px; }
