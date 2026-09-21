@@ -106,7 +106,7 @@ Its shared rules live at the end of `src/app/ui-preview/preview.module.css`.
 - Secondary actions: gray pills, minimum 44px height, the same 16px/600 label.
   Compact calendar Save and View Profile controls retain the main-branch sizing.
 - Page/display headings: 36px/1.08, weight 600. Section and date headings:
-  21px/1.2, weight 600. Subheadings: 18px/1.25, weight 600. Body: 16px/1.5;
+  20px/1.2, weight 600. Subheadings: 18px/1.25, weight 600. Body: 16px/1.5;
   supporting notes: 13px. Use semantic heading levels independently of size.
 - Bottom actions clear the safe area. Share's horizontally scrolling tools and
   primary action form one fixed dock; content reserves room beneath it. Action
