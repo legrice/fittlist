@@ -760,3 +760,5 @@
 
 /* Give date sections room to breathe on both calendar tabs. */
 .apple .calendarContent .daySection + .daySection { margin-top:32px; }
+
+.classDetailNav { background:transparent; }
