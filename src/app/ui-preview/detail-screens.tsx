@@ -24,6 +24,8 @@ function EditProfile() {
     <label>Handle<input required pattern="[a-zA-Z0-9_]+" value={draft.handle} onChange={e=>setDraft({...draft,handle:e.target.value})}/></label>
     <label>Bio<textarea aria-label="Bio" value={draft.bio} maxLength={200} onChange={e=>setDraft({...draft,bio:e.target.value})}/></label>
     <label>Location<input value={draft.location} onChange={e=>setDraft({...draft,location:e.target.value})}/></label>
+    <label>About<textarea value={draft.about} onChange={e=>setDraft({...draft,about:e.target.value})}/></label>
+    {([['website','Website'],['phone','Phone'],['contactEmail','Public email'],['instagram','Instagram']] as const).map(([key,label])=><label key={key}>{label}<input value={draft[key]} onChange={e=>setDraft({...draft,[key]:e.target.value})}/></label>)}
     <Button type="submit">Save profile</Button>
   </form>;
 }
@@ -58,17 +60,21 @@ function Settings({name}:{name:string}) {
 }
 import DetailHeader from "./detail-header";
 import ProfileHero from "./profile-hero";
+import ProfileInfo from "./profile-info";
 export default function DetailScreens({route}:{route:Destination}) {
   const p=usePrototype(); const [message,setMessage]=useState("");
   const item=p.schedule.find(c=>c.id===route.name);
   const title=route.kind==="notifications"?"Notifications":route.kind==="messages"?"Messages":route.kind==="membership"?"Membership":route.kind==="edit-profile"?"Edit profile":route.kind==="add-class"?"Add a class":route.kind==="edit-class"?"Edit class":route.kind==="class"?item?.name || "Class unavailable":route.name || "Details";
-  const personAbout=p.live?.people.find(person=>person.name===route.name);
-  const studioAbout=p.live?.studios.find(studio=>studio.name===route.name);
+  const storedPerson=p.live?.people.find(person=>person.name===route.name);
+  const personAbout=route.name===p.profile.name?{...storedPerson,...p.profile,title:p.profile.bio}:storedPerson;
+  const storedStudio=p.live?.studios.find(studio=>studio.name===route.name);
+  const sampleStudio=!p.live?({"Asana Soul Practice":{type:"Yoga",coordinates:[40.722,-74.044]},"Jane DO Jersey City":{type:"Sculpt",coordinates:[40.725,-74.047]},"Ironbound Performance Athletics":{type:"Strength",coordinates:[40.731,-74.057]}} as Record<string,{type:string;coordinates:number[]}>)[route.name||""]:undefined;
+  const studioAbout={...sampleStudio,...storedStudio,...p.studioDrafts[route.name||""]};
   const matching=p.schedule.filter(c=>route.kind==="person"?c.coach===route.name:(route.name==="Personal calendar"||route.name==="My classes")?((c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id)):route.name==="Gals who like to move"?["sculpt","ironbound"].includes(c.id)||c.place===route.name:c.place===route.name);
   if(route.kind==="manage" && (p.live?p.live.managed.some(s=>s.name===route.name):route.name==="Ironbound Performance Athletics")) return <StudioWorkspace name={route.name!} view={route.view || "Dashboard"}/>;
   return <>
     {route.kind==="person"||route.kind==="studio" ? <ProfileHero type={route.kind==="person"?"Person":"Studio"} name={title} id={route.name} banner={route.kind==="person"?personAbout?.banner:studioAbout?.banner} photo={route.kind==="person"?personAbout?.photo:studioAbout?.photo} onBack={p.back}/> : route.kind==="class" ? <DetailHeader type="Class" name={title} id={route.name} onBack={p.back}/> : <BackButton className={styles.backButton} onClick={p.back}/>}
-    <h1 className={styles.pageTitle}>{title}</h1>
+    {route.kind!=="person"&&route.kind!=="studio"&&<h1 className={styles.pageTitle}>{title}</h1>}
     {(route.kind==="notifications"||route.kind==="messages")&&<>
       {p.live ? <><p className={styles.sectionIntro}>{title} aren’t connected to this preview yet.</p><a className={styles.backButton} href={route.kind==="notifications"?"/notifications":"/inbox"}>Open {title.toLowerCase()} in the app</a></> : route.kind==="notifications" ? <div className={styles.stack}><Row title="Erin Clyne followed you" detail="Today" onClick={()=>p.open({kind:"person",name:"Erin Clyne"})}/><Row title="Freddie added a class" detail="Gals who like to move · Yesterday" onClick={()=>p.open({kind:"class",name:"sculpt"})}/></div> : <div className={styles.stack}><Row title="Erin Clyne" detail="See you at Asana Lab!" onClick={()=>p.open({kind:"conversation",name:"Erin Clyne"})}/></div>}
     </>}
@@ -77,12 +83,7 @@ export default function DetailScreens({route}:{route:Destination}) {
     {route.kind==="add-class" && <ClassComposer/>}{route.kind==="edit-class" && <ClassEditor route={route}/>}
     {route.kind==="settings" && <Settings name={title}/>}
     {(route.kind==="manage"||route.kind==="studio"||route.kind==="person") && <>
-      <div className={styles.detailIdentity}>{route.kind==="manage"&&<div className={styles.detailAvatar}><CalendarDays size={30}/></div>}<span><MapPin size={15}/> {p.live ? (route.kind==="person"?p.live.people.find(person=>person.name===route.name)?.location:p.live.studios.find(studio=>studio.name===route.name)?.location) || "Location not added" : "Jersey City, NJ"}</span>{(route.kind==="person"||route.kind==="studio")&&<Button {...secondary} onClick={()=>p.setFollowing(v=>v.includes(title)?v.filter(x=>x!==title):[...v,title])}>{p.following.includes(title)?"Following":"Follow"}</Button>}</div>
-
-      {(route.kind==="person"||route.kind==="studio")&&<section className={styles.profileAboutPanel}><p>{(route.kind==="person"?personAbout?.about:studioAbout?.about)|| (p.live?"No about information added.":route.kind==="person"?"A local instructor focused on approachable classes and helping people build confidence through movement.":"A neighborhood studio offering instructor-led classes for a range of experience levels.")}</p>
-      {route.kind==="person"&&<>{personAbout?.disciplines?.length ? <><h3>Specialties</h3><p>{personAbout.disciplines.join(" · ")}</p></>:null}{personAbout?.highlights?.length ? <><h3>Teaching focus</h3><ul>{personAbout.highlights.map((text,index)=><li key={index}>{text}</li>)}</ul></>:null}{personAbout?.certifications?.length ? <><h3>Certifications</h3><ul>{personAbout.certifications.map((text,index)=><li key={index}>{text}</li>)}</ul></>:null}</>}
-      {route.kind==="studio"&&studioAbout&&<><h3>Class types</h3><p>{studioAbout.type}</p></>}
-      </section>}
+      {(route.kind==="person"||route.kind==="studio")&&<ProfileInfo kind={route.kind} name={title} type={(route.kind==="person"?personAbout?.title:studioAbout?.type)||(route.kind==="person"?"Instructor":"Studio")} location={(route.kind==="person"?personAbout?.location:studioAbout?.location)||(p.live?undefined:"Jersey City, NJ")} about={(route.kind==="person"?personAbout?.about:studioAbout?.about)||(p.live?undefined:"A welcoming community with instructor-led classes for a range of experience levels.")} coordinates={studioAbout?.coordinates} website={(route.kind==="person"?personAbout:studioAbout)?.website} phone={(route.kind==="person"?personAbout:studioAbout)?.phone} contactEmail={(route.kind==="person"?personAbout:studioAbout)?.contactEmail} instagram={(route.kind==="person"?personAbout:studioAbout)?.instagram} action={<button onClick={()=>p.setFollowing(v=>v.includes(title)?v.filter(x=>x!==title):[...v,title])}>{p.following.includes(title)?"Following":"Follow"}</button>} extra={route.kind==="person"?<>{personAbout?.disciplines?.length? <p>Specialties: {personAbout.disciplines.join(" · ")}</p>:null}{personAbout?.highlights?.map(text=><p key={text}>{text}</p>)}{personAbout?.certifications?.map(text=><p key={text}>{text}</p>)}</>:undefined}/>}
       {route.kind==="manage" ? <><p className={styles.sectionIntro}>You manage this calendar.</p><div className={styles.profileActions}><Button {...secondary} onClick={()=>p.open({kind:"add-class",name:route.name})}><Plus size={18}/>Add class</Button><Button {...secondary} onClick={()=>p.open({kind:"settings",name:"People & access"})}>Manage access</Button></div></> : null}
       {route.kind==="manage"&&<Heading>Upcoming classes</Heading>}<Schedule items={matching}/>
     </>}

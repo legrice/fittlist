@@ -779,3 +779,26 @@
 .directoryFilters label { position:relative; flex:none; }
 .directoryFilters select { appearance:none; border:0; border-radius:999px; padding:9px 32px 9px 14px; background:var(--preview-soft); color:var(--preview-text); font:600 13px/1.25 var(--preview-font); max-width:220px; text-overflow:ellipsis; }
 .directoryFilters svg { position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; }
+.apple .daySection h3 { color:var(--preview-text); }
+.profileInfo { margin:12px 0 28px; }
+.profileMetadata { display:flex; align-items:center; justify-content:space-between; gap:16px; color:var(--preview-muted); font-size:12px; }
+.profileMetadata > :last-child { text-align:right; }
+.profileMetadata button { color:inherit; font:inherit; }
+.profileInfo .pageTitle { margin:12px 0; }
+.profileAddress { text-align:left; text-decoration:underline; text-underline-offset:4px; color:var(--preview-muted); font-size:14px; margin-bottom:16px; }
+.profileDescription,.profileDescriptionClamped { font-size:15px; line-height:1.5; margin:12px 0 0; color:var(--preview-text); white-space:pre-line; }
+.profileDescriptionClamped { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.profileReadMore { font:600 13px var(--preview-font); text-decoration:underline; margin-top:8px; }
+.profilePills { display:flex; gap:8px; overflow-x:auto; padding:20px 0 4px; }
+.profilePills :is(button,a) { display:inline-flex; align-items:center; gap:6px; flex:none; border:0; border-radius:999px; padding:10px 15px; background:var(--preview-soft); color:var(--preview-text); font:600 13px var(--preview-font); text-decoration:none; }
+.profileExtra { font-size:14px; line-height:1.5; }
+.profileLocationDialog { margin:auto; width:calc(100% - 32px); max-width:390px; border:1px solid var(--preview-line); border-radius:24px; padding:24px; background:var(--preview-ground); color:var(--preview-text); }
+.profileLocationDialog::backdrop { background:#0008; backdrop-filter:blur(4px); }
+.profileLocationDialog header,.profileLocationDialog a { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.profileLocationDialog h2 { font-size:20px; }
+.profileLocationDialog a { padding:16px 0; border-bottom:1px solid var(--preview-line); color:inherit; }
+.profileLocationDialog small { display:block; margin-top:16px; color:var(--preview-muted); }
+.mapFilters { position:absolute; top:calc(70px + env(safe-area-inset-top)); left:16px; right:16px; z-index:20; padding:12px; border-radius:20px; background:var(--preview-ground); box-shadow:0 4px 20px #0002; }
+.mapFilters .topControls { margin-bottom:8px; }
+.mapFilters .directoryFilters { padding-bottom:0; }
+.mapTakeover :global(.leaflet-top) { top:230px; }

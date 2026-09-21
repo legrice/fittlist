@@ -8,6 +8,7 @@ import PreviewClassCard from "./class-card";
 import GroupSampleUpdates from "./group-sample-updates";
 import { useCalendarSwipe } from "./use-calendar-swipe";
 import ProfileHero from "./profile-hero";
+import ProfileInfo from "./profile-info";
 import DetailScreens from "./detail-screens";
 import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
@@ -140,8 +141,7 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
   const title = page.charAt(0).toUpperCase() + page.slice(1);
   const options = [...new Set(page === "people" ? peopleSource.flatMap(person=>person.disciplines) : studiosSource.flatMap(studio=>studio.types))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
-  return <>
-    <h1 className={styles.pageTitle}>{title}</h1>
+  const controls=<>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
     <div className={styles.directoryFilters} aria-label={`${title} filters`}>
       <label><select aria-label="Distance" value={distance} disabled={locationPending} onChange={event=>chooseDistance(event.target.value)}><option value="">{locationPending?"Locating…":"Distance"}</option>{[1,2,5,10,25].map(miles=><option key={miles} value={miles}>Within {miles} {miles===1?"mile":"miles"}</option>)}</select><ChevronDown size={14}/></label>
@@ -149,8 +149,12 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
       <label><select aria-label={page==="people"?"Specialty":"Category"} value={filter} onChange={event=>setFilter(event.target.value)}><option value="">{page==="people"?"Specialty":"Category"}</option>{options.map(option=><option key={option}>{option}</option>)}</select><ChevronDown size={14}/></label>
     </div>
     {locationError&&<p role="status" className={styles.sectionIntro}>{locationError}</p>}
+  </>;
+  return <>
+    <h1 className={styles.pageTitle}>{title}</h1>
+    {!mapView&&controls}
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
-    {page === "studios" && mapView ? <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/> : <div className={page === "people" ? styles.peopleList : styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
+    {page === "studios" && mapView ? <StudioMap studios={shownStudios} controls={controls} onClose={() => setMapView(false)}/> : <div className={page === "people" ? styles.peopleList : styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
     {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={() => setMapView(true)}><MapIcon size={19}/>Map</button>}
   </>;
 }
@@ -212,8 +216,8 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <p className={styles.sectionIntro}>{group.name}</p>
       {groupView==="members" ? <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div> : <GroupSampleUpdates live={!!p.live} running={categoryOf(group.category)==="Run club"}/>}
     </> : group ? <>
-      <ProfileHero type="Group" name={group.name} id={group.id} banner={group.banner || (!p.live?group.image:null)} photo={group.image} category={categoryOf(group.category)} onBack={()=>setSelected(null)}/>
-      <h1 className={styles.pageTitle}>{group.name}</h1><p className={styles.sectionIntro}>{group.description}</p>
+      <ProfileHero type="Group" name={group.name} id={group.id} banner={group.banner} photo={group.image} onBack={()=>setSelected(null)}/>
+      <ProfileInfo kind="group" id={group.id} name={group.name} type={categoryOf(group.category)} location={group.location} about={group.description} action={<button onClick={()=>toggleMembership(group.id)}>{joined.includes(group.id)?"Joined":"Join"}</button>}/>
       <div className={styles.groupJoinFooter}><button className={styles.groupMemberCount} onClick={()=>setGroupView("members")}><span className={styles.groupAvatarStack}>{group.members.slice(0,3).map((member,index)=><Face key={member} initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={24}/>)}</span><strong>{group.members.length} members</strong><ChevronRight size={14}/></button><button className={styles.groupJoinButton} aria-pressed={joined.includes(group.id)} onClick={()=>toggleMembership(group.id)}>{joined.includes(group.id)?"Joined":"Join"}</button></div>
       <div className={styles.groupFooterSpace}>
 
@@ -250,7 +254,7 @@ function YouScreen({ dark, onDarkChange }: { dark: boolean; onDarkChange: (value
         <Button data-variant="outline" variant="outline" onClick={openShare} aria-haspopup="dialog">@{p.profile.handle}<ChevronDown size={16}/></Button>
         <Button data-variant="outline" variant="outline" onClick={()=>p.open({kind:"edit-profile"})}>Edit profile</Button>
       </div>
-      <p>{p.profile.bio} · {p.profile.location}</p>
+      <p>{p.profile.bio} · {p.profile.location}</p>{p.profile.about&&<details className={styles.profileExtra}><summary>About</summary><p>{p.profile.about}</p></details>}
     </header>
     <dialog ref={sheet} className={styles.profileSheet} aria-labelledby="profile-share-title" onClick={event => { if (event.target === event.currentTarget) sheet.current?.close(); }}>
       <div className={styles.sheetBody}>

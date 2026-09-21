@@ -9,9 +9,10 @@ export const initialClasses: PreviewClass[] = [
   { id:"ironbound", name:"Guns, Buns, and Lungs", place:"Ironbound Performance Athletics", coach:"Matt LeGrice", date:"2026-09-21", time:"18:00", duration:"60" },
 ];
 export type Destination = { kind:"notifications"|"messages"|"membership"|"settings"|"manage"|"edit-profile"|"person"|"studio"|"class"|"edit-class"|"add-class"|"conversation"; name?:string; view?:string };
+const profileDetails={about:"",website:"",phone:"",contactEmail:"",instagram:""};
 function useStateStore() {
   const [studioDrafts,setStudioDrafts]=useState<Record<string,import("./studio-workspace").StudioDraft>>({});
-  const [profile,setProfile] = useState({ name:"Matt LeGrice", handle:"mattlegrice", bio:"Strength & mobility coach", location:"Jersey City, NJ", email:"matt@example.com",photo:null as string|null });
+  const [profile,setProfile] = useState({ ...profileDetails, name:"Matt LeGrice", handle:"mattlegrice", bio:"Strength & mobility coach", location:"Jersey City, NJ", email:"matt@example.com",photo:null as string|null });
   const [membershipPlan,setMembershipPlan]=useState<"free"|"pro"|"studio">("free");
   const pro=membershipPlan==="pro";
   const [studioSubscriptions,setStudioSubscriptions]=useState<Record<string,"active"|"ending"|"grace"|"readonly">>({});
@@ -22,7 +23,7 @@ function useStateStore() {
   const [exportsUsed,setExportsUsed]=useState(0);
   const [live,setLive]=useState<Awaited<ReturnType<typeof loadLivePreview>>>(null);
   const [dataStatus,setDataStatus]=useState("loading");
-  const reloadData=async()=>{setDataStatus("loading");try{const data=await loadLivePreview();if(!data){setLive(null);setSchedule(initialClasses);setSaved(["asana","sculpt"]);setFollowing([]);setProfile({name:"Matt LeGrice",handle:"mattlegrice",bio:"Strength & mobility coach",location:"Jersey City, NJ",email:"matt@example.com",photo:null});setDataStatus("signed-out");return;}setLive(data);setProfile(data.profile);setSchedule(data.schedule);setSaved(data.saved);setFollowing(data.people.filter(p=>p.following).map(p=>p.name));setMessages([]);setDataStatus("live");}catch{setDataStatus("error");}};
+  const reloadData=async()=>{setDataStatus("loading");try{const data=await loadLivePreview();if(!data){setLive(null);setSchedule(initialClasses);setSaved(["asana","sculpt"]);setFollowing([]);setProfile({...profileDetails,name:"Matt LeGrice",handle:"mattlegrice",bio:"Strength & mobility coach",location:"Jersey City, NJ",email:"matt@example.com",photo:null});setDataStatus("signed-out");return;}setLive(data);setProfile({...profileDetails,...data.profile});setSchedule(data.schedule);setSaved(data.saved);setFollowing(data.people.filter(p=>p.following).map(p=>p.name));setMessages([]);setDataStatus("live");}catch{setDataStatus("error");}};
   useEffect(()=>{void reloadData();},[]);
   const [schedule,setSchedule] = useState(initialClasses);
   const [preferences,setPreferences] = useState<Record<string,boolean>>({ "Class reminders":true,"New followers":true,"Group activity":true,"Messages":true,"Email updates":false,"Public profile":true,"Allow messages":true,"Approve followers":false });
