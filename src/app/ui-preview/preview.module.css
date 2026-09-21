@@ -475,6 +475,8 @@
 
 /* Shared prototype type and action scale. See docs/DESIGN_SYSTEM.md. */
 .apple {
+  --preview-avatar-ink:#192126;
+  --preview-avatar-ground:#c8c3db;
   --preview-cta-height:60px;
   --preview-button-size:16px;
   --preview-section-size:20px;
@@ -690,3 +692,13 @@
 /* Back controls share their circular shape with all app navigation. */
 .apple .backButton { margin:0 0 16px; }
 .mapBackButton { position:absolute; top:16px; left:16px; z-index:20; }
+
+
+/* Initials stay dark on light avatar fills in either appearance. */
+.apple :is(.detailAvatar,.classIdentityAvatar,.profileHeroAvatar > span) {
+  background:var(--preview-avatar-ground); color:var(--preview-avatar-ink);
+}
+.apple :global(.clline-coach-face):has(> span) {
+  background:var(--preview-avatar-ground); color:var(--preview-avatar-ink);
+}
+.apple :global(.clline-coach-face) > span { color:var(--preview-avatar-ink); }

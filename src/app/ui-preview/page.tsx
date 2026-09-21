@@ -40,7 +40,7 @@ const classes = [
 
 function Face({ initials, color, photo, size = 36 }: { initials: string; color: string; photo?:string|null; size?: number }) {
   if(photo) return <img src={photo} alt="" style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>;
-  return <Avatar style={{ width: size, height: size, background: color }}><AvatarFallback style={{ background: color, color: "var(--preview-on-soft)", fontWeight: 600 }}>{initials}</AvatarFallback></Avatar>;
+  return <Avatar style={{ width: size, height: size, background: color }}><AvatarFallback style={{ background: color, color: "var(--preview-avatar-ink)", fontWeight: 600 }}>{initials}</AvatarFallback></Avatar>;
 }
 
 function SectionTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
