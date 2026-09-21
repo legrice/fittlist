@@ -924,3 +924,6 @@
 
 .mainShareEditor :global(.shlive-canvas) { box-shadow:0 12px 40px rgb(25 33 38 / 16%); }
 .mainShareEditor :global(.shsingle-preview .shprev-wrap),.mainShareEditor :global(.shsingle-preview .shlive-preview) { overflow:visible; }
+
+.apple .search { border:1px solid #dce3e6; }
+.apple.dark .search { border-color:var(--preview-line); }

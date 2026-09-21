@@ -159,9 +159,9 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
 }
 
 const sampleGroups = [
-  { id: "gals", location:"Jersey City, NJ", banner:null as string|null, name: "Gals who like to move", category: "Group fitness", description: "Find a class, make a plan, and bring your people.", image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85", members: ["Erin Clyne", "Freddie Morgan", "Alex Lee", "Matt LeGrice"], classIndexes: [1, 2] },
-  { id: "run", location:"Jersey City, NJ", banner:null as string|null, name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
-  { id: "sweat", location:"Jersey City, NJ", banner:null as string|null, name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
+  { id: "gals", location:"Jersey City, NJ", coordinates:[40.72,-74.045] as [number,number]|null, banner:null as string|null, name: "Gals who like to move", category: "Group fitness", description: "Find a class, make a plan, and bring your people.", image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85", members: ["Erin Clyne", "Freddie Morgan", "Alex Lee", "Matt LeGrice"], classIndexes: [1, 2] },
+  { id: "run", location:"Jersey City, NJ", coordinates:[40.72,-74.045] as [number,number]|null, banner:null as string|null, name: "Jersey City Run Club", category: "Running", description: "Easy miles, good company, and a reason to get outside. All paces welcome.", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85", members: ["Jordan Rivera", "Sam Chen", "Taylor Brooks"], classIndexes: [] },
+  { id: "sweat", location:"Jersey City, NJ", coordinates:[40.72,-74.045] as [number,number]|null, banner:null as string|null, name: "Sunday Sweat Crew", category: "Strength & mobility", description: "Make Sunday your day to move. Try local classes together and meet your next workout buddy.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=85", members: ["Freddie Morgan", "Alex Lee", "Jamie Park"], classIndexes: [1] },
 ];
 function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(value:string|null)=>void}) {
   const p=usePrototype();
@@ -170,13 +170,32 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const [joined, setJoined] = useState(["gals"]);
   const [groupQuery,setGroupQuery]=useState("");
   const [groupCategory,setGroupCategory]=useState("All groups");
+  const [groupType,setGroupType]=useState("");
+  const [distance,setDistance]=useState("");
+  const [geo,setGeo]=useState<[number,number]|null>(null);
+  const [locationPending,setLocationPending]=useState(false);
+  const [locationError,setLocationError]=useState("");
+  const chooseDistance=(value:string)=>{
+    setLocationError("");
+    if(!value||geo){setDistance(value);return;}
+    if(!navigator.geolocation){setLocationError("Location is unavailable. Showing all distances.");return;}
+    setLocationPending(true);
+    navigator.geolocation.getCurrentPosition(position=>{setGeo([position.coords.latitude,position.coords.longitude]);setDistance(value);setLocationPending(false);},()=>{setLocationPending(false);setLocationError("Location wasn’t shared. Showing all distances.");},{timeout:10000,maximumAge:300000});
+  };
+  const withinDistance=(coordinates:[number,number]|null)=>{
+    if(!distance)return true;
+    if(!geo||!coordinates)return false;
+    const radians=(n:number)=>n*Math.PI/180;
+    const a=Math.sin(radians(coordinates[0]-geo[0])/2)**2+Math.cos(radians(geo[0]))*Math.cos(radians(coordinates[0]))*Math.sin(radians(coordinates[1]-geo[1])/2)**2;
+    return 3958.8*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))<=Number(distance);
+  };
   const [seenUpdates,setSeenUpdates]=useState<string[]>([]);
   const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("schedule");
   useEffect(()=>{setGroupView("schedule");},[selected]);
   useEffect(()=>{if(selected)window.dispatchEvent(new Event("preview-subpage"));},[groupView]);
-  const categories=["All groups","New groups","Your groups","Fitness","Wellness","Run club"];
+  const categories=["All groups","New groups","Your groups"];
   const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
-  const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All groups"||(groupCategory==="New groups"?!joined.includes(g.id):groupCategory==="Your groups"?joined.includes(g.id):categoryOf(g.category)===groupCategory)));
+  const results=groups.filter(g=>withinDistance(g.coordinates)&&(!groupType||categoryOf(g.category)===groupType)&&(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All groups"||(groupCategory==="New groups"?!joined.includes(g.id):groupCategory==="Your groups"?joined.includes(g.id):categoryOf(g.category)===groupCategory)));
   const openGroup=(id:string)=>{setSelected(id);};
   const toggleMembership=(id:string)=>{
     const leaving=joined.includes(id);
@@ -197,12 +216,17 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   return <div ref={top}>
     {!selected || selected === "browse" ? <>
       <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input aria-label="Search groups" placeholder="Search groups" value={groupQuery} onChange={e=>setGroupQuery(e.target.value)}/></label><button className={styles.groupSearchAdd} onClick={()=>setSelected("create")} aria-label="Start a new group"><Plus size={22}/></button></div>
-      <div className={styles.groupCategories} role="group" aria-label="Group categories">{categories.map(c=><button key={c} aria-pressed={groupCategory===c} onClick={()=>setGroupCategory(c)}>{c}</button>)}</div>
+      <div className={styles.directoryFilters} aria-label="Group filters">
+        <label><select aria-label="Distance" value={distance} disabled={locationPending} onChange={event=>chooseDistance(event.target.value)}><option value="">{locationPending?"Locating…":"Distance"}</option>{[1,2,5,10,25].map(miles=><option key={miles} value={miles}>Within {miles} {miles===1?"mile":"miles"}</option>)}</select><ChevronDown size={14}/></label>
+        <label><select aria-label="Group type" value={groupType} onChange={event=>setGroupType(event.target.value)}><option value="">Type</option>{["Fitness","Wellness","Run club"].map(type=><option key={type}>{type}</option>)}</select><ChevronDown size={14}/></label>
+        <label><select aria-label="Groups" value={groupCategory} onChange={event=>setGroupCategory(event.target.value)}>{categories.map(category=><option key={category}>{category}</option>)}</select><ChevronDown size={14}/></label>
+      </div>
+      {locationError&&<p role="status" className={styles.sectionIntro}>{locationError}</p>}
       {results.length===0&&<p className={styles.sectionIntro}>No matching groups. Try another category or search.</p>}
       <div className={styles.exploreGroupList}>{results.map(item=><article key={item.id} className={styles.exploreGroupCard}><div className={styles.groupListImage}><button className={styles.groupImageOpen} onClick={()=>openGroup(item.id)} aria-label={`View ${item.name}`}>{item.image?<img src={item.image} alt="" loading="lazy"/>:<Users size={40}/>}</button><span className={styles.groupTypePill}>{categoryOf(item.category)}</span></div><div className={styles.exploreGroupCopy}><div className={styles.groupListTitleRow}><button className={styles.groupListName} onClick={()=>openGroup(item.id)}>{item.name}</button><button className={styles.groupListJoin} aria-pressed={joined.includes(item.id)} aria-label={`${joined.includes(item.id)?"Joined":"Join"} ${item.name}`} onClick={()=>toggleMembership(item.id)}>{joined.includes(item.id)?<><Check size={14} aria-hidden="true"/>Joined</>:"Join"}</button></div><button className={styles.groupListCopyButton} onClick={()=>openGroup(item.id)}><span>{item.location || "Location not added"}</span><span>{item.description}</span></button></div></article>)}</div>
     </> : selected === "create" ? <>
       {back}<h1 className={styles.pageTitle}>Start a group</h1><p className={styles.sectionIntro}>Give your people a place to make plans.</p>
-      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, banner:null, location:groupLocation.trim(), name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
+      <form className={styles.groupForm} onSubmit={event => { event.preventDefault(); if (!name.trim()) return; const id = `group-${Date.now()}`; setGroups(items => [...items, { id, coordinates:null, banner:null, location:groupLocation.trim(), name: name.trim(), category: "Group fitness", description: description.trim() || "A new place to make plans together.", image: "", members: [p.profile.name], classIndexes: [] }]); setJoined(ids => [...ids, id]); setName(""); setDescription(""); setSelected(id); }}>
         <label>Group name<Input required maxLength={80} value={name} onChange={event => setName(event.target.value)} placeholder="Your group’s name"/></label>
         <label>Location<Input required value={groupLocation} onChange={event=>setGroupLocation(event.target.value)} placeholder="City or neighborhood"/></label>
         <label>About your group<Input maxLength={240} value={description} onChange={event => setDescription(event.target.value)} placeholder="What brings you together?"/></label>
