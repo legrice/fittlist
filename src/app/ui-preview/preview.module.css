@@ -702,3 +702,5 @@
   background:var(--preview-avatar-ground); color:var(--preview-avatar-ink);
 }
 .apple :global(.clline-coach-face) > span { color:var(--preview-avatar-ink); }
+
+.apple .profileActions [data-slot="button"] { padding-inline:20px; }
