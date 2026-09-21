@@ -725,3 +725,35 @@
 .apple .profileHero ~ .detailIdentity [data-slot="button"] {
   flex-shrink:0; min-height:40px; padding-inline:20px;
 }
+
+/* Profile controls float above the full scrollable detail page. */
+.profileOverlayNav {
+  position:fixed; top:calc(12px + env(safe-area-inset-top));
+  left:50%; right:auto; transform:translateX(-50%);
+  width:min(calc(100% - 40px),390px); z-index:50; pointer-events:none;
+}
+.profileOverlayNav .detailNav { pointer-events:none; }
+.profileOverlayNav .detailNav > button,
+.profileOverlayNav .detailNav > div {
+  pointer-events:auto;
+}
+.apple .profileOverlayNav .detailNav > button,
+.apple .profileOverlayNav .detailNav > div {
+  border:1px solid #ffffffb3; background:#f5f7f8b8;
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 8px 30px #19212624,inset 0 1px 0 #ffffffcc;
+}
+.apple.dark .profileOverlayNav .detailNav > button,
+.apple.dark .profileOverlayNav .detailNav > div {
+  background:#202a30bd; border-color:#ffffff24;
+  box-shadow:0 8px 30px #0005,inset 0 1px 0 #ffffff1f;
+}
+@media(prefers-reduced-transparency:reduce) {
+  .apple .profileOverlayNav .detailNav > button,
+  .apple .profileOverlayNav .detailNav > div {
+    background:#f5f7f8; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  .apple.dark .profileOverlayNav .detailNav > button,
+  .apple.dark .profileOverlayNav .detailNav > div { background:#202a30; }
+}
