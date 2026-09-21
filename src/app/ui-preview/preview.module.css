@@ -810,3 +810,4 @@
 .mainShareEditor :global(.shtop-controls .shtop-undo) { position:static; inset:auto; transform:none; flex:none; }
 .apple .directoryList { gap:8px; margin-top:0; }
 .menuRow > .studioListAvatar { display:flex; flex:none; width:46px; height:46px; overflow:hidden; border-radius:50%; }
+.apple .youPage .settingsIcon:has(> svg) { background:var(--preview-soft); border-radius:10px; }
