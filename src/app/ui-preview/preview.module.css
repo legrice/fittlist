@@ -847,3 +847,17 @@
   .apple .youPage { max-width:760px; margin:0 auto; }
 }
 @media(prefers-reduced-motion:reduce) { .apple .dock,.apple .dock .navLabel { transition:none; } }
+.apple .search:focus-within { box-shadow:0 0 0 2px color-mix(in srgb,var(--preview-text) 25%,transparent); }
+.apple .search input:focus,.apple .search input:focus-visible { outline:none; box-shadow:none; border-color:transparent; }
+.librePin { background:none; border:0; padding:0; color:#192126; cursor:pointer; filter:drop-shadow(0 2px 3px #0004); }
+.librePin[aria-pressed="true"] { color:#6b9500; }
+.librePin:focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; border-radius:8px; }
+.libreTakeover :global(.maplibregl-ctrl-top-right) { top:160px; right:12px; }
+.mapFit { position:absolute; top:16px; right:16px; z-index:20; background:var(--preview-surface); color:var(--preview-text); border-radius:999px; padding:12px 16px; font-size:13px; }
+.mapStatus { position:absolute; top:145px; left:16px; right:60px; z-index:20; background:var(--preview-surface); border-radius:12px; padding:8px; font-size:12px; }
+.mapCardHeading { display:flex; gap:12px; align-items:center; }
+.mapCardHeading img { width:48px; height:48px; object-fit:cover; border-radius:12px; }
+.mapCardHeading > div { display:grid; gap:6px; }
+.mapCardActions { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.mapCardActions > button { min-height:40px; min-width:40px; }
+.mapQueryChip { font:inherit; font-size:12px; padding:0 0 10px; text-decoration:underline; }

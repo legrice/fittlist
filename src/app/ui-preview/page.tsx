@@ -142,7 +142,8 @@ function ExploreScreen({ page }: { page: ExplorePage }) {
   const options = [...new Set(page === "people" ? peopleSource.flatMap(person=>person.disciplines) : studiosSource.flatMap(studio=>studio.types))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   const controls=<>
-    <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
+    {!mapView&&<div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>}
+    {mapView&&query&&<button className={styles.mapQueryChip} onClick={()=>setQuery("")}>Search: {query} · Clear</button>}
     <div className={styles.directoryFilters} aria-label={`${title} filters`}>
       <label><select aria-label="Distance" value={distance} disabled={locationPending} onChange={event=>chooseDistance(event.target.value)}><option value="">{locationPending?"Locating…":"Distance"}</option>{[1,2,5,10,25].map(miles=><option key={miles} value={miles}>Within {miles} {miles===1?"mile":"miles"}</option>)}</select><ChevronDown size={14}/></label>
       <label><select aria-label={page==="people"?"Specialty":"Category"} value={filter} onChange={event=>setFilter(event.target.value)}><option value="">{page==="people"?"Specialty":"Category"}</option>{options.map(option=><option key={option}>{option}</option>)}</select><ChevronDown size={14}/></label>
