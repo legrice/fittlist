@@ -847,7 +847,9 @@
   .apple .youPage { max-width:760px; margin:0 auto; }
 }
 @media(prefers-reduced-motion:reduce) { .apple .dock,.apple .dock .navLabel { transition:none; } }
-.apple .search:focus-within { box-shadow:0 0 0 2px color-mix(in srgb,var(--preview-text) 25%,transparent); }
+.apple .search { --search-shadow:0 2px 8px #1921260a,0 1px 2px #19212608; box-shadow:var(--search-shadow); }
+.apple.dark .search { --search-shadow:0 2px 8px #00000026,0 1px 2px #0000001a; }
+.apple .search:focus-within { box-shadow:0 0 0 2px color-mix(in srgb,var(--preview-text) 25%,transparent),var(--search-shadow); }
 .apple .search input:focus,.apple .search input:focus-visible { outline:none; box-shadow:none; border-color:transparent; }
 .librePin { background:none; border:0; padding:0; color:#192126; cursor:pointer; filter:drop-shadow(0 2px 3px #0004); }
 .librePin[aria-pressed="true"] { color:#6b9500; }
