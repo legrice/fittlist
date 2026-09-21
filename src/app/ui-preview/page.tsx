@@ -192,7 +192,6 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
       <div className={styles.groupFooterSpace}>
 
       <button className={styles.groupUpdatesLink} onClick={()=>{setGroupView("updates");setSeenUpdates(ids=>[...ids,group.id]);}}><strong>Updates</strong>{!p.live&&!seenUpdates.includes(group.id)&&<Badge aria-label="2 new updates">2</Badge>}<ChevronRight size={18}/></button>
-      <SectionTitle>Upcoming classes</SectionTitle>
       {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3 className={styles.groupDateTitle}>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "Group class plans aren’t connected in this preview yet." : "No classes planned yet. Check back for the next group plan."}</p>}
       </div>
     </> : <>{back}<p className={styles.sectionIntro}>Group unavailable.</p>    </>}

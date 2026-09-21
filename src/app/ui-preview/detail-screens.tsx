@@ -83,7 +83,7 @@ export default function DetailScreens({route}:{route:Destination}) {
       {route.kind==="studio"&&studioAbout&&<><h3>Class types</h3><p>{studioAbout.type}</p></>}
       </section>}
       {route.kind==="manage" ? <><p className={styles.sectionIntro}>You manage this calendar.</p><div className={styles.profileActions}><Button {...secondary} onClick={()=>p.open({kind:"add-class",name:route.name})}><Plus size={18}/>Add class</Button><Button {...secondary} onClick={()=>p.open({kind:"settings",name:"People & access"})}>Manage access</Button></div></> : null}
-      <Heading>Upcoming classes</Heading><Schedule items={matching}/>
+      {route.kind==="manage"&&<Heading>Upcoming classes</Heading>}<Schedule items={matching}/>
     </>}
     {route.kind==="class" && item && <>
       <div className={styles.classPageMeta}><span><CalendarDays size={21}/>{dateLabel(item.date)}</span><span><Clock size={21}/>{classTimeRange(item)}</span></div>
