@@ -878,3 +878,6 @@
 .apple .topControls .groupSearchAdd { position:static; width:44px; height:44px; border-radius:50%; background:var(--preview-soft); color:var(--preview-text); display:grid; place-items:center; }
 @keyframes mapSlideIn { from { transform:translateX(100%); } to { transform:translateX(0); } }
 @media(prefers-reduced-motion:reduce) { .apple .inlineStudioMap { animation:none; } }
+.apple .search { --search-shadow:0 8px 30px #19212624,inset 0 1px 0 #ffffffcc; border:1px solid #ffffffb3; background:#f5f7f8b8; -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); box-shadow:var(--search-shadow); }
+.apple.dark .search { --search-shadow:0 8px 30px #0005,inset 0 1px 0 #ffffff1f; background:#202a30bd; border-color:#ffffff24; }
+@media(prefers-reduced-transparency:reduce) { .apple .search { background:#f5f7f8; backdrop-filter:none; -webkit-backdrop-filter:none; } .apple.dark .search { background:#202a30; } }
