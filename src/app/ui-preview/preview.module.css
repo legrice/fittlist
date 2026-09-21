@@ -819,3 +819,31 @@
 .groupListImage .groupTypePill { max-width:calc(100% - 24px); background:#f5f7f8b8; color:#192126; border:1px solid #ffffffb3; backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); box-shadow:inset 0 1px 0 #ffffffcc; }
 .dark .groupListImage .groupTypePill { background:#202a30bd; color:#f5f7f8; border-color:#ffffff24; box-shadow:inset 0 1px 0 #ffffff1f; }
 @media(prefers-reduced-transparency:reduce) { .groupListImage .groupTypePill { background:#f5f7f8; backdrop-filter:none; } .dark .groupListImage .groupTypePill { background:#202a30; } }
+@media(min-width:900px) {
+  .preview.apple { padding:0 0 0 88px; background:var(--preview-ground); }
+  .apple .notice { display:none; }
+  .apple .phone { width:100%; height:100dvh; min-height:0; margin:0; border:0; border-radius:0; box-shadow:none; }
+  .apple .dataBanner { padding:12px max(32px,calc((100% - 960px)/2)); }
+  .apple .content { width:100%; max-width:1024px; margin:0 auto; padding:32px 32px 64px; }
+  .apple .dock { position:fixed; inset:0 auto 0 0; display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start; gap:12px; width:88px; height:100dvh; padding:32px 16px; margin:0; border:0; border-right:1px solid var(--preview-line); border-radius:0; background:var(--preview-ground); box-shadow:none; backdrop-filter:none; overflow:hidden; transition:width .18s ease; z-index:35; }
+  .apple .dock:hover,.apple .dock:focus-within { width:220px; box-shadow:12px 0 30px #0000000a; }
+  .apple .dock button { position:relative; display:flex; flex-direction:row; justify-content:flex-start; gap:20px; flex:none; height:56px; width:100%; padding:16px; border-radius:16px; font-size:15px; white-space:nowrap; }
+  .apple .dock button[aria-current="page"] { border-radius:16px; }
+  .apple .dock button > svg,.apple .dockAvatar { flex:none; width:24px; }
+  .apple .dock .navLabel { opacity:0; transition:opacity .12s ease; }
+  .apple .dock:hover .navLabel,.apple .dock:focus-within .navLabel { opacity:1; }
+  .apple .dock button:last-child { margin-top:auto; }
+  .apple .directoryList,.apple .exploreGroupList { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+  .apple .calendarContent { max-width:824px; }
+  .apple .calendarHero { margin-left:-32px; margin-right:-32px; padding-left:32px; padding-right:32px; }
+  .apple .addFab { position:fixed; bottom:32px; right:32px; }
+  .apple .mapToggle { position:fixed; bottom:32px; left:calc(50% + 44px); }
+  .apple .content.profileTakeover { width:min(100%,800px); max-width:800px; padding-left:32px; padding-right:32px; }
+  .apple .profileOverlayNav { width:min(calc(100% - 64px),736px); }
+  .apple .groupJoinFooter,.apple .profileTakeover .classPageFooter { width:min(calc(100% - 32px),760px); }
+  .apple .mapTakeover { width:min(100%,1100px); }
+  .apple .mapFilters { right:auto; width:360px; }
+  .apple .mapTakeover .mapStudioCard { left:auto; width:340px; bottom:32px; }
+  .apple .youPage { max-width:760px; margin:0 auto; }
+}
+@media(prefers-reduced-motion:reduce) { .apple .dock,.apple .dock .navLabel { transition:none; } }
