@@ -1,8 +1,9 @@
 "use client";
 import { BackButton } from "@/components/BackButton";
 import Link from "next/link";
+import { PLACE_KIND_LABELS, PLACE_KINDS } from "@/lib/studio";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PreviewClassCard from "./class-card";
 import GroupSampleUpdates from "./group-sample-updates";
 import { useCalendarSwipe } from "./use-calendar-swipe";
@@ -108,22 +109,46 @@ function ExploreStudio({ place }: { place: typeof exploreStudios[number] }) {
 }
 function ExploreScreen({ page }: { page: ExplorePage }) {
   const p=usePrototype();
-  const peopleSource=p.live?.people || explorePeople;
-  const studiosSource=p.live?.studios || exploreStudios;
+  const peopleSource=p.live?.people || explorePeople.map((person,index)=>({...person,disciplines:[person.specialty],coordinates:[40.72+index*.004,-74.045] as [number,number]}));
+  const studiosSource=p.live?.studios || exploreStudios.map(place=>({...place,types:[place.type],placeKind:"studio"}));
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("");
   const [mapView, setMapView] = useState(false);
+  const [distance,setDistance]=useState("");
+  const [placeKind,setPlaceKind]=useState("");
+  const [geo,setGeo]=useState<[number,number]|null>(null);
+  const [locationPending,setLocationPending]=useState(false);
+  const [locationError,setLocationError]=useState("");
+  const chooseDistance=(value:string)=>{
+    setLocationError("");
+    if(!value||geo){setDistance(value);return;}
+    if(!navigator.geolocation){setLocationError("Location is unavailable. Showing all distances.");return;}
+    setLocationPending(true);
+    navigator.geolocation.getCurrentPosition(position=>{setGeo([position.coords.latitude,position.coords.longitude]);setDistance(value);setLocationPending(false);},()=>{setLocationPending(false);setLocationError("Location wasn’t shared. Showing all distances.");},{timeout:10000,maximumAge:300000});
+  };
+  const withinDistance=(coordinates:number[]|null)=>{
+    if(!distance)return true;
+    if(!geo||!coordinates)return false;
+    const radians=(n:number)=>n*Math.PI/180;
+    const a=Math.sin(radians(coordinates[0]-geo[0])/2)**2+Math.cos(radians(geo[0]))*Math.cos(radians(coordinates[0]))*Math.sin(radians(coordinates[1]-geo[1])/2)**2;
+    return 3958.8*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))<=Number(distance);
+  };
+
   const matches = (text: string) => text.toLowerCase().includes(query.trim().toLowerCase());
-  const shownPeople = peopleSource.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.specialty === filter));
-  const shownStudios = useMemo(() => studiosSource.filter(place => `${place.name} ${place.type} ${place.location}`.toLowerCase().includes(query.trim().toLowerCase()) && (!filter || place.type === filter)), [query, filter, studiosSource]);
+  const shownPeople = peopleSource.filter(person => matches(`${person.name} ${person.title}`) && (!filter || person.disciplines.includes(filter)) && withinDistance(person.coordinates));
+  const shownStudios = studiosSource.filter(place => matches(`${place.name} ${place.type} ${place.location}`) && (!filter || place.types.includes(filter)) && (!placeKind || place.placeKind===placeKind) && withinDistance(place.coordinates));
   const title = page.charAt(0).toUpperCase() + page.slice(1);
-  const options = [...new Set(page === "people" ? peopleSource.map(person=>person.specialty) : studiosSource.map(studio=>studio.type))];
+  const options = [...new Set(page === "people" ? peopleSource.flatMap(person=>person.disciplines) : studiosSource.flatMap(studio=>studio.types))];
   const count = page === "people" ? shownPeople.length : shownStudios.length;
   return <>
     <h1 className={styles.pageTitle}>{title}</h1>
     <div className={styles.topControls}><label className={styles.search}><Search size={19}/><Input value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${page}`} aria-label={`Search ${page}`}/></label></div>
-    <label className={styles.categoryFilter}>{page === "people" ? "Specialty" : "Studio type"}<select value={filter} onChange={event => setFilter(event.target.value)}><option value="">All {page === "people" ? "specialties" : "types"}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>
-    <SectionTitle aside={<Badge variant="secondary">{count}</Badge>}>{title} nearby</SectionTitle>
+    <div className={styles.directoryFilters} aria-label={`${title} filters`}>
+      <label><select aria-label="Distance" value={distance} disabled={locationPending} onChange={event=>chooseDistance(event.target.value)}><option value="">{locationPending?"Locating…":"Distance"}</option>{[1,2,5,10,25].map(miles=><option key={miles} value={miles}>Within {miles} {miles===1?"mile":"miles"}</option>)}</select><ChevronDown size={14}/></label>
+      {page==="studios"&&<label><select aria-label="Studio type" value={placeKind} onChange={event=>setPlaceKind(event.target.value)}><option value="">Type</option>{PLACE_KINDS.map(kind=><option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>)}</select><ChevronDown size={14}/></label>}
+      <label><select aria-label={page==="people"?"Specialty":"Category"} value={filter} onChange={event=>setFilter(event.target.value)}><option value="">{page==="people"?"Specialty":"Category"}</option>{options.map(option=><option key={option}>{option}</option>)}</select><ChevronDown size={14}/></label>
+    </div>
+    {locationError&&<p role="status" className={styles.sectionIntro}>{locationError}</p>}
     {count === 0 && <p className={styles.sectionIntro}>No matches. Try another search or filter.</p>}
     {page === "studios" && mapView ? <StudioMap studios={shownStudios} onClose={() => setMapView(false)}/> : <div className={page === "people" ? styles.peopleList : styles.stack}>{page === "people" ? shownPeople.map(person => <ExplorePerson key={person.name} person={person}/>) : shownStudios.map(place => <ExploreStudio key={place.name} place={place}/>)}</div>}
     {page === "studios" && !mapView && <button className={styles.mapToggle} onClick={() => setMapView(true)}><MapIcon size={19}/>Map</button>}
@@ -145,7 +170,7 @@ function GroupsScreen({selected,setSelected}:{selected:string|null;setSelected:(
   const [seenUpdates,setSeenUpdates]=useState<string[]>([]);
   const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("schedule");
   useEffect(()=>{setGroupView("schedule");},[selected]);
-  useEffect(()=>{window.dispatchEvent(new Event("preview-subpage"));},[groupView]);
+  useEffect(()=>{if(selected)window.dispatchEvent(new Event("preview-subpage"));},[groupView]);
   const categories=["All groups","New groups","Your groups","Fitness","Wellness","Run club"];
   const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
   const results=groups.filter(g=>(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All groups"||(groupCategory==="New groups"?!joined.includes(g.id):groupCategory==="Your groups"?joined.includes(g.id):categoryOf(g.category)===groupCategory)));
