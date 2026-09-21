@@ -1,5 +1,6 @@
 "use client";
 
+import { BackButton } from "@/components/BackButton";
 import { LoadingDots } from "@/components/LoadingDots";
 
 
@@ -268,6 +269,7 @@ export function ShareHubScreen({
   onPreviewCanSaveLook,
   onPreviewAdd,
   onPreviewEdit,
+  onPreviewBack,
   embedded = false,
   tabbed = false,
   coach,
@@ -296,6 +298,7 @@ export function ShareHubScreen({
   onPreviewEdit?: (key:string) => void;
   /** Render inside another surface (the calendar's share sheet). The sheet
    *  owns dismissal, so the editor does not add a second back control. */
+  onPreviewBack?: () => void;
   embedded?: boolean;
   /** Keep the route inside the persistent app navigation. */
   tabbed?: boolean;
@@ -486,6 +489,7 @@ export function ShareHubScreen({
   const [lookName, setLookName] = useState("");
   const [designSaving, setDesignSaving] = useState(false);
   const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<EditorSnapshot[]>([]);
 
   useEffect(() => () => {
     sharingRef.current = false;
@@ -931,6 +935,7 @@ export function ShareHubScreen({
 
   const pushUndo = () => {
     const snapshot = captureSnapshot();
+    setRedoStack([]);
     setUndoStack((current) => [...current.slice(-19), snapshot]);
     return snapshot;
   };
@@ -981,8 +986,18 @@ export function ShareHubScreen({
     const previous = undoStack[undoStack.length - 1];
     if (!previous) return;
     beginPreviewUpdate("undo");
+    setRedoStack(current=>[...current.slice(-19),captureSnapshot()]);
     setUndoStack((current) => current.slice(0, -1));
     restoreSnapshot(previous);
+  };
+
+  const redoLast=()=>{
+    const next=redoStack[redoStack.length-1];
+    if(!next)return;
+    beginPreviewUpdate("undo");
+    setUndoStack(current=>[...current.slice(-19),captureSnapshot()]);
+    setRedoStack(current=>current.slice(0,-1));
+    restoreSnapshot(next);
   };
 
   const applyCompleteStyle = (id: StoryStyleId) => {
@@ -1369,7 +1384,9 @@ export function ShareHubScreen({
         <section className={`sheditor-shell sheditor-week${building ? " is-building" : ""}`} aria-label="Share image editor">
           <div className="sheditor-disabled-layer" inert={building ? true : undefined} aria-hidden={building || undefined}>
             <div className="shtop-controls">
+              {onPreviewBack&&<BackButton label="Back to Home" onClick={onPreviewBack}/>}
               <button type="button" className="shtop-undo" disabled={undoStack.length === 0} onClick={undoLast} aria-label="Undo last change"><Icon name="reply" size={24}/></button>
+              {onPreviewBack&&<button type="button" className="shtop-undo" disabled={redoStack.length===0} onClick={redoLast} aria-label="Redo last change"><span style={{display:"flex",transform:"scaleX(-1)"}}><Icon name="reply" size={24}/></span></button>}
             </div>
             {styleId === "semantic" && <div className="sheditor-words-controls"><div className="sheditor-format-voices" role="group" aria-label="Voice">{SHARE_VOICES.map((voice) => <button type="button" className={shareVoice === voice.value ? "selected" : ""} aria-pressed={shareVoice === voice.value} key={voice.value} onClick={() => { setShareVoice(voice.value); setShareVoiceVariant((current) => (current+1+Math.floor(Math.random()*4))%5); localStorage.setItem(SHARE_VOICE_KEY,voice.value); }}><span aria-hidden="true">{voice.emoji}</span>{voice.label}</button>)}</div></div>}
 
