@@ -890,3 +890,21 @@
   .inlineStudioMap .mapListButton { bottom:calc(16px + env(safe-area-inset-bottom)); }
   .inlineStudioMap .mapStudioCard { bottom:calc(76px + env(safe-area-inset-bottom)); }
 }
+/* Shared page gutter; full-bleed surfaces offset this same token. */
+.preview { --preview-gutter:16px; }
+.apple .content,.apple .content.profileTakeover { padding-inline:var(--preview-gutter); }
+.apple .calendarHero { margin-inline:calc(-1 * var(--preview-gutter)); padding-inline:var(--preview-gutter); }
+.apple .peopleRail,.apple .calendarHero .peopleRail { margin-inline:calc(-1 * var(--preview-gutter)); padding-inline:var(--preview-gutter); scroll-padding-inline:var(--preview-gutter); }
+.apple .profileHero { margin-inline:calc(-1 * var(--preview-gutter)); }
+.apple .profileHeroAvatar { margin-left:var(--preview-gutter); }
+.apple .profileBannerCategory { right:var(--preview-gutter); }
+.apple .profileOverlayNav { width:min(calc(100% - 32px),398px); }
+.apple .classPageFooter,.apple .sheetBody,.apple .dataBanner { padding-inline:var(--preview-gutter); }
+.apple .mainShareEditor :global(.shtop-controls),.apple .mainShareEditor :global(.shsingle-preview),.apple .mainShareEditor :global(.sheditor-dock) { padding-inline:var(--preview-gutter); }
+.apple .addFab { right:var(--preview-gutter); }
+@media(max-width:899px) {
+  .apple .dock { left:var(--preview-gutter); right:var(--preview-gutter); }
+  .apple .inlineStudioMap { width:calc(100% + 32px); margin-inline:calc(-1 * var(--preview-gutter)); }
+  .apple .groupJoinFooter { width:calc(100% - 32px); max-width:398px; }
+}
+@media(min-width:900px) { .apple .profileOverlayNav { width:min(calc(100% - 32px),768px); } }
