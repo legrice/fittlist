@@ -903,7 +903,7 @@
 .apple .mainShareEditor :global(.shtop-controls),.apple .mainShareEditor :global(.shsingle-preview),.apple .mainShareEditor :global(.sheditor-dock) { padding-inline:var(--preview-gutter); }
 .apple .addFab { right:var(--preview-gutter); }
 @media(max-width:899px) {
-  .apple .dock { left:var(--preview-gutter); right:var(--preview-gutter); }
+  .apple .dock { left:var(--preview-gutter); right:var(--preview-gutter); bottom:calc(var(--preview-gutter) + env(safe-area-inset-bottom)); }
   .apple .inlineStudioMap { width:calc(100% + 32px); margin-inline:calc(-1 * var(--preview-gutter)); }
   .apple .groupJoinFooter { width:calc(100% - 32px); max-width:398px; }
 }
