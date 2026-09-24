@@ -874,6 +874,8 @@
 .directoryFilters svg { position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; }
 .apple .daySection h3 { color:var(--preview-text); }
 .profileInfo { margin:12px 0 28px; }
+.groupProfileInfo { margin-bottom:0; }
+.groupProfileInfo + .groupJoinFooter + .groupFooterSpace .groupContentToggle { margin-top:12px; }
 .profileMetadata { display:flex; align-items:center; justify-content:space-between; gap:16px; color:var(--preview-muted); font-size:12px; }
 .profileMetadata > :last-child { text-align:right; }
 .profileMetadata button { color:inherit; font:inherit; }
