@@ -974,7 +974,7 @@
 .apple .mainShareEditor :global(.shtop-controls),.apple .mainShareEditor :global(.shsingle-preview),.apple .mainShareEditor :global(.sheditor-dock) { padding-inline:var(--preview-gutter); }
 .apple .addFab { right:var(--preview-gutter); }
 @media(max-width:899px) {
-  .apple .dock { left:var(--preview-gutter); right:var(--preview-gutter); bottom:calc(var(--preview-gutter) + env(safe-area-inset-bottom)); }
+  .apple .dock { left:50%; right:auto; width:min(300px,calc(100% - (2 * var(--preview-gutter)))); bottom:calc(var(--preview-gutter) + env(safe-area-inset-bottom)); transform:translateX(-50%); }
   .apple .groupJoinFooter { width:calc(100% - 32px); max-width:398px; }
 }
 @media(min-width:900px) { .apple .profileOverlayNav { width:min(calc(100% - 32px),768px); } }
