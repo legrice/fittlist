@@ -1201,6 +1201,9 @@
 .homeClassItem { margin-top:28px; }
 .homeCalendarPreview > .homeClassItem:nth-child(2) { margin-top:0; }
 .homeCalendarPreview .mainBranchClasses { --color-surface:transparent; --kinetic-surface:transparent; margin-bottom:0; border:0; border-bottom:1px solid var(--preview-line); border-radius:0; background:transparent!important; }
+.homeCalendarPreview .mainBranchClasses :global(.activity-card-main) { padding-right:0; padding-left:0; }
+.homeCalendarPreview .mainBranchClasses :global(.explore-save-row) { right:0; }
+.homeCalendarPreview .homeClassItem:last-child .dateClassStack > .mainBranchClasses:last-child { border-bottom:0; }
 .homeDashboard .homeClassItem + .homeClassItem { margin-top:30px; }
 .homeClassItem h3 { margin:0 0 8px; color:var(--preview-muted); font:600 13px var(--preview-font); }
 .homeActivityList { display:grid; }
