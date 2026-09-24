@@ -1218,26 +1218,23 @@
 .apple .calendarHero .homeSummaryActions .shareWeekButton { padding:0 20px; border:1px solid color-mix(in srgb,var(--preview-surface) 80%,transparent); background:color-mix(in srgb,var(--preview-surface) 65%,transparent); box-shadow:0 2px 8px #00000008; text-decoration:none; }
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton { border-color:color-mix(in srgb,var(--preview-text) 14%,#fff); background:#ffffffe8; box-shadow:inset 0 1px 0 #fff,0 4px 14px #1921260a; }
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton:hover { background:#fff; }
-.homeDashboard { display:grid; gap:16px; padding-bottom:24px; }
-.homeDashboard > section { min-width:0; padding:18px; border:0; border-radius:24px; background:var(--preview-surface); }
-.homeDashboard > section > .sectionTitle { margin:0 0 14px; }
-.apple .homeDashboard > section > .sectionTitle h2,
-.apple .homeDashboard > section > .sectionTitle .homeSectionLink { color:var(--preview-text); font:400 15px/1.2 var(--preview-font); letter-spacing:-.015em; }
-.homeDashboard > section:first-child .sectionTitle { margin-top:0; }
+.homeDashboard { display:grid; gap:34px; padding-bottom:24px; }
+.homeDashboard > section { min-width:0; padding:0; border:0; border-radius:0; background:transparent; }
+.homeDashboard > section > .sectionTitle { margin:0 0 16px; }
+.apple .homeActivitySection > .sectionTitle h2 { color:var(--preview-text); font:600 var(--preview-section-size)/1.2 var(--preview-font); letter-spacing:-.035em; }
 .homeSectionLink { display:inline-flex; align-items:center; gap:2px; padding:5px 0; border:0; background:transparent; color:var(--preview-muted); font:600 12px var(--preview-font); cursor:pointer; }
-.homeCardFooter { display:flex; align-items:center; justify-content:center; gap:3px; width:100%; min-height:46px; margin-top:8px; padding:12px 0 0; border:0; border-top:1px solid var(--preview-line); background:transparent; color:var(--preview-text); font:400 15px/1.2 var(--preview-font); letter-spacing:-.015em; cursor:pointer; }
+.homeCardFooter { display:flex; align-items:center; justify-content:center; gap:5px; width:100%; min-height:50px; margin-top:16px; padding:0 18px; border:0; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 14px/1.2 var(--preview-font); cursor:pointer; }
 .homeClassItem { margin-top:28px; }
-.homeCalendarPreview > .homeClassItem:nth-child(2) { margin-top:0; }
-.homeCalendarPreview .mainBranchClasses { --color-surface:transparent; --kinetic-surface:transparent; margin-bottom:0; border:0; border-bottom:1px solid var(--preview-line); border-radius:0; background:transparent!important; }
-.homeCalendarPreview .mainBranchClasses :global(.activity-card-main) { padding-right:0; padding-left:0; }
-.homeCalendarPreview .mainBranchClasses :global(.clline) { padding-right:0; padding-left:0; border-radius:0; background:transparent; }
-.homeCalendarPreview .mainBranchClasses :global(.explore-save-row) { right:0; }
-.homeCalendarPreview .homeClassItem:last-child .dateClassStack > .mainBranchClasses:last-child { border-bottom:0; }
+.homeCalendarPreview > .homeClassItem:first-child { margin-top:0; }
+.homeStandaloneClass { overflow:hidden; border-radius:22px; background:var(--preview-surface); }
+.homeStandaloneClass .mainBranchClasses { --color-surface:transparent; --kinetic-surface:transparent; margin-bottom:0; border:0; border-radius:0; background:transparent!important; }
+.homeStandaloneClass .mainBranchClasses :global(.activity-card-main) { padding:16px; border:0; }
+.homeStandaloneClass .mainBranchClasses :global(.clline) { min-height:92px; padding:16px 18px; border:0; border-radius:0; background:transparent; box-shadow:none; }
+.homeStandaloneClass .mainBranchClasses :global(.explore-save-row) { right:16px; }
 .homeDashboard .homeClassItem + .homeClassItem { margin-top:30px; }
 .homeClassItem h3 { margin:0 0 8px; color:var(--preview-muted); font:600 13px var(--preview-font); }
-.homeActivityList { display:grid; }
-.homeActivityList > button { display:flex; align-items:center; gap:12px; width:100%; min-height:68px; padding:14px 0; border:0; border-bottom:1px solid var(--preview-line); border-radius:0; background:transparent; color:var(--preview-text); text-align:left; cursor:pointer; box-shadow:none; }
-.homeActivityList > button:last-child { border-bottom:0; }
+.homeActivityList { display:grid; gap:10px; }
+.homeActivityList > button { display:flex; align-items:center; gap:12px; width:100%; min-height:72px; padding:14px 16px; border:0; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); text-align:left; cursor:pointer; box-shadow:none; }
 .homeActivityList > button > span { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:12px; background:var(--preview-soft); }
 .homeActivityList > button > div { display:grid; gap:3px; flex:1; min-width:0; }
 .homeActivityList strong,.homeActivityList small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1280,10 +1277,10 @@
 .apple .calendarContent { background:var(--preview-ground); }
 .apple.dark .calendarContent { background:var(--preview-ground); }
 .apple .swipeCalendar { padding-bottom:52px; background:radial-gradient(ellipse at 85% 0%,color-mix(in srgb,var(--preview-highlight) 17%,transparent),transparent 55%),linear-gradient(145deg,var(--preview-soft),var(--preview-ground) 78%); }
-.apple .swipeCalendar .calendarHero { margin-bottom:0; padding-bottom:48px; background:transparent; }
+.apple .swipeCalendar .calendarHero { margin-bottom:0; padding-bottom:26px; background:transparent; }
 .apple .swipeCalendar .calendarHero .calendarSummary { gap:20px; padding-top:22px; }
-.apple .swipeCalendar .homeDashboard { position:relative; margin:0 calc(-1 * var(--preview-gutter)); padding:30px var(--preview-gutter) calc(12px + env(safe-area-inset-bottom)); border-radius:0; background:transparent; box-shadow:none; }
-.apple .swipeCalendar .homeCalendarPreview { padding-top:24px; }
+.apple .swipeCalendar .homeDashboard { position:relative; margin:0 calc(-1 * var(--preview-gutter)); padding:12px var(--preview-gutter) calc(12px + env(safe-area-inset-bottom)); border-radius:0; background:transparent; box-shadow:none; }
+.apple .swipeCalendar .homeCalendarPreview { padding-top:0; }
 .collectionDiscover { width:40px; height:40px; min-height:40px; padding:0; border:1px solid #ffffffb3; border-radius:50%; background:color-mix(in srgb,var(--preview-surface) 68%,transparent); box-shadow:0 5px 18px #19212612,inset 0 1px 0 #ffffffcc; backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%); }
 .dark .collectionDiscover { border-color:#ffffff1f; background:#24282ed6; box-shadow:0 5px 18px #0004,inset 0 1px 0 #ffffff1a; }
 .managedNav { display:none; }
