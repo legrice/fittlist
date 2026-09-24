@@ -1196,6 +1196,10 @@
 .apple .calendarHero .homeSummaryActions .homeManageButton:hover { background:var(--preview-soft); }
 .apple .calendarHero .homeSummaryActions > button,
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
   min-height:38px;
   padding:0 13px;
   border:0!important;
