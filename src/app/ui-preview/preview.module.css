@@ -718,10 +718,10 @@
 
 .apple .dock { grid-template-columns:repeat(4,minmax(0,1fr)); }
 .homeTopRow { position:relative; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.homeNavIdentity { display:flex; align-items:center; gap:10px; min-height:44px; padding:4px 15px 4px 4px; border:1px solid color-mix(in srgb,#fff 72%,var(--preview-line)); border-radius:999px; background:color-mix(in srgb,var(--preview-surface) 48%,transparent); box-shadow:inset 0 1px 0 #ffffffb8,0 5px 18px #1921260c; -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%); }
-.homeNavIdentity > button { display:grid; place-items:center; width:36px; height:36px; padding:0; border:0; border-radius:50%; background:color-mix(in srgb,var(--preview-surface) 62%,transparent); color:var(--preview-text); cursor:pointer; }
+.homeNavIdentity { display:grid; place-items:center; width:44px; height:44px; border:1px solid color-mix(in srgb,#fff 72%,var(--preview-line)); border-radius:50%; background:color-mix(in srgb,var(--preview-surface) 48%,transparent); box-shadow:inset 0 1px 0 #ffffffb8; -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%); }
+.homeNavIdentity > button { display:grid; place-items:center; width:42px; height:42px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--preview-text); cursor:pointer; }
 .homeUtilities { display:flex; gap:8px; }
-.homeUtilities button { position:relative; width:44px; height:44px; display:grid; place-items:center; border:1px solid color-mix(in srgb,#fff 72%,var(--preview-line)); border-radius:50%; background:color-mix(in srgb,var(--preview-surface) 48%,transparent); color:var(--preview-text); box-shadow:inset 0 1px 0 #ffffffb8,0 5px 18px #1921260c; -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%); }
+.homeUtilities button { position:relative; width:44px; height:44px; display:grid; place-items:center; border:1px solid color-mix(in srgb,#fff 72%,var(--preview-line)); border-radius:50%; background:color-mix(in srgb,var(--preview-surface) 48%,transparent); color:var(--preview-text); box-shadow:inset 0 1px 0 #ffffffb8; -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%); }
 .homeUtilities button > span { position:absolute; top:-3px; right:-3px; display:grid; place-items:center; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 10px/1 var(--preview-font); }
 .homeAccountOverlay { position:fixed; inset:0; z-index:90; background:#10151a66; }
 .homeAccountDrawer { display:flex; flex-direction:column; width:min(88%,390px); height:100dvh; padding:calc(20px + env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom)); overflow-y:auto; background:var(--preview-ground); color:var(--preview-text); box-shadow:18px 0 50px #0003; animation:homeDrawerIn .24s cubic-bezier(.2,.8,.2,1); }
@@ -1227,18 +1227,17 @@
   gap:7px;
   min-height:38px;
   padding:0 13px;
-  border:1px solid color-mix(in srgb,#fff 72%,var(--preview-line))!important;
-  background:color-mix(in srgb,var(--preview-surface) 48%,transparent)!important;
-  color:var(--preview-text)!important;
-  box-shadow:inset 0 1px 0 #ffffffb8,0 5px 18px #1921260c!important;
-  -webkit-backdrop-filter:blur(18px) saturate(145%);
-  backdrop-filter:blur(18px) saturate(145%);
+  border:1px solid #d8dfe2!important;
+  background:#fff!important;
+  color:#192126!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
   font-size:13px;
   font-weight:600;
 }
 .apple .calendarHero .homeSummaryActions > button:hover,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:color-mix(in srgb,var(--preview-surface) 70%,transparent)!important; }
-.apple.dark .calendarHero .homeSummaryActions > button { border-color:#ffffff26!important; box-shadow:inset 0 1px 0 #ffffff14,0 8px 22px #0003!important; }
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#f6f8f9!important; }
 .homeDashboard > .addFab { display:none; }
 .apple .calendarContent { background:var(--preview-ground); }
 .apple.dark .calendarContent { background:var(--preview-ground); }
