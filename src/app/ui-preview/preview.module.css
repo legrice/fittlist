@@ -1058,6 +1058,8 @@
 .followingPeople .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-highlight); }
 .followingPeople .daySection { margin-top:16px; }
 .followingPeople .daySection + .daySection,.homeClassItem + .homeClassItem { margin-top:40px; }
+.followingPeople .daySection > h3 { position:sticky; top:64px; z-index:18; margin:0 -16px 14px; padding:12px 16px 10px; background:color-mix(in srgb,var(--preview-ground) 94%,transparent); backdrop-filter:blur(14px); }
+.groupFooterSpace .daySection > h3 { position:sticky; top:0; z-index:18; margin:0 -16px 14px; padding:12px 16px 10px; background:color-mix(in srgb,var(--preview-ground) 94%,transparent); backdrop-filter:blur(14px); }
 .dateClassStack { display:grid; gap:12px; }
 .personPlansEmpty { display:grid; justify-items:start; gap:7px; margin-top:18px; padding:24px; border-radius:24px; background:var(--preview-surface); color:var(--preview-text); }
 .personPlansEmpty > span { display:grid; place-items:center; width:48px; height:48px; margin-bottom:5px; border-radius:50%; background:var(--preview-soft); }
@@ -1068,6 +1070,8 @@
 .collectionPage { min-height:100%; margin-top:-12px; }
 .collectionPageHeader { position:sticky; top:calc(-1 * var(--preview-top-padding)); z-index:22; display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 -16px 10px; padding:12px 16px 10px; background:var(--preview-ground); }
 .collectionPageHeader .pageTitle { margin:0; }
+.collectionPageHeader .pageTitle { font-size:30px; }
+@media(min-width:900px) { .collectionPage { padding-inline:32px; } .collectionPageHeader { margin-inline:0; padding-inline:0; } }
 .visuallyHidden { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 .directorySearchHeader { display:grid; grid-template-columns:minmax(0,1fr) 38px; align-items:center; gap:8px; }
 .directorySearchHeader .search { width:100%; min-width:0; }
@@ -1272,7 +1276,7 @@
 .calendarUpcoming > h2 { margin:0 0 14px; font:600 18px var(--preview-font); }
 .calendarUpcoming .calendarWorkspaceDay h3 { margin:0 0 8px; font:600 15px var(--preview-font); }
 .calendarDateEmpty { margin:0; padding:16px; border:1px solid var(--preview-line); border-radius:17px; background:color-mix(in srgb,var(--preview-surface) 72%,transparent); color:var(--preview-muted); font:14px var(--preview-font); }
-.apple :is(.homeClassItem h3,.calendarWorkspaceDay h2,.daySection h3,.daySection .groupDateTitle) { margin-bottom:8px; color:var(--preview-muted); font:600 13px/1.2 var(--preview-font); letter-spacing:0; }
+.apple :is(.homeClassItem h3,.calendarWorkspaceDay h2,.daySection h3,.daySection .groupDateTitle) { margin-bottom:10px; color:var(--preview-text); font:600 18px/1.2 var(--preview-font); letter-spacing:-.025em; }
 @media(max-width:520px) { .calendarWorkspaceHeader { gap:9px; } .apple .calendarWorkspaceHeader .pageTitle { font-size:28px; } .personalCalendarToolbar button { width:32px; min-width:32px; height:32px; min-height:32px; padding:0; } }
 @media(max-width:899px) { .apple .phone:has(.calendarWorkspace) .dock { display:none; } }
 @media(min-width:900px) { .calendarWorkspace { left:88px; right:0; width:auto; max-width:none; padding-inline:32px; } .apple .calendarWorkspace .addFab { right:32px; bottom:32px; } }
