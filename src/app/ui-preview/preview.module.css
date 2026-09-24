@@ -1273,6 +1273,14 @@
 }
 .apple .calendarHero .homeSummaryActions > button:hover,
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#f6f8f9!important; }
+.apple .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton { border-color:var(--preview-text)!important; background:var(--preview-text)!important; color:var(--preview-ground)!important; }
+.apple .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton:hover,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton:hover { background:color-mix(in srgb,var(--preview-text) 88%,var(--preview-ground))!important; }
+.apple .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton { border-color:var(--preview-text)!important; background:transparent!important; color:var(--preview-text)!important; }
+.apple .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton:hover,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton:hover { background:color-mix(in srgb,var(--preview-surface) 42%,transparent)!important; }
 .homeDashboard > .addFab { display:none; }
 .apple .calendarContent { background:var(--preview-ground); }
 .apple.dark .calendarContent { background:var(--preview-ground); }
