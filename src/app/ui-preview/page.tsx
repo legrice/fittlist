@@ -360,6 +360,7 @@ function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appeara
   const sheet = useRef<HTMLDialogElement>(null);
   const [qr, setQr] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
+  const [appearanceOpen,setAppearanceOpen]=useState(false);
   const profileUrl = `https://fittlist.co/${p.profile.handle}`;
   const openShare = async () => {
     setCopyStatus("");
@@ -373,6 +374,7 @@ function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appeara
     try { await navigator.clipboard.writeText(profileUrl); setCopyStatus("Profile link copied."); }
     catch { setCopyStatus("Select the link below to copy it manually."); }
   };
+  if(appearanceOpen)return <div className={styles.youPage}><BackButton label="Back to Profile" onClick={()=>setAppearanceOpen(false)}/><h1 className={styles.pageTitle}>Appearance</h1><div className={styles.appearanceSetting}><div><span className={styles.settingsIcon}><Moon size={22}/></span><div><strong>Theme</strong><span>{appearance==="automatic"?"Changes with the time of day":appearance==="light"?"Always use the light appearance":"Always use the dark appearance"}</span></div></div><div className={styles.appearanceOptions} role="group" aria-label="Appearance">{(["automatic","light","dark"] as AppearanceMode[]).map(option=><button key={option} aria-pressed={appearance===option} onClick={()=>onAppearanceChange(option)}>{option==="automatic"?"Automatic":option==="light"?"Light":"Dark"}</button>)}</div></div></div>;
   return <div className={styles.youPage}>
     <header className={styles.profileHeader}>
       <Face initials={p.profile.name.split(" ").map(part=>part[0]).join("").slice(0,2)} color="#C8C3DB" photo={p.profile.photo} size={80}/>
@@ -408,6 +410,7 @@ function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appeara
         { icon: GlobeLock, title: "Privacy & communication", detail: "Messages, visibility, and follower approvals" },
         { icon: Bell, title: "Notification settings", detail: "Choose which alerts you receive" },
         { icon: LockKeyhole, title: "Account & preferences", detail: "Login and account details" },
+        { icon: Moon, title: "Appearance", detail: appearance==="automatic"?"Changes with the time of day":appearance==="light"?"Always use the light appearance":"Always use the dark appearance" },
       ] },
       { title: "Admin", rows: [
         { icon: ShieldUser, title: "Admin dashboard", detail: "Manage people, studios, and event registration access" },
@@ -415,14 +418,13 @@ function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appeara
     ].map((section) => <section key={section.title}>
       <SectionTitle>{section.title}</SectionTitle>
       <div className={styles.stack}>{section.rows.map(({ icon: Icon, title, detail }) =>
-        <button key={title} className={styles.cardLink} onClick={()=>p.open(title==="Membership"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
+        <button key={title} className={styles.cardLink} onClick={()=>title==="Appearance"?setAppearanceOpen(true):p.open(title==="Membership"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
           {Icon && <span className={styles.settingsIcon}><Icon size={22}/></span>}
           <div><strong>{title}</strong><span>{detail}</span></div>
           <ChevronRight size={18}/>
         </CardContent></Card></button>
       )}</div>
     </section>)}
-    <section><SectionTitle>Appearance</SectionTitle><div className={styles.appearanceSetting}><div><span className={styles.settingsIcon}><Moon size={22}/></span><div><strong>Theme</strong><span>{appearance==="automatic"?"Changes with the time of day":appearance==="light"?"Always use the light appearance":"Always use the dark appearance"}</span></div></div><div className={styles.appearanceOptions} role="group" aria-label="Appearance">{(["automatic","light","dark"] as AppearanceMode[]).map(option=><button key={option} aria-pressed={appearance===option} onClick={()=>onAppearanceChange(option)}>{option==="automatic"?"Automatic":option==="light"?"Light":"Dark"}</button>)}</div></div></section>
     <form action={logout} onSubmit={clearClientMemory} className={styles.logoutForm}><Button type="submit" data-variant="outline" variant="outline"><LogOut size={19}/>Log out</Button></form>
   </div>;
 }

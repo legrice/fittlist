@@ -723,11 +723,11 @@
 .homeUtilities { display:flex; gap:8px; }
 .homeUtilities button { position:relative; width:44px; height:44px; display:grid; place-items:center; border:1px solid color-mix(in srgb,#fff 72%,var(--preview-line)); border-radius:50%; background:color-mix(in srgb,var(--preview-surface) 48%,transparent); color:var(--preview-text); box-shadow:inset 0 1px 0 #ffffffb8; -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%); }
 .homeUtilities button > span { position:absolute; top:-3px; right:-3px; display:grid; place-items:center; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 10px/1 var(--preview-font); }
-.homeAccountOverlay { position:fixed; inset:0; z-index:90; background:#10151a66; }
-.homeAccountDrawer { display:flex; flex-direction:column; width:min(88%,390px); height:100dvh; padding:calc(20px + env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom)); overflow-y:auto; background:var(--preview-ground); color:var(--preview-text); box-shadow:18px 0 50px #0003; animation:homeDrawerIn .24s cubic-bezier(.2,.8,.2,1); }
-.homeDrawerCloseRow { display:flex; justify-content:flex-end; padding:0 20px 12px; }
+.homeAccountOverlay { position:fixed; inset:0; z-index:90; background:var(--preview-ground); }
+.homeAccountDrawer { display:flex; flex-direction:column; width:100%; height:100dvh; padding:calc(20px + env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom)); overflow-y:auto; background:var(--preview-ground); color:var(--preview-text); animation:homeDrawerIn .24s cubic-bezier(.2,.8,.2,1); }
+.homeDrawerCloseRow { display:flex; justify-content:flex-end; width:min(100%,430px); margin:0 auto; padding:0 20px 12px; }
 .homeDrawerCloseRow > button { display:grid; place-items:center; width:38px; height:38px; padding:0; border:1px solid var(--preview-line); border-radius:50%; background:var(--preview-surface); color:var(--preview-text); cursor:pointer; }
-.homeDrawerProfile { padding:0 20px 24px; }
+.homeDrawerProfile { width:min(100%,430px); margin:0 auto; padding:0 20px 24px; }
 .homeAccountHeader { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:13px; padding:10px 20px 24px; border-bottom:1px solid var(--preview-line); }
 .homeAccountHeader > div { display:grid; gap:3px; min-width:0; }
 .homeAccountHeader strong { overflow:hidden; font:600 17px var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
