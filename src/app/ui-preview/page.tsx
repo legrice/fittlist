@@ -10,7 +10,7 @@ import GroupSampleUpdates from "./group-sample-updates";
 import ProfileHero from "./profile-hero";
 import ProfileInfo from "./profile-info";
 import DetailScreens from "./detail-screens";
-import { PrototypeProvider, usePrototype, dateLabel, timeLabel } from "./prototype-state";
+import { PrototypeProvider, usePrototype, dateLabel, timeLabel, type Destination } from "./prototype-state";
 import { logout } from "@/app/actions/auth";
 import { clearClientMemory } from "@/lib/client-memory";
 import { Activity, Check, ArrowUpRight, Bell, House, MessageCircle, CalendarDays, ChevronDown, Copy, X, ChevronLeft, ChevronRight, Clock, CreditCard, GlobeLock, List, LockKeyhole, LogOut, Map as MapIcon, MapPin, Moon, Plus, Search, Share2, ShieldUser, SlidersHorizontal, Storefront, UserRound, Users } from "@/components/PhosphorIcons";
@@ -61,12 +61,14 @@ function CalendarScreen({ onShare, firstTime, onNavigate, onOpenGroup, appearanc
   const p = usePrototype();
   const [dayPart,setDayPart]=useState<"morning"|"midday"|"evening">("morning");
   const [homeMenuOpen,setHomeMenuOpen]=useState(false);
+  const profileReturnDepth=useRef<number|null>(null);
   const [calendarOpen,setCalendarOpen]=useState(false);
   const [calendarView,setCalendarView]=useState<"day"|"month">("day");
   const [selectedCalendarDate,setSelectedCalendarDate]=useState("2026-09-19");
   const calendarWorkspaceRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{const hour=new Date().getHours();setDayPart(hour<12?"morning":hour<17?"midday":"evening");},[]);
   useEffect(()=>{const open=()=>setCalendarOpen(true);window.addEventListener("preview-open-calendar",open);return()=>window.removeEventListener("preview-open-calendar",open);},[]);
+  useEffect(()=>{if(profileReturnDepth.current!==null&&p.stack.length<=profileReturnDepth.current){profileReturnDepth.current=null;setHomeMenuOpen(true);}},[p.stack.length]);
   useEffect(()=>{if(!calendarOpen||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;calendarWorkspaceRef.current?.animate([{transform:"translateX(100%)"},{transform:"translateX(0)"}],{duration:240,easing:"cubic-bezier(.2,.8,.2,1)"});},[calendarOpen]);
   const personalClasses=p.schedule.filter(c=>(c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")) || p.saved.includes(c.id));
   const homeWeekStart=p.live?new Date().toISOString().slice(0,10):personalClasses.map(item=>item.date).sort()[0];
@@ -83,6 +85,7 @@ function CalendarScreen({ onShare, firstTime, onNavigate, onOpenGroup, appearanc
   const studioActivity=studioClass?[{id:`studio-${studioClass.id}`,priority:45,title:`${studioClass.name} is coming up at ${studioClass.place}`,meta:`Saved studio · ${dateLabel(studioClass.date)}`,icon:<Storefront size={19}/>,open:()=>p.open({kind:"class",name:studioClass.id})}]:[];
   const communityFeed=[...joinedGroupUpdates,...savedClassActivity,...followedActivity,...studioActivity].sort((a,b)=>b.priority-a.priority).slice(0,3);
   const openCalendar=()=>setCalendarOpen(true);
+  const openProfileDetail=(destination:Destination)=>{profileReturnDepth.current=p.stack.length;setHomeMenuOpen(false);p.open(destination);};
   const calendarMonths=Array.from({length:18},(_,index)=>new Date(2026,8+index,1));
   const calendarDates=new Set(personalClasses.map(item=>item.date));
   const dayListDates=[...new Set([...personalClasses.map(item=>item.date),selectedCalendarDate])].sort();
@@ -97,7 +100,7 @@ function CalendarScreen({ onShare, firstTime, onNavigate, onOpenGroup, appearanc
   return <div className={`${styles.swipeCalendar} ${homeDayPart==="morning"?styles.morningHome:homeDayPart==="midday"?styles.middayHome:styles.eveningHome}`}>
     <div className={styles.calendarHero}>
       <h1 className={styles.visuallyHidden}>Home</h1><div className={styles.homeTopRow}><div className={styles.homeNavIdentity}><button aria-label="Open profile menu" aria-expanded={homeMenuOpen} onClick={()=>setHomeMenuOpen(value=>!value)}><Face initials={p.profile.name.split(/\s+/).filter(Boolean).map(part=>part[0]).slice(0,2).join("")} color="#C8C3DB" photo={p.profile.photo} size={38}/></button></div><div className={styles.homeUtilities}><button aria-label="Notifications" onClick={()=>{p.setSampleNotificationsSeen(true);p.open({kind:"notifications"});}}><Bell size={21}/>{!p.live&&!p.sampleNotificationsSeen&&<span aria-label="2 unread notifications">2</span>}</button><button aria-label="Messages" onClick={()=>{p.setSampleMessagesSeen(true);p.open({kind:"messages"});}}><MessageCircle size={21}/>{!p.live&&!p.sampleMessagesSeen&&<span aria-label="1 unread message">1</span>}</button></div></div>
-      {homeMenuOpen&&<div className={styles.homeAccountOverlay} onMouseDown={event=>{if(event.target===event.currentTarget)setHomeMenuOpen(false);}}><aside className={styles.homeAccountDrawer} aria-label="Profile"><div className={styles.homeDrawerCloseRow}><button aria-label="Close profile" onClick={()=>setHomeMenuOpen(false)}><X size={20}/></button></div><div className={styles.homeDrawerProfile}><YouScreen appearance={appearance} onAppearanceChange={onAppearanceChange} onOpenCalendar={()=>{setHomeMenuOpen(false);openCalendar();}}/></div></aside></div>}
+      {homeMenuOpen&&<div className={styles.homeAccountOverlay} onMouseDown={event=>{if(event.target===event.currentTarget)setHomeMenuOpen(false);}}><aside className={styles.homeAccountDrawer} aria-label="Profile"><div className={styles.homeDrawerCloseRow}><button aria-label="Close profile" onClick={()=>setHomeMenuOpen(false)}><X size={20}/></button></div><div className={styles.homeDrawerProfile}><YouScreen appearance={appearance} onAppearanceChange={onAppearanceChange} onOpenDetail={openProfileDetail} onOpenCalendar={()=>{setHomeMenuOpen(false);openCalendar();}}/></div></aside></div>}
       {firstTime?<div className={`${styles.calendarSummary} ${styles.yourCalendarSummary} ${styles.firstTimeSummary}`}><strong>Your week starts here.</strong><p>Add classes you teach or plan to take. Follow people to discover what’s on their calendars.</p><div className={styles.firstTimeActions}><button type="button" onClick={()=>p.open({kind:"add-class"})}><Plus size={18}/>Add a class</button></div></div>:<div className={`${styles.calendarSummary} ${styles.yourCalendarSummary}`}><strong>{calendarActivitySummary({ teaching: p.schedule.filter(c=>c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice")).length, attending: personalClasses.filter(c=>!c.personal && !(c.own ?? (c.coach===p.profile.name || c.coach==="Matt LeGrice"))).length, personal: p.schedule.filter(c=>c.personal).length })}</strong><div className={`${styles.heroActions} ${styles.homeSummaryActions}`}><button type="button" onClick={onShare} className={styles.shareWeekButton} aria-label="Share your week"><Share2 size={15}/><span>Share your week</span></button><button type="button" onClick={openCalendar} className={styles.homeManageButton}><CalendarDays size={15}/>Manage calendar</button></div></div>}
     </div>
     {firstTime?<section className={styles.homeDiscovery}><h2>Explore your community</h2><button onClick={()=>onNavigate("people")}><span><UserRound size={20}/></span><div><strong>People near you</strong><small>Follow calendars and discover classes</small></div><ChevronRight size={18}/></button><button onClick={()=>onNavigate("studios")}><span><Storefront size={20}/></span><div><strong>Studios near you</strong><small>Find places you’ll want to revisit</small></div><ChevronRight size={18}/></button><button onClick={()=>onNavigate("groups")}><span><Users size={20}/></span><div><strong>Groups to join</strong><small>Meet people who like to move</small></div><ChevronRight size={18}/></button></section>:<div className={`${styles.calendarYouPanel} ${styles.homeDashboard}`}><section className={styles.homeCalendarPreview}><SectionTitle aside={<button className={styles.homeSectionLink} onClick={openCalendar}>View calendar<ChevronRight size={14}/></button>}>Upcoming</SectionTitle>{homeWeekClasses.length===0?<p className={styles.sectionIntro}>Nothing scheduled in the next seven days.</p>:homeWeekDates.map(date=><div className={styles.homeClassItem} key={date}><h3>{dateLabel(date)}</h3><div className={styles.dateClassStack}>{homeWeekClasses.filter(item=>item.date===date).map(item=><ClassCard key={item.id} item={{...item,day:dateLabel(item.date),color:"#C8C3DB"}}/>)}</div></div>)}</section><section><SectionTitle>Needs attention</SectionTitle><div className={`${styles.homeActivityList} ${styles.attentionList}`}><button onClick={()=>onNavigate("studios")}><span><Storefront size={19}/></span><div><strong>2 classes need coverage</strong><small>Ironbound Performance Athletics</small></div><ChevronRight size={17}/></button><button onClick={()=>onNavigate("groups")}><span><Users size={19}/></span><div><strong>Sunday class needs a headcount</strong><small>Sunday Sweat Crew</small></div><ChevronRight size={17}/></button></div></section>{communityFeed.length>0&&<section><SectionTitle>From your community</SectionTitle><div className={`${styles.homeActivityList} ${styles.communityList}`}>{communityFeed.map(item=><button data-kind={item.id.split("-")[0]} key={item.id} onClick={item.open}><span>{item.icon}</span><div><strong>{item.title}</strong><small>{item.meta}</small></div><ChevronRight size={17}/></button>)}</div></section>}<button onClick={() => p.open({kind:"add-class"})} className={styles.addFab} aria-label="Add a class"><Plus size={28}/></button></div>}
@@ -355,8 +358,9 @@ function GroupsScreen({selected,setSelected,firstTime}:{selected:string|null;set
   </div>;
 }
 
-function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appearance: AppearanceMode; onAppearanceChange: (value: AppearanceMode) => void; onOpenCalendar: () => void }) {
+function YouScreen({ appearance, onAppearanceChange, onOpenCalendar, onOpenDetail }: { appearance: AppearanceMode; onAppearanceChange: (value: AppearanceMode) => void; onOpenCalendar: () => void; onOpenDetail?:(destination:Destination)=>void }) {
   const p=usePrototype();
+  const openDetail=onOpenDetail??p.open;
   const sheet = useRef<HTMLDialogElement>(null);
   const [qr, setQr] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
@@ -381,7 +385,7 @@ function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appeara
       <h1 className={styles.pageTitle}>{p.profile.name}</h1>
       <div className={styles.profileActions}>
         <Button data-variant="outline" variant="outline" onClick={openShare} aria-haspopup="dialog">@{p.profile.handle}<ChevronDown size={16}/></Button>
-        <Button data-variant="outline" variant="outline" onClick={()=>p.open({kind:"edit-profile"})}>Edit profile</Button>
+        <Button data-variant="outline" variant="outline" onClick={()=>openDetail({kind:"edit-profile"})}>Edit profile</Button>
       </div>
       <p>{p.profile.bio} · {p.profile.location}</p>{p.profile.about&&<details className={styles.profileExtra}><summary>About</summary><p>{p.profile.about}</p></details>}
     </header>
@@ -397,7 +401,7 @@ function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appeara
       </div>
     </dialog>
     <section><SectionTitle>Calendars you manage</SectionTitle><div className={styles.stack}>
-      {[{name:"My calendar",initials:"ML",detail:"Classes, shifts, and saved plans",photo:p.profile.photo},...(p.live ? p.live.managed : [{name:"Ironbound Performance Athletics",initials:"IP",detail:"Studio calendar · You’re an admin",photo:null},{name:"Gals who like to move",initials:"GM",detail:"Group calendar · 4 members",photo:null}])].map(calendar=><button key={calendar.name} className={styles.cardLink} onClick={()=>calendar.name==="My calendar"?onOpenCalendar():p.open({kind:"manage",name:calendar.name})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials={calendar.initials} photo={calendar.photo} color="#C8C3DB" size={40}/></span><div><strong>{calendar.name}</strong><span>{calendar.detail}</span></div><ChevronRight size={18}/></CardContent></Card></button>)}
+      {[{name:"My calendar",initials:"ML",detail:"Classes, shifts, and saved plans",photo:p.profile.photo},...(p.live ? p.live.managed : [{name:"Ironbound Performance Athletics",initials:"IP",detail:"Studio calendar · You’re an admin",photo:null},{name:"Gals who like to move",initials:"GM",detail:"Group calendar · 4 members",photo:null}])].map(calendar=><button key={calendar.name} className={styles.cardLink} onClick={()=>calendar.name==="My calendar"?onOpenCalendar():openDetail({kind:"manage",name:calendar.name})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}><span className={styles.settingsIcon}><Face initials={calendar.initials} photo={calendar.photo} color="#C8C3DB" size={40}/></span><div><strong>{calendar.name}</strong><span>{calendar.detail}</span></div><ChevronRight size={18}/></CardContent></Card></button>)}
     </div></section>
     {[
       { title: "Tools", rows: [
@@ -418,7 +422,7 @@ function YouScreen({ appearance, onAppearanceChange, onOpenCalendar }: { appeara
     ].map((section) => <section key={section.title}>
       <SectionTitle>{section.title}</SectionTitle>
       <div className={styles.stack}>{section.rows.map(({ icon: Icon, title, detail }) =>
-        <button key={title} className={styles.cardLink} onClick={()=>title==="Appearance"?setAppearanceOpen(true):p.open(title==="Membership"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
+        <button key={title} className={styles.cardLink} onClick={()=>title==="Appearance"?setAppearanceOpen(true):openDetail(title==="Membership"?{kind:"membership"}:{kind:"settings",name:title})}><Card className={styles.simpleCard}><CardContent className={styles.settingsRow}>
           {Icon && <span className={styles.settingsIcon}><Icon size={22}/></span>}
           <div><strong>{title}</strong><span>{detail}</span></div>
           <ChevronRight size={18}/>
