@@ -1193,13 +1193,18 @@
 .apple .calendarHero .homeSummaryActions .shareWeekButton { padding:0 20px; border:1px solid color-mix(in srgb,var(--preview-surface) 80%,transparent); background:color-mix(in srgb,var(--preview-surface) 65%,transparent); box-shadow:0 2px 8px #00000008; text-decoration:none; }
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton { border-color:color-mix(in srgb,var(--preview-text) 14%,#fff); background:#ffffffe8; box-shadow:inset 0 1px 0 #fff,0 4px 14px #1921260a; }
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton:hover { background:#fff; }
-.homeDashboard { padding-bottom:80px; }
-.homeDashboard > section:first-child .sectionTitle { margin-top:8px; }
+.homeDashboard { display:grid; gap:16px; padding-bottom:80px; }
+.homeDashboard > section { min-width:0; padding:18px; border:1px solid color-mix(in srgb,var(--preview-line) 62%,transparent); border-radius:24px; background:var(--preview-surface); }
+.homeDashboard > section > .sectionTitle { margin:0 0 14px; }
+.homeDashboard > section:first-child .sectionTitle { margin-top:0; }
 .homeSectionLink { display:inline-flex; align-items:center; gap:2px; padding:5px 0; border:0; background:transparent; color:var(--preview-muted); font:600 12px var(--preview-font); cursor:pointer; }
 .homeClassItem { margin-top:28px; }
+.homeCalendarPreview > .homeClassItem:first-child { margin-top:0; }
+.homeCalendarPreview .mainBranchClasses { --color-surface:var(--preview-soft); --kinetic-surface:var(--preview-soft); background:var(--preview-soft)!important; }
+.homeDashboard .homeClassItem + .homeClassItem { margin-top:30px; }
 .homeClassItem h3 { margin:0 0 8px; color:var(--preview-muted); font:600 13px var(--preview-font); }
 .homeActivityList { display:grid; gap:8px; }
-.homeActivityList > button { display:flex; align-items:center; gap:12px; width:100%; min-height:76px; padding:16px; border:0; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); text-align:left; cursor:pointer; box-shadow:none; }
+.homeActivityList > button { display:flex; align-items:center; gap:12px; width:100%; min-height:72px; padding:14px; border:0; border-radius:16px; background:var(--preview-soft); color:var(--preview-text); text-align:left; cursor:pointer; box-shadow:none; }
 .homeActivityList > button > span { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:12px; background:var(--preview-soft); }
 .homeActivityList > button > div { display:grid; gap:3px; flex:1; min-width:0; }
 .homeActivityList strong,.homeActivityList small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
