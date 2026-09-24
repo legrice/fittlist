@@ -294,7 +294,7 @@ function GroupsScreen({selected,setSelected,firstTime}:{selected:string|null;set
   const [leaveGroupId,setLeaveGroupId]=useState<string|null>(null);
   const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("schedule");
   useEffect(()=>{setGroupView("schedule");},[selected]);
-  useEffect(()=>{if(selected)window.dispatchEvent(new Event("preview-subpage"));},[groupView]);
+  useEffect(()=>{if(selected&&groupView==="members")window.dispatchEvent(new Event("preview-subpage"));},[groupView,selected]);
   const categories=["All","Run clubs","Fitness","Wellness"];
   const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
   const results=groups.filter(g=>withinDistance(g.coordinates)&&(`${g.name} ${g.description} ${g.category}`).toLowerCase().includes(groupQuery.trim().toLowerCase())&&(groupCategory==="All"||categoryOf(g.category)===(groupCategory==="Run clubs"?"Run club":groupCategory)));
@@ -333,19 +333,21 @@ function GroupsScreen({selected,setSelected,firstTime}:{selected:string|null;set
       {landingGroups.length?<div className={styles.exploreGroupList}>{landingGroups.map(groupCard)}</div>:<div className={styles.collectionEmpty}><p>{groupLandingView==="Joined"?"You haven’t joined a group yet.":"No groups in this category yet."}</p><button className={styles.discoverMore} onClick={()=>setDiscover(true)}>Find groups <ArrowUpRight size={16}/></button></div>}
       <button type="button" className={styles.addFab} aria-label="Create a group" onClick={()=>setSelected("create")}><Plus size={28}/></button>
     </div>) : selected === "create" ? <GroupCreator location={p.profile.location || ""} people={(p.live?.people || explorePeople).filter(person=>person.name!==p.profile.name)} onCancel={()=>setSelected(null)} onCreate={draft=>{const id=`group-${Date.now()}`;setGroups(items=>[...items,{id,coordinates:null,banner:null,location:draft.location,name:draft.name,category:draft.category,description:draft.description,image:draft.image,members:[p.profile.name],classIndexes:[],purpose:draft.purpose,invitees:draft.invitees}]);p.joinGroup(id,draft.name,0,true);setSelected(id);}}/>
-    : group && groupView!=="schedule" ? <>
+    : group && groupView==="members" ? <>
       <BackButton className={styles.backButton} label={`Back to ${group.name}`} onClick={()=>setGroupView("schedule")}/>
-      <h1 className={styles.pageTitle}>{groupView==="members"?"Members":"Updates"}</h1>
+      <h1 className={styles.pageTitle}>Members</h1>
       <p className={styles.sectionIntro}>{group.name}</p>
-      {groupView==="members" ? <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div> : <GroupSampleUpdates live={!!p.live} running={categoryOf(group.category)==="Run club"}/>}
+      <div className={styles.stack}>{group.members.map((member,index)=><div className={styles.groupMemberRow} key={member}><Face initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={44}/><strong>{member}</strong></div>)}</div>
     </> : group ? <>
       <ProfileHero type="Group" name={group.name} id={group.id} banner={group.banner} photo={group.image} onBack={()=>setSelected(null)}/>
       <ProfileInfo kind="group" id={group.id} name={group.name} type={categoryOf(group.category)} location={group.location} about={group.description}/>
       <div className={styles.groupJoinFooter}><button className={styles.groupMemberCount} onClick={()=>setGroupView("members")}><span className={styles.groupAvatarStack}>{group.members.slice(0,3).map((member,index)=><Face key={member} initials={member.split(" ").map(part=>part[0]).join("")} color={["#D8C6B4","#AFCFEC","#C8C3DB"][index%3]} size={24}/>)}</span><strong>{group.members.length} members</strong><ChevronRight size={14}/></button><button className={styles.groupJoinButton} aria-pressed={joined.includes(group.id)} onClick={()=>toggleMembership(group.id)}>{joined.includes(group.id)?<><Check size={14} aria-hidden="true"/>Joined</>:"Join"}</button></div>
       <div className={styles.groupFooterSpace}>
-
-      <button className={styles.groupUpdatesLink} onClick={()=>{setGroupView("updates");setSeenUpdates(ids=>[...ids,group.id]);}}><strong>Updates</strong>{!p.live&&!seenUpdates.includes(group.id)&&<Badge aria-label="2 new updates">2</Badge>}<ChevronRight size={18}/></button>
-      {group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3 className={styles.groupDateTitle}>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "Group class plans aren’t connected in this preview yet." : "No classes planned yet. Check back for the next group plan."}</p>}
+      <div className={styles.groupContentToggle} role="tablist" aria-label={`${group.name} content`}>
+        <button role="tab" aria-selected={groupView==="updates"} onClick={()=>{setGroupView("updates");setSeenUpdates(ids=>ids.includes(group.id)?ids:[...ids,group.id]);}}>Updates{!p.live&&!seenUpdates.includes(group.id)&&<Badge aria-label="2 new updates">2</Badge>}</button>
+        <button role="tab" aria-selected={groupView==="schedule"} onClick={()=>setGroupView("schedule")}>Schedule</button>
+      </div>
+      <div role="tabpanel" className={styles.groupContentPanel}>{groupView==="updates"?<GroupSampleUpdates live={!!p.live} running={categoryOf(group.category)==="Run club"}/>:group.classIndexes.length ? group.classIndexes.map(index => <section className={styles.daySection} key={index}><h3 className={styles.groupDateTitle}>{groupClasses[index].day}</h3><ClassCard item={groupClasses[index]}/></section>) : <p className={styles.sectionIntro}>{p.live ? "No classes have been added to this group yet." : "No classes planned yet. Check back for the next group plan."}</p>}</div>
       </div>
     </> : <>{back}<p className={styles.sectionIntro}>Group unavailable.</p>    </>}
   </div>;
