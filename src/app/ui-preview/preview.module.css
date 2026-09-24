@@ -358,6 +358,12 @@
 .detailRow { display:flex; align-items:center; gap:12px; width:100%; padding:20px 0; border:0; border-bottom:1px solid var(--preview-line); background:transparent; color:var(--preview-text); font:inherit; text-align:left; cursor:pointer; }
 .detailRow > span { flex:1; display:grid; gap:5px; }
 .detailRow small,.detailClass small,.detailIdentity > span { color:var(--preview-muted); font-size:13px; }
+.followNotification { display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--preview-line); }
+.followNotification > button:first-child { display:flex; align-items:center; gap:12px; min-width:0; flex:1; padding:20px 0; border:0; background:transparent; color:var(--preview-text); font:inherit; text-align:left; cursor:pointer; }
+.followNotification > button:first-child > span { display:grid; flex:1; gap:5px; min-width:0; }
+.followNotification small { color:var(--preview-muted); font-size:13px; }
+.followNotification > button:last-child { display:inline-flex; align-items:center; justify-content:center; gap:5px; flex:none; min-height:36px; padding:0 13px; border:1px solid var(--preview-text); border-radius:999px; background:transparent; color:var(--preview-text); font:600 12px var(--preview-font); cursor:pointer; }
+.followNotification > button:last-child[aria-pressed="true"] { background:var(--preview-text); color:var(--preview-ground); }
 .detailClass { display:grid; gap:14px; padding:20px; border:0; border-radius:16px; background:var(--preview-surface); color:var(--preview-text); width:100%; font:inherit; text-align:left; cursor:pointer; }
 .detailClass > div { display:grid; grid-template-columns:90px 1fr; gap:12px; }
 .detailClass > div > span { display:grid; gap:6px; }
