@@ -1218,8 +1218,9 @@
 .apple .calendarHero .homeSummaryActions .shareWeekButton { padding:0 20px; border:1px solid color-mix(in srgb,var(--preview-surface) 80%,transparent); background:color-mix(in srgb,var(--preview-surface) 65%,transparent); box-shadow:0 2px 8px #00000008; text-decoration:none; }
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton { border-color:color-mix(in srgb,var(--preview-text) 14%,#fff); background:#ffffffe8; box-shadow:inset 0 1px 0 #fff,0 4px 14px #1921260a; }
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton:hover { background:#fff; }
-.homeDashboard { display:grid; gap:34px; padding-bottom:24px; }
+.homeDashboard { display:grid; gap:24px; padding-bottom:24px; }
 .homeDashboard > section { min-width:0; padding:0; border:0; border-radius:0; background:transparent; }
+.homeDashboard > .homeActivitySection { padding-top:24px; border-top:1px solid var(--preview-line); }
 .homeDashboard > section > .sectionTitle { margin:0 0 16px; }
 .apple .homeActivitySection > .sectionTitle h2 { color:var(--preview-text); font:600 var(--preview-section-size)/1.2 var(--preview-font); letter-spacing:-.035em; }
 .homeSectionLink { display:inline-flex; align-items:center; gap:2px; padding:5px 0; border:0; background:transparent; color:var(--preview-muted); font:600 12px var(--preview-font); cursor:pointer; }
@@ -1248,10 +1249,6 @@
 .apple:not(.dark) .communityList > button[data-kind="saved"] > span { background:#e5f1f5; color:#416b7b; }
 .apple:not(.dark) .communityList > button[data-kind="person"] > span { background:#e8eef8; color:#4e658d; }
 .apple:not(.dark) .communityList > button[data-kind="studio"] > span { background:#e8f1e1; color:#557643; }
-.apple .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton { border:1px solid var(--preview-text); background:var(--preview-text); background-image:none; color:var(--preview-ground); box-shadow:none; text-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; }
-.apple .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton:hover { background:color-mix(in srgb,var(--preview-text) 90%,var(--preview-ground)); }
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton { border-color:#192126; background:#192126; color:#fff; }
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton:hover { background:#303b41; }
 .apple .calendarHero .homeSummaryActions .homeManageButton { border:1px solid var(--preview-text); background:transparent; color:var(--preview-text); box-shadow:none; }
 .apple .calendarHero .homeSummaryActions .homeManageButton:hover { background:var(--preview-soft); }
 .apple .calendarHero .homeSummaryActions > button,
@@ -1262,7 +1259,7 @@
   gap:7px;
   min-height:38px;
   padding:0 13px;
-  border:1px solid #d8dfe2!important;
+  border:1px solid var(--preview-text)!important;
   background:#fff!important;
   color:#192126!important;
   box-shadow:none!important;
@@ -1273,14 +1270,6 @@
 }
 .apple .calendarHero .homeSummaryActions > button:hover,
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#f6f8f9!important; }
-.apple .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton { border-color:var(--preview-text)!important; background:var(--preview-text)!important; color:var(--preview-ground)!important; }
-.apple .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton:hover,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton:hover { background:color-mix(in srgb,var(--preview-text) 88%,var(--preview-ground))!important; }
-.apple .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton { border-color:var(--preview-text)!important; background:transparent!important; color:var(--preview-text)!important; }
-.apple .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton:hover,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .homeManageButton:hover { background:color-mix(in srgb,var(--preview-surface) 42%,transparent)!important; }
 .homeDashboard > .addFab { display:none; }
 .apple .calendarContent { background:var(--preview-ground); }
 .apple.dark .calendarContent { background:var(--preview-ground); }
