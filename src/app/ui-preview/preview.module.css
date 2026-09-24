@@ -1274,7 +1274,7 @@
 .homeDashboard > .addFab { display:none; }
 .apple .calendarContent { background:var(--preview-ground); }
 .apple.dark .calendarContent { background:var(--preview-ground); }
-.apple .swipeCalendar { padding-bottom:52px; background:radial-gradient(ellipse at 85% 0%,color-mix(in srgb,var(--preview-highlight) 17%,transparent),transparent 55%),linear-gradient(145deg,var(--preview-soft),var(--preview-ground) 78%); }
+.apple .swipeCalendar { padding-bottom:52px; background:var(--preview-ground); }
 .apple .swipeCalendar .calendarHero { margin-bottom:0; padding-bottom:26px; background:transparent; }
 .apple .swipeCalendar .calendarHero .calendarSummary { gap:20px; padding-top:22px; }
 .apple .swipeCalendar .homeDashboard { position:relative; margin:0 calc(-1 * var(--preview-gutter)); padding:12px var(--preview-gutter) calc(12px + env(safe-area-inset-bottom)); border-radius:0; background:transparent; box-shadow:none; }
