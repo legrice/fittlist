@@ -1258,7 +1258,7 @@
 .apple .swipeCalendar { background:radial-gradient(ellipse at 85% 0%,color-mix(in srgb,var(--preview-highlight) 17%,transparent),transparent 55%),linear-gradient(145deg,var(--preview-soft),var(--preview-ground) 78%); }
 .apple .swipeCalendar .calendarHero { margin-bottom:0; padding-bottom:48px; background:transparent; }
 .apple .swipeCalendar .calendarHero .calendarSummary { gap:20px; padding-top:22px; }
-.apple .swipeCalendar .homeDashboard { position:relative; margin:0 calc(-1 * var(--preview-gutter)); padding:30px var(--preview-gutter) 96px; border-radius:28px 28px 0 0; background:var(--preview-ground); box-shadow:0 -1px 0 color-mix(in srgb,var(--preview-line) 65%,transparent),0 -12px 32px #19212608; }
+.apple .swipeCalendar .homeDashboard { position:relative; margin:0 calc(-1 * var(--preview-gutter)); padding:30px var(--preview-gutter) 96px; border-radius:0; background:transparent; box-shadow:none; }
 .apple .swipeCalendar .homeCalendarPreview { padding-top:24px; }
 .collectionDiscover { width:40px; height:40px; min-height:40px; padding:0; border:1px solid #ffffffb3; border-radius:50%; background:color-mix(in srgb,var(--preview-surface) 68%,transparent); box-shadow:0 5px 18px #19212612,inset 0 1px 0 #ffffffcc; backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%); }
 .dark .collectionDiscover { border-color:#ffffff1f; background:#24282ed6; box-shadow:0 5px 18px #0004,inset 0 1px 0 #ffffff1a; }
