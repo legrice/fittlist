@@ -1291,5 +1291,9 @@
 .savedClassGroups > button { display:grid; grid-template-columns:38px minmax(0,1fr) auto; align-items:center; gap:11px; width:100%; min-height:58px; padding:10px 13px; border:0; border-radius:18px; background:var(--preview-surface); color:var(--preview-text); text-align:left; }
 .savedClassGroups > button > span { display:grid; place-items:center; width:38px; height:38px; border-radius:12px; background:var(--preview-soft); }
 .savedClassGroups > button strong { overflow:hidden; font:600 14px var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
+.savedClassGroups > button[aria-pressed="true"] { background:color-mix(in srgb,var(--preview-highlight) 14%,var(--preview-surface)); }
+.savedClassGroups > button > .savedClassGroupCopy { display:grid; justify-items:start; gap:3px; width:auto; height:auto; border-radius:0; background:transparent; }
+.savedClassGroupCopy small { color:var(--preview-muted); font:12px/1.25 var(--preview-font); }
+.savedClassGroups > button > .savedClassGroupCheck { width:28px; height:28px; border-radius:50%; background:var(--preview-text); color:var(--preview-ground); }
 .savedClassGroups > .savedClassCreate { border:1px solid var(--preview-line); background:transparent; }
 @media(min-width:900px) { .savedClassOverlay { position:fixed; left:88px; } .savedClassSheet { width:min(430px,100%); margin:0 auto; border-radius:28px 28px 0 0; } }
