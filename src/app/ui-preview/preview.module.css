@@ -512,8 +512,8 @@
 }
 .apple :is(.membershipCta,.classPageFooter button):disabled { opacity:.5; cursor:not-allowed; }
 .apple :is(.membershipCta,.classPageFooter button):focus-visible { outline:2px solid var(--preview-text); outline-offset:3px; }
-.apple .classPageFooter button { border:1px solid #d8dfe2; background:#fff; color:#192126; }
-.apple .classPageFooter button[aria-pressed="true"] { border-color:#192126; background:#192126; color:#fff; }
+.apple .profileTakeover .classPageFooter button { border:1px solid #cbd4d8; background:#fff; color:#192126; }
+.apple .profileTakeover .classPageFooter button[aria-pressed="true"] { border-color:#192126; background:#192126; color:#fff; }
 .apple :is(.shareWeekButton,.copyProfile,.logoutForm button,.profileActions [data-slot="button"]) { font-family:var(--preview-font); font-size:var(--preview-button-size); font-weight:600; line-height:1.25; min-height:44px; }
 .apple :is(.sectionTitle h2,.daySection h3,.planHeading,.sheetBody h2) { font-family:var(--preview-font); font-size:var(--preview-section-size); font-weight:600; line-height:1.2; letter-spacing:-.035em; }
 .apple .calendarPersonContext .sectionTitle h2 { font-size:14px; letter-spacing:normal; }
