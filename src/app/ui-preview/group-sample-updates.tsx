@@ -8,7 +8,7 @@ import styles from "./preview.module.css";
 type Comment = { name:string; initials:string; text:string };
 type Update = { id:string; initials:string; name:string; when:string; body:string; comments:Comment[]; className?:string };
 
-export default function GroupSampleUpdates({ live, running }: { live:boolean; running:boolean }) {
+export default function GroupSampleUpdates({ live, running, dark }: { live:boolean; running:boolean; dark:boolean }) {
   const updates:Update[]=[
     {id:"week-plan",initials:"EC",name:"Erin Clyne",when:"Today",body:running?"Saturday run: meet by the waterfront at 8. Easy pace, and coffee afterward. Everyone is welcome.":"Who’s joining us this week? Bring a friend. There’s room for every experience level.",comments:[{name:"Alex Lee",initials:"AL",text:"I’m in! See you there."},{name:"Sam Chen",initials:"SC",text:"Count me in too."},{name:"Freddie Morgan",initials:"FM",text:"Can’t wait!"}]},
     {id:"class-plan",initials:"FM",name:"Freddie Morgan",when:"Yesterday",body:"Added a class to the calendar",className:running?"Weekend run":"Strength & mobility",comments:[{name:"Erin Clyne",initials:"EC",text:"This looks great. I saved it."}]},
@@ -31,8 +31,8 @@ export default function GroupSampleUpdates({ live, running }: { live:boolean; ru
         <button className={styles.groupCommentButton} aria-label={`View ${commentCount} comments`} onClick={()=>setActiveComments(update.id)}><ChatCircle size={21}/>{commentCount>0&&<b>{commentCount}</b>}</button>
       </div>
     </article>})}</div>
-    {active&&<BodyPortal><div className={styles.groupCommentsOverlay} onMouseDown={event=>{if(event.target===event.currentTarget)setActiveComments(null);}}><section className={styles.groupCommentsSheet} role="dialog" aria-modal="true" aria-labelledby="group-comments-title">
-      <div className={styles.groupCommentsHandle}/><header><div><small>{active.when}</small><h2 id="group-comments-title">Comments</h2></div><button aria-label="Close comments" onClick={()=>setActiveComments(null)}><X size={20}/></button></header>
+    {active&&<BodyPortal><div className={`${styles.groupCommentsOverlay} ${dark?styles.groupCommentsOverlayDark:""}`} onMouseDown={event=>{if(event.target===event.currentTarget)setActiveComments(null);}}><section className={styles.groupCommentsSheet} role="dialog" aria-modal="true" aria-labelledby="group-comments-title">
+      <div className={styles.groupCommentsHandle}/><header><h2 id="group-comments-title">Comments</h2><button aria-label="Close comments" onClick={()=>setActiveComments(null)}><X size={20}/></button></header>
       <div className={styles.groupCommentList}>{comments.map((comment,index)=><div key={`${comment.name}-${index}`}><span>{comment.initials}</span><p><strong>{comment.name}</strong>{comment.text}</p></div>)}</div>
       <form onSubmit={event=>{event.preventDefault();addComment();}}><input aria-label="Add a comment" value={reply} onChange={event=>setReply(event.target.value)} placeholder="Add a comment"/><button disabled={!reply.trim()}>Post</button></form>
     </section></div></BodyPortal>}

@@ -639,7 +639,8 @@
 .groupUpdateActions .groupCommentButton { width:42px; padding:0; }
 .groupUpdateActions b { position:absolute; top:-5px; right:-5px; display:grid; place-items:center; min-width:18px; height:18px; padding:0 5px; border:2px solid var(--preview-surface); border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 10px/1 var(--preview-font); }
 .groupCommentsOverlay { --preview-font:"Delight","Helvetica Neue",Arial,sans-serif; --preview-soft:#e8edef; --preview-ground:#f5f7f8; --preview-text:#192126; --preview-muted:#536067; --preview-line:#d8dfe2; --preview-surface:#fff; position:fixed; inset:0; z-index:1000; display:flex; align-items:flex-end; justify-content:center; background:#11191d75; font-family:var(--preview-font); }
-.groupCommentsSheet { width:min(100%,430px); min-height:min(68dvh,620px); max-height:82dvh; padding:8px 20px calc(18px + env(safe-area-inset-bottom)); overflow-y:auto; border-radius:28px 28px 0 0; background:#fff; color:var(--preview-text); box-shadow:0 -18px 56px #0003; }
+.groupCommentsOverlayDark { --preview-soft:#1b2027; --preview-ground:#0b0e14; --preview-text:#f7f8fa; --preview-muted:#9ca4af; --preview-line:#343a43; --preview-surface:#24282e; color-scheme:dark; }
+.groupCommentsSheet { width:min(100%,430px); min-height:min(68dvh,620px); max-height:82dvh; padding:8px 20px calc(18px + env(safe-area-inset-bottom)); overflow-y:auto; border-radius:28px 28px 0 0; background:var(--preview-surface); color:var(--preview-text); box-shadow:0 -18px 56px #0003; }
 .groupCommentsHandle { width:42px; height:4px; margin:0 auto 16px; border-radius:99px; background:var(--preview-line); }
 .groupCommentsSheet > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:22px; }
 .groupCommentsSheet h2 { margin:3px 0 0; font:600 24px/1.15 var(--preview-font); letter-spacing:-.035em; }
