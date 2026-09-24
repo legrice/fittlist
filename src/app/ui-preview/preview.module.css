@@ -747,7 +747,7 @@
 .homeUtilities button > span { position:absolute; top:-3px; right:-3px; display:grid; place-items:center; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 10px/1 var(--preview-font); }
 .homeAccountOverlay { position:fixed; inset:0; z-index:90; background:var(--preview-ground); }
 .homeAccountDrawer { display:flex; flex-direction:column; width:100%; height:100dvh; padding:calc(20px + env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom)); overflow-y:auto; background:var(--preview-ground); color:var(--preview-text); animation:homeDrawerIn .24s cubic-bezier(.2,.8,.2,1); }
-.homeDrawerCloseRow { display:flex; justify-content:flex-end; width:min(100%,430px); margin:0 auto; padding:0 20px 12px; }
+.homeDrawerCloseRow { display:flex; justify-content:flex-start; width:min(100%,430px); margin:0 auto; padding:0 20px 12px; }
 .homeDrawerCloseRow > button { display:grid; place-items:center; width:38px; height:38px; padding:0; border:1px solid var(--preview-line); border-radius:50%; background:var(--preview-surface); color:var(--preview-text); cursor:pointer; }
 .homeDrawerProfile { width:min(100%,430px); margin:0 auto; padding:0 20px 24px; }
 .homeAccountHeader { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:13px; padding:10px 20px 24px; border-bottom:1px solid var(--preview-line); }
@@ -1233,13 +1233,13 @@
 .homeStandaloneClass .mainBranchClasses :global(.explore-save-row) { right:16px; }
 .homeDashboard .homeClassItem + .homeClassItem { margin-top:30px; }
 .homeClassItem h3 { margin:0 0 8px; color:var(--preview-muted); font:600 13px var(--preview-font); }
-.homeActivityList { display:grid; gap:10px; }
-.homeActivityList > button { display:flex; align-items:center; gap:12px; width:100%; min-height:72px; padding:14px 16px; border:0; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); text-align:left; cursor:pointer; box-shadow:none; }
-.homeActivityList > button > span { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:12px; background:var(--preview-soft); }
+.homeActivityList { display:grid; gap:var(--preview-card-gap); }
+.homeActivityList > button { display:flex; align-items:center; gap:14px; width:100%; min-height:76px; padding:16px; border:0; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); text-align:left; cursor:pointer; box-shadow:none; }
+.homeActivityList > button > span { display:grid; place-items:center; flex:none; width:40px; height:40px; border-radius:12px; background:var(--preview-soft); }
 .homeActivityList > button > div { display:grid; gap:3px; flex:1; min-width:0; }
 .homeActivityList strong,.homeActivityList small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.homeActivityList strong { font:600 13px var(--preview-font); }
-.homeActivityList small { color:var(--preview-muted); font:12px var(--preview-font); }
+.homeActivityList strong { font:500 16px/1.25 var(--preview-font); }
+.homeActivityList small { color:var(--preview-muted); font:13px/1.4 var(--preview-font); }
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton { border-color:#d8e4e8; background:#edf5f7; box-shadow:inset 0 1px 0 #fff,0 4px 14px #19212608; }
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions .shareWeekButton:hover { background:#e5f0f3; }
 .apple:not(.dark) .attentionList > button:first-child > span { background:#f6ead4; color:#8a632a; }
