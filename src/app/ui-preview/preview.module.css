@@ -578,7 +578,7 @@
 .studioTaskCard > span,.studioTaskEmpty { display:grid; gap:4px; }
 .studioTaskCard strong,.studioDashboardLinks .studioLink strong,.studioTaskEmpty strong { font:500 16px/1.25 var(--preview-font); }
 .studioTaskCard small,.studioDashboardLinks .studioLink small,.studioTaskEmpty small { color:var(--preview-muted); font:13px/1.4 var(--preview-font); }
-.studioTaskCard svg,.studioDashboardLinks .studioLink svg { margin-left:auto; }
+.studioTaskCard > svg,.studioDashboardLinks .studioLink > svg { margin-left:auto; }
 .studioTaskEmpty { align-items:start; }
 .studioManageIcon { display:grid!important; place-items:center; flex:none; width:40px; height:40px; border-radius:12px; background:var(--preview-soft); color:var(--preview-text); }
 .studioTaskScreen { display:grid; gap:28px; margin-top:24px; }
