@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BodyPortal } from "@/components/BodyPortal";
 import { ChatCircle, Heart, X } from "@/components/PhosphorIcons";
 import styles from "./preview.module.css";
 
@@ -27,13 +28,13 @@ export default function GroupSampleUpdates({ live, running }: { live:boolean; ru
       {update.className&&<div className={styles.groupUpdateClass}><strong>{update.className}</strong><span>Saturday · 9:00 AM</span><span>Jersey City</span></div>}
       <div className={styles.groupUpdateActions}>
         <button aria-label={isLiked?"Unlike update":"Like update"} aria-pressed={isLiked} onClick={()=>setLiked(value=>isLiked?value.filter(id=>id!==update.id):[...value,update.id])}><Heart size={21} weight={isLiked?"fill":"regular"}/><span>{isLiked?4:3}</span></button>
-        <button aria-label={`View ${commentCount} comments`} onClick={()=>setActiveComments(update.id)}><ChatCircle size={21}/><span>Comments</span>{commentCount>0&&<b>{commentCount}</b>}</button>
+        <button className={styles.groupCommentButton} aria-label={`View ${commentCount} comments`} onClick={()=>setActiveComments(update.id)}><ChatCircle size={21}/>{commentCount>0&&<b>{commentCount}</b>}</button>
       </div>
     </article>})}</div>
-    {active&&<div className={styles.groupCommentsOverlay} onMouseDown={event=>{if(event.target===event.currentTarget)setActiveComments(null);}}><section className={styles.groupCommentsSheet} role="dialog" aria-modal="true" aria-labelledby="group-comments-title">
+    {active&&<BodyPortal><div className={styles.groupCommentsOverlay} onMouseDown={event=>{if(event.target===event.currentTarget)setActiveComments(null);}}><section className={styles.groupCommentsSheet} role="dialog" aria-modal="true" aria-labelledby="group-comments-title">
       <div className={styles.groupCommentsHandle}/><header><div><small>{active.when}</small><h2 id="group-comments-title">Comments</h2></div><button aria-label="Close comments" onClick={()=>setActiveComments(null)}><X size={20}/></button></header>
       <div className={styles.groupCommentList}>{comments.map((comment,index)=><div key={`${comment.name}-${index}`}><span>{comment.initials}</span><p><strong>{comment.name}</strong>{comment.text}</p></div>)}</div>
       <form onSubmit={event=>{event.preventDefault();addComment();}}><input aria-label="Add a comment" value={reply} onChange={event=>setReply(event.target.value)} placeholder="Add a comment"/><button disabled={!reply.trim()}>Post</button></form>
-    </section></div>}
+    </section></div></BodyPortal>}
   </>;
 }
