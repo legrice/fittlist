@@ -24,3 +24,4 @@ nav-*.png
 
 # Generated matching MapLibre worker assets
 /public/maplibre/
+.vercel

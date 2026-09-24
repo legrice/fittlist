@@ -2,9 +2,9 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 import { loadLivePreview } from "./live-data";
-export type PreviewClass = { personal?:boolean; description?:string|null; own?:boolean; inCalendar?:boolean; photo?:string|null; id: string; name: string; place: string; coach: string; date: string; time: string; duration: string };
+export type PreviewClass = { personal?:boolean; description?:string|null; links?:{label:string;url:string}[]; own?:boolean; inCalendar?:boolean; photo?:string|null; id: string; name: string; place: string; coach: string; date: string; time: string; duration: string };
 export const initialClasses: PreviewClass[] = [
-  { id:"asana", name:"Asana Lab", place:"Asana Soul Practice", coach:"Erin Clyne", date:"2026-09-19", time:"08:00", duration:"60" },
+  { id:"asana", name:"Asana Lab", place:"Asana Soul Practice", coach:"Erin Clyne", date:"2026-09-19", time:"08:00", duration:"60", links:[{label:"Book this class",url:"https://www.asanasoulpractice.com/jersey-city-class-schedule"}] },
   { id:"sculpt", name:"Sculpt", place:"Jane DO Jersey City", coach:"Freddie Morgan", date:"2026-09-20", time:"10:30", duration:"50" },
   { id:"ironbound", name:"Guns, Buns, and Lungs", place:"Ironbound Performance Athletics", coach:"Matt LeGrice", date:"2026-09-21", time:"18:00", duration:"60" },
 ];
@@ -23,19 +23,36 @@ function useStateStore() {
   const [exportsUsed,setExportsUsed]=useState(0);
   const [live,setLive]=useState<Awaited<ReturnType<typeof loadLivePreview>>>(null);
   const [dataStatus,setDataStatus]=useState("loading");
-  const reloadData=async()=>{setDataStatus("loading");try{const data=await loadLivePreview();if(!data){setLive(null);setSchedule(initialClasses);setSaved(["asana","sculpt"]);setFollowing([]);setProfile({...profileDetails,name:"Matt LeGrice",handle:"mattlegrice",bio:"Strength & mobility coach",location:"Jersey City, NJ",email:"matt@example.com",photo:null});setDataStatus("signed-out");return;}setLive(data);setProfile({...profileDetails,...data.profile});setSchedule(data.schedule);setSaved(data.saved);setFollowing(data.people.filter(p=>p.following).map(p=>p.name));setMessages([]);setDataStatus("live");}catch{setDataStatus("error");}};
+  const reloadData=async()=>{setDataStatus("loading");try{const data=await loadLivePreview();if(!data){setLive(null);setSchedule(initialClasses);setSaved(["asana","sculpt"]);setFollowing([]);setJoinedGroups({gals:"Gals who like to move"});setSavedStudios([]);setProfile({...profileDetails,name:"Matt LeGrice",handle:"mattlegrice",bio:"Strength & mobility coach",location:"Jersey City, NJ",email:"matt@example.com",photo:null});setDataStatus("signed-out");return;}setLive(data);setProfile({...profileDetails,...data.profile});setSchedule(data.schedule);setSaved(data.saved);setFollowing(data.people.filter(p=>p.following).map(p=>p.name));setJoinedGroups(Object.fromEntries(data.groups.filter(group=>data.joined.includes(group.id)).map(group=>[group.id,group.name])));setSavedStudios([]);setMessages([]);setDataStatus("live");}catch{setDataStatus("error");}};
   useEffect(()=>{void reloadData();},[]);
   const [schedule,setSchedule] = useState(initialClasses);
   const [preferences,setPreferences] = useState<Record<string,boolean>>({ "Class reminders":true,"New followers":true,"Group activity":true,"Messages":true,"Email updates":false,"Public profile":true,"Allow messages":true,"Approve followers":false });
   const [away,setAway] = useState({ start:"",end:"",note:"",reply:"" });
   const [following,setFollowing] = useState<string[]>([]);
+  const [savedStudios,setSavedStudios]=useState<string[]>([]);
+  const [joinedGroups,setJoinedGroups]=useState<Record<string,string>>({gals:"Gals who like to move"});
+  const [collectionConfirmation,setCollectionConfirmation]=useState<{kind:"studio"|"group";name:string;id?:string;created?:boolean}|null>(null);
+  const [skipCollectionConfirmation,setSkipCollectionConfirmation]=useState<Record<"studio"|"group",boolean>>({studio:false,group:false});
+  useEffect(()=>{try{setSkipCollectionConfirmation({studio:localStorage.getItem("fittlist-preview-skip-studio-confirmation")==="true",group:localStorage.getItem("fittlist-preview-skip-group-confirmation")==="true"});}catch{}},[]);
+  const setCollectionConfirmationPreference=(kind:"studio"|"group",skip:boolean)=>{setSkipCollectionConfirmation(value=>({...value,[kind]:skip}));try{if(skip)localStorage.setItem(`fittlist-preview-skip-${kind}-confirmation`,"true");else localStorage.removeItem(`fittlist-preview-skip-${kind}-confirmation`);}catch{}};
+  const saveStudio=(name:string,confirmationDelayMs=0)=>{setSavedStudios(value=>value.includes(name)?value:[...value,name]);if(!skipCollectionConfirmation.studio){const confirm=()=>setCollectionConfirmation({kind:"studio",name});if(confirmationDelayMs)window.setTimeout(confirm,confirmationDelayMs);else confirm();}};
+  const unsaveStudio=(name:string)=>{setSavedStudios(value=>value.filter(studio=>studio!==name));setCollectionConfirmation(null);};
+  const joinGroup=(id:string,name:string,confirmationDelayMs=0,created=false)=>{setJoinedGroups(value=>({...value,[id]:name}));if(created||!skipCollectionConfirmation.group){const confirm=()=>setCollectionConfirmation({kind:"group",name,id,created});if(confirmationDelayMs)window.setTimeout(confirm,confirmationDelayMs);else confirm();}};
+  const leaveGroup=(id:string)=>{setJoinedGroups(value=>{const next={...value};delete next[id];return next;});setCollectionConfirmation(null);};
+  const [followConfirmation,setFollowConfirmation]=useState<string|null>(null);
+  const [skipFollowConfirmation,setSkipFollowConfirmation]=useState(false);
+  useEffect(()=>{try{setSkipFollowConfirmation(localStorage.getItem("fittlist-preview-skip-follow-confirmation")==="true");}catch{}},[]);
+  const setFollowConfirmationPreference=(skip:boolean)=>{setSkipFollowConfirmation(skip);try{if(skip)localStorage.setItem("fittlist-preview-skip-follow-confirmation","true");else localStorage.removeItem("fittlist-preview-skip-follow-confirmation");}catch{}};
+  const follow=(name:string,confirmationDelayMs=0)=>{setFollowing(v=>v.includes(name)?v:[...v,name]);if(!skipFollowConfirmation){const confirm=()=>setFollowConfirmation(name);if(confirmationDelayMs)window.setTimeout(confirm,confirmationDelayMs);else confirm();}};
+  const unfollow=(name:string)=>{setFollowing(v=>v.filter(person=>person!==name));setFollowConfirmation(null);};
   const [saved,setSaved] = useState<string[]>(["asana","sculpt"]);
   const [connections,setConnections] = useState<string[]>([]);
   const [roles,setRoles] = useState<Record<string,string>>({"Freddie Morgan":"Editor","Erin Clyne":"Editor"});
   const [timezone,setTimezone] = useState("America/New_York");
   const [saveNotice,setSaveNotice]=useState("");
+  const [savedClassConfirmation,setSavedClassConfirmation]=useState<PreviewClass|null>(null);
   const toggleSaved=(item:PreviewClass)=>{
-    if(saved.includes(item.id)){setSaved(v=>v.filter(id=>id!==item.id));setSaveNotice("");return;}
+    if(saved.includes(item.id)){setSaved(v=>v.filter(id=>id!==item.id));setSaveNotice("");setSavedClassConfirmation(null);return;}
     const start=new Date(`${item.date}T${item.time}:00`).getTime();
     const end=start+Number(item.duration)*60000;
     const conflict=schedule.find(c=>{
@@ -44,6 +61,7 @@ function useStateStore() {
       return start<otherStart+Number(c.duration)*60000 && otherStart<end;
     });
     setSaved(v=>[...v,item.id]);
+    setSavedClassConfirmation(item);
     setSaveNotice(conflict?`Saved. Just so you know, you’re coaching ${conflict.name} at ${timeLabel(conflict.time)} and the times overlap.`:"");
   };
   const [sampleNotificationsSeen,setSampleNotificationsSeen]=useState(false);
@@ -71,7 +89,7 @@ function useStateStore() {
     window.history[push?"pushState":"replaceState"](state,"",url);
     setStack(routes);
   };
-  return { sampleNotificationsSeen,setSampleNotificationsSeen,sampleMessagesSeen,setSampleMessagesSeen,favorites,setFavorites,studioDrafts,setStudioDrafts,saveNotice,setSaveNotice,toggleSaved,billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
+  return { sampleNotificationsSeen,setSampleNotificationsSeen,sampleMessagesSeen,setSampleMessagesSeen,favorites,setFavorites,studioDrafts,setStudioDrafts,saveNotice,setSaveNotice,savedClassConfirmation,setSavedClassConfirmation,toggleSaved,billingProvider,setBillingProvider,studioSubscriptions,setStudioSubscriptions,personalEnding,setPersonalEnding,billingReceipts,setBillingReceipts,membershipPlan,setMembershipPlan,pro,setPro,exportsUsed,setExportsUsed,live,dataStatus,reloadData,profile,setProfile,schedule,setSchedule,preferences,setPreferences,away,setAway,following,setFollowing,follow,unfollow,followConfirmation,setFollowConfirmation,skipFollowConfirmation,setFollowConfirmationPreference,savedStudios,saveStudio,unsaveStudio,joinedGroups,setJoinedGroups,joinGroup,leaveGroup,collectionConfirmation,setCollectionConfirmation,skipCollectionConfirmation,setCollectionConfirmationPreference,saved,setSaved,connections,setConnections,messages,setMessages,roles,setRoles,timezone,setTimezone,stack,
     open:(route:Destination)=>navigate([...stack,route],true),
     back:()=>{if(window.history.state?.previewDepth>0) window.history.back(); else navigate(stack.slice(0,-1),false);},
     reset:()=>navigate([],false) };

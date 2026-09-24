@@ -135,9 +135,12 @@ export function Adder({
   onDeleted,
   onMatch,
   onPreviewPublish,
+  onPreviewBack,
 }: {
   /** Prototype adapter: intercept writes while reusing the production editor. */
   onPreviewPublish?: (input: import("@/app/actions/classes").PublishInput & { times?: string[] }) => void;
+  /** Prototype adapter: return from place selection to the preceding type step. */
+  onPreviewBack?: () => void;
   studios: StudioDto[];
   templates: TemplateDto[];
   customTypes: string[];
@@ -169,8 +172,9 @@ export function Adder({
    *  answer doesn't cost them everything they typed. */
   onMatch?: (m: PersonalMatch, again: () => void) => void;
 }) {
+  const [confirmClose, setConfirmClose] = useState(false);
   const onClose = () => {
-    if (onPreviewPublish && !window.confirm("Are you sure you want to close? Your progress will be lost.")) return;
+    if (onPreviewPublish) { setConfirmClose(true); return; }
     closeComposer();
   };
   const isEdit = Boolean(prefill?.classId);
@@ -308,6 +312,8 @@ export function Adder({
   const [nsKind, setNsKind] = useState<PlaceKind>("studio");
   const [nsMatches, setNsMatches] = useState<StudioMatch[]>([]);
   const [nsMatching, setNsMatching] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [addressSearching, setAddressSearching] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
   // Studio-first: the class list is scoped to the chosen studio's catalog. A
@@ -343,6 +349,29 @@ export function Adder({
       window.clearTimeout(timer);
     };
   }, [nsKind, nsName, stage]);
+
+  useEffect(() => {
+    const query = nsAddr.trim();
+    if (stage !== "new" || nsKind === "virtual" || query.length < 3) {
+      setAddressSuggestions([]);
+      setAddressSearching(false);
+      return;
+    }
+    let live = true;
+    setAddressSearching(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/address-suggestions?q=${encodeURIComponent(query)}`);
+        const data = await response.json() as { suggestions?: string[] };
+        if (live) setAddressSuggestions((data.suggestions ?? []).filter(value => value !== query));
+      } catch {
+        if (live) setAddressSuggestions([]);
+      } finally {
+        if (live) setAddressSearching(false);
+      }
+    }, 300);
+    return () => { live = false; window.clearTimeout(timer); };
+  }, [nsAddr, nsKind, stage]);
 
   // Load the studio's shared class catalog whenever the studio changes.
   useEffect(() => {
@@ -923,9 +952,8 @@ export function Adder({
           studio, tap a class. Only the form takes the screen, because the
           form is the work; a picker that takes over first reads like a
           heavier decision than it is. */}
-      <div className={`sheet adder${stage !== "form" ? " adder-step" : ""}`}>
-        {onPreviewPublish && stepped && <div className="adder-progress" role="progressbar" aria-label="Class setup progress" aria-valuemin={1} aria-valuemax={3} aria-valuenow={stage==="form"?3:stage==="class"?2:1}>{[1,2,3].map(step=><span key={step} data-complete={step<=(stage==="form"?3:stage==="class"?2:1)}/>)}</div>}
-        {stage !== "form" && (
+      <div className={`sheet adder${stage !== "form" ? " adder-step" : ""}${onPreviewPublish?" preview-adder":""}`}>
+        {stage !== "form" && !onPreviewPublish && (
           <button className="iconbtn sheetclose sheet-dismiss" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={20} />
           </button>
@@ -934,7 +962,7 @@ export function Adder({
         {stage === "form" && (
           <div>
             {/* Sticky title bar: heading + close stay pinned while the form scrolls. */}
-            <div className="adderhead">
+            <div className={`adderhead${onPreviewPublish?" preview-adder-head":""}`}>
               {/* The way back up the steps: the studio and the class were
                   answered on the screens behind this one, and changing that
                   answer should not mean starting over. */}
@@ -949,9 +977,11 @@ export function Adder({
                 </button>
               )}
               <h2>{stepped ? "Add a class" : heading.title}</h2>
-              <button className="iconbtn sheetclose adderclose sheet-dismiss" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
+              <button className={`iconbtn sheetclose adderclose sheet-dismiss${onPreviewPublish?" composerclose":""}`} aria-label="Close class setup" onClick={onClose}><Icon name="close" size={20} /></button>
             </div>
-            {stepped && <p className="stepline">Step 3 of 3 &middot; The details</p>}
+            {onPreviewPublish&&<div className="adder-progress" role="progressbar" aria-label="Class setup progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={4}>{[1,2,3,4].map(step=><span key={step} data-complete/>)}</div>}
+            {stepped && !onPreviewPublish && <p className="stepline">Step 3 of 3 &middot; The details</p>}
+            {onPreviewPublish&&<h1 className="preview-step-title">Class details</h1>}
 
             {/* Coaching it, or going to it. Only a coach is asked: a member
                 has one answer and a question with one answer is furniture.
@@ -1370,20 +1400,23 @@ export function Adder({
                 back is the profile pages' circled arrow, beside the title;
                 the first step of a fresh add has nothing behind it, so the X
                 is the way out. Reopened from the form, back returns there. */}
-            <div className="stephead">
+            <div className={`stephead${onPreviewPublish?" preview-adder-head":""}`}>
               {(onPreviewPublish || !stepped || name.trim() !== "" || Boolean(selectedStudio)) && (
                 <button
                   className="iconbtn sheetclose stepback"
                   aria-label="Back"
                   data-local-back={onPreviewPublish ? true : undefined}
-                  onClick={() => onPreviewPublish ? onClose() : setStage(stepped && !name.trim() ? "class" : "form")}
+                  onClick={() => {if(onPreviewPublish&&onPreviewBack){onPreviewBack();return;}onPreviewPublish ? onClose() : setStage(stepped && !name.trim() ? "class" : "form");}}
                 >
                   <Icon name="arrow_back" size={20} />
                 </button>
               )}
               <h2>{stepped ? "Add a class" : "Choose a place"}</h2>
+              {onPreviewPublish&&<button className="iconbtn sheetclose composerclose" aria-label="Close class setup" onClick={onClose}><Icon name="close" size={20}/></button>}
             </div>
-            {stepped && <p className="stepline">Step 1 of 3 &middot; Choose the place</p>}
+            {onPreviewPublish&&<div className="adder-progress" role="progressbar" aria-label="Class setup progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={2}>{[1,2,3,4].map(step=><span key={step} data-complete={step<=2}/>)}</div>}
+            {stepped && !onPreviewPublish && <p className="stepline">Step 1 of 3 &middot; Choose the place</p>}
+            {onPreviewPublish&&<h1 className="preview-step-title">Choose a place</h1>}
             {/* The box leads and the list waits for typing: with five hundred
                 studios in the directory a dumped list is a wall, and the ask
                 here is three words long. Type it, tap it, move on. No
@@ -1429,8 +1462,8 @@ export function Adder({
                 )}
               </div>
             )}
-            <button className="addnew" onClick={() => setStage("new")}>
-              + New place
+            <button className="addnew" onClick={() => {setNsName(search.trim());setStage("new");}}>
+              {search.trim() && filteredStudios.length === 0 ? `“${search.trim()}” doesn’t exist yet. Add it` : "+ New place"}
             </button>
             <div className="dirnote">Places are shared. Add one once and everyone can use it.</div>
           </div>
@@ -1442,7 +1475,7 @@ export function Adder({
             to answer; New class lands on the same form blank. */}
         {stage === "class" && (
           <div>
-            <div className="stephead">
+            <div className={`stephead${onPreviewPublish?" preview-adder-head":""}`}>
               <button
                 className="iconbtn sheetclose stepback"
                 aria-label="Back"
@@ -1452,10 +1485,11 @@ export function Adder({
                 <Icon name="arrow_back" size={20} />
               </button>
               <h2>Add a class</h2>
+              {onPreviewPublish&&<button className="iconbtn sheetclose composerclose" aria-label="Close class setup" onClick={onClose}><Icon name="close" size={20}/></button>}
             </div>
-            <p className="stepline">
-              Step 2 of 3 &middot; Pick a class{selectedStudio ? ` at ${selectedStudio.name}` : ""}
-            </p>
+            {onPreviewPublish&&<div className="adder-progress" role="progressbar" aria-label="Class setup progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={3}>{[1,2,3,4].map(step=><span key={step} data-complete={step<=3}/>)}</div>}
+            {!onPreviewPublish&&<p className="stepline">Step 2 of 3 &middot; Pick a class{selectedStudio ? ` at ${selectedStudio.name}` : ""}</p>}
+            {onPreviewPublish&&<h1 className="preview-step-title">Pick a class</h1>}
             <p className="lead">
               {catLoading || catalog.length > 0
                 ? "Start from a class already at this place, or from scratch. Yours to adjust either way."
@@ -1495,7 +1529,7 @@ export function Adder({
 
         {stage === "new" && (
           <div>
-            <div className="stephead">
+            <div className={`stephead${onPreviewPublish?" preview-new-place-head":""}`}>
               <button
                 className="iconbtn sheetclose stepback"
                 aria-label="Back"
@@ -1505,23 +1539,13 @@ export function Adder({
                 <Icon name="arrow_back" size={20} />
               </button>
               <h2>New place</h2>
+              {onPreviewPublish&&<button className="iconbtn sheetclose composerclose" aria-label="Close class setup" onClick={onClose}><Icon name="close" size={20}/></button>}
             </div>
             <p className="lead">A gym, event, park, or online space where fitness happens.</p>
-            <label className="flabel">What kind of place?</label>
-            <div className="placekind-grid" role="radiogroup" aria-label="Place type">
-              {PLACE_KINDS.map((kind) => (
-                <button
-                  key={kind}
-                  type="button"
-                  role="radio"
-                  aria-checked={nsKind === kind}
-                  className={`placekind-option${nsKind === kind ? " on" : ""}`}
-                  onClick={() => setNsKind(kind)}
-                >
-                  {PLACE_KIND_LABELS[kind]}
-                </button>
-              ))}
-            </div>
+            <label className="flabel" htmlFor="nsKind">What kind of place?</label>
+            <select id="nsKind" className="editinput placekind-select" value={nsKind} onChange={event => setNsKind(event.target.value as PlaceKind)}>
+              {PLACE_KINDS.map(kind => <option key={kind} value={kind}>{PLACE_KIND_LABELS[kind]}</option>)}
+            </select>
             <label className="flabel" htmlFor="nsName">
               Place name
             </label>
@@ -1563,11 +1587,15 @@ export function Adder({
             <input
               type="text"
               id="nsAddr"
-              placeholder={nsKind === "virtual" ? "e.g. Zoom" : "e.g. Hamilton Park, Jersey City"}
-              autoComplete="off"
+              placeholder={nsKind === "virtual" ? "e.g. Zoom" : "Start typing a street address"}
+              autoComplete={nsKind === "virtual" ? "off" : "street-address"}
               value={nsAddr}
               onChange={(e) => setNsAddr(e.target.value)}
             />
+            {nsKind !== "virtual" && (addressSearching || addressSuggestions.length > 0) && <div className="globaladd-matches" aria-live="polite">
+              <span>{addressSearching ? "Finding addresses…" : "Suggested addresses"}</span>
+              {addressSuggestions.map(address => <button key={address} type="button" onClick={() => {setNsAddr(address);setAddressSuggestions([]);}}><span><b>{address}</b></span><em>Use address</em></button>)}
+            </div>}
             <div className="publishwrap" style={{ marginTop: 24 }}>
               <button
                 className="btn si"
@@ -1580,6 +1608,8 @@ export function Adder({
           </div>
         )}
       </div>
+
+      {confirmClose && <div className="confirm-scrim" onClick={event=>{if(event.target===event.currentTarget)setConfirmClose(false);}}><div className="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="close-class-title"><h3 id="close-class-title">Close class setup?</h3><p>Your progress will be lost.</p><button className="btn si" onClick={closeComposer}>Yes, close</button><button className="confirm-keep" onClick={()=>setConfirmClose(false)}>Keep editing</button></div></div>}
 
       {confirmDelete && (
         <div

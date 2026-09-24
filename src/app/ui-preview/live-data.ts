@@ -24,7 +24,7 @@ export async function loadLivePreview() {
     const iso=date.toISOString().slice(0,10);
     for(const c of personal.classes) {
       if(!runsOn(c,iso,(date.getUTCDay()+6)%7)||occurrenceEnded(iso,c.startTime,c.durationMin,c.timeZone)) continue;
-      schedule.push({id:`${c.id}.${iso}`,name:c.name,description:c.description,place:personal.studios.find(s=>s.id===c.studioId)?.name || c.location || "Location to come",coach:me.name,date:iso,time:c.startTime,duration:String(c.durationMin),own:true,inCalendar:true,photo:me.photo});
+      schedule.push({id:`${c.id}.${iso}`,name:c.name,description:c.description,links:c.links,place:personal.studios.find(s=>s.id===c.studioId)?.name || c.location || "Location to come",coach:me.name,date:iso,time:c.startTime,duration:String(c.durationMin),own:true,inCalendar:true,photo:me.photo});
     }
   }
   const saved:string[]=[];
