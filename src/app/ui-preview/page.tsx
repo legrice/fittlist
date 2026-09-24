@@ -312,8 +312,8 @@ function GroupsScreen({selected,setSelected,firstTime}:{selected:string|null;set
   };
   const [seenUpdates,setSeenUpdates]=useState<string[]>([]);
   const [leaveGroupId,setLeaveGroupId]=useState<string|null>(null);
-  const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("schedule");
-  useEffect(()=>{setGroupView("schedule");},[selected]);
+  const [groupView,setGroupView]=useState<"schedule"|"members"|"updates">("updates");
+  useEffect(()=>{setGroupView("updates");},[selected]);
   useEffect(()=>{if(selected&&groupView==="members")window.dispatchEvent(new Event("preview-subpage"));},[groupView,selected]);
   const categories=["All","Run clubs","Fitness","Wellness"];
   const categoryOf=(value:string)=>/run/i.test(value)?"Run club":/wellness|yoga|mindful/i.test(value)?"Wellness":"Fitness";
