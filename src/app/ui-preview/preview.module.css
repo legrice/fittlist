@@ -595,6 +595,7 @@
 .groupContentToggle [data-slot="badge"] { min-width:20px; height:20px; padding:0 6px; border:0; background:var(--preview-text); color:var(--preview-ground); }
 .groupContentPanel { padding-top:20px; }
 .groupContentPanel > .stack > .sectionIntro:first-child { margin-top:0; }
+.groupUpdatesFeed { display:grid; gap:16px; }
 .groupAvatarStack { display:flex; padding-left:6px; }
 .groupAvatarStack > * { margin-left:-6px; border:2px solid var(--preview-surface); }
 .apple .daySection .groupDateTitle { color:var(--preview-text); font-size:var(--preview-section-size); }
@@ -623,15 +624,35 @@
 .groupMemberCount { display:flex; align-items:center; gap:8px; font-size:13px; }
 .groupJoinFooter { padding-left:16px; gap:12px; }
 .groupJoinButton { flex:none; min-height:44px; min-width:88px; padding:12px 20px; background:var(--preview-soft); color:var(--preview-text); }
-.sampleUpdate { padding:20px; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); }
+.sampleUpdate { padding:22px 20px 18px; border-radius:22px; background:var(--preview-surface); color:var(--preview-text); }
 .sampleUpdate header { display:flex; gap:12px; align-items:center; }
-.sampleUpdate header > span { display:grid; place-items:center; width:40px; height:40px; background:var(--preview-soft); border-radius:50%; }
-.sampleUpdate header div { display:grid; gap:4px; }
-.sampleUpdate small { color:var(--preview-muted); }
-.sampleUpdate p { line-height:1.5; }
-.sampleUpdate button { border:0; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); padding:10px 16px; }
-.sampleUpdate form { display:flex; gap:8px; }
-.sampleUpdate input { min-width:0; flex:1; border:1px solid var(--preview-soft); border-radius:12px; padding:10px; color:var(--preview-text); background:var(--preview-ground); }
+.sampleUpdate header > span { display:grid; place-items:center; flex:none; width:42px; height:42px; background:var(--preview-soft); border-radius:50%; font:600 13px var(--preview-font); }
+.sampleUpdate header div { display:grid; gap:3px; }
+.sampleUpdate small { color:var(--preview-muted); font-size:12px; }
+.sampleUpdate .groupUpdateBody { margin:22px 0; font:400 17px/1.48 var(--preview-font); letter-spacing:-.015em; }
+.groupUpdateClass { display:grid; gap:5px; margin:-4px 0 22px; padding:16px; border-radius:17px; background:var(--preview-soft); }
+.groupUpdateClass strong { font-size:15px; }
+.groupUpdateClass span { color:var(--preview-muted); font-size:13px; }
+.groupUpdateActions { display:flex; align-items:center; gap:10px; padding-top:16px; border-top:1px solid var(--preview-line); }
+.groupUpdateActions button { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:42px; padding:0 14px; border:0; border-radius:999px; background:var(--preview-soft); color:var(--preview-text); font:500 13px var(--preview-font); cursor:pointer; }
+.groupUpdateActions button[aria-pressed="true"] { color:#b83f59; }
+.groupUpdateActions b { display:grid; place-items:center; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 11px var(--preview-font); }
+.groupCommentsOverlay { position:absolute; inset:0; z-index:110; display:flex; align-items:flex-end; background:#11191d75; }
+.groupCommentsSheet { width:100%; max-height:82%; padding:8px 20px calc(18px + env(safe-area-inset-bottom)); overflow-y:auto; border-radius:28px 28px 0 0; background:var(--preview-surface); color:var(--preview-text); box-shadow:0 -18px 56px #0003; }
+.groupCommentsHandle { width:42px; height:4px; margin:0 auto 16px; border-radius:99px; background:var(--preview-line); }
+.groupCommentsSheet > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:22px; }
+.groupCommentsSheet h2 { margin:3px 0 0; font:600 24px/1.15 var(--preview-font); letter-spacing:-.035em; }
+.groupCommentsSheet small { color:var(--preview-muted); font-size:12px; }
+.groupCommentsSheet > header button { display:grid; place-items:center; width:40px; height:40px; border:0; border-radius:50%; background:var(--preview-soft); color:var(--preview-text); }
+.groupCommentList { display:grid; }
+.groupCommentList > div { display:flex; align-items:flex-start; gap:11px; padding:16px 0; border-top:1px solid var(--preview-line); }
+.groupCommentList > div > span { display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:50%; background:var(--preview-soft); font:600 11px var(--preview-font); }
+.groupCommentList p { display:grid; gap:4px; margin:0; font:14px/1.45 var(--preview-font); }
+.groupCommentList strong { font-size:13px; }
+.groupCommentsSheet form { position:sticky; bottom:-18px; display:flex; gap:8px; margin:20px -4px -18px; padding:12px 4px calc(18px + env(safe-area-inset-bottom)); background:var(--preview-surface); }
+.groupCommentsSheet input { min-width:0; flex:1; min-height:46px; padding:0 16px; border:1px solid var(--preview-line); border-radius:999px; background:var(--preview-soft); color:var(--preview-text); font:14px var(--preview-font); }
+.groupCommentsSheet form button { min-height:46px; padding:0 16px; border:0; border-radius:999px; background:var(--preview-text); color:var(--preview-ground); font:600 13px var(--preview-font); }
+.groupCommentsSheet form button:disabled { opacity:.4; }
 
 .directoryNavTitle { margin:0; text-align:center; font:600 16px/1.25 var(--preview-font); color:var(--preview-text); }
 
