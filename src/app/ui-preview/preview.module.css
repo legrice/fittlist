@@ -566,6 +566,9 @@
 .studioLink svg { flex-shrink:0; }
 .studioDashboardSection { margin-top:28px; }
 .studioDashboardSection > h2 { margin:0 0 12px; color:var(--preview-muted); font:600 13px/1.2 var(--preview-font); letter-spacing:.01em; }
+.studioDashboardHeading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.studioDashboardHeading h2 { margin:0; color:var(--preview-muted); font:600 13px/1.2 var(--preview-font); letter-spacing:.01em; }
+.studioDashboardHeading button { padding:4px 0; border:0; background:transparent; color:var(--preview-text); font:600 12px var(--preview-font); }
 .studioTaskList { display:grid; overflow:hidden; border-radius:20px; background:var(--preview-surface); }
 .studioDashboardLinks { display:grid; gap:var(--preview-card-gap); }
 .studioTaskCard,.studioTaskEmpty { display:flex; align-items:center; gap:14px; width:100%; min-height:68px; padding:14px 16px; border:0; border-bottom:1px solid var(--preview-line); border-radius:0; background:transparent; color:var(--preview-text); text-align:left; }
@@ -577,6 +580,23 @@
 .studioTaskCard small,.studioDashboardLinks .studioLink small,.studioTaskEmpty small { color:var(--preview-muted); font:13px/1.4 var(--preview-font); }
 .studioTaskCard svg,.studioDashboardLinks .studioLink svg { margin-left:auto; }
 .studioTaskEmpty { align-items:start; }
+.studioManageIcon { display:grid!important; place-items:center; flex:none; width:40px; height:40px; border-radius:12px; background:var(--preview-soft); color:var(--preview-text); }
+.studioTaskScreen { display:grid; gap:28px; margin-top:24px; }
+.studioTaskScreen section > h2 { margin:0 0 12px; color:var(--preview-muted); font:600 13px/1.2 var(--preview-font); }
+.studioTaskActionList { display:grid; overflow:hidden; border-radius:20px; background:var(--preview-surface); }
+.studioTaskAction { display:grid; gap:14px; padding:16px; border-bottom:1px solid var(--preview-line); }
+.studioTaskAction:last-child { border-bottom:0; }
+.studioTaskAction > div:first-child { display:grid; gap:4px; }
+.studioTaskAction strong { font:500 16px/1.25 var(--preview-font); }
+.studioTaskAction small { color:var(--preview-muted); font:13px/1.4 var(--preview-font); }
+.studioTaskAction > div:last-child { display:flex; justify-content:flex-end; gap:8px; }
+.studioTaskAction button,.studioTaskReview { min-height:38px; padding:0 14px; border:1px solid var(--preview-text); border-radius:999px; background:transparent; color:var(--preview-text); font:600 13px var(--preview-font); }
+.studioTaskAction button:last-child { background:var(--preview-text); color:var(--preview-ground); }
+.studioTaskAction button:disabled { opacity:.4; }
+.studioTaskAssign select { flex:1; min-width:0; height:40px; padding:0 32px 0 12px; border:1px solid var(--preview-line); border-radius:999px; background:var(--preview-ground); color:var(--preview-text); font:600 13px var(--preview-font); }
+.studioTaskReview { display:flex; align-items:center; gap:12px; width:100%; min-height:76px; padding:16px; border:0; border-radius:20px; background:var(--preview-surface); text-align:left; }
+.studioTaskReview > span { display:grid; flex:1; gap:4px; }
+.studioTaskReview svg { margin-left:auto; }
 .studioPrimary { display:flex; justify-content:center; align-items:center; min-height:var(--preview-cta-height); width:100%; margin-top:16px; padding:16px 24px; border:0; border-radius:999px; background:var(--preview-highlight); color:#192126; font:600 var(--preview-button-size)/1.25 var(--preview-font); }
 .studioWorkspace input[type="checkbox"] { width:20px; min-height:20px; }
 .studioCalendarToolbar { display:flex; align-items:center; justify-content:flex-start; gap:12px; margin:6px 0 26px; }
