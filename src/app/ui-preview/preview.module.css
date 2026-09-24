@@ -1206,6 +1206,7 @@
 .homeCalendarPreview > .homeClassItem:nth-child(2) { margin-top:0; }
 .homeCalendarPreview .mainBranchClasses { --color-surface:transparent; --kinetic-surface:transparent; margin-bottom:0; border:0; border-bottom:1px solid var(--preview-line); border-radius:0; background:transparent!important; }
 .homeCalendarPreview .mainBranchClasses :global(.activity-card-main) { padding-right:0; padding-left:0; }
+.homeCalendarPreview .mainBranchClasses :global(.clline) { padding-right:0; padding-left:0; border-radius:0; background:transparent; }
 .homeCalendarPreview .mainBranchClasses :global(.explore-save-row) { right:0; }
 .homeCalendarPreview .homeClassItem:last-child .dateClassStack > .mainBranchClasses:last-child { border-bottom:0; }
 .homeDashboard .homeClassItem + .homeClassItem { margin-top:30px; }
