@@ -1743,6 +1743,12 @@
 .apple .profileHeader { padding-bottom:36px; margin-bottom:8px; }
 .apple .profileStudioList { gap:14px; }
 .apple .profileStudioCard { min-height:88px; padding:18px; }
+.apple .calendarHero .homeSummaryActions > button,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button,
+.apple.dark .calendarHero .homeSummaryActions > button { border:0!important; background:#fff!important; color:#151718!important; box-shadow:none!important; }
+.apple .calendarHero .homeSummaryActions > button:hover,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover,
+.apple.dark .calendarHero .homeSummaryActions > button:hover { background:#f7f7f5!important; color:#151718!important; }
 .apple.dark .setupPanel { box-shadow:0 14px 36px rgb(0 0 0 / 22%); }
 @media(min-width:900px) {
   .setupPanel { margin-top:24px; padding:28px; border-radius:28px; }
