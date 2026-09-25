@@ -1290,6 +1290,26 @@
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton { border-color:color-mix(in srgb,var(--preview-text) 14%,#fff); background:#ffffffe8; box-shadow:inset 0 1px 0 #fff,0 4px 14px #1921260a; }
 .apple .swipeCalendar:not(.eveningHome) .calendarHero .homeSummaryActions .shareWeekButton:hover { background:#fff; }
 .homeDashboard { display:grid; gap:24px; padding-bottom:24px; }
+.homeStudioTasks { margin:18px var(--preview-gutter) 0; }
+.homeStudioTasks > .sectionTitle { margin-bottom:10px; }
+.homeStudioTasks > .sectionTitle > button { display:flex; align-items:center; gap:2px; padding:5px 0; border:0; background:transparent; color:var(--preview-muted); font:600 12px var(--preview-font); cursor:pointer; }
+.homeStudioTasks > div:last-child { overflow:hidden; border:1px solid var(--preview-line); border-radius:20px; background:var(--preview-surface); }
+.homeStudioTasks > div:last-child > button { display:flex; align-items:center; gap:12px; width:100%; min-height:72px; padding:13px 15px; border:0; border-bottom:1px solid var(--preview-line); background:transparent; color:var(--preview-text); text-align:left; cursor:pointer; }
+.homeStudioTasks > div:last-child > button:last-child { border-bottom:0; }
+.homeStudioTaskIcon { display:grid; place-items:center; flex:none; width:40px; height:40px; border-radius:12px; background:var(--preview-soft); }
+.homeStudioTasks button > span:nth-child(2) { display:grid; flex:1; gap:3px; min-width:0; }
+.homeStudioTasks strong { overflow:hidden; font:500 15px/1.25 var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
+.homeStudioTasks small { overflow:hidden; color:var(--preview-muted); font:12px/1.35 var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
+.homeStudioTasks em { color:var(--preview-action-green); font:600 12px var(--preview-font); font-style:normal; white-space:nowrap; }
+.profileStudios .sectionTitle > span:last-child { display:grid; place-items:center; min-width:24px; height:24px; padding:0 7px; border-radius:999px; background:var(--preview-soft); color:var(--preview-muted); font:600 12px var(--preview-font); }
+.profileStudioList { display:grid; gap:10px; }
+.profileStudioCard { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:12px; width:100%; padding:16px; border:1px solid var(--preview-line); border-radius:22px; background:var(--preview-surface); color:var(--preview-text); text-align:left; cursor:pointer; }
+.profileStudioAvatar { display:grid; place-items:center; grid-row:1 / span 2; width:48px; height:48px; overflow:hidden; border-radius:15px; background:var(--preview-soft); }
+.profileStudioAvatar img { width:100%; height:100%; object-fit:cover; }
+.profileStudioCard > span:nth-child(2) { display:grid; gap:3px; min-width:0; }
+.profileStudioCard strong { overflow:hidden; font:500 16px/1.25 var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
+.profileStudioCard small { color:var(--preview-muted); font:13px/1.35 var(--preview-font); }
+.profileStudioOpen { display:flex; align-items:center; gap:2px; grid-column:2; color:var(--preview-action-green); font:600 12px var(--preview-font); }
 .homeDashboard > section { min-width:0; padding:0; border:0; border-radius:0; background:transparent; }
 .homeDashboard > .homeActivitySection { padding-top:24px; border-top:1px solid var(--preview-line); }
 .homeDashboard > section > .sectionTitle { margin:0 0 16px; }
