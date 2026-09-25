@@ -202,7 +202,7 @@
 .apple .fullTabs { height:36px; padding:2px; background:var(--preview-field); border-radius:999px; }
 .apple .fullTabs [data-slot="tabs-trigger"] { border-radius:999px; color:var(--preview-text); font-weight:500; }
 .apple .fullTabs [data-slot="tabs-trigger"][data-active] { background:#fff; box-shadow:0 2px 5px #0000001a; font-weight:600; }
-.apple .settingsIcon { width:34px; height:34px; border-radius:8px; background:var(--preview-accent); color:#fff; }
+.apple .settingsIcon { width:34px; height:34px; border-radius:8px; background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple .settingsIcon svg { width:20px; height:20px; }
 .apple .settingsRow strong { font-size:16px; font-weight:500; }
 .apple .simpleCard { border-radius:14px; }
@@ -653,7 +653,7 @@
 .groupContentToggle [data-slot="badge"] { min-width:20px; height:20px; padding:0 6px; border:0; background:var(--preview-text); color:var(--preview-ground); }
 .apple .groupContentToggle { background:var(--preview-field); }
 .apple .groupContentToggle > button { background:transparent; color:var(--preview-text); }
-.apple .groupContentToggle > button[aria-selected="true"] { background:var(--preview-accent); color:#fff; box-shadow:none; }
+.apple .groupContentToggle > button[aria-selected="true"] { background:var(--preview-accent); color:var(--preview-on-accent); box-shadow:none; }
 .apple .groupContentToggle > button[aria-selected="true"] [data-slot="badge"] { background:#fff; color:var(--preview-accent); }
 .groupContentPanel { padding-top:20px; }
 .groupContentPanel > .stack > .sectionIntro:first-child { margin-top:0; }
@@ -1480,12 +1480,12 @@
   box-shadow:0 8px 24px rgb(36 40 37 / 5%);
 }
 .apple :is(.shareWeekButton,[data-slot="button"],.studioPrimary,.groupSetupFooter > button) { background:var(--preview-accent); color:var(--preview-on-accent); }
-.apple .calendarHero .shareWeekButton { background:var(--preview-accent); color:#fff; }
+.apple .calendarHero .shareWeekButton { background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple .calendarHero .shareWeekButton:hover,.apple .shareWeekButton:hover { background:#0c966a; }
 .apple .addFab { background:var(--preview-highlight); color:#08291f; }
 .apple .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-highlight); }
 .apple .settingsIcon,.apple .studioManageIcon,.apple .groupPurposeIcon { background:var(--preview-soft); color:var(--preview-accent); }
-.apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-accent); color:#fff; }
+.apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple .dock button[aria-current="page"] { background:var(--preview-soft); color:var(--preview-accent); }
 .apple .dock button[aria-current="page"] svg { color:var(--preview-accent); }
 
@@ -1573,19 +1573,20 @@
 
 /* Brand actions remain recognizable across discovery and calendar surfaces. */
 .apple .personAdd .allFace { color:#171c20; }
-.apple :is(.directoryFollow,.suggestionAction,.classSave,.groupListJoin,.groupJoinButton) { border-color:var(--preview-accent); background:var(--preview-accent); color:#fff; }
+.apple :is(.directoryFollow,.suggestionAction,.classSave,.groupListJoin,.groupJoinButton) { border-color:var(--preview-accent); background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple :is(.directoryFollow,.suggestionAction,.classSave,.groupListJoin,.groupJoinButton)[aria-pressed="true"] { border-color:#171c20; background:#171c20; color:#fff; }
 .apple .studioResults .suggestionAction[aria-pressed="true"] { border-color:#171c20; background:#171c20; color:#fff; }
-.apple .mainBranchClasses :global(.explore-save-button) { background:var(--preview-accent); color:#fff; }
+.apple .mainBranchClasses :global(.explore-save-button) { background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple .mainBranchClasses :global(.explore-save-button.on) { background:#171c20; color:#fff; }
 .apple .profileActions [data-slot="button"][data-variant="outline"] { color:var(--preview-text); }
 .apple .youPage .settingsIcon { color:var(--preview-text); }
 .apple .logoutForm button { color:var(--preview-text); }
-.apple .followSuccess { color:#fff; }
+.apple .followSuccess { color:var(--preview-on-accent); }
 .apple .calendarHero .homeSummaryActions > button,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button { border-color:var(--preview-accent)!important; background:var(--preview-accent)!important; color:#fff!important; }
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button { border-color:var(--preview-accent)!important; background:var(--preview-accent)!important; color:var(--preview-on-accent)!important; }
 .apple .calendarHero .homeSummaryActions > button:hover,
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#0c966a!important; }
+.apple.dark .calendarHero :is(.shareWeekButton,.homeSummaryActions > button):hover { background:#18c58b!important; color:var(--preview-on-accent)!important; }
 
 .setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
 .setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
@@ -1601,7 +1602,7 @@
 .setupTasks small { overflow:hidden; color:var(--preview-muted); font:12px/1.35 var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
 .setupTasks > button > svg { flex:none; color:var(--preview-muted); }
 .setupTasks > button[data-complete="true"] strong { color:var(--preview-muted); text-decoration:line-through; }
-.setupTasks > button[data-complete="true"] > span { background:var(--preview-accent); color:#fff; }
+.setupTasks > button[data-complete="true"] > span { background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple.dark .setupPanel { box-shadow:0 14px 36px rgb(0 0 0 / 22%); }
 @media(min-width:900px) {
   .setupPanel { margin-top:24px; padding:28px; border-radius:28px; }
