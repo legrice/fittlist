@@ -1582,6 +1582,10 @@
 .apple .youPage .settingsIcon { color:var(--preview-text); }
 .apple .logoutForm button { color:var(--preview-text); }
 .apple .followSuccess { color:#fff; }
+.apple .calendarHero .homeSummaryActions > button,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button { border-color:var(--preview-accent)!important; background:var(--preview-accent)!important; color:#fff!important; }
+.apple .calendarHero .homeSummaryActions > button:hover,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#0c966a!important; }
 
 .setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
 .setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
