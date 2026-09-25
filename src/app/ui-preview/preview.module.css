@@ -1571,3 +1571,28 @@
 .apple :is(.directoryFollow,.suggestionAction,.classSave)[aria-pressed="true"] { border-color:var(--preview-accent); background:var(--preview-accent); color:#fff; }
 .apple .studioResults .suggestionAction[aria-pressed="true"] { border-color:var(--preview-accent); background:var(--preview-accent); color:#fff; }
 .apple .mainBranchClasses :global(.explore-save-button),.apple .mainBranchClasses :global(.explore-save-button.on) { background:var(--preview-accent); color:#fff; }
+
+.setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
+.setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.setupPanel h2,.setupPanel p { margin:0; }
+.setupPanel h2 { font:600 20px/1.2 var(--preview-font); letter-spacing:-.025em; }
+.setupPanel p { margin-top:5px; color:var(--preview-muted); font:13px/1.4 var(--preview-font); }
+.setupPanel > header > span { flex:none; color:var(--preview-muted); font:600 13px var(--preview-font); }
+.setupTasks { display:grid; gap:9px; }
+.setupTasks > button { display:flex; align-items:center; gap:12px; width:100%; min-height:68px; padding:12px; border:1px solid var(--preview-line); border-radius:17px; background:var(--preview-surface); color:var(--preview-text); text-align:left; }
+.setupTasks > button > span { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:12px; background:var(--preview-soft); color:var(--preview-accent); }
+.setupTasks > button > div { display:grid; flex:1; min-width:0; gap:3px; }
+.setupTasks strong { font:600 14px/1.25 var(--preview-font); }
+.setupTasks small { overflow:hidden; color:var(--preview-muted); font:12px/1.35 var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
+.setupTasks > button > svg { flex:none; color:var(--preview-muted); }
+.setupTasks > button[data-complete="true"] strong { color:var(--preview-muted); text-decoration:line-through; }
+.setupTasks > button[data-complete="true"] > span { background:var(--preview-accent); color:#fff; }
+.apple.dark .setupPanel { box-shadow:0 14px 36px rgb(0 0 0 / 22%); }
+@media(min-width:900px) {
+  .setupPanel { margin-top:24px; padding:28px; border-radius:28px; }
+  .setupPanel > header { margin-bottom:22px; }
+  .setupTasks { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+  .setupTasks > button { align-items:flex-start; min-height:118px; padding:16px; }
+  .setupTasks > button > svg { margin-left:auto; }
+  .setupTasks small { white-space:normal; }
+}
