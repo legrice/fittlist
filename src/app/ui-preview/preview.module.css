@@ -1578,6 +1578,7 @@
 .apple .studioResults .suggestionAction[aria-pressed="true"] { border-color:#171c20; background:#171c20; color:#fff; }
 .apple .mainBranchClasses :global(.explore-save-button) { background:var(--preview-accent); color:#fff; }
 .apple .mainBranchClasses :global(.explore-save-button.on) { background:#171c20; color:#fff; }
+.apple .profileActions [data-slot="button"][data-variant="outline"] { color:var(--preview-text); }
 
 .setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
 .setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
