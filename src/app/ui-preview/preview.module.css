@@ -1667,39 +1667,39 @@
 .setupTasks > button[data-complete="true"] strong { color:var(--preview-muted); text-decoration:line-through; }
 .setupTasks > button[data-complete="true"] > span { background:var(--preview-accent); color:var(--preview-on-accent); }
 
-/* High-energy palette experiment: deep ocean structure, warm cream canvas, restrained electric yellow. */
+/* High-energy palette experiment: neutral structure, crisp white surfaces, restrained electric yellow. */
 .apple {
-  --preview-accent:#11425d;
-  --preview-highlight:#11425d;
+  --preview-accent:#151718;
+  --preview-highlight:#151718;
   --preview-brand:#ddff55;
   --preview-energy:#ddff55;
-  --preview-soft:#c0d6ea;
-  --preview-on-soft:#002233;
-  --preview-ground:#f1f3f4;
-  --preview-text:#002233;
-  --preview-muted:#426276;
-  --preview-line:#dfe3e5;
-  --preview-field:#e8ecee;
+  --preview-soft:#e9e9e7;
+  --preview-on-soft:#151718;
+  --preview-ground:#f3f3f1;
+  --preview-text:#151718;
+  --preview-muted:#696c6b;
+  --preview-line:#e1e1de;
+  --preview-field:#eaeae7;
   --preview-surface:#fff;
   --preview-on-accent:#f6f2e8;
 }
 .apple.dark {
-  --preview-accent:#c0d6ea;
-  --preview-highlight:#c0d6ea;
+  --preview-accent:#f6f2e8;
+  --preview-highlight:#f6f2e8;
   --preview-brand:#ddff55;
   --preview-energy:#ddff55;
-  --preview-soft:#11425d;
+  --preview-soft:#242728;
   --preview-on-soft:#f6f2e8;
-  --preview-ground:#002233;
+  --preview-ground:#0d0f10;
   --preview-text:#f6f2e8;
   --preview-muted:#c5c0c9;
-  --preview-line:#31576c;
-  --preview-field:#173b50;
-  --preview-surface:#0c354b;
-  --preview-on-accent:#002233;
-  background:#002233;
+  --preview-line:#343738;
+  --preview-field:#252829;
+  --preview-surface:#1c1f20;
+  --preview-on-accent:#151718;
+  background:#0d0f10;
 }
-.apple.middayTheme { background:#e9edef; }
+.apple.middayTheme { background:#ededeb; }
 .apple .calendarHero .calendarSummary strong { font-weight:700; letter-spacing:-.005em; }
 .apple :is(.addFab,.homeUtilities button > span,.notification [data-slot="badge"]) { border-color:var(--preview-energy); background:var(--preview-energy); color:#002233; }
 .apple .unreadDot { background:var(--preview-energy); }
@@ -1710,15 +1710,15 @@
 .apple .studioMarker:focus { outline-color:var(--preview-energy); }
 .apple .monthGrid > button.monthHasClass i { background:var(--preview-energy); }
 .apple .calendarHero .homeSummaryActions > button,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button { background:#11425d!important; color:#f6f2e8!important; }
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button { background:#151718!important; color:#fff!important; }
 .apple .calendarHero .homeSummaryActions > button:hover,
-.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#002233!important; color:#f6f2e8!important; }
-.apple.dark .calendarHero .homeSummaryActions > button { background:#c0d6ea!important; color:#002233!important; }
-.apple.dark .calendarHero .homeSummaryActions > button:hover { background:#ddff55!important; color:#002233!important; }
-.apple .homeCardFooter { background:#11425d!important; color:#f6f2e8!important; }
-.apple .homeCardFooter:hover { background:#002233!important; color:#f6f2e8!important; }
-.apple.dark .homeCardFooter { background:#c0d6ea!important; color:#002233!important; }
-.apple.dark .homeCardFooter:hover { background:#ddff55!important; color:#002233!important; }
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#000!important; color:#fff!important; }
+.apple.dark .calendarHero .homeSummaryActions > button { background:#f6f2e8!important; color:#151718!important; }
+.apple.dark .calendarHero .homeSummaryActions > button:hover { background:#ddff55!important; color:#151718!important; }
+.apple .homeCardFooter { background:#151718!important; color:#fff!important; }
+.apple .homeCardFooter:hover { background:#000!important; color:#fff!important; }
+.apple.dark .homeCardFooter { background:#f6f2e8!important; color:#151718!important; }
+.apple.dark .homeCardFooter:hover { background:#ddff55!important; color:#151718!important; }
 
 /* Open, Cash-inspired spatial rhythm without borrowing its product structure. */
 @media(max-width:899px) {
