@@ -1591,6 +1591,31 @@
 .apple .homeCardFooter:hover { background:#0c966a; }
 .apple.dark .homeCardFooter:hover { background:#18c58b; }
 
+/* Final surface and control polish. */
+.apple:not(.dark) .calendarWorkspace .addFab { border:1px solid var(--preview-line); background:#fff; color:var(--preview-text); box-shadow:0 5px 18px rgb(23 28 32 / 12%); }
+.apple .calendarWorkspace .addFab svg { stroke-width:3; }
+.apple .personalCalendarToolbar button[aria-pressed="true"] { background:var(--preview-accent); color:#fff; }
+.apple.dark .personalCalendarToolbar button[aria-pressed="true"] { color:var(--preview-on-accent); }
+.apple .calendarWorkspaceHeader .pageTitle,.apple .collectionPageHeader .pageTitle { transform:translateY(-3px); }
+.apple .calendarWorkspaceDay > .mainBranchClasses + .mainBranchClasses { margin-top:12px; }
+.apple :is(.classCard,.personCard,.simpleCard,.ownedGroup,.exploreGroupCard,.studioCalendarCard,.studioLink,.appearanceSetting,.homeWidget,.sampleUpdate,.homeStandaloneClass),
+.apple .homeActivityList > button,
+.apple .calendarWorkspaceDay > .mainBranchClasses { box-shadow:0 2px 10px rgb(36 40 37 / 6%); }
+.apple.dark :is(.classCard,.personCard,.simpleCard,.ownedGroup,.exploreGroupCard,.studioCalendarCard,.studioLink,.appearanceSetting,.homeWidget,.sampleUpdate,.homeStandaloneClass),
+.apple.dark .homeActivityList > button,
+.apple.dark .calendarWorkspaceDay > .mainBranchClasses { box-shadow:0 3px 12px rgb(0 0 0 / 16%); }
+.apple .homeCardFooter { font-size:15px; }
+.apple .calendarHero .homeSummaryActions > button,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button { border-color:color-mix(in srgb,var(--preview-accent) 18%,transparent)!important; background:var(--preview-soft)!important; color:var(--preview-on-soft)!important; font-size:14px; }
+.apple .calendarHero .homeSummaryActions > button:hover,
+.apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover,
+.apple.dark .calendarHero :is(.shareWeekButton,.homeSummaryActions > button):hover { background:color-mix(in srgb,var(--preview-soft) 88%,var(--preview-accent))!important; color:var(--preview-on-soft)!important; }
+.apple .dock button[aria-current="page"] { background:color-mix(in srgb,var(--preview-accent) 10%,var(--preview-surface)); }
+.apple.dark .dock button[aria-current="page"] { background:color-mix(in srgb,var(--preview-accent) 12%,var(--preview-surface)); }
+.apple .calendarHero .calendarSummary strong { letter-spacing:-.015em; }
+.apple .homeUtilities button { border:1px solid var(--preview-line); background:var(--preview-surface); box-shadow:0 2px 10px rgb(36 40 37 / 7%); -webkit-backdrop-filter:none; backdrop-filter:none; }
+.apple.dark .homeUtilities button { box-shadow:0 3px 12px rgb(0 0 0 / 18%); }
+
 .setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
 .setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
 .setupPanel h2,.setupPanel p { margin:0; }
