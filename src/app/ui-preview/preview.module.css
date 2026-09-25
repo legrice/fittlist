@@ -138,7 +138,7 @@
 /* Shared Apple layout with semantic palette tokens. */
 .apple { color:var(--preview-text); font-family:var(--preview-font); }
 .apple {
-  --preview-font:"Circular Std","Helvetica Neue",Arial,sans-serif;
+  --preview-font:"Delight","Helvetica Neue",Arial,sans-serif;
   --preview-accent:#192126;
   --preview-highlight:#19c58b;
   --preview-brand:#19c58b;
