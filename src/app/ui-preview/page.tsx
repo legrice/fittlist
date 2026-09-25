@@ -80,22 +80,27 @@ function CalendarScreen({ onShare, firstTime, onNavigate, onOpenGroup, appearanc
   if(homeWeekEnd)homeWeekEnd.setDate(homeWeekEnd.getDate()+7);
   const homeWeekClasses=homeWeekStart&&homeWeekEnd?personalClasses.filter(item=>item.date>=homeWeekStart&&new Date(`${item.date}T12:00:00`)<homeWeekEnd):personalClasses;
   const homeWeekDates=[...new Set(homeWeekClasses.map(item=>item.date))].sort();
-  const joinedGroupUpdates=Object.entries(p.joinedGroups).map(([id,name],index)=>({id:`group-${id}`,priority:100-index,title:`New plan from ${name}`,meta:"Group update",icon:<Users size={19}/>,open:()=>onOpenGroup(id)}));
+  const activityPerson=(name:string,photo?:string|null)=>{const person=p.live?.people.find(item=>item.name===name)||explorePeople.find(item=>item.name===name);const personPhoto=(person as {photo?:string|null}|undefined)?.photo;return <Face initials={(person?.initials||name.split(/\s+/).map(part=>part[0]).join("")).slice(0,2)} color={person?.color||"#C8C3DB"} photo={photo||personPhoto} size={40}/>;};
+  const activityGroup=(id:string,name:string)=>{const group=p.live?.groups.find(item=>item.id===id||item.name===name);const image=group?.image||(id==="gals"?"https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=160&q=80":id==="sweat"?"https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=160&q=80":"");return image?<img className={styles.activityImage} src={image} alt=""/>:<Users size={19}/>;};
+  const activityStudio=(name:string)=>{const studio=p.live?.studios.find(item=>item.name===name);return studio?.photo?<img className={styles.activityImage} src={studio.photo} alt=""/>:<Storefront size={19}/>;};
+  const joinedGroupUpdates=Object.entries(p.joinedGroups).map(([id,name],index)=>({id:`group-${id}`,priority:100-index,title:`New plan from ${name}`,meta:"Group update",icon:activityGroup(id,name),open:()=>onOpenGroup(id)}));
   const savedActivityClass=p.schedule.find(item=>p.saved.includes(item.id));
-  const savedClassActivity=savedActivityClass?[{id:`saved-${savedActivityClass.id}`,priority:85,title:`${p.live?.people.find(person=>person.name!==p.profile.name)?.name||"Erin Clyne"} saved ${savedActivityClass.name}`,meta:`Class activity · ${savedActivityClass.place}`,icon:<CalendarDays size={19}/>,open:()=>p.open({kind:"class",name:savedActivityClass.id})}]:[];
+  const savedActor=p.live?.people.find(person=>person.name!==p.profile.name);
+  const savedActorName=savedActor?.name||"Erin Clyne";
+  const savedClassActivity=savedActivityClass?[{id:`saved-${savedActivityClass.id}`,priority:85,title:`${savedActorName} saved ${savedActivityClass.name}`,meta:`Class activity · ${savedActivityClass.place}`,icon:activityPerson(savedActorName,savedActor?.photo),open:()=>p.open({kind:"class",name:savedActivityClass.id})}]:[];
   const followedClass=p.schedule.find(item=>p.following.includes(item.coach));
-  const followedActivity=followedClass?[{id:`person-${followedClass.id}`,priority:65,title:`${followedClass.coach} is teaching ${followedClass.name}`,meta:`People you follow · ${dateLabel(followedClass.date)}`,icon:<UserRound size={19}/>,open:()=>p.open({kind:"class",name:followedClass.id})}]:[];
+  const followedActivity=followedClass?[{id:`person-${followedClass.id}`,priority:65,title:`${followedClass.coach} is teaching ${followedClass.name}`,meta:`People you follow · ${dateLabel(followedClass.date)}`,icon:activityPerson(followedClass.coach,followedClass.photo),open:()=>p.open({kind:"class",name:followedClass.id})}]:[];
   const studioClass=p.schedule.find(item=>p.savedStudios.includes(item.place));
-  const studioActivity=studioClass?[{id:`studio-${studioClass.id}`,priority:45,title:`${studioClass.name} is coming up at ${studioClass.place}`,meta:`Saved studio · ${dateLabel(studioClass.date)}`,icon:<Storefront size={19}/>,open:()=>p.open({kind:"class",name:studioClass.id})}]:[];
+  const studioActivity=studioClass?[{id:`studio-${studioClass.id}`,priority:45,title:`${studioClass.name} is coming up at ${studioClass.place}`,meta:`Saved studio · ${dateLabel(studioClass.date)}`,icon:activityStudio(studioClass.place),open:()=>p.open({kind:"class",name:studioClass.id})}]:[];
   const openCalendar=()=>setCalendarOpen(true);
   const sampleActivity=[
-    {id:"notification-follow",priority:58,title:"Erin Clyne followed you",meta:"Today",icon:<UserRound size={19}/>,open:()=>p.open({kind:"person",name:"Erin Clyne"})},
-    {id:"notification-class",priority:54,title:"Freddie added Sculpt & Strength",meta:"Gals who like to move · Yesterday",icon:<CalendarDays size={19}/>,open:()=>p.open({kind:"class",name:"sculpt"})},
-    {id:"notification-plan",priority:50,title:"Alex shared a new class plan",meta:"Sunday Sweat Crew · 2 days ago",icon:<Users size={19}/>,open:()=>onNavigate("groups")},
-    {id:"notification-save",priority:46,title:"Jordan saved Morning Flow",meta:"Class activity · 3 days ago",icon:<CalendarDays size={19}/>,open:()=>p.open({kind:"notifications"})},
-    {id:"notification-join",priority:42,title:"Sam joined your group",meta:"Gals who like to move · 4 days ago",icon:<Users size={19}/>,open:()=>onNavigate("groups")},
-    {id:"notification-studio",priority:38,title:"Asana Lab posted a new class",meta:"Studio update · 5 days ago",icon:<Storefront size={19}/>,open:()=>p.open({kind:"notifications"})},
-    {id:"notification-comment",priority:34,title:"Erin commented on your plan",meta:"Group activity · 6 days ago",icon:<MessageCircle size={19}/>,open:()=>p.open({kind:"notifications"})},
+    {id:"notification-follow",priority:58,title:"Erin Clyne followed you",meta:"Today",icon:activityPerson("Erin Clyne"),open:()=>p.open({kind:"person",name:"Erin Clyne"})},
+    {id:"notification-class",priority:54,title:"Freddie added Sculpt & Strength",meta:"Gals who like to move · Yesterday",icon:activityPerson("Freddie Morgan"),open:()=>p.open({kind:"class",name:"sculpt"})},
+    {id:"notification-plan",priority:50,title:"Alex shared a new class plan",meta:"Sunday Sweat Crew · 2 days ago",icon:activityGroup("sweat","Sunday Sweat Crew"),open:()=>onNavigate("groups")},
+    {id:"notification-save",priority:46,title:"Jordan saved Morning Flow",meta:"Class activity · 3 days ago",icon:activityPerson("Jordan Rivera"),open:()=>p.open({kind:"notifications"})},
+    {id:"notification-join",priority:42,title:"Sam joined your group",meta:"Gals who like to move · 4 days ago",icon:activityPerson("Sam Chen"),open:()=>onNavigate("groups")},
+    {id:"notification-studio",priority:38,title:"Asana Lab posted a new class",meta:"Studio update · 5 days ago",icon:activityStudio("Asana Soul Practice"),open:()=>p.open({kind:"notifications"})},
+    {id:"notification-comment",priority:34,title:"Erin commented on your plan",meta:"Group activity · 6 days ago",icon:activityPerson("Erin Clyne"),open:()=>p.open({kind:"notifications"})},
     {id:"notification-reminder",priority:30,title:"Your Saturday class is coming up",meta:"Calendar reminder · 1 week ago",icon:<CalendarDays size={19}/>,open:openCalendar},
   ];
   const activityFeed=[...joinedGroupUpdates,...savedClassActivity,...followedActivity,...studioActivity,...sampleActivity].sort((a,b)=>b.priority-a.priority).slice(0,8);

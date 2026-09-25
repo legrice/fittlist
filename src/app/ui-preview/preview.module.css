@@ -651,6 +651,10 @@
 .groupContentToggle > button { display:flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:0 16px; border:0; border-radius:999px; background:transparent; color:var(--preview-muted); font:600 14px var(--preview-font); cursor:pointer; }
 .groupContentToggle > button[aria-selected="true"] { background:var(--preview-surface); color:var(--preview-text); box-shadow:0 2px 8px #19212612; }
 .groupContentToggle [data-slot="badge"] { min-width:20px; height:20px; padding:0 6px; border:0; background:var(--preview-text); color:var(--preview-ground); }
+.apple .groupContentToggle { background:var(--preview-field); }
+.apple .groupContentToggle > button { background:#fff; color:#171c20; }
+.apple .groupContentToggle > button[aria-selected="true"] { background:var(--preview-accent); color:#fff; box-shadow:none; }
+.apple .groupContentToggle > button[aria-selected="true"] [data-slot="badge"] { background:#fff; color:var(--preview-accent); }
 .groupContentPanel { padding-top:20px; }
 .groupContentPanel > .stack > .sectionIntro:first-child { margin-top:0; }
 .groupUpdatesFeed { display:grid; gap:16px; }
@@ -1298,6 +1302,8 @@
 .homeActivityList { display:grid; gap:var(--preview-card-gap); }
 .homeActivityList > button { display:flex; align-items:center; gap:14px; width:100%; min-height:76px; padding:16px; border:0; border-radius:20px; background:var(--preview-surface); color:var(--preview-text); text-align:left; cursor:pointer; box-shadow:none; }
 .homeActivityList > button > span { display:grid; place-items:center; flex:none; width:40px; height:40px; border-radius:12px; background:var(--preview-soft); }
+.homeActivityList > button > span:has(.activityImage),.homeActivityList > button > span:has([data-slot="avatar"]) { overflow:hidden; background:transparent; }
+.activityImage { display:block; width:100%; height:100%; border-radius:12px; object-fit:cover; }
 .homeActivityList > button > div { display:grid; gap:3px; flex:1; min-width:0; }
 .homeActivityList strong,.homeActivityList small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .homeActivityList strong { font:500 16px/1.25 var(--preview-font); }
@@ -1558,3 +1564,10 @@
   .studioMapSlot .mapCardRail { left:304px; }
   .studioMapSlot .mapListButton { left:calc(50% + 152px); }
 }
+
+/* Brand actions remain recognizable across discovery and calendar surfaces. */
+.apple .personAdd .allFace { color:#171c20; }
+.apple :is(.directoryFollow,.suggestionAction,.classSave) { border-color:var(--preview-accent); background:var(--preview-accent); color:#fff; }
+.apple :is(.directoryFollow,.suggestionAction,.classSave)[aria-pressed="true"] { border-color:var(--preview-accent); background:var(--preview-accent); color:#fff; }
+.apple .studioResults .suggestionAction[aria-pressed="true"] { border-color:var(--preview-accent); background:var(--preview-accent); color:#fff; }
+.apple .mainBranchClasses :global(.explore-save-button),.apple .mainBranchClasses :global(.explore-save-button.on) { background:var(--preview-accent); color:#fff; }
