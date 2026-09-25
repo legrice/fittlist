@@ -1621,6 +1621,14 @@
 .apple:not(.dark) .calendarHero .homeSummaryActions > button:hover,
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover,
 .apple:not(.dark) .homeCardFooter:hover { background:color-mix(in srgb,var(--preview-accent) 15%,var(--preview-surface))!important; color:var(--preview-accent)!important; }
+.apple.dark .calendarHero .homeSummaryActions > button,
+.apple.dark .homeCardFooter { border-color:color-mix(in srgb,var(--preview-accent) 16%,transparent)!important; background:color-mix(in srgb,var(--preview-accent) 12%,var(--preview-surface))!important; color:var(--preview-accent)!important; }
+.apple.dark .calendarHero .homeSummaryActions > button:hover,
+.apple.dark .homeCardFooter:hover { background:color-mix(in srgb,var(--preview-accent) 17%,var(--preview-surface))!important; color:var(--preview-accent)!important; }
+.apple:not(.dark) :is(.classCard,.personCard,.simpleCard,.ownedGroup,.exploreGroupCard,.studioCalendarCard,.studioLink,.appearanceSetting,.homeWidget,.sampleUpdate,.homeStandaloneClass),
+.apple:not(.dark) .homeActivityList > button,
+.apple:not(.dark) .calendarWorkspaceDay > .mainBranchClasses,
+.apple:not(.dark) .homeUtilities button { box-shadow:none; }
 
 .setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
 .setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
