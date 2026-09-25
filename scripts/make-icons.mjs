@@ -31,6 +31,17 @@ function square(size, radius, fill) {
   </svg>`;
 }
 
+function splash(size) {
+  const inner = brandIcon(LIME)
+    .replace(/^<svg[^>]*>/, "")
+    .replace(/<\/svg>$/, "");
+  const scale = 12.6 / INK.w;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="${size}" height="${size}">
+    <rect width="120" height="120" fill="#FDFCF7"/>
+    <g fill="${LIME}" transform="translate(60 60) scale(${scale}) translate(${-INK.cx} ${-INK.cy})">${inner}</g>
+  </svg>`;
+}
+
 // A plain icon uses the reference's large lime mark on its dark field. A
 // maskable one gets cropped to whatever shape the launcher likes, so its mark
 // pulls into the safe zone. Apple touch applies its own rounded-square mask.
@@ -53,9 +64,15 @@ await sharp(Buffer.from(square(1024, 0, 68)))
   .removeAlpha().png()
   .toFile("ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png");
 
+for (const file of ["splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"]) {
+  await sharp(Buffer.from(splash(2732)))
+    .removeAlpha().png()
+    .toFile(`ios/App/App/Assets.xcassets/Splash.imageset/${file}`);
+}
+
 // The browser favicon: same mark, same source, so the tab matches the app.
 fs.writeFileSync("src/app/icon.svg", `${square(120, 0, 79.2).replace(/\n\s+/g, "")}\n`);
 console.log("src/app/icon.svg");
 
 if (!fs.existsSync("public/icon-512.png")) throw new Error("icons missing");
-console.log(`\n${ICONS.length + 2} written`);
+console.log(`\n${ICONS.length + 5} written`);

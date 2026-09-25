@@ -70,9 +70,9 @@ html[data-native="ios"] body, html[data-native="android"] body { padding-top: en
 :root {
   /* FittList core palette. New UI should consume these semantic tokens;
      the legacy aliases below map to them while older surfaces migrate. */
-  --color-lime: #A1E510;
-  --color-lime-pressed: #BBF246;
-  --color-lime-soft: #EEFAD7;
+  --color-lime: #19C58B;
+  --color-lime-pressed: #10A978;
+  --color-lime-soft: #E5F4EE;
   --color-action: var(--color-lime);
   --color-action-pressed: var(--color-lime-pressed);
   --color-action-soft: var(--color-lime-soft);
@@ -6064,7 +6064,7 @@ html[data-mode="dark"],
   --grad-mid: var(--color-background);
   --ground: var(--color-background);
   --si-tint: #303D22;
-  --si-ink: #BBF246;
+  --si-ink: #19C58B;
   --card: var(--color-surface);
   --ink: var(--color-text-primary);
   --ol: var(--color-text-secondary);
@@ -14961,7 +14961,7 @@ a.clspeek-by:active { opacity: .6; }
   --kinetic-canvas-dark: #111F24;
   --kinetic-canvas-light: #F6F6F4;
   --kinetic-surface: #FFFFFF;
-  --kinetic-accent: #8CF25F;
+  --kinetic-accent: #19C58B;
   --kinetic-text: #000000;
   --kinetic-inverse: #FFFFFF;
   --kinetic-badge: rgba(20, 20, 20, 0.06);

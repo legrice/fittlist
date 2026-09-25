@@ -27,7 +27,7 @@ export async function GET() {
           flexDirection: "column",
           alignItems: "stretch",
           justifyContent: "center",
-          background: "#8CF25F",
+          background: "#19C58B",
           color: "#020D08",
           fontFamily: "Delight",
           padding: "50px 68px 44px",

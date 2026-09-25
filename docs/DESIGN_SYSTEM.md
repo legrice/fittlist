@@ -27,7 +27,7 @@ the element, reconsider whether the element needs a container.
 
 ## Actions
 
-- **Primary:** lime (`#A1E510`) fill, charcoal (`#192126`) type; lighter lime (`#BBF246`) when pressed.
+- **Primary:** brand green (`#19C58B`) with white type in light mode and dark type in dark mode; deeper green (`#10A978`) when pressed.
 - **Secondary:** cool gray fill, charcoal type. Secondary text uses `#384046` in light mode.
 - **Outline:** white fill with ink outline, used only when the boundary matters.
 - **Tertiary:** text only.

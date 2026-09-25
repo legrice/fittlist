@@ -15,7 +15,7 @@ async function main() {
   process.env.PGLITE_DATA_DIR = join(directory, "db");
   const secret = randomBytes(32).toString("hex");
   const db = await getDb();
-  const portrait = "data:image/png;base64," + (await sharp({create:{width:40,height:100,channels:3,background:"#8cf25f"}}).png().toBuffer()).toString("base64");
+  const portrait = "data:image/png;base64," + (await sharp({create:{width:40,height:100,channels:3,background:"#19c58b"}}).png().toBuffer()).toString("base64");
   // Legacy data-URL artwork is deliberately substantial, so accidentally
   // returning artwork from a list query is measurable. It is never rendered.
   const legacyArtwork = "data:image/png;base64," + randomBytes(12_000).toString("base64");

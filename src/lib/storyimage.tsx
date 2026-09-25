@@ -298,7 +298,7 @@ export async function renderStory(model: StoryModel) {
   if (backgroundPhoto) {
     const compact = plan.tier !== 1;
     const storyHeight = square ? 1080 : 1920;
-    const photoMark = iconUri("#8CF25F");
+    const photoMark = iconUri("#19C58B");
     return new ImageResponse(
       (
         <div

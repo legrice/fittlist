@@ -58,7 +58,7 @@
 .simpleCard p { margin:6px 0 0; color:#69767d; font-size:13px; }
 .groupHero { gap:0; padding:0; overflow:hidden; border:0; border-radius:22px; background:#192126; color:#fff; }
 .groupHero > [data-slot="card-header"] { gap:9px; padding:22px; }
-.groupSymbol { display:grid; place-items:center; width:58px; height:58px; margin-bottom:6px; border-radius:17px; background:#a1e510; color:#192126; }
+.groupSymbol { display:grid; place-items:center; width:58px; height:58px; margin-bottom:6px; border-radius:17px; background:#19c58b; color:#fff; }
 .groupHero [data-slot="badge"] { justify-self:start; border-radius:999px; background:#354147; color:#e5eff2; }
 .groupHero [data-slot="card-title"] { color:#fff; font-size:23px; font-weight:500; }
 .groupHero p { margin:0; color:#cbd6da; font-size:13px; }
@@ -70,8 +70,8 @@
 .inlinePerson > div:last-child { display:flex; flex-direction:column; }
 .inlinePerson span { color:#69767d; font-size:12px; }
 .notification { display:flex; align-items:center; gap:11px; }
-.notification [data-slot="badge"] { border-radius:999px; background:#a1e510; color:#192126; }
-.unreadDot { width:8px; height:8px; border-radius:50%; background:#a1e510; }
+.notification [data-slot="badge"] { border-radius:999px; background:#19c58b; color:#fff; }
+.unreadDot { width:8px; height:8px; border-radius:50%; background:#19c58b; }
 .profileCard { gap:0; padding:0; border:0; border-radius:23px; background:#192126; color:white; }
 .profileCard > [data-slot="card-content"] { display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding:22px; }
 .profileCard h2 { margin:0; color:#fff; font-size:23px; font-weight:500; }
@@ -130,8 +130,8 @@
 .groupForm label { display:flex; flex-direction:column; gap:8px; font-size:14px; }
 
 .calendarYouPanel { padding-bottom:64px; }
-.addFab { position:absolute; right:20px; bottom:calc(88px + env(safe-area-inset-bottom)); z-index:10; display:grid; place-items:center; width:58px; height:58px; border-radius:50%; background:#a1e510; color:#192126; box-shadow:0 5px 18px #19212626; text-decoration:none; }
-.addFab:hover { background:#b0ed35; }
+.addFab { position:absolute; right:20px; bottom:calc(88px + env(safe-area-inset-bottom)); z-index:10; display:grid; place-items:center; width:58px; height:58px; border-radius:50%; background:#19c58b; color:#fff; box-shadow:0 5px 18px #19212626; text-decoration:none; }
+.addFab:hover { background:#10a978; }
 .addFab:focus-visible { outline:3px solid #192126; outline-offset:3px; }
 
 /* Apple-inspired layout with the original FittList colors. */
@@ -140,8 +140,8 @@
 .apple {
   --preview-font:"Delight","Helvetica Neue",Arial,sans-serif;
   --preview-accent:#192126;
-  --preview-highlight:#8fbf68;
-  --preview-brand:#a1e510;
+  --preview-highlight:#19c58b;
+  --preview-brand:#19c58b;
   --preview-soft:#e8edef;
   --preview-on-soft:#192126;
   --preview-ground:#f5f7f8;
@@ -267,7 +267,7 @@
 .studioMapWrap { position:relative; padding-bottom:90px; }
 .studioMap { height:clamp(220px,28dvh,320px); width:100%; border-radius:20px; z-index:0; background:#e6ecef; }
 .studioMarker { display:grid; place-items:center; background:#192126; color:white; border:3px solid white; border-radius:50% 50% 50% 4px; box-shadow:0 3px 10px #19212640; font:600 16px Delight,Arial,sans-serif; }
-.studioMarker:focus { outline:3px solid #a1e510; }
+.studioMarker:focus { outline:3px solid #19c58b; }
 .mapNote { margin:8px 0; color:#536067; font-size:12px; }
 .mapStudioCard { display:flex; flex-direction:column; gap:8px; padding:20px; border-radius:16px; background:#fff; }
 .mapStudioCard strong { font-size:18px; }
@@ -416,7 +416,7 @@
 .scheduleCoachAvatar { display:grid; place-items:center; flex:none; width:32px; height:32px; border-radius:50%; background:#c8c3db; color:#192126; font-size:11px; font-weight:600; }
 .teachingBadge { padding:7px 10px; border-radius:999px; background:#e7eedb; color:#3c5122; font-size:11px; font-weight:600; }
 .dark .teachingBadge { background:#35432a; color:#d5ecc0; }
-.teachingCard { border-left:3px solid #a1e510; }
+.teachingCard { border-left:3px solid #19c58b; }
 .scheduleCard button:focus-visible { outline:2px solid var(--preview-text); outline-offset:4px; border-radius:8px; }
 @media(max-width:360px) { .scheduleCard { padding:14px; } .classTimeLink { font-size:13px; } .classSave { padding:8px; } }
 
