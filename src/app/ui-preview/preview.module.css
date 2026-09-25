@@ -652,7 +652,7 @@
 .groupContentToggle > button[aria-selected="true"] { background:var(--preview-surface); color:var(--preview-text); box-shadow:0 2px 8px #19212612; }
 .groupContentToggle [data-slot="badge"] { min-width:20px; height:20px; padding:0 6px; border:0; background:var(--preview-text); color:var(--preview-ground); }
 .apple .groupContentToggle { background:var(--preview-field); }
-.apple .groupContentToggle > button { background:#fff; color:#171c20; }
+.apple .groupContentToggle > button { background:transparent; color:var(--preview-text); }
 .apple .groupContentToggle > button[aria-selected="true"] { background:var(--preview-accent); color:#fff; box-shadow:none; }
 .apple .groupContentToggle > button[aria-selected="true"] [data-slot="badge"] { background:#fff; color:var(--preview-accent); }
 .groupContentPanel { padding-top:20px; }
@@ -1008,6 +1008,12 @@
   .apple .mapTakeover .mapStudioCard { left:auto; width:340px; bottom:32px; }
   .apple .youPage { max-width:760px; margin:0 auto; }
 }
+.searchRecents { display:grid; margin-top:24px; }
+.searchRecents h2 { margin:0 0 10px; color:var(--preview-muted); font:600 13px/1.2 var(--preview-font); }
+.searchRecents > button { display:grid; grid-template-columns:32px minmax(0,1fr) auto; align-items:center; gap:10px; min-height:54px; padding:8px 0; border:0; border-bottom:1px solid var(--preview-line); background:transparent; color:var(--preview-text); text-align:left; }
+.searchRecents > button > svg:first-child { display:grid; padding:7px; width:32px; height:32px; border-radius:10px; background:var(--preview-soft); color:var(--preview-accent); }
+.searchRecents > button > svg:last-child { color:var(--preview-muted); }
+.searchRecents > button span { overflow:hidden; font:500 15px var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
 @media(prefers-reduced-motion:reduce) { .apple .dock,.apple .dock .navLabel { transition:none; } }
 .apple .search:focus-within { outline:2px solid color-mix(in srgb,var(--preview-text) 25%,transparent); outline-offset:2px; }
 .apple .search input:focus,.apple .search input:focus-visible { outline:none; box-shadow:none; border-color:transparent; }
