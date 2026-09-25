@@ -43,10 +43,12 @@ html[data-native="ios"] body, html[data-native="android"] body { padding-top: en
    real 800 cut. Register it explicitly so the DOM preview does not synthesize
    weight 800 from 700 and then shift when the final PNG appears. */
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-800.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Circular Preview'; src: url('/fonts/schibsted-grotesk-regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Circular Preview'; src: url('/fonts/schibsted-grotesk-medium.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Circular Preview'; src: url('/fonts/schibsted-grotesk-semibold.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Circular Preview'; src: url('/fonts/schibsted-grotesk-bold.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Circular Std'; src: url('/fonts/circular-std-book.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Circular Std'; src: url('/fonts/circular-std-book-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Circular Std'; src: url('/fonts/circular-std-medium.woff2') format('woff2'); font-weight: 500 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Circular Std'; src: url('/fonts/circular-std-medium-italic.woff2') format('woff2'); font-weight: 500 600; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Circular Std'; src: url('/fonts/circular-std-bold.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Circular Std'; src: url('/fonts/circular-std-bold-italic.woff2') format('woff2'); font-weight: 700; font-style: italic; font-display: swap; }
 /* The poster's guest faces (the Type picker's personalities): the same TTFs
    satori draws with, so the picker's sample rows show the truth. Loaded
    lazily by font-display: swap; only the picker and nothing else uses them. */
