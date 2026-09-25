@@ -431,7 +431,7 @@
 .bookingLinks a > span { display:grid; gap:3px; }
 .bookingLinks small { color:var(--preview-muted); font-size:12px; }
 .classPageFooter { position:absolute; bottom:0; left:0; right:0; z-index:35; padding:16px 20px calc(20px + env(safe-area-inset-bottom)); background:var(--preview-ground); border-top:1px solid var(--preview-line); }
-.classPageFooter button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:52px; padding:12px; border:0; border-radius:999px; background:var(--preview-highlight); color:#192126; font:inherit; font-weight:600; cursor:pointer; }
+.classPageFooter button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:52px; padding:12px; border:0; border-radius:999px; background:var(--preview-highlight); color:var(--preview-on-accent); font:inherit; font-weight:600; cursor:pointer; }
 
 .dataBanner { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 24px; font-size:12px; color:var(--muted-foreground); border-bottom:1px solid color-mix(in srgb,currentColor 12%,transparent); }
 .dataBanner a { text-decoration:underline; }
@@ -464,7 +464,7 @@
 .mainBranchClasses :global(.explore-save-button.on) { background:var(--preview-text); color:var(--preview-ground); }
 
 .membership { padding-bottom:30px; }
-.proBadge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; background:var(--preview-highlight); color:#192126; padding:7px 12px; font-size:13px; font-weight:600; }
+.proBadge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; background:var(--preview-highlight); color:var(--preview-on-accent); padding:7px 12px; font-size:13px; font-weight:600; }
 .membership h2 { font-size:36px; line-height:1.1; margin:24px 0 14px; letter-spacing:-.04em; }
 .membership p { color:var(--preview-muted); line-height:1.5; }
 .planSwitch { display:flex; padding:4px; border-radius:999px; background:var(--preview-soft); margin:24px 0; }
@@ -476,7 +476,7 @@
 .membership li svg { flex-shrink:0; }
 .freePlan { padding:20px; border-radius:20px; background:var(--preview-soft); }
 .freePlan p { margin:8px 0 0; font-size:14px; }
-.membershipCta { position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:min(calc(100% - 40px),390px); min-height:52px; border-radius:999px; background:var(--preview-highlight); color:#192126; font-weight:600; box-shadow:0 0 0 12px var(--preview-ground); }
+.membershipCta { position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:min(calc(100% - 40px),390px); min-height:52px; border-radius:999px; background:var(--preview-highlight); color:var(--preview-on-accent); font-weight:600; box-shadow:0 0 0 12px var(--preview-ground); }
 .sharePlanBar { display:flex; justify-content:space-between; align-items:center; gap:12px; font-size:13px; margin:12px 0; }
 .sharePlanBar button { padding:8px 12px; background:var(--preview-soft); border-radius:999px; font-weight:600; }
 .planDemo { font-size:12px; color:var(--preview-muted); margin-bottom:12px; }
@@ -513,7 +513,7 @@
   display:flex; align-items:center; justify-content:center; gap:8px;
   min-height:var(--preview-cta-height); height:auto; padding:16px 24px;
   border:0; border-radius:var(--radius-pill,999px);
-  background:var(--preview-highlight); color:#192126;
+  background:var(--preview-highlight); color:var(--preview-on-accent);
   font-family:var(--preview-font); font-size:var(--preview-button-size); font-weight:600; line-height:1.25;
 }
 .apple :is(.membershipCta,.classPageFooter button):disabled { opacity:.5; cursor:not-allowed; }
@@ -597,7 +597,7 @@
 .studioTaskReview { display:flex; align-items:center; gap:12px; width:100%; min-height:76px; padding:16px; border:0; border-radius:20px; background:var(--preview-surface); text-align:left; }
 .studioTaskReview > span { display:grid; flex:1; gap:4px; }
 .studioTaskReview svg { margin-left:auto; }
-.studioPrimary { display:flex; justify-content:center; align-items:center; min-height:var(--preview-cta-height); width:100%; margin-top:16px; padding:16px 24px; border:0; border-radius:999px; background:var(--preview-highlight); color:#192126; font:600 var(--preview-button-size)/1.25 var(--preview-font); }
+.studioPrimary { display:flex; justify-content:center; align-items:center; min-height:var(--preview-cta-height); width:100%; margin-top:16px; padding:16px 24px; border:0; border-radius:999px; background:var(--preview-highlight); color:var(--preview-on-accent); font:600 var(--preview-button-size)/1.25 var(--preview-font); }
 .studioWorkspace input[type="checkbox"] { width:20px; min-height:20px; }
 .studioCalendarToolbar { display:flex; align-items:center; justify-content:flex-start; gap:12px; margin:6px 0 26px; }
 .studioCalendarToolbar select { min-width:132px; height:42px; padding:0 34px 0 13px; border:1px solid var(--preview-line); border-radius:999px; background:var(--preview-surface); color:var(--preview-text); font:600 13px var(--preview-font); }
@@ -672,7 +672,7 @@
 .groupJoinFooter { position:fixed; bottom:calc(12px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:min(calc(100% - 32px),398px); z-index:45; display:flex; align-items:center; gap:16px; border:1px solid var(--preview-soft); border-radius:999px; padding:8px 8px 8px 24px; background:var(--preview-surface); box-shadow:0 4px 24px #0002; }
 .groupMemberCount { display:grid; text-align:left; background:none; border:0; color:var(--preview-text); font:inherit; }
 .groupMemberCount span { color:var(--preview-muted); font-size:13px; }
-.groupJoinButton { margin-left:auto; flex:1; min-height:60px; border:0; border-radius:999px; background:var(--preview-highlight); color:#192126; font:600 16px/1.25 var(--preview-font); }
+.groupJoinButton { margin-left:auto; flex:1; min-height:60px; border:0; border-radius:999px; background:var(--preview-highlight); color:var(--preview-on-accent); font:600 16px/1.25 var(--preview-font); }
 
 .groupFooterSpace { padding-bottom:110px; }
 
@@ -1142,7 +1142,7 @@
 .groupPurposeGrid strong { padding-right:16px; font-size:15px; line-height:1.2; }
 .groupPurposeGrid strong + span { margin-top:5px; font-size:12px; line-height:1.35; }
 .groupSetupFooter { position:fixed; bottom:0; left:50%; transform:translateX(-50%); z-index:45; width:min(100%,430px); display:grid; gap:8px; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); background:var(--preview-ground); }
-.groupSetupFooter > button { min-height:52px; border-radius:999px; background:var(--preview-highlight); color:#192126; font:600 16px var(--preview-font); }
+.groupSetupFooter > button { min-height:52px; border-radius:999px; background:var(--preview-highlight); color:var(--preview-on-accent); font:600 16px var(--preview-font); }
 .groupSetupFooter > button:disabled { opacity:.45; }
 .groupSetupFooter > .groupSetupSkip { min-height:36px; background:transparent; color:var(--preview-muted); font-size:14px; }
 .groupSetup .groupForm textarea,.groupSetup .groupForm select { width:100%; padding:12px; border-radius:12px; border:1px solid var(--preview-line); background:var(--preview-surface); color:var(--preview-text); font:inherit; }
@@ -1157,7 +1157,7 @@
 .followOverlay { position:absolute; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(17,25,29,.48); }
 .followDialog { position:relative; width:min(100%,390px); padding:32px 24px 22px; border-radius:26px; background:var(--preview-surface); color:var(--preview-text); text-align:center; box-shadow:0 24px 64px rgba(0,0,0,.2); }
 .followClose { position:absolute; top:16px; right:16px; border:0; background:transparent; color:var(--preview-muted); cursor:pointer; }
-.followSuccess { display:inline-flex; align-items:center; justify-content:center; width:58px; height:58px; border-radius:50%; background:var(--preview-brand); color:#192126; animation:followCircleEnter 420ms cubic-bezier(.2,1.35,.35,1) both; }
+.followSuccess { display:inline-flex; align-items:center; justify-content:center; width:58px; height:58px; border-radius:50%; background:var(--preview-brand); color:var(--preview-on-accent); animation:followCircleEnter 420ms cubic-bezier(.2,1.35,.35,1) both; }
 .followSuccess svg { animation:followCheckEnter 320ms ease-out 180ms both; }
 @keyframes followCircleEnter { from { opacity:0; transform:scale(.55); } to { opacity:1; transform:scale(1); } }
 @keyframes followCheckEnter { from { opacity:0; transform:scale(.55) rotate(-12deg); } to { opacity:1; transform:scale(1) rotate(0); } }
@@ -1385,7 +1385,7 @@
 .calendarWorkspaceToolbar > div { display:flex; gap:4px; padding:3px; border-radius:999px; background:var(--preview-soft); }
 .calendarWorkspaceToolbar > div button { min-height:32px; padding:5px 12px; border:0; border-radius:999px; background:transparent; color:var(--preview-muted); font:600 12px var(--preview-font); cursor:pointer; }
 .calendarWorkspaceToolbar > div button[aria-pressed="true"] { background:var(--preview-surface); color:var(--preview-text); box-shadow:0 1px 4px #19212612; }
-.calendarAddButton { display:flex; align-items:center; gap:6px; min-height:38px; padding:7px 13px; border:0; border-radius:999px; background:var(--preview-highlight); color:#192126; font:600 13px var(--preview-font); cursor:pointer; }
+.calendarAddButton { display:flex; align-items:center; gap:6px; min-height:38px; padding:7px 13px; border:0; border-radius:999px; background:var(--preview-highlight); color:var(--preview-on-accent); font:600 13px var(--preview-font); cursor:pointer; }
 .calendarManagement { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; padding:14px; border-radius:17px; background:var(--preview-surface); }
 .calendarManagement > div { display:grid; gap:3px; }
 .calendarManagement strong { font:600 14px var(--preview-font); }
@@ -1482,7 +1482,7 @@
 .apple :is(.shareWeekButton,[data-slot="button"],.studioPrimary,.groupSetupFooter > button) { background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple .calendarHero .shareWeekButton { background:var(--preview-accent); color:var(--preview-on-accent); }
 .apple .calendarHero .shareWeekButton:hover,.apple .shareWeekButton:hover { background:#0c966a; }
-.apple .addFab { background:var(--preview-highlight); color:#08291f; }
+.apple .addFab { background:var(--preview-highlight); color:var(--preview-on-accent); }
 .apple .personFilter[aria-pressed="true"] .personRing { border-color:var(--preview-highlight); }
 .apple .settingsIcon,.apple .studioManageIcon,.apple .groupPurposeIcon { background:var(--preview-soft); color:var(--preview-accent); }
 .apple .calendarModeTabs [data-slot="tabs-trigger"][data-active] { background:var(--preview-accent); color:var(--preview-on-accent); }
