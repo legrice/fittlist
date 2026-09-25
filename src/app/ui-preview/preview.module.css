@@ -1675,12 +1675,12 @@
   --preview-energy:#ddff55;
   --preview-soft:#c0d6ea;
   --preview-on-soft:#002233;
-  --preview-ground:#f6f2e8;
+  --preview-ground:#f1f3f4;
   --preview-text:#002233;
   --preview-muted:#426276;
-  --preview-line:#d8d4cc;
-  --preview-field:#ebe8e0;
-  --preview-surface:#fffdf8;
+  --preview-line:#dfe3e5;
+  --preview-field:#e8ecee;
+  --preview-surface:#fff;
   --preview-on-accent:#f6f2e8;
 }
 .apple.dark {
@@ -1699,7 +1699,7 @@
   --preview-on-accent:#002233;
   background:#002233;
 }
-.apple.middayTheme { background:#eee9df; }
+.apple.middayTheme { background:#e9edef; }
 .apple .calendarHero .calendarSummary strong { font-weight:700; letter-spacing:-.005em; }
 .apple :is(.addFab,.homeUtilities button > span,.notification [data-slot="badge"]) { border-color:var(--preview-energy); background:var(--preview-energy); color:#002233; }
 .apple .unreadDot { background:var(--preview-energy); }
