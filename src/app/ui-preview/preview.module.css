@@ -1587,6 +1587,9 @@
 .apple .calendarHero .homeSummaryActions > button:hover,
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#0c966a!important; }
 .apple.dark .calendarHero :is(.shareWeekButton,.homeSummaryActions > button):hover { background:#18c58b!important; color:var(--preview-on-accent)!important; }
+.apple .homeCardFooter { border:1px solid var(--preview-accent); background:var(--preview-accent); color:var(--preview-on-accent); }
+.apple .homeCardFooter:hover { background:#0c966a; }
+.apple.dark .homeCardFooter:hover { background:#18c58b; }
 
 .setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
 .setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
