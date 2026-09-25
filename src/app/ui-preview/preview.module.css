@@ -1651,18 +1651,15 @@
 .apple:not(.dark) .swipeCalendar .calendarHero .homeSummaryActions > button:hover { background:#0c966a!important; color:#fff!important; }
 .apple.dark .calendarHero .homeSummaryActions > button:hover { background:#18c58b!important; color:#171c20!important; }
 
-.setupPanel { margin:20px 0 28px; padding:20px; border:1px solid var(--preview-line); border-radius:24px; background:var(--preview-surface); box-shadow:0 10px 30px rgb(36 40 37 / 6%); }
-.setupPanel > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
-.setupPanel h2,.setupPanel p { margin:0; }
-.setupPanel h2 { font:600 20px/1.2 var(--preview-font); letter-spacing:-.025em; }
-.setupPanel p { margin-top:5px; color:var(--preview-muted); font:13px/1.4 var(--preview-font); }
-.setupPanel > header > span { flex:none; color:var(--preview-muted); font:600 13px var(--preview-font); }
-.setupTasks { display:grid; gap:9px; }
-.setupTasks > button { display:flex; align-items:center; gap:12px; width:100%; min-height:68px; padding:12px; border:1px solid var(--preview-line); border-radius:17px; background:var(--preview-surface); color:var(--preview-text); text-align:left; }
-.setupTasks > button > span { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:12px; background:var(--preview-soft); color:var(--preview-accent); }
-.setupTasks > button > div { display:grid; flex:1; min-width:0; gap:3px; }
-.setupTasks strong { font:600 14px/1.25 var(--preview-font); }
-.setupTasks small { overflow:hidden; color:var(--preview-muted); font:12px/1.35 var(--preview-font); text-overflow:ellipsis; white-space:nowrap; }
+.setupPanel { margin:28px 0 36px; }
+.setupPanel > header { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:12px; margin-bottom:16px; }
+.setupPanel h2 { margin:0; font:600 23px/1.15 var(--preview-font); letter-spacing:-.025em; }
+.setupPanel > header > span { color:var(--preview-muted); font:600 13px var(--preview-font); }
+.setupPanel > header > button { display:grid; place-items:center; width:40px; height:40px; padding:0; border:0; border-radius:999px; background:var(--preview-surface); color:var(--preview-text); }
+.setupTasks { display:grid; gap:10px; }
+.setupTasks > button { display:flex; align-items:center; gap:14px; width:100%; min-height:74px; padding:14px 16px; border:0; border-radius:28px; background:var(--preview-surface); color:var(--preview-text); text-align:left; }
+.setupTasks > button > span { display:grid; place-items:center; flex:none; width:42px; height:42px; border-radius:999px; background:var(--preview-soft); color:var(--preview-accent); }
+.setupTasks strong { flex:1; min-width:0; font:600 15px/1.25 var(--preview-font); }
 .setupTasks > button > svg { flex:none; color:var(--preview-muted); }
 .setupTasks > button[data-complete="true"] strong { color:var(--preview-muted); text-decoration:line-through; }
 .setupTasks > button[data-complete="true"] > span { background:var(--preview-accent); color:var(--preview-on-accent); }
