@@ -1,5 +1,5 @@
 .preview { min-height:100dvh; padding:20px; background:#e9edf0; color:#192126; font-family:'Delight','Helvetica Neue',Arial,sans-serif; }
-.notice { max-width:430px; margin:0 auto 12px; color:#536067; font-size:12px; font-weight:700; letter-spacing:.04em; text-align:center; text-transform:uppercase; }
+.notice { max-width:430px; margin:0 auto 12px; color:#536067; font-size:12px; font-weight:500; letter-spacing:.04em; text-align:center; text-transform:uppercase; }
 .phone { position:relative; display:flex; flex-direction:column; width:min(100%,430px); height:min(880px,calc(100dvh - 64px)); min-height:600px; margin:0 auto; overflow:hidden; border:1px solid #d8dfe2; border-radius:32px; background:#f5f7f8; box-shadow:0 18px 60px #19212624; }
 .content { flex:1; min-height:0; overflow:auto; padding:var(--preview-top-padding) 20px 36px; scrollbar-width:thin; }
 .topControls { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
@@ -11,7 +11,7 @@
 .yourCalendarSummary { align-items:center; gap:22px; padding:34px 22px; text-align:center; }
 .yourCalendarSummary strong { max-width:320px; }
 .heroActions { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; width:100%; }
-.shareWeekButton { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 26px; border-radius:999px; background:#fff; color:#192126; font-size:14px; font-weight:700; text-decoration:none; }
+.shareWeekButton { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 26px; border-radius:999px; background:#fff; color:#192126; font-size:14px; font-weight:500; text-decoration:none; }
 .shareWeekButton:hover { background:#e8edef; }
 .secondaryHeroButton { border:1px solid #cbd6da; background:transparent; color:var(--preview-text); align-items:flex-start; text-align:left; }
 .secondaryHeroButton:hover { background:#344148; }
@@ -23,12 +23,12 @@
 .personRing > div,.allFace { width:56px; height:56px; border-radius:50%; }
 .allFace { display:grid; place-items:center; background:#e6ecef; color:#192126; }
 .personFilter small { max-width:64px; overflow:hidden; font-size:12px; font-weight:600; text-overflow:ellipsis; }
-.personFilter[aria-pressed="true"] small { color:#192126; font-weight:700; }
+.personFilter[aria-pressed="true"] small { color:#192126; font-weight:500; }
 .sectionTitle { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:28px 0 12px; }
-.sectionTitle h2 { margin:0; font-size:20px; font-weight:700; letter-spacing:-.025em; }
+.sectionTitle h2 { margin:0; font-size:20px; font-weight:500; letter-spacing:-.025em; }
 .sectionTitle [data-slot="badge"] { border-radius:999px; background:#e8edef; color:#46545c; }
 .daySection { margin:20px 0; }
-.daySection h3 { margin:0 0 9px; color:#536067; font-size:14px; font-weight:700; }
+.daySection h3 { margin:0 0 9px; color:#536067; font-size:14px; font-weight:500; }
 .classCard,.personCard,.simpleCard { gap:0; padding:0; border:1px solid #e1e6e9; border-radius:19px; background:#fff; box-shadow:0 2px 8px #19212608; }
 .classCard { border:0; border-radius:20px; box-shadow:none; }
 .classCardBody { display:flex; flex-direction:column; align-items:stretch; gap:7px; min-height:100px; padding:16px 18px; }
@@ -45,7 +45,7 @@
 .fullTabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; height:42px; margin:20px 0 4px; border-radius:14px; background:#e6ecef; }
 .fullTabs:has(> :nth-child(2):last-child) { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .calendarModeTabs { margin:0; }
-.fullTabs [data-slot="tabs-trigger"] { min-width:0; border-radius:11px; font-size:13px; font-weight:700; }
+.fullTabs [data-slot="tabs-trigger"] { min-width:0; border-radius:11px; font-size:13px; font-weight:500; }
 .fullTabs [data-slot="tabs-trigger"][data-active] { background:#fff; color:#192126; box-shadow:0 1px 4px #19212614; }
 .stack { display:flex; flex-direction:column; gap:10px; }
 .personCardBody { display:flex; align-items:center; gap:12px; min-height:84px; padding:14px; }
@@ -60,7 +60,7 @@
 .groupHero > [data-slot="card-header"] { gap:9px; padding:22px; }
 .groupSymbol { display:grid; place-items:center; width:58px; height:58px; margin-bottom:6px; border-radius:17px; background:#a1e510; color:#192126; }
 .groupHero [data-slot="badge"] { justify-self:start; border-radius:999px; background:#354147; color:#e5eff2; }
-.groupHero [data-slot="card-title"] { color:#fff; font-size:23px; font-weight:700; }
+.groupHero [data-slot="card-title"] { color:#fff; font-size:23px; font-weight:500; }
 .groupHero p { margin:0; color:#cbd6da; font-size:13px; }
 .groupHeroFooter { display:flex; align-items:center; gap:10px; padding:14px 22px; border-top:1px solid #ffffff24; color:#dce5e8; font-size:13px; }
 .groupHeroFooter > svg { margin-left:auto; }
@@ -74,7 +74,7 @@
 .unreadDot { width:8px; height:8px; border-radius:50%; background:#a1e510; }
 .profileCard { gap:0; padding:0; border:0; border-radius:23px; background:#192126; color:white; }
 .profileCard > [data-slot="card-content"] { display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding:22px; }
-.profileCard h2 { margin:0; color:#fff; font-size:23px; font-weight:700; }
+.profileCard h2 { margin:0; color:#fff; font-size:23px; font-weight:500; }
 .profileCard span,.profileCard p { color:#cad4d8; font-size:13px; }
 .profileCard p { margin:8px 0 4px; }
 .profileCard button { border:0; border-radius:999px; background:#fff; color:#192126; }
@@ -459,7 +459,7 @@
 .apple .personFilter small { max-width:86px; width:100%; white-space:nowrap; line-height:1.1; }
 .calendarPersonContext .sectionTitle { min-height:36px; margin:14px 0 24px; }
 .apple .calendarPersonContext .sectionTitle h2 { font-size:14px; font-weight:600; letter-spacing:normal; }
-.calendarProfileButton { min-height:30px; padding:6px 12px; gap:3px; font-size:12px; font-weight:700; line-height:1; border:1px solid var(--preview-line); }
+.calendarProfileButton { min-height:30px; padding:6px 12px; gap:3px; font-size:12px; font-weight:500; line-height:1; border:1px solid var(--preview-line); }
 .apple .personFilter:hover { background:transparent; }
 .mainBranchClasses :global(.explore-save-button.on) { background:var(--preview-text); color:var(--preview-ground); }
 
@@ -1163,7 +1163,7 @@
 @keyframes followCheckEnter { from { opacity:0; transform:scale(.55) rotate(-12deg); } to { opacity:1; transform:scale(1) rotate(0); } }
 @media (prefers-reduced-motion:reduce) { .followSuccess,.followSuccess svg { animation:none; } }
 .followDialog h2 { margin:18px 0 24px; font-size:22px; line-height:1.2; }
-.followGoHome { width:100%; min-height:48px; border:0; border-radius:999px; font:inherit; font-weight:700; cursor:pointer; }
+.followGoHome { width:100%; min-height:48px; border:0; border-radius:999px; font:inherit; font-weight:500; cursor:pointer; }
 .followGoHome { display:flex; align-items:center; justify-content:center; gap:8px; background:var(--preview-accent); color:var(--preview-on-accent); }
 .followRemember { display:inline-flex; align-items:center; gap:9px; margin-top:10px; padding:8px; color:var(--preview-muted); font-size:13px; cursor:pointer; }
 .followRemember input { width:17px; height:17px; margin:0; accent-color:var(--preview-highlight); cursor:pointer; }

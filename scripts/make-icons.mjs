@@ -11,13 +11,13 @@ import sharp from "sharp";
 import fs from "node:fs";
 import { brandIcon } from "../src/lib/brand.ts";
 
-const LIME = "#8CF25F";
-const INK_COLOR = "#111F24";
+const LIME = "#19C58B";
+const INK_COLOR = "#171C20";
 
 // brandIcon's ink fills its 108x103 viewBox exactly, so the centre is the box
 // centre. Scale by the larger side, so the mark fits its share of the square in
 // both directions; `fill` is how much of the 120 box it takes up.
-const INK = { cx: 54, cy: 51.5, w: 108 };
+const INK = { cx: 105.39805, cy: 102.25005, w: 103.2039 };
 function square(size, radius, fill) {
   // brandIcon carries its colour on the <svg> element, which is exactly the
   // part being unwrapped, so the group has to carry it instead.
