@@ -23,9 +23,9 @@ struct MarkRect {
 }
 
 let markRects = [
-  MarkRect(x: 0, y: 0, width: 108, height: 27),
-  MarkRect(x: 0, y: 38, width: 72, height: 27),
-  MarkRect(x: 0, y: 76, width: 36, height: 27),
+  MarkRect(x: 0, y: 0, width: 103.2039, height: 25.8009),
+  MarkRect(x: 0, y: 36.3124, width: 68.8029, height: 25.8005),
+  MarkRect(x: 0, y: 72.6249, width: 34.4013, height: 25.8010),
 ]
 
 func context(size: Int, alpha: Bool) -> CGContext {
@@ -42,16 +42,16 @@ func context(size: Int, alpha: Bool) -> CGContext {
 }
 
 func drawMark(_ ctx: CGContext, in rect: CGRect, color: CGColor) {
-  let scale = rect.width / 108
+  let scale = rect.width / 103.2039
   ctx.setFillColor(color)
   for item in markRects {
     let target = CGRect(
       x: rect.minX + item.x * scale,
-      y: rect.minY + (103 - item.y - item.height) * scale,
+      y: rect.minY + (98.4259 - item.y - item.height) * scale,
       width: item.width * scale,
       height: item.height * scale
     )
-    ctx.addPath(CGPath(roundedRect: target, cornerWidth: 4 * scale, cornerHeight: 4 * scale, transform: nil))
+    ctx.addPath(CGPath(roundedRect: target, cornerWidth: 10.118 * scale, cornerHeight: 10.118 * scale, transform: nil))
     ctx.fillPath()
   }
 }
