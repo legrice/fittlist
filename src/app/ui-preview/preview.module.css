@@ -1719,6 +1719,30 @@
 .apple .homeCardFooter:hover { background:#002233!important; color:#f6f2e8!important; }
 .apple.dark .homeCardFooter { background:#c0d6ea!important; color:#002233!important; }
 .apple.dark .homeCardFooter:hover { background:#ddff55!important; color:#002233!important; }
+
+/* Open, Cash-inspired spatial rhythm without borrowing its product structure. */
+@media(max-width:899px) {
+  .preview { --preview-gutter:24px; }
+}
+.apple .calendarHero .calendarSummary { gap:24px; padding-top:32px; }
+.homeSummaryActions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; width:100%; }
+.homeSummaryActions > button { width:100%; min-height:56px!important; padding:0 16px!important; font-size:15px!important; }
+.apple .calendarHero:has(.homeSummaryActions) { padding-bottom:44px; }
+.apple :is(.homeStandaloneClass,.homeActivityList > button,.profileStudioCard,.setupPanel,.homeDiscovery > button) { border-radius:28px; }
+.apple .homeActivityList { gap:16px; }
+.apple .homeActivityList > button { min-height:84px; padding:18px; }
+.apple .homeDashboard { gap:36px; }
+.apple .homeDashboard > .homeActivitySection { padding-top:36px; }
+.apple .youPage > section { margin-top:40px; }
+.apple .youPage > section:first-of-type { margin-top:8px; }
+.apple .youPage .stack { gap:0; }
+.apple .youPage .cardLink { border-bottom:1px solid var(--preview-line); }
+.apple .youPage .cardLink:last-child { border-bottom:0; }
+.apple .youPage .simpleCard { border:0!important; border-radius:0!important; background:transparent!important; box-shadow:none!important; }
+.apple .youPage :is(.settingsRow,.menuRow) { min-height:82px; padding:18px 0; }
+.apple .profileHeader { padding-bottom:36px; margin-bottom:8px; }
+.apple .profileStudioList { gap:14px; }
+.apple .profileStudioCard { min-height:88px; padding:18px; }
 .apple.dark .setupPanel { box-shadow:0 14px 36px rgb(0 0 0 / 22%); }
 @media(min-width:900px) {
   .setupPanel { margin-top:24px; padding:28px; border-radius:28px; }
