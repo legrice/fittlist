@@ -15402,6 +15402,21 @@ html:has(.person-profile-light), body:has(.person-profile-light) { background:va
 /* One profile palette for people, studios, and groups. */
 .pub:is(.profile,.memberpub,.group-page),
 .pub:is(.profile,.memberpub,.group-page) :is(.profwrap,.pubcard,.pubpanel,.pubstick,.group-main) {
+  /* These profiles intentionally keep a light canvas in both appearance
+     modes. Reset the semantic palette at the page boundary as well as the
+     literal background/color pair: schedule captions, locations, dividers,
+     and other nested components consume --ol/--line through these tokens.
+     Without this reset, a dark-mode viewer gets white cards containing the
+     dark theme's near-white secondary text. */
+  --color-background:var(--kinetic-canvas-light);
+  --color-surface:var(--kinetic-surface);
+  --color-surface-muted:#E5E7EB;
+  --color-surface-hover:#D1D5DB;
+  --color-border:#D1D5DB;
+  --color-border-strong:#9CA3AF;
+  --color-text-primary:var(--kinetic-text);
+  --color-text-secondary:#384046;
+  --color-text-muted:#6B7280;
   background:var(--kinetic-canvas-light); color:var(--kinetic-text);
 }
 .pub:is(.profile,.memberpub) .pubhead:not(.pubhead-hero),
